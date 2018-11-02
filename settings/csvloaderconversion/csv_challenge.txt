@@ -1,0 +1,6 @@
+ID=Ground_truth
+frame=frame
+xnm=xnano
+ynm=ynano
+znm=znano
+phot=intensity

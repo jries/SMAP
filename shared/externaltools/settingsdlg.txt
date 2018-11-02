@@ -1,0 +1,3 @@
+Settings dialog:
+https://github.com/rodyo/FEX-settingsdlg
+https://uk.mathworks.com/matlabcentral/fileexchange/26312-settings-dialog

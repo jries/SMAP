@@ -1,0 +1,11 @@
+frame=frame
+xnm=x
+ynm=y
+phot=photons
+PSFxnm=sx
+PSFynm=sy
+bg=bg
+locprecnm=lpx
+znm=z
+cam_pixelsize_um=100
+factor=100    1

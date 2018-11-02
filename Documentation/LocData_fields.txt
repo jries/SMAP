@@ -1,0 +1,35 @@
+Fields
+
+x
+y
+z
+PSFx
+PSFy
+
+
+
+phot
+bg
+
+
+
++ "nm" for nanometer
++ "err" for CRLB
+
+channel
+frame
+filenumber
+
+logLikelihood
+
+
+peakfindx
+peakfindy
+
+locprecthompson
+
+Derived:
+numberInGroup
+groupindex
+locprecnm = sqrt(xerr^2+yerr^2)
+locprecznm

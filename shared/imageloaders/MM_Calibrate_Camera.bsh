@@ -1,0 +1,231 @@
+import org.micromanager.api.AcquisitionOptions;
+import java.lang.System;
+import org.jfree.data.xy.XYSeries;
+import ij.measure.ResultsTable;
+import ij.measure.*;
+import ij.plugin.frame.Fitter;
+import java.text.DecimalFormat;
+import ij.*;
+import ij.gui.Plot;
+
+//camera specific initialiaztion
+//int offset=400;
+double  expf=0.05;
+
+//intitialization
+static int STRAIGHT_LINE;
+static int CIRCLE;
+static int CROSS;
+static int BLUE;
+
+acqName="calibrate65";
+acqName2="calibrate75";
+String[] channels = {"any"};
+rootDirName="c:/";
+ij.plugin.ImageCalculator calc = new ij.plugin.ImageCalculator();
+
+
+ResultsTable fitout=new ResultsTable();
+//fitout.reset();
+
+XYSeries data = new XYSeries("");
+
+
+DecimalFormat twoPlaces = new DecimalFormat("0.000");
+sqrt2 = Math.sqrt(2);
+
+numSlices=1;
+numFrames=1;
+
+//measure background
+mmc.setExposure(0.05);
+mmc.setProperty(mmc.getCameraDevice(), "Shutter (Internal)","Closed");
+
+if (1==1){
+ngain="Gain";
+namp="Output_Amplifier";
+npreamp="Pre-Amp-Gain";
+nreadm="ReadoutMode";
+nT="CCDTemperature";
+nampEM="Electron Multiplying";
+readmodesubstring=5;
+preampsub1=5;
+offset=200;
+}
+
+if (1==0)
+{
+//Evolve
+ngain="MultiplierGain";
+namp="Port";
+npreamp="Gain";
+nreadm="ReadoutRate";
+nT="CCDTemperature";
+nampEM="Multiplication Gain";
+readmodesubstring=1;
+preampsub1=0;
+offset=400;
+}
+
+emGain=Integer.parseInt(mmc.getProperty(mmc.getCameraDevice(), ngain));
+outputAmp=mmc.getProperty(mmc.getCameraDevice(), namp);
+preAmp=mmc.getProperty(mmc.getCameraDevice(), npreamp);
+readOutMode=(mmc.getProperty(mmc.getCameraDevice(), nreadm));
+Temperature=Double.parseDouble(mmc.getProperty(mmc.getCameraDevice(), nT));
+
+
+
+
+//isEM=outputAmp.equals("Electron Multiplying");
+isEM=outputAmp.equals(nampEM);
+isEMi = (isEM) ? 1 : 0;
+
+excessnoise2=(isEM) ? 2 :1;
+//readmode=Double.parseDouble(readOutMode.substring(0,5));
+//readmode=Double.parseDouble(readOutMode.substring(0,1));
+//preAmpd=Integer.parseInt(preAmp.substring(5,6));
+//preAmpd=Integer.parseInt(preAmp.substring(0,1));
+
+readmode=Double.parseDouble(readOutMode.substring(0,readmodesubstring));
+preAmpd=Integer.parseInt(preAmp.substring(preampsub1,preampsub1+1));
+
+fitout.incrementCounter();
+fitout.addValue("EM gain", emGain);
+fitout.addValue("EM?", isEMi);
+fitout.addValue("horiz", readmode);
+fitout.addValue("PreAmp", preAmpd);
+fitout.addValue("Temp", Temperature);
+
+gui.openAcquisition(acqName, rootDirName, numFrames, channels.length, numSlices);
+gui.snapAndAddImage(acqName, 0,0, 0,0);
+
+gui.snapAndAddImage(acqName, 1,0, 0,0);
+gui.closeAcquisition(acqName);
+
+ImagePlus ip1=WindowManager.getCurrentImage();
+ImageStack stack=ip1.getStack();  
+bg1=stack.getProcessor(1);
+bg2=stack.getProcessor(2);
+ij.process.ImageStatistics stats = bg1.getStatistics();
+ipDiff = calc.run("Subtract create 32-bit", new ij.ImagePlus("1", bg1), new ij.ImagePlus("2",bg2) );
+ij.process.ImageStatistics statsDiff = ipDiff.getStatistics();
+stdDevbg = statsDiff.stdDev/sqrt2;
+
+
+fitout.addValue("<BG>A", stats.mean);
+fitout.addValue("BG std A", stats.stdDev);
+fitout.addValue("BGDifstd A", stdDevbg);
+
+
+
+//get sequence of exposrue times
+mmc.setProperty(mmc.getCameraDevice(), "Shutter (Internal)","Open");
+int[] exposures={2.5,5,7.5,10,12.5,15,17.5,20,22.5,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100};
+
+numFrames=exposures.length*2;
+
+gui.openAcquisition(acqName2, rootDirName, numFrames, channels.length, numSlices);
+
+for (int i=0;i<exposures.length;i++){
+	mmc.setExposure(exposures[i]*expf);
+	gui.snapAndAddImage(acqName2, 2*i,0, 0,0);
+	gui.snapAndAddImage(acqName2, 2*i+1,0, 0,0);
+}
+gui.closeAcquisition(acqName2);
+
+//results table with statistics
+ResultsTable rt = new ResultsTable();
+rt.reset();
+
+ImagePlus ipx=WindowManager.getCurrentImage(); 
+
+int width=ipx.getWidth(); 
+int height=ipx.getHeight(); 
+ImageStack stack=ipx.getStack(); 
+int slices=stack.getSize(); 
+//float[] tempimage=new float[width*height]; 
+for (int i=0;i<exposures.length;i++){
+	ipx1=stack.getProcessor(2*i+1);
+	ipx2=stack.getProcessor(2*i+2);
+	ij.process.ImageStatistics stats = ipx1.getStatistics();
+	ipDiff = calc.run("Subtract create 32-bit", new ij.ImagePlus("1", ipx1), new ij.ImagePlus("2",ipx2) );
+	ij.process.ImageStatistics statsDiff = ipDiff.getStatistics();
+	stdDev = statsDiff.stdDev/sqrt2;
+	rt.incrementCounter();
+	rt.addValue("Signal DN", stats.mean);
+	/*rt.addValue("Noise DN", stats.stdDev);*/
+   rt.addValue("Noise DN", stdDev);
+	rt.addValue("Diff in signal", statsDiff.mean);
+	data.add(stats.mean, stdDev);
+} 
+//rt.show("rt");
+
+//fit line to first 10 data points
+double[] x=new double[10];
+double[] y=new double[10];
+for (int i=0;i<10;i++){
+	x[i]=data.getX(i)-offset;
+	y[i]=data.getY(i)*data.getY(i);
+}
+ij.measure.CurveFitter fit=new ij.measure.CurveFitter(x,y);
+fit.doFit(STRAIGHT_LINE,false);
+double[] fitResults=fit.getParams();
+
+double ePerAdu=excessnoise2/fitResults[1];
+double readNoise=Math.sqrt(fitResults[0])*ePerAdu;
+double minNoise=data.getY(1)*ePerAdu;
+
+fitout.addValue("e-/A", ePerAdu);
+fitout.addValue("EM*e-/A", ePerAdu*emGain);
+
+double[] xl=new double[exposures.length];
+double[] yl=new double[exposures.length];
+for (int i=0;i<exposures.length;i++){
+	xl[i]=data.getX(i)-offset;
+	yl[i]=data.getY(i)*data.getY(i);
+}
+double[] xs=new double[2];
+double[] ys=new double[2];
+xs[0]=xl[0];
+ys[0]=fitResults[1]*xs[0]+fitResults[0];
+xs[1]=xl[xl.length-1];
+ys[1]=fitResults[1]*xs[1]+fitResults[0];
+
+title="EM"+emGain+"_"+preAmp+"_"+readOutMode;
+ij.gui.Plot alldat=new Plot(title,"ADU","var",xs,ys);
+alldat.addPoints(xl,yl,0);
+alldat.addPoints(x,y,5);
+
+//determine saturation
+xlin=0;
+xmax=0;
+ymax=0;
+for (int i=10;i<exposures.length;i++)
+{
+	ylin=	fitResults[1]*xl[i]+fitResults[0];
+	dy=(yl[i]-ylin)/(ylin);
+	if (Math.abs(dy)<0.1)
+	{
+		xlin=xl[i];
+	}
+	if (yl[i]>ymax)
+	{
+		xmax=xl[i];
+		ymax=yl[i];
+	}
+}
+fitout.addValue("lin 0.05 adu-off", xlin);
+fitout.addValue("sat adu-off", xmax);
+
+//display results
+alldat.show();
+fitout.show("results");
+
+//ip1.close();
+
+//Fitter ff=new Fitter();
+//ff.plot(fit);
+
+
+ip1.close();
+ipx.close();

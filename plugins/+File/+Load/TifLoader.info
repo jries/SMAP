@@ -1,0 +1,1 @@
+Plugin to load Tif data (single images or stack). If the source is a micro-manager Tif file, it locates the path of the metadata.txt file and passes it on to the CameraConverter.

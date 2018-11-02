@@ -1,0 +1,5 @@
+frame=Var1
+xnm=Var2
+ynm=Var3
+znm=Var4
+phot=Var5

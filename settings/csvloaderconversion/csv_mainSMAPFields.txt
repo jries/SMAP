@@ -1,0 +1,9 @@
+frame=frame
+xnm=xnm
+ynm=ynm
+znm=znm
+phot=phot
+bg=bg
+locprecnm=locprecnm
+cam_pixelsize_um=100
+factor=1

@@ -1,0 +1,6 @@
+ID=Var1
+frame=Var2
+xnm=Var3
+ynm=Var4
+znm=Var5
+phot=Var6

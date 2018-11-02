@@ -1,0 +1,5 @@
+formanuel.favoritmodules.fithist.module=Analyzers,counting,cfithist
+formanuel.favoritmodules.fithist.name=Fit Histogram
+formanuel.favoritmodules.makehist.module=Analyzers,counting,cmakehist
+formanuel.loadhist.module=Analyzers,counting,cloadhist
+formanuel.name=Example Menu

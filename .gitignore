@@ -1,0 +1,9 @@
+settings/temp
+.DS_Store
+~$*
+*.m~
+plugins/plugin.m
+*.asv
+autosave_*
+External/bfmatlab/*
+*.docx
