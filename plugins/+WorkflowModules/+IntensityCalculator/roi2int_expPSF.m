@@ -135,8 +135,9 @@ dz=obj.spline.SXY(1).cspline.dz;
     end
     cor=horzcat(loc.dy+dn,loc.dx+dn,z+zmp);
    
-    template = evalSpline(obj.p.roisize_fit,obj.splinecoeff,1,0,cor);
-    
+   % template = evalSpline(obj.p.roisize_fit,obj.splinecoeff,1,0,cor);
+    template = simSplinePSF_call(obj.p.roisize_fit,obj.splinecoeff,1,0,single(cor));
+   
 for k=1:sim(3)
     templateh=template(:,:,k);
     if obj.p.fitbg
