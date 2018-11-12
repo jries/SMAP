@@ -6,6 +6,10 @@ function imageslicer(varargin)
 %input parser: x,y,z (optional),V,'name',value
 %Parent,all gui parameters: scale,  contrastmode, contrast,
 %Title
+%Tags
+%   cell array of length of dimensions
+%   for every dimension either empty (no tag for this dimension) or cell
+%   arry of tags with length corresponding to length of this dimension
 
 %todo: rgb, more dimension, choose dim1,dim2
 if isa(varargin{1},'matlab.graphics.axis.Axes')||isa(varargin{1},'matlab.ui.Figure')
@@ -17,17 +21,23 @@ else
 p=parseinput(varargin);
 end
 % extend to rgb
+V=p.V;
 if ~isempty(p.x)
-    V=p.z;
-    axl{1}=p.V;
     axl{2}=p.x;
-    axl{3}=p.y;
-else   
-    V=p.V;
-    axl{1}=1:size(V,1);
+else
     axl{2}=1:size(V,2);
+end
+if ~isempty(p.y)
+    axl{3}=p.y;
+else
     axl{3}=1:size(V,3);
 end
+if ~isempty(p.z)
+    axl{1}=p.z;
+else
+    axl{1}=1:size(V,1);
+end
+
 
 if isempty(p.Parent)
     phandle=figure;
@@ -49,7 +59,7 @@ dimrgb=[];
 if isprop(phandle,'WindowKeyPressFcn')
     phandle.WindowKeyPressFcn=@keypress;
 end
-ax=axes('Parent',phandle,'Position',[0.05,0.18,.95,.78]);
+ax=axes('Parent',phandle,'Position',[0.05,0.18,.95,.75]);
 ax.XLim=[0 Inf];
 
 vp1=0.08;
@@ -64,8 +74,8 @@ hslider{2}=uicontrol('Parent',phandle,'Style','slider','Units','normalized','Pos
 hframe{1}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','String','1','Position',[0.4 vp1 0.075 0.05],'Callback',{@framecallback,1});
 hframe{2}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','String','1','Position',[0.4 vp2 0.075 0.05],'Callback',{@framecallback,2});
 
-hslidert{1}=uicontrol('Parent',phandle,'Style','text','Units','normalized','Position',[0.02 vp1 0.03 0.05],'String','3');
-hslidert{2}=uicontrol('Parent',phandle,'Style','text','Units','normalized','Position',[0.02 vp2 0.03 0.05],'String','4');
+hslidert{1}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','Position',[0.02 vp1 0.03 0.05],'String','3');
+hslidert{2}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','Position',[0.02 vp2 0.03 0.05],'String','4');
 
 hmenu{1}=uicontrol('Parent',phandle,'Style','popupmenu','Units','normalized','String',{'x','y','z'},'Position',[0.475 vp1 0.125 0.05],...
     'Callback',{@changeaxis,0});
@@ -115,17 +125,6 @@ changeaxis(0,0,0);
         ax.XLim=[-inf inf];
         ax.YLim=[-inf inf];
         updateall
-%         plotimage
-%         switch a.String{a.Value}
-%             case 'xy'
-%                 dim = [1 2 3];
-%             case 'yz'
-%                 dim = [2 3 1];
-%             case 'xz'
-%                 dim = [1 3 2];
-%         end
-%         ax.XLim=[0 Inf];
-%         updateall
 
     end
     
@@ -146,9 +145,6 @@ changeaxis(0,0,0);
         
         s=size(V);
             
-%         for k=1:length(s)
-%             dimall{k}=1:s(k);
-%         end
         
         if hrgb.Value&&any(s==3)
             dimrgb=find(s==3,1,'last');
@@ -216,11 +212,11 @@ changeaxis(0,0,0);
          s=size(V);
             
         for k=1:length(s)
-            if k<=4+double(p.rgb)
+%             if k<=4+double(p.rgb)
             dimall{k}=1:s(k);
-            else
-                dimall{k}=1;
-            end
+%             else
+%                 dimall{k}=1;
+%             end
         end
         xlimold=ax.XLim;
         ylimold=ax.YLim;
@@ -241,30 +237,19 @@ changeaxis(0,0,0);
         dimall{dimmenu(1)}=round(str2double(hframe{1}.String));
         if length(dimmenu)>1
             dimall{dimmenu(2)}=round(str2double(hframe{2}.String));
-            dimmenu2=dimmenu(2);
-        else
-            dimmenu2=[];
+        end
+        for k=3:length(dimmenu)
+            dimall{dimmenu(k)}=1; %XXXX later remember position
         end
         Vsl=V(dimall{:});
-        dims=[dim(2) dim(1) dimrgb dimmenu(1) dimmenu2];
+        dims=[dim(2) dim(1) dimrgb dimmenu];
         dimshow=(1:length(size(V)));
         dimshow(1:length(dims))=dims;
         
         Vslp=permute(Vsl,dimshow);
         
         img=(squeeze(Vslp));
-        
-%         switch hmenu{1}.String{hmenu{1}.Value}
-%             case 'xy'
-%                img=V(:,:,slice)';
-%                a1=x;a2=y;
-%             case 'yz'
-%                img=squeeze(V(slice,:,:))';
-%                a1=y;a2=z;
-%             case 'xz'
-%                img=squeeze(V(:,slice,:))';
-%                a1=x;a2=z;
-%         end
+       
         
         %contrast
         contrast=str2num(hcontrast.String);
@@ -277,8 +262,6 @@ changeaxis(0,0,0);
                 dV=(maxV-minV)/2;
                 imax=meanV+dV*contrast(1);
                 imin=meanV-dV*contrast(1);
-    %             imax=str2double(hcontrast.String)*maxV;
-    %             imin=str2double(hcontrast.String)*minV;
             else
                 imaxim=nanmax(img(:));
                 iminim=nanmin(img(:));
@@ -290,7 +273,6 @@ changeaxis(0,0,0);
                     dV=(imaxim-iminim)/2;
                     imax=meanV+dV*contrast(1);
                     imin=meanV-dV*contrast(1);
-    %                 imax=str2double(hcontrast.String)*imaxim;
                 end
             end
         end
@@ -301,9 +283,9 @@ changeaxis(0,0,0);
         if length(size(img))==3 %???
             img=(img-imin)/(imax-imin);
         end
-%         img(1,1)=imax; %replace by scaling
+
         imagesc(ax,a1,a2,img);
-%         imagesc(ax,img);
+
         if haxscale.Value
             axis(ax,'fill')
         else
@@ -320,9 +302,42 @@ changeaxis(0,0,0);
         colormap(ax,hlut.String{hlut.Value})
 %         imin=nanmin(img(:));
         ax.CLim=[imin imax];
+        tagtxt='';
+        titletxt='';
         if ~isempty(p.Title)
-            title(ax,p.Title);
+            titletxt{1}=p.Title;
         end
+        if ~isempty(p.Tags)
+            tags=p.Tags;
+%             stags=size(tags);
+            for d=3:length(dims) %1,2 of dims used for plotting
+                dimp=dims(d);
+                indexh=dimall{dimp};
+                if dimp<=length(tags) && length(tags{dimp})>=indexh
+                    tagsall=tags{dimp};
+                    if ~iscell(tagsall)
+                        tagh=tagsall(indexh);
+                    else
+                        tagh=tagsall{indexh};
+                    end
+                    if isnumeric(tagh)
+                        tagh=num2str(tagh);
+                    end
+                    tagtxt=[tagtxt ' ' num2str(dimp) ': ' tagh];
+                end
+                    
+            end
+            if ~iscell(titletxt) %title defined
+                titletxt{1}=tagtxt;
+            else
+                titletxt{end+1}=tagtxt;
+            end
+        end
+        if iscell(titletxt)
+            title(titletxt)
+        end
+
+        
         if ~p.rgb
             colorbar(ax)
         end
@@ -366,6 +381,7 @@ p.addParameter('ydim',2,@isnumeric);
 p.addParameter('rgb',false);
 p.addParameter('globalcontrast',false,@islogical);
 p.addParameter('Title',[]);
+p.addParameter('Tags',[]);
 parse(p,in{:});
 pv=p.Results;
 
