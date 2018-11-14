@@ -101,7 +101,14 @@ z0=-cyclicaverage(dzm,pi/frequency)+pi/frequency/2+z0;
 
 if nargin>4 &&~isempty(ax)
     phasez=mod((zastig-z0)*2*frequency,2*pi);
-    plot(ax,zastig,phase,'.',zastig,phasez,'*')
+    
+    axes(ax)
+    dscatter(zastig,phase)
+    hold on
+    plot(zastig,phasez,'r.')
+    xlabel('zastig')
+    ylabel('phase')
+    legend('phase','phase from z astig')
 end
 
 % figure(88);histogram(dzm)

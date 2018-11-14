@@ -6,8 +6,8 @@ imgr=imageloaderAll([path f]);
 % %%
 
 %%
-par.cutoffmin=900;
-par.mask=0;
+par.cutoffmin=600;
+par.mask=1;
 par.Rnear=5;
 par.sigmaf=0.5;
 par.file=f;
@@ -28,7 +28,8 @@ for k=1:size(img,3)
     img(:,:,k)=img(:,:,k)/exp(-kbl*(k-1)); %first frame: no bleaching
 end
 
-figure
+figure(8)
+hold on
 % subplot(2,2,1)
 ax1=gca;
 % subplot(2,2,2)
@@ -73,7 +74,7 @@ end
 % mimg=mimg-background;
 %%
 
-numbins=100; 
+numbins=50; 
 if 0
 maxima=zeros(0,3);
 for k=1:size(imghr,3)
@@ -120,8 +121,9 @@ if ~isempty(ax1)
 % cutoffmin=600;
 % mintc=mint(indgood);
 mintc=maximaf(:,3);
-hold(ax1,'off')
-h=histogram(ax1,mintc,numbins);
+% hold(ax1,'off')
+h=histogram(ax1,mintc,numbins,'Normalization','probability');
+
 % cftool(h.BinEdges(1:end-1)+h.BinWidth/2,h.Values)
 xfit=h.BinEdges(1:end-1)+h.BinWidth/2;
 yfit=(h.Values);
