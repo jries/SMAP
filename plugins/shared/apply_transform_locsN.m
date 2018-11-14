@@ -55,7 +55,7 @@ switch p.datapart.selection
         indt=true(size(xf));    
     case 'target'
 %         indt=~transform.getRef(xf,yf);
-        indt=transform.getPart(2,horzcat(xf,yf));
+        indt=transform.getPart(2,horzcat(xf,yf),'nm');
         if ~isempty(indfz)
             indfz=indfz&indt;
         end
@@ -63,7 +63,7 @@ switch p.datapart.selection
 %         [x,y,z]=transform.transformCoordinatesInv(xf(indf&indt),yf(indf&indt),zf(indfz));
     case 'reference'
         adsf
-        indt=transform.getRef(xf,yf);
+        indt=transform.getRef(xf,yf,'nm');
         if ~isempty(indfz)
             indfz=indfz&indt;
         end
