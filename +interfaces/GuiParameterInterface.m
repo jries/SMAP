@@ -47,7 +47,7 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                 for k=1:lf
                     phx=obj.P.par.(field)(k);
                     if ~isvalid(phx.obj)
-                        outind=k;
+                        outind(k)=true;
                     end
                     if phx.obj==hstruc.obj &&((isempty(handle) && isempty(phx.handle) )|| (~isempty(handle) && phx.handle==handle))
                         posnew=k;
@@ -366,15 +366,9 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
         end
         function saveGlobalSettings(obj)
             global SMAP_globalsettings
-            maindir=obj.getPar('maindirectory');
-            if isempty(maindir)
-                warning('could not save global settings because main SMAP directory could not be identified')
-            else
-                file=[obj.getPar('maindirectory') filesep obj.P.globalSettingsFile];
-                writestruct(file,obj.P.globalSettings);
-            end
-                SMAP_globalsettings=obj.P.globalSettings;
-
+            file=[obj.getPar('maindirectory') filesep obj.P.globalSettingsFile];
+            writestruct(file,obj.P.globalSettings);
+            SMAP_globalsettings=obj.P.globalSettings;
         end
         function loadGlobalSettings(obj)
             global SMAP_globalsettings

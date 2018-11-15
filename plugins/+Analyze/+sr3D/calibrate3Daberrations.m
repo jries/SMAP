@@ -10,7 +10,17 @@ classdef calibrate3Daberrations<interfaces.DialogProcessor
         end
         function out=run(obj,p)
             p.EMon=obj.locData.files.file(1).info.EMon;
-            p.RIM=obj.locData.history{1}.children.fitparamters.fitterGUI.children.MLE_GPU_Yiming.refractive_index_mismatch;
+            fp=obj.locData.history{1}.children.fitparamters;
+            if isfield(fp,'fitterGUI')
+                fp=fp.fitterGUI.children.MLE_GPU_Yiming;
+            elseif isfield(fp,'MLE_GPU_Yiming')
+                fp=fp.MLE_GPU_Yiming;
+            end
+            if fp.userefractive_index_mismatch
+                p.RIM=fp.refractive_index_mismatch;
+            else 
+                p.RIM=1;
+            end
             p.dz=p.dz*p.RIM;
             out=[];
             %             * Make 3D fitting model
@@ -88,15 +98,17 @@ classdef calibrate3Daberrations<interfaces.DialogProcessor
            err0=err1;
            goodind=find(true(length(beads),1));
            beads2=beads;
+
+           cutofffactor=4;
            while  1% length(beads2)>length(beads)/2
-                cutoff=3*nanmean(err1);
+                cutoff=cutofffactor*nanmean(err1);
                 badind=(err1>cutoff|isnan(err1));
                 if sum(badind)==0
                     break
                 end
                 goodind=goodind(~badind);
                 beads2=beads(goodind);
-                dzerr2=dzerr(goodind);
+%                 dzerr2=dzerr(goodind);
                 [ZcorrInterp]=getZinterp(beads2,ZcorrInterp,p);
                 %calculate errors
                 [err1,dzerrh]=geterrors(beads2,ZcorrInterp,p);    
@@ -349,7 +361,7 @@ function [err1,dzerr]=geterrors(beads,Zint,p)
   else
       factor=1;
   end        
-        err1(k)=mean(dz.^2)*factor;
+        err1(k)=sqrt(mean(dz.^2))*factor;
         err2(k)=mean(abs(dz))*factor;
         err3(k)=std(dz)*factor;
 %         dzerr{k}=ones(size(beads(k).loc.znm))+NaN;
