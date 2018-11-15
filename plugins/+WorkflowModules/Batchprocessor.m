@@ -163,13 +163,15 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
                 obj.processonline(filelist{1})
                 return
             end
+            parsave=obj.P.par;
             for k=1:length(filelist)
                 obj.locData.clear;
                 filen=filelist{k};
                 status=['fitting ' num2str(k) '/' num2str(length(filelist)) '. ' filen];
                  obj.guihandles.status.String=status;drawnow;
                  disp(status);
-
+                obj.P.par=parsave;
+                obj.setPar('synchronizeguistate',false)
                 if contains(filen,'.tif') || contains(filen,'.dcimg')
                     obj.processtiff(filen);
                 elseif contains(filen,'.mat') 
@@ -180,6 +182,7 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
                     end
                 end
             end
+            obj.P.par=parsave;
             status='done...';
             obj.guihandles.status.String=status;drawnow;
             disp(status);

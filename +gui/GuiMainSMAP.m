@@ -46,6 +46,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
 
             obj.setPar('mainGuihandle',handle);
             obj.setPar('mainGui',obj);
+            obj.setPar('synchronizeguistate',true);
             obj.handle=handle;
             set(handle,'MenuBar','none','Toolbar','none')
             [pmenu,hmenu]=makePluginMenu(obj,handle);

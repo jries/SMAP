@@ -495,6 +495,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 end
                 allFields=fieldnames(guidef);
                 anyoptional=false;
+                synchronizeguistate=obj.getPar('synchronizeguistate');
                 for k=1:length(allFields) 
                     thisField=guidef.(allFields{k});
                     if strcmp(allFields{k},'syncParameters')
@@ -579,7 +580,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %                             h.TooltipString=thisField.TooltipString;
 %                         end
                     end
-                    if anyoptional
+                    if anyoptional && synchronizeguistate
                         obj.addSynchronization('globalGuiState',[],[],@obj.setglobalguistate);
                     end
                        
