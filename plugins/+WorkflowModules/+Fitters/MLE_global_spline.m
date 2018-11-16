@@ -1,7 +1,6 @@
 classdef MLE_global_spline<interfaces.WorkflowFitter
     properties
         fitpar
-%         mirrorstack
     end
     methods
         function obj=MLE_global_spline(varargin)
@@ -22,8 +21,11 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                     addpath(fitterpath)
                     obj.fitpar.link=obj.fitpar.link([2 1 4 5 3 6]);
                     obj.fitpar.fitfunction=@mleFit_LM_4Pi;
+                case 'Gauss'
+                     obj.fitpar.fitfunction=@GPUmleFit_LM_MultiChannel_Gauss;
                 otherwise
                     obj.fitpar.fitfunction=@mleFit_LM_global; %later: include single channel, decide here
+%                     GPUmleFit_LM_MultiChannel_Gauss
             end
              transform=obj.getPar('loc_globaltransform');
              
@@ -41,8 +43,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
             roisize=obj.getPar('loc_ROIsize');
             obj.numberInBlock=round(obj.fitpar.roisperfit*100/roisize^2/12)*12;
             
-            if obj.fitpar.fitmode==5 ||obj.fitpar.fitmode==6
-%               
+            if obj.fitpar.fitmode==5 ||obj.fitpar.fitmode==6              
                 obj.fitpar.mirrorstack=false; %later: remove completely
                 p=obj.getAllParameters;
                 if p.overwritePixelsize
@@ -55,8 +56,6 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                 end
                  obj.setPar('loc_iterations',p.iterations);
             end   
-            
-%             disp(reporttext)
         end
         function nofound(obj,varargin)
             disp('fit function not working. Wrong Cuda version?')
@@ -87,11 +86,8 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
 
         function initGui(obj)
             initGui@interfaces.WorkflowFitter(obj);
-%             obj.guihandles.fitmode.Callback={@fitmode_callback,obj};
-%             fitmode_callback(0,0,obj)
             obj.guihandles.loadcal.Callback={@loadcall_callback,obj};
-%             obj.addSynchronization('loc_fileinfo',[],[],{@loc_fileinfo_callback,obj});
-%             executecallbacks(obj,'switchvisible');
+
             %make global fit control
             hold=obj.guihandles.globaltable;
             gt=uitable(hold.Parent,'Position',hold.Position);
@@ -125,9 +121,7 @@ end
 
 end
 
-% function loc_fileinfo_callback(obj)
-% 
-% end
+
 function locs=fit2locs_global(results,stackinfo,fitpar,image)
 if isempty(results)
     locs=[];
@@ -170,13 +164,30 @@ end
 % locs.ypix=P(:,1)-dn+posy;
 off{1}=-dn+posy;
 
+switch fitpar.mode
+    case 'Gauss'
+        fac{3}=EMexcess;
+        fac{4}=EMexcess;
+        faccrlb{3}=EMexcess;
+        faccrlb{4}=EMexcess;
+        names={'ypix','xpix','phot','bg','PSFxpix'};
+        namesav={'ypix','xpix','PSFxpix','phot'};
+    
+    case 'Spline'
+        fac{4}=EMexcess;
+        fac{5}=EMexcess;
+        faccrlb{4}=EMexcess;
+        faccrlb{5}=EMexcess;
+        fac{3}=fitpar.dz*fitpar.refractive_index_mismatch;
+        off{3}=-fitpar.z0*fitpar.dz*fitpar.refractive_index_mismatch;
+        faccrlb{3}=fitpar.dz*fitpar.refractive_index_mismatch;
+        names={'ypix','xpix','znm','phot','bg'};
+        namesav={'ypix','xpix','znm','phot'};
+end
 
 % locs.phot=P(:,4)*EMexcess;
 % locs.bg=P(:,5)*EMexcess;
-fac{4}=EMexcess;
-fac{5}=EMexcess;
-faccrlb{4}=EMexcess;
-faccrlb{5}=EMexcess;
+
 locs.frame=frame;
 
 locs.logLikelihood=LogL;
@@ -188,12 +199,9 @@ locs.peakfindy=posy;
         locs.PSFxpix=sx;
         locs.PSFypix=sx;
 % end
-fac{3}=fitpar.dz*fitpar.refractive_index_mismatch;
-off{3}=-fitpar.z0*fitpar.dz*fitpar.refractive_index_mismatch;
-faccrlb{3}=fitpar.dz*fitpar.refractive_index_mismatch;
 
-names={'ypix','xpix','znm','phot','bg'};
-namesav={'ypix','xpix','znm','phot'};
+
+
 linked=fitpar.link;
 ind=1;
 for k=1:length(names)
@@ -205,11 +213,7 @@ for k=1:length(names)
         v=zeros(numl,numchannels,'single');
         ve=zeros(numl,numchannels,'single');
         for c=1:numchannels
-%             if c==1
-%                 ch='';
-%             else
-                ch=num2str(c);
-%             end
+            ch=num2str(c);
             locs.([names{k} ch])=P(:,ind).*fac{k}+off{k};
             locs.([names{k} ch 'err'])=sqrt(CRLB(:,ind)).*faccrlb{k};
             v(:,c)=locs.([names{k} ch]);
@@ -232,8 +236,8 @@ for k=1:length(names)
     end
 end
 locs.iterations=P(:,end);
-% locs.locpthompson=sqrt((locs.PSFxpix.*locs.PSFypix+1/12*v1)./( locs.phot/EMexcess)+8*pi*(locs.PSFxpix.*locs.PSFypix).^2.* locs.bg./( locs.phot/EMexcess).^2);
 end
+
 function locs=fit2locs_4pi(results,stackinfo,fitpar,image)
 if isempty(results)
     locs=[];
@@ -263,22 +267,15 @@ LogL=results.LogL;
            
 o=ones( numpar,1);fac=num2cell(o);z=zeros( numpar,1);off=num2cell(z);
 faccrlb=fac;
-% locs.xpix=P(:,2)-dn+posx;
 if (fitpar.fitmode==5||fitpar.fitmode==6) && fitpar.mirrorstack
     fac{2}=-1;
     off{2}=dn+posx;
-%     locs.xpix=dn-P(:,2)+posx;
 else
     fac{2}=1;
     off{2}=-dn+posx;
-%     locs.xpix=P(:,2)-dn+posx;
 end
-% locs.ypix=P(:,1)-dn+posy;
 off{1}=-dn+posy;
 
-
-% locs.phot=P(:,4)*EMexcess;
-% locs.bg=P(:,5)*EMexcess;
 fac{4}=EMexcess;
 fac{3}=EMexcess;
 faccrlb{4}=EMexcess;
@@ -289,11 +286,10 @@ locs.logLikelihood=LogL;
 
 locs.peakfindx=posx;
 locs.peakfindy=posy;
-   
-         sx=1*v1;
-        locs.PSFxpix=sx;
-        locs.PSFypix=sx;
-% end
+sx=1*v1; 
+locs.PSFxpix=sx;
+locs.PSFypix=sx;
+
 fac{5}=fitpar.dz*fitpar.refractive_index_mismatch;
 off{5}=-fitpar.z0*fitpar.dz*fitpar.refractive_index_mismatch;
 faccrlb{5}=fitpar.dz*fitpar.refractive_index_mismatch;
@@ -301,7 +297,7 @@ faccrlb{5}=fitpar.dz*fitpar.refractive_index_mismatch;
 names={'ypix','xpix','phot','bg','zastig','phase'};
 namesav={'ypix','xpix','zastig','phot'};
 linked=fitpar.link(1:6);
-% linked(end+1)=1; %XXXXX phase. Later include in gui
+
 ind=1;
 for k=1:length(names)
     if linked(k)
@@ -312,11 +308,7 @@ for k=1:length(names)
         v=zeros(numl,numchannels,'single');
         ve=zeros(numl,numchannels,'single');
         for c=1:numchannels
-%             if c==1
-%                 ch='';
-%             else
-                ch=num2str(c);
-%             end
+            ch=num2str(c);
             locs.([names{k} ch])=P(:,ind).*fac{k}+off{k};
             if strcmp(names{k},'phase')
                 locs.([names{k} ch])=mod(locs.([names{k} ch]),2*pi);
@@ -343,13 +335,13 @@ for k=1:length(names)
     end
 end
 locs.iterations=P(:,end);
-% locs.locpthompson=sqrt((locs.PSFxpix.*locs.PSFypix+1/12*v1)./( locs.phot/EMexcess)+8*pi*(locs.PSFxpix.*locs.PSFypix).^2.* locs.bg./( locs.phot/EMexcess).^2);
 end
+
 function out=fitwrapper_global(imstack,fitpar,stackinfo,varstack)
 numberOfChannels=2;
 nfits=ceil(size(imstack,3)/numberOfChannels);
 npar=5;
-numframes=size(imstack,3); 
+
 
 s=size(imstack);
 if length(s)==2 
@@ -364,31 +356,12 @@ EMexcess=fitpar.EMexcessNoise;
 if isempty(EMexcess)
     EMexcess=1;
 end
-
-
-        
+         
 dT=zeros(npar,2,(nfits));
 dT(1,2,:)=stackinfo.dy(2:numberOfChannels:end);
 dT(2,2,:)=stackinfo.dx(2:numberOfChannels:end);
 
-% %XXXXXXXXXXX
-% dT(1,2,:)=-stackinfo.dx(2:numberOfChannels:end);
-% dT(2,2,:)=-stackinfo.dy(2:numberOfChannels:end);
-
-
-% dT(1,2,:)=stackinfo.dx;
-% dT(2,2,:)=-stackinfo.dy;
-
-sharedA = repmat(int32(fitpar.link(1:5)'),[1 numframes]);
- 
-%for testing: change order
-
-
-out.indused=1:numberOfChannels:numframes;   %XXXXXXX check. Wrong? results shoud be only displayed in one channel
 disp('check MLE_globalspline')
-% out.indused=1:nfits; 
-% [~,ind]=sort(rand(length(out.indused),1));
-
 
 imfit(:,:,:,1)=imstack(:,:,1:numberOfChannels:end);
 if fitpar.mirrorud
@@ -397,27 +370,42 @@ if fitpar.mirrorud
 else
     imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
 end
+numframes=size(imfit,3); 
+sharedA = repmat(int32(fitpar.link(1:5)'),[1 numframes]);
+out.indused=1:numberOfChannels:numframes*numberOfChannels;   %XXXXXXX check. Wrong? results shoud be only displayed in one channel
 
-% imfit(:,:,:,2)=single(poissrnd(10,size(imfit(:,:,:,1))));
+switch fitpar.mode
+    case 'Gauss'
+        arguments{1}=imfit/EMexcess;
+        arguments{2}=uint32(2);
+        arguments{3}=uint32(sharedA);
+        arguments{4}=uint32(fitpar.iterations);
+        arguments{5}=single(fitpar.PSFx0);
+        arguments{6}=single(dT); %XXXXXXXXXX
+        %imstack, sharedflag, iterations, spline coefficients, channelshift,
+        %fitmode, varmap
+%         arguments{6}=fitpar.fitmode;
+%         arguments{7}=fitpar.zstart/fitpar.dz;
+    case 'Spline'
+        arguments{1}=imfit/EMexcess;
+        arguments{2}=sharedA;
+        arguments{3}=fitpar.iterations;
+        arguments{4}=single(fitpar.splinefithere.coeff);
+        arguments{5}=single(dT); %XXXXXXXXXX
+        %imstack, sharedflag, iterations, spline coefficients, channelshift,
+        %fitmode, varmap
+%         arguments{6}=fitpar.fitmode;
+        arguments{6}=fitpar.zstart/fitpar.dz;
+    otherwise
+        disp('fitmode not implemented for global fitting')
+end
 
-% if fitpar.mirrorstack %em vs non em mirror
-% %     dT(2,2,:)=-dT(2,2,:);
-% %bit problem with using transform. everything is mirrord.
-% end
-
-% imfit=imfit(:,:,ind,:);
-% dT=dT(:,:,ind);
-% dT=zeros(npar,2,nfits);
-arguments{1}=imfit/EMexcess;
-arguments{2}=sharedA;
-arguments{3}=fitpar.iterations;
-arguments{4}=single(fitpar.splinefithere.coeff);
-arguments{5}=single(dT); %XXXXXXXXXX
-%imstack, sharedflag, iterations, spline coefficients, channelshift,
-%fitmode, varmap
-arguments{6}=fitpar.fitmode;
-arguments{7}=fitpar.zstart/fitpar.dz;
 [P CRLB LogL]=fitpar.fitfunction(arguments{:});
+
+
+% [PG,CRLBG, LLG] =  GPUmleFit_LM_MultiChannel_Gauss(d_data,2 (fitmode),uint32(sharedA),iterations,single(PSFstart),single(dT));
+
+
 % [P, CRLB,LogL, res]=CPUmleFit_LM_MultiChannel_R(arguments{:});
 % htot=P(:,8)
 % 
@@ -440,16 +428,6 @@ arguments{7}=fitpar.zstart/fitpar.dz;
 %                 arguments{1}=single(imstack/EMexcess);
 %             end
 %             arguments{4}=single(fitpar.splinefithere.cspline.coeff);
-%     end
-   
-%     if fitpar.fitmode==6
-%           
-%         [P1 CRLB1 LL1 P2 CRLB2 LL2 ]=fitpar.fitfunction(arguments{:});
-%         P = repmat(single(LL1>=LL2),1,6).*P1+repmat(single(LL1<LL2),1,6).*P2;
-%         CRLB = repmat(single(LL1>=LL2),1,5).*CRLB1+repmat(single(LL1<LL2),1,5).*CRLB2;
-%         LogL = repmat(single(LL1>=LL2),1,1).*LL1+repmat(single(LL1<LL2),1,1).*LL2;
-%     else
-%         [P CRLB LogL]=fitpar.fitfunction(arguments{:});
 %     end
 
 out.P=P;
@@ -747,6 +725,7 @@ if fitpar.fitmode==3||fitpar.fitmode==5
 %     fitpar.objPos=p.objPos;
     
 else
+    fitpar.mode='Gauss'
     fitpar.PSFx0=p.PSFx0;
 end
 if p.loc_cameraSettings.EMon
@@ -786,24 +765,27 @@ switch fitmode
     case {1,2}
         roisize=7;
         iterations=30;
+        RowName={'x','y','N','Bg','PSF',' '};
       
     otherwise
         roisize=13;
         iterations=50;
+        RowName={'x','y','z','N','Bg',' '};
 end
 
 obj.setPar('loc_ROIsize',roisize);
 
 % obj.fieldvisibility('on',ton,'off',toff);
 obj.setGuiParameters(struct('iterations',iterations));
+obj.guihandles.globaltable.RowName=RowName;
 end
 
 function pard=guidef(obj)
 p1(1).value=1; p1(1).on={'PSFx0','tPSFx0'}; 
-p1(1).off={'loadcal','cal_3Dfile','trefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize',...
+p1(1).off={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize',...
     'fit2D','isscmos','pixelsizex','pixelsizey','selectscmos','scmosfile'};
 p1(2)=p1(1);p1(2).value=2;
-p1(3).value=3;p1(3).off={'PSFx0','tPSFx0'};p1(3).on={'loadcal','cal_3Dfile','trefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','fit2D','isscmos'};
+p1(3).value=3;p1(3).off={'PSFx0','tPSFx0'};p1(3).on={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','fit2D','isscmos'};
 p1(4)=p1(1);p1(4).value=4;
 p1(5)=p1(3);p1(5).value=5;
 p1(6)=p1(5);p1(6).value=6;
