@@ -8,64 +8,40 @@ classdef dcimgReaderMatlab<handle
     function obj = dcimgReaderMatlab(fname)
 
         fId = fopen(fname, 'rb');
-
         % read from file
         fContent = fread(fId, 200, 'uint32'); % i.e. 4 byte
-        
         fclose(fId);
+        
         h = parseheader(fContent, fname);
         obj.metadata=h;
         obj.metadata.filename=fname;
         obj.memmap=memmapfile(fname, ...
             'Format', {'uint16', [double((h.bytes_per_frame / h.bytes_per_pixel)) h.num_frames], 'frame'},...
-            'Offset', h.session0_data);
-    %     frames_with_footer = getAllFrames(h, fname);
-    %     h.frames_with_footer = frames_with_footer;
-
-        % only frame 1
-        % frames_with_footer = getSpecificFrames(h, fname, [1]);
-        % h.frames_with_footer = frames_with_footer;
-
-        % get a frame properly reshaped
-        % ttt = getSingleReshapedFrame(h.frames_with_footer, h, 25);
-
-
+            'Offset', h.session0_data,'Repeat', 1);
     end
 
-    function frames_with_footer = getAllFrames(obj)
-    % functiont o read all frames
-%         h=obj.metadata;
-%         m = memmapfile(obj.metadata.filename, ...
-%             'Format', {'uint16', [double((h.bytes_per_frame / h.bytes_per_pixel)) h.num_frames], 'frame'},...
-%             'Offset', h.session0_data,...
-%             'Repeat', 1);
-        frames_with_footer = obj.memmap.Data.frame;
-    end
+%     function frames_with_footer = getAllFrames(obj)
+%     % functiont o read all frames
+%         frames_with_footer = obj.memmap.Data.frame;
+%     end
 
     function frames = getSpecificFrames(obj, frameIndices)
     % function to read only a subset of all frames
-    % note that frames which are not in the subset are 0.
         h=obj.metadata;
-%         additionalOffset = (frameIndices - 1) * double(h.bytes_per_frame);
-
-        % write NaN to frames which were not in the list of frameIndices
         frames = zeros(h.num_columns,h.num_rows, length(frameIndices), 'uint16');
         for k = 1:numel(frameIndices)
-%             m = memmapfile(h.filename, ...
-%                 'Format', {'uint16', [double((h.bytes_per_image / h.bytes_per_pixel)) 1], 'frame'},...
-%                 'Offset', (h.session0_data + additionalOffset(k)),...
-%                 'Repeat', 1);
             frames(:,:,k) = obj.getSingleReshapedFrame(obj.memmap.Data.frame(:,frameIndices(k)));
         end
     end
 
     function frame = getSingleReshapedFrame(obj,framesPlusFooter)
-    % function to get a proper frame in matlab usuable dtype
         h=obj.metadata;
         frames = framesPlusFooter(1:h.bytes_per_image / h.bytes_per_pixel);
-        % it seems benefitial converting to matlabs double just when single
-        % frame is needed
         frame = (reshape(frames, h.num_columns, h.num_rows));
+    end
+    function close(obj)
+        obj.memmap=[];
+%         clear(obj.memmap)
     end
     end
 end
@@ -102,13 +78,13 @@ end
                 'uint32', 1, 'num_frames';...
                 'uint32', 1, 'pixel_type';...
                 'uint32', 1, 'mystery1';...
-                'uint32', 'num_columns';...
-                'uint32', 'bytes_per_row';...
-                'uint32', 'num_rows';...
-                'uint32', 'bytes_per_image';...
+                'uint32', 1,'num_columns';...
+                'uint32', 1,'bytes_per_row';...
+                'uint32', 1,'num_rows';...
+                'uint32', 1,'bytes_per_image';...
                 'uint32', 2, 'pad3';...
-                'uint32', 'offset_to_data';...
-                'uint32', 'offset_to_footer' },...
+                'uint32', 1,'offset_to_data';...
+                'uint32', 1,'offset_to_footer' },...
                 'Offset', h.session0_offset, ...
                 'Repeat', 1);
 
@@ -151,7 +127,7 @@ end
             warning("WARNING");
             h.bytes_per_frame = double(session_head.bytes_per_image);
         end
-
+        clear m;
 
     end
     

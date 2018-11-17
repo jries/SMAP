@@ -1,6 +1,6 @@
 classdef imageloaderDCIMG<interfaces.imageloaderSMAP
     %imageloaderMM image loader for micromanager single tiff files
-    %  now implement with hacked DCIMG reader
+    %   Detailed explanation goes here
     
     properties
         reader
@@ -15,10 +15,8 @@ classdef imageloaderDCIMG<interfaces.imageloaderSMAP
             obj@interfaces.imageloaderSMAP(varargin{:});
         end
         function openi(obj,file)
-%             r=dcimgmex( 'open', file);
-            r=dcimgReaderMatlab(file);
-            obj.blocksize=r.metadata.num_frames;
-%             obj.blocksize=double(dcimgmex('getparam',r,'NUMBEROF_FRAME'));
+            r=dcimgmex( 'open', file);
+            obj.blocksize=double(dcimgmex('getparam',r,'NUMBEROF_FRAME'));
             [path,filen,ext]=fileparts(file);
             allfiles=dir([path filesep filen(1:end-3) '*' ext]);
             if length(allfiles)==1 %test of previous block is incremental
@@ -31,46 +29,35 @@ classdef imageloaderDCIMG<interfaces.imageloaderSMAP
             obj.separate.numfiles=length(allfiles);
             [~,ind]=sort({allfiles(:).name});
             firstfile=allfiles(ind(1)).name;
-            r.close;
-%             dcimgmex('close', r);
+            dcimgmex('close', r);
             
             obj.file=[path filesep firstfile];
             obj.currentfile=1;
-            for k=1:obj.separate.numfiles
-                obj.reader{k}=dcimgReaderMatlab([path filesep allfiles(ind(k)).name]);
-            end
+            obj.reader=dcimgmex( 'open', file);
             obj.getmetadata;
             
             obj.separate.path=path;
-            obj.separatefiles={allfiles(ind).name};
+            obj.separatefiles={allfiles(:).name};
         end
 
         function allmd=getmetadatatagsi(obj)
-            
-%             parameters={'SENSOR_BINNING', 'SENSOR_HPOS', 'SENSOR_HSIZE', 'SENSOR_VPOS', 'SENSOR_VSIZE',...
-%                  'IMAGE_WIDTH', 'IMAGE_HEIGHT', 'IMAGE_ROWBYTES', 'IMAGE_PIXELTYPE', ...
-%                  'NUMBEROF_TOTALFRAME', 'NUMBEROF_SESSION', 'NUMBEROF_FRAME',...
-%                  'NUMBEROF_VIEW', 'NUMBEROF_REGIONRECT',...
-%                  'CURRENT_SESSION', 'CURRENT_VIEW', 'CURRENT_REGIONRECT', 'FILEFORMAT_VERSION'};
-%               for k=length(parameters):-1:1
-%                   allmd{k,1}=parameters{k};
-%                   allmd{k,2}=num2str((dcimgmex('getparam',obj.reader,parameters{k})));
-%               end
-              md=obj.reader{1}.metadata;
-              fn=fieldnames(md);
-              for k=1:length(fn)
-                  allmd{k,1}=fn{k};
-                  allmd{k,2}=md.(fn{k});
+            parameters={'SENSOR_BINNING', 'SENSOR_HPOS', 'SENSOR_HSIZE', 'SENSOR_VPOS', 'SENSOR_VSIZE',...
+                 'IMAGE_WIDTH', 'IMAGE_HEIGHT', 'IMAGE_ROWBYTES', 'IMAGE_PIXELTYPE', ...
+                 'NUMBEROF_TOTALFRAME', 'NUMBEROF_SESSION', 'NUMBEROF_FRAME',...
+                 'NUMBEROF_VIEW', 'NUMBEROF_REGIONRECT',...
+                 'CURRENT_SESSION', 'CURRENT_VIEW', 'CURRENT_REGIONRECT', 'FILEFORMAT_VERSION'};
+              for k=length(parameters):-1:1
+                  allmd{k,1}=parameters{k};
+                  allmd{k,2}=num2str((dcimgmex('getparam',obj.reader,parameters{k})));
               end
               allmd{k+1,1}='numberOfFrames';
-              allmd{k+1,2}=obj.blocksize*(obj.separate.numfiles-1)+obj.reader{end}.metadata.num_frames;
+              allmd{k+1,2}=obj.blocksize*obj.separate.numfiles;
         end
         function image=getimagei(obj,frame)
             image=readseparate(obj,frame);
         end
         function closei(obj)
-            obj.reader.close;
-%             dcimgmex('close', obj.reader);
+            dcimgmex('close', obj.reader);
         end
         function file= getbasefile(obj)
             file=getbasefile(obj.file);
@@ -97,32 +84,66 @@ if obj.onlineAnalysis &&  (filenumber<length(obj.separatefiles) || isempty(obj.s
         return
     else
         obj.separatefiles{filenumber}=thisname;
-        obj.reader{filenumber}=dcimgReaderMatlab(thisfile);
         obj.metadata.numberOfFrames=max(length(obj.separatefiles{number})*obj.blocksize,number);
     end 
 end
 
-if filenumber>length(obj.reader)
+if filenumber>length( obj.separatefiles)
     image=[];
     return
 end
-% if filenumber~=obj.currentfile
-%     dcimgmex('close',obj.reader);
-%     obj.reader=dcimgmex('open',[obj.separate.path filesep obj.separatefiles{filenumber}]);
-%     obj.currentfile=filenumber;
+if filenumber~=obj.currentfile
+    dcimgmex('close',obj.reader);
+    obj.reader=dcimgmex('open',[obj.separate.path filesep obj.separatefiles{filenumber}]);
+    obj.currentfile=filenumber;
+end
+frame=mod(number,obj.blocksize);
+image=[];
+% separate=obj.separate;
+% % lenfiles=length(separate.files);
+% lenfiles=separate.numfiles;
+% if lenfiles<number || (ismethod(obj.separatefiles(number),'ismissing') && obj.separatefiles(number).ismissing)
+%     if obj.onlineAnalysis %ask for image that is not in list
+%         lastfile= obj.separatefiles{lenfiles};
+% %         thisname= generateFileName(lastfile,lenfiles,obj.metadata.allmetadata.numberNameRange,number);
+%         thisname= generateFileName(lastfile,lenfiles,number);
+%         thisfile=[separate.path filesep thisname];
+%         if ~exist(thisfile,'file')
+%             disp('wait')
+%             pause(obj.waittime*2)
+%         end
+%         if ~exist(thisfile,'file')
+%             image=[];
+%             return
+%         else
+% %             if number>lenfiles
+% %                 obj.separatefiles{number+1000}='';
+% %             end
+%             obj.separatefiles{number}=thisname;
+%             obj.separate.numfiles=max(lenfiles,number);
+%             obj.metadata.numberOfFrames=max(lenfiles,number);
+%         end 
+%     else
+%         image=[];
+%         return
+%     end
+% else
+%     try
+%         
+%     thisfile=[separate.path filesep obj.separatefiles{number}];
+%     catch err
+%         
+%         err
+%         return
+%     end
 % end
-frame=mod(number,obj.blocksize)+1;
-
-% try
-%     image=transpose(dcimgmex( 'readframe', obj.reader, frame)); 
-    image=transpose(obj.reader{filenumber}.getSpecificFrames(frame));
-% catch err
-%     err
-%     pause(obj.waittime*2)
-%     disp('error encountered rading image, try again');
-% %     image=transpose(dcimgmex( 'readframe', obj.reader, frame));   
-%     image=transpose(obj.reader{filenumber}.getSpecificFrames(frame));
-% end
+try
+    image=transpose(dcimgmex( 'readframe', obj.reader, frame));   
+catch err
+    pause(obj.waittime*2)
+    disp('error encountered rading image, try again');
+    image=transpose(dcimgmex( 'readframe', obj.reader, frame));    
+end
 end
 
 function newfile=generateFileName(obj,newfilenumber)
