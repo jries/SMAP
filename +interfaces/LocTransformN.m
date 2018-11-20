@@ -18,13 +18,15 @@ classdef LocTransformN<interfaces.LocTransformN0
         end
         function [xo,yo,zo]=transformCoordinatesInv(obj,x,y,z) 
             ci=horzcat(x,y);
-            if nargin>3
+            if nargin>3 && ~isempty(z)
                 ci=horzcat(ci,z);
             end
             co=obj.transformToReference(2,ci,'nm');
             xo=co(:,1);yo=co(:,2);
-            if nargin>3
+            if nargin>3 && ~isempty(z)
                 zo=co(:,3);
+            else 
+                zo=[];
             end
         end
         function ind=getRef(obj,x,y)

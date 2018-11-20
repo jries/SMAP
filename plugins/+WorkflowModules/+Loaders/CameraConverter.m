@@ -45,6 +45,10 @@ classdef CameraConverter<interfaces.WorkflowModule
             end
             md=obj.loc_cameraSettings;
             
+            lock=obj.getSingleGuiParameter('lockcampar');
+            if lock
+                disp('camera parameters locked, cannot be updated')
+            end
             %update adu2phot
             if md.EMon
                 emfactor=md.emgain;
@@ -55,7 +59,7 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.adu2phot=md.pix2phot;
             obj.loc_cameraSettings=interfaces.metadataSMAP;
             obj.loc_cameraSettings=copyfields(obj.loc_cameraSettings,md);
-            if ~overwrite
+            if ~overwrite && ~lock
                 settings=obj.getPar('loc_fileinfo');
                 fn=fieldnames(settings);
                 for k=1:length(fn)
@@ -64,6 +68,7 @@ classdef CameraConverter<interfaces.WorkflowModule
                     end
                 end
             end
+            
             obj.setPar('loc_cameraSettings',obj.loc_cameraSettings);
             obj.setPar('EMon',obj.loc_cameraSettings.EMon);
             obj.updatefileinfo;
@@ -183,7 +188,7 @@ for k=length(fn):-1:1
     end
 end
 answer=inputdlg(fields,'Acquisition settings',1,defAns);
-if ~isempty(answer)
+if ~isempty(answer) && ~ obj.getSingleGuiParameter('lockcampar')
     for k=1:length(fn)
         if isnumeric(obj.loc_cameraSettingsStructure.(fn{k}))||islogical(obj.loc_cameraSettingsStructure.(fn{k}))
             obj.loc_cameraSettings.(fn{k})=str2num(answer{k});
@@ -199,6 +204,9 @@ obj.setmetadata(true);
 %         obj.EMexcessNoise=1;
 %     end
 %     obj.globpar.parameters.loc_cameraSettings=obj.loc_cameraSettings; %doesnt work
+end
+if obj.getSingleGuiParameter('lockcampar')
+    warning('cannot update camera paramters because they are locked')
 end
 end
 
@@ -278,9 +286,14 @@ pard.calibrate.Width=0.6;
 
 
 pard.camparbutton.object=struct('Style','pushbutton','String','set Cam Parameters');
-pard.camparbutton.position=[1,3.7];
+pard.camparbutton.position=[1,3.2];
 pard.camparbutton.Width=1.3;
 pard.camparbutton.TooltipString=sprintf('Edit camera acquisition parameters.');
+pard.lockcampar.object=struct('Style','checkbox','String','Lock','Value',0);
+pard.lockcampar.position=[1,4.5];
+pard.lockcampar.Width=0.5;
+pard.lockcampar.TooltipString=sprintf('Do not overwrite camera parameters automatically, but keep those set manually.');
+
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='Allows editing metadata, or loading from a file.';
 end
