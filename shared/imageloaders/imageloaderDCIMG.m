@@ -64,12 +64,16 @@ classdef imageloaderDCIMG<interfaces.imageloaderSMAP
               end
               allmd{k+1,1}='numberOfFrames';
               allmd{k+1,2}=obj.blocksize*(obj.separate.numfiles-1)+obj.reader{end}.metadata.num_frames;
+              allmd{k+2,1}='DCIMG-reader Hamamatsu Version';
+              allmd{k+2,2}=num2str(md.format_version);
         end
         function image=getimagei(obj,frame)
             image=readseparate(obj,frame);
         end
         function closei(obj)
-            obj.reader.close;
+            for k=1:length(obj.reader)
+            obj.reader{k}.close;
+            end
 %             dcimgmex('close', obj.reader);
         end
         function file= getbasefile(obj)
@@ -115,7 +119,8 @@ frame=mod(number,obj.blocksize)+1;
 
 % try
 %     image=transpose(dcimgmex( 'readframe', obj.reader, frame)); 
-    image=transpose(obj.reader{filenumber}.getSpecificFrames(frame));
+%    image=transpose(obj.reader{filenumber}.getSpecificFrames(frame));
+     image=(obj.reader{filenumber}.getSpecificFrames(frame));
 % catch err
 %     err
 %     pause(obj.waittime*2)
