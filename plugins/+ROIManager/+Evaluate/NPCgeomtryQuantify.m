@@ -65,7 +65,8 @@ ym=locs.ynm-y0;
 
 if ~isempty(locs.znm) % evaluate z distance
     dz=8;
-    z=-200:dz:150;
+    z0=median(locs.znm);
+    z=-100:dz:100+z0;
     hz=hist(locs.znm-obj.site.pos(3),z);
     % hz=hz-mean(hz);
     ac=myxcorr(hz,hz);

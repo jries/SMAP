@@ -30,8 +30,9 @@ tnum=p.render_colormode.Value;
  else
     pixsize=fileh.info.cam_pixelsize_um;
     roi=fileh.info.roi;
+     pixsize(2)=pixsize(1); %XXXXXXX hack to put images together. No idea why. XXXXX
  end
- 
+
 srec=round(p.sr_sizeRecPix);
 rangex=rangex+pixsize(1)*1000/2;rangey=rangey+pixsize(end)*1000/2;
 rangexpix=rangex/1000/pixsize(1);rangeypix=rangey/1000/pixsize(end);
@@ -46,6 +47,7 @@ positionc(3:4)=position(3:4)-roi(2);
 coim=cutoutim(permute(double(fileh.(form)(tnum).image),[2 1 3]),positionc);
 
 magnification=pixsize/p.sr_pixrec*1000;
+% magnification=magnification([2 1])
 if numel(magnification)>2
     warning('problem in tif2srimage')
 end
@@ -53,6 +55,7 @@ end
 % disp('tif2srimage: check rescale line 47')
 s=size(coim);
 srcoim=imresize(coim,magnification.*s(1:2),'nearest');
+% srfinal=imresize(coim,srec,'nearest');
 
 psr=[rangex(:)/p.sr_pixrec-position(1)*magnification(1)+1; rangey(:)/p.sr_pixrec-position(3)*magnification(end)+1];
 psr(2)=psr(1)+srec(1)-1;
