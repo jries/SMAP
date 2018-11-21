@@ -30,7 +30,7 @@ tnum=p.render_colormode.Value;
  else
     pixsize=fileh.info.cam_pixelsize_um;
     roi=fileh.info.roi;
-     pixsize(2)=pixsize(1); %XXXXXXX hack to put images together. No idea why. XXXXX
+%      pixsize(2)=pixsize(1); %XXXXXXX hack to put images together. No idea why. XXXXX
  end
 
 srec=round(p.sr_sizeRecPix);

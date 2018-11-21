@@ -94,7 +94,7 @@ for k=1:length(fn)
             offs=roi(2);
         end  
         newfield=strrep(fn{k},'ypix','ynm');
-        locdat.(newfield)=(locs.(fn{k})(indin)+offs)*pixelsize(1);
+        locdat.(newfield)=(locs.(fn{k})(indin)+offs)*pixelsize(end);
     end
 end
 
