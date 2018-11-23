@@ -124,7 +124,7 @@ end
             h.bytes_per_frame = double(session_head.bytes_per_frame);
         catch
             % add ValueError catch here
-            warning("WARNING");
+%             warning("WARNING");
             h.bytes_per_frame = double(session_head.bytes_per_image);
         end
         clear m;
