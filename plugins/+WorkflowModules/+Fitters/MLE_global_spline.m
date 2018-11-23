@@ -173,7 +173,7 @@ switch fitpar.mode
         names={'ypix','xpix','phot','bg','PSFxpix'};
         namesav={'ypix','xpix','PSFxpix','phot'};
     
-    case 'Spline'
+    case {'Spline','cspline'}
         fac{4}=EMexcess;
         fac{5}=EMexcess;
         faccrlb{4}=EMexcess;
@@ -386,7 +386,7 @@ switch fitpar.mode
         %fitmode, varmap
 %         arguments{6}=fitpar.fitmode;
 %         arguments{7}=fitpar.zstart/fitpar.dz;
-    case 'Spline'
+    case {'Spline','cspline'}
         arguments{1}=imfit/EMexcess;
         arguments{2}=sharedA;
         arguments{3}=fitpar.iterations;
