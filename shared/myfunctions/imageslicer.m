@@ -74,8 +74,8 @@ hslider{2}=uicontrol('Parent',phandle,'Style','slider','Units','normalized','Pos
 hframe{1}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','String','1','Position',[0.4 vp1 0.075 0.05],'Callback',{@framecallback,1});
 hframe{2}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','String','1','Position',[0.4 vp2 0.075 0.05],'Callback',{@framecallback,2});
 
-hslidert{1}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','Position',[0.02 vp1 0.03 0.05],'String','3');
-hslidert{2}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','Position',[0.02 vp2 0.03 0.05],'String','4');
+hslidert{1}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','Position',[0.02 vp1 0.03 0.05],'String','3', 'Callback',{@changeaxis,2});
+hslidert{2}=uicontrol('Parent',phandle,'Style','edit','Units','normalized','Position',[0.02 vp2 0.03 0.05],'String','4', 'Callback',{@changeaxis,3});
 
 hmenu{1}=uicontrol('Parent',phandle,'Style','popupmenu','Units','normalized','String',{'x','y','z'},'Position',[0.475 vp1 0.125 0.05],...
     'Callback',{@changeaxis,0});
@@ -112,10 +112,10 @@ changeaxis(0,0,0);
     end
 
     function changeaxis(a,b,axv)
+        
         oax=~axv;
         
-        
-        if strcmp(hmenu{axv+1}.String{hmenu{axv+1}.Value},hmenu{oax+1}.String{hmenu{oax+1}.Value})
+        if axv<2 && strcmp(hmenu{axv+1}.String{hmenu{axv+1}.Value},hmenu{oax+1}.String{hmenu{oax+1}.Value})
             if hmenu{axv+1}.Value==1
                 hmenu{oax+1}.Value=2;
             else
