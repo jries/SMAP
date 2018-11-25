@@ -30,9 +30,9 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             p.loaderclass=wf.module('TifLoader').getSingleGuiParameter('loaderclass'); 
             p.loaderclass.Value=1;%single MM
            
-             wf.module('TifLoader').setGuiParameters(p);
+            wf.module('TifLoader').setGuiParameters(p);
                   
-               p.framestop=max(obj.locData.loc.frame);
+            p.framestop=max(obj.locData.loc.frame);
 
             file=obj.locData.files.file;
             wf.module('IntLoc2posN').filestruc=file;
@@ -55,13 +55,19 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             if p.evaltarget
                 obj.setPar('intensity_channel','t')
                 wf.module('TifLoader').addFile(p.tiffiletarget,true);   
+                wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
 %                 wf.module('EvaluateIntensity_s').extension='t';
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
                 wf.run;
             end
             if p.evalref
                 obj.setPar('intensity_channel','r')
+                if isempty(p.tiffileref) %when same, dont select again
+                    p.tiffileref=p.tiffiletarget;
+                    p.mirroremref=p.mirroremtarget;
+                end
                 wf.module('TifLoader').addFile(p.tiffileref,true);   
+                wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
 %                 wf.module('EvaluateIntensity_s').extension='r';
                 
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
@@ -108,6 +114,17 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             if f
                 obj.guihandles.(field).String=[path f];
             end      
+            r=imageloaderAll([path f]);
+            mirror=r.metadata.EMon;
+            r.close;
+            if contains(field,'target')
+                obj.setGuiParameters(struct('mirroremtarget',mirror));
+                if isempty(obj.getSingleGuiParameter('tiffileref'))
+                    obj.setGuiParameters(struct('mirroremref',mirror));
+                end
+            else
+                obj.setGuiParameters(struct('mirroremref',mirror));
+            end
         end
     end
 end
@@ -121,9 +138,18 @@ pard.evaltarget.object=struct('Style','checkbox','String','target','Value',1);
 pard.evaltarget.position=[1,1];
 pard.evaltarget.Width=0.7;
 
+pard.mirroremtarget.object=struct('Style','checkbox','String','EM','Value',1);
+pard.mirroremtarget.position=[1,1.7];
+pard.mirroremtarget.Optional=true;
+pard.mirroremtarget.Width=0.6;
+pard.mirroremref.object=struct('Style','checkbox','String','EM','Value',1);
+pard.mirroremref.position=[2,1.7];
+pard.mirroremref.Optional=true;
+pard.mirroremref.Width=0.6;
+
 pard.tiffiletarget.object=struct('Style','edit','String','');
-pard.tiffiletarget.position=[1,1.7];
-pard.tiffiletarget.Width=2.6;
+pard.tiffiletarget.position=[1,2.1];
+pard.tiffiletarget.Width=2.2;
 
 pard.loadbuttontiftarget.object=struct('Style','pushbutton','String','load tif','Callback',{{@obj.loadbutton_tif,'tiffiletarget'}});
 pard.loadbuttontiftarget.position=[1,4.3];
@@ -134,8 +160,8 @@ pard.evalref.position=[2,1];
 pard.evalref.Width=0.7;
 
 pard.tiffileref.object=struct('Style','edit','String','');
-pard.tiffileref.position=[2,1.7];
-pard.tiffileref.Width=2.6;
+pard.tiffileref.position=[2,2.1];
+pard.tiffileref.Width=2.2;
 
 pard.loadbuttontifref.object=struct('Style','pushbutton','String','load tif','Callback',{{@obj.loadbutton_tif,'tiffileref'}});
 pard.loadbuttontifref.position=[2,4.3];
@@ -155,10 +181,7 @@ pard.loadbuttonT.position=[3,4.3];
 pard.loadbuttonT.Width=0.7;
 pard.loadbuttonT.TooltipString=pard.Tfile.TooltipString;
 
-pard.mirrorem.object=struct('Style','checkbox','String','EM mirror','Value',1);
-pard.mirrorem.position=[4,1];
-pard.mirrorem.Optional=true;
-pard.mirrorem.Width=0.8;
+
 
 pard.syncParameters={{'transformationfile','Tfile',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';

@@ -228,7 +228,7 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
             wf.attachLocData(obj.locData);
             wf.makeGui;
             wf.load(wffile,[],true,true);
-            disp(mytextsplit(wf.description));
+%             disp(mytextsplit(wf.description));
             %workflow: recover tiff file and start
             loadergui=wf.module(wf.startmodule);
             loader=loadergui.loaders{loadergui.getGuiParameters.loaderlist.Value};

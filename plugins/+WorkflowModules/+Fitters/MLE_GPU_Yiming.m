@@ -228,6 +228,13 @@ if fitpar.addgaussfit
              locs.xerrpix=sqrt(results.CRLB2(:,2));
              locs.yerrpix=sqrt(results.CRLB2(:,1)); 
      end
+     switch fitpar.addgaussfit_mode.selection
+         case 'free'
+             locs.PSFxpixGauss=results.P2(:,5);
+         case 'elliptical'
+             locs.PSFxpixGauss=results.P2(:,5);
+             locs.PSFypixGauss=results.P2(:,6);
+     end
          
          
 end
@@ -311,6 +318,14 @@ end
         
 function loadcall_callback(a,b,obj)
 p=obj.getAllParameters;
+if isempty(p.cal_3Dfile)
+    path=obj.getGlobalSetting('DataDirectory');
+    fh=obj.getPar('loc_fileinfo');
+    if ~isempty(fh)
+        path=fileparts(fh.imagefile);
+    end  
+    p.cal_3Dfile=[path filesep '*3dcal.mat'];
+end
 [f,p]=uigetfile(p.cal_3Dfile);
 if f
     l=load([p f]);
@@ -612,7 +627,7 @@ pard.zstart.Optional=true;
 pard.loadcal.object=struct('Style','pushbutton','String','Load 3D cal');
 pard.loadcal.position=[2,1];
 pard.loadcal.Width=.75;
-pard.cal_3Dfile.object=struct('Style','edit','String','settings/cal_3DAcal.mat');
+pard.cal_3Dfile.object=struct('Style','edit','String','');
 pard.cal_3Dfile.position=[2,1.75];
 pard.cal_3Dfile.Width=1.75;
 pard.cal_3Dfile.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');

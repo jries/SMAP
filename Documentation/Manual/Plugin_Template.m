@@ -82,6 +82,18 @@ classdef Plugin_Template<interfaces.DialogProcessor
             pard.guiobject2.position=[2,1];
             pard.guiobject2.Width=1;
             
+            %automatically hide and show other gui parameters based on the
+            %value of a specific parameter
+            %pass on structure array, each element with the fields
+             %value choose which Value the description corresponds to
+             % on: array of names of gui objects to switched on when this
+             % value is selected
+             % off: array of names of gui objects to switched off
+            p(1).value=0; p(1).on={}; p(1).off={'guiobject2','guiobject'};
+            p(2).value=1; p(2).on={'guiobject2','guiobject'}; p(2).off={};
+
+            pard.onofftoggle.object=struct('Style','checkbox','String','show','Callback',{{@obj.switchvisible,p}});
+            
             %provide a description and name in the field: plugininfo.
             pard.plugininfo.name='Plugin Name';
             pard.plugininfo.description='write a description for your plugin';

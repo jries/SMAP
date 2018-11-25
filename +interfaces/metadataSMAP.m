@@ -23,7 +23,7 @@ classdef metadataSMAP<handle
         basefile;
         assigned
         imagefile
-        EMmirror=false;
+        EMmirror=false; %used by Tiff loader workflow
     end
     
     methods

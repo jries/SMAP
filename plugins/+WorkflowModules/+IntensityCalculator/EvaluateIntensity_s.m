@@ -22,7 +22,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             fw=obj.guiPar.FieldWidth;
             fh=obj.guiPar.FieldHeight;
             fs=obj.guiPar.fontsize;
-            huitable=uitable('Units','pixels','Position',[fw,2*fh,fw,5*fh],'Parent',obj.handle,'FontSize',obj.guiPar.fontsize);
+            huitable=uitable('Units','pixels','Position',[5,2*fh,fw,5*fh],'Parent',obj.handle,'FontSize',obj.guiPar.fontsize);
             huitable.ColumnEditable=[true false];
             huitable.RowName=[];
             huitable.ColumnName=[];
@@ -43,7 +43,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                 ev=obj.evaluators{k};
                 data{k,1}=true;
                 data{k,2}=ev.info.name;
-                hpanel=uipanel('Parent',obj.handle,'Units','pixels','Position',[2*fw,2*fh,2*fw,5*fh],'FontSize',fs,'Visible','off');
+                hpanel=uipanel('Parent',obj.handle,'Units','pixels','Position',[fw,2*fh,3*fw,5*fh],'FontSize',fs,'Visible','off');
                  obj.children.(['panel_' num2str(k)])=ev;
                 obj.guihandles.(['panel_' num2str(k)])=hpanel;
                 ev.setGuiAppearence(p)

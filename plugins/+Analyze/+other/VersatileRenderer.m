@@ -27,22 +27,22 @@ classdef VersatileRenderer<interfaces.DialogProcessor
             lochere.grouploc.y=v2;
             
             pall=obj.getLayerParameters;
-            if p.setsigma1
-                    lochere.loc.sx=lochere.loc.x*0+p.sigma1/p.pixelsize1/pall{1}.gaussfac;
-                    lochere.grouploc.sx=lochere.grouploc.x*0+p.sigma1/p.pixelsize1/pall{1}.gaussfac;
-            else
-                    lochere.loc.sx=lochere.loc.(p.sigmafield1.selection)/p.pixelsize1;
-                    lochere.grouploc.sx=lochere.grouploc.(p.sigmafield1.selection)/p.pixelsize1;
-          
-            end
-            if p.setsigma2
-                    lochere.loc.sy=lochere.loc.x*0+p.sigma2/p.pixelsize2/pall{1}.gaussfac;  
-                    lochere.grouploc.sy=lochere.grouploc.x*0+p.sigma2/p.pixelsize2/pall{1}.gaussfac;
+%             if p.setsigma1
+                    lochere.loc.sx=lochere.loc.x*0+p.sigma1;
+                    lochere.grouploc.sx=lochere.grouploc.x*0+p.sigma1;
+%             else
+%                     lochere.loc.sx=lochere.loc.(p.sigmafield1.selection)/p.pixelsize1;
+%                     lochere.grouploc.sx=lochere.grouploc.(p.sigmafield1.selection)/p.pixelsize1;
+%           
+%             end
+%             if p.setsigma2
+                    lochere.loc.sy=lochere.loc.x*0+p.sigma2;  
+                    lochere.grouploc.sy=lochere.grouploc.x*0+p.sigma2;
                     
-            else   
-                    lochere.loc.sy=lochere.loc.(p.sigmafield2.selection)/p.pixelsize2;
-                    lochere.grouploc.sy=lochere.grouploc.(p.sigmafield2.selection)/p.pixelsize2;
-            end
+%             else   
+%                     lochere.loc.sy=lochere.loc.(p.sigmafield2.selection)/p.pixelsize2;
+%                     lochere.grouploc.sy=lochere.grouploc.(p.sigmafield2.selection)/p.pixelsize2;
+%             end
 %             phere.gaussfac=1;
             phere.sr_pixrec=1;
             phere.rangex=[p.min1 p.max1]/p.pixelsize1;
@@ -105,31 +105,31 @@ pard.t4.object=struct('String','min','Style','text');
 pard.t4.position=[4,1];
 pard.t5.object=struct('String','max','Style','text');
 pard.t5.position=[5,1];
-pard.t7.object=struct('String','sigma','Style','text');
-pard.t7.position=[6,1];
+% pard.t7.object=struct('String','sigma','Style','text');
+% pard.t7.position=[6,1];
 
 
-pard.sigmafield1.object=struct('Style','popupmenu','String',{{'n1,n2'}});
-pard.sigmafield1.position=[6,2];
-pard.sigmafield2.object=struct('Style','popupmenu','String',{{'n1,n2'}});
-pard.sigmafield2.position=[6,3];
+% pard.sigmafield1.object=struct('Style','popupmenu','String',{{'n1,n2'}});
+% pard.sigmafield1.position=[6,2];
+% pard.sigmafield2.object=struct('Style','popupmenu','String',{{'n1,n2'}});
+% pard.sigmafield2.position=[6,3];
 
-pard.setsigma.object=struct('String','set sigma:','Style','text');
-pard.setsigma.position=[7,1];
-pard.setsigma1.object=struct('String','','Style','checkbox','Value',1);
-pard.setsigma1.position=[7,2];
-pard.setsigma1.Width=.2;
+pard.setsigma.object=struct('String','sigma','Style','text');
+pard.setsigma.position=[6,1];
+% pard.setsigma1.object=struct('String','','Style','checkbox','Value',1);
+% pard.setsigma1.position=[7,2];
+% pard.setsigma1.Width=.2;
 
-pard.setsigma2.object=struct('String','','Style','checkbox','Value',1);
-pard.setsigma2.position=[7,3];
-pard.setsigma2.Width=.2;
+% pard.setsigma2.object=struct('String','','Style','checkbox','Value',1);
+% pard.setsigma2.position=[7,3];
+% pard.setsigma2.Width=.2;
 
 pard.sigma1.object=struct('String','1','Style','edit');
-pard.sigma1.position=[7,2.2];
-pard.sigma1.Width=.8;
+pard.sigma1.position=[6,2];
+pard.sigma1.Width=1;
 pard.sigma2.object=struct('String','1','Style','edit');
-pard.sigma2.position=[7,3.2];
-pard.sigma2.Width=.8;
+pard.sigma2.position=[6,3];
+pard.sigma2.Width=1;
 
 pard.pixelsize1.object=struct('String','','Style','edit');
 pard.pixelsize1.position=[3,2];
@@ -151,7 +151,7 @@ pard.max2.position=[5,3];
 % pard.filtersize.object=struct('String','1','Style','edit');
 % pard.filtersize.position=[2,4];
 
-pard.syncParameters={{'locFields','assignfield1',{'String'}},{'locFields','assignfield2',{'String'}},{'locFields','sigmafield2',{'String'}},{'locFields','sigmafield1',{'String'}}};
+pard.syncParameters={{'locFields','assignfield1',{'String'}},{'locFields','assignfield2',{'String'}}};%,{'locFields','sigmafield2',{'String'}},{'locFields','sigmafield1',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
 end
 
