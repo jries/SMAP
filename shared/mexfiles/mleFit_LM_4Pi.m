@@ -28,8 +28,7 @@ function [P,CRLB,LogL]=mleFit_LM_4Pi(varargin)
 %CRLB: cramer-rao lower bounds, as in P
 %LogL: log-likelihood.
 
-%Only for fitmode 6: P1 etc: results with z-startparameter<0, P2 etc:
-%results with z-startparameter>0
+
 
 % [P,CRLB, LL] =CPUmleFit_LM_MultiChannel(fitstack,int32(sharedA),50,coeffh,single(dT),fitmode);
 % P=[];CRLB=[];LogL=[]; %
@@ -60,9 +59,13 @@ B=single(varargin{6});
 
 coeffsize=size(I);
 
-% if nargin<7||isempty(varargin{7})
-%     varmap=0; %emccd
-% end 
+if nargin<10||isempty(varargin{10})
+    p0=single(0); 
+else
+    p0=single(varargin{10});
+end
+
+
 if nargin<9||isempty(varargin{9})
     zstart=single(coeffsize(3)/2); 
 else
@@ -70,35 +73,28 @@ else
 end
 
 phase=single(varargin{8});
-if isempty(varargin{3})
+if ~isempty(varargin{3})
     iterations=varargin{3};
 else
     iterations=30;
 end
 
-% if fitmode==6
-%     fitmode=5;
-%     zstart=single([-coeffsize(3)/4, coeffsize(3)/4]+coeffsize(3)/2);
-% %     zstart=single([-coeffsize(3)/3, coeffsize(3)/3]+coeffsize(3)/2);
-% end
 imstack=single(varargin{1});
 shared=uint32(varargin{2});
 channelshift=single(varargin{7});
+if numel(zstart)~=size(imstack,3)
+    zstart=ones(size(imstack,3),1,'single')*zstart;
+end
+if numel(p0)==1
+    p0=p0*ones(size(imstack,3),1,'single');
+end
 
-% if fitmode==6 %2D fit: find proper results
-% %     [P1,CRLB1,LogL1,P2,CRLB2,LogL2]=allfitters{fitter}(varargin{:});
-% %     ind1=LogL1>=LogL2;
-% %     ind2=LogL1<LogL2;
-% %     P=zeros(size(P1),'single');CRLB=zeros(size(CRLB1),'single');LogL=zeros(size(LogL1),'single');
-% %     P(ind1,:)=P1(ind1,:);P(ind2,:)=P2(ind2,:);
-% %     CRLB(ind1,:)=CRLB1(ind1,:);CRLB(ind2,:)=CRLB2(ind2,:);
-% %     LogL(ind1,:)=LogL1(ind1,:);LogL(ind2,:)=LogL2(ind2,:);
-[P,CRLB,LogL]=allfitters{fitter}(imstack,shared,iterations,I,A,B,channelshift,phase,zstart(1));
+[P,CRLB,LogL]=allfitters{fitter}(imstack,shared,iterations,I,A,B,channelshift,phase,zstart(:,1),p0(:));
 
-
-if length(zstart)>1
-    for k=2:length(zstart)
-        [Ph,CRLBh,LogLh]=allfitters{fitter}(imstack,shared,iterations,I,A,B,channelshift,phase,zstart(k));
+sz0=size(zstart);
+if sz0(2)>1
+    for k=2:sz0(2)
+        [Ph,CRLBh,LogLh]=allfitters{fitter}(imstack,shared,iterations,I,A,B,channelshift,phase,zstart(:,k),p0(:));
 %         indbettero=LogLh<LogL;
         indbetter=LogLh-LogL>1e-4; %copy only everything if LogLh increases by more than rounding error.
         P(indbetter,:)=Ph(indbetter,:);
@@ -106,18 +102,5 @@ if length(zstart)>1
         LogL(indbetter)=LogLh(indbetter);
     end
 end
-%     [P,CRLB,LogL]=allfitters{fitter}(imstack,shared,iterations,splinecoeff,channelshift,zstart);
-% end
-%%
-% 
-% <latex>
-% \begin{tabular}{|c|c|} \hline
-% $n$ & $n!$ \\ \hline
-% 1 & 1 \\
-% 2 & 2 \\
-% 3 & 6 \\ \hline
-% \end{tabular}
-% </latex>
-% 
  clear(allfittersnames{fitter})
 
