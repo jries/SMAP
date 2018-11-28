@@ -39,10 +39,10 @@ methods
     % plotimage
 
 
-        function resetax(a,b)
-            ax.XLim=[0 Inf];
-            hcontrast.String='1';
-            plotimage;
+        function resetax(obj,a,b)
+            obj.guihandles.axis.XLim=[0 Inf];
+            obj.guihandles.hcontrast.String='1';
+            obj.plotimage;
         end
         function slidercallback(obj,a,b,slider)
             obj.setslice(a.Value,slider);
@@ -52,15 +52,6 @@ methods
         end
 
         function changeaxis(obj,a,b,axv)
-%             hmenu=obj.guihandles.hmenu;
-%             oax=~axv;
-%             if axv<2 && strcmp(hmenu{axv+1}.String{hmenu{axv+1}.Value},hmenu{oax+1}.String{hmenu{oax+1}.Value})
-%                 if hmenu{axv+1}.Value==1
-%                     hmenu{oax+1}.Value=2;
-%                 else
-%                     hmenu{oax+1}.Value=1;
-%                 end
-%             end
             obj.guihandles.axis.XLim=[-inf inf];
             obj.guihandles.axis.YLim=[-inf inf];
                 if obj.guihandles.hrgb.Value&&any(s==3)
@@ -80,7 +71,7 @@ methods
             for k=1:2
                 obj.guihandles.hmenu{k}.Value=dim(k);
             end
-            for k=1:2
+            for k=1:length(dim)-2
                 obj.guihandles.hslidert{k}.String=str(dim(k+2));
             end
                 obj.updateall
@@ -291,17 +282,17 @@ methods
                 slider=1;
             end
             if strcmp(b.Character,'+')||strcmp(b.Key,'rightarrow')
-                frame=hslider{slider}.Value;
-                setslice(frame+1,slider);
+                frame=obj.guihandles.hslider{slider}.Value;
+                obj.setslice(frame+1,slider);
             elseif strcmp(b.Character,'-')||strcmp(b.Key,'leftarrow')
-                frame=hslider{slider}.Value;
-                setslice(frame-1,slider);
+                frame=obj.guihandles.hslider{slider}.Value;
+                obj.setslice(frame-1,slider);
             elseif strcmp(b.Key,'uparrow')
-                hcontrast.String=num2str(str2double(hcontrast.String)*1.1,'%1.2f');
-                plotimage;
+                obj.guihandles.hcontrast.String=num2str(str2double(obj.guihandles.hcontrast.String)*1.1,'%1.2f');
+                obj.plotimage;
             elseif strcmp(b.Key,'downarrow')
-                hcontrast.String=num2str(str2double(hcontrast.String)*.9,'%1.2f');
-                plotimage;
+                obj.guihandles.hcontrast.String=num2str(str2double(obj.guihandles.hcontrast.String)*.9,'%1.2f');
+                obj.plotimage;
             end
 
 
@@ -320,10 +311,12 @@ methods
                  dim(2)=obj.guihandles.hmenu{2}.Value;
              end
              dim(3)=str2double(strrep(strrep(obj.guihandles.hslidert{1}.String,'x','1'),'y','2'));
-             dim(4)=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','1'),'y','2'));
-             
-             
              s=size(obj.V);
+             if length(s)>3
+             dim(4)=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','1'),'y','2'));
+             end
+             
+             
              dimmissing=setdiff(1:length(s),dim);
              dim=[dim dimmissing];
              for k=1:2
@@ -335,7 +328,7 @@ methods
                  end
              end
             obj.showframes{dim(3)}=round(str2double(obj.guihandles.hframe{1}.String));
-            if strcmp(obj.guihandles.hframe{2}.Visible,'on')
+            if length(s)>3 %&& strcmp(obj.guihandles.hframe{2}.Visible,'on')
                 obj.showframes{dim(4)}=round(str2double(obj.guihandles.hframe{2}.String));
             end
         end
