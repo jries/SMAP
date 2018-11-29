@@ -9,7 +9,7 @@ classdef Locstatistics<interfaces.DialogProcessor
         end
         
         function out=run(obj,p)
-        fields={'filenumber','frame','phot','locprecnm','znm','PSFxnm','locprecznm','numberInGroup','bg'};
+        fields={'filenumber','frame','phot','locprecnm','znm','PSFxnm','locprecznm','numberInGroup','bg','bg2'};
         if p.useroi
             position='roi';
         else
@@ -76,7 +76,7 @@ pard.tphot.object=struct('String','photon range:','Style','text');
 pard.tphot.position=[3,1];
 pard.tphot.Width=1.5;
 
-pard.photrange.object=struct('String','800 10000','Style','edit');
+pard.photrange.object=struct('String','800 100000','Style','edit');
 pard.photrange.position=[3,2.5];
 
 pard.tlt.object=struct('String','lifetime range (frames):','Style','text');
