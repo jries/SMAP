@@ -29,6 +29,33 @@ classdef selectManyFiles<handle
              
             uicontrol('Style','pushbutton','String','Done','Callback',@obj.done_callback,'Parent',obj.handle,'Position',[750 10 100 50])
             obj.guihandles.freepos=uicontrol('Style','text','String','','Position',[700 60 200 30]);
+            c=uicontextmenu;
+            obj.guihandles.filelist.UIContextMenu=c;
+            
+            m1=uimenu(c,'Label','move up','Callback',@obj.filelistmenu);
+            m2=uimenu(c,'Label','move down','Callback',@obj.filelistmenu);
+        end
+        function filelistmenu(obj,in,a,b)
+            select=obj.guihandles.filelist.Value;
+            str=obj.guihandles.filelist.String;
+            allvalues=1:length(str);
+            selectnew=select;
+            switch in.Text
+                case 'move up'
+                    if select>1
+                        allvalues(select-1)=select;
+                        allvalues(select)=select-1;
+                        selectnew=select-1;
+                    end
+                case 'move down'
+                    if select<length(allvalues)
+                        allvalues(select+1)=select;
+                        allvalues(select)=select+1;
+                        selectnew=select+1;
+                    end
+            end
+            obj.guihandles.filelist.String=str(allvalues);
+            obj.guihandles.filelist.Value=selectnew;
         end
         function ch2check_callback(obj,a,b)
             if a.Value
