@@ -69,7 +69,7 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
                 end
                     
             end
-            ttt.close;
+           
             ind=strfind(desc,'images=');
             
             if ~isempty(ind)
@@ -80,6 +80,15 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
                     numf=sscanf(desc(ind:end),'slices=%f');
                 end
             end
+            if numf==1 %might not have worked
+                disp('could not determine number of images. Directly evaluate file, might take time.');
+                warning('off','MATLAB:imagesci:tiffmexutils:libtiffWarning');
+                while ~ttt.lastDirectory
+                    ttt.nextDirectory
+                end
+                numf=ttt.currentDirectory;
+            end
+            ttt.close;
             allmd(end+1,:)={'Frames',numf};
             obj.allmetadatatags=allmd;
                 

@@ -4,6 +4,7 @@
 dirlist=genpath('shared');
 addpath(dirlist)
 if exist('g','var')
+    
     delete(g)
 end
 
