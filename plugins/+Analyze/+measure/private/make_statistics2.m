@@ -64,6 +64,9 @@ for k=datrange
     slegend{k}=[modetxt{k} num2str(datrange(k))];
 %     slegend{end+1}='';
     frames=locs{k}.frame;
+    if isempty(frames)
+        continue
+    end
     mf=max(frames);
     [hfr,n]=hist(frames,10);
     hfrc=hfr;
@@ -213,8 +216,13 @@ end
 
 %background
 bg=getFieldAsVector(locs,'bg');
-hbg=plothist(bg,0.95,1,0,ax4,modetxt);
 slb={'Background'};
+if isempty(bg{1})
+bg=getFieldAsVector(locs,'bg2');   
+slb={'Background2'};
+end
+hbg=plothist(bg,0.95,1,0,ax4,modetxt);
+
 for k=datrange
     slb{end+1}='';
     slb{end+1}=[num2str(k) '.' modetxt{k} ];
