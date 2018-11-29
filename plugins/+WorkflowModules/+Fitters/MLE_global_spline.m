@@ -364,7 +364,7 @@ dT(2,2,:)=stackinfo.dx(2:numberOfChannels:end);
 disp('check MLE_globalspline')
 
 imfit(:,:,:,1)=imstack(:,:,1:numberOfChannels:end);
-if fitpar.mirrorud
+if isfield(fitpar,'mirrorud') && fitpar.mirrorud
     imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
     dT(1,2,:)=-dT(1,2,:);
 else

@@ -106,7 +106,7 @@ if ~isfield(p,'sr_colorbarthickness')
 end
 for k=1:(length(layers))
     if p.sr_layerson(k)&&~isempty(layers(k).images)
-        if k<=4 && p.sr_colorbarthickness>0
+        if k<=4 && (isempty(p.sr_colorbarthickness) ||  p.sr_colorbarthickness>0)
         imfinal=addcolorbar(imfinal,layers(k).images.finalImages.lut,k,p.sr_colorbarthickness);
         end
         rangexplot=layers(k).images.finalImages.rangex;
