@@ -2,7 +2,7 @@ function [imout,sr_imagehandle]=displayerSMAP(layers,p)
 
 if nargin==0
     %input parameters
-    imout={'sr_layerson','sr_axes','sr_sizeRecPix','roihandle','sr_pixrec','rotationangle','sr_pos','sr_size','sr_layersseparate','layernames','sr_plotlayernames'};
+    imout={'sr_layerson','sr_axes','sr_sizeRecPix','roihandle','sr_pixrec','rotationangle','sr_pos','sr_size','sr_layersseparate','layernames','sr_plotlayernames','sr_plotscalebar','sr_colorbarthickness'};
     return          
 end
 
@@ -106,7 +106,7 @@ if ~isfield(p,'sr_colorbarthickness')
 end
 for k=1:(length(layers))
     if p.sr_layerson(k)&&~isempty(layers(k).images)
-        if k<=4
+        if k<=4 && p.sr_colorbarthickness>0
         imfinal=addcolorbar(imfinal,layers(k).images.finalImages.lut,k,p.sr_colorbarthickness);
         end
         rangexplot=layers(k).images.finalImages.rangex;
@@ -124,7 +124,7 @@ if layersnext
      end
 end
 
-if isfield(p,'addscalebar') && ~ p.addscalebar
+if (isfield(p,'addscalebar') && ~ p.addscalebar) || (isfield(p,'sr_plotscalebar') && ~isempty(p.sr_plotscalebar) && ~ p.sr_plotscalebar) 
      lennm=0;
 else
     [imfinal,lennm]=addscalebar(imfinal,p.sr_pixrec(1));

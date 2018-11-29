@@ -580,6 +580,7 @@ if isempty(settings)
     settings.imsize='2000 2000';
 %     settings.layerssep=false;
     settings.colorbarthickness=4;
+    settings.plotscalebar=true;
     settings.customcheck=false;
 %     settings.plotlayernames=false;
 end
@@ -588,6 +589,7 @@ end
     'title'      , 'Par',... 
     'Pixelsize',{'1x1','2x2','3x3','4x4'},...
     {'thickness of colorbar (pix)','colorbarthickness'},settings.colorbarthickness,...
+    {'Plot scale bar';'plotscalebar'},[true ],...
     {'Custom image size';'customcheck'},[false true],...
     {'Imagesize (pixel) or magnification (if <20)','imsize'},num2str(settings.imsize) );
      
@@ -619,6 +621,7 @@ if strcmpi(button,'ok')
     end
 %     obj.setPar('sr_layersseparate',settings.layerssep);
     obj.setPar('sr_colorbarthickness',settings.colorbarthickness);
+    obj.setPar('sr_plotscalebar',settings.plotscalebar);
 %     obj.setPar('sr_plotlayernames',settings.plotlayernames);
 %     if settings.newfig
 %         obj.setPar('sr_axes',obj.makesrfigure((settings.fignumber)));
