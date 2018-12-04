@@ -38,6 +38,11 @@ classdef RoiCutterWF<interfaces.WorkflowModule
                     error ('no localizations found')
 
                 end
+%                  outs.info=info;
+%                     outs.img=cutoutimages(:,:,1:ind);
+                dato=data{1};%.copy;
+                dato.data=[];
+                outputdat=dato;
                 return;
             end
             

@@ -178,7 +178,7 @@ switch fitpar.mode
         fac{5}=EMexcess;
         faccrlb{4}=EMexcess;
         faccrlb{5}=EMexcess;
-        fac{3}=fitpar.dz*fitpar.refractive_index_mismatch;
+        fac{3}=-fitpar.dz*fitpar.refractive_index_mismatch; % negative factor to fix direction in SMAP
         off{3}=-fitpar.z0*fitpar.dz*fitpar.refractive_index_mismatch;
         faccrlb{3}=fitpar.dz*fitpar.refractive_index_mismatch;
         names={'ypix','xpix','znm','phot','bg'};
@@ -290,7 +290,7 @@ sx=1*v1;
 locs.PSFxpix=sx;
 locs.PSFypix=sx;
 
-fac{5}=fitpar.dz*fitpar.refractive_index_mismatch;
+fac{5}=-fitpar.dz*fitpar.refractive_index_mismatch; %fix direction
 off{5}=-fitpar.z0*fitpar.dz*fitpar.refractive_index_mismatch;
 faccrlb{5}=fitpar.dz*fitpar.refractive_index_mismatch;
 

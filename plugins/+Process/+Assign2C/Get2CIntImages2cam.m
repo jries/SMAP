@@ -21,6 +21,7 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             f.Visible='on';
             wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
             wffile='settings/workflows/get2CIntensityImagesWF2';
+            wffile='settings/workflows/get2CIntensityImagesWF3';
             wf=interfaces.Workflow(f,obj.P);
             wf.attachLocData(obj.locData);
             wf.makeGui;

@@ -152,6 +152,8 @@ for k=1:sim(3)
                     bg=loc.bg(k);
                 case 'BG fixed to:'
                     bg=obj.p.bgsetvalue;
+                case 'BG fixed automatic'
+                    bg=loc.bgim(k);
                 otherwise
                     warning('not implemented')      
             end
@@ -211,7 +213,7 @@ p(1).value=0; p(1).on={}; p(1).off={'bgsetvalue'};
 p(2)=p(1);p(2).value=2;p(3)=p(1);p(3).value=3;
 p(4).value=4; p(4).on={'bgsetvalue'}; p(4).off={};
             
-pard.fitbg.object=struct('Style','popupmenu','String',{{'BG free fit','BG from localizations','not implementd: BG fixed automatic','BG fixed to:'}},'Value',1,...
+pard.fitbg.object=struct('Style','popupmenu','String',{{'BG free fit','BG from localizations','BG fixed automatic','BG fixed to:'}},'Value',1,...
     'Callback',{{@obj.switchvisible,p}});
 pard.fitbg.position=[1,2.5];
 pard.fitbg.Width=2;
