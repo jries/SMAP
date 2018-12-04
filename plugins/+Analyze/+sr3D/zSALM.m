@@ -33,7 +33,7 @@ classdef zSALM<interfaces.DialogProcessor
             is=locs.(fsa)(indbright);
             iu=locs.(fua)(indbright);
             rsu=double(is./iu);
-            znm=-double(locs.znm(indbright));
+            znm=double(locs.znm(indbright));
             zrange=-400:10:400;
             rrange=-0.1:0.01:1;
             indf=znm>quantile(znm,0.02) & znm<quantile(znm,0.98)...

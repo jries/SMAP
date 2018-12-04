@@ -159,8 +159,13 @@ else
     locs.xpix=P(:,2)-dn+posx;
 end
 locs.ypix=P(:,1)-dn+posy;
+if isfield(fitpar.splinefithere.cspline,'normf')
+    normf=fitpar.splinefithere.cspline.normf;
+else
+    normf=1;
+end
 
-locs.phot=P(:,3)*EMexcess;
+locs.phot=P(:,3)*EMexcess*normf;
 locs.bg=P(:,4)*EMexcess;
 locs.frame=frame;
 

@@ -174,7 +174,7 @@ switch fitpar.mode
         namesav={'ypix','xpix','PSFxpix','phot'};
     
     case {'Spline','cspline'}
-        fac{4}=EMexcess;
+        fac{4}=EMexcess*fitpar.splinefithere.normf;
         fac{5}=EMexcess;
         faccrlb{4}=EMexcess;
         faccrlb{5}=EMexcess;
@@ -206,7 +206,7 @@ linked=fitpar.link;
 ind=1;
 for k=1:length(names)
     if linked(k)
-        locs.(names{k})=P(:,ind).*fac{k}+off{k};
+        locs.(names{k})=P(:,ind).*fac{k}(1)+off{k};
         locs.([names{k} 'err'])=sqrt(CRLB(:,ind)).*faccrlb{k};
         ind=ind+1;
     else
@@ -214,7 +214,8 @@ for k=1:length(names)
         ve=zeros(numl,numchannels,'single');
         for c=1:numchannels
             ch=num2str(c);
-            locs.([names{k} ch])=P(:,ind).*fac{k}+off{k};
+            fach=fac{k}(min(length(fac{k}),c)); %channel-dependent factor, e.g. for normalization of PSF
+            locs.([names{k} ch])=P(:,ind).*fach+off{k};
             locs.([names{k} ch 'err'])=sqrt(CRLB(:,ind)).*faccrlb{k};
             v(:,c)=locs.([names{k} ch]);
             ve(:,c)=locs.([names{k} ch 'err']);
@@ -945,7 +946,7 @@ pard.asymmetry.Optional=true;
     
 
 
-pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
+pard.syncParameters={{'cal_3Dfile','',{'String'}}};
 
 pard.plugininfo.type='WorkflowFitter';
 pard.plugininfo.description='Maximum likelyhood estimater, optimized for GPU processing. According to: C. S. Smith, N. Joseph, B. Rieger, and K. A. Lidke, ?Fast, single-molecule localization that achieves theoretically minimum uncertainty.,? Nat Methods, vol. 7, no. 5, pp. 373?375, May 2010.';
