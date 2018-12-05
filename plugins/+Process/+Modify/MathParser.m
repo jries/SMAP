@@ -97,8 +97,9 @@ classdef MathParser<interfaces.DialogProcessor
                  p.equationh.Value=1;
                  obj.setGuiParameters(p);
                  
-             catch
-                 disp('could not evaluate equation')
+             catch err
+                 disp(['could not evaluate equation: ' evalstr])
+                 disp(err.message)
              end
              
         end
