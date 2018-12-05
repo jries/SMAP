@@ -284,8 +284,10 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                     obj.layer(layers(k)).filter=[];
                  end
                  filterall=true;
-            elseif ~iscell(fields)
+            else
+                if ~iscell(fields)
                 fields={fields};
+                end
                 filterall=false;
             end
 

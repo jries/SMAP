@@ -112,7 +112,10 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 for k=length(lps):-1:1
                     rfields{k}=lps{k}.renderfield.selection;
                 end
-                rfields=horzcat(unique(rfields),{'xnm','ynm','znm','locprecnm','locprecznm','phot','numberInGroup'});
+                zfield=obj.getSingleGuiParameter('zfield').selection;
+                zfielderr=obj.getSingleGuiParameter('zfielderr').selection;
+                rfields(end+1:end+2)={zfield, zfielderr};
+                rfields=horzcat(unique(rfields),{'xnm','ynm','locprecnm','phot','numberInGroup'});
                 lenL=len*2;
                 obj.posL=[meanpos(1)-lenL, meanpos(2)-lenL;meanpos(1)+lenL, meanpos(2)+lenL];
                 posLnm=obj.posL*1000;
@@ -121,6 +124,11 @@ classdef Viewer3DV01<interfaces.DialogProcessor
 %                 sum(inx&iny)
                 
                  obj.locDataL=obj.locData.copy(rfields,inx&iny);
+                 obj.locDataL.loc.znm=single(obj.locDataL.loc.(zfield));
+                 obj.locDataL.grouploc.znm=single(obj.locDataL.grouploc.(zfield));
+                 obj.locDataL.loc.locprecznm=single(obj.locDataL.loc.(zfielderr));
+                 obj.locDataL.grouploc.locprecznm=single(obj.locDataL.grouploc.(zfielderr));
+                 obj.locDataL.filter({zfield,zfielderr});
             end
         end
 
@@ -918,7 +926,36 @@ switch p.stereo.Value
 end
 end
 
+function zfield_callback(obj, a,b)
+str=obj.guihandles.zfield.String;
+ind=find(strcmp(str,'znm'));
+if ~isempty(ind)
+    obj.guihandles.zfield.Value=ind(1);
+end
+
+ind=find(strcmp(str,'locprecznm'));
+if ~isempty(ind)
+    obj.guihandles.zfielderr.Value=ind(1);
+end
+
+end
+
 function pard=guidef(obj)
+pard.zfieldt.object=struct('String','z, zerr','Style','text');
+pard.zfieldt.position=[1,1];
+pard.zfieldt.Width=0.5;
+pard.zfieldt.Optional=true;
+
+pard.zfield.object=struct('String',' ','Style','popupmenu');
+pard.zfield.position=[1,1.3];
+pard.zfield.Width=.7;
+pard.zfield.Optional=true;
+
+pard.zfielderr.object=struct('String',' ','Style','popupmenu');
+pard.zfielderr.position=[1,1.9];
+pard.zfielderr.Width=.75;
+pard.zfielderr.Optional=true;
+
 pard.text2.object=struct('String','zmin/zmax','Style','text');
 pard.text2.position=[2,1];
 pard.text2.Width=0.6;
@@ -965,14 +1002,14 @@ pard.transparencypar.Width=0.5;
 pard.transparencypar.TooltipString=pard.transparencymode.TooltipString;
 pard.transparencypar.Optional=true;
 
-pard.pixrecset.object=struct('Style','edit','String','5 5'); 
+pard.pixrecset.object=struct('Style','edit','String','2 2'); 
 pard.pixrecset.position=[4,2.1];
 pard.pixrecset.Width=0.5;
 pard.pixrecset.Optional=true;
 
 pard.showcontrols.object=struct('String','Show Controls','Style','pushbutton','Callback',@obj.showpanel_callback);
-pard.showcontrols.position=[1,1];
-pard.showcontrols.Width=1.6;
+pard.showcontrols.position=[8,3];
+pard.showcontrols.Width=1;
 pard.showcontrols.TooltipString='opens control panel to move, rotate, zoom';
 pard.showcontrols.Optional=false;
 
@@ -1088,6 +1125,9 @@ pard.savesideview.position=[8,4];
 pard.savesideview.Width=1;
 pard.savesideview.Optional=false;
 
+
+pard.syncParameters={{'locFields','zfield',{'String'},{@zfield_callback,obj}},{'locFields','zfielderr',{'String'}}};
+ 
 pard.plugininfo.name='Viewer 3D';
 pard.plugininfo.type='ProcessorPlugin';
 pard.plugininfo.description=sprintf(['localization based 3D viewer for superresolution data.\n'...
