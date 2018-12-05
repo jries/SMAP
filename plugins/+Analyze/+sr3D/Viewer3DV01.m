@@ -936,6 +936,11 @@ end
 ind=find(strcmp(str,'locprecznm'));
 if ~isempty(ind)
     obj.guihandles.zfielderr.Value=ind(1);
+else
+    ind=find(strcmp(str,'locprecnm'));
+    if ~isempty(ind)
+        obj.guihandles.zfielderr.Value=ind(1);
+    end
 end
 
 end
