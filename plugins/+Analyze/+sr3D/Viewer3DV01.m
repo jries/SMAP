@@ -77,14 +77,18 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                  obj.axis.Position=[0 0 1 1];
                  fig.Color=[0 0 0];
              else
-                 obj.axis.Position=[0.05 0.05 .95 .9];
+                 obj.axis.Position=[0.05 0.05 .94 .9];
                  fig.ToolBar='figure';
                  fig.MenuBar='figure';
                  fig.Color=[0.94 0.94 0.94];
              end
              figure(fig);
              axis(obj.axis,'tight');
-             axis(obj.axis,'equal');
+             if p.fillimage
+                 axis(obj.axis,'normal');
+             else
+                axis(obj.axis,'equal');
+             end
              axis(obj.axis,'ij');
              set(fig,'WindowKeyPressFcn',{@obj.keypress,[]})
              set(fig,'WindowButtonDownFcn',{@obj.mousebutton,1})
@@ -969,10 +973,19 @@ pard.text2.Optional=false;
 % pard.text3.position=[2,2];
 % pard.text3.Width=0.3;
 
-pard.setpixelsize.object=struct('String','set pixelsize (x z): ','Style','checkbox','Value',1);
+pard.setpixelsize.object=struct('String','pixelsize x,z','Style','checkbox','Value',1);
 pard.setpixelsize.position=[4,1];
-pard.setpixelsize.Width=1.5;
+pard.setpixelsize.Width=1;
 pard.setpixelsize.Optional=true;
+pard.pixrecset.object=struct('Style','edit','String','2 2'); 
+pard.pixrecset.position=[4,1.8];
+pard.pixrecset.Width=0.4;
+pard.pixrecset.Optional=true;
+
+pard.fillimage.object=struct('Style','checkbox','String','fill','Value',0); 
+pard.fillimage.position=[4,2.2];
+pard.fillimage.Width=0.4;
+pard.fillimage.Optional=true;
 
 pard.transparencymode.object=struct('String',{{'projection', 'transparency','balls'}} ,'Style','popupmenu');
 pard.transparencymode.position=[6,1];
@@ -1007,10 +1020,7 @@ pard.transparencypar.Width=0.5;
 pard.transparencypar.TooltipString=pard.transparencymode.TooltipString;
 pard.transparencypar.Optional=true;
 
-pard.pixrecset.object=struct('Style','edit','String','2 2'); 
-pard.pixrecset.position=[4,2.1];
-pard.pixrecset.Width=0.5;
-pard.pixrecset.Optional=true;
+
 
 pard.showcontrols.object=struct('String','Show Controls','Style','pushbutton','Callback',@obj.showpanel_callback);
 pard.showcontrols.position=[8,3];
