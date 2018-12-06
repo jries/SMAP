@@ -10,11 +10,12 @@ end
 methods
         
     function obj=imx(varargin)
+        %V
     %optional: x,y,z
-    %V
+    
     %optional handle
 
-    %input parser: x,y,z (optional),V,'name',value
+    %input parser:V, x,y,z (optional),'name',value
     %Parent,all gui parameters: scale,  contrastmode, contrast,
     %Title
     %Tags
@@ -122,11 +123,6 @@ methods
             obj.guihandles.hslider{1}.Max=size(obj.V,dims1);
             obj.setslice(min(obj.guihandles.hslider{1}.Max,obj.guihandles.hslider{1}.Value),1,0);
 
-%              if dims1<3
-%              hslidert{1}.String=str{dims1};
-%              else
-%                  hslidert{1}.String=num2str(dimmenu(1));
-%              end
             if length(dim)>3
                 dims2=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','1'),'y','2'));
 %                 dims2=str2double(obj.guihandles.hslidert{2}.String);
@@ -140,11 +136,6 @@ methods
                 obj.guihandles.hslider{2}.Visible='on';
                 obj.guihandles.hframe{2}.Visible='on';
                 obj.guihandles.hslidert{2}.Visible='on';
-%                  if dimmenu(2)<3
-%                     obj.guihandles.hslidert{2}.String=str{dimmenu(2)};
-%                  else
-%                      obj.guihandles.hslidert{2}.String=num2str(dimmenu(2));
-%                  end
             else
                 obj.guihandles.hslider{2}.Visible='off';
                 obj.guihandles.hframe{2}.Visible='off';
@@ -154,18 +145,13 @@ methods
 
         end
         function plotimage(obj,a,b,c)
-    %         disp('plot')
-             s=size(obj.V);
-
+%              s=size(obj.V);
             xlimold=obj.guihandles.axis.XLim;
             ylimold=obj.guihandles.axis.YLim;
             dim=obj.getdims;
             Vsl=obj.V(obj.showframes{:});
-            
+           
             dims=[dim(2) dim(1) obj.dimrgb dim(3:end)];
-%             dimshow=(1:length(size(obj.V)));
-%             dimshow(1:length(dims))=dims;
-
             Vslp=permute(Vsl,dims);
 
             img=(squeeze(Vslp));
@@ -231,7 +217,6 @@ methods
                 obj.guihandles.axis.YLim=a2([1 end])+[-1 1]*d2/2;
             end
             colormap(obj.guihandles.axis,obj.guihandles.hlut.String{obj.guihandles.hlut.Value})
-    %         imin=nanmin(img(:));
             obj.guihandles.axis.CLim=[imin imax];
             tagtxt='';
             titletxt='';
@@ -241,7 +226,6 @@ methods
             end
             if ~isempty(p.Tags)
                 tags=p.Tags;
-    %             stags=size(tags);
                 for d=3:length(dims) %1,2 of dims used for plotting
                     dimp=dims(d);
                     indexh=obj.showframes{dimp};
@@ -268,7 +252,6 @@ methods
             if iscell(titletxt)
                 title(obj.guihandles.axis,titletxt)
             end
-
 
             if ~p.rgb
                 colorbar(obj.guihandles.axis)
@@ -315,8 +298,6 @@ methods
              if length(s)>3
              dim(4)=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','1'),'y','2'));
              end
-             
-             
              dimmissing=setdiff(1:length(s),dim);
              dim=[dim dimmissing];
              for k=1:2
@@ -339,21 +320,20 @@ function makegui(obj,p)
 V=p.V;
 obj.V=V;
     if ~isempty(p.x)
-        obj.parameters.axl{2}=p.x;
+        obj.parameters.axl{1}=p.x;
     else
-        obj.parameters.axl{2}=1:size(V,2);
+        obj.parameters.axl{1}=1:size(V,2);
     end
     if ~isempty(p.y)
-        obj.parameters.axl{3}=p.y;
+        obj.parameters.axl{2}=p.y;
     else
-        obj.parameters.axl{3}=1:size(V,3);
+        obj.parameters.axl{2}=1:size(V,3);
     end
     if ~isempty(p.z)
-        obj.parameters.axl{1}=p.z;
+        obj.parameters.axl{3}=p.z;
     else
-        obj.parameters.axl{1}=1:size(V,1);
+        obj.parameters.axl{3}=1:size(V,1);
     end
-
 
     if isempty(p.Parent)
         obj.handle=figure;
@@ -366,11 +346,6 @@ obj.V=V;
         delete(obj.handle.Children)
     end
 
-
-% 
-%      dim=1:2;
-%      dimmenu=3;
-%     dimrgb=[];
     if isprop(obj.handle,'WindowKeyPressFcn')
         obj.handle.WindowKeyPressFcn=@obj.keypress;
     end
@@ -419,10 +394,11 @@ obj.V=V;
 end
 function pv=parseinput(in)
 p=inputParser;
+p.addRequired('V',@isnumeric);
 p.addOptional('x',[],@isnumeric);
 p.addOptional('y',[],@isnumeric);
 p.addOptional('z',[],@isnumeric);
-p.addRequired('V',@isnumeric);
+
 p.addParameter('Parent',[]);
 p.addParameter('fill',false);
 p.addParameter('xdim',1,@isnumeric);
@@ -433,5 +409,5 @@ p.addParameter('Title',[]);
 p.addParameter('Tags',[]);
 parse(p,in{:});
 pv=p.Results;
-
+% pv
 end
