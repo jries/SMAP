@@ -23,6 +23,11 @@ if strcmpi(ext,'.mat')&& ~isempty(strfind(f,'_sites'))
     emptylocs=true;
     return
 end
+if strcmpi(ext,'.hdf5')
+    mode='hdf5';
+    emptylocs=true;
+    return
+end
 if ~isempty(strfind(f,'fitpos'))
     mode='fitpos';
     emptylocs=true;

@@ -1,6 +1,6 @@
 classdef Loader_csvAndMore<interfaces.DialogProcessor
     properties
-        loaderpath
+        loaderpath='settings/csvloaderconversion/';
     end
     methods
         function obj=Loader_csvAndMore(varargin)        
@@ -18,8 +18,8 @@ classdef Loader_csvAndMore<interfaces.DialogProcessor
             pard=guidef;
         end
         function run(obj,p)
-            [f,p]=uigetfile(obj.info.extensions);
-            obj.load(p,[p f]);
+            [f,path]=uigetfile(obj.info.extensions);
+            obj.load(p,[path f]);
             initGuiAfterLoad(obj);
         end
         function clear(obj,file,isadd)

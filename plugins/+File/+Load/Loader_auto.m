@@ -46,21 +46,23 @@ pard.updateGuiPar.position=[1,1];
  pard.updateGuiPar.Width=2;
 pard.updateGuiPar.TooltipString='Restore Gui parameters saved with localization data';
 info.name='auto loader';
-info.extensions={'*.mat;*.tif;*.csv';'*.mat';'*.tif';'*.csv';'*.*'};
+info.extensions={'*.mat;*.tif;*.csv;*.hdf5';'*.mat';'*.tif';'*.csv';'*.*'};
 info.dialogtitle='select any SMLM position, Tif, csv, settings or workflow file';
 pard.plugininfo=info;
 pard.plugininfo.type='LoaderPlugin';
 end
 
 function loadfile(obj,p,file,mode)            
-        loader=getloader(obj,mode);
+        [loader,pout]=getloader(obj,mode);
+        p=copyfields(p,pout);
         if ~isempty(loader)
         loader.load(p,file);
         end
 end
 
         
-function loader=getloader(obj,mode)  
+function [loader,p]=getloader(obj,mode)  
+p=[];
 obj.notfound=false;
         switch mode
             case 'tif'
@@ -85,4 +87,9 @@ obj.notfound=false;
         end
         loader=plugin('File','Load',loadername,[],obj.P);
         loader.attachLocData(obj.locData);
+        switch mode
+            case 'hdf5'
+                p.importdef.selection='hdf5_Jungmann.txt'; %hack to load Jungmann when automatic loader and hdf5
+                p.importdef.Value=8;
+        end
 end
