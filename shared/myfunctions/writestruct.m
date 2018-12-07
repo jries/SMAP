@@ -11,7 +11,7 @@ function txt=writestruct(file,p)%replacestruct,parseascell)
      txt{k}(1)=[];
  end
  fid=fopen(file,'w');
- if fid
+ if fid>0
      for k=1:length(txt)
          fprintf(fid,'%s\n',txt{k});
      end
