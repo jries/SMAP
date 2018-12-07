@@ -99,7 +99,7 @@ classdef calibrate3Daberrations<interfaces.DialogProcessor
            goodind=find(true(length(beads),1));
            beads2=beads;
 
-           cutofffactor=4;
+           cutofffactor=6;
            while  1% length(beads2)>length(beads)/2
                 cutoff=cutofffactor*nanmean(err1);
                 badind=(err1>cutoff|isnan(err1));
@@ -121,7 +121,12 @@ classdef calibrate3Daberrations<interfaces.DialogProcessor
            
            axhere=obj.initaxis('error');
            n=1:length(beads);
-           plot(n,err0,n(goodind),err1,'*-');
+           ng=n(goodind);
+           f0=[beads(:).f0];
+           f0g=[beads(goodind).f0];
+           [f0s,indsortf0]=sort(f0);
+             [f0gs,indsortf0g]=sort(f0g);
+           plot(f0s,err0(indsortf0),'+',f0gs,err1(indsortf0g),'o');
            %correct beads for testing
            
            ax1=obj.initaxis('validation');

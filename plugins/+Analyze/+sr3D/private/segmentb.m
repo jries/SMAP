@@ -2,7 +2,7 @@ function bead=segmentb(obj,p)
 if isfield(p,'zrangeuse')
 minframes=(p.zrangeuse(2)-p.zrangeuse(1))/ p.dz/2;
 else
-    minframes=800/p.dz;
+    minframes=500/p.dz;
 end
 % minframes=(p.zrangeuse(2)-p.zrangeuse(1))/ p.dz/5;
 

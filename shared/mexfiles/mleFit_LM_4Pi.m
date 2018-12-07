@@ -85,16 +85,18 @@ channelshift=single(varargin{7});
 if numel(zstart)~=size(imstack,3)
     zstart=ones(size(imstack,3),1,'single')*zstart;
 end
-if numel(p0)==1
-    p0=p0*ones(size(imstack,3),1,'single');
+if numel(p0)~=size(imstack,3)
+    p0=ones(size(imstack,3),1,'single')*single(p0);
 end
 
-[P,CRLB,LogL]=allfitters{fitter}(imstack,shared,iterations,I,A,B,channelshift,phase,zstart(:,1),p0(:));
-
+% [P,CRLB,LogL]=allfitters{fitter}(imstack,shared,iterations,I,A,B,channelshift,phase,zstart(:,1),p0(:,1));
+LogL=ones(size(imstack,3),1,'single')-1e10;
 sz0=size(zstart);
-if sz0(2)>1
-    for k=2:sz0(2)
-        [Ph,CRLBh,LogLh]=allfitters{fitter}(imstack,shared,iterations,I,A,B,channelshift,phase,zstart(:,k),p0(:));
+sp0=size(p0);
+% if sz0(2)>1
+for p=1:sp0(2)
+    for k=1:sz0(2)
+        [Ph,CRLBh,LogLh]=allfitters{fitter}(imstack,shared,iterations,I,A,B,channelshift,phase,zstart(:,k),p0(:,p));
 %         indbettero=LogLh<LogL;
         indbetter=LogLh-LogL>1e-4; %copy only everything if LogLh increases by more than rounding error.
         P(indbetter,:)=Ph(indbetter,:);
@@ -102,5 +104,6 @@ if sz0(2)>1
         LogL(indbetter)=LogLh(indbetter);
     end
 end
+% end
  clear(allfittersnames{fitter})
 
