@@ -169,7 +169,7 @@ classdef LocTransformN0<handle
             end
             ci=ci/1000;
             co=transformPointsInverse(obj.transform2Target{channel},ci(:,1:2)); %inverse of inverse is forward          
-            if size(ci,2)>2 %z coordinates present               
+            if size(ci,2)>2 && length(obj.transformZ2Target)>=channel %z coordinates present               
                  X=transformPointsInverse(obj.transformZ2Target{channel},horzcat(co,ci(:,3)));
                  co(:,3)=X(:,3);
             end

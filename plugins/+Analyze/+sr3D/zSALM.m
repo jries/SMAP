@@ -74,7 +74,7 @@ classdef zSALM<interfaces.DialogProcessor
             zerrs=zerrSALM(fitp.b,isall,isall,bgs,bgu);
             errza=obj.locData.loc.locprecznm_a;
             %also here change sign of z.
-            znmnew=(-obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
+            znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
             locprecznmnew=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
             obj.locData.setloc('znm',znmnew);
             obj.locData.setloc('locprecznm',locprecznmnew);

@@ -53,6 +53,8 @@ facsize=ones(2,1);
 separator=roinm(1:2)+roinm(3:4);
 spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000)/2;
 mirroradd=zeros(2,1);
+if p.useT
+else
 switch p.targetpos.selection
     case 'top'
         dy=-chipsizenm(2)/2;
@@ -103,19 +105,24 @@ switch p.targetpos.selection
         yrangecamt=[0 filetar.info.roi(4)+filetar.info.roi(2)];
 %         indtarget=true(size(loctarget.xnm));
 end
+end
 
 cutout=false;
 if p.useT
-    Tinitial=loadtransformation(locData,p.Tfile,p.dataselect.Value);
+    if ~ischar(p.Tfile)
+        Tinitial=p.Tfile;
+    else
+        Tinitial=loadtransformation(locData,p.Tfile,p.dataselect.Value);
+    end
     if isa(Tinitial,'interfaces.LocTransformN')
         pos=Tinitial.transformToReference(2,horzcat(loctarget.xnm,loctarget.ynm),'nm');
         loctT.x=pos(:,1);loctT.y=pos(:,2);
     else
-    [loctT.x,loctT.y]=Tinitial.transformCoordinatesInv(loctarget.xnm,loctarget.ynm);
-    mirrorinfo=Tinitial.tinfo.mirror;
-    if contains(mirrorinfo.targetmirror,'no')
-    cutout=true;
-    end
+        [loctT.x,loctT.y]=Tinitial.transformCoordinatesInv(loctarget.xnm,loctarget.ynm);
+        mirrorinfo=Tinitial.tinfo.mirror;
+        if contains(mirrorinfo.targetmirror,'no')
+            cutout=true;
+        end
     end
     %     pos=Tinitial.pos;
 %     size=Tinitial.size;

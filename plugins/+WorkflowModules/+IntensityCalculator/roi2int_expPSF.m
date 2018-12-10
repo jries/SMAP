@@ -161,7 +161,7 @@ for k=1:sim(3)
         Xmat=templateh(:);
         roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k)-bg;
         p(k,1)=Xmat\roih(:);
-        p(k,2)=loc.bg(k);
+        p(k,2)=bg;
     end
 end
 
