@@ -1,0 +1,6 @@
+mirt3D_mexinterp.m	https://ch.mathworks.com/matlabcentral/fileexchange/24177-3d-interpolation
+mirt3D_mexinterp.cpp	https://ch.mathworks.com/matlabcentral/fileexchange/24177-3d-interpolation
+gauss3filter.m	https://ch.mathworks.com/matlabcentral/fileexchange/39013-efficient-three-dimensional-3d-gaussian-smoothing-using-convolution-via-frequency-domain
+ba_interp3.m	https://ch.mathworks.com/matlabcentral/fileexchange/21702-3d-volume-interpolation-with-ba_interp3-fast-interp3-replacement
+ba_interp3.cpp	https://ch.mathworks.com/matlabcentral/fileexchange/21702-3d-volume-interpolation-with-ba_interp3-fast-interp3-replacement
+ba_interp3.mexa64	https://ch.mathworks.com/matlabcentral/fileexchange/21702-3d-volume-interpolation-with-ba_interp3-fast-interp3-replacement
