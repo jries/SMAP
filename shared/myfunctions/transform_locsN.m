@@ -82,8 +82,8 @@ switch p.targetpos.selection
         separator(1)=roinm(1)+roinm(3)/2;
         indtarget=indtarget&loctarget.xnm<separator(1);
         indref=indref&locref.xnm>=separator(1);
-        xrangecamr=[spix(1) spix(1)*2];yrangecamr=[0 spix(2)];
-        xrangecamt=[0 spix(1)];yrangecamt=[0 spix(2)];
+        xrangecamr=[spix(1) spix(1)*2];yrangecamr=[0 spix(2)*2];
+        xrangecamt=[0 spix(1)];yrangecamt=[0 spix(2)*2];
          mirroradd(1)=chipsizenm(2);
     case 'right'
         dx=chipsizenm(1)/2;
@@ -93,8 +93,8 @@ switch p.targetpos.selection
         indtarget=loctarget.xnm>separator(1);
         indtarget=indtarget&loctarget.xnm>separator(1);
         indref=indref&locref.xnm<=separator(1);
-        xrangecamr=[0 spix(1)];yrangecamr=[0 spix(2)];
-        xrangecamt=[spix(1) spix(1)*2];yrangecamt=[0 spix(2)];
+        xrangecamr=[0 spix(1)];yrangecamr=[0 spix(2)*2];
+        xrangecamt=[spix(1) spix(1)*2];yrangecamt=[0 spix(2)*2];
     otherwise
         dx=0;
         dy=0;
