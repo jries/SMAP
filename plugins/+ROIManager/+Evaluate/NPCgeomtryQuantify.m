@@ -58,16 +58,26 @@ if isempty(locs.xnm)
     return
 end
 
-
+%2D fit
 [x0,y0]=fitposring(locs.xnm,locs.ynm,R);
 xm=locs.xnm-x0;
 ym=locs.ynm-y0;
 
 if ~isempty(locs.znm) % evaluate z distance
+    templatefit= runNPC3DfittingJ(obj, p);
+    xm=double(templatefit.locxyz(:,1));
+    ym=double(templatefit.locxyz(:,2));
+    zm=double(templatefit.locxyz(:,3));
+    badind=abs(zm)>100; %too far outside
+    r2=xm.^2+ym.^2;
+    badind=badind & r2<(p.R-p.dR).^2 & r2>(p.R+p.dR).^2;
+    xm(badind)=[];
+    ym(badind)=[];
+    zm(badind)=[];
     dz=8;
-    z0=median(locs.znm);
+    z0=median(zm);
     z=-100:dz:100+z0;
-    hz=hist(locs.znm-obj.site.pos(3),z);
+    hz=hist(zm,z);
     % hz=hz-mean(hz);
     ac=myxcorr(hz,hz);
     % if obj.display
@@ -81,19 +91,25 @@ if ~isempty(locs.znm) % evaluate z distance
     fitresult=createFit(z, hz,[]);
     end
     
-    % plot(ax1,z,hz)
-  
-
-
-    % end
-    out.ac=ac;
-    out.dz=dz;
-    out.hist=hz;
-    out.z=z;
-    out.Gaussfit=copyfields([],fitresult,{'a1','a2','b','c','d'});
+    out.profile.ac=ac;
+    out.profile.dz=dz;
+    out.profile.hist=hz;
+    out.profile.z=z;
+    out.profile.Gaussfit=copyfields([],fitresult,{'a1','a2','b','c','d'});
+    out.templatefit=templatefit;
 end
 
 %radial analysis
+[x0,y0,R0]=fitposring(xm,ym);
+if obj.display
+ax1=obj.setoutput('ringfit');
+
+plot(ax1,xm-x0,ym-y0,'.')
+hold(ax1,'on')
+circle(0,0,R0,'Parent',ax1);
+hold(ax1,'off')
+title(ax1,R0)
+end
 thetan=-pi:pi/128:pi;
 [theta,rhoa]=cart2pol(xm,ym);
 histtheta=hist(theta,thetan);
@@ -105,9 +121,9 @@ if obj.display
    ax1=obj.setoutput('corrtheta');
    plot(ax1,thetan-thetan(1),tac1);
 end
-
-out.actheta=tac1;
-out.thetan=thetan-thetan(1);
+out.Rfit=R0;
+out.angular.actheta=tac1;
+out.angular.thetan=thetan-thetan(1);
 end
 
 
