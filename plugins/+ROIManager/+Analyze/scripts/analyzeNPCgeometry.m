@@ -27,6 +27,7 @@ fline=fit(zt,abs(dt),'poly1');
 hold on
 plot(zt,fline(zt),'r')
 xlabel('z');ylabel('distance')
+title(['d(z=0) fit: ' num2str(fline.p2,ff)]);
 end
 
 R0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.Rfit');
