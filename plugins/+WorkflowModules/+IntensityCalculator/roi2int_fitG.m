@@ -114,10 +114,10 @@ pard.t1.TooltipString='Roi size around localizations for fitting';
 pard.roisize_fit.object=struct('Style','edit','String','5');
 pard.roisize_fit.position=[1,2];
 pard.roisize_fit.TooltipString=pard.t1.TooltipString;
-pard.fixpsf.object=struct('Style','checkbox','String','Fix PSF (nm) size to:');
+pard.fixpsf.object=struct('Style','checkbox','String','Fix PSF (pix) size to:');
 pard.fixpsf.position=[2,1];
 pard.fixpsf.Width=3;
-pard.fixpsf.TooltipString='fix the PSF during the fit (value in nm). Otherwise the fitted PSF size is used.';
+pard.fixpsf.TooltipString='fix the PSF during the fit (value in pix). Otherwise the fitted PSF size is used.';
 
 pard.psfsize_fit.object=struct('Style','edit','String','130');
 pard.psfsize_fit.position=[2,4];
