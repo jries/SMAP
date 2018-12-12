@@ -117,6 +117,8 @@ if p.useT
     if isa(Tinitial,'interfaces.LocTransformN')
         pos=Tinitial.transformToReference(2,horzcat(loctarget.xnm,loctarget.ynm),'nm');
         loctT.x=pos(:,1);loctT.y=pos(:,2);
+           indref=Tinitial.getPart(1,pos,'nm');
+           indtarget=Tinitial.getPart(2,pos,'nm');
     else
         [loctT.x,loctT.y]=Tinitial.transformCoordinatesInv(loctarget.xnm,loctarget.ynm);
         mirrorinfo=Tinitial.tinfo.mirror;
@@ -209,7 +211,7 @@ imt=myhist2(loctT.x,loctT.y,pixelsizerec,pixelsizerec,rangex,rangey);
 
 
 maxshift=round(p.register_parameters.maxshift_corr/pixelsizerec);
-ax1=initaxis(p.resultstabgroup,'shiftcorr');
+ax1=initaxis(p.resultstabgroup,['corr' p.repetition]);
 
 % s=size(imr)
 % ima=zeros(s(1),s(2),3);
@@ -252,9 +254,15 @@ loctarget.x=loctarget.xnm/pixtarget(1);
 loctarget.y=loctarget.ynm/pixtarget(end);
 
 % transform.findTransform(locref.x(iAa),locref.y(iAa),loctarget.x(iBa),loctarget.y(iBa))
-transform=interfaces.LocTransformN;
-transform.setTransform(1,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixref,'xrange',xrangecamr,'yrange',yrangecamr);
-transform.setTransform(2,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixtarget,'xrange',xrangecamt,'yrange',yrangecamt);
+
+if p.useT
+    transform=Tinitial;
+else
+    transform=interfaces.LocTransformN;
+    transform.setTransform(1,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixref,'xrange',xrangecamr,'yrange',yrangecamr);
+    transform.setTransform(2,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixtarget,'xrange',xrangecamt,'yrange',yrangecamt);
+end
+
 %XXXXXXX still need to include mirroring...XXXXXX
 % t.parameter=p.transformparam;
 
@@ -287,17 +295,17 @@ ltr=transform.transformToReference(2,lt);
    if ztransform
        dz=ltr(:,3)-locref.znm(iAa);
        dzb=loctarget.znm(iBa)-locref.znm(iAa);
-       initaxis(p.resultstabgroup,'zcalib')
+       initaxis(p.resultstabgroup,['z' p.repetition])
        histogram(dz);hold on ; histogram(dzb);hold off
    end
    
 %    dx=loctarget.x(iBa)-locref.x(iAa);
 %    dx=loctarget.y(iBa)-locref.y(iAa);
 %    figure(88)
-initaxis(p.resultstabgroup,'scatter')
+initaxis(p.resultstabgroup,['dxy' p.repetition])
    dscatter(dx,dy)
    title({['number of anchor points: ' num2str(length(iBa)) ' of ' num2str(nseen)],['dx= ' num2str(std(dx),3) ' pix, dy= ' num2str(std(dy),3) ' pix']});
- ax3=initaxis(p.resultstabgroup,'hist');
+ ax3=initaxis(p.resultstabgroup,['hist' p.repetition]);
  hist(dx,50)
 
  rr=rand(1000,1);
@@ -306,7 +314,7 @@ initaxis(p.resultstabgroup,'scatter')
   if isempty(nb)
       rb=[];
   end
- ax4=initaxis(p.resultstabgroup,'locs');
+ ax4=initaxis(p.resultstabgroup,['pos' p.repetition]);
  plot(loctarget.x(iBa(ra)),loctarget.y(iBa(ra)),'+',loctarget.x(nb(rb)),loctarget.y(nb(rb)),'ro')
  legend('paired','unpaired');
  

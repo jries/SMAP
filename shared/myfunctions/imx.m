@@ -322,17 +322,17 @@ obj.V=V;
     if ~isempty(p.x)
         obj.parameters.axl{1}=p.x;
     else
-        obj.parameters.axl{1}=1:size(V,2);
+        obj.parameters.axl{1}=1:size(V,1);
     end
     if ~isempty(p.y)
         obj.parameters.axl{2}=p.y;
     else
-        obj.parameters.axl{2}=1:size(V,3);
+        obj.parameters.axl{2}=1:size(V,2);
     end
     if ~isempty(p.z)
         obj.parameters.axl{3}=p.z;
     else
-        obj.parameters.axl{3}=1:size(V,1);
+        obj.parameters.axl{3}=1:size(V,3);
     end
 
     if isempty(p.Parent)

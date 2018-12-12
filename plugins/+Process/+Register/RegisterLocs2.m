@@ -21,11 +21,30 @@ classdef RegisterLocs2<interfaces.DialogProcessor
             end
             p.isz=obj.isz;
             p.register_parameters=obj.register_parameters;
+            fn=fieldnames(p.register_parameters);
+            nmax=1;
+            for k=1:length(fn)
+                nmax=max(nmax,length(p.register_parameters.(fn{k})));
+            end
+            
+%             rp=p.register_parameters;
+            for n=1:nmax
+                for k=1:length(fn)
+                    ind=min(n,length(p.register_parameters.(fn{k})));
+                    rp(n).(fn{k})=p.register_parameters.(fn{k})(ind);
+                end
+            end
             
 %             if p.saveoldformat
 %                 obj.transformation=transform_locs(obj.locData,p);
 %             else
-            obj.transformation=transform_locsN(obj.locData,p);
+            for n=1:nmax
+                p.register_parameters=rp(n);
+                 p.repetition=num2str(n);
+                obj.transformation=transform_locsN(obj.locData,p);
+                p.Tfile=obj.transformation;
+                p.useT=true;
+            end
 %             end
             fv=p.dataselect.Value;
             obj.locData.files.file(fv).transform=obj.transformation;
@@ -84,15 +103,22 @@ classdef RegisterLocs2<interfaces.DialogProcessor
         end
         function parameters_callback(obj,callobj,b)
             if isempty(obj.register_parameters)        
-                par.pixelsizenm=10;
+                par.pixelsizenm=[500 50];
                 par.maxshift_corr=5000;
                 par.maxlocsused=50000;
-                par.maxshift_match=250;
+                par.maxshift_match=[1250 150];
                 par.initial_mag=1;
                 par.initialshiftx=0;
                  par.initialshifty=0;
             else 
                 par=obj.register_parameters;
+            end
+            
+            fn=fieldnames(par);
+            for k=1:length(fn)
+                if length(par.(fn{k}))>1 %vector
+                    par.(fn{k})=num2str(par.(fn{k}));
+                end
             end
             if isa(callobj,'matlab.ui.control.UIControl')
 
@@ -109,6 +135,12 @@ classdef RegisterLocs2<interfaces.DialogProcessor
 
                 if strcmpi(button,'ok')
                     par=addFields(par,settings);
+                    for k=1:length(fn)
+                        if ischar(par.(fn{k})) %vector
+                            par.(fn{k})=str2num(par.(fn{k}));
+                        end
+                    end
+                    
                     obj.register_parameters=par;
                 end
             else

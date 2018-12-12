@@ -280,16 +280,26 @@ end
             arguments{4}=single(fitpar.zparhere);
 %         case 4 %sx sy
         case {5,6} %spline   
-            if fitpar.mirrorstack
-                arguments{1}=single(imstack(:,end:-1:1,:)/EMexcess);
-            else
-                arguments{1}=single(imstack/EMexcess);
-            end
+%             if fitpar.mirrorstack
+%                 arguments{1}=single(imstack(:,end:-1:1,:)/EMexcess);
+%             else
+%                 arguments{1}=single(imstack/EMexcess);
+%             end
             coeffh=(fitpar.splinefithere.cspline.coeff);
             if iscell(coeffh)
                 coeffh=coeffh{1};
             end
             arguments{4}=single(coeffh);
+%             mirr=fitpar.splinefithere.cspline.mirror;
+%             switch mirr
+%                 case 0 %no mirror
+                    imfit=single(imstack/EMexcess);
+%                 case 1 %righ-left mirror
+%                     imfit=single(imstack(:,end:-1:1,:)/EMexcess);
+%                 case 2 %up-down mirror
+%                     imfit=single(imstack(end:-1:1,:,:)/EMexcess);
+%             end
+            arguments{1}=imfit;
             
     end
    

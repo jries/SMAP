@@ -44,6 +44,7 @@ end
 
 xf=double(loc.xnm);
 yf=double(loc.ynm);
+transform.setTransform([],'cam_pixnm',p.cam_pixelsize_nm);
 switch p.datapart.selection
     case {'all (T->R)','all'}
         pos=transform.transformToReference(2,horzcat(xf(indf),yf(indf),zf(indfz)),'nm');
