@@ -8,7 +8,7 @@ classdef getKymograph<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj,p)
-            out = runGetKymogroph(obj,p);
+            out = runGetKymograph(obj,p);
         end
         function pard=guidef(obj)
             pard=guidef(obj);
