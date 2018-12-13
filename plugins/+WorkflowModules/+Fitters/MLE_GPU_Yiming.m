@@ -153,18 +153,18 @@ LogL=results.LogL;
            CRLB(isnan(CRLB))= 0; %XXXXXXXXX
            LogL(isnan(LogL))= 0; %XXXXXXXXX
            CRLB((CRLB)<0)= 0; %XXXXXXXXX
-if (fitpar.fitmode==5||fitpar.fitmode==6) && fitpar.mirrorstack
-    locs.xpix=dn-P(:,2)+posx;
-else
-    locs.xpix=P(:,2)-dn+posx;
+           
+normf=1;
+locs.xpix=P(:,2)-dn+posx;
+if (fitpar.fitmode==5||fitpar.fitmode==6) 
+    if fitpar.mirrorstack
+        locs.xpix=dn-P(:,2)+posx;
+    end
+    if isfield(fitpar.splinefithere.cspline,'normf')
+        normf=fitpar.splinefithere.cspline.normf;
+    end
 end
 locs.ypix=P(:,1)-dn+posy;
-if isfield(fitpar.splinefithere.cspline,'normf')
-    normf=fitpar.splinefithere.cspline.normf;
-else
-    normf=1;
-end
-
 locs.phot=P(:,3)*EMexcess*normf;
 locs.bg=P(:,4)*EMexcess;
 locs.frame=frame;
