@@ -23,47 +23,67 @@ classdef zSALM<interfaces.DialogProcessor
                 obj.locData.setloc('locprecznm_a',obj.locData.loc.locprecznm);
             end
             nfit=3e4;
-            goodLL=locs.LLrel>-1;
+            goodLL=locs.LLrel>-1.3;
             photll=locs.phot(goodLL);
             [~,ind]=sort(photll);
             indref=max(1,length(ind)-nfit);
             photref=photll(ind(indref));
+%             photref=0;
             indbright=(locs.phot>photref)&goodLL;
             
             is=locs.(fsa)(indbright);
             iu=locs.(fua)(indbright);
-            rsu=double(is./iu);
+            rsu=double(is./(iu));
+%             rsu=real(log(rsu));
             znm=double(locs.znm(indbright));
-            zrange=-400:10:400;
-            rrange=-0.1:0.01:1;
-            indf=znm>quantile(znm,0.02) & znm<quantile(znm,0.98)...
-                & rsu>quantile(rsu,0.01) & rsu<quantile(rsu,0.99);         
+            zrange=-350:10:400;
+%             rrange=-4.10:0.01:1.5;
+            rrange=0:0.01:1.5;
+            indf=znm>max(quantile(znm,0.001),zrange(1)) & znm<min(quantile(znm,0.985),zrange(end))...
+                & rsu>max(quantile(rsu,0.015),rrange(1)) & rsu<min(quantile(rsu,0.995),rrange(end));
+    
             
-            hz=histcounts2(znm(indf),rsu(indf),zrange,rrange);
+            hz=histcounts2(rsu(indf),znm(indf),rrange,zrange);
             %make compatible to coordinate system
             hzo=hz';
             ax=obj.initaxis('r vs z');
             hold(ax,'off')
-            h=imagesc(ax,zrange,rrange,hzo);
+            h=imagesc(ax,rrange,zrange,hzo);
             axis(ax, 'xy')
             hold(ax,'on')
-            plot(ax,zrange,0*zrange,'k')
+            plot(ax,rrange,0*rrange,'k')
             
             %later extend to multi-exponential that better describes I(s)
-            ft = fittype('a*exp(-b*(x))');
+%             ft = fittype('a*exp(-b*(x))');
+%             startp=[.45,0.006];
+%             lb=[0 0 0];
+%                ft = fittype('a*x+b+c*x^2');
+%             startp=[-0.005,-1,0];
+%             lb=[-inf -inf -inf];   
+             ft = fittype('a*log(x)+b');
+            startp=[-100,-100];
+            lb=[-inf -inf ];   
+%             ft = fittype('a*exp(-b*(x))+c*exp(-d*(x))');
+%             startp=[.2,0.008, .1 0.001];
+%             lb=[0 0 0 0];
+%             ft = fittype('a*exp(-b*(x))+c');
+%             startp=[.2,0.008, 0];
+%             lb=[0 0 -inf];
+             ft = fittype('a*log(x)+b+c*x.^2');
+            startp=[-100,-100,0];
+%             lb=[-inf -inf -];  
             
-            startp=[0.2,0.007];
-           
-            
-            fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare');
-            plot(ax,zrange,fitp(zrange),'r')  
-            plot(ax,zrange,ft(startp(1),startp(2),zrange),'y')
-%             plot(zrange,ft(startp(1),startp(2),startp(3),zrange))
+            fitp=fit(rsu(indf),znm(indf),ft,'StartPoint',startp)
+            plot(ax,rrange,fitp(rrange),'r')  
+%             plot(ax,rrange,ft(startp(1),startp(2),rrange),'y')
+            plot(ax,rrange,ft(startp(1),startp(2),startp(3),rrange),'y')
+%               plot(zrange,ft(startp(1),startp(2),startp(3),startp(4),zrange),'y')
             isall=obj.locData.loc.(fsa);
             iuall=obj.locData.loc.(fua);
             rall=isall./iuall;
-            zr=real(log(rall/fitp.a)/(-fitp.b));
-            zr(rsu<0)=1000;
+            zr=fitp(rall);
+%             zr=real(log(rall/fitp.a)/(-fitp.b));
+%             zr(rsu<0)=1000;
             obj.locData.loc.zSALM=zr;
             
             %calculate error of zr
@@ -71,7 +91,7 @@ classdef zSALM<interfaces.DialogProcessor
             % weighted average
             bgs=obj.locData.loc.(fsabg);
             bgu=obj.locData.loc.(fsubg);
-            zerrs=zerrSALM(fitp.b,isall,isall,bgs,bgu);
+            zerrs=zerrSALM(fitp.a,isall,isall,bgs,bgu);
             errza=obj.locData.loc.locprecznm_a;
             %also here change sign of z.
             znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
@@ -127,7 +147,7 @@ pard.plugininfo.type='ProcessorPlugin';
 
 end
 
-function err=zerrSALM(b,Ns,Nu,bgs,bgu)
+function err=zerrSALM(a,Ns,Nu,bgs,bgu)
 Ns(Ns<1)=1;
 Nu(Nu<1)=1;
 
@@ -135,7 +155,8 @@ r=Ns./Nu;
 dru=-Ns./Nu.^2;
 drs=1./Ns;
 dR2=drs.^2.*errN2(Ns,bgs)+dru.^2.*errN2(Nu,bgu);
-dz2=dR2/b^2./r.^2;
+dz2=(a./r).^2.*dR2;
+% dz2=dR2/b^2./r.^2;
 err=sqrt(dz2);
 end
 

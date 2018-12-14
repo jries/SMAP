@@ -53,6 +53,10 @@ facsize=ones(2,1);
 separator=roinm(1:2)+roinm(3:4);
 spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000)/2;
 mirroradd=zeros(2,1);
+
+if ~isfield(p,'repetition')
+    p.repetition=[];
+end
 if p.useT
 else
 switch p.targetpos.selection
@@ -115,10 +119,11 @@ if p.useT
         Tinitial=loadtransformation(locData,p.Tfile,p.dataselect.Value);
     end
     if isa(Tinitial,'interfaces.LocTransformN')
+        Tinitial.setTransform([],'cam_pixnm',p.currentfileinfo.cam_pixelsize_um*1000)
         pos=Tinitial.transformToReference(2,horzcat(loctarget.xnm,loctarget.ynm),'nm');
         loctT.x=pos(:,1);loctT.y=pos(:,2);
-           indref=Tinitial.getPart(1,pos,'nm');
-           indtarget=Tinitial.getPart(2,pos,'nm');
+           indref=Tinitial.getPart(1,horzcat(locref.xnm,locref.ynm),'nm');
+           indtarget=Tinitial.getPart(2,horzcat(loctarget.xnm,loctarget.ynm),'nm');
     else
         [loctT.x,loctT.y]=Tinitial.transformCoordinatesInv(loctarget.xnm,loctarget.ynm);
         mirrorinfo=Tinitial.tinfo.mirror;

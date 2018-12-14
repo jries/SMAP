@@ -43,14 +43,14 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
                 return;
             end
             switch ic
-                case 'r' 
+                case {'r' ,'s'}
                     sppos=1;
-                case 't'
+                case {'t','u'}
                     sppos=2;
             end
                sppos        
             sind=min(length(obj.spline.SXY(sppos).cspline.coeff),sppos); %did not fix calibrator yet..
-            obj.splinecoeff=obj.spline.SXY(sppos).cspline.coeff{sind};
+            obj.splinecoeff=single(obj.spline.SXY(sppos).cspline.coeff{sind});
             
         end
         function prerun(obj,p)
@@ -133,7 +133,7 @@ dz=obj.spline.SXY(1).cspline.dz;
     else
         z=loc.z/dz;
     end
-    cor=horzcat(loc.dy+dn,loc.dx+dn,z+zmp);
+    cor=horzcat(loc.dy+dn,loc.dx+dn,-z+zmp);
    
    % template = evalSpline(obj.p.roisize_fit,obj.splinecoeff,1,0,cor);
     template = simSplinePSF_call(obj.p.roisize_fit,obj.splinecoeff,1,0,single(cor));

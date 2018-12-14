@@ -21,10 +21,12 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             cal3D=load(p.cal_3Dfile);
             transformcal=cal3D.transformation;
             pt.Tfile=transformcal;
-            pt.register_parameters.pixelsizenm=50;
+            pt.register_parameters.pixelsizenm=200;
             pt.register_parameters.maxshift_corr=10000;
+            pt.register_parameters.maxshift_match=350;
             pt.resultstabgroup=obj.resultstabgroup;
-            transform_locsN(obj.locData,pt)
+            pt.register_parameters.maxlocsused=50000;
+            transform=transform_locsN(obj.locData,pt)
             
             [locsa,xx]=obj.locData.getloc({'xnm','ynm','frame','filenumber','znm','PSFxnm'},'layer',p.salayer.Value,'position','roi','grouping','ungrouped');
             [locua,yy]=obj.locData.getloc({'xnm','ynm','frame','filenumber','znm','PSFxnm'},'layer',p.ualayer.Value,'position','roi','grouping','ungrouped');
@@ -52,6 +54,7 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             p.framestop=max(obj.locData.loc.frame);
             file=obj.locData.files.file;
             wf.module('IntLoc2posN').filestruc=file;
+            wf.module('IntLoc2posN').transformation=transform;
             wf.module('IntLoc2posN').setGuiParameters(p);
             
             pe=obj.children.evaluate.getGuiParameters(true);
@@ -62,34 +65,44 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             
             wf.module('EvaluateIntensity_s').setGuiParameters(pe,true);
             obj.setPar('loc_preview',false);
-
-            rsfit=wf.module('EvaluateIntensity_s').children.panel_3.getSingleGuiParameter('roisize_fit');
+            
+            evalfit=wf.module('EvaluateIntensity_s').children.panel_3;
+            rsfit=evalfit.getSingleGuiParameter('roisize_fit');
+            pfit=evalfit.getAllParameters;
+             pfit.fixz0=1;
+             evalfit.setGuiParameters(pfit)
+            
+            
             p.loc_ROIsize=rsfit+2;
-            p.loc.fitgrouped=true;
+            p.loc_fitgrouped=false;
 %             wf.module('RoiCutterWF_groupExt').setGuiParameters(p);
             wf.module('RoiCutterWF').setGuiParameters(p);
             
             
             % now first SA
     
-                obj.setPar('intensity_channel','t')
+                obj.setPar('intensity_channel','s')
                 wf.module('TifLoader').addFile(p.tiffiletarget,true);   
-                wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
+                wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirrorem))
 %                 wf.module('EvaluateIntensity_s').extension='t';
-                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
+                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
                 wf.run;
         %then fit UA if needed with modified settings
-            if p.evalref
-                obj.setPar('intensity_channel','r')
-                if isempty(p.tiffileref) %when same, dont select again
+            if p.evalua
+                obj.setPar('intensity_channel','u')
+%                 if isempty(p.tiffileref) %when same, dont select again
                     p.tiffileref=p.tiffiletarget;
-                    p.mirroremref=p.mirroremtarget;
-                end
+                    p.mirroremref=p.mirrorem;
+%                 end
+                
+                pfit.fixz0=0;
+                evalfit.setGuiParameters(pfit)
+             
                 wf.module('TifLoader').addFile(p.tiffileref,true);   
                 wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
 %                 wf.module('EvaluateIntensity_s').extension='r';
                 
-                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
+                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
                 wf.run;
             end
             delete(f);

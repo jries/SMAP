@@ -70,7 +70,13 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             global EvaluateIntensity_intensity
             obj.extension=obj.getPar('intensity_channel');
             p=obj.getAllParameters;
-            obj.useevaluators=[p.evalmodules.Data{:,1}];
+            for k=1:size(p.evalmodules.Data,1)
+                if isempty(p.evalmodules.Data{k,1})
+                    obj.useevaluators(k)=0;
+                else
+                    obj.useevaluators(k)=p.evalmodules.Data{k,1};
+                end
+            end
             
             obj.loccounter=0;
             obj.fields={};
