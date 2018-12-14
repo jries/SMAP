@@ -598,7 +598,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                     
 
     %                 l=length(obj.layer);
-                    for l=1:length(obj.layer);
+                    for l=1:length(obj.layer)
                         fields=fieldnames(obj.layer(l).filter);
                         for k=1:length(fields)
                             locout.layer(l).filter.(fields{k})=obj.layer(l).filter.(fields{k})(indu);

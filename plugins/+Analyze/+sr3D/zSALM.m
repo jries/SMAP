@@ -73,7 +73,7 @@ classdef zSALM<interfaces.DialogProcessor
             startp=[-100,-100,0];
 %             lb=[-inf -inf -];  
             
-            fitp=fit(rsu(indf),znm(indf),ft,'StartPoint',startp)
+            fitp=fit(rsu(indf),znm(indf),ft,'StartPoint',startp);
             plot(ax,rrange,fitp(rrange),'r')  
 %             plot(ax,rrange,ft(startp(1),startp(2),rrange),'y')
             plot(ax,rrange,ft(startp(1),startp(2),startp(3),rrange),'y')
@@ -82,6 +82,7 @@ classdef zSALM<interfaces.DialogProcessor
             iuall=obj.locData.loc.(fua);
             rall=isall./iuall;
             zr=fitp(rall);
+            zr(isnan(zr))=-zrange(1)-100;
 %             zr=real(log(rall/fitp.a)/(-fitp.b));
 %             zr(rsu<0)=1000;
             obj.locData.loc.zSALM=zr;
