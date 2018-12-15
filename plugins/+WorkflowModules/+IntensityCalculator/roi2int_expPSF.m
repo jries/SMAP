@@ -165,6 +165,17 @@ for k=1:sim(3)
     end
 end
 
+if 0%loc.frame(1)==60
+    
+    roia=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,:);
+    tp=template;
+    for k=1:size(roi,3)
+        tp(:,:,k)=tp(:,:,k)*p(k,1)+p(k,2);
+    end
+    impl=[roia,tp;roia-tp,0*tp];
+    f=figure(88);
+    imx(impl,'Parent',f)
+end
 end
 
 

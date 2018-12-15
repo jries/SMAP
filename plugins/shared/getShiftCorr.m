@@ -5,6 +5,7 @@ end
 if nargin<5
     subpixel=true;
 end
+
 % facs=1; %global resize factor for smaller pixel sizes
  filtersize=1.5;
  winfit=3;
@@ -41,6 +42,7 @@ Fccfilt=Fccsmall;
 [x,y]=ind2sub(size(Fccfilt),ind);
 try
 Fcccut=Fccsmall(x-winfit:x+winfit,y-winfit:y+winfit);
+
 catch err
     disp('Maximum on edge:increase Max shift (correlation)')
 end
@@ -56,7 +58,6 @@ else
     fitp=[0 0];
     abg=maxcc;
 end
-abg=abg/sqrt(s1*s2);
 if ploton
 % 
 % % figure(1)
@@ -73,3 +74,4 @@ plot(fitp(:,2),fitp(:,1),'ks')
 hold off
 axis equal
 end
+abg=abg/sqrt(s1*s2);

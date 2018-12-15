@@ -110,6 +110,8 @@ classdef RegisterLocs2<interfaces.DialogProcessor
                 par.initial_mag=1;
                 par.initialshiftx=0;
                  par.initialshifty=0;
+                 obj.register_parameters=par;
+                 return
             else 
                 par=obj.register_parameters;
             end

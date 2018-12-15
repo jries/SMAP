@@ -54,7 +54,8 @@ weighted=0;
     end
     
 [Xi,Yi]=meshgrid(xi,yi);
-  rsxsy= sum( sum((Xi-xm).*(Yi-ym).*image))/sum(image(:));
+    imagerho=image-min(image(:));
+  rsxsy= sum( sum((Xi-xm).*(Yi-ym).*imagerho))/sum(imagerho(:));
   rho=rsxsy/sxm/sym;
     
     bg=min(image(:));

@@ -157,6 +157,7 @@ classdef LocSaver<interfaces.WorkflowModule
            
             
             if data.eof %save locs
+                obj.status('saving localizations');drawnow
                 if ~isempty(templocs)
                     locdat=interfaces.LocalizationData;
                     locdat.loc=fitloc2locdata(obj,templocs,1:numlocs);
