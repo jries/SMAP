@@ -11,7 +11,10 @@ par.mask=1;
 par.Rnear=5;
 par.sigmaf=0.5;
 par.file=f;
+par.regionfilter=false
+par.overwrite=true;
 kbl=0;
+kbl=0.077;
 zlen=3;
 %%
 
@@ -29,7 +32,11 @@ for k=1:size(img,3)
 end
 
 figure(8)
-hold on
+if par.overwrite
+hold off
+else
+    hold on
+end
 % subplot(2,2,1)
 ax1=gca;
 % subplot(2,2,2)
@@ -74,7 +81,7 @@ end
 % mimg=mimg-background;
 %%
 
-numbins=50; 
+binpos=0:50:3000;
 if 0
 maxima=zeros(0,3);
 for k=1:size(imghr,3)
@@ -91,10 +98,31 @@ end
 
 mint=maxima(:,3);
 indgood=mint>cutoffmin;
-
-
-%%
 maximafi=maxima(indgood,:);
+% investigate local neighbourhood, only keep maxima that are clear maxima
+if par.regionfilter
+roi=3;
+cutf=0.85;
+r=-roi:roi;
+maskh=ones(length(r));
+maskh(2:end-1,2:end-1)=0;
+indtruemax=false(size(indgood));
+for k=1:size(maximafi,1)
+    roih=mimgr(maximafi(k,2)+r,maximafi(k,1)+r);
+    if all(roih.*maskh<maximafi(k,3)*cutf)
+        indtruemax(k)=true;
+    end
+    
+end
+figure(90);imagesc(mimgr);hold on;
+plot(maximafi(indtruemax,1),maximafi(indtruemax,2),'kx')
+hold off
+indgood=indtruemax;
+else 
+    indgood=true(size(maximafi,1),1);
+end
+%%
+
 
 %only take maxima not in first or last frame
 % maxp=imghr(maximafi(:,1),maximafi(:,2),1);
@@ -103,7 +131,7 @@ indlin=sub2ind(size(indmax),maximafi(:,1),maximafi(:,2));
 indmaxx=indmax(indlin);
 mp=size(imghr,3)/2;
 % indgood=abs(indmaxx-mp)<=mp-2;
-indgood=true(size(indmaxx));
+% indgood=true(size(indmaxx));
 maximaf=maximafi(indgood,:);
 if ~isempty(ax2)
 scatter(ax2,maximaf(:,1),maximaf(:,2),4,maximaf(:,3),'filled')
@@ -122,14 +150,14 @@ if ~isempty(ax1)
 % mintc=mint(indgood);
 mintc=maximaf(:,3);
 % hold(ax1,'off')
-h=histogram(ax1,mintc,numbins,'Normalization','probability');
+h=histogram(ax1,mintc,binpos,'Normalization','probability');
 
 % cftool(h.BinEdges(1:end-1)+h.BinWidth/2,h.Values)
 xfit=h.BinEdges(1:end-1)+h.BinWidth/2;
 yfit=(h.Values);
 
 fitp1=fit(xfit',yfit','gauss1','Robust','LAR');
-fitp2=fit(xfit',yfit','gauss2','Robust','LAR','StartPoint',[fitp1.a1,fitp1.b1,fitp1.c1,0,fitp1.b1,fitp1.c1]);
+fitp2=fit(xfit',yfit','gauss2','Robust','LAR','StartPoint',[fitp1.a1,fitp1.b1,fitp1.c1,0,fitp1.b1*2,fitp1.c1]);
 % fitp3=fit(xfit',sqrt(yfit)','gauss3','StartPoint',[fitp.a1,fitp.b1,fitp.c1,fitp.a2*.8,fitp.b2,fitp.c2,fitp.a2*.2,fitp.b1*3,fitp.c2]);
 hold(ax1,'on')
 plot(ax1,xfit,fitp1(xfit))
@@ -137,8 +165,10 @@ plot(ax1,xfit,fitp2(xfit))
 legend('hist','single G','double G')
 
 mv=sort([fitp2.b1 fitp2.b2]);
-title(ax1,{['maximum at ' num2str(fitp1.b1,4) ', 2G:'  num2str(mv(1),4) ', '  num2str(mv(2),4) ', bg ' num2str(background,2) ', std ' num2str(fitp1.c1/sqrt(2),3)],par.file},...
+title(ax1,{['maximum at ' num2str(fitp1.b1,4) ', 2G:'  num2str(mv(1),4) ', '  num2str(mv(2),4) ', bg ' num2str(background,2) ', std ' num2str(fitp1.c1/sqrt(2),3) ', sem ' num2str(fitp1.c1/sqrt(2)/sqrt(sum(indgood)),3)],par.file},...
     'Interpreter','none')
+% title(ax1,{['maximum at ' num2str(fitp1.b1,4) ', bg ' num2str(background,2) ', std ' num2str(fitp1.c1/sqrt(2),3)],par.file},...
+%     'Interpreter','none')
 xlabel('intensity at maximum')
 ylabel('frequency')
 % cftool(h.BinEdges(1:end-1),h.Values)
