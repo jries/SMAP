@@ -7,7 +7,7 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
         function obj=MLE_GPU_Yiming(varargin)
             obj@interfaces.WorkflowFitter(varargin{:})
             obj.inputChannels=1; 
-             obj.setInputChannels(1,'frame');
+             obj.setInputChannels(1,'frame','segmented ROI stacks');
         end
         function pard=guidef(obj)
             pard=guidef(obj);

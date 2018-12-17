@@ -338,8 +338,9 @@ classdef Workflow<interfaces.DialogProcessor
                     end
                 end
                 
+                tooltip='';
                 
-                obj.makeinputlist(thistag,obj.modules{idx}.inputpanel,module.inputChannels,module.isstartmodule);
+                obj.makeinputlist(thistag,obj.modules{idx}.inputpanel,module.inputChannels,module.isstartmodule,obj.modules{idx}.module.inputchanneldescription);
                 obj.children.(thistag)=module;
 %             catch err
 %                 obj.modules(idx)=[];
@@ -508,8 +509,7 @@ classdef Workflow<interfaces.DialogProcessor
                 mh.Visible='on';
 %             end
         end
-        function makeinputlist(obj,tag,inputhandle,inputChannels,isstartmodule)
-            
+        function makeinputlist(obj,tag,inputhandle,inputChannels,isstartmodule,tooltips)       
             pos=inputhandle.Position;
             fs=obj.guiPar.fontsize;
             fh=obj.guiPar.FieldHeight;
@@ -527,10 +527,16 @@ classdef Workflow<interfaces.DialogProcessor
                 mpos2(1)=mpos(1)+fw/4;
                 h=uicontrol('Parent',inputhandle,'Style','popupmenu','Position',mpos,...
                     'String','1','FontSize',fs,'Callback',{@obj.input_callback,tag,k});
-                obj.guihandles.([tag '_input' int2str(k)])=h;
+                
                 h2=uicontrol('Parent',inputhandle,'Style','edit','Position',mpos2,...
                     'String','1','FontSize',fs,'Callback',{@obj.output_callback,tag,k});
+                if length(tooltips)>=k
+                    h.Tooltip=tooltips{k};
+                    h2.Tooltip=tooltips{k};
+                end
                 obj.guihandles.([tag '_outputchannel' int2str(k)])=h2;
+                obj.guihandles.([tag '_input' int2str(k)])=h;
+                
             end
             if isstartmodule
                 
