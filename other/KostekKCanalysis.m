@@ -2,29 +2,35 @@
 
 path='/Volumes/t2ries/users/Kostek/For Jonas/Distance data';
 if 0
-dirs=dir(path);
-ind=1;
-clear dists pname meanall stdall semall numdists
-for k=1:length(dirs)
-    if dirs(k).isdir && ~strcmp(dirs(k).name(1),'.')
-        dirh=dirs(k).name;
-        disp(dirh)
-        dists{ind}=getdistances([path filesep dirh filesep]);
-        pname{ind}=strrep(dirh,'_','-');
-        ind=ind+1;
+    dirs=dir(path);
+    ind=1;
+    clear dists pname meanall stdall semall numdists
+    for k=1:length(dirs)
+        if dirs(k).isdir && ~strcmp(dirs(k).name(1),'.')
+            dirh=dirs(k).name;
+            disp(dirh)
+            dists{ind}=getdistances([path filesep dirh filesep]);
+            pname{ind}=strrep(dirh,'_','-');
+            ind=ind+1;
+        end
+
     end
-end
+    save([path filesep 'distances.mat'],'pname','dists')
 else
     load([path filesep 'distances.mat'])
 end
 
 for k=1:length(pname)
-    meanall(k)=mean(dists{k},'omitnan');
+    meanall(k)=-mean(dists{k},'omitnan');
     stdall(k)=std(dists{k},'omitnan');
     numdists(k)=length(dists{k});
     semall(k)=stdall(k)/sqrt(numdists(k));
+    medianall(k)=-median(dists{k},'omitnan');
 end
 
+meanall(6)=meanall(6)+meanall(5);
+medianall(6)=medianall(6)+medianall(5);
+pname{6}=[pname{6} '*'];
 
 figure(88);
 hold off
@@ -36,11 +42,12 @@ ax.YTick=n;
 ax.YTickLabel=pname;
 ylim([0 n(end)+1])
 
+
 hold on
 for k=1:length(pname)
 rectangle('Position',[meanall(k)-semall(k),n(k)-dd,semall(k)*2,2*dd])
 end
-
+plot(medianall,n,'ro')
 
 %p-values
 for k=1:length(pname)
@@ -58,7 +65,7 @@ for k=1:length(pname)
     end
 end
 pstar
-txtt=num2str(ptt,2)
+txtt=num2str(ptt,4)
 
 function dists=getdistances(file)
 dirh=dir([file filesep '*.mat']);
