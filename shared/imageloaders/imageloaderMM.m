@@ -61,7 +61,7 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             troi=textscan(imgmetadata.get('ROI'),'%d','delimiter','-');
             %XXXXX
             roih=troi{:}';
-            roih(1)=512-roih(1)-roih(3);
+%             roih(1)=512-roih(1)-roih(3);
             allmd(end+1,:)={'ROI direct',num2str(roih)};
             catch err
             end

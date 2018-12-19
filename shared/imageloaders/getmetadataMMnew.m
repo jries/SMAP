@@ -51,7 +51,7 @@ metafile=info.metafile;
              troi=textscan(minfo(ind+10:ind+100),'%d','delimiter',',');
              %XXXXXXXX
              roih=troi{:}';
-             roih(1)=512-roih(1)-roih(3);
+%              roih(1)=512-roih(1)-roih(3);
              mdo(end+1,:)={'ROI direct',num2str(roih)};
 
              

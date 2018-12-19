@@ -307,7 +307,7 @@ function mirrorem_callback(a,b,obj)
 if ~isempty(obj.imloader)
      fileinf=obj.imloader.metadata;
             if fileinf.EMon && obj.getSingleGuiParameter('mirrorem')  %if em gain on and mirrorem on: switch roi
-                fileinf.roi(1)=512-fileinf.roi(1)-fileinf.roi(3);
+%                 fileinf.roi(1)=512-fileinf.roi(1)-fileinf.roi(3);
                 fileinf.EMmirror=true;
             else 
                 fileinf.EMmirror=false;
