@@ -87,7 +87,7 @@ pard.calculatebg.position=[1,1];
 
 pard.bgfunction.object=struct('Style','popupmenu','String',{{'quantile'}});
 pard.bgfunction.position=[1,2];
-pard.bgfunctionpar.object=struct('Style','edit','String','0.3');
+pard.bgfunctionpar.object=struct('Style','edit','String','0.5');
 pard.bgfunctionpar.position=[1,3];
 pard.bgfunctionpar.Width=0.5;
 

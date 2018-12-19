@@ -261,7 +261,7 @@ loctarget.y=loctarget.ynm/pixtarget(end);
 % transform.findTransform(locref.x(iAa),locref.y(iAa),loctarget.x(iBa),loctarget.y(iBa))
 
 if p.useT
-    transform=Tinitial;
+    transform=Tinitial.copy;
 else
     transform=interfaces.LocTransformN;
     transform.setTransform(1,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixref,'xrange',xrangecamr,'yrange',yrangecamr);

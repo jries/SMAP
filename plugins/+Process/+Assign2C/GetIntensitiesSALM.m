@@ -19,19 +19,20 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             pt.currentfileinfo=obj.locData.files.file(1).info;
             pt.useT=true;
             cal3D=load(p.cal_3Dfile);
-            transformcal=cal3D.transformation;
-            pt.Tfile=transformcal;
+            transform=cal3D.transformation;
+            pt.Tfile=transform;
             pt.register_parameters.pixelsizenm=200;
             pt.register_parameters.maxshift_corr=10000;
             pt.register_parameters.maxshift_match=350;
             pt.resultstabgroup=obj.resultstabgroup;
             pt.register_parameters.maxlocsused=50000;
-            transform=transform_locsN(obj.locData,pt)
-            
-            [locsa,xx]=obj.locData.getloc({'xnm','ynm','frame','filenumber','znm','PSFxnm'},'layer',p.salayer.Value,'position','roi','grouping','ungrouped');
-            [locua,yy]=obj.locData.getloc({'xnm','ynm','frame','filenumber','znm','PSFxnm'},'layer',p.ualayer.Value,'position','roi','grouping','ungrouped');
-            pos=transformcal.transformToReference(2,horzcat(locua.xnm,locua.ynm),'nm');
-    
+            if p.makeT
+            transform=transform_locsN(obj.locData,pt);
+            end
+%             [locsa,xx]=obj.locData.getloc({'xnm','ynm','frame','filenumber','znm','PSFxnm'},'layer',p.salayer.Value,'position','roi','grouping','ungrouped');
+%             [locua,yy]=obj.locData.getloc({'xnm','ynm','frame','filenumber','znm','PSFxnm'},'layer',p.ualayer.Value,'position','roi','grouping','ungrouped');
+%             pos=transformcal.transformToReference(2,horzcat(locua.xnm,locua.ynm),'nm');
+%     
             %make WF
             if isempty(obj.figure)||~isvalid(obj.figure)
                 obj.figure=figure;

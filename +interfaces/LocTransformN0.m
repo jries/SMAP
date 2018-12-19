@@ -251,6 +251,14 @@ classdef LocTransformN0<handle
                 out(2)=true;
             end
         end
+        function out=copy(obj)
+            out=eval(class(obj));
+            fn=properties(obj);
+            fn=setdiff(fn,'tinfo');
+            for k=1:length(fn)
+                out.(fn{k})=obj.(fn{k});
+            end
+        end
         
     end
 end
