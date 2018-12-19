@@ -417,8 +417,8 @@ if p.isscmos  %this needs to be extended. Include offset correction as well!
                 else
                     metadata=p.loc_cameraSettings;
                 end
-                if isfield(l,'mean')
-                offsetmaph=(single(l.mean)-metadata.offset)*metadata.pix2phot;
+                if isfield(l,'offsetmap')
+                offsetmaph=(single(l.offsetmap)-metadata.offset)*metadata.pix2phot;
                 else
                     offsetmaph=[];
                 end
@@ -427,7 +427,7 @@ if p.isscmos  %this needs to be extended. Include offset correction as well!
                 else
                     gainmap=[];
                 end
-                varmaph=single(l.variance)*metadata.pix2phot^2;
+                varmaph=single(l.varmap)*metadata.pix2phot^2;
 %             end
         otherwise
             disp('could not load variance map. No sCMOS noise model used.')
@@ -673,7 +673,7 @@ pard.isscmos.object=struct('Style','checkbox','String','sCMOS','Callback',{{@obj
 pard.isscmos.position=[5,1];
 pard.isscmos.Optional=true;
 pard.selectscmos.object=struct('Style','pushbutton','String','Load var map','Callback',{{@loadscmos_callback,obj}});   
-pard.selectscmos.TooltipString='Select sCMOS variance map (in ADU^2) of same size ROI on chip as image stack';
+pard.selectscmos.TooltipString='Select .mat-file containing sCMOS variance map (in counts^2, named varmap), gain map (in electrons/count, named gainmap) and offset map (in counts, named offsetmap).';
 pard.selectscmos.position=[5,2];
 pard.selectscmos.Optional=true;
 pard.scmosfile.object=struct('Style','edit','String','');

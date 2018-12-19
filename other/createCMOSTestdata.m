@@ -40,7 +40,7 @@ rng(1); % reset the random number generator for reproduceable results
 
     map_offset = map_pattern_offset * val_offset;
     map_noise = map_pattern_noise * val_noise;
-    map_gain = (1 + map_pattern_gain) / val_epc;
+    map_gain = (1 + map_pattern_gain) * val_epc;
     
     % place emitters
         map_gauss = zeros(xsize, ysize); % preallocation
@@ -56,7 +56,7 @@ rng(1); % reset the random number generator for reproduceable results
         
 % simulate signal
     for frame = 1
-         map_signal(:,:,frame) = map_offset + map_gain .* ( normrnd(0, map_noise) + poissrnd(photons*map_gauss) );
+         map_signal(:,:,frame) = map_offset + 1./map_gain .* ( normrnd(0, map_noise) + poissrnd(photons*map_gauss) );
     end % for
  
 % test plots
@@ -91,4 +91,9 @@ rng(1); % reset the random number generator for reproduceable results
         
     imwrite(uint16(map_signal), 'CMOS_testsignal.tif')
     
-    cd(current_dir)
+    gainmap = map_gain;
+    offsetmap = map_offset;
+    varmap = map_noise;
+    save('CMOS_maps.mat', 'gainmap', 'offsetmap', 'varmap')
+    
+    %cd(current_dir)
