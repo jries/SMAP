@@ -46,6 +46,7 @@ classdef locsfromSE<interfaces.DialogProcessor
                         psf(ind)=info.PSF;
                         localizations(ind)=info.(gfield);  
                         ind=ind+1;
+                        filenumbersave=sites(k).info.filenumber;
                     end
                 end
                 locprecnm(ind:end)=[];
@@ -88,7 +89,13 @@ classdef locsfromSE<interfaces.DialogProcessor
                 [y,x]=hist(dlocs,0:dloc:maxhist+dloc);
                 xlim([1,100])
                 plot(x,y)
-                title(['mean: ' num2str(mean(dlocs(dlocs<maxhist))) ',std: ' num2str(std(dlocs(dlocs<maxhist))) ',median: ' num2str(median(dlocs(dlocs<maxhist)))]);
+                hmean=num2str(mean(dlocs(dlocs<maxhist)));
+                hstd=num2str(std(dlocs(dlocs<maxhist)));
+                hmedian=num2str(median(dlocs(dlocs<maxhist)));
+                nlocs=num2str(sum(dlocs<maxhist));
+                title(['mean: ' (hmean) ' ,std: ' (hstd)  ' ,median: ' (hmedian) ' ,nlocs: ' (nlocs)]);
+                filen=obj.locData.SE.files(filenumbersave).name;
+                clipboard('copy',[filen sprintf(['\t' hmean '\t' hstd '\t' hmedian '\t' nlocs])])
                 % sum(y)
                 % length(cluster)
 
