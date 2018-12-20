@@ -3,6 +3,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
         filestruc;
         locs
         roi
+        transformation=[];
     end
     methods
         function obj=IntLoc2posN(varargin)
@@ -20,8 +21,11 @@ classdef IntLoc2posN<interfaces.WorkflowModule
             obj.locData.sort('frame');
             % filter again?
             p=obj.getAllParameters;
-          
-            transform=loadtransformation(obj,p.Tfile);
+            if isempty(obj.transformation)
+                transform=loadtransformation(obj,p.Tfile);
+            else
+                transform=obj.transformation;
+            end
             obj.locs=obj.locData.getloc({'frame','xnm','ynm','znm','PSFxnm','phot','bg','groupindex','numberInGroup','filenumber'});
             %XXXXX
 %             obj.locs=obj.locData.getloc({'frame','xnm','ynm','znm','PSFxnm','phot','bg','groupindex','numberInGroup','filenumber'},'layer',1,'grouping','ungrouped');

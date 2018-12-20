@@ -115,7 +115,7 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             if f
                 obj.guihandles.(field).String=[path f];
             end      
-            r=imageloaderAll([path f]);
+            r=imageloaderAll([path f],[],obj.P);
             mirror=r.metadata.EMon;
             r.close;
             if contains(field,'target')

@@ -223,10 +223,23 @@ obj.cameras=cameras;
 end
 
 function prop2table(obj)
-obj.guihandles.partable.Data=obj.cameras(obj.currentcam).par;
+
+%hack to add property for roi mode
+pardat=obj.cameras(obj.currentcam).par;
+if size(pardat,1)<13
+    pardat(13,:)={'roimode','fix','none','select',[],'',[]};
+end
+obj.guihandles.partable.Data=pardat;
+
 obj.guihandles.statelist.Value=obj.currentstate;
 obj.guihandles.statedeftable.Data=obj.cameras(obj.currentcam).state(obj.currentstate).defpar;
-obj.guihandles.statevaltable.Data=obj.cameras(obj.currentcam).state(obj.currentstate).par;
+statepar=obj.cameras(obj.currentcam).state(obj.currentstate).par;
+%hack to add property for roi mode
+if size(statepar,1)<13
+    statepar(13,:)={'roimode','none'};
+    obj.cameras(obj.currentcam).state(obj.currentstate).par=statepar;
+end
+obj.guihandles.statevaltable.Data=statepar;
 
 cams=obj.cameras;
 for k=1:length(cams)
@@ -250,11 +263,11 @@ end
 
 function t=intpartable
 t=cell(12,7);
-parnames={'EMon','cam_pixelsize_um','conversion','emgain','offset','roi','exposure','timediff','comment','numberOfFrames','Width','Height'};
-mode={'fix','fix','fix','fix','fix','fix','fix','fix','fix','metadata','metadata','metadata'};
-default={'1','0.1','1','100','100','','1','1','settings not initialized','0','0','0'};
-conversion={'str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2num(X)','str2double(X)','str2double(X)','','str2double(X)','str2double(X)','str2double(X)'};
-metafield={'select','select','select','select','select','select','select','select','select','select','select','select','select'};
+parnames={'EMon','cam_pixelsize_um','conversion','emgain','offset','roi','exposure','timediff','comment','numberOfFrames','Width','Height','roimode'};
+mode={'fix','fix','fix','fix','fix','fix','fix','fix','fix','metadata','metadata','metadata','fix'};
+default={'1','0.1','1','100','100','','1','1','settings not initialized','0','0','0','none'};
+conversion={'str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2num(X)','str2double(X)','str2double(X)','','str2double(X)','str2double(X)','str2double(X)',''};
+metafield={'select','select','select','select','select','select','select','select','select','select','select','select','select','select'};
 
 for k=1:size(t,1)
     t{k,1}=parnames{k};

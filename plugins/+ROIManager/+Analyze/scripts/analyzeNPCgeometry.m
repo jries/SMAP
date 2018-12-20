@@ -1,5 +1,6 @@
-if isfield(sites(1).evaluation.NPCgeomtryQuantify,'profile') %z-data is there
 sites=g.locData.SE.sites;
+if isfield(sites(1).evaluation.NPCgeomtryQuantify,'profile') %z-data is there
+
 z0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.b');
 sigma=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.c');
 d=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.d');

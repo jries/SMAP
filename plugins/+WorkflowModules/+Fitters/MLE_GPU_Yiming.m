@@ -7,7 +7,7 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
         function obj=MLE_GPU_Yiming(varargin)
             obj@interfaces.WorkflowFitter(varargin{:})
             obj.inputChannels=1; 
-             obj.setInputChannels(1,'frame');
+             obj.setInputChannels(1,'frame','segmented ROI stacks');
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -76,7 +76,7 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
             end
             if obj.fitpar.issCMOS
                 varstack=getvarmap(obj.fitpar.varmap,stackinfo,size(imstack,1));
-%                 imstackraw=imstack; %XXXXXXXXXXXXXXXXXXXX
+                imstackraw=imstack; %XXXXXXXXXXXXXXXXXXXX added for test purposes
                 if ~isempty(obj.fitpar.offsetmap)
                     offsetstack=getvarmap(obj.fitpar.offsetmap,stackinfo,size(imstack,1));
                     imstack=imstack-offsetstack;
@@ -153,18 +153,18 @@ LogL=results.LogL;
            CRLB(isnan(CRLB))= 0; %XXXXXXXXX
            LogL(isnan(LogL))= 0; %XXXXXXXXX
            CRLB((CRLB)<0)= 0; %XXXXXXXXX
-if (fitpar.fitmode==5||fitpar.fitmode==6) && fitpar.mirrorstack
-    locs.xpix=dn-P(:,2)+posx;
-else
-    locs.xpix=P(:,2)-dn+posx;
+           
+normf=1;
+locs.xpix=P(:,2)-dn+posx;
+if (fitpar.fitmode==5||fitpar.fitmode==6) 
+    if fitpar.mirrorstack
+        locs.xpix=dn-P(:,2)+posx;
+    end
+    if isfield(fitpar.splinefithere.cspline,'normf')
+        normf=fitpar.splinefithere.cspline.normf;
+    end
 end
 locs.ypix=P(:,1)-dn+posy;
-if isfield(fitpar.splinefithere.cspline,'normf')
-    normf=fitpar.splinefithere.cspline.normf;
-else
-    normf=1;
-end
-
 locs.phot=P(:,3)*EMexcess*normf;
 locs.bg=P(:,4)*EMexcess;
 locs.frame=frame;
@@ -280,16 +280,26 @@ end
             arguments{4}=single(fitpar.zparhere);
 %         case 4 %sx sy
         case {5,6} %spline   
-            if fitpar.mirrorstack
-                arguments{1}=single(imstack(:,end:-1:1,:)/EMexcess);
-            else
-                arguments{1}=single(imstack/EMexcess);
-            end
+%             if fitpar.mirrorstack
+%                 arguments{1}=single(imstack(:,end:-1:1,:)/EMexcess);
+%             else
+%                 arguments{1}=single(imstack/EMexcess);
+%             end
             coeffh=(fitpar.splinefithere.cspline.coeff);
             if iscell(coeffh)
                 coeffh=coeffh{1};
             end
             arguments{4}=single(coeffh);
+%             mirr=fitpar.splinefithere.cspline.mirror;
+%             switch mirr
+%                 case 0 %no mirror
+                    imfit=single(imstack/EMexcess);
+%                 case 1 %righ-left mirror
+%                     imfit=single(imstack(:,end:-1:1,:)/EMexcess);
+%                 case 2 %up-down mirror
+%                     imfit=single(imstack(end:-1:1,:,:)/EMexcess);
+%             end
+            arguments{1}=imfit;
             
     end
    
@@ -420,7 +430,7 @@ if fitpar.fitmode==3||fitpar.fitmode==5
 end
 
 %load sCMOS
-if p.isscmos  %this needs to be extended. Include offset correction as well!
+if p.isscmos
     [~,~,ext]=fileparts(p.scmosfile);
     switch ext
         case '.tif'
@@ -432,22 +442,23 @@ if p.isscmos  %this needs to be extended. Include offset correction as well!
 
                 %fn=fieldnames(varmaph);
                 %varmaph=varmaph.(fn{1});
-                if isfield(l,'metadata')
+                if isfield(l,'metadata') % get camera settings either from metadata or loc_cameraSetting
                     metadata=l.metadata;
                 else
                     metadata=p.loc_cameraSettings;
                 end
-                if isfield(l,'mean')
-                offsetmaph=(single(l.mean)-metadata.offset)*metadata.pix2phot;
-                else
+                
+                if isfield(l,'offsetmap')
+                offsetmaph=single(l.offsetmap-metadata.offset)*metadata.pix2phot; % the offset must be provided in counts
+                else % test this
                     offsetmaph=[];
                 end
                 if isfield(l,'gainmap')
-                    gainmap=(single(l.gainmap))/metadata.pix2phot;
-                else
+                    gainmap=(single(l.gainmap))/metadata.pix2phot; % NB: the gain is normalized to the gain in the metadata
+                else % test this
                     gainmap=[];
                 end
-                varmaph=single(l.variance)*metadata.pix2phot^2;
+                varmaph=single(l.varmap)*metadata.pix2phot^2;
 %             end
         otherwise
             disp('could not load variance map. No sCMOS noise model used.')
@@ -471,7 +482,7 @@ if p.isscmos  %this needs to be extended. Include offset correction as well!
 %         varmap=varmaph(max(1,roi(1)):roi(3),max(1,roi(2)):roi(4)); %or +1? roi: width height or coordinates? This is wrong
         gainmap=gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
     end
-else 
+else % else: sCMOS option not used
     varmap=[];
     offsetmap=[];
     gainmap=[];
@@ -693,7 +704,7 @@ pard.isscmos.object=struct('Style','checkbox','String','sCMOS','Callback',{{@obj
 pard.isscmos.position=[5,1];
 pard.isscmos.Optional=true;
 pard.selectscmos.object=struct('Style','pushbutton','String','Load var map','Callback',{{@loadscmos_callback,obj}});   
-pard.selectscmos.TooltipString='Select sCMOS variance map (in ADU^2) of same size ROI on chip as image stack';
+pard.selectscmos.TooltipString='Select .mat-file containing sCMOS variance map (in counts^2, named varmap), gain map (in electrons/count, named gainmap) and offset map (in counts, named offsetmap).';
 pard.selectscmos.position=[5,2];
 pard.selectscmos.Optional=true;
 pard.scmosfile.object=struct('Style','edit','String','');

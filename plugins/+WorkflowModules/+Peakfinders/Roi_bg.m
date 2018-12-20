@@ -28,6 +28,10 @@ classdef Roi_bg<interfaces.WorkflowModule
            
         end
         function outputdat=run(obj,data,p)
+            if ~p.calculatebg
+                outputdat=data{1};
+                return
+            end
             persistent imbufferlocal
 %             outputdat=[];
 %             avlen=20; %define in GUI
@@ -60,7 +64,7 @@ classdef Roi_bg<interfaces.WorkflowModule
                 end
                 for k=length(xpos):-1:1
                     roih=imbufferlocal(ypos(k)-wx:ypos(k)+wx,xpos(k)-wx:xpos(k)+wx,framerange);
-                    roi.info.bgim(k,1)=single(getbackground(roih),p);
+                    roi.info.bgim(k,1)=single(getbackground(roih,p));
                 end
                
                 dato=data{1};
@@ -78,14 +82,17 @@ end
 
 
 function pard=guidef
+pard.calculatebg.object=struct('Style','checkbox','String','calculate BG');
+pard.calculatebg.position=[1,1];
+
 pard.bgfunction.object=struct('Style','popupmenu','String',{{'quantile'}});
-pard.bgfunction.position=[1,1];
-pard.bgfunctionpar.object=struct('Style','edit','String','0.3');
-pard.bgfunctionpar.position=[1,2];
+pard.bgfunction.position=[1,2];
+pard.bgfunctionpar.object=struct('Style','edit','String','0.5');
+pard.bgfunctionpar.position=[1,3];
 pard.bgfunctionpar.Width=0.5;
 
 pard.t1.object=struct('Style','text','String','# frames used for BG calculation');
-pard.t1.position=[2,2];
+pard.t1.position=[2,1];
 pard.t1.Width=2;
 pard.numframes_bg.object=struct('Style','edit','String','20');
 pard.numframes_bg.position=[2,3];

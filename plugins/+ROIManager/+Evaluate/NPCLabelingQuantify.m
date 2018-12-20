@@ -47,6 +47,15 @@ pard.dRt.Width=1;
 pard.dR.object=struct('Style','edit','String','20');
 pard.dR.position=[1,4];
 pard.dR.Width=1;
+
+pard.minlocst.object=struct('Style','text','String','min locs/corner');
+pard.minlocst.position=[2,1];
+pard.minlocst.Width=3;
+
+pard.minlocs.object=struct('Style','edit','String','1');
+pard.minlocs.position=[2,4];
+pard.minlocs.Width=1;
+
 % pard.dualchannel.object=struct('Style','checkbox','String','dual channel','Value',0);
 % pard.dualchannel.position=[2,1];
 % pard.dualchannel.Width=2;
@@ -143,7 +152,7 @@ timepoints=myquantile(frames0,qq);  % now edges are defined: think about time wi
     
 
 % timepoints=linspace(minf,maxf,numpoints+1);
-[numbercornerassigned,mdt,assigneddirect,timing]=assigntocornersdirect(out.coordinates,inr,8,ax1,timepoints,ax1b);
+[numbercornerassigned,mdt,assigneddirect,timing]=assigntocornersdirect(out.coordinates,inr,8,ax1,timepoints,ax1b,p.minlocs);
 [numfound, numfound2]=countspacing(out.coordinates,inr,8,ax2);
 
 
@@ -324,7 +333,7 @@ end
 end
 
 
-function [numbercornerassigned,mdt,direct,timing]=assigntocornersdirect(locs,inr,corners,ax,timepoints,axtp)
+function [numbercornerassigned,mdt,direct,timing]=assigntocornersdirect(locs,inr,corners,ax,timepoints,axtp,minlocs)
 % if nargin <5 || isempty(co)
 %     co=0.5;
 % end
@@ -333,10 +342,18 @@ function [numbercornerassigned,mdt,direct,timing]=assigntocornersdirect(locs,inr
 step=2*pi/corners;
 % locptheta=locs.drho(inr)./locs.rho(inr);
 
-mdt=cyclicaverage(locs.theta(inr),step,1./locs.dtheta(inr).^2);
-if mdt>pi/16
-    mdt=mdt-step;
+mdtc=cyclicaverage(locs.theta(inr),step,1./locs.dtheta(inr).^2);
+if mdtc>pi/16
+    mdtc=mdtc-step;
 end
+
+%try with fitting
+ft=fittype('mod(x-a,pi/4)');
+thh=double(locs.theta(inr));
+fitp=fit(thh,0*thh+pi/8,ft,'Weights',double(1./locs.dtheta(inr)),'StartPoint',mdtc+pi/8);
+mdt=fitp.a-pi/8;
+
+% disp([mdtc,mdt])
 frameh=locs.frame(inr);
 throt=locs.theta(inr)-mdt; %rotate with respect to template.
 throt=mod(throt-step/2,2*pi);
@@ -344,7 +361,7 @@ cornerposd=0:step:2*pi;
 cornerposdf=0:step/8:2*pi;
 h=histcounts(throt,cornerposd);
 hf=histcounts(throt,cornerposdf);
-direct=sum(h>=1);
+direct=sum(h>=minlocs);
 
 
 numbercornerassigned=direct;

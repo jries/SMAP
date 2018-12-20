@@ -88,7 +88,7 @@ classdef locsfromSE<interfaces.DialogProcessor
                 [y,x]=hist(dlocs,0:dloc:maxhist+dloc);
                 xlim([1,100])
                 plot(x,y)
-                title(['mean: ' num2str(mean(dlocs(dlocs<maxhist))) ',median: ' num2str(median(dlocs(dlocs<maxhist)))]);
+                title(['mean: ' num2str(mean(dlocs(dlocs<maxhist))) ',std: ' num2str(std(dlocs(dlocs<maxhist))) ',median: ' num2str(median(dlocs(dlocs<maxhist)))]);
                 % sum(y)
                 % length(cluster)
 

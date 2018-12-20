@@ -104,6 +104,9 @@ classdef driftcorrectionXYZ<interfaces.DialogProcessor
                     end
                     obj.locData.loc.xnm(~badind)=lochere.loc.xnm;
                     obj.locData.loc.ynm(~badind)=lochere.loc.ynm;
+                    if isfield(lochere.loc,'znm')
+                        obj.locData.loc.znm(~badind)=lochere.loc.znm;
+                    end
                 end
                 obj.locData.regroup;
         end

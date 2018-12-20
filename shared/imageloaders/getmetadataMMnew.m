@@ -49,7 +49,10 @@ metafile=info.metafile;
                  ind=strfindfast(minfo,'"ROI": "',1);
              end
              troi=textscan(minfo(ind+10:ind+100),'%d','delimiter',',');
-             mdo(end+1,:)={'ROI direct',num2str(troi{:}')};
+             %XXXXXXXX
+             roih=troi{:}';
+%              roih(1)=512-roih(1)-roih(3);
+             mdo(end+1,:)={'ROI direct',num2str(roih)};
 
              
             ind=strfindfast(minfo2,'"FrameKey-',1,-1);

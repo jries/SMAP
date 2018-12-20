@@ -179,7 +179,7 @@ switch fitpar.mode
         faccrlb{4}=EMexcess;
         faccrlb{5}=EMexcess;
         fac{3}=-fitpar.dz*fitpar.refractive_index_mismatch; % negative factor to fix direction in SMAP
-        off{3}=-fitpar.z0*fitpar.dz*fitpar.refractive_index_mismatch;
+        off{3}=fitpar.z0*fitpar.dz*fitpar.refractive_index_mismatch;
         faccrlb{3}=fitpar.dz*fitpar.refractive_index_mismatch;
         names={'ypix','xpix','znm','phot','bg'};
         namesav={'ypix','xpix','znm','phot'};
@@ -368,6 +368,20 @@ imfit(:,:,:,1)=imstack(:,:,1:numberOfChannels:end);
 if isfield(fitpar,'mirrorud') && fitpar.mirrorud
     imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
     dT(1,2,:)=-dT(1,2,:);
+elseif isfield(fitpar,'mirror')  %now only mirror channel two!
+    mirr=fitpar.mirror{2};
+    switch mirr
+        case 0 %no mirror
+            imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
+        case 1 %righ-left mirror
+            imfit(:,:,:,2)=imstack(:,end:-1:1,2:numberOfChannels:end);
+            dT(2,2,:)=-dT(2,2,:);
+        case 2 %up-down mirror
+            imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
+            dT(1,2,:)=-dT(1,2,:);
+    end
+
+    
 else
     imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
 end

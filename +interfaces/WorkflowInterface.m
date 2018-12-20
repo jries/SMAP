@@ -6,6 +6,7 @@ classdef WorkflowInterface<handle
         isstartmodule=false;
         initialized=false;
         UID
+        inputchanneldescription={};
     end
     properties(Access=private) 
         inputData
@@ -31,13 +32,16 @@ classdef WorkflowInterface<handle
             module.addNextModule(obj,outputchannel,inputchannel,inputinfo);
             
         end
-        function setInputChannels(obj,inputChannels,syncmode)
+        function setInputChannels(obj,inputChannels,syncmode,varargin)
             if inputChannels>1
                 obj.inputChannels=inputChannels;
                 obj.inputData=interfaces.SyncBuffer(obj.inputChannels);
             end
-            if nargin>2
+            if nargin>2 && ~isempty(syncmode)
                 obj.syncmode=syncmode;
+            end
+            if nargin>3 %tooltip
+                    obj.inputchanneldescription=varargin;
             end
         end
         function addNextModule(obj,module,outputchannel,inputchannel,inputinfo)        

@@ -120,7 +120,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                     %set pixelsize in transform here
                 end
                 xpix=(maxima.x+roi(1)); %still x,y inconsistency! solve
-                ypix=(maxima.y+roi(2));
+                ypix=(maxima.y+roi(2)); %put on camera chip
                 cpix=[xpix,ypix];
                 indref=transform.getPart(1,cpix);
                 
@@ -152,7 +152,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
 
 %                 for k=2:transform.channels
                 ct=transform.transformToTargetAll(cr);
-                
+                ct(:,1,:)=ct(:,1,:)-roi(1); %bring back to ROI on camera
+                ct(:,2,:)=ct(:,2,:)-roi(2);
                 %test dc XXXXX
                 ctt=ct;
                 offsettest=ones(size(cr,1),1);
@@ -161,8 +162,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
             
                 ctr=round(ctt);
                 dc=ct-ctr;
-                dc(:,1,:)=dc(:,1,:)-roi(2);
-                dc(:,2,:)=dc(:,2,:)-roi(1);
+%                 dc(:,1,:)=dc(:,1,:)-roi(2);
+%                 dc(:,2,:)=dc(:,2,:)-roi(1);
                 
 %                 cout=[];
 %                 dcout=[];
@@ -181,17 +182,19 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 cout=permute(ctr,[2 3 1]);
                 dcout=permute(dc,[2 3 1]);
                 indout=repmat((1:size(ctr,1)),1,transform.channels);
+                xh=cout(1,:,:);yh=cout(2,:,:);
+                dxh=dcout(1,:,:);dyh=dcout(2,:,:);
                 
-                maxout.x=squeeze(cout(1,:));
-                maxout.y=squeeze(cout(2,:));
+                maxout.x=squeeze(xh(:));
+                maxout.y=squeeze(yh(:));
 %                 maxout.xref=cref(:,2);
 %                 maxout.yref=cref(:,1);
 %                 maxout.xfound=maxima.x;
 %                 maxout.yfound=maxima.y;
 %                 maxout.intensityfound=maxima.intensity;
                 maxout.ID=indout(:);
-                maxout.dx=squeeze(dcout(1,:));
-                maxout.dy=squeeze(dcout(2,:));
+                maxout.dx=squeeze(dxh(:));
+                maxout.dy=squeeze(dyh(:));
                 dato=data;
                 dato.data=maxout;
             else

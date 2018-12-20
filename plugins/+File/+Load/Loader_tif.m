@@ -74,7 +74,7 @@ else
     images=gettif(file);
 end
 
-if p.mirrortif
+if isfield(p,'mirrortif' ) && p.mirrortif
     for k=1:length(images)
         images(k).image=images(k).image(:,end:-1:1);
         roih=images(k).info.roi;

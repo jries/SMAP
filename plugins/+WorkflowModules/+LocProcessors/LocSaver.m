@@ -18,6 +18,7 @@ classdef LocSaver<interfaces.WorkflowModule
             obj@interfaces.WorkflowModule(varargin{:})
             obj.inputChannels=1; 
             obj.inputParameters={'loc_ROIsize'};
+            obj.setInputChannels(1,[],'fitted localizations');
 %             obj.propertiesToSave={'savefields'};
        end
        function savefit_callback(obj)
@@ -157,6 +158,7 @@ classdef LocSaver<interfaces.WorkflowModule
            
             
             if data.eof %save locs
+                obj.status('saving localizations');drawnow
                 if ~isempty(templocs)
                     locdat=interfaces.LocalizationData;
                     locdat.loc=fitloc2locdata(obj,templocs,1:numlocs);

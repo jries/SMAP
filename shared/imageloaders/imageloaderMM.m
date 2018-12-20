@@ -59,7 +59,10 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             %direct
             try
             troi=textscan(imgmetadata.get('ROI'),'%d','delimiter','-');
-            allmd(end+1,:)={'ROI direct',num2str(troi{:}')};
+            %XXXXX
+            roih=troi{:}';
+%             roih(1)=512-roih(1)-roih(3);
+            allmd(end+1,:)={'ROI direct',num2str(roih)};
             catch err
             end
             framesd=max([img.lastAcquiredFrame,summarymetadata.get('Slices'),summarymetadata.get('Frames'),summarymetadata.get('Positions')]);

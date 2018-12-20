@@ -8,7 +8,7 @@ classdef LocTransformN0<handle
         transformZ2Reference
         transformZ2Target
         unit='nm'; %or pixel
-        cam_pixnm={[100 100],[100 100]};  %In future: allow pixel size for every channel? e.g. for multi-camera setup
+%         cam_pixnm={[100 100],[100 100]};  %In future: allow pixel size for every channel? e.g. for multi-camera setup
         channels=2;
 %         mirror
     end
@@ -33,14 +33,15 @@ classdef LocTransformN0<handle
             end
             obj.channels=max(obj.channels,max(channel));
             
-            properties={'xrange','yrange','type','parameter','mirror','unit','channels','cam_pixnm'};
+%             properties={'xrange','yrange','type','parameter','mirror','unit','channels','cam_pixnm'};
+            propertiesch={'xrange','yrange','type','parameter','mirror','cam_pixnm'};
             if isstruct(varargin{1})   
                 p=varargin{1};
                 if max(channel)>length(obj.info)
                     obj.info{max(channel)}=[];
                 end
                 for c=1:length(channel)
-                    obj.info{channel(c)}=copyfields(obj.info{channel(c)},p,properties);
+                    obj.info{channel(c)}=copyfields(obj.info{channel(c)},p,propertiesch);
                 end
                 if isfield(p,'unit')
                     obj.unit=p.unit;
@@ -48,13 +49,13 @@ classdef LocTransformN0<handle
                 if isfield(p,'channels')
                     obj.channels=p.channels;
                 end
-                if isfield(p,'cam_pixnm')
-                    obj.cam_pixnm{channel}=p.cam_pixnm;
-                end
+%                 if isfield(p,'cam_pixnm')
+%                     obj.cam_pixnm{channel}=p.cam_pixnm;
+%                 end
             else
                   
             for k=1:2:length(varargin)
-                if any(strcmp(properties,varargin{k}))
+                if any(strcmp(propertiesch,varargin{k}))
                     for c=1:length(channel)
                         obj.info{channel(c)}.(varargin{k})=varargin{k+1};
                         
@@ -71,10 +72,12 @@ classdef LocTransformN0<handle
             if ~isempty(ind)
                 obj.channels=varargin{ind+1};
             end
-            ind=find(strcmp(varargin,'cam_pixnm'));
-            if ~isempty(ind)
-                obj.cam_pixnm{channel}=varargin{ind+1};
-            end   
+%             ind=find(strcmp(varargin,'cam_pixnm'));
+%             if ~isempty(ind)
+%                 for ch=channel
+%                 obj.cam_pixnm{ch}=varargin{ind+1};
+%                 end
+%             end   
             end
         end
         function findTransform(obj,channel,coordreference,coordtarget,type,parameter)
@@ -139,9 +142,10 @@ classdef LocTransformN0<handle
            if ~strcmp(unitref,unittar)
                 switch unittar
                     case {'pixels','pixel'}
-                        cf=1./obj.cam_pixnm{channel};
+                        cf=1./obj.info{channel}.cam_pixnm;
+%                         cf=1./obj.cam_pixnm{channel};
                     case 'nm'
-                        cf=obj.cam_pixnm{channel};
+                        cf=obj.info{channel}.cam_pixnm;        
                 end
     %             co(1,:)=ci(1,:)*cf(1);
     %             co(2,:)=ci(2,:)*cf(end);
@@ -169,7 +173,7 @@ classdef LocTransformN0<handle
             end
             ci=ci/1000;
             co=transformPointsInverse(obj.transform2Target{channel},ci(:,1:2)); %inverse of inverse is forward          
-            if size(ci,2)>2 %z coordinates present               
+            if size(ci,2)>2 && length(obj.transformZ2Target)>=channel %z coordinates present               
                  X=transformPointsInverse(obj.transformZ2Target{channel},horzcat(co,ci(:,3)));
                  co(:,3)=X(:,3);
             end
@@ -196,6 +200,7 @@ classdef LocTransformN0<handle
         end  
         
         function ind=getPart(obj,channel,coordinates,unit)
+            % obj, channel, coordinates, unit
             if nargin>3 %unit specified
                 coordinates=obj.convertcoordinates(coordinates,unit,obj.unit,channel);
             end
@@ -244,6 +249,14 @@ classdef LocTransformN0<handle
             end
             if dc(2)<0
                 out(2)=true;
+            end
+        end
+        function out=copy(obj)
+            out=eval(class(obj));
+            fn=properties(obj);
+            fn=setdiff(fn,'tinfo');
+            for k=1:length(fn)
+                out.(fn{k})=obj.(fn{k});
             end
         end
         

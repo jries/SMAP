@@ -7,6 +7,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
         fields
         useevaluators
         extension
+        makeevaluators=true(3,1);
 %         outputfilename
     end
     methods
@@ -39,21 +40,24 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
              obj.evaluators(3)=ev3;
             p=obj.guiPar;
             p.Xpos=1;p.Vpos=1;p.Vrim=0;
+%             ind=1;
             for k=1:length(obj.evaluators)
-                ev=obj.evaluators{k};
-                data{k,1}=true;
-                data{k,2}=ev.info.name;
-                hpanel=uipanel('Parent',obj.handle,'Units','pixels','Position',[fw,2*fh,3*fw,5*fh],'FontSize',fs,'Visible','off');
-                 obj.children.(['panel_' num2str(k)])=ev;
-                obj.guihandles.(['panel_' num2str(k)])=hpanel;
-                ev.setGuiAppearence(p)
-                ev.handle=hpanel;
-                ev.attachPar(obj.P);
-                ev.makeGui;
-                ev.handle.Units='normalized';
+                if obj.makeevaluators(k)
+                    ev=obj.evaluators{k};
+                    data{k,1}=true;
+                    data{k,2}=ev.info.name;
+                    hpanel=uipanel('Parent',obj.handle,'Units','pixels','Position',[fw,2*fh,3*fw,5*fh],'FontSize',fs,'Visible','off');
+                     obj.children.(['panel_' num2str(k)])=ev;
+                    obj.guihandles.(['panel_' num2str(k)])=hpanel;
+                    ev.setGuiAppearence(p)
+                    ev.handle=hpanel;
+                    ev.attachPar(obj.P);
+                    ev.makeGui;
+                    ev.handle.Units='normalized';
+                end
             end
             huitable.Data=data;
-            obj.evaluators{1}.handle.Visible='on';
+            obj.evaluators{find(obj.makeevaluators,1,'first')}.handle.Visible='on';
             obj.initGui;
         end
             
@@ -66,7 +70,13 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             global EvaluateIntensity_intensity
             obj.extension=obj.getPar('intensity_channel');
             p=obj.getAllParameters;
-            obj.useevaluators=[p.evalmodules.Data{:,1}];
+            for k=1:size(p.evalmodules.Data,1)
+                if isempty(p.evalmodules.Data{k,1})
+                    obj.useevaluators(k)=0;
+                else
+                    obj.useevaluators(k)=p.evalmodules.Data{k,1};
+                end
+            end
             
             obj.loccounter=0;
             obj.fields={};
