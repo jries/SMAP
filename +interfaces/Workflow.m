@@ -531,8 +531,8 @@ classdef Workflow<interfaces.DialogProcessor
                 h2=uicontrol('Parent',inputhandle,'Style','edit','Position',mpos2,...
                     'String','1','FontSize',fs,'Callback',{@obj.output_callback,tag,k});
                 if length(tooltips)>=k
-                    h.Tooltip=tooltips{k};
-                    h2.Tooltip=tooltips{k};
+                    h.TooltipString=tooltips{k};
+                    h2.TooltipString=tooltips{k};
                 end
                 obj.guihandles.([tag '_outputchannel' int2str(k)])=h2;
                 obj.guihandles.([tag '_input' int2str(k)])=h;
