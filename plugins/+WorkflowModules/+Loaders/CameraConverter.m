@@ -59,9 +59,13 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.adu2phot=md.pix2phot;
             obj.loc_cameraSettings=interfaces.metadataSMAP;
             obj.loc_cameraSettings=copyfields(obj.loc_cameraSettings,md);
-            if ~overwrite && ~lock
+            if ~overwrite 
                 settings=obj.getPar('loc_fileinfo');
                 fn=fieldnames(settings);
+                if lock
+                    lockedfields={'Width','Height','roi','exposure','emgain','EMon','conversion','offset','cam_pixelsize_um','timediff','comment'};
+                    fn=setdiff(fn,lockedfields);
+                end
                 for k=1:length(fn)
                     if isfield(settings.assigned,fn{k}) && settings.assigned.(fn{k})
                         obj.loc_cameraSettings.(fn{k})=settings.(fn{k});
