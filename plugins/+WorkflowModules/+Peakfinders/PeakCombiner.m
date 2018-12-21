@@ -114,7 +114,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 dato=data;
                 dato.data=maxout;
             elseif isa(transform,'interfaces.LocTransformN')
-                if isfield(transform.info{1},'unit')&&strcmp(transform.info{1}.unit,'pixel')
+                if myisfield(transform,'unit')&&strcmp(transform.unit,'pixel')
                 else
                     disp('calibration should be in pixel units for 4pi');
                     %set pixelsize in transform here
