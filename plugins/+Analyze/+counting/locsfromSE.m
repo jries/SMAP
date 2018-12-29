@@ -16,14 +16,19 @@ classdef locsfromSE<interfaces.DialogProcessor
             
             for i = 1:numberOfSubsets
                 sites=obj.locData.SE.sites;
+                induse=(getFieldAsVector(sites,'annotation','use'));
+                listn=p.c_list;
+                if ~strcmp(listn,'all') %select only those with the right list entry
+                    listv=getFieldAsVector(sites,'annotation',listn,'value');
+                    indlist=listv==p.c_listvalue;
+                    induse=induse&indlist; 
+                end
                 
+                induse=find(induse);
                 if p.numberOfSites_perSub > 0
-                    induse=find(getFieldAsVector(sites,'annotation','use'));
                     nIndus = length(induse);
                     indSelect = randi(nIndus, p.numberOfSites_perSub, 1);
                     induse=induse(indSelect);
-                else
-                    induse=find(getFieldAsVector(sites,'annotation','use'));
                 end
                 
                 nums=length(induse);
@@ -56,6 +61,11 @@ classdef locsfromSE<interfaces.DialogProcessor
 
                 nonnan=~isnan(psf)&~isnan(locprecnm);
                 indgood=psf>p.c_PSFmin&psf<p.c_PSFmax&nonnan;
+                %list
+             
+
+                
+                
                 initaxis(p.resultstabgroup,'scatter');
                 subplot(2,2,1);
                 try
@@ -154,13 +164,21 @@ pard.c_PSFmax.Width=0.5;
 
 pard.c_groupfield.object=struct('String',{{'ungrouped','grouped','blink remove'}},'Style','popupmenu');
 pard.c_groupfield.position=[3,1];
-pard.c_groupfield.Width=2;
-pard.c_listofcellsc.object=struct('String','use only cells from this list:','Style','checkbox','Value',0);
+pard.c_groupfield.Width=1.5;
+
+pard.c_list.object=struct('String',{{'all','list1','list2','list3','list4'}},'Style','popupmenu');
+pard.c_list.position=[3,3];
+pard.c_list.Width=1;
+pard.c_listvalue.object=struct('String','1','Style','edit');
+pard.c_listvalue.position=[3,4];
+pard.c_listvalue.Width=1;
+
+pard.c_listofcellsc.object=struct('String','use only these cells:','Style','checkbox','Value',0);
 pard.c_listofcellsc.position=[4,1];
-pard.c_listofcellsc.Width=2;
+pard.c_listofcellsc.Width=1.5;
 pard.c_listofcells.object=struct('String','1:10','Style','edit');
-pard.c_listofcells.position=[4,3];
-pard.c_listofcells.Width=2;
+pard.c_listofcells.position=[4,2.5];
+pard.c_listofcells.Width=1.5;
 
 pard.savehist.object=struct('String','Save histogram','Style','pushbutton','Callback',{{@obj.savehist_callback}});
 pard.savehist.position=[5,1];
