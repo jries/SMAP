@@ -1,4 +1,4 @@
-function [x0,y0,R0]=fitposring(x,y,R,startpar)
+function [x0,y0,R0,resnorm]=fitposring(x,y,R,startpar)
 if nargin<3||isempty(R) %fit also R
     fh=@freering;
     if nargin<4    
@@ -6,7 +6,7 @@ if nargin<3||isempty(R) %fit also R
         rs=sqrt(std(x).^2+std(y).^2);
         startpar=[xs,ys,rs];
     end
-    fitp=implicitfit(fh,startpar,x,y,0);
+    [fitp,resnorm]=implicitfit(fh,startpar,x,y,0);
     x0=fitp(1);y0=fitp(2);R0=fitp(3);
 else 
     fh=@fixring;
@@ -14,7 +14,7 @@ else
         xs=mean(x);ys=mean(y);
         startpar=[xs,ys];
     end
-    fitp=implicitfit(fh,startpar,x,y,R);
+    [fitp,resnorm]=implicitfit(fh,startpar,x,y,R);
     x0=fitp(1);y0=fitp(2);
     R0=R;
 end

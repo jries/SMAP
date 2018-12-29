@@ -29,10 +29,12 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
 
             kernelSize=obj.loc_ROIsize;
             obj.dn=ceil((kernelSize-1)/2);
-            ninit=1000;
-            init=zeros(ninit,1);
-            tempinfo=struct('inuse',false(size(init)),'x',init,'y',init,'dT',init,'numrois',init,'groupindex',init,'numberInGroup',init,'phot',init,'bg',init);
-            temprois=zeros(obj.loc_ROIsize,obj.loc_ROIsize,ninit,'single');
+            if p.loc_fitgrouped
+                ninit=200;
+                init=zeros(ninit,1);
+                tempinfo=struct('inuse',false(size(init)),'x',init,'y',init,'dT',init,'numrois',init,'groupindex',init,'numberInGroup',init,'phot',init,'bg',init);
+                temprois=zeros(obj.loc_ROIsize,obj.loc_ROIsize,ninit,'single');
+            end
            
         end
         function outputdat=run(obj,data,p)
@@ -43,10 +45,13 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
             if isempty(maxima.x)
                 return;
             end
-            for k=1:length(maxima.x)
-                obj.addroi(image,copystructReduce(maxima,k))
-            end 
             
+            if p.loc_fitgrouped
+%                 for k=1:length(maxima.x)
+%                     obj.addroi(image,copystructReduce(maxima,k))
+%                 end 
+                obj.addroi(image,maxima)
+            end
             if obj.preview 
                 outputfig=obj.getPar('loc_outputfig');
                 if ~isvalid(outputfig)
@@ -62,10 +67,17 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
                     pos=[maxima.x(k)-obj.dn maxima.y(k)-obj.dn maxima.x(k)+obj.dn maxima.y(k)+obj.dn ];
                     plotrect(ax,pos,col);
                 end
-                [cutoutimages,maximap]=obj.purgeall;
+                if p.loc_fitgrouped
+                    [cutoutimages,maximap]=obj.purgeall;
+                end
             else
-                [cutoutimages,maximap]=obj.purgerois;
+                if p.loc_fitgrouped
+                    [cutoutimages,maximap]=obj.purgerois;
+                end
             end 
+            if ~p.loc_fitgrouped
+                [cutoutimages,maximap]=obj.getungrouped(image,maxima);
+            end
              info=maximap;
             frameh=data{1}.frame;
             info.frame=maximap.x*0+frameh;
@@ -81,6 +93,35 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
                 outputdat=data{1};
             end
         end
+        function [cutoutimages,maxima]=getungrouped(obj,image,maxima)
+%             kernelSize=obj.loc_ROIsize;
+%             dn=ceil((kernelSize-1)/2);
+
+            dn=obj.dn;
+            kernelSize=2*dn+1;
+            sim=size(image);
+            cutoutimages=zeros(kernelSize,kernelSize,length(maxima.x),'single');
+            ind=0;
+            goodind=~(maxima.y<=dn|maxima.y>sim(1)-dn|maxima.x<=dn|maxima.x>sim(2)-dn);
+            outside=(maxima.y<=1|maxima.y>sim(1)-1|maxima.x<=1|maxima.x>sim(2)-1);
+
+            for k=1:length(maxima.x)
+                 ind=ind+1;
+                if goodind(k)
+                    cutoutimages(:,:,ind)=image(maxima.y(k)-dn:maxima.y(k)+dn,maxima.x(k)-dn:maxima.x(k)+dn); %coordinates exchanged.
+                elseif outside(k)
+                    maxima.y(k)=max(dn+1,min(maxima.y(k),sim(1)-dn));
+                    maxima.x(k)=max(dn+1,min(maxima.x(k),sim(2)-dn));  
+                    cutoutimages(:,:,ind)=zeros(2*dn+1,'single');
+                else
+                    maxima.y(k)=max(dn+1,min(maxima.y(k),sim(1)-dn));
+                    maxima.x(k)=max(dn+1,min(maxima.x(k),sim(2)-dn));
+                    cutoutimages(:,:,ind)=image(maxima.y(k)-dn:maxima.y(k)+dn,maxima.x(k)-dn:maxima.x(k)+dn); %coordinates exchanged.
+%                     cutoutimages(:,:,ind)=zeros(kernelSize,kernelSize,1,'single');
+                end  
+            end 
+      
+        end
         function addroi(obj,image,maxima)
             %   use groupnumber and numberingroup
 %   if same groupnumber: add. If numrois>=numberingroup: purge
@@ -88,34 +129,39 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
 
             global tempinfo temprois
             inuse=tempinfo.inuse;
-            x=maxima.x;y=maxima.y;
-            %later: keep x0 as cut out position (has to be same), but
-            %update xsearch
-            inxy=find(tempinfo.groupindex(inuse)==maxima.groupindex);
-            if ~isempty(inxy) %already there
-                finuse=find(inuse);
-                indtemp=finuse(inxy(1)); %later: choose closest
-                temprois(:,:,indtemp)=temprois(:,:,indtemp)+cutoutimage(image,tempinfo.x(indtemp),tempinfo.y(indtemp),obj.dn);
-                %fill info
-                tempinfo.numrois(indtemp)=tempinfo.numrois(indtemp)+1;
-                tempinfo.phot(indtemp)=tempinfo.phot(indtemp)+maxima.phot;
-                tempinfo.bg(indtemp)=tempinfo.bg(indtemp)+maxima.bg;
-            else %new ROI, this would be standard
-                newind=find(tempinfo.inuse==false,1,'first');
-                if isempty(newind)
-                    newind=length(tempinfo.inuse)+1;
+            fn=setdiff(fieldnames(maxima),{'x','y'});
+            for k=1:length(maxima.x)
+                x=maxima.x(k);y=maxima.y(k);
+                %later: keep x0 as cut out position (has to be same), but
+                %update xsearch
+                inxy=find(tempinfo.groupindex(inuse)==maxima.groupindex(k));
+                if ~isempty(inxy) %already there
+                    finuse=find(inuse);
+                    indtemp=finuse(inxy(1)); %later: choose closest
+                    coi=cutoutimage(image,tempinfo.x(indtemp),tempinfo.y(indtemp),obj.dn);
+                    temprois(:,:,indtemp)=temprois(:,:,indtemp)+coi;
+                    %fill info
+                    tempinfo.numrois(indtemp)=tempinfo.numrois(indtemp)+1;
+                    tempinfo.phot(indtemp)=tempinfo.phot(indtemp)+maxima.phot(k);
+                    tempinfo.bg(indtemp)=tempinfo.bg(indtemp)+maxima.bg(k);
+                else %new ROI, this would be standard
+                    newind=find(tempinfo.inuse==false,1,'first');
+                    if isempty(newind)
+                        newind=length(tempinfo.inuse)+1;
+                    end
+                    [coi,xh,yh]=cutoutimage(image,x,y,obj.dn);
+                    temprois(:,:,newind)=coi;
+                    tempinfo.numrois(newind,1)=1;
+%                  
+                    tempinfo.inuse(newind,1)=true;
+%                 
+%                     fn=fieldnames(maxima);
+                    for ff=1:length(fn)
+                        tempinfo.(fn{ff})(newind,1)=maxima.(fn{ff})(k);
+                    end
+                    tempinfo.x(newind,1)=xh;
+                    tempinfo.y(newind,1)=yh; 
                 end
-                temprois(:,:,newind)=cutoutimage(image,x,y,obj.dn);
-                tempinfo.numrois(newind)=1;
-%                 tempinfo.x(newind)=x;tempinfo.y(newind)=y;  
-                tempinfo.inuse(newind)=true;
-                fn=fieldnames(maxima);
-                for k=1:length(fn)
-                    tempinfo.(fn{k})(newind)=maxima.(fn{k});
-                end
-                
-%                 tempinfo.numberInGroup(newind)=maxima.numberInGroup;
-%                 tempinfo.groupindex(newind)=maxima.groupindex;
             end
         end
 
@@ -147,14 +193,14 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
     end
 end
 
-        function out=cutoutimage(image, x,y,dn)
-            sim=size(image);
-                if  (y<=dn||y>sim(1)-dn||x<=dn||x>sim(2)-dn)
-                    y=max(dn+1,min(y,sim(1)-dn));
-                    x=max(dn+1,min(x,sim(2)-dn));
-                end  
-                out=image(y-dn:y+dn,x-dn:x+dn);
-        end
+function [out,x,y]=cutoutimage(image, x,y,dn)
+    sim=size(image);
+        if  (y<=dn||y>sim(1)-dn||x<=dn||x>sim(2)-dn)
+            y=max(dn+1,min(y,sim(1)-dn));
+            x=max(dn+1,min(x,sim(2)-dn));
+        end  
+        out=image(y-dn:y+dn,x-dn:x+dn);
+end
 
 function pard=guidef
 pard.text.object=struct('Style','text','String','Size ROI (pix)');

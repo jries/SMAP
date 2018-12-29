@@ -41,7 +41,8 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             f.Visible='on';
 %             wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
 %             wffile='settings/workflows/get2CIntensityImagesWF2';
-            wffile='settings/workflows/get2CIntensityImagesWF3';
+%             wffile='settings/workflows/get2CIntensityImagesWF3';
+            wffile='settings/workflows/get2CIntensityImagesWF_group_bg';
             wf=interfaces.Workflow(f,obj.P);
             wf.attachLocData(obj.locData);
             wf.makeGui;
@@ -75,9 +76,9 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             
             
             p.loc_ROIsize=rsfit+2;
-            p.loc_fitgrouped=false;
-%             wf.module('RoiCutterWF_groupExt').setGuiParameters(p);
-            wf.module('RoiCutterWF').setGuiParameters(p);
+%             p.loc_fitgrouped=p.fitgrouped;
+            wf.module('RoiCutterWF_groupExt').setGuiParameters(p);
+%             wf.module('RoiCutterWF').setGuiParameters(p);
             
             
             % now first SA
@@ -217,6 +218,10 @@ pard.loadbuttoncal.Width=0.7;
 pard.evalua.object=struct('Style','checkbox','String','evaluate also UA','Value',1);
 pard.evalua.position=[4,1];
 pard.evalua.Width=2;
+
+pard.loc_fitgrouped.object=struct('Style','checkbox','String','evaluate grouped images','Value',0);
+pard.loc_fitgrouped.position=[4,3];
+pard.loc_fitgrouped.Width=2;
 
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';

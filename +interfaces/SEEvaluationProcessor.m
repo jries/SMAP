@@ -16,7 +16,10 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             obj.outputParameters={'name','modulename'};
             
         end
-        
+        function redraw(obj)
+            obj.site.image=[];
+            obj.locData.SE.plotsite(obj.site)
+        end
         
         function ax=setoutput(obj,name,clear)
             if nargin<3

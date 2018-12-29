@@ -35,6 +35,7 @@ classdef SEExploreGui<interfaces.SEProcessor
              h.addsite=uicontrol(obj.handle,'Position',[290,925,60,40],'Style','pushbutton','String','Add','Units','normalized','FontSize',fontsize,'Callback',{@addsite,obj});
              h.removesite=uicontrol(obj.handle,'Position',[400-10,540,90,30],'Style','pushbutton','String','Remove','Units','normalized','FontSize',fontsize,'Callback',{@removesite_callback,obj});
              h.toggleuse=uicontrol(obj.handle,'Position',[510+20,540,70,30],'Style','pushbutton','String','Use','Units','normalized','FontSize',fontsize,'Callback',{@toggleuse_callback,obj});
+             h.updatelist=uicontrol(obj.handle,'Position',[480,540,50,30],'Style','pushbutton','String','upd','Units','normalized','FontSize',fontsize,'Callback',{@updatelist_callback,obj});
              
              
              h.redrawcell=uicontrol(obj.handle,'Position',[430,925,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawcell_callback,obj});
@@ -769,4 +770,8 @@ end
 
 function redrawsiteall_callback(a,b,obj)
 obj.redrawall(true);
+end
+
+function updatelist_callback(a,b,obj)
+redraw_sitelist(obj);
 end

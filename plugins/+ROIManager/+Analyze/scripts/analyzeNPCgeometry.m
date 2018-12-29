@@ -3,14 +3,15 @@ sites=g.locData.SE.sites;
 % dt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',4);
 % ind = dt>20&dt<100;
 % sites = sites(ind);
-
+ff='%2.1f';
+f=figure(88);
 if isfield(sites(1).evaluation.NPCgeomtryQuantify,'profile') %z-data is there
 
 z0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.b');
 sigma=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.c');
 d=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.d');
-ff='%2.1f';
-f=figure(88);
+
+
 subplot(2,4,5)
 histogram(sigma); xlabel('sigma (nm)')
 title(['profile: sigma z: ' num2str(mean(sigma),ff) '\pm' num2str(std(sigma),ff)])

@@ -48,7 +48,7 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
                 case {'t','u'}
                     sppos=2;
             end
-               sppos        
+%                sppos        
             sind=min(length(obj.spline.SXY(sppos).cspline.coeff),sppos); %did not fix calibrator yet..
             obj.splinecoeff=single(obj.spline.SXY(sppos).cspline.coeff{sind});
             
@@ -137,30 +137,42 @@ dz=obj.spline.SXY(1).cspline.dz;
    
    % template = evalSpline(obj.p.roisize_fit,obj.splinecoeff,1,0,cor);
     template = simSplinePSF_call(obj.p.roisize_fit,obj.splinecoeff,1,0,single(cor));
-   
+   numrois=1;
 for k=1:sim(3)
     templateh=template(:,:,k);
+    roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
     switch obj.p.fitbg.selection
         case 'BG free fit'
             %fit bg
-            Xmat=horzcat(templateh(:),ones((2*dn+1)^2,1));
-            roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
-            p(k,:)=Xmat\roih(:);
+            Xmat=horzcat(templateh(:),ones((2*dn+1)^2,1));          
+            if obj.p.normalizeimage
+                ph=lscov(Xmat,roih(:),1./sqrt(roih(:)));
+                p(k,:)=ph;
+            else
+                p(k,:)=Xmat\roih(:);
+            end
         otherwise
+            if isfield(loc,'numrois') %grouped data
+                numrois=loc.numrois(k);
+            end
             switch obj.p.fitbg.selection
                 case 'BG from localizations'
                     bg=loc.bg(k);
                 case 'BG fixed to:'
-                    bg=obj.p.bgsetvalue;
+                    bg=obj.p.bgsetvalue*numrois;
                 case 'BG fixed automatic'
-                    bg=loc.bgim(k);
+                    bg=loc.bgim(k)*numrois;
                 otherwise
                     warning('not implemented')      
             end
         %bg fixed
         Xmat=templateh(:);
-        roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k)-bg;
-        p(k,1)=Xmat\roih(:);
+        if obj.p.normalizeimage
+            ph=lscov(Xmat,(roih(:)-bg),1./sqrt(roih(:)));
+            p(k,1)=ph;
+        else
+            p(k,1)=Xmat\(roih(:)-bg);
+        end
         p(k,2)=bg;
     end
 end
@@ -208,6 +220,12 @@ pard.cal_3Dfile.object=struct('Style','edit','String','');
 pard.cal_3Dfile.position=[2,1];
 pard.cal_3Dfile.Width=3;
 pard.cal_3Dfile.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');
+
+pard.normalizeimage.object=struct('Style','checkbox','String','normalize image to Poisson noise');
+pard.normalizeimage.position=[3,1];
+pard.normalizeimage.Width=3;
+% pard.normalizeimage.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');
+
 
 
 pard.fixz0.object=struct('Style','checkbox','String','Fix z pos to frame:');
