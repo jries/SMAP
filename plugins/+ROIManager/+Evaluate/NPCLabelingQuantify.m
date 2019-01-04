@@ -334,6 +334,9 @@ end
 
 
 function [numbercornerassigned,mdt,direct,timing]=assigntocornersdirect(locs,inr,corners,ax,timepoints,axtp,minlocs)
+if nargin<7
+    minlocs=1;
+end
 % if nargin <5 || isempty(co)
 %     co=0.5;
 % end

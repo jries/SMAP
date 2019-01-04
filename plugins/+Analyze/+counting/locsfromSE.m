@@ -18,8 +18,8 @@ classdef locsfromSE<interfaces.DialogProcessor
                 sites=obj.locData.SE.sites;
                 induse=(getFieldAsVector(sites,'annotation','use'));
                 listn=p.c_list;
-                if ~strcmp(listn,'all') %select only those with the right list entry
-                    listv=getFieldAsVector(sites,'annotation',listn,'value');
+                if ~strcmp(listn.selection,'all') %select only those with the right list entry
+                    listv=getFieldAsVector(sites,'annotation',listn.selection,'value');
                     indlist=listv==p.c_listvalue;
                     induse=induse&indlist; 
                 end

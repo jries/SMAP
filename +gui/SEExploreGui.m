@@ -121,7 +121,7 @@ classdef SEExploreGui<interfaces.SEProcessor
             if nargin<2|| isempty(onlysites)
                 onlysites=false;
             end
-            
+            timerVal=tic;
             sites=obj.SE.sites;
             
             indselected=obj.getSingleGuiParameter('sitelist').Value;
@@ -155,7 +155,10 @@ classdef SEExploreGui<interfaces.SEProcessor
                 for k=1:length(cells)
                     obj.guihandles.cellist.Value=k;   
                     obj.status(['redrawall: cell ' num2str(k) ' of ' num2str(length(cells))])
+                    if obj.getPar('se_display') || toc(timerVal)>15
                     drawnow
+                    timerVal=tic;
+                    end
                     if ~se_keeptempimages
                         cells(k).image=[];
                     end
@@ -176,7 +179,10 @@ classdef SEExploreGui<interfaces.SEProcessor
             
             obj.guihandles.sitelist.Value=k;   
             obj.status(['redrawall: site ' num2str(k) ' of ' num2str(length(sites))])
+            if obj.getPar('se_display') || toc(timerVal)>15
             drawnow
+            timerVal=tic;
+            end
             sites(k).image=[];
             obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
             obj.SE.processors.eval.evaluate(sites(k));
@@ -597,7 +603,7 @@ for k=1:length(ind)
 end
 redraw_sitelist(obj);
 sv=obj.guihandles.sitelist.Value;
-sv=min(max(1,sv),length(obj.guihandles.sitelist.String));
+sv=min(max(1,min(sv)),length(obj.guihandles.sitelist.String));
 % if obj.guihandles.sitelist.Value>length(obj.guihandles.sitelist.String)
 obj.guihandles.sitelist.Value=sv;
 obj.SE.currentsite=obj.SE.sites(sv);

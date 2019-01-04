@@ -1,9 +1,10 @@
 function fitCircleImg
-global pixelsize results
+global pixelsize results path
 results=[];
 %fitting exm with circle
-file='/Users/jonas/OneDrive/Projects/NPC_Reference/images/Figure1/ExM/NUP96_SIM.tif';
-file='/Users/jonas/OneDrive/Projects/NPC_Reference/images/Figure1/ExM/NUP96_WF.tif';
+ 
+[file, path]=uigetfile([path  '*.tif']);
+file=[path file]
 img=imread(file);
 img=double(img);
 %%
@@ -21,20 +22,21 @@ end
 function plotresults
 global results pixelsize
 rnm=results*pixelsize;
-cutoff=3;
+cutoff=3.5;
 indb=results(:,1)<cutoff;
 figure(100);hold off; histogram(rnm(~indb,1),30);
-title(mean(rnm(~indb,1)));
+title([mean(rnm(~indb,1)) std(rnm(~indb,1))]);
 if size(rnm,2)>1
-end
+
 figure(101)
 histogram(results(~indb,2),30);
+end
 end
 %%
 function txt=fitposition(a,cinf,img,fig)
 global results
 sigmafix=6.8; %SIM
-sigmafix=[];
+% sigmafix=[];
 sigmafix=12; %WF
 pos=cinf.Position;
 dn=11;

@@ -41,22 +41,28 @@ end
 function out=runintern(obj,p)
 % p.bootstrap=1;
 se=obj.SE;
-fields={'evaluation','NPCLabelingQuantify'};
+quantifyevaluator='NPCLabelingQuantify_s';
+fields={'evaluation',quantifyevaluator};
 fields2={'evaluation','generalStatistics'};
 
-numfoundint=getFieldAsVector(se.sites,fields{:},'numfoundint');
-numfoundrat=getFieldAsVector(se.sites,fields{:},'numfoundrat');
+% numfoundint=getFieldAsVector(se.sites,fields{:},'numfoundint');
+% numfoundrat=getFieldAsVector(se.sites,fields{:},'numfoundrat');
 numbercornerassinged=getFieldAsVector(se.sites,fields{:},'numbercornerassigned');
 numbercornerassigneddirect=getFieldAsVector(se.sites,fields{:},'numbercornerassigneddirect');
 filenumber=getFieldAsVector(se.sites,'info','filenumber');
 psf=getFieldAsVector(se.sites,fields2{:},'PSFlayers');
 % psf=ones(1,length(psf)); %XXXXX
 
-fields3={'evaluation','NPCLabelingQuantify','timing'};
+fields3={'evaluation',quantifyevaluator,'timing'};
 timepoints=getFieldAsVectorInd(se.sites,fields3{:},'timepoints');
 nstart=getFieldAsVectorInd(se.sites,fields3{:},'nstart');
 nend=getFieldAsVectorInd(se.sites,fields3{:},'nend');
 frames=getFieldAsVectorInd(se.sites,fields{:},'coordinates','frame');
+
+
+nchunks=getFieldAsVectorInd(se.sites,fields3{:},'nchunks');
+nchunksn=getFieldAsVectorInd(se.sites,fields3{:},'nchunksn');
+dind=getFieldAsVectorInd(se.sites,fields3{:},'dind');
 
 radius=getFieldAsVector(se.sites,fields{:},'radius');
 siteid=getFieldAsVector(se.sites,'ID');
@@ -104,8 +110,8 @@ indgood=indgood&~isnan(numbercornerassinged);
 
 nb=0:p.corners;
 
-numfoundint=numfoundint(indgood);
-numfoundrat=numfoundrat(indgood);
+% numfoundint=numfoundint(indgood);
+% numfoundrat=numfoundrat(indgood);
 numbercornerassinged=numbercornerassinged(indgood);
 numbercornerassigneddirect=numbercornerassigneddirect(indgood);
 radius=radius(indgood);
@@ -118,11 +124,14 @@ nstart=nstart(indgood,:);
 nend=nend(indgood,:);
 frames=frames(indgood,:);
 
+nchunks=nchunks(indgood,:);
+nchunksn=nchunksn(indgood,:);
+dind=dind(indgood,:);
 if isempty(numbercornerassinged) || length(numbercornerassinged)<=5
     warndlg('Not sufficient (>5) number of evaluations found. Make sure right evaluator used. Try redraw all.')
     return
 end
-if isfield(se.sites(1).evaluation.NPCLabelingQuantify,'numcornersfiltered_gt')
+if isfield(se.sites(1).evaluation.(quantifyevaluator),'numcornersfiltered_gt')
     gtexist=true;
     numcorners=getFieldAsVector(se.sites,fields{:},'numcornersfiltered_gt');
     numcornersa=getFieldAsVector(se.sites,fields{:},'numcornersall_gt');
@@ -145,42 +154,42 @@ title(axpsf,['PSF range: ' num2str(p.PSFrange)])
 xlabel('average PSF (nm)')
 end
 
-ax1=obj.initaxis('from gap');
-ax2=axes(ax1.Parent);
-subplot(1,2,1,ax1);
-    p.ploton=false;
-    bs_numfoundint=bootstrp(20,@fitNPClabeling,numfoundint,p);
-    berr_numfoundint=std(bs_numfoundint);
-    p.ploton=true;    
-hi=hist(numfoundint,nb);
-    bar(nb,hi)
-    hold on
-    pf=fitNPClabeling(hi,p);
-    title(['gap int: ' num2str(100*pf,'%2.1f') '\pm' num2str(100*berr_numfoundint,'%2.1f')])
-    axis tight
-    results.gapint=pf*100;   
-    results(2).gapint=berr_numfoundint*100;
-subplot(1,2,2,ax2);
-    p.ploton=false;
-    bs_numfoundrat=bootstrp(20,@fitNPClabeling,numfoundrat,p);
-    berr_numfoundrat=std(bs_numfoundrat);
-    p.ploton=true;    
-    
-    hold off
-    hr=hist(numfoundrat,nb);
-    bar(nb,hr)
-    hold on
-    pf=fitNPClabeling(hr,p);
-    title(['gap frac: ' num2str(100*pf,'%2.1f')  '\pm' num2str(100*berr_numfoundrat,'%2.1f')])
-    axis tight
-    results(1).gapf=pf*100 ; 
-    results(2).gapf=berr_numfoundrat*100;
-    
- ax3=obj.initaxis('ass.+all');
+% ax1=obj.initaxis('from gap');
+% ax2=axes(ax1.Parent);
+% subplot(1,2,1,ax1);
+%     p.ploton=false;
+%     bs_numfoundint=bootstrp(20,@fitNPClabeling,numfoundint,p);
+%     berr_numfoundint=std(bs_numfoundint);
+%     p.ploton=true;    
+% hi=hist(numfoundint,nb);
+%     bar(nb,hi)
+%     hold on
+%     pf=fitNPClabeling(hi,p);
+%     title(['gap int: ' num2str(100*pf,'%2.1f') '\pm' num2str(100*berr_numfoundint,'%2.1f')])
+%     axis tight
+%     results.gapint=pf*100;   
+%     results(2).gapint=berr_numfoundint*100;
+% subplot(1,2,2,ax2);
+%     p.ploton=false;
+%     bs_numfoundrat=bootstrp(20,@fitNPClabeling,numfoundrat,p);
+%     berr_numfoundrat=std(bs_numfoundrat);
+%     p.ploton=true;    
+%     
+%     hold off
+%     hr=hist(numfoundrat,nb);
+%     bar(nb,hr)
+%     hold on
+%     pf=fitNPClabeling(hr,p);
+%     title(['gap frac: ' num2str(100*pf,'%2.1f')  '\pm' num2str(100*berr_numfoundrat,'%2.1f')])
+%     axis tight
+%     results(1).gapf=pf*100 ; 
+%     results(2).gapf=berr_numfoundrat*100;
+%     
+ ax3=obj.initaxis('assigned');
 
-ax4=axes(ax3.Parent);
+% ax4=axes(ax3.Parent);
 
-   subplot(1,2,1,ax3);
+%    subplot(1,2,1,ax3);
     ha=hist(numbercornerassigneddirect,nb);
     p.ploton=false;
     bs_assigned=bootstrp(20,@fitNPClabeling,numbercornerassigneddirect,p);
@@ -196,15 +205,15 @@ ax4=axes(ax3.Parent);
    axis tight
    results(1).assigned=pf*100; 
    results(2).assigned=berr_assigned*100;
-   
-subplot(1,2,2,ax4);
-    hall=hi+hr+ha;
-    bar(nb,hall)
-    hold on
-    pf=fitNPClabeling(hall,p);
-    title(['all: ' num2str(100*pf,'%2.1f')])
-    axis tight 
-    results(1).all=pf*100; 
+%    
+% subplot(1,2,2,ax4);
+%     hall=hi+hr+ha;
+%     bar(nb,hall)
+%     hold on
+%     pf=fitNPClabeling(hall,p);
+%     title(['all: ' num2str(100*pf,'%2.1f')])
+%     axis tight 
+%     results(1).all=pf*100; 
 
     
 % analyze time dependence
@@ -231,9 +240,23 @@ subplot(1,2,2,ax4);
     plot(rank,0*rank+mlta);
     errorbar(rank,lta,nerra,'o')
     
-    lbs=['lin: ';'exp: ';'sum: '];
+    lbs=['lin: ';'lcoi:';'exp: ';'sum: '];
     ls(end+1)=mlta;
     le(end+1)=0;
+    
+    axtc=obj.initaxis('chunks');
+    clear nchall
+    tp=size(timepoints,2);
+    for k=1:floor(tp/2)
+        nh=nchunks(dind==k);
+        nchall{k+1}=nh(:);
+        nh=nchunksn(dind==k);
+        nchall{tp-k}=nh(:);
+    end
+    nchall{tp}=nstart(:,end);
+    [lc,ltc,nerrc,rank]=evaluatetime(nchall,p,'k');
+    
+    
     
     if gtexist
         [lsgt,ltsgt]=evaluatetime(nstart_gt,p,'m');
@@ -256,6 +279,10 @@ subplot(1,2,2,ax4);
             legend('data start',['lin fit: ' num2str(ls(1)*100,'%2.1f')],...
        ['exp fit: ' num2str(ls(2)*100,'%2.1f')],'data end',...
        ['lin fit: ' num2str(le(1)*100,'%2.1f')],['exp fit: ' num2str(le(2)*100,'%2.0f')])
+   
+           title(axtc,[lbs(1:3,:) num2str([lc]*100,'%4.1f, ')]);
+            legend('data start',['lin fit: ' num2str(lc(1)*100,'%2.1f')],...
+       ['exp fit: ' num2str(lc(2)*100,'%2.1f')],'data end')
     
     end
     ylabel('labeling efficiency')
@@ -428,7 +455,11 @@ nerr=ones(1,size(n,2))/100;
 pf=zeros(1,size(n,2));
 for k=1:size(n,2)
 %     h=hist(n(:,k),nb);
-    nh=n(:,k);
+    if iscell(n)
+        nh=n{k};
+    else
+        nh=n(:,k);
+    end
     if sum(nh>0)>5 %minium for fitting)
         pf(k)=fitNPClabeling(nh,p);
         if p.bootstrap
@@ -473,11 +504,15 @@ else
     lex=fx(tp(end));
 end
 
+ci=confint(fr);
+dr=ci(2,:)-ci(1,:);
+errle=sqrt(sum(dr.^2));
+
 hold on
 plot(tp,fr(tp),col);
 plot(tp,fx(tp),[col '--']);
 xlabel('rank');
-out=[le;lex];
+out=[le;errle;lex];
 end
 
 

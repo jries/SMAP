@@ -3,7 +3,7 @@ function plabel=fitNPClabeling(corners,p)
 
     
  nb=0:p.corners;
- if length(corners)>9 %otherwise: histogram passed on
+ if length(corners)>9 ||(isfield(p,'ishistogram') && ~p.ishistogram) %otherwise: histogram passed on
     hr=hist(corners,nb);
  else
      hr=corners;
@@ -31,18 +31,27 @@ x=n(range)';
 % clusterfromlabeling(x,corners,rings,.5)
 % ft=fittype('a*clusterfromlabeling(x,corners,rings,p)','problem',{'corners','rings'});
 % f=fit(x,hi(range)',ft,'problem',{corners, rings},'Lower',[0 0.01],'Upper',[inf .99],'Start',[shi .4]);
+fun=@(fitpar,xdata) sqrt(fitpar(1)*clusterfromlabeling(xdata,corners,rings,fitpar(2)));
+startp=[shi .4];
+options=optimoptions('lsqcurvefit','Display','off');
+fitp=lsqcurvefit(fun,startp,x,sqrt(hi(range))',[],[],options);
+% 
+% ft=fittype('sqrt(a*clusterfromlabeling(x,corners,rings,p))','problem',{'corners','rings'});
+% f=fit(x,sqrt(hi(range))',ft,'problem',{corners, rings},'Lower',[0 0.01],'Upper',[inf .99],'Start',[shi .4]);
 
-ft=fittype('sqrt(a*clusterfromlabeling(x,corners,rings,p))','problem',{'corners','rings'});
-f=fit(x,sqrt(hi(range))',ft,'problem',{corners, rings},'Lower',[0 0.01],'Upper',[inf .99],'Start',[shi .4]);
+
 
 if ~isfield(p,'ploton') || p.ploton==true
-plot(n,f(n).^2,'-g')
-plot(x,f(x).^2,'-*r')
+% plot(n,f(n).^2,'-g')
+% plot(x,f(x).^2,'-*r')
+plot(n,fitp(1)*clusterfromlabeling(n,corners,rings,fitp(2)),'-g')
+plot(x,fitp(1)*clusterfromlabeling(x,corners,rings,fitp(2)),'-*r')
 end
 
 % if ~isfield(p,'ploton') || p.ploton==true
 % plot(n,f(n),'-g')
 % plot(x,f(x),'-*r')
 % end
-pf=f.p;
+% pf=f.p;
+pf=fitp(2);
 end

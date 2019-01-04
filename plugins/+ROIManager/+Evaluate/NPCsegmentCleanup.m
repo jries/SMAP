@@ -86,6 +86,14 @@ pard.minlocs.object=struct('Style','edit','String','10');
 pard.minlocs.position=[5,4.5];
 pard.minlocs.Width=.5;
 
+pard.maxPSFt.object=struct('Style','text','String','max average PSF');
+pard.maxPSFt.position=[6,1];
+pard.maxPSFt.Width=1.5;
+pard.maxPSF.object=struct('Style','edit','String','150');
+pard.maxPSF.position=[6,2.5];
+pard.maxPSF.Width=.5;
+
+
 pard.plugininfo.type='ROI_Evaluate';
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer1_','layer2_','se_sitepixelsize'};
 end
@@ -110,7 +118,7 @@ if p.center %directly center to do furhter analysis on centered pore
 %     obj.redraw;
 end
 
-locs=obj.getLocs({'xnm','ynm'},'layer',1,'size',p.se_siteroi(1)/2);
+locs=obj.getLocs({'xnm','ynm','PSFxnm'},'layer',1,'size',p.se_siteroi(1)/2);
 if isempty(locs.xnm)
     return
 end
@@ -153,8 +161,10 @@ smav=sqrt(prod(sm));
 
 goodsize=smav>p.minsize;
 goodlocs=length(xm)>p.minlocs;
+mpsf=mean(locs.PSFxnm);
 
-usethis=goodradius&goodout&goodin&goodsize&goodlocs;
+goodpsf=mpsf<=p.maxPSF;
+usethis=goodradius&goodout&goodin&goodsize&goodlocs & goodpsf;
     savefield='list4';
 obj.site.annotation.(savefield).value=usethis+1;
 obj.site.annotation.use=usethis;
@@ -180,11 +190,12 @@ if obj.display
 
     ff='%2.1f';
     ff2='%1.2f';
-    titletxt=[textstart{usethis+1} 'R: ' textstyle{goodradius+1} num2str(R0r,ff) ...
+    titletxt=[textstart{usethis+1} '\bf R: ' textstyle{goodradius+1} num2str(R0r,ff) ...
         '\bf, in: ' textstyle{goodin+1} num2str(inside/inring,ff2)...
         '\bf, out: ' textstyle{goodout+1} num2str(outside/inring,ff2)...
         '\bf, size: ' textstyle{goodsize+1} num2str(smav,ff) ...
-        '\bf, locs: ' textstyle{goodlocs+1} num2str(length(xm),'%2i')];
+        '\bf, locs: ' textstyle{goodlocs+1} num2str(length(xm),'%2i') ...
+        '\bf, psf: ' textstyle{goodpsf+1} num2str(mpsf,'%3.0f')];
     title(ax1,titletxt)
 end
 

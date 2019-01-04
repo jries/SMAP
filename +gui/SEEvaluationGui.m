@@ -179,7 +179,7 @@ s=size(d);
 for k=1:s(1)
     if d{k,1} %evaluate
         module=obj.processors{k};
-        module.display=p.display;
+        module.display=p.se_display;
         module.evaluate(site);
     end
 end
@@ -207,13 +207,13 @@ pard.redrawall.TooltipString='redraw all sites (inclusive files and cells) or se
 pard.evaluateon.object=struct('Style','checkbox','String','evaluate on','Value',1);
 pard.evaluateon.position=[7,1];
 pard.evaluateon.Width=1.5;
-pard.display.object=struct('Style','checkbox','String','display','Value', 1);
-pard.display.position=[8,1];
-pard.display.Width=1.5;
+pard.se_display.object=struct('Style','checkbox','String','display','Value', 1);
+pard.se_display.position=[8,1];
+pard.se_display.Width=1.5;
 
 pard.se_keeptempimages.object=struct('Style','checkbox','String','keep temp imgs','Value', 0);
 pard.se_keeptempimages.position=[9,1];
 pard.se_keeptempimages.Width=1.5;
 
-pard.outputParameters={'se_keeptempimages'};
+pard.outputParameters={'se_keeptempimages','se_display'};
 end

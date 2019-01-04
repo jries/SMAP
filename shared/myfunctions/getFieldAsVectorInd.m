@@ -38,7 +38,7 @@ for k=length(p):-1:1
 %         v(k)=vh;
 %         isarray=true;
     if isarray||((isnumeric(vh)||islogical(vh)))
-        v(k,1:length(vh))=vh;
+        v(k,1:numel(vh))=vh(:);
         isarray=true;
     else
         v{k}=vh;

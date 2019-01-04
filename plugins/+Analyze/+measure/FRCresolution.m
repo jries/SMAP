@@ -26,10 +26,10 @@ classdef FRCresolution<interfaces.DialogProcessor
 %             bfrc(1:end/2)=1;
             lochere.addloc('FRCblocks',bfrc);
             lochere.regroup;
-            lochere.filter('FRCblocks',[],'minmax',[-.1 .5])
-            image1=getimage(lochere,p);
-            lochere.filter('FRCblocks',[],'minmax',[.5 1.1])
-            image2=getimage(lochere,p);
+%             lochere.filter('FRCblocks',[],'minmax',[-.1 .5])
+            image1=getimage(lochere,p,[-.1 .5]);
+%             lochere.filter('FRCblocks',[],'minmax',[.5 1.1])
+            image2=getimage(lochere,p,[.5 1.1]);
             
             image1f=filterimage(image1);
             image2f=filterimage(image2);
@@ -114,7 +114,7 @@ maskt=mask.*mask';
 imageo=maskt.*imagei;
 
 end
-function image=getimage(lochere,p)
+function image=getimage(lochere,p,frcrange)
 if p.takeimage
     p.sr_axes=[];
     imt=anyRender(lochere,p);
@@ -122,10 +122,10 @@ if p.takeimage
 else
     
     locs=lochere.getloc({'xnm','ynm','FRCblocks'},'position','roi','layer',1);
-    
+    goodlocs=locs.FRCblocks>frcrange(1) & locs.FRCblocks<frcrange(2);
     rx=p.sr_pos(1)+p.sr_size(1)*[-1 1];
     ry=p.sr_pos(2)+p.sr_size(2)*[-1 1];
-    image=myhist2(locs.xnm,locs.ynm,p.pixrec_frc,p.pixrec_frc,rx,ry);
+    image=myhist2(locs.xnm(goodlocs),locs.ynm(goodlocs),p.pixrec_frc,p.pixrec_frc,rx,ry);
     
 end
 s=size(image);
