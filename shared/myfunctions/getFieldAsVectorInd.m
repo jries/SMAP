@@ -10,7 +10,13 @@ else
 end
 
 fieldnames=takeapart(fieldnames);
-fieldexists=isfield(p(1),fieldnames{1}) | isprop(p(1),fieldnames{1});
+    if iscell(p)
+            ph=p{1};
+    else
+            ph=p(1);
+    end
+    
+fieldexists=isfield(ph,fieldnames{1}) | isprop(ph,fieldnames{1});
 
 for k=length(p):-1:1
 %     try
