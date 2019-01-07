@@ -98,7 +98,7 @@ locsall=obj.locData.getloc({'frame','filenumber'},'layer',1,'removefilter','file
 
 frames=locsall.frame(locsall.filenumber==obj.site.info.filenumber);
 frames0=frames(frames>0);
-numpoints=10;
+numpoints=50;
 qq=linspace(0,1,numpoints+1);
 timepoints=myquantile(frames0,qq);  % now edges are defined: think about time windows
 

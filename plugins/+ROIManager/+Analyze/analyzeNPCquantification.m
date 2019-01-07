@@ -338,7 +338,7 @@ if nargin <3
 end
 p=pin;
 p.ploton=false;
-p.fitrange=[1 8];
+p.fitrange=[0 8];
 nerr=zeros(1,size(n,2))/100;
 pf=zeros(1,size(n,2));
 fitstarts=[0 0 1 1 1 1 2 2 3];
@@ -350,7 +350,7 @@ for k=1:size(n,2)
     end
     
     if sum(nh>0)>5 %minium for fitting)
-        p.fitrange(1)=fitstarts(floor(mean(nh))+1);
+%         p.fitrange(1)=fitstarts(floor(mean(nh))+1);
         pf(k)=fitNPClabeling(nh,p);
         if p.bootstrap
             bs_numfoundint=bootstrp(10,@fitNPClabeling,nh,p);
@@ -384,7 +384,7 @@ if pf(end)-pf(1) < 0
     %try other fit rank = a (pf(1-b ln(pf))
     g2 = fittype( @(le,a,x) logmodel(le,a,x));
     fitrange(end)=false;
-    fx2=fit(pf(fitrange)',tp(fitrange)',g2,'StartPoint',[pf(1) 0]);
+    fx2=fit(pf(fitrange)',1-tp(fitrange)',g2,'StartPoint',[pf(1) 0]);
     findzero=pf(1)-0.05:0.001:pf(1)+0.05;
     r0=fx2(findzero); 
     ind=find(r0<0,1,'first');
@@ -413,7 +413,7 @@ if pin.ploton
         end
         hold on
         leplot=0:0.01:lelog;
-        plot(1-fx2(leplot),leplot,[col ]);
+        plot(fx2(leplot),leplot,[col ]);
 %         xlim([fx2(pf(1)) 1])
     else
         if all(nerr==0)
@@ -432,8 +432,8 @@ end
 
 
 function out=logmodel(le,a,x)
-    out=1-(x/le.*(1-a*log(x/le)));
-    out(x==0)=1;
+    out=(x/le.*(1-a*log(x/le)));
+    out(x==0)=0;
 
 end
      
