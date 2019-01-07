@@ -2,6 +2,8 @@ function v=getFieldAsVector(p,varargin)
 % ls=length(p);
 isarray=false;
 fieldnames=takeapart(varargin);
+fieldexists=isfield(p(1),fieldnames{1}) | isprop(p(1),fieldnames{1});
+
 for k=length(p):-1:1
 %     try
     if iscell(p)
@@ -10,7 +12,7 @@ for k=length(p):-1:1
             ph=p(k);
     end
 %     ph=struct(ph);
-    if isfield(ph,fieldnames{1}) || isprop(ph,fieldnames{1})
+    if fieldexists %isfield(ph,fieldnames{1}) || isprop(ph,fieldnames{1})
        vh=ph.(fieldnames{1});
        for f=2:length(fieldnames)
            if isempty(vh) || ~(isfield(vh,fieldnames{f}) || isprop(vh,fieldnames{f}))

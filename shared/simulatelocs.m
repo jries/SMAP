@@ -307,7 +307,7 @@ switch model
         end
         
     case 'Dye'
-        timescale=maxframe/numblinks/2;
+        timescale=maxframe/(numblinks+1)/2;
         frame=(exprnd(timescale,numlocs,1));
         on=true(size(frame));
         onind=find(on);

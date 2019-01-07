@@ -114,7 +114,7 @@ if ~isempty(locs.xnm_gt)
     ymgt=locs.ynm_gt-y0gt;
     [thagt,rhoagt]=cart2pol(xmgt,ymgt);
     coordinates_gt=struct('rho',rhoagt,'theta',thagt,'drho',locs.locprecnm*0+5, 'dtheta',locs.locprecnm*0+pi/64,'x',locs.xnm_gt,'y',locs.ynm_gt,'frame',locs.frame);
-    [numbercornerassigned_gt,~,direct_gt]=assigntocornersdirect(coordinates_gt,inr,8,ax3,timepoints);
+    [numbercornerassigned_gt,~,direct_gt,timing_gt]=assigntocornersdirect(coordinates_gt,inr,8,ax3,timepoints);
 
     locsall=obj.getLocs({'xnm','ynm','xnm_gt','ynm_gt','locprecnm','frame'},'size',p.se_siteroi);
     xmgta=locsall.xnm_gt-x0gt;
@@ -122,14 +122,14 @@ if ~isempty(locs.xnm_gt)
     [thagta,rhoagta]=cart2pol(xmgta,ymgta);
     inrgt=rhoagta>R-dR&rhoagta<R+dR;
     coordinates_gta=struct('rho',rhoagta,'theta',thagta,'drho',rhoagta*0+5, 'dtheta',rhoagta*0+pi/64,'x',locsall.xnm_gt,'y',locsall.ynm_gt,'frame',locsall.frame);
-    [numbercornerassigned_gta,~,direct_gta,timing_gt]=assigntocornersdirect(coordinates_gta,inrgt,8,[],timepoints,ax3b);
+    [numbercornerassigned_gta,~,direct_gta]=assigntocornersdirect(coordinates_gta,inrgt,8,[],timepoints,ax3b);
 
     out.numcornersfiltered_gt=direct_gt;
     out.numcornersall_gt=direct_gta;
     out.timing_gt=timing_gt;
 
-    strt_gt=[', gt filtered (m/d): ' num2str(mean([numgap_gt, numbercornerassigned_gt],'omitnan')) ', ' num2str(direct_gt)];
-    strt_gt=[strt_gt ', gt all (m/d): ' num2str(mean([numgap_gta, numbercornerassigned_gta],'omitnan')) ', ' num2str(direct_gta)];
+    strt_gt=[', gt filtered (m/d): ' num2str(mean([numbercornerassigned_gt],'omitnan')) ', ' num2str(direct_gt)];
+    strt_gt=[strt_gt ', gt all (m/d): ' num2str(mean([ numbercornerassigned_gta],'omitnan')) ', ' num2str(direct_gta)];
     
 else
     strt_gt='';
@@ -220,7 +220,7 @@ if nargin>4 && ~isempty(timepoints)
     nstart=zeros(length(timepoints),1);
     nend=zeros(length(timepoints),1);
     for k=1:length(timepoints)
-        indin=frameh<timepoints(k);
+        indin=frameh<=timepoints(k);
         nstart(k)=sum(histcounts(throt(indin),cornerposd)>=1);
         nend(k)=sum(histcounts(throt(~indin),cornerposd)>=1);
     end
@@ -233,14 +233,25 @@ if nargin>4 && ~isempty(timepoints)
     
     % new analysis: divide into chunks
     ltp=(length(timepoints))-1;
-    nchunks=zeros(floor(ltp/2),ltp)+NaN;nchunksn=nchunks;
+    nchunks=zeros(ltp,ltp)+NaN;nchunksn=nchunks;
     dind=nchunks;
-    for d=1:floor(ltp/2)
-        for k=1:ltp-d
-            indin=frameh>=timepoints(k) & frameh<timepoints(k+d);
+    for d=1:ltp
+        for k=1:ltp
+            k2=mod(k+d,ltp+1); 
+            if k2==0 
+                k2=ltp+1; 
+            end
+            if k2>k
+                indin=frameh>=timepoints(k) & frameh<timepoints(k2);
+            else
+                indin=frameh>=timepoints(k) | frameh<timepoints(k2+1);
+            end
+            
             if sum(indin)>0
                 nchunks(d,k)=sum(histcounts(throt(indin),cornerposd)>=1);
-                nchunksn(d,k)=sum(histcounts(throt(~indin),cornerposd)>=1);
+%                 nchunksn(d,k)=sum(histcounts(throt(~indin),cornerposd)>=1);
+            else
+                 nchunks(d,k)=0;
             end
              dind(d,k)=d;
         end    
