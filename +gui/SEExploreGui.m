@@ -97,6 +97,10 @@ classdef SEExploreGui<interfaces.SEProcessor
             end
 
             if ishandle(obj.guihandles.filelist)
+%                 if isempty(obj.SE.files)
+%                     fl=obj.getPar('filelist_long').String;
+%                     for k=1:length(
+%                 end
                 obj.guihandles.filelist.String={obj.SE.files.name};
                 obj.guihandles.filelist.Value=1;
             end
@@ -780,4 +784,6 @@ end
 
 function updatelist_callback(a,b,obj)
 redraw_sitelist(obj);
+redraw_celllist(obj);
+updateFilelist(obj);
 end

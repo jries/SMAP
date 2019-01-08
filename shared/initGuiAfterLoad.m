@@ -71,9 +71,12 @@ if ~isempty(strfind(obj.getPar('mainfile'),'_sml'))
 end
 
 se=obj.locData.SE;
+% fnames={se.files(:).name};
 if isempty(se.files) %later: test if sites were added already, otherwise run to updata
     for k=1:length(obj.locData.files.file)
-        se.addFile(obj.locData.files.file(k).name,obj.locData.files.file(k).number,obj.locData.files.file(k).info)
+%         if ~contains(fnames,obj.locData.files.file(k).name)
+            se.addFile(obj.locData.files.file(k).name,obj.locData.files.file(k).number,obj.locData.files.file(k).info)
+%         end
     end
 end
 
