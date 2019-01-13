@@ -469,7 +469,11 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             else
                 srim=displayerSMAP(layer,pr);
             end
+            if isempty(srim)
+                return
+            end
             obj.currentimage=copyfields(obj.currentimage,srim);
+            
             him=imagesc(srim.rangex*1000,srim.rangey*1000,srim.image,'Parent',ax);
              ax.HitTest='on';
             ax.PickableParts='all';

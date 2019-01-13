@@ -338,10 +338,10 @@ if nargin <3
 end
 p=pin;
 p.ploton=false;
-p.fitrange=[0 8];
+p.fitrange=[1 8];
 nerr=zeros(1,size(n,2))/100;
 pf=zeros(1,size(n,2));
-fitstarts=[0 0 1 1 1 1 2 2 3];
+% fitstarts=[1 1 1 1 1 1 2 2 3];
 for k=1:size(n,2)
     if iscell(n)
         nh=n{k};
@@ -356,19 +356,24 @@ for k=1:size(n,2)
             bs_numfoundint=bootstrp(10,@fitNPClabeling,nh,p);
             nerr(k)=std(bs_numfoundint);
         end
+        nm(k)=mean(nh);
     else
         pf(k)=0;
         nerr(k)=0;
+        nm(k)=0;
     end
 end
 tp=linspace(0,1,size(n,2)); %rank
 
-fitrange=pf<0.95;
+% fitrange=pf<0.95;
+% fitrange=nm>2 | pf==0;
+
+% nm
 
 if p.bootstrap
     delta=min(nerr(nerr>0));
     w=1./(nerr+delta);
-    w=w(fitrange);
+%     w=w(fitrange);
     w=w/max(w);
 else
     w=[];
@@ -378,25 +383,50 @@ end
  
 
 if pf(end)-pf(1) < 0 
+%     fitrange=tp<=0.5;
+    fitrange=nm>2;
+    fitrange(end)=false;
+    if ~isempty(w)
+        w=w(fitrange);
+    end
     [le, errle]=lscov(1-tp(fitrange)',pf(fitrange)',w);
 %     fr=fit(tp(fitrange)',pf(fitrange)','poly1','Weights',w');
 %     le=fr(0);
     %try other fit rank = a (pf(1-b ln(pf))
     g2 = fittype( @(le,a,x) logmodel(le,a,x));
-    fitrange(end)=false;
+%     fitrange(end)=false;
     fx2=fit(pf(fitrange)',1-tp(fitrange)',g2,'StartPoint',[pf(1) 0]);
-    findzero=pf(1)-0.05:0.001:pf(1)+0.05;
-    r0=fx2(findzero); 
-    ind=find(r0<0,1,'first');
-    lelog0=findzero(ind); 
+%     findzero=pf(1)-0.05:0.001:pf(1)+0.05;
+%     r0=fx2(findzero); 
+%     ind=find(r0<0,1,'first');
+%     lelog0=findzero(ind); 
 %     lelog0
     lelog=fx2.le;
+%     fx2.a
 %     lelog
+%     g1=fittype(@(le,a,b,x) le*x.*(1+a*x.*exp(-b*x)));
+%     fx1=fit(1-tp(fitrange)',pf(fitrange)',g1,'StartPoint',[pf(1) 0.1 10]);
+    fpol=fit(1-tp(fitrange)',pf(fitrange)','poly2','Weights',w');
+    lepol=fpol(1);
+    
+%     figure(88);th=1-tp(fitrange)';pfh=pf(fitrange)';
+%     hold off
+% %     plot(th,pfh,'o',th,fx1(th)')
+%     
+%     plot(th,pfh,'x',fx2(pfh),pfh)
+%     hold on
+%     plot(th,fpol(th));
+%     legend('dat','exp','log','pol')
 %     ci=confint(fr);
 %     dr=ci(2,:)-ci(1,:);
 %     errle=sqrt(sum(dr.^2));
 else
     lelog=0;
+    lepol=0;
+    fitrange=nm>2;
+    if ~isempty(w)
+        w=w(fitrange);
+    end
     [le, errle]=lscov(tp(fitrange)',pf(fitrange)',w);
 %      le=fr(tp(end));
 end
@@ -407,25 +437,28 @@ if pin.ploton
     
     if pf(end)-pf(1) < 0 
         if all(nerr==0)
-            plot(1-tp,pf,[col 'o'])
+            plot(1-tp(fitrange),pf(fitrange),[col 'o'])
         else
-            errorbar(1-tp,pf,nerr,[col '.'])
+            errorbar(1-tp(fitrange),pf(fitrange),nerr(fitrange),[col '.'])
         end
         hold on
-        leplot=0:0.01:lelog;
+        tpa=min(1-tp(fitrange)):0.01:1;
+        leplot=0:0.01:fx2.le+0.02;
+%         plot(tpa,fpol(tpa),col);
         plot(fx2(leplot),leplot,[col ]);
-%         xlim([fx2(pf(1)) 1])
+%         xlim([fx2f(pf(1)) 1])
     else
         if all(nerr==0)
-            plot(tp,pf,[col 'x'])
+            plot(tp(fitrange),pf(fitrange),[col 'x'])
         else
-            errorbar(tp,pf,nerr,[col '.'])
+            errorbar(tp(fitrange),pf(fitrange),nerr(fitrange),[col '.'])
         end
         hold on
         plot(tp,le*(tp),col);
     end
 xlabel('fraction used');
 end
+out=[le;errle;lepol];
 out=[le;errle;lelog];
 end
 

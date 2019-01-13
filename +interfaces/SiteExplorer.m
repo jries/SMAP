@@ -53,12 +53,13 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             seout=interfaces.SiteExplorer;
             pp=properties(obj);
             direct={'P','locData'};
+            skip='processors';
             for k=1:length(pp)
                 if isa(obj.(pp{k}),'handle')&&~any(strcmp(pp{k},direct))
 
                      seout.(pp{k})=copy(obj.(pp{k}));
 
-                else
+                elseif ~any(strcmp(pp{k},skip))
                     seout.(pp{k})=(obj.(pp{k}));
                 end
             end

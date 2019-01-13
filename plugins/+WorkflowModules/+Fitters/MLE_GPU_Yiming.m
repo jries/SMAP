@@ -531,11 +531,11 @@ fitmode=p.fitmode.Value;
 switch fitmode
     case {1,2}
         roisize=7;
-        iterations=50;
+        iterations=25;
       
     otherwise
         roisize=13;
-        iterations=50;
+        iterations=30;
 end
 
 obj.setPar('loc_ROIsize',roisize);
