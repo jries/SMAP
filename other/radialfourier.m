@@ -71,7 +71,7 @@ ax.XTickMode='manual';
 xlabel('1/frequency (nm)')
 ylabel('power spectrum log(|F(I)|^2)')
  ylim([-10 1])
- xlim([0 0.025])
+ xlim([0 0.025])    
 end
 function [rs,norm]=radialsum(img)
 s=size(img);
