@@ -13,22 +13,24 @@ classdef lineprofile<interfaces.SEEvaluationProcessor
             layers=find(inp.sr_layerson);
             ax=obj.setoutput('profile');
             for k=1:length(layers)
-                locs=obj.getLocs({'xnmrot','ynmrot','znm'},'layer',layers(k),'size',inp.se_siteroi);  
-                nbins=-200:10:200;
+                locs=obj.getLocs({'xnmrot','ynmrot','znm'},'layer',layers(k),'size',inp.se_siteroi/2);  
+                nbins=-200:5:200;
                 hc=histcounts(locs.ynmrot,nbins);
                 mp=median(locs.ynmrot);
                 d=std(locs.ynmrot);
+%                 d=30;
                 amp=max(hc);
                 ft=fittype( @(a1,b1,s,a2,b2,x) a1*exp(-(x-b1).^2/2/s^2)+a2*exp(-(x-b2).^2/2/s^2));
 %                 ft=fittype( @(a1,b1,s,a2,b2,c,x) a1*normcdf((x-b1)/s)+a2*normcdf((x-b2)/s)+c);
 %                 hc=cumsum(hc);
-                fitp=fit(nbins(1:end-1)',hc',ft,'StartPoint',[amp mp-d d/2 amp mp+d]);
+                fitp=fit(nbins(1:end-1)',hc',ft,'StartPoint',[amp mp-d d amp mp+d]);
                 plot(ax,nbins(1:end-1),hc,nbins,fitp(nbins));
                 dist=abs(fitp.b2-fitp.b1);
                 title(ax,dist)
 
             end
             out.distance=dist;
+            out.std=fitp.s;
         end
      
         function pard=guidef(obj)

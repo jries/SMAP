@@ -1,7 +1,13 @@
-function out = runNPC3DfittingJ(obj, p)
+function out = runNPC3DfittingJ(obj, p,locsin,startcoord)
     % Set bounds of parameters
-    locs = obj.getLocs({'xnmrot','ynmrot', 'znm'},'size',obj.P.par.se_siteroi.content/2,'grouping','ungrouped', 'layer', 1);
-
+    if nargin>2 || ~isempty(locsin)
+        locs=locsin;
+    else
+        locs = obj.getLocs({'xnmrot','ynmrot', 'znm'},'size',obj.P.par.se_siteroi.content/2,'grouping','ungrouped', 'layer', 1);
+    end
+%     figure(222);
+%     hold on
+%     plot(locs.xnmrot,locs.ynmrot,'.')
     % Build the model/template
     img3d = obj.getPar('img3d');
     xcor3d =  obj.getPar('xcor3d');
@@ -19,9 +25,13 @@ function out = runNPC3DfittingJ(obj, p)
     % Objective function
     objfun =@(x) -sum(log10(NPC3dJ(locs.xnmrot, locs.ynmrot, locs.znm, x(1), x(2), x(3), x(4), x(5), x(6) ,'gridX', xcor3d, 'gridY',ycor3d, 'gridZ',zcor3d, 'img3d',img3d, 'roisize', 500, 'SumOffset', p.sumOffset)));
 %      objfun =@(x) -sum((NPC3d(locs.xnmrot, locs.ynmrot, locs.znm, x(1), x(2), x(3), x(4), x(5), x(6) ,'gridX', xcor3d, 'gridY',ycor3d, 'gridZ',zcor3d, 'img3d',img3d, 'roisize', 500, 'SumOffset', p.sumOffset)));
-    options=optimset('TolX',1e-7);
+    options=optimset('TolX',1e-7,'MaxFunEvals',5000);
     dstart=60;
-    st=[double(median(locs.xnmrot)) double(mean(locs.xnmrot)) double(mean(locs.znm))-dstart dstart 0 0 ];
+    if nargin<4||isempty(startcoord)
+        st=[double(median(locs.xnmrot)) double(mean(locs.xnmrot)) double(mean(locs.znm))-dstart dstart 0 0 ];
+    else
+        st=[double(startcoord(1)) double(startcoord(2))  double(mean(locs.znm))-dstart dstart 0 0 ];
+    end
     x=st;
     
 %           NPC3d(locs.xnmrot, locs.ynmrot, locs.znm, x(1), x(2), x(3), x(4), x(5), x(6), 'gridX', xcor3d, 'gridY',ycor3d, 'gridZ',zcor3d, 'img3d',img3d, 'roisize', 500, 'SumOffset', p.sumOffset, 'plot',1)
@@ -45,6 +55,9 @@ function out = runNPC3DfittingJ(obj, p)
         out.fitted = fittedVals;
         x = fittedVals;
         [~,~,~,~,~,out.locxyz] = NPC3dJ(locs.xnmrot, locs.ynmrot, locs.znm, x(1), x(2), x(3), x(4), x(5), x(6), 'gridX', xcor3d, 'gridY',ycor3d, 'gridZ',zcor3d, 'img3d',img3d, 'roisize', 500, 'SumOffset', p.sumOffset, 'plot',[]);
+%         if nargin>2
+%             [~,~,~,~,~,out.locxyzlayer] = NPC3dJ(locsin.xnmrot, locsin.ynmrot, locsin.znm, x(1), x(2), x(3), x(4), x(5), x(6), 'gridX', xcor3d, 'gridY',ycor3d, 'gridZ',zcor3d, 'img3d',img3d, 'roisize', 500, 'SumOffset', p.sumOffset, 'plot',[]);
+%         end
     if obj.display
         ax=obj.setoutput('fit');
         NPC3dJ(locs.xnmrot, locs.ynmrot, locs.znm, x(1), x(2), x(3), x(4), x(5), x(6), 'gridX', xcor3d, 'gridY',ycor3d, 'gridZ',zcor3d, 'img3d',img3d, 'roisize', 500, 'SumOffset', p.sumOffset, 'plot',ax)

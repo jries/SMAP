@@ -391,10 +391,17 @@ if pf(end)-pf(1) < 0
     lelog0=findzero(ind); 
 %     lelog0
     lelog=fx2.le;
+    
+    g1=fittype(@(le,a,b,x) le*x.*(1-a*exp(-b*x)));
+    
+    fx1=fit(1-tp(fitrange)',pf(fitrange)',g1,'StartPoint',[pf(1) 0. 0.5]);
+%      figure(88);plot(1-tp,pf,1-tp,fx1(1-tp))
 %     lelog
 %     ci=confint(fr);
 %     dr=ci(2,:)-ci(1,:);
 %     errle=sqrt(sum(dr.^2));
+
+
 else
     lelog=0;
     [le, errle]=lscov(tp(fitrange)',pf(fitrange)',w);

@@ -8,7 +8,7 @@ classdef NPC3Dfitting<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj,p)
-            out = runNPC3Dfitting(obj,p);
+            out = runNPC3DfittingJ(obj,p);
         end
         function pard=guidef(obj)
             pard=guidef(obj);

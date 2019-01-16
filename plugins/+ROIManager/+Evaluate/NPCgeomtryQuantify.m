@@ -52,19 +52,21 @@ function out=runintern(obj,p)
 R=p.R;
 dR=p.dR;
 
-locs=obj.getLocs({'xnm','ynm','znm','locprecnm','locprecznm','frame'},'layer',1,'size',p.se_siteroi(1)/2);
+locs=obj.getLocs({'xnm','ynm','znm','xnmrot','ynmrot','locprecnm','locprecznm','frame'},'layer',1,'size',p.se_siteroi(1)/2);
 if isempty(locs.xnm)
     out=[];
     return
 end
 
 %2D fit
-[x0,y0]=fitposring(locs.xnm,locs.ynm,R);
-xm=locs.xnm-x0;
-ym=locs.ynm-y0;
-
+[x0,y0]=fitposring(locs.xnmrot,locs.ynmrot,R);
+xm=locs.xnmrot-x0;
+ym=locs.ynmrot-y0;
+locsfit=locs;
+locsfit.xnmrot=xm;
+locsfit.ynmrot=ym;
 if ~isempty(locs.znm) % evaluate z distance
-    templatefit= runNPC3DfittingJ(obj, p);
+    templatefit= runNPC3DfittingJ(obj, p,locsfit,[0 0]);
     xm=double(templatefit.locxyz(:,1));
     ym=double(templatefit.locxyz(:,2));
     zm=double(templatefit.locxyz(:,3));
@@ -74,28 +76,72 @@ if ~isempty(locs.znm) % evaluate z distance
     xm(badind)=[];
     ym(badind)=[];
     zm(badind)=[];
+    sx=locs.locprecnm(~badind);
+    sy=locs.locprecznm(~badind);
     dz=8;
     z0=median(zm);
     z=-100:dz:100+z0;
     hz=hist(zm,z);
     % hz=hz-mean(hz);
     ac=myxcorr(hz,hz);
+    hzraw=hist(locs.znm(~badind)-median(locs.znm),z);
     % if obj.display
     if obj.display
     ax1=obj.setoutput('profile');
+%     hold(ax1,'off')
        fitresult=createFit(z, hz,ax1);
     title(ax1,fitresult.d)
+%            hold(ax1,'on')
+     
+     ax1=obj.setoutput('profileraw');
+     fitresultraw=createFit(z, hzraw,ax1);
+     title(ax1,fitresultraw.d)
      ax2=obj.setoutput('correlation');
     plot(ax2,z,ac)
     else
     fitresult=createFit(z, hz,[]);
+     fitresultraw=createFit(z, hzraw,[]);
     end
+    locr.x=xm;
+    locr.y=zm;
+    locr.znm=zm; %in case z color coding
+    locr.sx=sx;
+    locr.sy=sy;
+    posrender=[-p.se_siteroi(1)/2,-100,p.se_siteroi(1),200];
+    
+    srim=renderallSMAP(locr,obj,'position',posrender,'pixrec',1);
+    if obj.display
+        ax1=obj.setoutput('render');  
+        imagesc(ax1,srim.rangex,srim.rangey,srim.composite)
+        axis(ax1,'equal')
+        axis(ax1,'tight')
+    end
+        if true
+        figure(93)
+        subplot(1,2,1)
+        imagesc(srim.rangex,srim.rangey,srim.composite)
+        ax1=gca;
+        axis equal
+        axis tight
+        axis xy
+        subplot(1,2,2)
+        zp=z(1):1:z(end);
+        plot(hz,z,'k',fitresult(zp),zp,'r')
+        ax2=gca;
+        ax2.Position(4)=ax1.Position(4);
+        ax2.Position(3)=.1;
+        ylim([-100 100])
+%         axh=gca;
+%         fitresult=createFit(z, hz,axh);
+        
+        end
     
     out.profile.ac=ac;
     out.profile.dz=dz;
     out.profile.hist=hz;
     out.profile.z=z;
     out.profile.Gaussfit=copyfields([],fitresult,{'a1','a2','b','c','d'});
+    out.profile.Gaussfitraw=copyfields([],fitresultraw,{'a1','a2','b','c','d'});
     out.templatefit=templatefit;
 end
 
