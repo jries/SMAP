@@ -82,6 +82,8 @@ classdef LocSaver<interfaces.WorkflowModule
             obj.locDatatemp.addfile;
             obj.filenumber=1;
              obj.locDatatemp.files.file=locsaveFileinfo(obj);  
+             obj.locDatatemp.SE.files.info=obj.locDatatemp.files.file.info;
+             obj.locDatatemp.SE.files.name=obj.locDatatemp.files.file.name;
              if contains(p.outputfile,'_sml.mat') %valid output name
                  obj.locDatatemp.files.file.name=p.outputfile;
              end

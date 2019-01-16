@@ -30,6 +30,7 @@ if obj.getGlobalSetting('SE_autosavecheck')
 end
 
 SEpreview=obj.SE.processors.preview;
+SEpreview=obj.SEpreview;
     if isempty(SEpreview)||~isvalid(SEpreview.handle)
         obj.SE.processors.SEMainGui.make_siteexplorer;
         SEpreview=obj.SE.processors.preview;

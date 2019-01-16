@@ -42,7 +42,10 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             obj.maxcell=0;
 
         end
-%         function attachLocData(obj,locData)
+        function attachLocData(obj,locData)            
+            attachLocData@interfaces.LocDataInterface(obj,locData);
+            obj.attachPar(locData.P);
+        end
 %             attachLocData@interfaces.LocDataInterface(obj,locData);
 %             obj.initializeProcessors()
 %         end
@@ -50,12 +53,13 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             seout=interfaces.SiteExplorer;
             pp=properties(obj);
             direct={'P','locData'};
+            skip='processors';
             for k=1:length(pp)
                 if isa(obj.(pp{k}),'handle')&&~any(strcmp(pp{k},direct))
 
                      seout.(pp{k})=copy(obj.(pp{k}));
 
-                else
+                elseif ~any(strcmp(pp{k},skip))
                     seout.(pp{k})=(obj.(pp{k}));
                 end
             end
@@ -259,28 +263,28 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
                     site.pos(3)=0;
                 end
                 p1.sr_pos=site.pos;
-                p1.sr_size=ones(2,1)*obj.getPar('se_sitefov')/2;
-                p1.sr_pixrec=obj.getPar('se_sitepixelsize');
+                p1.sr_size=ones(2,1)*obj.locData.getPar('se_sitefov')/2;
+                p1.sr_pixrec=obj.locData.getPar('se_sitepixelsize');
     %             p1.pixrec=obj.sePar.Settings.sitepixelsize;
                 p1.sr_sizeRecPix=round((p1.sr_size*2)/p1.sr_pixrec);
     %             p1.sr_axes=hax;
                 p1.sr_axes=-1;
-                p1.normalizeFoV=p1.sr_sizeRecPix(1)/obj.getPar('se_sitefov')*obj.getPar('se_siteroi')/2;
+                p1.normalizeFoV=p1.sr_sizeRecPix(1)/obj.locData.getPar('se_sitefov')*obj.locData.getPar('se_siteroi')/2;
                 angle=pos2angle(site.annotation.rotationpos.pos);
-                if obj.getPar('se_rotate')&&angle~=0
+                if obj.locData.getPar('se_rotate')&&angle~=0
                  p1.rotationangle=angle;
                 else 
                  p1.rotationangle=0;
                 end
 
-                if obj.getPar('se_imaxcheck_site')
+                if obj.locData.getPar('se_imaxcheck_site')
                     p1.imaxtoggle=false;
-                    imax=obj.getPar('se_imax_site');
+                    imax=obj.locData.getPar('se_imax_site');
 
                     for k=1:length(imax)
                         pl{k}.imax_min=imax(k);
                     end
-                    for k=length(imax)+1:obj.getPar('numberOfLayers')
+                    for k=length(imax)+1:obj.locData.getPar('numberOfLayers')
                         pl{k}.imax_min=imax(1);
                     end
                 else
@@ -291,7 +295,7 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
     %             haxz=gca;
 
                 if ~isempty(haxz)
-                    p1.sr_size(3)=obj.getPar('se_dz')/2;
+                    p1.sr_size(3)=obj.locData.getPar('se_dz')/2;
                     [site.image, imz]=obj.plotobject(p1,site.info.filenumber,pl);%filenumber
                 else
                     site.image=obj.plotobject(p1,site.info.filenumber,pl);%filenumber
@@ -308,11 +312,11 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             
             if nargin>2&&ishandle(hax)
              displayimage(site.image,hax);
-             plotbox(hax,site.pos,obj.getPar('se_siteroi'));
-             plotcirc(hax,site.pos,obj.getPar('se_siteroi'));
+             plotbox(hax,site.pos,obj.locData.getPar('se_siteroi'));
+             plotcirc(hax,site.pos,obj.locData.getPar('se_siteroi'));
              line(site.pos(1)/1000+[-.001 .001],site.pos(2)/1000+[0 0],'Color',[1 1 1],'Parent',hax,'LineWidth',3)
              delete(obj.temp.siteincell);
-             obj.temp.siteincell=plotbox(hbox,site.pos,obj.getPar('se_sitefov'));
+             obj.temp.siteincell=plotbox(hbox,site.pos,obj.locData.getPar('se_sitefov'));
             end
            
 
@@ -324,22 +328,22 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
         function imout=plotcell(obj,cell,hax,hbox)
              if isempty(cell.image)
                 p1.sr_pos=cell.pos;
-                p1.sr_size=ones(2,1)*obj.getPar('se_cellfov')/2;
-                p1.sr_pixrec=obj.getPar('se_cellpixelsize');
+                p1.sr_size=ones(2,1)*obj.locData.getPar('se_cellfov')/2;
+                p1.sr_pixrec=obj.locData.getPar('se_cellpixelsize');
                 p1.sr_sizeRecPix=round((p1.sr_size*2)/p1.sr_pixrec);       
                 p1.sr_axes=hax;
                 p1.sr_axes=-1;
                 p1.rotationangle=0;
                 p1.normalizeFoV=[];
                 
-                if obj.getPar('se_imaxcheck_cell')
+                if obj.locData.getPar('se_imaxcheck_cell')
                     p1.imaxtoggle=false;
-                    imax=obj.getPar('se_imax_cell');
+                    imax=obj.locData.getPar('se_imax_cell');
 
                     for k=1:length(imax)
                         pl{k}.imax_min=imax(k);
                     end
-                    for k=length(imax)+1:obj.getPar('numberOfLayers')
+                    for k=length(imax)+1:obj.locData.getPar('numberOfLayers')
                         pl{k}.imax_min=imax(1);
                     end
                 else
@@ -355,7 +359,7 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             
             
              %plot all site boxes
-             if obj.getPar('se_drawboxes')&&~isempty(obj.sites)&&~isempty(obj.sites(1).info)
+             if obj.locData.getPar('se_drawboxes')&&~isempty(obj.sites)&&~isempty(obj.sites(1).info)
                  allsites=[obj.sites(:).info];
                  ind=[allsites.cell]==cell.ID;
                  
@@ -364,17 +368,17 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
                  use=getFieldAsVector(obj.sites(ind),'annotation','use');
 %                  use(isnan(use))=false;
                     if iscell(use)
-                         plotmanyboxes(hax,obj.sites(ind),[],obj.getPar('se_sitefov'),[1 0 1]);
+                         plotmanyboxes(hax,obj.sites(ind),[],obj.locData.getPar('se_sitefov'),[1 0 1]);
                     else
-                         plotmanyboxes(hax,obj.sites(ind), ~use,obj.getPar('se_sitefov'),[1 0 0]);
-                          plotmanyboxes(hax,obj.sites(ind),use,obj.getPar('se_sitefov'),[1 0 1]);
+                         plotmanyboxes(hax,obj.sites(ind), ~use,obj.locData.getPar('se_sitefov'),[1 0 0]);
+                          plotmanyboxes(hax,obj.sites(ind),use,obj.locData.getPar('se_sitefov'),[1 0 1]);
                     end
          
                  end
              end
             
             delete(obj.temp.cellinfile);
-            obj.temp.cellinfile=plotbox(hbox,cell.pos,obj.getPar('se_cellfov'));
+            obj.temp.cellinfile=plotbox(hbox,cell.pos,obj.locData.getPar('se_cellfov'));
             
             imout=cell.image;
             
@@ -413,10 +417,10 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             displayimage(file.image,hax);
             
                          %plot all site boxes
-             if obj.getPar('se_drawboxes')&&~isempty(obj.cells)&&~isempty(obj.cells(1).info)
+             if obj.locData.getPar('se_drawboxes')&&~isempty(obj.cells)&&~isempty(obj.cells(1).info)
                  allcells=[obj.cells(:).info];
                  ind=[allcells.filenumber]==fileID;
-                 plotmanyboxes(hax,obj.cells,ind,obj.getPar('se_cellfov'));
+                 plotmanyboxes(hax,obj.cells,ind,obj.locData.getPar('se_cellfov'));
              end
             
         end
@@ -425,7 +429,7 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             imagez=[];
            fileind=obj.indexFromID(obj.files,filenumber);
 %            p1=obj.locData.parameters;
-           numlayers=obj.getPar('numberOfLayers');
+           numlayers=obj.locData.getPar('numberOfLayers');
            allfields=[renderSMAP drawerSMAP displayerSMAP];
 %            allfields=[obj.processors.renderer.inputParameters obj.processors.drawer.inputParameters obj.processors.displayer.inputParameters];
            players=obj.getLayerParameters(1:numlayers,allfields);
@@ -573,6 +577,14 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             se.numberOfFiles=obj.numberOfFiles;
         end
         function load(obj,se)
+        end
+        function set.processors(obj,processors)
+           pr=obj.processors;
+           pr=copyfields(pr,processors);
+           obj.locData.setPar('roimanager_processors',pr); 
+        end
+        function pr=get.processors(obj)
+            pr=obj.locData.getPar('roimanager_processors');
         end
     end
 end

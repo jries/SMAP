@@ -39,6 +39,8 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                 obj.SE.clear;
             else
                 obj.SE=interfaces.SiteExplorer(obj);
+                obj.SE.attachPar(obj.P);
+                obj.SE.attachLocData(obj);
 %                 obj.SE.locData=obj;
             end
             elseif strcmpi(part,'filter')
@@ -451,6 +453,8 @@ classdef LocalizationData<interfaces.GuiParameterInterface
             obj.files=locData.files;
             if myisfield(locData,'SE')
                 obj.SE=locData.SE;
+                obj.SE.attachLocData(obj);
+                obj.SE.attachPar(obj.P);
             end
         end
         

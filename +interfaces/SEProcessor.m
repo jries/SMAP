@@ -7,16 +7,20 @@ classdef SEProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             obj@interfaces.GuiModuleInterface(varargin{:})
         end
         function attachSE(obj,se)
-            obj.SE=se;
-            if isempty(obj.locData)
-                obj.locData=obj.SE.locData;
-            end
+            obj.attachLocData(se.locData);
+%             obj.SE=se;
+%             if isempty(obj.locData)
+%                 obj.locData.SE=obj.SE;
+%             end
         end
         function attachLocData(obj,locData)
+            
             attachLocData@interfaces.LocDataInterface(obj,locData);
-            if isempty(obj.SE)
-                obj.SE=locData.SE;
-            end
+            
+            obj.locData.SE.attachPar(obj.locData.P);
+%             if isempty(obj.SE)
+%                 obj.SE=locData.SE;
+%             end
         end
         function updateSingleParameter(obj, data,actionData,field)
             val=obj.getSingleGuiParameter(field);
@@ -27,6 +31,12 @@ classdef SEProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             for k=1:length(fn)
                 obj.updateSingleParameter(obj.guihandles.(fn{k}),0,fn{k})
             end           
+        end
+        function out=get.SE(obj)
+            out=obj.locData.SE;
+        end
+        function set.SE(obj,se)
+            obj.locData.SE=se;
         end
 
     end
