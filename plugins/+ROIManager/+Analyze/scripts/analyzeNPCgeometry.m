@@ -64,7 +64,7 @@ hold on
 plot(zt,fline(zt),'r')
 xlabel('z');ylabel('distance')
 title(['d(z=0) fit: ' num2str(fline.p2,ff) ' Corr:' num2str(corr(abs(d(ind)'),zt(ind')))]);
-ylim([25 60])
+ylim([25 100])
 xlim([-200 200])
 end
 
