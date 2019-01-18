@@ -271,6 +271,9 @@ zd=zeros(size(tab.(pfile.(fn{1}))),'single');
 if ~isfield(locData.loc,'frame')
     locData.setloc('frame',double(zd+1));
 end
+if ~isfield(locData.loc,'phot')
+    locData.setloc('phot',0*single(zd+1)+1000);
+end
 % locData.addloc('frame',dat(:,pfile.frame));
 % locData.addloc('xnm',single(dat(:,pfile.xnm)));
 % locData.addloc('ynm',single(dat(:,pfile.ynm)));

@@ -81,6 +81,7 @@ timepoints=timepoints(indgood,:);
 nstart=nstart(indgood,:);
 nend=nend(indgood,:);
 frames=frames(indgood,:);
+psf=psf(indgood);
 
 nchunks=nchunks(indgood,:);
 dind=dind(indgood,:);
