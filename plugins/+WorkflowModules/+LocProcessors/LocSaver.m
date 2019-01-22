@@ -194,8 +194,9 @@ classdef LocSaver<interfaces.WorkflowModule
                 obj.locDatatemp.loc=rmfield(obj.locDatatemp.loc,nosave);
                 
                 average=obj.getPar('tiffloader_averagetiff');
-
-                obj.locDatatemp.files.file.raw(2:length(obj.frames)+1)=obj.frames;
+                if ~isempty(obj.frames)
+                    obj.locDatatemp.files.file.raw(2:length(obj.frames)+1)=obj.frames;
+                end
                 obj.locDatatemp.files.file.raw(1).image=average;
                 obj.locDatatemp.files.file.raw(1).frame=0;
                 transformation=obj.getPar('loc_globaltransform');
