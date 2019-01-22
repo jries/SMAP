@@ -16,6 +16,7 @@ classdef roi2int_fitG<interfaces.GuiModuleInterface
             %TODO include PSF fit
             global roi2int_fitG_parameters;
             roi2int_fitG_parameters=obj.getAllParameters;
+            warning('off','MATLAB:rankDeficientMatrix');
 %             mp=round(sim+1)/2;
 %             dn=single(round((roi2int_fitG_parameters.roisize_fit-1)/2));
 %             [roi2int_fitG_parameters.X,roi2int_fitG_parameters.Y]=meshgrid(-dn:dn);

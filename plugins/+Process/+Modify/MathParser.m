@@ -9,7 +9,7 @@ classdef MathParser<interfaces.DialogProcessor
         end
         function initGui(obj)
             if exist(obj.historyfile,'file')
-                obj.equationhistory=readtable(obj.historyfile);
+                obj.equationhistory=readtable(obj.historyfile,'Delimiter',',');
                 p=obj.getGuiParameters;
                 p.resultfieldh.String=obj.equationhistory.resultfield;
                 p.equationh.String=obj.equationhistory.equation;
