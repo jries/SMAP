@@ -15,7 +15,7 @@ classdef zSALM<interfaces.DialogProcessor
             fsabg=p.bgfield1.selection;
             fsubg=p.bgfield2.selection;
             locs=obj.locData.getloc({fsa,fua,'znm','phot','LLrel','znm_a'},...
-                'layer', find(obj.getPar('sr_layeron')),'position','roi');
+                'layer', find(obj.getPar('sr_layerson')),'position','roi');
             if ~isempty(locs.znm_a)
                 locs.znm=locs.znm_a;
             else
@@ -36,23 +36,41 @@ classdef zSALM<interfaces.DialogProcessor
             rsu=double(is./(iu));
 %             rsu=real(log(rsu));
             znm=double(locs.znm(indbright));
-            zrange=-350:10:400;
+            zrange=-150:10:350;
 %             rrange=-4.10:0.01:1.5;
-            rrange=0:0.01:1.5;
-            indf=znm>max(quantile(znm,0.001),zrange(1)) & znm<min(quantile(znm,0.985),zrange(end))...
+            rrange=-0.2:0.01:1.5;
+            indf=znm>max(quantile(znm,0.01),zrange(1)) & znm<min(quantile(znm,0.985),zrange(end))...
                 & rsu>max(quantile(rsu,0.015),rrange(1)) & rsu<min(quantile(rsu,0.995),rrange(end));
     
             
             hz=histcounts2(rsu(indf),znm(indf),rrange,zrange);
             %make compatible to coordinate system
             hzo=hz';
-            ax=obj.initaxis('r vs z');
+            ax=obj.initaxis('z vs r');
             hold(ax,'off')
             h=imagesc(ax,rrange,zrange,hzo);
             axis(ax, 'xy')
             hold(ax,'on')
             plot(ax,rrange,0*rrange,'k')
             
+                        %
+%             try other fit
+            
+            ax2=obj.initaxis('r vs z');
+            hold(ax2,'off')
+            h=imagesc(ax2,zrange,rrange,hz);
+            axis(ax2, 'xy')
+            hold(ax2,'on')
+%             ft = fittype('a*exp(-b*x)+c');
+            ft = fittype('a*exp(-b*x)+c');
+            startp=[.7,.008,0.01];
+%             lb=[-inf -inf ];   
+%             ft='smoothingspline';
+            
+            fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare');
+            plot(ax2,zrange,fitp(zrange),'r')  
+            plot(ax2,zrange,ft(startp(1),startp(2),startp(3),zrange),'y')
+            drawnow
             %later extend to multi-exponential that better describes I(s)
 %             ft = fittype('a*exp(-b*(x))');
 %             startp=[.45,0.006];
@@ -60,29 +78,34 @@ classdef zSALM<interfaces.DialogProcessor
 %                ft = fittype('a*x+b+c*x^2');
 %             startp=[-0.005,-1,0];
 %             lb=[-inf -inf -inf];   
-             ft = fittype('a*log(x)+b');
-            startp=[-100,-100];
-            lb=[-inf -inf ];   
+%              ft = fittype('a*log(x)+b');
+%             startp=[-100,-100];
+%             lb=[-inf -inf ];   
 %             ft = fittype('a*exp(-b*(x))+c*exp(-d*(x))');
 %             startp=[.2,0.008, .1 0.001];
 %             lb=[0 0 0 0];
 %             ft = fittype('a*exp(-b*(x))+c');
 %             startp=[.2,0.008, 0];
 %             lb=[0 0 -inf];
-             ft = fittype('a*log(x)+b+c*x.^2');
-            startp=[-100,-100,0];
-%             lb=[-inf -inf -];  
-            
-            fitp=fit(rsu(indf),znm(indf),ft,'StartPoint',startp);
-            plot(ax,rrange,fitp(rrange),'r')  
-%             plot(ax,rrange,ft(startp(1),startp(2),rrange),'y')
-            plot(ax,rrange,ft(startp(1),startp(2),startp(3),rrange),'y')
+%              ft = fittype('real(a*log(x)+b+c*x.^2)');
+%             startp=[-100,-100,0];
+%             lb=[-inf -inf 0];   
+%             
+%             fitp=fit(rsu(indf),znm(indf),ft,'StartPoint',startp)
+%             plot(ax,rrange,fitp(rrange),'r')  
+% %             plot(ax,rrange,ft(startp(1),startp(2),rrange),'y')
+%             plot(ax,rrange,ft(startp(1),startp(2),startp(3),rrange),'y')
+%             drawnow
 %               plot(zrange,ft(startp(1),startp(2),startp(3),startp(4),zrange),'y')
             isall=obj.locData.loc.(fsa);
             iuall=obj.locData.loc.(fua);
             rall=isall./iuall;
-            zr=fitp(rall);
-            zr(isnan(zr))=-zrange(1)-100;
+            
+          
+            zr=-log((rall-fitp.c)/fitp.a)/fitp.b;
+            
+%             zr=fitp(rall);
+            zr(isnan(zr))=zrange(end)-100;
 %             zr=real(log(rall/fitp.a)/(-fitp.b));
 %             zr(rsu<0)=1000;
             obj.locData.loc.zSALM=zr;
@@ -92,7 +115,7 @@ classdef zSALM<interfaces.DialogProcessor
             % weighted average
             bgs=obj.locData.loc.(fsabg);
             bgu=obj.locData.loc.(fsubg);
-            zerrs=zerrSALM(fitp.a,isall,isall,bgs,bgu);
+            zerrs=zerrSALM(fitp,isall,iuall,bgs,bgu);
             errza=obj.locData.loc.locprecznm_a;
             %also here change sign of z.
             znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
@@ -101,7 +124,8 @@ classdef zSALM<interfaces.DialogProcessor
             obj.locData.setloc('locprecznm',locprecznmnew);
             obj.locData.regroup;
 
-            
+
+%             plot(ax,rrange,0*rrange,'k')
             out=[];
         end
         
@@ -148,15 +172,19 @@ pard.plugininfo.type='ProcessorPlugin';
 
 end
 
-function err=zerrSALM(a,Ns,Nu,bgs,bgu)
-Ns(Ns<1)=1;
-Nu(Nu<1)=1;
-
+function err=zerrSALM(fitp,Ns,Nu,bgs,bgu)
+indb=Ns<1 | Nu<10;
+% Ns(Ns<1)=1;
+% Nu(Nu<1)=1;
+c=max(fitp.c,0);
 r=Ns./Nu;
 dru=-Ns./Nu.^2;
 drs=1./Ns;
 dR2=drs.^2.*errN2(Ns,bgs)+dru.^2.*errN2(Nu,bgu);
-dz2=(a./r).^2.*dR2;
+dz2=dR2./(-fitp.b.*(r-c)).^2;
+dz2(r<c)=inf;
+dz2(indb)=inf;
+% dz2=(a./r).^2.*dR2;
 % dz2=dR2/b^2./r.^2;
 err=sqrt(dz2);
 end
