@@ -7,6 +7,7 @@ classdef PSFmodel<interfaces.GuiModuleInterface
         modelpar
         X
         Y
+        roisize=13;
     end
     properties(Abstract=true)
         locfields
