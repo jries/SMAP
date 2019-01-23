@@ -57,7 +57,7 @@ if isempty(locs.xnm)
     out=[];
     return
 end
-
+thetan=-pi:pi/180:pi;
 %2D fit
 [x0,y0]=fitposring(locs.xnmrot,locs.ynmrot,R);
 xm=locs.xnmrot-x0;
@@ -79,12 +79,13 @@ if ~isempty(locs.znm) % evaluate z distance
     sx=locs.locprecnm(~badind);
     sy=locs.locprecznm(~badind);
     dz=8;
-    z0=median(zm);
-    z=-100:dz:100+z0;
+%     z0=median(zm);
+    z=(-100:dz:100);
+    zr=z;
     hz=hist(zm,z);
     % hz=hz-mean(hz);
     ac=myxcorr(hz,hz);
-    hzraw=hist(locs.znm(~badind)-median(locs.znm),z);
+    hzraw=hist(locs.znm(~badind)-median(locs.znm),zr);
     % if obj.display
     if obj.display
     ax1=obj.setoutput('profile');
@@ -94,14 +95,26 @@ if ~isempty(locs.znm) % evaluate z distance
 %            hold(ax1,'on')
      
      ax1=obj.setoutput('profileraw');
-     fitresultraw=createFit(z, hzraw,ax1);
+     fitresultraw=createFit(zr, hzraw,ax1);
      title(ax1,fitresultraw.d)
-     ax2=obj.setoutput('correlation');
-    plot(ax2,z,ac)
+     ax2=obj.setoutput('zcorr');
+    plot(ax2,z+z(end),ac)
     else
     fitresult=createFit(z, hz,[]);
-     fitresultraw=createFit(z, hzraw,[]);
+     fitresultraw=createFit(zr, hzraw,[]);
     end
+    
+    % angular cross-correlation between two rings
+    inr1=zm<0;
+    
+    [theta,rhoa]=cart2pol(xm,ym);
+    
+    ht1=hist(theta(inr1),thetan);
+    ht2=hist(theta(~inr1),thetan);
+    out.angular.cc12=xcorrangle(ht1-mean(ht1),ht2-mean(ht2));
+    out.angular.ac1=xcorrangle(ht1-mean(ht1));
+    out.angular.ac2=xcorrangle(ht2-mean(ht2));
+    
     locr.x=xm;
     locr.y=zm;
     locr.znm=zm; %in case z color coding
@@ -115,8 +128,17 @@ if ~isempty(locs.znm) % evaluate z distance
         imagesc(ax1,srim.rangex,srim.rangey,srim.composite)
         axis(ax1,'equal')
         axis(ax1,'tight')
+        
+        axtheta=obj.setoutput('corrtheta');
+        hold(axtheta,'off')
+        plot(axtheta,thetan-thetan(1),out.angular.ac1);
+        hold(axtheta,'on')
+        plot(axtheta,thetan-thetan(1),out.angular.ac2);
+        plot(axtheta,thetan-thetan(1),out.angular.cc12);
+        legendtheta={'ac1','ac2','cc12'};
+        
     end
-        if true
+        if false
         figure(93)
         subplot(1,2,1)
         imagesc(srim.rangex,srim.rangey,srim.composite)
@@ -156,7 +178,7 @@ circle(0,0,R0,'Parent',ax1);
 hold(ax1,'off')
 title(ax1,R0)
 end
-thetan=-pi:pi/128:pi;
+
 [theta,rhoa]=cart2pol(xm,ym);
 histtheta=hist(theta,thetan);
 % histtheta12=hist(theta+pi,thetan+pi);
@@ -164,8 +186,10 @@ histtheta=hist(theta,thetan);
 % tac1=tac+myxcorr(histtheta12,histtheta12);
 tac1=xcorrangle(histtheta-mean(histtheta));
 if obj.display
-   ax1=obj.setoutput('corrtheta');
-   plot(ax1,thetan-thetan(1),tac1);
+    legendtheta{end+1}='all';
+   axtheta=obj.setoutput('corrtheta');
+   plot(axtheta,thetan-thetan(1),tac1);
+   legend(axtheta,legendtheta);
 end
 out.Rfit=R0;
 out.angular.actheta=tac1;
@@ -191,7 +215,8 @@ fstart=ft(sp(1),sp(2),sp(3),sp(4),sp(5),xData);
 [fitresult, gof] = fit( xData, yData, ft, opts );
 if ~isempty(ax)
 axes(ax)
-h = plot(xData,fitresult(xData),'r', xData, yData,'b-',xData,fstart,'g');
+xdf=xData(1):1:xData(end);
+h = plot(xdf,fitresult(xdf),'r', xData, yData,'b-',xData,fstart,'g');
 
 
 % legend( h, 'hz vs. z', 'untitled fit 1', 'Location', 'NorthEast' );

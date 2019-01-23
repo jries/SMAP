@@ -7,6 +7,7 @@ classdef PSFmodel<interfaces.GuiModuleInterface
         modelpar
         X
         Y
+        roisize=13;
     end
     properties(Abstract=true)
         locfields
@@ -19,11 +20,18 @@ classdef PSFmodel<interfaces.GuiModuleInterface
     end
     methods
         function img=render(obj,locsh,xrange,yrange,pixelsizex,pixelsizey)
+            %or xrange: pixels in x, yrange pixels in y, locs already in
+            %pixel units
+            %z nm
             locsh=copyfields([],locsh,obj.locfields);
-            sx=round((xrange(2)-xrange(1))/pixelsizex);
-            sy=round((yrange(2)-yrange(1))/pixelsizey);
-
-            xh=(locsh.x-xrange(1))/pixelsizex;yh=(locsh.y-yrange(1))/pixelsizey;
+            if nargin>4
+                sx=round((xrange(2)-xrange(1))/pixelsizex);
+                sy=round((yrange(2)-yrange(1))/pixelsizey);
+                xh=(locsh.x-xrange(1))/pixelsizex;yh=(locsh.y-yrange(1))/pixelsizey;
+            else
+                sx=xrange;sy=yrange;
+                xh=locsh.x; yh=locsh.y;
+            end
 %             zh=locsh.z;
             locs1=copystructReduce(locsh,1);locs1.x=0;locs1.y=0;
             imh=obj.PSF(locs1);

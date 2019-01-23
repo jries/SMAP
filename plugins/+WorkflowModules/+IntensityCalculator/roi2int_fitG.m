@@ -16,6 +16,7 @@ classdef roi2int_fitG<interfaces.GuiModuleInterface
             %TODO include PSF fit
             global roi2int_fitG_parameters;
             roi2int_fitG_parameters=obj.getAllParameters;
+            warning('off','MATLAB:rankDeficientMatrix');
 %             mp=round(sim+1)/2;
 %             dn=single(round((roi2int_fitG_parameters.roisize_fit-1)/2));
 %             [roi2int_fitG_parameters.X,roi2int_fitG_parameters.Y]=meshgrid(-dn:dn);
@@ -119,7 +120,7 @@ pard.fixpsf.position=[2,1];
 pard.fixpsf.Width=3;
 pard.fixpsf.TooltipString='fix the PSF during the fit (value in pix). Otherwise the fitted PSF size is used.';
 
-pard.psfsize_fit.object=struct('Style','edit','String','130');
+pard.psfsize_fit.object=struct('Style','edit','String','1');
 pard.psfsize_fit.position=[2,4];
 pard.psfsize_fit.TooltipString=pard.fixpsf.TooltipString;
 

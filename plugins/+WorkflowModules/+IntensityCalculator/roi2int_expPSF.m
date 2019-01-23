@@ -65,6 +65,7 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
             end
             obj.p=obj.getGuiParameters;
             obj.load_spline;
+            warning('off','MATLAB:lscov:RankDefDesignMat')
 %             dn=round((obj.p.roisize_fit-1)/2);
 %             zmp=obj.spline.SXY(1).cspline.z0;
 %             norm=evalSpline(obj.p.roisize_fit,obj.splinecoeff,1,0,[dn dn zmp]);
