@@ -33,7 +33,11 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 bfpath=obj.getGlobalSetting('bioformatspath');
             if exist(bfpath,'dir')
                 addpath(bfpath)
-                bfCheckJavaPath;
+                try
+                    bfCheckJavaPath;
+                catch
+                    disp('bioformats not found')
+                end
             else
 %             catch err %no bioformats found
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
