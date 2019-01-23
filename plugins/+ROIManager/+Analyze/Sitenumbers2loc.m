@@ -3,11 +3,14 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
         function obj=Sitenumbers2loc(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
 %             obj.inputParameters={'se_layerson'};
-            obj.showresults=true;
+            obj.showresults=falses;
         end
         
         function out=run(obj,p)  
             out=[];
+            obj.setPar('undoModule','Sitenumbers2loc');
+            notify(obj.P,'backup4undo');
+            
             sites=obj.SE.sites;
             
             ld=obj.locData.loc;

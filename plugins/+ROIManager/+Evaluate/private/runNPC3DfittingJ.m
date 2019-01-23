@@ -1,6 +1,6 @@
 function out = runNPC3DfittingJ(obj, p,locsin,startcoord)
     % Set bounds of parameters
-    if nargin>2 || ~isempty(locsin)
+    if nargin>2 && ~isempty(locsin)
         locs=locsin;
     else
         locs = obj.getLocs({'xnmrot','ynmrot', 'znm'},'size',obj.P.par.se_siteroi.content/2,'grouping','ungrouped', 'layer', 1);
