@@ -1,6 +1,24 @@
 function [locsout,possites]=simulatelocs(p, colour)
+        if nargin<2
+            colour=1;
+        end
            [poslabels,possites]=getlabels(p, colour);
            
+           if ~isfield(p,'model')
+               p.model.selection='simple';
+           end
+           if ~isfield(p,'blinks')
+               p.blinks=0;
+           end
+           if ~isfield(p,'maxframes')
+               p.maxframes=100;
+           end
+           if ~isfield(p,'lifetime')
+               p.lifetime=1;
+           end
+           if ~isfield(p,'background')
+               p.background=0;
+           end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
            
 %            p.lifetime=2;
@@ -114,7 +132,7 @@ switch ext
         if isfield(l,'image')
             image=l.image;
         else
-            locsall=copyfields([],l,{'x','y','z'});
+            locsall=copyfields([],l,{'x','y','z','channel'});
         end
     case '.m'
         cf=pwd;
@@ -149,9 +167,18 @@ if ~isfield(locsall,'z')
     locsall.z=0*locsall.x;
 end
 
-if isempty(p.se_sitefov)
-    p.se_sitefov=500;
+if ~isfield(p,'se_sitefov') || isempty(p.se_sitefov)
+    if isfield(p,'size')
+        p.se_sitefov=p.size;
+    else
+        p.se_sitefov=500;
+    end
 end
+
+if ~isfield(p,'labeling_efficiency') || isempty(p.labeling_efficiency)
+    p.labeling_efficiency=1;
+end
+
 distsites=p.se_sitefov;
 
 if length(p.numberofsites)>1
@@ -177,7 +204,7 @@ for k=numberofsites:-1:1
     locsh.y=reshape(locsh.y,numlocs,1);
     locsh.z=reshape(locsh.z,numlocs,1);
     locsh.channel=reshape(locsh.channel,numlocs,1); %added
-    if p.randomrot
+    if isfield(p,'randomrot') && p.randomrot
         angle=2*pi*rand(1);
         [locsh.x,locsh.y]=rotcoord(locsh.x,locsh.y,angle);
         if isfield(locsh,'z')
@@ -191,7 +218,7 @@ for k=numberofsites:-1:1
         angle=0;
     end
     
-    if p.randomxy 
+    if isfield(p,'randomxy') && p.randomxy 
         if length(p.randomxyd)==1
             zspread=p.randomxyd;
         else
