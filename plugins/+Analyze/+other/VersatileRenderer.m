@@ -12,10 +12,16 @@ classdef VersatileRenderer<interfaces.DialogProcessor
             ax=initaxis(p.resultstabgroup,'image');
             
             
-            lochere=obj.locData.copy;
-            [~,inroi]=lochere.getloc('xnm','position','roi');
-            lochere.removelocs(~inroi);
-            lochere.regroup;
+            lp=obj.getLayerParameters;
+           
+            for k=length(lp):-1:1
+                plotfields{k}=lp{k}.renderfield.selection;
+            end
+           
+            [~,inroi]=obj.locData.getloc('xnm','position','roi');
+             lochere=obj.locData.copy(unique({plotfields{:} p.assignfield1.selection p.assignfield2.selection 'locprecnm' 'znm' 'xnm' 'ynm' 'phot' 'numberInGroup'}),inroi);
+%             lochere.removelocs(~inroi);
+%             lochere.regroup;
             v1=lochere.loc.(p.assignfield1.selection)/p.pixelsize1;
             v2=lochere.loc.(p.assignfield2.selection)/p.pixelsize2;
             lochere.loc.x=v1;

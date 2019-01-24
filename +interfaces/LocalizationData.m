@@ -557,11 +557,11 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                     locout.layer(k).filter=obj.layer(k).filter;
                     locout.layer(k).groupfilter=obj.layer(k).groupfilter;
                 end
-            else
+            else %specify fields and inices
                 if nargin<4
                     clearfilter=false;
                 end
-                    
+ 
                 fn=fieldnames(obj.loc);
                 if isempty(fn)
                     return;
@@ -570,7 +570,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                 numlocs=length(obj.loc.(fn{1}));
                 numglocs=length(obj.grouploc.(fn{1}));
                 
-                if nargin<3
+                if nargin<3 || isempty(indin)
                     indu=true(numlocs,1);
                     indg=true(numglocs,1);
                 else
