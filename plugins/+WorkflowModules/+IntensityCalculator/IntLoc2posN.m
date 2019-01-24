@@ -63,7 +63,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                     try
                     cpix=transform.cam_pixnm{2}(1);
                     catch error
-                        cpix=obj.locData.files.file(1).info.cam_pixelsize_um;
+                        cpix=obj.locData.files.file(1).info.cam_pixelsize_um*1000;
                     end
                 end
                 obj.locs.PSFxpix=double(obj.locs.PSFxnm/cpix(1));

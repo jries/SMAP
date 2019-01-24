@@ -120,7 +120,7 @@ pard.fixpsf.position=[2,1];
 pard.fixpsf.Width=3;
 pard.fixpsf.TooltipString='fix the PSF during the fit (value in pix). Otherwise the fitted PSF size is used.';
 
-pard.psfsize_fit.object=struct('Style','edit','String','130');
+pard.psfsize_fit.object=struct('Style','edit','String','1');
 pard.psfsize_fit.position=[2,4];
 pard.psfsize_fit.TooltipString=pard.fixpsf.TooltipString;
 
