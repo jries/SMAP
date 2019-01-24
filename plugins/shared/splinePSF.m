@@ -79,10 +79,10 @@ classdef splinePSF<interfaces.PSFmodel
         end
         function loadmodel(obj,file)
             l=load(file);
-            obj.modelpar.coeff=(l.SXY.cspline.coeff{1});
-            obj.modelpar.dz=l.SXY.cspline.dz;
-            obj.modelpar.z0=l.SXY.cspline.z0;
-            obj.modelpar.x0=l.SXY.cspline.x0;
+            obj.modelpar.coeff=(l.SXY(1).cspline.coeff{1});
+            obj.modelpar.dz=l.SXY(1).cspline.dz;
+            obj.modelpar.z0=l.SXY(1).cspline.z0;
+            obj.modelpar.x0=l.SXY(1).cspline.x0;
         end
     end
     
