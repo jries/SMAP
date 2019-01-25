@@ -19,11 +19,14 @@ if ndims(img)>2
     img=sum(img,3);
 end
 imf=imfinfo(file);
-pixelsize=1000/imf.XResolution %pixelsize in nm
+
 
 if contains(file,'MAX2_U2OS_Nup96GFP195_Wide_5i488_100nm_10slices_40ms_Roi2_2_1_MMStack_Pos0')
-pixelsize= 131 %WF
-% img=imresize(img,2);pixelsize=pixelsize/2;
+    pixelsize= 131 %WF
+elseif contains(file,'Widefield_GFP_new_MAX_Pos0-1')
+    pixelsize= 65 %WF
+else
+    pixelsize=1000/imf.XResolution %pixelsize in nm
 end
 
 
@@ -37,7 +40,7 @@ subplot(2,2,2);
 imagesc((abs(in1)));
 f=figure(189);
 f.Renderer='painters';
-
+hold on
 rpix=(1:length(rs))';
 qmax=0.5/pixelsize;
 
@@ -66,12 +69,12 @@ for k=1:length(xt)
     xtl{k}=[num2str(1/xt(k),'% 2.0f')];
 %     xtl{k}=['av';'cd'];
 end
-ax.XTickLabel=xtl;
+% ax.XTickLabel=xtl;
 ax.XTickMode='manual';
 xlabel('1/frequency (nm)')
-ylabel('power spectrum log(|F(I)|^2)')
+ylabel('power spectrum (|F(I)|^2)')
  ylim([-10 1])
- xlim([0 0.025])    
+ xlim([0 0.02])    
 end
 function [rs,norm]=radialsum(img)
 s=size(img);
