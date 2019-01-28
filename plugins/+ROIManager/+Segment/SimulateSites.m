@@ -17,7 +17,7 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
             setvisibility(obj);
         end
         function out=run(obj,p)  
-            [locst,possites]=simulatelocs(p, 1);
+            [locst,possites,parameters]=simulatelocs(p, 1);
             
            if ~p.savez
                locst=rmfield(locst,{'znm','znm_gt'});
@@ -52,6 +52,7 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
                thissite.pos=[possites(k).x possites(k).y];
                thissite.info.cell=cell.ID;
                thissite.info.filenumber=cell.info.filenumber;
+               thissite.evaluation.simulatesites=parameters(k);
                 % thissite.cellnumber=sitepar.currentcell.number;
         %         thissite.number=sitepar.sitelist.cellnumber+1;
                 se.addSite(thissite);

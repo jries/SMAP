@@ -1,8 +1,8 @@
-function [locsout,possites]=simulatelocs(p, colour)
+function [locsout,possites,parameters]=simulatelocs(p, colour)
         if nargin<2
             colour=1;
         end
-           [poslabels,possites]=getlabels(p, colour);
+           [poslabels,possites,parameters]=getlabels(p, colour);
            
            if ~isfield(p,'model')
                p.model.selection='simple';
@@ -92,12 +92,12 @@ locso=copystructReduce(locso,ind);
 
 end
 
-function [locs,possites]=getlabels(p, colour)
+function [locs,possites,parameters]=getlabels(p, colour)
 %gets position of labels either from image or from coordinates
 % fields p. :
 % coordinatefile, se_sitefov, numberofsites(x,y), labeling_efficiency, randomxy,
 % randomxyd
-if isstr(p.coordinatefile)
+if ischar(p.coordinatefile)
 paths =  strsplit(p.coordinatefile, '|');
 switch colour
     case 1
@@ -110,6 +110,7 @@ end
 [~,~,ext]=fileparts(p.coordinatefile);% Get extension of the specified file
 image=[];
 locsall=[];
+locfun=[];
 switch ext
     case {'.txt','.csv'}
         plocs=readtable(p.coordinatefile);
@@ -135,17 +136,7 @@ switch ext
             locsall=copyfields([],l,{'x','y','z','channel'});
         end
     case '.m'
-        cf=pwd;
-        [ph,fh]=fileparts(p.coordinatefile);
-        cd(ph)
-        l=eval(fh);
-        cd(cf);
-%         l=eval(p.coordinatefile);
-        if isfield(l,'image')
-            image=l.image;
-        else
-            locsall=copyfields([],l,{'x','y','z','channel'}); % channel is added
-        end
+            locfun=p.coordinatefile;
 % add a new way to get localizations
     case {'.loc'}
         image=imread(p.coordinatefile);
@@ -163,9 +154,7 @@ else %pass on matlab variable
     end
         
 end
-if ~isfield(locsall,'z')
-    locsall.z=0*locsall.x;
-end
+
 
 if ~isfield(p,'se_sitefov') || isempty(p.se_sitefov)
     if isfield(p,'size')
@@ -190,15 +179,26 @@ else
 end
 
 % numeroflines=ceil(p.numberofsites/numberofrows);
+fieldstosave={'labeling_efficiency','model','blinks','lifetime','photons','background','maxframes','coordinatefile'};
+psave=copyfields([],p,fieldstosave);
 for k=numberofsites:-1:1
     xh=mod(k-1,numberofrows)+1;
     yh=ceil(k/numberofrows);
+    
+    phere=psave;
     if ~isempty(image)
         locsh=locsfromimage(image,p);
+        
+    elseif ~isempty(locfun)
+        [locsd,ph]=getcoordm(p);
+        locsh=labelremove(locsd,p.labeling_efficiency);
+        phere.model=ph;
     else
         locsh=labelremove(locsall,p.labeling_efficiency); % give all the coordinates of I dots and the lableling efficiency (P(ref)), and then randomly generating I even probabilities (P(gi)), keep P(gi) if the P(gi) <= P(ref)
     end
-
+    if ~isfield(locsh,'z')
+        locsh.z=0*locsh.x;
+    end
     numlocs=length(locsh.x);
     locsh.x=reshape(locsh.x,numlocs,1);
     locsh.y=reshape(locsh.y,numlocs,1);
@@ -206,6 +206,7 @@ for k=numberofsites:-1:1
     locsh.channel=reshape(locsh.channel,numlocs,1); %added
     if isfield(p,'randomrot') && p.randomrot
         angle=2*pi*rand(1);
+        phere.angle=angle;
         [locsh.x,locsh.y]=rotcoord(locsh.x,locsh.y,angle);
         if isfield(locsh,'z')
             dtheta=p.randomrotangle/360*2*pi;
@@ -213,6 +214,7 @@ for k=numberofsites:-1:1
             [locsh.x,locsh.z]=rotcoord(locsh.x,locsh.z,thetas);
             angle=2*pi*rand(1);
             [locsh.x,locsh.y]=rotcoord(locsh.x,locsh.y,angle);
+            phere.theta=thetas;
         end
     else
         angle=0;
@@ -229,6 +231,7 @@ for k=numberofsites:-1:1
         locsh.x=locsh.x+dx;
         locsh.y=locsh.y+dy;
         locsh.z=locsh.z+dz;
+        phere.dxyz=[dx dy dz];
     else
         dx=0;
         dy=0;
@@ -246,6 +249,7 @@ for k=numberofsites:-1:1
     
     possites(k).x=xh*distsites;
     possites(k).y=yh*distsites;
+    parameters(k)=phere;
 %     figure(89);plot(locs(k).x,locs(k).y,'*')
 %     waitforbuttonpress
     
@@ -432,4 +436,24 @@ for l=1:length(locs)
     end
     ind=ind+numlh;
 end
+end
+
+function [out,parameters]=getcoordm(p)
+        cf=pwd;
+        [ph,fh]=fileparts(p.coordinatefile);
+        cd(ph)
+        try
+        [l,parameters]=eval(fh);
+        catch
+            [l]=eval(fh);
+            parameters=[];
+        end
+        cd(cf);
+%         l=eval(p.coordinatefile);
+        if isfield(l,'image')
+           
+            out=locsfromimage(l.image,p);
+        else
+            out=copyfields([],l,{'x','y','z','channel'}); % channel is added
+        end
 end
