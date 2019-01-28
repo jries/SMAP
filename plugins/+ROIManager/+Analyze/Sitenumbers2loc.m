@@ -3,7 +3,7 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
         function obj=Sitenumbers2loc(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
 %             obj.inputParameters={'se_layerson'};
-            obj.showresults=falses;
+            obj.showresults=false;
         end
         
         function out=run(obj,p)  
