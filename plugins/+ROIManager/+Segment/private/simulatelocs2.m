@@ -297,6 +297,7 @@ function locs=locsfromposi(locsi,p, colour)
     numlocs=length(locsi.x);
 %     phot=exprnd(p.photons,numlocs,1);
     phot=locsi.phot;
+    zfactor=1;
     
     a=100;
     PSF=100;
@@ -312,7 +313,7 @@ function locs=locsfromposi(locsi,p, colour)
 %     locs.frame=double(ceil(rand(numlocs,1)*p.maxframe));
     locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locprecnm(indin));
     locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locprecnm(indin));
-    locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locprecnm(indin)*3);
+    locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locprecnm(indin)*zfactor);
     locs.xnm_gt=single(locsi.x(indin));
     locs.ynm_gt=single(locsi.y(indin));
     locs.znm_gt=single(locsi.z(indin));

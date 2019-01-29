@@ -386,6 +386,7 @@ function locs=locsfromposi(locsi,p)
     
     a=100;
     PSF=100;
+    zfactor=1;
 %     sa=PSF+a/12;
     phot(phot<10)=10;
     indin=phot>=10;
@@ -402,7 +403,7 @@ function locs=locsfromposi(locsi,p)
 %     locs.frame=double(ceil(rand(numlocs,1)*p.maxframe));
     locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locprecnm(indin));
     locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locprecnm(indin));
-    locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locprecnm(indin)*3);
+    locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locprecnm(indin)*zfactor);
     locs.xnm_gt=single(locsi.x(indin));
     locs.ynm_gt=single(locsi.y(indin));
     locs.znm_gt=single(locsi.z(indin));

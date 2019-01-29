@@ -201,6 +201,6 @@ pard.numberOfSubsets.object = struct('String', '0', 'Style', 'edit');
 pard.numberOfSubsets.position = [7,2];
 pard.numberOfSubsets.width = 0.5;
 
-pard.plugininfo.name='histogram from SE';
+pard.plugininfo.name='histogram from Roimanager';
 pard.plugininfo.type='ProcessorPlugin';
 end
