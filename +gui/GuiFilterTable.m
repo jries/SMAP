@@ -129,7 +129,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
                    end
                end
                sss=obj.guihandles.table.Data;
-               noupdate=all(strcmp(sss(:,1),fn));
+               noupdate=size(sss,1)==length(fn) && all(strcmp(sss(:,1),fn));
                
                for k=1:length(fn)
                    val=obj.locData.loc.(fn{k});
