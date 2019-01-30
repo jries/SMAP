@@ -128,14 +128,19 @@ classdef GuiFilterTable< interfaces.LayerInterface
                        obj.filter.(fn{k}).invert=false;
                    end
                end
+               sss=obj.guihandles.table.Data;
+               noupdate=all(strcmp(sss(:,1),fn));
+               
                for k=1:length(fn)
                    val=obj.locData.loc.(fn{k});
                    s{k,1}=fn{k};
                    s{k,2}=obj.filter.(fn{k}).minmax(1);
                    s{k,6}=obj.filter.(fn{k}).minmax(2);
-                   s{k,3}=min(val);
-                   s{k,4}=mean(val);
-                   s{k,5}=max(val);
+                   if ~noupdate || length(val)<2e6%this can take time, only update if fields changed.
+                       s{k,3}=min(val);
+                       s{k,4}=mean(val);
+                       s{k,5}=max(val);
+                   end
                    s{k,7}=logical(obj.filter.(fn{k}).auto);
                    s{k,8}=obj.filter.(fn{k}).invert;
                end

@@ -172,7 +172,11 @@ classdef GuiChannel< interfaces.LayerInterface
         
         function setcolorfield_callback(obj)
             if isempty(obj.locData.loc), return; end
+            if length(obj.locData.loc.colorfield)==length(obj.locData.loc.frame)
+                return
+            end
             numlocs=length(obj.locData.loc.frame);
+            
             obj.locData.loc.colorfield=single((1:numlocs)'/numlocs*2-0.5);
             if ~isempty(obj.locData.grouploc)
                 numlocs=length(obj.locData.grouploc.frame);

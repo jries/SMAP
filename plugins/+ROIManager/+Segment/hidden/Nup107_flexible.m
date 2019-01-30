@@ -11,7 +11,7 @@ function [l,p]=MakeNPCCoordinates
 % l.channel=ones(size(l.x));
 
 ring_angle=13; %deg %Nup107
-% ring_angle=20; 
+ring_angle=20; 
 % ring_angle=8; %deg %Nup96
 pair_angle=12;
 dz=60+randn*10;
