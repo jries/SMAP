@@ -9,6 +9,7 @@ classdef ImageFilter<interfaces.WorkflowModule
         function obj=ImageFilter(varargin)
             obj@interfaces.WorkflowModule(varargin{:});
             obj.outputParameters={'loc_loc_filter_sigma'};
+            
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -30,19 +31,58 @@ classdef ImageFilter<interfaces.WorkflowModule
                 h=1;
             end
             switch p.filtermode.Value
-                case 1 %GAuss
+                case 2 %GAuss
                     obj.filterkernel=h;
 
-                case 2
+                case 3
+                        PSF=obj.filterkernelPSF.PSF;
+                        fig=nanmean(PSF,3);
+                        rs=obj.getPar('loc_ROIsize');
+                        rss=round((rs-1)/2);
+                        midp=round(size(fig)/2);
+                        figs=fig(midp(1)-rss:midp(1)+rss,midp(2)-rss:midp(2)+rss);
+                        kernelPSF=figs-nanmin(figs(:));
+                        kernelPSF=kernelPSF/nansum(kernelPSF(:));
+                     
                     if isempty(obj.filterkernelPSF)
                         error('for PSF filtering you need to load a PSF model _3Dcal.mat before fitting')
                     end
                     if fs>0
-                        obj.filterkernel=filter2(h,obj.filterkernelPSF);
+                        obj.filterkernel=filter2(h,kernelPSF);
                     else
-                        obj.filterkernel=obj.filterkernelPSF;
+                        obj.filterkernel=kernelPSF;
                     end
-                case 3 %DoG
+                case 4 %exp PSF, MIP
+                        rs=obj.getPar('loc_ROIsize');
+                        rss=round((rs-1)/2);
+                        
+                        PSF=obj.filterkernelPSF.PSF;
+                        midp=round(size(PSF)/2);
+                        dz=obj.filterkernelPSF.dz;
+                        if numel(p.zrange)>1
+                            z=round(p.zrange/dz+size(PSF,3)/2);
+                            z(z<1)=1;z(z>size(PSF,3))=size(PSF,3);
+                        else
+                            z=round(linspace(1,size(PSF,3),max(2,p.zrange)));
+                        end
+                        psfstack=zeros(rs,rs,length(z)-1);
+                        normp=PSF(midp(1)-rss:midp(1)+rss,midp(2)-rss:midp(2)+rss,round(size(PSF,3)/2));
+                        normf=nansum(normp(:));
+%                         minph=nanmin(normp(:));
+                        for k=1:length(z)-1
+                            ph=nanmean(PSF(midp(1)-rss:midp(1)+rss,midp(2)-rss:midp(2)+rss,z(k):z(k+1)-1),3);
+                            ph=ph-min(ph(:));
+%                             psfstack(:,:,k)=ph/normf;
+                            psfstack(:,:,k)=ph/nansum(ph(:));
+                        end
+                        obj.filterkernelPSF.fitpsf=psfstack;
+                        if fs>0
+                            obj.filterkernel=h;
+                        else 
+                            obj.filterkernel=[];
+                        end
+                        
+                case 1 %DoG
                     rsize=max(ceil(6*fs-1),3);
                     hdog=fspecial('gaussian',rsize,fs)-fspecial('gaussian',rsize,max(1,2.5*fs));
                     obj.filterkernel=hdog;
@@ -51,33 +91,40 @@ classdef ImageFilter<interfaces.WorkflowModule
         end
         function dato=run(obj,data,p)
             dato=data;%.copy;
-            if p.filtermode.Value==3&&~isempty(data.data)&&obj.offset==0
+            if p.filtermode.Value==1&&~isempty(data.data)&&obj.offset==0
                 offset=min(data.data(:,1));
             else 
                 offset=obj.offset;
             end
-            imf=filter2(obj.filterkernel,data.data-offset);
             
-            if obj.preview
-                drawimage(obj,data.data-offset,imf)
-                
+            switch p.filtermode.Value
+                case {1,2}
+                    imf=filter2(obj.filterkernel,data.data-offset);
+                case 3
+                    imf=conv2(data.data-offset,obj.filterkernel,'same');
+                case 4
+                    h=obj.filterkernel;
+                    psfstack=obj.filterkernelPSF.fitpsf;
+                    imf=-inf;
+%                     imf=0;
+                    for k=1:size(psfstack,3)
+                        imh=conv2(data.data-offset,psfstack(:,:,k),'same');
+%                         imh=filter2(psfstack(:,:,k),data.data-offset);
+%                         impl(:,:,k)=imh;
+                        imf=max(imh,imf);
+%                         imf=imf+imh/size(psfstack,3);
+                    end
+                    if ~isempty(obj.filterkernel)
+                        imf=filter2(obj.filterkernel,imf);
+                    end
+                    
             end
             
-%             if obj.preview&&obj.getPar('loc_previewmode').Value==3&&~isempty(imf)
-%                 outputfig=obj.getPar('loc_outputfig');
-%                 if ~isvalid(outputfig)
-%                     outputfig=figure(209);
-%                     obj.setPar('loc_outputfig',outputfig);
-%                 end
-%                 outputfig.Visible='on';
-% 
-% 
-%                 figure(outputfig)
-%                 hold off
-%                 imagesc(imf);
-%                 colorbar;
-%                 axis equal
-%             end
+            if obj.preview
+                drawimage(obj,data.data-offset,imf)   
+            end
+           
+
             dato.data=(imf);
         end
     end
@@ -128,71 +175,89 @@ end
 
 
 
-function filtermode_callback(object,b,obj)
-gauss={};
-psf={'loadPSF'};
-switch object.Value
-    case 1 %Gauss
-        obj.fieldvisibility('on',gauss,'off',psf);
-    case 2 %PSF
-        obj.fieldvisibility('off',gauss,'on',psf);
-end
-end
+% function filtermode_callback(object,b,obj)
+% gauss={};
+% psf={'loadPSF'};
+% switch object.Value
+%     case 1 %Gauss
+%         obj.fieldvisibility('on',gauss,'off',psf);
+%     case 2 %PSF
+%         obj.fieldvisibility('off',gauss,'on',psf);
+% end
+% end
 
 function loadPSF_callback(object,b,obj)
 
 p=(obj.getPar('lastSMLFile'));
+if isempty(p)
+    p=obj.getPar('loc_fileinfo');
+    p=p.basefile;
+end
 if ~isempty(p)
     p=fileparts(p);
 end
 [f,p]=uigetfile([p filesep '*.mat']);
 
-if f
-    
-
-    
+if f  
     l=load([p f]);
     if isfield(l,'SXY')
-    PSF=l.SXY(1).PSF{1};
-    elseif isfield(l,'cspline_all')
-        PSF=l.cspline_all.PSF;
-    end    
-        rs=obj.getPar('loc_ROIsize');
-    if isempty(rs)
-        disp('preview once to set roisize')
-        rs=size(PSF,1);
+        l=l.SXY(1);
     end
-    fig=nanmean(PSF,3);
-    rss=round((rs-1)/2);
-    midp=round(size(fig)/2);
-    figs=fig(midp(1)-rss:midp(1)+rss,midp(2)-rss:midp(2)+rss);
-    h=figs-nanmin(figs);
-    h=h/nansum(h(:));
-    obj.filterkernelPSF=h;
+    if isfield(l,'PSF')
+        PSF=l.PSF{1};
+        dz=l.cspline.dz;
+%     elseif isfield(l,'splinefit')
+%         PSF=l.splinefit.PSF;
+%         dz=l.splinefit.dz;
+%     elseif isfield(l,'cspline_all')
+%         PSF=l.cspline_all.PSF;
+%         dz=l.cspline_all.dz;
+    else
+        disp('PSF not found')
+    end    
+
+    obj.filterkernelPSF.PSF=PSF;
+    obj.filterkernelPSF.dz=dz;
     
 end
-figure(99);imagesc(h);
+% figure(99);imagesc(h);
 end
 
 function pard=guidef(obj)
-pard.filtermode.object=struct('Style','popupmenu','String',{{'Gauss: ','mean PSF','DoG'}},'Callback',{{@filtermode_callback,obj}});
+p(1).value=1;p(1).on={};p(1).off={'loadPSF','text2','zrange'};
+p(2)=p(1);p(2).value=2;
+p(3).value=3;p(3).on={'loadPSF'};p(3).off={'text2','zrange'};
+p(4).value=4;p(4).on={'loadPSF','text2','zrange'};p(4).off={};
+
+pard.filtermode.object=struct('Style','popupmenu','String',{{'DoG','Gauss: ','mean PSF','MIP PSF'}},'Callback',{{@obj.switchvisible,p}});
 pard.filtermode.position=[1,1];
-pard.filtermode.Width=1.;
+pard.filtermode.Width=0.8;
 pard.filtermode.Optional=true;
 
-pard.text.object=struct('Style','text','String','sigma:');
-pard.text.position=[1,2];
-pard.text.Width=0.5;
+pard.text.object=struct('Style','text','String','s:');
+pard.text.position=[1,1.8];
+pard.text.Width=0.15;
 pard.text.Optional=true;
 
-pard.loc_loc_filter_sigma.object=struct('Style','edit','String','1.2');
-pard.loc_loc_filter_sigma.position=[1,2.5];
-pard.loc_loc_filter_sigma.Width=.4;
+pard.loc_loc_filter_sigma.object=struct('Style','edit','String','1.2','Visible','on');
+pard.loc_loc_filter_sigma.position=[1,1.95];
+pard.loc_loc_filter_sigma.Width=.3;
 pard.loc_loc_filter_sigma.TooltipString=sprintf('Sigma (in camera pixels) for a Gaussian filter which is applied after background correction and before peak finding. \n Typical size of PSF in pixels, eg 1 (range: 0.5-5) ');
 
 pard.loadPSF.object=struct('Style','pushbutton','String','load','Callback',{{@loadPSF_callback,obj}},'Visible','off');
-pard.loadPSF.position=[1,2.9];
+pard.loadPSF.position=[1,2.2];
 pard.loadPSF.Width=.4;
+
+pard.text2.object=struct('Style','text','String','z:','Visible','off');
+pard.text2.position=[1,2.6];
+pard.text2.Width=0.2;
+pard.text2.Optional=true;
+
+pard.zrange.object=struct('Style','edit','String','5');
+pard.zrange.position=[1,2.8];
+pard.zrange.Width=1;
+pard.zrange.TooltipString=sprintf('For using experimetnal PSF for peak finding: at which z-positions to probe the PSF for correlation');
+
 
 pard.plugininfo.type='WorkflowModule';
 pard.loc_loc_filter_sigma.Optional=true;

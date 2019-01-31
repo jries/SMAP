@@ -377,7 +377,7 @@ if fitpar.fitmode==3||fitpar.fitmode==5
 
         for X=s(1):-1:1
             for Y=s(2):-1:1
-                zpar{X,Y}=cal.SXY(X,Y,Z).gauss_zfit;
+%                 zpar{X,Y}=cal.SXY(X,Y,Z).gauss_zfit;
                 splinefit{X,Y}=cal.SXY(X,Y,Z);
             end
         end
@@ -391,7 +391,7 @@ if fitpar.fitmode==3||fitpar.fitmode==5
             end
             fitpar.coeffsize=size(coeffh);
         end
-        fitpar.zpar=zpar;
+%         fitpar.zpar=zpar;
 
         if numel(cal.SXY)>1
             obj.spatial3Dcal=true;
