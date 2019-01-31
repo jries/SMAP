@@ -41,7 +41,7 @@ classdef ImageFilter<interfaces.WorkflowModule
                         rss=round((rs-1)/2);
                         midp=round(size(fig)/2);
                         figs=fig(midp(1)-rss:midp(1)+rss,midp(2)-rss:midp(2)+rss);
-                        kernelPSF=figs-nanmin(figs(:));
+                        kernelPSF=figs;%-nanmin(figs(:));
                         kernelPSF=kernelPSF/nansum(kernelPSF(:));
                      
                     if isempty(obj.filterkernelPSF)
@@ -71,9 +71,9 @@ classdef ImageFilter<interfaces.WorkflowModule
 %                         minph=nanmin(normp(:));
                         for k=1:length(z)-1
                             ph=nanmean(PSF(midp(1)-rss:midp(1)+rss,midp(2)-rss:midp(2)+rss,z(k):z(k+1)-1),3);
-                            ph=ph-min(ph(:));
-%                             psfstack(:,:,k)=ph/normf;
-                            psfstack(:,:,k)=ph/nansum(ph(:));
+%                             ph=ph-min(ph(:));
+                            psfstack(:,:,k)=ph/normf;
+%                             psfstack(:,:,k)=ph/nansum(ph(:));
                         end
                         obj.filterkernelPSF.fitpsf=psfstack;
                         if fs>0
@@ -101,14 +101,17 @@ classdef ImageFilter<interfaces.WorkflowModule
                 case {1,2}
                     imf=filter2(obj.filterkernel,data.data-offset);
                 case 3
-                    imf=conv2(data.data-offset,obj.filterkernel,'same');
+                    dat=(data.data/2).^2-0.375;
+                    imf=conv2(dat,obj.filterkernel,'same');
                 case 4
                     h=obj.filterkernel;
                     psfstack=obj.filterkernelPSF.fitpsf;
                     imf=-inf;
 %                     imf=0;
+                    dat=data.data;
                     for k=1:size(psfstack,3)
-                        imh=conv2(data.data-offset,psfstack(:,:,k),'same');
+                        dat=(data.data/2).^2-0.375;
+                        imh=conv2(dat,psfstack(:,:,k),'same');
 %                         imh=filter2(psfstack(:,:,k),data.data-offset);
 %                         impl(:,:,k)=imh;
                         imf=max(imh,imf);
@@ -117,6 +120,7 @@ classdef ImageFilter<interfaces.WorkflowModule
                     if ~isempty(obj.filterkernel)
                         imf=filter2(obj.filterkernel,imf);
                     end
+                    imf=(2*sqrt(imf+0.3750));
                     
             end
             
@@ -214,8 +218,9 @@ if f
 %         dz=l.cspline_all.dz;
     else
         disp('PSF not found')
-    end    
-
+    end
+    PSF=PSF-nanmin(PSF(:));
+%     PSF=(2*sqrt(PSF-nanmin(PSF(:))+0.3750)); % image normalize
     obj.filterkernelPSF.PSF=PSF;
     obj.filterkernelPSF.dz=dz;
     
