@@ -42,6 +42,15 @@ pard.cutoff_circularity.position = [3,2];
 pard.preview.object=struct('String','preview','Style','checkbox','Value',1);
 pard.preview.position=[8,1];
 pard.plugininfo.type='ROI_Analyze';
+
+pard.t4.object=struct('String','Smoothing factor:','Style','text');
+pard.t4.position=[4,1];
+pard.t4.width=1;
+
+pard.smoothingPar.object=struct('String','0.7','Style','edit');
+pard.smoothingPar.position=[4,2];
+pard.smoothingPar.width=0.5;
+pard.smoothingPar.Tooltip='from 0 to 1, the lower the smoother';
 % 
 % pard.t2.object=struct('String','sigmaNMS','Style','text');
 % pard.t2.position=[2,1];
