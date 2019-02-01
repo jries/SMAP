@@ -1,14 +1,14 @@
-classdef getKymograph<interfaces.SEEvaluationProcessor
+classdef fibrilAnalysis<interfaces.SEEvaluationProcessor
     % This is a plugin in development. Public has no access to the 
     % run_ functions called in this plugin. For internal users, 
     % "fibrilKymograph" is required.
     methods
-        function obj=getKymograph(varargin)        
+        function obj=fibrilAnalysis(varargin)        
                 obj@interfaces.SEEvaluationProcessor(varargin{:});
         end
         
         function out=run(obj,p)
-            out = runGetKymograph(obj,p);
+            out = runFibrilAnalysis(obj,p);
         end
         function pard=guidef(obj)
             pard=guidef(obj);
