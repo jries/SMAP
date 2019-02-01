@@ -35,13 +35,16 @@ z0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.b');
 sigma=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.c');
 d=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.d');
 draw=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfitraw.d');
+dt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',4);
 
 ax0=obj.initaxis('sigma_z');
 n=0:1:25;
 histogram(sigma,n); xlabel('sigma (nm)')
 title(['sigma z: ' num2str(mean(sigma),ff) '\pm' num2str(std(sigma),ff)])
 
-
+d(d<20|d>80)=[];
+draw(draw<20|draw>80)=[];
+dt(dt<20|dt>80)=[];
 n=20:1:80;
 
 ax1=obj.initaxis('d_Gauss');
@@ -54,6 +57,9 @@ plot(nf,fitp(nf))
 hold off
 title(['d2G: med ' num2str(median(d),ff) ', mean ' num2str(mean(d),ff) '\pm' num2str(std(d),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
 
+d2G=fitp.b1;
+d2Gerr=fitp.c1/sqrt(2);
+
 ax2=obj.initaxis('d_raw');
 histogram(abs(draw),n); xlabel('d (nm)')
 
@@ -65,7 +71,8 @@ plot(nf,fitp(nf))
 hold off
 title(['draw2G: med ' num2str(median(draw),ff) ', mean ' num2str(mean(draw),ff) '\pm' num2str(std(draw),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
 
-dt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',4);
+draw=fitp.b1;drawerr=fitp.c1/sqrt(2);
+
 ax3=obj.initaxis('d_t');
 histogram(abs(dt),n); xlabel('d (nm)')
 % title(['template d: median' num2str(median(dt),ff) '\pm' num2str(std(dt),ff)])
@@ -92,6 +99,8 @@ title(['d(z=0) fit: ' num2str(fline.p2,ff) ' Corr:' num2str(corr(abs(d(ind)'),zt
 ylim([25 100])
 xlim([-200 200])
 end
+
+pearsonc=corr(abs(d(ind)'),zt(ind'));
 
 R0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.Rfit');
 ax5=obj.initaxis('R');
@@ -124,7 +133,7 @@ for k=1:length(sites)
 end
 aca=aca/length(sites);
 tn=sites(1).evaluation.NPCgeomtryQuantify.angular.thetan;
-ax2=obj.initaxis('corr');
+axc=obj.initaxis('corr');
 aca=aca/2;
 % norm=length(tn)-(1:length(tn));
 hold off
@@ -153,54 +162,10 @@ if numel(aca1)>1
     ampm=max(ampm,max(aca1(2:end)));
     ampm=max(ampm,max(aca2(2:end)));
     ampm=max(ampm,max(acc12(2:end)));
-   
-    
-    %derermine position of maxima of CC
-    [~,indm]=max(acc12n);
-%     win=10;
-%     th=tnn(indm-win:indm+win);cch=acc12n(indm-win:indm+win);
-%     fitp=fit(th',cch','poly2');
-%     dth=-fitp.p2/fitp.p1/2;
-%     plot(th,fitp(th));
-    
-    win=15;
-    th=tnn(indm-win:indm+win);cch=acc12n(indm-win:indm+win);
-    ft=fittype('b+a*cos(2*pi*(x-d)/45)');
-    fitps=fit(th',cch',ft,'StartPoint',[ampm-ampmin, ampmin,tnn(indm)]);
-    plot(th,fitps(th),'r')
-
-    legend('all','ring1','ring2','cross-corr','cos fit')
-    win=15;
-    indm=indm+45; %next peak
-    th=tnn(indm-win:indm+win);cch=acc12n(indm-win:indm+win);
-    ft=fittype('b+a*cos(2*pi*(x-d)/45)');
-    fitps1=fit(th',cch',ft,'StartPoint',[ampm-ampmin, ampmin,tnn(indm)]);
-    indm=round(fitps1.d+length(tnn)/2); %next peak
-    th=tnn(indm-win:indm+win);cch=acc12n(indm-win:indm+win);
-    fitps1=fit(th',cch',ft,'StartPoint',[ampm-ampmin, ampmin,tnn(indm)]);    
-    plot(th,fitps1(th),'r')
-
-    indm=round(fitps1.d+length(tnn)/2)-135; %next peak
-    th=tnn(indm-win:indm+win);cch=acc12n(indm-win:indm+win);
-    fitps2=fit(th',cch',ft,'StartPoint',[ampm-ampmin, ampmin,tnn(indm)]);
-    indm=round(fitps2.d+length(tnn)/2); %next peak
-    th=tnn(indm-win:indm+win);cch=acc12n(indm-win:indm+win);
-    fitps2=fit(th',cch',ft,'StartPoint',[ampm-ampmin, ampmin,tnn(indm)]);    
-    plot(th,fitps2(th),'r')
-    
-     indm=round(fitps2.d+length(tnn)/2)+45; %next peak
-    th=tnn(indm-win:indm+win);cch=acc12n(indm-win:indm+win);
-    fitps3=fit(th',cch',ft,'StartPoint',[ampm-ampmin, ampmin,tnn(indm)]);
-    indm=round(fitps3.d+length(tnn)/2); %next peak
-    th=tnn(indm-win:indm+win);cch=acc12n(indm-win:indm+win);
-    fitps3=fit(th',cch',ft,'StartPoint',[ampm-ampmin, ampmin,tnn(indm)]);    
-    plot(th,fitps3(th),'r')
-    
-    ff='%2.1f';
-    
-     txtshift=[', shift: cos fit1: ' num2str(fitps.d,ff) '°, fit2: ' num2str(fitps1.d-45,ff) '°, fit3: ' num2str(fitps2.d+90,ff) '°, fit4: ' num2str(fitps3.d+45,ff) '°'];
-     
-     
+     [ddd,cid]=getcorrangleglobal(tnn,acc12n);
+    legend('all','ring1','ring2','cross-corr','cos fit')    
+    ff='%2.2f';
+     txtshift=[', shift: ' num2str(ddd,ff) '° ± ' num2str((cid(2)-cid(1))/2,ff) '° (95% confidence)'];
       plot([0 0],[ampmin ampm*1.1],'k')
 end
 ylim([ampmin ampm*1.1]);
@@ -214,15 +179,76 @@ ax.XGrid='on';
 xlabel('angle (theta) ')
 ylabel('auto/cross correlation')
 title(['angular correlation. Nlocs=' num2str(length(d)) txtshift])
+if p.copytopage
+    sm=3;sn=3;
+    f=figure;
+    f.Renderer='painters';
+    axt=ax0.copy;
+    axt.Parent=f;
+    subplot(sm,sn,2,axt)
+    
+    axt=ax1.copy;
+    axt.Parent=f;
+    subplot(sm,sn,5,axt) 
+    
+    axt=axc.copy;
+    axt.Parent=f;
+   subplot(sm,sn,[7,8,9],axt)
+    
+    axt=ax3.copy;
+    axt.Parent=f;
+    subplot(sm,sn,6,axt)
+    
+    axt=ax4.copy;
+    axt.Parent=f;
+    subplot(sm,sn,3,axt)
+    
+    axt=ax5.copy;
+    axt.Parent=f;
+    subplot(sm,sn,1,axt)
+    
+    axt=ax2.copy;
+    axt.Parent=f;
+    subplot(sm,sn,4,axt)
 end
 
+%copy to clipboard
+%file lastfile N R dR sigma dsigma drawfit drawstdfit d2Gfit d2Gstdfit PearsonC angle
+%dangle95
+filen=obj.SE.files(sites(1).info.filenumber).name;
+ lastfile=obj.getPar('lastSMLFile');
+clipboard('copy',sprintf([filen '\t' lastfile '\t' num2str(length(d)) '\t' num2str(mean(R0)) '\t' num2str(std(R0)) ...
+    '\t' num2str(mean(sigma)) '\t' num2str(std(sigma)) '\t' num2str(draw) '\t' num2str(drawerr) ...
+    '\t' num2str(d2G) '\t' num2str(d2Gerr) '\t' num2str(pearsonc) '\t' num2str(ddd) '\t' num2str((cid(2)-cid(1))/2)]))
 
+end
+
+function [d,cid,fitp]=getcorrangleglobal(ti,cci)
+  t=ti;cc=cci;
+  mp=round(length(ti)/2);
+  win=12;
+  t(mp-win:mp+win)=[];
+  cc(mp-win:mp+win)=[];
+  ft=fittype('(b1+b2*x+b3*x.^2+b4*x.^3)+(a1+a2*x+a3*x.^2+a4*x.^3).*cos(2*pi*(x-d)/45)');
+  sp=[(max(cc)-min(cc))/2,0,0,0, min(cc)+1,0,0,0,10];
+  fitp=fit(t',cc',ft,'StartPoint',sp);
+  t(round(length(t)/2))=nan;
+  plot(t,fitp(t))
+  d=fitp.d;
+  ci=confint(fitp);
+  cid=ci(:,end);
+
+end
 
 
 function pard=guidef(obj)
 pard.t1.object=struct('String','Plot results from evaluator: NPCgeometryQuantify','Style','text');
 pard.t1.position=[1,1];
 pard.t1.Width=4;
+
+pard.copytopage.object=struct('String','Copy to own page','Style','checkbox');
+pard.copytopage.position=[2,1];
+pard.copytopage.Width=2;
 
 
 pard.plugininfo.type='ROI_Analyze';
