@@ -106,7 +106,7 @@ classdef locsfromSE<interfaces.DialogProcessor
                 lastfile=obj.getPar('lastSMLFile');
                 title(['mean: ' (hmean) ' ,std: ' (hstd)  ' ,median: ' (hmedian) ' ,nlocs: ' (nlocs)]);
                 filen=obj.locData.SE.files(filenumbersave).name;
-                clipboard('copy',[filen sprintf(['\t' lastfile '\t' hmean '\t' hstd '\t' hmedian '\t' nlocs])])
+                clipboard('copy',[filen sprintf('\t') lastfile sprintf(['\t'  hmean '\t' hstd '\t' hmedian '\t' nlocs])])
                 % sum(y)
                 % length(cluster)
 
