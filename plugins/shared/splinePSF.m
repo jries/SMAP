@@ -10,19 +10,33 @@ classdef splinePSF<interfaces.PSFmodel
         function img=PSF(obj,locs)
             roisize=min(obj.roisize,size(obj.modelpar.coeff,1));
             dn=round((roisize-1)/2);
-            if ~isfield(locs,'N')
-                 N=ones(size(locs.x));
+            if isstruct(locs)
+                if ~isfield(locs,'N')
+                     N=ones(size(locs.x));
+                else
+                    N=locs.N;
+                end
+                if ~isfield(locs,'bg')
+                     bg=zeros(size(locs.x));
+                else
+                    bg=locs.bg;
+                end
+                cor=[locs.x+dn,locs.y+dn,-locs.z/obj.modelpar.dz+obj.modelpar.z0];
             else
-                N=locs.N;
+                cor=zeros(size(locs),'single');
+                cor(:,1:2)=locs(:,1:2)+dn;
+                cor(:,3)=-locs(:,3)/obj.modelpar.dz+obj.modelpar.z0;
+                if size(locs,2)>3
+                    N=locs(:,4);
+                else
+                    N=1;
+                end
+                if size(locs,2)>4
+                    bg=locs(:,5);
+                else
+                    bg=0;
+                end
             end
-            if ~isfield(locs,'bg')
-                 bg=zeros(size(locs.x));
-            else
-                bg=locs.bg;
-            end
-            
-%             x=locs.x;y=locs.y;z=locs.z;
-            cor=[locs.x+dn,locs.y+dn,locs.z/obj.modelpar.dz+obj.modelpar.z0];
             
             img=simSplinePSF_call(roisize,obj.modelpar.coeff,N,bg,cor);
             
@@ -83,6 +97,18 @@ classdef splinePSF<interfaces.PSFmodel
             obj.modelpar.dz=l.SXY(1).cspline.dz;
             obj.modelpar.z0=l.SXY(1).cspline.z0;
             obj.modelpar.x0=l.SXY(1).cspline.x0;
+        end
+        function crlb=crlb(obj,N,bg,z,rois)
+            if nargin<5
+                rois=obj.roisize;
+            end
+            coeff=obj.modelpar.coeff; 
+            x=rois/2;y=rois/2;
+            v1=ones(length(z),1);
+            zh=(z/obj.modelpar.dz)+obj.modelpar.z0;
+            coords=[v1*x , v1*y , N, bg, zh];
+            crlb=CalSplineCRLB(coeff, rois, coords);
+            crlb(:,5)=crlb(:,5)*obj.modelpar.dz.^2;
         end
     end
     

@@ -66,7 +66,7 @@ classdef PSFmodel<interfaces.GuiModuleInterface
                 
             else
                 col=false;
-                imgh=zeros(sx+roipix,sy+roipix);
+                imgh=zeros(sy+roipix,sx+roipix);
             end
 
             for k=1:length(xh)
@@ -78,17 +78,17 @@ classdef PSFmodel<interfaces.GuiModuleInterface
                 ryh=yr+1:yr+roipix;ryh=max(ryh,1);ryh=min(ryh,sy+roipix);
                 if col
                     for c=1:3
-                        imgh(rxh,ryh,c)=imgh(rxh,ryh,c)+imh*lut(zind(k),c); 
+                        imgh(ryh,rxh,c)=imgh(ryh,rxh,c)+imh*lut(zind(k),c); 
                     end
                 else
-                    imgh(rxh,ryh)=imgh(rxh,ryh)+imh;    
+                    imgh(ryh,rxh)=imgh(ryh,rxh)+imh;    
                 end
             end
             if col
-                img=permute(imgh(roipixh+2:end-roipixh,roipixh+2:end-roipixh,:),[2 1 3]);
+                img=imgh(roipixh+2:end-roipixh,roipixh+2:end-roipixh,:);
                 img=img/max(img(:));
             else
-                img=imgh(roipixh+2:end-roipixh,roipixh+2:end-roipixh)';
+                img=imgh(roipixh+2:end-roipixh,roipixh+2:end-roipixh);
             end
         end
     end

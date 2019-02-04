@@ -204,7 +204,8 @@ classdef LocSaver<interfaces.WorkflowModule
                     obj.locDatatemp.files.file.transformation=transformation;
                 end
                 obj.locDatatemp.files.file.savefit=obj.savefit;
-  
+                
+                if ~contains(filename,'nosave')
                 try
                      obj.locDatatemp.savelocs(filename,[],struct('fitparameters',fitpar));
                 catch err
@@ -217,6 +218,7 @@ classdef LocSaver<interfaces.WorkflowModule
                 
                 if p.savelocal
                     movefile(filename,filenameremote);
+                end
                 end
 %               write to main GUI
 %                 obj.locData.clear;

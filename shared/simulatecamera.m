@@ -95,7 +95,7 @@ locsh.z=locs.znm(range);
 %         [img,nlocs,Gc]=gaussrender(locsh,p.xrange, p.yrange, p.pixelsize, p.pixelsize);        
 %     case 'Astigmatig Gaussian'
 %     case 'Spline'
-        img=psf.render(locsh,p.xrange,p.yrange,p.pixelsize,p.pixelsize);
+        img=psf.render(locsh,p.xrange,p.yrange,'pixelsizex',p.pixelsize,'pixelsizey',p.pixelsize);
 %         sx=p.sizex;sy=p.sizey;
 %         xh=(locsh.x-p.xrange(1))/p.pixelsize;yh=(locsh.y-p.yrange(1))/p.pixelsize;
 %         zh=locsh.z;

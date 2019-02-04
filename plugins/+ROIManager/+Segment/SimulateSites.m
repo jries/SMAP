@@ -36,11 +36,11 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
            obj.locData.files.file(end).info.simulationParameters=obj.getGuiParameters;
            obj.locData.addLocData(locst);
            obj.locData.sort('filenumber','frame');
-           try
+%            try
            initGuiAfterLoad(obj);
-           catch err
-               err
-           end
+%            catch err
+%                err
+%            end
            se=obj.locData.SE;
            cell=interfaces.SEsites;
            cell.pos=[mean(locst.xnm) mean(locst.ynm)];

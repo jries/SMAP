@@ -62,6 +62,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
             for k=1:length(loadernames)
                 loader=plugin('WorkflowModules','Loaders',loadernames{k});
                 loader.attachPar(obj.P);
+                loader.attachLocData(obj.locData);
                 hp=uipanel(obj.handle,'Units','pixels','Position',panelpos,'Visible','off');
                 hp.Units='normalized';
                 loader.handle=hp;

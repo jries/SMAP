@@ -22,34 +22,38 @@ classdef OnlineReconstruction<interfaces.WorkflowModule
             initGui@interfaces.WorkflowModule(obj);
         end
         function prerun(obj,p)
-            if obj.getPar('loc_preview')
-                return
-            end
+            
             obj.updatenow=false;
             obj.localupdatetime=obj.getGuiParameters.loc_updatetime;
             obj.filenumber=1;%obj.locData.files.filenumberEnd+1;
-            obj.locData.files.filenumberEnd=1;%obj.filenumber;
-            obj.locData.loc=struct('frame',1,'filenumber',1,'xnm',0,'ynm',0,'channel',-1);
-            fn=fieldnames(obj.locData.loc);
-            obj.setPar('locFields',fn);
-            obj.locData.clear;
-            obj.locData.files.file=locsaveFileinfo(obj);
+            if ~obj.getPar('loc_preview')
+                obj.locData.files.filenumberEnd=1;%obj.filenumber;
+                obj.locData.loc=struct('frame',1,'filenumber',1,'xnm',0,'ynm',0,'channel',-1);
+                fn=fieldnames(obj.locData.loc);
+                obj.setPar('locFields',fn);
+                obj.locData.clear;
+                obj.locData.files.file=locsaveFileinfo(obj);
                 
-            filelist={obj.locData.files.file(:).name};
-            for k=1:length(filelist)
-                [~,filelists{k}]=fileparts(filelist{k});
+                filelist={obj.locData.files.file(:).name};
+                for k=1:length(filelist)
+                    [~,filelists{k}]=fileparts(filelist{k});
+                end
+                obj.setPar('filelist_long',filelist,'String')
+                obj.setPar('filelist_short',filelists,'String')
+                fsx=[{'layer','all'} filelists];
+                obj.setPar('filelist_short_ext',fsx,'String');
+                p=obj.parent.getGuiParameters(true,true);
+                p.name=obj.parent.pluginpath;
+                obj.locData.addhistory(p);
             end
-            
             obj.fileinfo=obj.getPar('loc_cameraSettings');
             op=obj.getPar('overwrite_pixelsize');
             if ~isempty(op)
                   obj.fileinfo.cam_pixelsize_um=op;
             end
             obj.setPar('currentfileinfo',obj.fileinfo);
-            obj.setPar('filelist_long',filelist,'String')
-            obj.setPar('filelist_short',filelists,'String')
-            fsx=[{'layer','all'} filelists];
-            obj.setPar('filelist_short_ext',fsx,'String');
+
+
             
             pos=(obj.fileinfo.roi(1:2)+obj.fileinfo.roi(3:4)/2).*obj.fileinfo.cam_pixelsize_um*1000;
             srs=obj.fileinfo.roi(3:4).*obj.fileinfo.cam_pixelsize_um*1000;
@@ -57,9 +61,8 @@ classdef OnlineReconstruction<interfaces.WorkflowModule
             obj.setPar('sr_pos',pos);
              obj.setPar('sr_pixrec',pixels);
             obj.locDatatemp=interfaces.LocalizationData;
-             p=obj.parent.getGuiParameters(true,true);
-             p.name=obj.parent.pluginpath;
-             obj.locData.addhistory(p);
+
+            
               obj.localtimervalue=tic;
               obj.run(); %clear
         end
@@ -71,9 +74,9 @@ classdef OnlineReconstruction<interfaces.WorkflowModule
             end
             
             output=[];
-            if obj.getPar('loc_preview') %||(~obj.getSingleGuiParameter('update_check')&&~obj.updatenow)
-                return
-            end
+%             if obj.getPar('loc_preview') %||(~obj.getSingleGuiParameter('update_check')&&~obj.updatenow)
+%                 return
+%             end
             locs=data.data;%get;
             
             if ~isempty(locs)&&~isempty(locs.frame)
@@ -109,18 +112,22 @@ classdef OnlineReconstruction<interfaces.WorkflowModule
 %                     end
                     numlocs=numlocs+sindin;
                 end
-                if (toc(obj.localtimervalue)>obj.getSingleGuiParameter('loc_updatetime') && obj.getSingleGuiParameter('update_check'))||data.eof || obj.updatenow
+                if (toc(obj.localtimervalue)>obj.getSingleGuiParameter('loc_updatetime') && obj.getSingleGuiParameter('update_check'))...
+                        ||data.eof || obj.updatenow ||obj.getPar('loc_preview')
                     obj.updatenow=false;
                     locdat=interfaces.LocalizationData;
                     locdat.loc=fitloc2locdata(obj,templocs,1:numlocs);
 %                     obj.locDatatemp.addLocData(locdat);
                     templocs=[];
                     numlocs=[];
-                    
-                    obj.locData.addLocData(locdat); %Careful: does this add it many time? need to intialize obj.locDatatemp?
-                    initGuiAfterLoad(obj,false);  %resets the view always! 
-                    notify(obj.P,'sr_render')
-                    drawnow
+                    if obj.getPar('loc_preview') %||(~obj.getSingleGuiParameter('update_check')&&~obj.updatenow)
+                        obj.setPar('locdata_preview',locdat.loc);
+                    else
+                        obj.locData.addLocData(locdat); %Careful: does this add it many time? need to intialize obj.locDatatemp?
+                        initGuiAfterLoad(obj,false);  %resets the view always! 
+                        notify(obj.P,'sr_render')
+                        drawnow
+                    end
                     obj.localtimervalue=tic;
                     obj.locDatatemp.clear; %??? new
                 end                    

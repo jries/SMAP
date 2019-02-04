@@ -106,8 +106,8 @@ void mexFunction(int nlhs, mxArray *plhs[],	int	nrhs, const	mxArray	*prhs[]) {
 
 	// simPSF
 	int Npixels,Nfitraw, xstart, ystart, zstart;
-	float *coeff,*cor, *data;
-	float I, bg, xcenter, ycenter, zcenter,xc, yc, zc,off,temp;
+	float *coeff,*cor, *data, *I, *bg;
+	float  xcenter, ycenter, zcenter,xc, yc, zc,off,temp;
 	const mwSize *datasize_spline;
 	const mwSize *datasize=0;
 	int spline_xsize, spline_ysize, spline_zsize,ii,jj,kk;
@@ -119,8 +119,10 @@ void mexFunction(int nlhs, mxArray *plhs[],	int	nrhs, const	mxArray	*prhs[]) {
 
 	Npixels = (int)mxGetScalar(prhs[0]);
 	coeff =(float *) mxGetData(prhs[1]);
-	I = (float)mxGetScalar(prhs[2]);
-	bg = (float)mxGetScalar(prhs[3]);
+	/*I = (float)mxGetScalar(prhs[2]);
+	bg = (float)mxGetScalar(prhs[3]);*/
+    I = (float *)mxGetData(prhs[2]);
+	bg = (float *)mxGetData(prhs[3]);
 	cor = (float *) mxGetData(prhs[4]);
 
 	datasize_spline=mxGetDimensions(prhs[1]);
@@ -158,7 +160,7 @@ void mexFunction(int nlhs, mxArray *plhs[],	int	nrhs, const	mxArray	*prhs[]) {
 		kernel_computeDelta3D(xc, yc, zc, delta_f);
 		for (ii=0;ii<Npixels;ii++) for(jj=0;jj<Npixels;jj++) {
 			temp = fAt3Dj(ii+xstart+off,jj+ystart+off,zstart,spline_xsize,spline_ysize,spline_zsize,delta_f,coeff);
-			data[Npixels*Npixels*kk+Npixels*jj+ii] = temp*I + bg;		
+			data[Npixels*Npixels*kk+Npixels*jj+ii] = temp*I[kk] + bg[kk];		
 		}
 	}
 

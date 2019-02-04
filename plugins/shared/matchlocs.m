@@ -41,6 +41,14 @@ for k=1:lA
                 found=1;
             end
             l=l+1;
+            %idea:
+            %per frame: matrix all agianst all
+            % if two are closer than distance: put distance in matrix
+            % associate lowest entry
+            % remove, associate next
+            % or to speed up: when matched: store d2 and both indices
+            % 
+           
 %             if abs(yA(ixAs(k))-yB(ixBs(l))+d(2))<maxd %true hit
 %                 %do something here
 %                 iA(rx)=ixAs(k);

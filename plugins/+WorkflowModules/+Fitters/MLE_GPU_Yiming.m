@@ -336,7 +336,7 @@ p=obj.getAllParameters;
 if isempty(p.cal_3Dfile)
     path=obj.getGlobalSetting('DataDirectory');
     fh=obj.getPar('loc_fileinfo');
-    if ~isempty(fh)
+    if ~isempty(fh) && ~isempty(fh.imagefile)
         path=fileparts(fh.imagefile);
     end  
     p.cal_3Dfile=[path filesep '*3dcal.mat'];
@@ -716,6 +716,8 @@ pard.scmosfile.Optional=true;
 pard.asymmetry.object=struct('Style','checkbox','String','get asymmetry');   
 pard.asymmetry.position=[6,1];
 pard.asymmetry.Optional=true;
+
+pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 
 pard.plugininfo.type='WorkflowFitter';
 pard.plugininfo.description='Maximum likelyhood estimater, optimized for GPU processing. According to: C. S. Smith, N. Joseph, B. Rieger, and K. A. Lidke, ?Fast, single-molecule localization that achieves theoretically minimum uncertainty.,? Nat Methods, vol. 7, no. 5, pp. 373?375, May 2010.';
