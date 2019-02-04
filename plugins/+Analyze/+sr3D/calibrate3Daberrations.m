@@ -69,7 +69,7 @@ classdef calibrate3Daberrations<interfaces.DialogProcessor
             hold off
             for k=1:length(beads)
                 beads(k).loc.zglass=(beads(k).loc.frame-f0glass(beads(k).filenumber))*p.dz;
-                beads(k).loc.z0relative=-(beads(k).f0-beads(k).loc.frame)*p.dz;
+                beads(k).loc.z0relative=+(beads(k).f0-beads(k).loc.frame)*p.dz;
                 beads(k).loc.dzcorr=beads(k).loc.z0relative-beads(k).loc.znm;
                 beads(k).f0glass=beads(k).f0-f0glass(beads(k).filenumber);
                 beads(k).loc.z0glass=beads(k).f0glass*p.dz+0*beads(k).loc.zglass;

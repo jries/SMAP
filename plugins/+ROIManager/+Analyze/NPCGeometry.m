@@ -117,7 +117,7 @@ hh=histcounts(R0,rn);
 fitp=fit(rn(1:end-1)'+(rn(2)-rn(1))/2,hh','gauss1');
 hold on
 plot(rn,fitp(rn))
-fitp
+% fitp
 
 aca=0;aca1=0;aca2=0;acc12=0;
 for k=1:length(sites)
@@ -165,7 +165,7 @@ if numel(aca1)>1
      [ddd,cid]=getcorrangleglobal(tnn,acc12n);
     legend('all','ring1','ring2','cross-corr','cos fit')    
     ff='%2.2f';
-     txtshift=[', shift: ' num2str(ddd,ff) 'Â° Â± ' num2str((cid(2)-cid(1))/2,ff) 'Â° (95% confidence)'];
+     txtshift=[', shift: ' num2str(ddd,ff) '° ± ' num2str((cid(2)-cid(1))/2,ff) '° (95% confidence)'];
       plot([0 0],[ampmin ampm*1.1],'k')
 end
 ylim([ampmin ampm*1.1]);
@@ -213,13 +213,13 @@ if p.copytopage
 end
 
 %copy to clipboard
-%file lastfile N R dR sigma dsigma drawfit drawstdfit d2Gfit d2Gstdfit PearsonC angle
-%dangle95
+
 filen=obj.SE.files(sites(1).info.filenumber).name;
  lastfile=obj.getPar('lastSMLFile');
-clipboard('copy',sprintf([filen '\t' lastfile '\t' num2str(length(d)) '\t' num2str(mean(R0)) '\t' num2str(std(R0)) ...
+ disp([lastfile sprintf('\n') 'N R dR sigma dsigma drawfit drawstdfit d2Gfit d2Gstdfit PearsonC angle dangle95'])
+clipboard('copy',[filen sprintf('\t') lastfile sprintf([ '\t' num2str(length(d)) '\t' num2str(mean(R0)) '\t' num2str(std(R0)) ...
     '\t' num2str(mean(sigma)) '\t' num2str(std(sigma)) '\t' num2str(draw) '\t' num2str(drawerr) ...
-    '\t' num2str(d2G) '\t' num2str(d2Gerr) '\t' num2str(pearsonc) '\t' num2str(ddd) '\t' num2str((cid(2)-cid(1))/2)]))
+    '\t' num2str(d2G) '\t' num2str(d2Gerr) '\t' num2str(pearsonc) '\t' num2str(ddd) '\t' num2str((cid(2)-cid(1))/2)])])
 
 end
 
@@ -230,14 +230,18 @@ function [d,cid,fitp]=getcorrangleglobal(ti,cci)
   t(mp-win:mp+win)=[];
   cc(mp-win:mp+win)=[];
   ft=fittype('(b1+b2*x+b3*x.^2+b4*x.^3)+(a1+a2*x+a3*x.^2+a4*x.^3).*cos(2*pi*(x-d)/45)');
-  sp=[(max(cc)-min(cc))/2,0,0,0, min(cc)+1,0,0,0,10];
-  fitp=fit(t',cc',ft,'StartPoint',sp);
+  sp=[(max(cc)-min(cc))/2,0,0,0, min(cc)+1,0,0,0,-10];
+  lb=-inf*ones(size(sp));
+  lb(1)=0;
+  fitp=fit(t',cc',ft,'StartPoint',sp,'Lower',lb);
   t(round(length(t)/2))=nan;
   plot(t,fitp(t))
   d=fitp.d;
   ci=confint(fitp);
   cid=ci(:,end);
-
+%   plot(t,(fitp.b1+fitp.b2*t+fitp.b3*t.^2+fitp.b4*t.^3))
+%   plot(t,(fitp.a1+fitp.a2*t+fitp.a3*t.^2+fitp.a4*t.^3+fitp.b1+fitp.b2*t+fitp.b3*t.^2+fitp.b4*t.^3))
+%  fitp
 end
 
 
