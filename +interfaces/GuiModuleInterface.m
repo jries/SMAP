@@ -148,7 +148,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                          if isfield(obj.guihandles,off{l})
                         hh=obj.guihandles.(off{l});
                         hh.Visible='off';
-                        if isprop(hh,'Callback') && ~isempty(hh.Callback) &&contains(func2str(hh.Callback{1}),'switchvisible')
+                        if isprop(hh,'Callback') && ~isempty(hh.Callback) && iscell(hh.Callback) && contains(func2str(hh.Callback{1}),'switchvisible')
                             fnc=hh.Callback;
                             fnc{1}(hh,0,fnc{2});
                         end
@@ -162,7 +162,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                             if ~(myisfield(obj.guidef.(on{l}),'Optional') && obj.guidef.(on{l}).Optional &&obj.simplegui)
                             hh.Visible='on';
                             end
-                            if isprop(hh,'Callback') && ~isempty(hh.Callback) &&contains(func2str(hh.Callback{1}),'switchvisible')
+                            if isprop(hh,'Callback') && ~isempty(hh.Callback) &&  iscell(hh.Callback) && contains(func2str(hh.Callback{1}),'switchvisible')
 
                             %call switchvisible for all children to nest
                             %functions

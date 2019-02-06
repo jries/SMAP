@@ -151,6 +151,9 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
         
         function update_slider(obj,a,b)        
             fi=obj.getPar('loc_fileinfo');
+            if isempty(fi)
+                return
+            end
             nf=fi.numberOfFrames;
             if isempty(nf)||isinf(nf)||isnan(nf)
                 nf=obj.getPar('loc_previewframe')+1;
@@ -158,8 +161,8 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             end
             obj.guihandles.previewframeslider.Min=1;
             obj.guihandles.previewframeslider.Max=max(nf,1);
-            pvf=min(nf,obj.getPar('loc_previewframe'));
-            obj.guihandles.previewframeslider.Value=max(min(1,pvf),nf);
+            pvf=max(1,min(nf,obj.getPar('loc_previewframe')));
+            obj.guihandles.previewframeslider.Value=min(max(1,pvf),nf);
             obj.setPar('loc_previewframe',pvf)
             obj.guihandles.previewframe.String=num2str(pvf);
 %             obj.setPar('loc_previewframe',round(pf));

@@ -4,6 +4,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
         simulator
         par
         PSF
+        file
        
     end
     methods
@@ -15,6 +16,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
         end
         function initGui(obj)
             simulation_callback(obj.guihandles.simulationsource, 0,obj)
+            obj.setcampar;
 %             psfpar_callback(0,0,obj,true)
         end
         function out=run(obj,data,p)  
@@ -56,7 +58,9 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
                   locgt=obj.locs;
               end
               locgt.bg=locgt.bg+p.background;
+              if ~obj.getPar('loc_preview')
               simulationerror(locgt,locfit,obj.PSF)
+              end
               
               if p.savetiffs && ~obj.getPar('loc_preview')
                   saveim=uint16(allimgs);
@@ -74,7 +78,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
             pard=guidef(obj);
         end
         
-        function prerun(obj,p)
+        function prerun(obj,p)   
             if  obj.getPar('loc_preview')
                 f='';path='';
             else
@@ -95,15 +99,43 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
                     path='';
                     f='simulation_nosave_sml.mat';
                 end
+                
             end
+            obj.file=[path f];
+%             obj.par.basefile
+           obj.setcampar;
+           %get PSF
+           switch p.psfmodel.selection
+               case {'Symm Gauss','Astig Gauss' }
+                   
+               case {'Spline'}
+                   f=p.cal_3Dfile;
+                   if isempty(f)
+                       errordlg('please select first a 3D calibration file with a PSF model')
+                       return
+                   end
+                   psf=splinePSF;
+                   psf.loadmodel(f);
+                   obj.PSF=psf;
+           end
+           [~,par]=simulatecamera(obj.locs,obj.par,1,obj.PSF);
+           obj.par=par;
+        end
+        function setcampar(obj)
+            cs=obj.getPar('loc_cameraSettings');
+           
             p=obj.getAllParameters;
 
             if p.autorange
+                     if isempty(obj.locs)
+                         p.xrange=[0 1]; p.yrange=[0 1];
+                     else
                       rim=1000;
                       p.xrange=[min(obj.locs.xnm)-rim max(obj.locs.xnm)+rim]; 
                       p.yrange=[min(obj.locs.ynm)-rim max(obj.locs.ynm)+rim]; 
+                     end
             end
-            obj.par=copyfields(obj.par,p);
+            obj.par=copyfields(p,cs);
             par=obj.par;
             xrp=(par.xrange/par.pixelsize);
             yrp=(par.yrange/par.pixelsize);        
@@ -122,29 +154,15 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
                info.conversion=1;
                info.EMon=false;
            end
-           info.basefile=[path f];
+           info.basefile=obj.file;
+           if ~isempty(obj.locs)
            info.numberOfFrames=max(obj.locs.frame);
-           info.assigned.roi=true;
-           
-           obj.setPar('loc_fileinfo',info);
-           obj.par=copyfields(obj.par,info,{'offset','emgain','conversion','EMon'});
-           
-           %get PSF
-           switch p.psfmodel.selection
-               case {'Symm Gauss','Astig Gauss' }
-                   
-               case {'Spline'}
-                   f=p.cal_3Dfile;
-                   if isempty(f)
-                       errordlg('please select first a 3D calibration file with a PSF model')
-                       return
-                   end
-                   psf=splinePSF;
-                   psf.loadmodel(f);
-                   obj.PSF=psf;
            end
-           [~,par]=simulatecamera(obj.locs,obj.par,1,obj.PSF);
-           obj.par=par;
+           info.assigned.roi=true;
+           obj.setPar('loc_fileinfo',info);
+           obj.setPar('loc_fileinfo_set',info);
+           obj.par=copyfields(obj.par,info,{'offset','emgain','conversion','EMon'});
+            
         end
     end
 end
@@ -203,69 +221,9 @@ p=obj.getAllParameters;
 filestruct=initfile('');
 filestruct.info=interfaces.metadataSMAP;
 filestruct.info.numberOfFrames=max(obj.locs.frame);
-% obj.par=par;
 obj.setPar('loc_fileinfo',filestruct.info);
-% filestruct.info.numberOfFrames=max(obj.locs.frame);
-end
 
-% function psfpar_callback(a,b,obj,silent)
-% if nargin<4
-%     silent=false;
-% end
-% persistent model;
-% if isempty(model)
-% mg=GaussPSF();
-% model{1}=mg;
-% ms=splinePSF();
-% model{2}=ms;
-% end
-% f=figure('MenuBar','none','Toolbar','none','Name','PSF model parameters');
-% pos=f.Position;
-% uicontrol(f,'String','Ok','Position',[010,10,75,25],'Callback',@closebutton)
-% hmodel=uicontrol(f,'String',{'Gaussian','Spline'},'Style','popupmenu','Position',[10,pos(4)-30,275,25],'Callback',@selectmodel);
-% 
-% pos(2)=30;pos(4)=pos(4)-60;
-% hp(1)=uipanel(f,'Position',[0 0.1 1 .8]);
-% model{1}.handle=hp(1);model{1}.makeGui;
-% if ~isempty(model{1}.guipar)
-%     model{1}.setGuiParameters(model{1}.guipar);
-% end
-% 
-% hp(2)=uipanel(f,'Position',[0 0.1 1 .8],'Visible','off');
-% model{2}.handle=hp(2);model{2}.makeGui;
-% if ~isempty(model{2}.guipar)
-%     model{2}.setGuiParameters(model{2}.guipar);
-% end
-% 
-% if silent
-%     closebutton(0,0)
-% end
-% % model=obj.getSingleGuiParameter('psfmodel');
-% % switch model.selection
-% %     case 'Spline'
-% %         modelf=@splinePSF;
-% % end
-% % 
-% % mo=modelf();
-% % mo.handle=f;
-% % mo.makeGui;
-% waitfor(f)
-%     function closebutton(a,b)
-%         model{hmodel.Value}.guipar=model{hmodel.Value}.getGuiParameters;
-%         obj.PSF=model{hmodel.Value};
-%         
-%         close(f)
-%     end
-%     function selectmodel(a,b)
-%         switch a.Value
-%             case 1
-%                 hp(1).Visible='on';hp(2).Visible='off';
-%             case 2
-%                 hp(2).Visible='on';hp(1).Visible='off';
-%         end
-%     end
-% 
-% end
+end
 
 function simulation_callback(a,b,obj)
 if a.Value==3 %make with simulation plugin
@@ -283,6 +241,7 @@ if a.Value==3 %make with simulation plugin
         obj.simulator.makeGui;
         disp('press get localizations after running the simulator')
     end
+    figure(obj.simulator.handle)
     
 end
 end
@@ -304,6 +263,7 @@ if f
         msgbox('no 3D data recognized. Select other file.');
     end
     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
+        obj.setPar('cal3Dfile',[p f]);
     
 end
 end
@@ -371,7 +331,7 @@ la=4;
 p=[];
 p(1).value=0;p(1).on={'t2','xrange','t3','yrange','tf','frames'};p(1).off={};
 p(2).value=1;p(2).off={'t2','xrange','t3','yrange','tf','frames'};p(2).on={};
-pard.autorange.object=struct('String','auto','Style','checkbox','Value',1,'Callback',{{@obj.switchvisible,p}});
+pard.autorange.object=struct('String','auto','Style','checkbox','Value',1,'Callback',{{@obj.switchvisible,p,{@obj.setcampar}}});
 pard.autorange.position=[la,1];
 pard.autorange.Width=0.5;
 
@@ -379,15 +339,15 @@ pard.t2.object=struct('String','X range','Style','text','Visible','off');
 pard.t2.position=[la,1.5];
 pard.t2.Width=0.5;
 
-pard.xrange.object=struct('String','0 50000','Style','edit','Visible','off');
+pard.xrange.object=struct('String','0 50000','Style','edit','Visible','off','Callback',@obj.setcampar);
 pard.xrange.position=[la,2];
 pard.xrange.Width=0.5;
 
-pard.t3.object=struct('String','Y range','Style','text','Visible','off');
+pard.t3.object=struct('String','Y range','Style','text','Visible','off','Callback',@obj.setcampar);
 pard.t3.position=[la,2.5];
 pard.t3.Width=0.5;
 
-pard.yrange.object=struct('String','0 50000','Style','edit','Visible','off');
+pard.yrange.object=struct('String','0 50000','Style','edit','Visible','off','Callback',@obj.setcampar);
 pard.yrange.position=[la,3];
 pard.yrange.Width=0.5;
 
@@ -403,28 +363,28 @@ lu=5;
 p(1).value=0;p(1).on={};p(1).off={'t5','emgain','t6','conversion','t7','offset'};
 p(2).value=1;p(2).off={};p(2).on={'t5','emgain','t6','conversion','t7','offset'};
 
-pard.usecam.object=struct('String','Use camera units','Style','checkbox','Value',1,'Callback',{{@obj.switchvisible,p}});
+pard.usecam.object=struct('String','Use camera units','Style','checkbox','Value',1,'Callback',{{@obj.switchvisible,p,{@obj.setcampar}}});
 pard.usecam.position=[lu,1];
 pard.usecam.Width=1.3;
 
 pard.t5.object=struct('String','EMgain 0=off','Style','text');
 pard.t5.position=[lu,2.2];
 pard.t5.Width=.8;
-pard.emgain.object=struct('String','100','Style','edit');
+pard.emgain.object=struct('String','100','Style','edit','Callback',@obj.setcampar);
 pard.emgain.Width=.3;
 pard.emgain.position=[lu,3];
 
 pard.t6.object=struct('String','Conversion','Style','text');
 pard.t6.position=[lu,3.3];
 pard.t6.Width=.7;
-pard.conversion.object=struct('String','5','Style','edit');
+pard.conversion.object=struct('String','5','Style','edit','Callback',@obj.setcampar);
 pard.conversion.Width=.3;
 pard.conversion.position=[lu,4];
 
 pard.t7.object=struct('String','Offset','Style','text');
 pard.t7.position=[lu,4.3];
 pard.t7.Width=0.4;
-pard.offset.object=struct('String','100','Style','edit');
+pard.offset.object=struct('String','100','Style','edit','Callback',@obj.setcampar);
 pard.offset.Width=.3;
 pard.offset.position=[lu,4.7];
 
