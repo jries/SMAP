@@ -263,9 +263,16 @@ loctarget.y=loctarget.ynm/pixtarget(end);
 if p.useT
     transform=Tinitial.copy;
 else
+    if contains(mirrorinfo.targetmirror,'up-down')
+        mirrorch2= 2;
+    elseif contains(mirrorinfo.targetmirror,'right-left')
+        mirrorch2= 1;
+    else
+        mirrorch2=0;
+    end
     transform=interfaces.LocTransformN;
-    transform.setTransform(1,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixref,'xrange',xrangecamr,'yrange',yrangecamr);
-    transform.setTransform(2,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixtarget,'xrange',xrangecamt,'yrange',yrangecamt);
+    transform.setTransform(1,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixref,'xrange',xrangecamr,'yrange',yrangecamr,'mirror',0);
+    transform.setTransform(2,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixtarget,'xrange',xrangecamt,'yrange',yrangecamt,'mirror',mirrorch2);
 end
 
 %XXXXXXX still need to include mirroring...XXXXXX
