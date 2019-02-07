@@ -21,8 +21,17 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
         end
         function out=run(obj,data,p)  
                 p=obj.par;   
-                 if obj.getPar('loc_preview')
-                    allframes=max(1,obj.getPar('loc_previewframe'));    
+                preview=obj.getPar('loc_preview');
+                 if preview
+                    allframes=max(1,obj.getPar('loc_previewframe'));  
+                    indh=obj.locs.frame==allframes;
+                    locgth=copystructReduce(obj.locs,indh,{'x','y','znm','bg','phot'});
+                    locgt.x=(locgth.x-p.xrange(1))/p.pixelsize;
+                    locgt.y=(locgth.y-p.yrange(1))/p.pixelsize;
+                    locgt.z=locgth.znm;
+                    locgt.N=locgth.phot;
+                    locgt.bg=locgth.bg+p.background;
+                    obj.setPar('loc_gt_preview',locgt)
                  else
                     allframes=max(1,p.frames(1)):min(p.frames(end),max(obj.locs.frame));
                  end
@@ -59,7 +68,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
               end
               locgt.bg=locgt.bg+p.background;
               if ~obj.getPar('loc_preview')
-              simulationerror(locgt,locfit,obj.PSF)
+                simulationerror(locgt,locfit,obj.PSF)
               end
               
               if p.savetiffs && ~obj.getPar('loc_preview')
