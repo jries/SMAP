@@ -41,9 +41,10 @@ classdef PSFmodel<interfaces.GuiModuleInterface
 %                 xh=locsh.x-xrange(1); yh=locsh.y-xrange(2);
 %             end
 %             zh=locsh.z;
-            locs1=copystructReduce(locsh,1);locs1.x=0;locs1.y=0;
-            imh=obj.PSF(locs1);
-            roipix=size(imh,1);
+%             locs1=copystructReduce(locsh,1);locs1.x=0;locs1.y=0;
+%             imh=obj.PSF(locs1);
+%             roipix=size(imh,1);
+            roipix=obj.roisize;
             roipixh=floor(roipix/2);
 
             if ~isempty(p.lut)

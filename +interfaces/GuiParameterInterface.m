@@ -119,7 +119,11 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                             handle.(varargin{k+1})=varargin{k};
                         end
                     end
+                    if isempty(handle)
+                        obj.setfields(field,varargin{1});
+                    else
                     obj.setfields(field,handle);
+                    end
                 else
                     obj.setfields(field,varargin{1});
                 end
@@ -402,9 +406,10 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                         end
                     end
                 end
-            else
+            end
+            if  ~hstruc(1).isGuiPar || isnumeric(handle) || ischar(handle) 
                 for k=1:length(hstruc)
-                    hstruc(k).content=handle;
+                    hstruc(k).content=handle; 
                 end
 
 %             SMAPparameters.(field)=hstruc; %Hack to improve performance. its the same as:
