@@ -87,8 +87,8 @@ iAi=zeros(numcandidates,1);iBi=zeros(numcandidates,1);
 %     end
 %     
 % end
-ikm=true(size(ik));
-ilm=true(size(il));
+ikm=true(size(dmatrix,1));
+ilm=true(size(dmatrix,2));
 for k=1:numcandidates
     if ikm(ik(k)) && ilm(il(k))
         iAi(ig)=ik(k);

@@ -41,10 +41,13 @@ ax0=obj.initaxis('sigma_z');
 n=0:1:25;
 histogram(sigma,n); xlabel('sigma (nm)')
 title(['sigma z: ' num2str(mean(sigma),ff) '\pm' num2str(std(sigma),ff)])
+dindin=d>20&d<80;
+drawindin=d>20&d<80;
+dtindin=d>20&d<80;
 
-d(d<20|d>80)=[];
-draw(draw<20|draw>80)=[];
-dt(dt<20|dt>80)=[];
+d=d(dindin);
+draw=draw(drawindin);
+dt=dt(dtindin);
 n=20:1:80;
 
 ax1=obj.initaxis('d_Gauss');
@@ -85,22 +88,23 @@ plot(nf,fitp(nf))
 hold off
 title(['dtemplate: med ' num2str(median(dt),ff) ', mean ' num2str(mean(dt),ff) '\pm' num2str(std(dt),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
 
-ind = dt<80&dt>20;
+% ind = dt<80&dt>20;
 zt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',3);
 dpl=d';
+indzin=dindin;
 ax4=obj.initaxis('d vs z');
 hold off
-plot(zt(ind),abs(dpl(ind)),'.')
-fline=fit(zt(ind),abs(dpl(ind)),'poly1');
+plot(zt(indzin),abs(dpl),'.')
+fline=fit(zt(indzin),abs(dpl),'poly1');
 hold on
-plot(zt,fline(zt),'r')
+plot(zt(indzin),fline(zt(indzin)),'r')
 xlabel('z');ylabel('distance')
-title(['d(z=0) fit: ' num2str(fline.p2,ff) ' Corr:' num2str(corr(abs(d(ind)'),zt(ind')))]);
+title(['d(z=0) fit: ' num2str(fline.p2,ff) ' Corr:' num2str(corr(abs(d'),zt(indzin')))]);
 ylim([25 100])
 xlim([-200 200])
 end
 
-pearsonc=corr(abs(d(ind)'),zt(ind'));
+pearsonc=corr(abs(d'),zt(indzin'));
 
 R0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.Rfit');
 ax5=obj.initaxis('R');
@@ -230,7 +234,9 @@ function [d,cid,fitp]=getcorrangleglobal(ti,cci)
   t(mp-win:mp+win)=[];
   cc(mp-win:mp+win)=[];
   ft=fittype('(b1+b2*x+b3*x.^2+b4*x.^3)+(a1+a2*x+a3*x.^2+a4*x.^3).*cos(2*pi*(x-d)/45)');
-  sp=[(max(cc)-min(cc))/2,0,0,0, min(cc)+1,0,0,0,-10];
+  [~,imcc]=max(cci);
+  tm=ti(imcc);
+  sp=[(max(cc)-min(cc))/2,0,0,0, min(cc)+1,0,0,0,tm];
   lb=-inf*ones(size(sp));
   lb(1)=0;
   fitp=fit(t',cc',ft,'StartPoint',sp,'Lower',lb);

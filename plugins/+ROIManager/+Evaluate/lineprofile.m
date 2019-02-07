@@ -17,13 +17,14 @@ classdef lineprofile<interfaces.SEEvaluationProcessor
                 nbins=-200:5:200;
                 hc=histcounts(locs.ynmrot,nbins);
                 mp=median(locs.ynmrot);
-                d=std(locs.ynmrot);
+                sd=std(locs.ynmrot);
 %                 d=30;
                 amp=max(hc);
                 ft=fittype( @(a1,b1,s,a2,b2,x) a1*exp(-(x-b1).^2/2/s^2)+a2*exp(-(x-b2).^2/2/s^2));
 %                 ft=fittype( @(a1,b1,s,a2,b2,c,x) a1*normcdf((x-b1)/s)+a2*normcdf((x-b2)/s)+c);
 %                 hc=cumsum(hc);
-                fitp=fit(nbins(1:end-1)',hc',ft,'StartPoint',[amp mp-d d amp mp+d]);
+                dstart=50;
+                fitp=fit(nbins(1:end-1)',hc',ft,'StartPoint',[amp mp-dstart/2 sd amp mp+dstart/2],'Lower',[0 -inf 0 0 -inf]);
                 plot(ax,nbins(1:end-1),hc,nbins,fitp(nbins));
                 dist=abs(fitp.b2-fitp.b1);
                 title(ax,dist)

@@ -21,7 +21,7 @@ for frame=1:maxframe
     while ind2<=sf2(1)&&(pos2.frame(ind2)<=frame)
         ind2=ind2+1;
     end
-    [iA,iB,uiA,uiB]=matchlocs(pos1.x(indo1:ind1-1),pos1.y(indo1:ind1-1),pos2.x(indo2:ind2-1),pos2.y(indo2:ind2-1),([dx dy]),maxd); 
+    [iA,iB,uiA,uiB]=matchlocshd(pos1.x(indo1:ind1-1),pos1.y(indo1:ind1-1),pos2.x(indo2:ind2-1),pos2.y(indo2:ind2-1),([dx dy]),maxd); 
     indi2=finda+length(iA)-1;
     iAa(finda:indi2)=iA+indo1-1;
     iBa(finda:indi2)=iB+indo2-1;
