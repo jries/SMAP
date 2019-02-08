@@ -8,16 +8,19 @@ classdef fibrilAnalysis<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj,p)
-            if isfield(obj.site.evaluation,'fibrilAnalysis')&&isfield(obj.site.evaluation.fibrilAnalysis,'setting')
-            else
-                p.axisLb = 0;
-                p.axisUb = 0;
+            if p.filtering
+                if isfield(obj.site.evaluation,'fibrilAnalysis')&&isfield(obj.site.evaluation.fibrilAnalysis,'setting')
+                else
+                    p.axisLb = 0;
+                    p.axisUb = 0;
+                end
             end
             out = runFibrilAnalysis(obj,p);
-
-            obj.guihandles.axisLb.String = out.setting.axisLb;
-            obj.guihandles.axisUb.String = out.setting.axisUb;
-            
+            if p.filtering
+                obj.guihandles.axisLb.String = out.setting.axisLb;
+                obj.guihandles.axisUb.String = out.setting.axisUb;
+            end
+            obj.guihandles.filtering.Value = 0;
             
         end
         function pard=guidef(obj)
@@ -44,6 +47,10 @@ function pard = guidef(obj)
     pard.axisUb.position = [2 2.5];
     pard.axisUb.Width = 0.5;
     
+    pard.filtering.object = struct('Style','checkbox','String','','Value',0);
+    pard.filtering.position = [2 3];
+    pard.filtering.Width = 0.5;
+
     pard.redoProjection.object = struct('Style','checkbox','String','Re run','Value', 0);
     pard.redoProjection.position = [3 1];
     pard.redoProjection.Width = 1;
