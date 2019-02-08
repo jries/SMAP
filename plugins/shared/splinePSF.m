@@ -8,7 +8,7 @@ classdef splinePSF<interfaces.PSFmodel
     
     methods
         function img=PSF(obj,locs)
-            roisize=min(obj.roisize,size(obj.modelpar.coeff,1));
+            roisize=min(obj.roisize,size(obj.modelpar.coeff,1))+2;
             dn=round((roisize-1)/2);
             if isstruct(locs)
                 if ~isfield(locs,'N')
@@ -38,8 +38,8 @@ classdef splinePSF<interfaces.PSFmodel
                 end
             end
             
-            img=simSplinePSF_call(roisize,obj.modelpar.coeff,N,bg,cor);
-            
+            imgi=simSplinePSF_call(roisize,obj.modelpar.coeff,N,bg,cor);
+            img=imgi(2:end-1,2:end-1,:);
             
 %            Npixels = 13;  
 %            %convert to pixel unit, center = 0
