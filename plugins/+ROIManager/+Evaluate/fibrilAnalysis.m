@@ -16,10 +16,15 @@ classdef fibrilAnalysis<interfaces.SEEvaluationProcessor
                 end
             end
             out = runFibrilAnalysis(obj,p);
-            if p.filtering
+            
+            if isfield(obj.site.evaluation,'fibrilAnalysis')&&isfield(obj.site.evaluation.fibrilAnalysis,'setting')
                 obj.guihandles.axisLb.String = out.setting.axisLb;
                 obj.guihandles.axisUb.String = out.setting.axisUb;
+            else
+                obj.guihandles.axisLb.String = 0;
+                obj.guihandles.axisUb.String = out.straitened.arclength;
             end
+                
             obj.guihandles.filtering.Value = 0;
             
         end
