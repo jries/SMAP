@@ -59,7 +59,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %             Mstart=M;
             Mi=single(obj.splinePSF.PSF(coord));      
             [~,inds]=sort(maxima.N,'descend');
-            LL=ones(length(inds),1,'single');iterations=ones(length(inds),1,'single');crlb=ones(length(inds),1,5,'single');
+            LL=ones(length(inds),1,'single');iterations=ones(length(inds),1,'single');crlb=ones(length(inds),1,5,'single');chi2=ones(length(inds),1,'single');
             for iter=1:p.iterations
                 for k=1:length(inds)
                     ih=inds(k);
@@ -74,9 +74,11 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                     coordf(5)=0; %take out fitted bg
                     Mi(:,:,ih)=obj.splinePSF.PSF(coordf);
                     M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr)=M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr)+Mi(:,:,ih);
+                    dim=(roiM+Mi(:,:,ih)-roiim+coord(ih,5)).^2./(roiM+Mi(:,:,ih)+coord(ih,5));
+                    chi2(k)=(mean(dim(:)));
                 end   
             end
-            locout=coord2loc(coord,crlb,LL,iterations,pos,data{1}.frame);
+            locout=coord2loc(coord,crlb,LL,iterations,pos,data{1}.frame,chi2);
             if obj.preview
                 
                  figure(87);
@@ -92,9 +94,10 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                     plot(gt.x,gt.y,'ko')
                     subplot(2,2,3)
                     plot(gt.x,gt.z,'ko',coord(:,1)+pos.x,coord(:,3),'kx')
-                    subplot(2,2,4)
-                    plot(coord(:,1)+pos.x,LL/((2*dr+1)^2),'ko')
+                    xlim([0,size(image,2)])
                 end
+                subplot(2,2,4)
+                plot(coord(:,1)+pos.x,-LL/((2*dr+1)^2),'ko',coord(:,1)+pos.x,chi2,'x')
                 xlim([0,size(image,2)])
     %             pause(.5)
 
@@ -107,7 +110,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
     end
 end
 
-function locout=coord2loc(coord,crlb,LL,iterations,pos,frame)
+function locout=coord2loc(coord,crlb,LL,iterations,pos,frame,chi2)
 locout.xpix=single(coord(:,1)+pos.x);
 locout.ypix=single(coord(:,2)+pos.y);
 locout.znm=single(coord(:,3));
@@ -121,6 +124,7 @@ locout.bgerr=single(sqrt(crlb(:,5)));
 locout.logLikelihood=single(LL);
 locout.iterations=single(iterations);
 locout.frame=zeros(size(locout.xpix))+frame;
+locout.chi2=single(chi2);
 
 end
 function [coord,crlb, LogL, iterations]=fitsingleMD(roiim,roiM,startpar,spline,iterf)
