@@ -24,9 +24,9 @@ classdef fibrilAnalysis<interfaces.SEEvaluationProcessor
                 obj.guihandles.axisLb.String = 0;
                 obj.guihandles.axisUb.String = out.straitened.arclength;
             end
-                
-            obj.guihandles.filtering.Value = 0;
-            
+            if ~p.lockFilter
+                obj.guihandles.filtering.Value = 0;
+            end
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -46,15 +46,19 @@ function pard = guidef(obj)
     
     pard.axisLb.object = struct('Style','edit','String','0');
     pard.axisLb.position = [2 2];
-    pard.axisLb.Width = 0.5;
+    pard.axisLb.Width = 1;
     
     pard.axisUb.object = struct('Style','edit','String','0');
-    pard.axisUb.position = [2 2.5];
-    pard.axisUb.Width = 0.5;
+    pard.axisUb.position = [2 3];
+    pard.axisUb.Width = 1;
     
     pard.filtering.object = struct('Style','checkbox','String','','Value',0);
-    pard.filtering.position = [2 3];
-    pard.filtering.Width = 0.5;
+    pard.filtering.position = [2 4];
+    pard.filtering.Width = 0.3;
+    
+    pard.lockFilter.object = struct('Style','checkbox','String','Lock','Value',0);
+    pard.lockFilter.position = [2 4.3];
+    pard.lockFilter.Width = 1;
 
     pard.redoProjection.object = struct('Style','checkbox','String','Re run','Value', 0);
     pard.redoProjection.position = [3 1];
