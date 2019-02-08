@@ -52,13 +52,14 @@ function pard = guidef(obj)
     pard.axisUb.position = [2 3];
     pard.axisUb.Width = 1;
     
-    pard.filtering.object = struct('Style','checkbox','String','','Value',0);
+    pard.filtering.object = struct('Style','checkbox','String','','Value',0, 'Callback', {{@filterCallback,obj}});
     pard.filtering.position = [2 4];
     pard.filtering.Width = 0.3;
     
     pard.lockFilter.object = struct('Style','checkbox','String','Lock','Value',0);
     pard.lockFilter.position = [2 4.3];
     pard.lockFilter.Width = 1;
+    pard.lockFilter.Enable = 'off';
 
     pard.redoProjection.object = struct('Style','checkbox','String','Re run','Value', 0);
     pard.redoProjection.position = [3 1];
@@ -66,4 +67,13 @@ function pard = guidef(obj)
 
     pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
     pard.plugininfo.type='ROI_Evaluate';
+end
+
+function filterCallback(a,b,obj)
+    if obj.guihandles.filtering.Value
+        obj.guihandles.lockFilter.Enable = 'on';
+    else
+        obj.guihandles.lockFilter.Enable = 'off';
+        obj.guihandles.lockFilter.Value = 0;
+    end
 end
