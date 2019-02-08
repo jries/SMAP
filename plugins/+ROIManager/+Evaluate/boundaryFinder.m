@@ -76,7 +76,7 @@ pard.t_method.object=struct('Style','text','String','Method (rough boundary)');
 pard.t_method.position=[7,1];
 pard.t_method.Width=2;
 
-pard.method.object=struct('Style','popupmenu','String',{{'Contour line','Percentile'}}, 'Value', 2, 'Callback', {{@mathod_callBack,obj}});
+pard.method.object=struct('Style','popupmenu','String',{{'Contour line','Percentile','cumulative'}}, 'Value', 3, 'Callback', {{@mathod_callBack,obj}});
 pard.method.position=[7,3];
 pard.method.Width=2;
 
@@ -135,5 +135,12 @@ function mathod_callBack(a,b,obj)
             obj.guihandles.t_std.Visible = 'off';
             obj.guihandles.t_prctile.Visible = 'on';
             obj.guihandles.prctile.Visible = 'on';
+        case 3
+            obj.guihandles.contourLevel.Visible = 'off';
+            obj.guihandles.std.Visible = 'off';
+            obj.guihandles.t_contourLevel.Visible = 'off';
+            obj.guihandles.t_std.Visible = 'off';
+            obj.guihandles.t_prctile.Visible = 'off';
+            obj.guihandles.prctile.Visible = 'off';
     end
 end

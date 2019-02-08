@@ -8,7 +8,17 @@ classdef fibrilAnalysis<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj,p)
+            if isfield(obj.site.evaluation,'fibrilAnalysis')&&isfield(obj.site.evaluation.fibrilAnalysis,'setting')
+            else
+                p.axisLb = 0;
+                p.axisUb = 0;
+            end
             out = runFibrilAnalysis(obj,p);
+
+            obj.guihandles.axisLb.String = out.setting.axisLb;
+            obj.guihandles.axisUb.String = out.setting.axisUb;
+            
+            
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -17,6 +27,7 @@ classdef fibrilAnalysis<interfaces.SEEvaluationProcessor
 end
 
 function pard = guidef(obj)
+
     pard.showPlot.object = struct('Style','checkbox','String','Show fig', 'Value', 0);
     pard.showPlot.position = [1 1];
     pard.showPlot.Width = 1;
