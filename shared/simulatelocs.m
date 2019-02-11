@@ -78,7 +78,7 @@ indout=[(1:numlocs)'; indextra];
 for k=1:length(fn)
     locso.(fn{k})=locs.(fn{k})(indout);
 end
-timeonall=[lenfirst; timeon];
+timeonall=[min(lenfirst,lifetime); timeon];
 photons=timeonall*photonsperframe;
 photonsr=poissrnd(photons);
 locso.phot=photonsr;
