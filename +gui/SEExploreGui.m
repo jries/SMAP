@@ -39,6 +39,7 @@ classdef SEExploreGui<interfaces.SEProcessor
              
              
              h.redrawcell=uicontrol(obj.handle,'Position',[430,925,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawcell_callback,obj});
+              h.redrawcellall=uicontrol(obj.handle,'Position',[510,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawcellall_callback,obj});
              h.addcell=uicontrol(obj.handle,'Position',[650,925,60,40],'Style','pushbutton','String','Add','Units','normalized','FontSize',fontsize,'Callback',{@addcell,obj});
              h.removecell=uicontrol(obj.handle,'Position',[600+20,540,90,30],'Style','pushbutton','String','Remove','Units','normalized','FontSize',fontsize,'Callback',{@removecell_callback,obj});
              
@@ -117,26 +118,39 @@ classdef SEExploreGui<interfaces.SEProcessor
             redraw_celllist(obj)
         end
         
-        function redrawall(obj,onlysites)
+        function redrawall(obj,redrawwhat)
             global SMAP_stopnow
             if SMAP_stopnow
                 disp('STOP button is activated. Function not executed')
             end
-            if nargin<2|| isempty(onlysites)
-                onlysites=false;
+            drawcells=true;
+            drawsites=true;
+            if nargin>1|| ~isempty(redrawwhat)
+            	if ischar(redrawwhat)
+                    switch redrawwhat
+                        case 'sites'
+                            drawcells=false;
+                        case 'cells'
+                            drawsites=false;
+                    end
+                elseif islogical
+                    drawcells=~redrawwhat; %legacy: htis was only sites      
+                end
             end
+
             timerVal=tic;
             sites=obj.SE.sites;
             
             indselected=obj.getSingleGuiParameter('sitelist').Value;
             if length(indselected)>1 %selected sites
-                onlysites=true; %only redraw sites
+                drawsites=true; %only redraw sites
+                drawcells=false;
                 disp('redrawing only selected sites')
             else
                          indselected=1:length(sites);
             end
             se_keeptempimages=obj.getPar('se_keeptempimages');
-            if ~onlysites
+            if drawcells
                 files=obj.SE.files;
                 for k=1:length(files)
                     obj.guihandles.filelist.Value=k;
@@ -179,30 +193,30 @@ classdef SEExploreGui<interfaces.SEProcessor
 %         else
 %             indselected=1:length(sites);
 %         end
-        for k=indselected
-            
-            obj.guihandles.sitelist.Value=k;   
-            obj.status(['redrawall: site ' num2str(k) ' of ' num2str(length(sites))])
-            if obj.getPar('se_display') || toc(timerVal)>15
-            drawnow
-            timerVal=tic;
+        if drawsites
+            for k=indselected
+
+                obj.guihandles.sitelist.Value=k;   
+                obj.status(['redrawall: site ' num2str(k) ' of ' num2str(length(sites))])
+                if obj.getPar('se_display') || toc(timerVal)>15
+                drawnow
+                timerVal=tic;
+                end
+                sites(k).image=[];
+                obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
+                obj.SE.processors.eval.evaluate(sites(k));
+                if ~obj.getPar('se_keeptempimages')
+                sites(k).image.composite=[];
+                sites(k).image.layers=[];
+                end
+                sites(k).image.image=single(sites(k).image.image);
+                if SMAP_stopnow
+                    break
+                end
             end
-            sites(k).image=[];
-            obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
-            obj.SE.processors.eval.evaluate(sites(k));
-            if ~obj.getPar('se_keeptempimages')
-            sites(k).image.composite=[];
-            sites(k).image.layers=[];
-            end
-            sites(k).image.image=single(sites(k).image.image);
-            if SMAP_stopnow
-                break
-            end
+            obj.SE.currentsite=sites(k);
         end
-        obj.SE.currentsite=sites(k);
-        obj.status(['redrawall: completed'])
-% 
-%         obj.SE.plotsite(site,obj.guihandles.siteax,obj.guihandles.cellax);
+        obj.status('redrawall: completed')
         end
         function clearall(obj)
             obj.SE.clear;
@@ -779,7 +793,10 @@ obj.setPar('filenumber',obj.SE.currentsite.info.filenumber)
 end
 
 function redrawsiteall_callback(a,b,obj)
-obj.redrawall(true);
+obj.redrawall('sites');
+end
+function redrawcellall_callback(a,b,obj)
+obj.redrawall('cells');
 end
 
 function updatelist_callback(a,b,obj)

@@ -635,7 +635,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
 %             obj.setPar('status','grouping')
             grouper=Grouper;
             grouper.attachLocData(obj);
-            groupfields={'frame','xnm','ynm','filenumber','channel'};
+            groupfields={'frame','xnm','ynm','locprecnm','filenumber','channel'};
             if isfield(obj.loc,'class')
                 groupfields{end+1}='class';
             end

@@ -38,7 +38,7 @@ classdef Grouper< interfaces.LocDataInterface
              obj.combinemodes.cellnumbers='max';
               obj.combinemodes.sitenumbers='max';
         end
-        function connect(obj,dx,dt,framef,xf,yf,varargin)
+        function connect(obj,dx,dt,framef,xf,yf,locpf,varargin)
             fn=fieldnames(obj.locData.loc);
             lm=0;
             for k=1:length(fn)
@@ -52,8 +52,10 @@ classdef Grouper< interfaces.LocDataInterface
             end
 %             obj.status('group localizations')
             %here not clear. like this or exchanged?
+            sigmafactor=2.5;
             x=double(obj.locData.getloc(xf).(xf));
             y=double(obj.locData.getloc(yf).(yf));
+            locp=max(double(obj.locData.getloc(locpf).(locpf))*sigmafactor,10); %less than pixelsiz/10 is not resolvable also for HD
             frame=double(obj.locData.getloc(framef).(framef));
             
             numfields=length(varargin);
@@ -94,9 +96,10 @@ classdef Grouper< interfaces.LocDataInterface
             
             
             clear sortmatrix 
-            maxactive=10000;
-            list=connectsingle2c(sortmatrixsort(:,end),double(y(indsort)),sortmatrixsort(:,end-1),double(dx),int32(dt),int32(maxactive));
-%             listo=connectsingle2c(double(x(indsort)),double(y(indsort)),double(frame(indsort)),double(dx),int32(dt),int32(maxactive));
+%             maxactive=10000;
+%             list=connectsingle2c(sortmatrixsort(:,end),double(y(indsort)),sortmatrixsort(:,end-1),double(dx),int32(dt),int32(maxactive));
+%             
+            list=connectsinglesigma(sortmatrixsort(:,end),double(y(indsort)),sortmatrixsort(:,end-1),double(dx),int32(dt),double(locp));
             
             clear  sortmatrixsort
             clear frame
