@@ -125,7 +125,7 @@ classdef SEExploreGui<interfaces.SEProcessor
             end
             drawcells=true;
             drawsites=true;
-            if nargin>1|| ~isempty(redrawwhat)
+            if nargin>1 && ~isempty(redrawwhat)
             	if ischar(redrawwhat)
                     switch redrawwhat
                         case 'sites'
@@ -133,7 +133,7 @@ classdef SEExploreGui<interfaces.SEProcessor
                         case 'cells'
                             drawsites=false;
                     end
-                elseif islogical
+                elseif islogical(redrawwhat)
                     drawcells=~redrawwhat; %legacy: htis was only sites      
                 end
             end
