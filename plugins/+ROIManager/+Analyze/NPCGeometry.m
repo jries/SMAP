@@ -169,7 +169,7 @@ if numel(aca1)>1
      [ddd,cid]=getcorrangleglobal(tnn,acc12n);
     legend('all','ring1','ring2','cross-corr','cos fit')    
     ff='%2.2f';
-     txtshift=[', shift: ' num2str(ddd,ff) '° ± ' num2str((cid(2)-cid(1))/2,ff) '° (95% confidence)'];
+     txtshift=[', shift: ' num2str(ddd,ff) char(176) ' Â± ' num2str((cid(2)-cid(1))/2,ff) char(176) ' (95% confidence)'];
       plot([0 0],[ampmin ampm*1.1],'k')
 end
 ylim([ampmin ampm*1.1]);

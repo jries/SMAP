@@ -88,12 +88,14 @@ fitp=fitSome(fitfun,x(minfit:maxfit)',y(minfit:maxfit)',allpar,fitind,[0 0.01 0.
 
 
 %plot histogram
+dx=histogram.c(2)-histogram.c(1);
 binning=par.bin;
 hold(axhist,'off')
-plothist(axhist,histogram.c,histogram.h, binning, @stairs,'b');
+plothist(axhist,histogram.c,histogram.h, binning, @bar,'b');
+% plothist(axhist,histogram.c,histogram.h, binning, @stairs,'b');
 hold(axhist,'on')
-plothist(axhist,histogram.c,histforfit(fitp,histogram.c',addpar), binning,[], 'r');
-plothist(axhist,histogram.c,histforfit(allpar,histogram.c',addpar), binning, [], 'k--');
+plothist(axhist,histogram.c,histforfit(fitp,histogram.c',addpar)*dx, binning,[], 'r');
+plothist(axhist,histogram.c,histforfit(allpar,histogram.c',addpar)*dx, binning, [], 'k--');
 
 hold(axwhist,'off')
 plothist(axwhist,histogram.c,sqrt(histogram.h), binning, @stairs,'b');
