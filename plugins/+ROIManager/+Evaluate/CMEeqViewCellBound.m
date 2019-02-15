@@ -9,7 +9,7 @@ classdef CMEeqViewCellBound<interfaces.SEEvaluationProcessor
         function out=run(obj,p)
             out = runCMEeqViewCellBound(obj,p);
         end
-        function pard=guidef
+        function pard=guidef(obj);
             pard=guidef;
         end
     end
