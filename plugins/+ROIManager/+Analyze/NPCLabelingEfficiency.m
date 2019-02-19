@@ -213,7 +213,7 @@ axsize=obj.initaxis('size');
 plotSElink(radius,numlocs,siteid,se,'o')
 xlabel('radius (nm)')
 ylabel('number of localizations')
-
+results(3).assigned=0;
 if gtexist %not from simulation
 ax6=obj.initaxis('GT filtered');
 %     p.ploton=false;
@@ -270,6 +270,7 @@ if p.filecheck
     results(1).file=(p.filenumbers(1));
     results(2).file=(p.filenumbers(end));
     results(3).file=0;
+
 end
 
 axp=ax0.Parent;
@@ -333,6 +334,7 @@ end
 filen=se.files(filefile).name;
 %filename   LE  LEerrbs     numberofnpcs    locspernpcmean  locspernpcfit
    clipboard('copy',[filen sprintf(['\t' num2str(pf) '\t' num2str(berr_assigned) '\t' num2str(sum(indgood)) '\t' num2str(mean(numlocs)) '\t' num2str(fp.b1) ])])
+   display(sprintf('filename  \t LE \t LEerrbs \t  numberofnpcs \t locspernpcmean \t locspernpcfit'))
 end
 
 

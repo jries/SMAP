@@ -246,7 +246,7 @@ for k=numberofsites:-1:1
     locs(k).dx_gt=dx*ones(size(locsh.x));
     locs(k).dy_gt=dy*ones(size(locsh.x));
     locs(k).dz_gt=dz*ones(size(locsh.x));
-    
+    locs(k).site=k*ones(size(locsh.x));
     possites(k).x=xh*distsites;
     possites(k).y=yh*distsites;
     parameters(k)=phere;
@@ -413,6 +413,7 @@ function locs=locsfromposi(locsi,p)
     locs.angle=single(locsi.angle(indin));
     locs.frame=single(locsi.frame(indin));
     locs.channel=single(locsi.channel(indin));  %added
+    locs.site=single(locsi.site(indin)); 
 end
 
 

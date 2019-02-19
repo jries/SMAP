@@ -9,18 +9,20 @@ function [l,p]=MakeNPCCoordinates
 % end
 % [l.x,l.y]=pol2cart(thetaa,radius);
 % l.channel=ones(size(l.x));
+zwobble=0;
+rwobble=0;
 
 ring_angle=13; %deg %Nup107
 ring_angle=20; 
 % ring_angle=8; %deg %Nup96
 pair_angle=12;
-dz=60+randn*10;
+dz=60+randn*zwobble;
 corners=8;
 
 r(1)=50;
 r(2)=54;
 r(4)=r(1);r(3)=r(2);
-r=r+randn*3;
+r=r+randn*rwobble;
 a(1)=0;
 a(3)=a(1)+pair_angle;
 a(2)=a(1)+ring_angle;

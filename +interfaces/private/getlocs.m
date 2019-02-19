@@ -235,7 +235,10 @@ else
 end
 
 indcombined=indfilter&indpos&indwithin;
-% indf=find(indcombined);
+indf=find(indcombined);
+if numel(indf)/numel(indcombined)>0.05
+    indf=indcombined;
+end
 
 if isempty(p.fields)||any(strcmpi(p.fields,'all'))
     p.fields=fieldnames(locs);
@@ -247,7 +250,7 @@ end
          vh=addshift(locs.(field),field,p.shiftxy);
          
 %          vh3=vh(indf);
-         vh2=vh(indcombined);
+         vh2=vh(indf);
         locsout.(field)=vh2;
      elseif strcmp(p.fields{k},'ingrouped')
             locsout.(p.fields{k})=getindices(locData,indcombined,1);
