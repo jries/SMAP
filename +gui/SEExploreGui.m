@@ -65,10 +65,11 @@ classdef SEExploreGui<interfaces.SEProcessor
              obj.hlines.rotationpos=[];
              obj.hlines.line1=[];
              obj.hlines.line2=[];
+             obj.hlines.line3=[];
              obj.hlines.sidemarker.rotationpos=[];
              obj.hlines.sidemarker.line1=[];
              obj.hlines.sidemarker.line2=[];
-             
+             obj.hlines.sidemarker.roi=[];
 
              
              
@@ -529,6 +530,13 @@ end
 if obj.SE.currentsite.annotation.line2.length>0
 obj.lineannotation(2)
 end
+
+%roi
+if isfield(obj.SE.currentsite.annotation,'line3') && numel(obj.SE.currentsite.annotation.line3.pos)>0
+obj.lineannotation(3)
+end
+
+
 %plot info
 %update annotations
 obj.SE.processors.annotation.sitechange(obj.SE.currentsite);
@@ -685,8 +693,15 @@ switch posfield
         color='c';
     case 'line2'
         color='m';
+    case 'line3'
+        color='y';
     otherwise
         color='b';
+end
+roistyle='none';
+if ischar(anglehandle)
+    roistyle=anglehandle;
+    anglehandle=[];
 end
 if nargin<3||isempty(anglehandle)
     anglehandle=[];
@@ -694,28 +709,66 @@ end
 hax=obj.guihandles.siteax;
 alphaimage=obj.SE.currentsite.image.angle;
 site=obj.SE.currentsite;
-pos=site.annotation.(posfield).pos;
-% posfield
-% site.annotation.(posfield)
-if isa(obj.hlines.(posfield),'imline')
-    delete(obj.hlines.(posfield))
-end
-if sum(pos(:).^2)==0
-    obj.hlines.(posfield)=imline(hax);
-%         obj.hlines.(posfield).wait
-    posin=obj.hlines.(posfield).getPosition;
-    roipositon(posin,obj,posfield,anglehandle,hax);
+
+
+if strcmp(posfield,'line3') %roi
+    switch roistyle
+        case 'rectangle'
+            roifun=@drawrectangle;
+        case 'ellipse'
+            roifun=@drawellipse;
+        case 'polygon'
+            roifun=@drawpolygon;
+        case 'free'
+            roifun=@drawfreehand;
+        case 'polyline'
+            roifun=@drawpolyline;   
+        case 'none'
+            roifun=site.annotation.(posfield).roifun;
+    end
+    if contains(class(obj.hlines.(posfield)),'images.roi')
+        delete(obj.hlines.(posfield))
+    end
+    if isfield(site.annotation,posfield)&&~isempty(site.annotation.(posfield).pos)
+        try
+            hroi=roifun(hax,'Position',site.annotation.(posfield).pos,'Color','y');
+        catch err
+            hroi=roifun(hax,'Color','y');
+        end
+    else
+        hroi=roifun(hax,'Color','y');
+    end
+    obj.hlines.(posfield)=hroi;
+    site.annotation.(posfield).pos=hroi.Position;
+    site.annotation.(posfield).roifun=roifun;
+    addlistener(hroi,'MovingROI',@(src,event) updateroiposition(src,event,site,posfield));
 else
-%     alphaimage
-    posr=rotatepos(pos,site.pos/1000,alphaimage);
-%      posr(2)
-    obj.hlines.(posfield)=imline(hax,posr);
-    roipositon(posr,obj,posfield,anglehandle,hax);
+    pos=site.annotation.(posfield).pos;
+    % posfield
+    % site.annotation.(posfield)
+    if isa(obj.hlines.(posfield),'imline')
+        delete(obj.hlines.(posfield))
+    end
+    if sum(pos(:).^2)==0
+        obj.hlines.(posfield)=imline(hax);
+    %         obj.hlines.(posfield).wait
+        posin=obj.hlines.(posfield).getPosition;
+        roipositon(posin,obj,posfield,anglehandle,hax);
+    else
+    %     alphaimage
+        posr=rotatepos(pos,site.pos/1000,alphaimage);
+    %      posr(2)
+        obj.hlines.(posfield)=imline(hax,posr);
+        roipositon(posr,obj,posfield,anglehandle,hax);
 
+    end
+    obj.hlines.(posfield).setColor(color);
+
+    addNewPositionCallback( obj.hlines.(posfield),@(pos) roipositon(pos,obj,posfield,anglehandle,hax));
 end
-obj.hlines.(posfield).setColor(color);
-
-addNewPositionCallback( obj.hlines.(posfield),@(pos) roipositon(pos,obj,posfield,anglehandle,hax));
+end
+function updateroiposition(src,event,site,posfield)
+site.annotation.(posfield).pos=src.Position;
 end
 
 function anglebutton_callback(data,b,obj)

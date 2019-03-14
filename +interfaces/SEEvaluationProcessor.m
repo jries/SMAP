@@ -72,11 +72,15 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             site.evaluation.(obj.name).GuiParameters=gp; 
         end
         
+        function [locsout,indloc]=getlocs(obj,varargin) 
+            [locsout,indloc]=obj.getLocs(varargin);
+        end
         function [locsout,indloc]=getLocs(obj,varargin) 
             %uses locData.getloc
             %size: size of ROI. Otherwise it takes the whole FoV, not ROI
             %(from image rangex, rangey)
             %if one value: circular. vector: in x and y: rectangualr roi
+            
             fields=varargin{1};
             fields={fields{:} ,'xnm','ynm','filenumber'};
             parameters=varargin(2:end);
