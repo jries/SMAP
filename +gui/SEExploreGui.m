@@ -724,7 +724,11 @@ if strcmp(posfield,'line3') %roi
         case 'polyline'
             roifun=@drawpolyline;   
         case 'none'
+            if isfield(site.annotation.(posfield),'roifun')
             roifun=site.annotation.(posfield).roifun;
+            else
+                return
+            end
     end
     if contains(class(obj.hlines.(posfield)),'images.roi')
         delete(obj.hlines.(posfield))
