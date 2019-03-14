@@ -56,7 +56,10 @@ classdef SEExploreGui<interfaces.SEProcessor
              
              h.revealsmap=uicontrol(obj.handle,'Position',[30,600,30,30],'Style','pushbutton','String','<-','Units','normalized','FontSize',fontsize,'Callback',{@revealsmap_callback,obj});
              h.revealsmap.TooltipString='reaveal current site in SMAP';
-            
+             
+             c=uicontextmenu;
+             h.sitelist.UIContextMenu=c;
+             m1=uimenu(c,'Label','duplicate','Callback',@obj.sitelistmenu);
              obj.guihandles=h;
              obj.updateFilelist;
              obj.hlines.rotationpos=[];
@@ -66,13 +69,24 @@ classdef SEExploreGui<interfaces.SEProcessor
              obj.hlines.sidemarker.line1=[];
              obj.hlines.sidemarker.line2=[];
              
+
              
              
              obj.handle.WindowKeyPressFcn={@keypress,obj,0};
              obj.addSynchronization('filelist_long',[],[],@obj.updateFilelist);
             obj.addSynchronization('currentsite',[],[],@obj.updatesite);
         end
- 
+        function sitelistmenu(obj,a,b)
+            switch a.Text
+                case 'duplicate'
+                    siten=obj.guihandles.sitelist.Value;
+                    sitenew=obj.SE.sites(siten).copy;
+                    sitenew.ID=max([obj.SE.sites(:).ID])+1;
+                    sitelistnew=[obj.SE.sites(1:siten) sitenew obj.SE.sites(siten+1:end) ];
+                    obj.SE.sites=sitelistnew;
+                    redraw_sitelist(obj);
+            end
+        end
         function updatesite(obj,varargin)
             if nargin>1
                 currentsiteid=varargin{1};
