@@ -69,8 +69,9 @@ p=readstruct(gfile,{},true);
     end
 end 
 
-
-
+help=uimenu(handle,'Label','Help');
+h.helpsmap=uimenu(help,'Label','Manual SMAP','Callback',{@helpsmap_callback,obj});
+h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpnpc_callback,obj});
 end
 
 % function changeglobalGuiState(state)
@@ -226,4 +227,18 @@ imout=img.CData;
 title=['Figure ' num2str(f.Number)];
 openstackinfiji(obj,imout,title)
 
+end
+
+function helpsmap_callback(a,b,obj)
+txt=fileread('Documentation/Manual/SMAPStep-by-StepGuide.md');
+f=figure;
+h=MarkdownPanel('Parent',f);
+h.Content=txt;
+pause(1)
+h.refresh;
+
+end
+
+function helpnpc_callback(a,b,obj)
+open('/Users/ries/Desktop/SMAP_manual_190314.pdf');
 end
