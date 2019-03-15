@@ -82,7 +82,8 @@ classdef SEExploreGui<interfaces.SEProcessor
                 case 'duplicate'
                     siten=obj.guihandles.sitelist.Value;
                     sitenew=obj.SE.sites(siten).copy;
-                    sitenew.ID=max([obj.SE.sites(:).ID])+1;
+                    sitenew.info.originalsite=sitenew.ID;
+                    sitenew.ID=max([obj.SE.sites(:).ID])+1;            
                     sitelistnew=[obj.SE.sites(1:siten) sitenew obj.SE.sites(siten+1:end) ];
                     obj.SE.sites=sitelistnew;
                     redraw_sitelist(obj);
