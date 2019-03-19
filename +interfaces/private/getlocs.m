@@ -14,7 +14,7 @@ function [locsout,indcombined,hroio]=getlocs(locData,fields,varargin)
 %'position': 'all' (default),'roi','fov': position filter
 %'position': vector: [centerx, centery, widhtx widthy] or [centerx,
 %centery,radius] for circular ROI
-%   'interfaces.SEsites: locaizations in site.
+%   'interfaces.SEsites: localizations in site.
 %'layer': double number or vector of layers.
 
 %'removeFilter': cell array of filter names to remove 

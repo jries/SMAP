@@ -56,23 +56,39 @@ classdef SEExploreGui<interfaces.SEProcessor
              
              h.revealsmap=uicontrol(obj.handle,'Position',[30,600,30,30],'Style','pushbutton','String','<-','Units','normalized','FontSize',fontsize,'Callback',{@revealsmap_callback,obj});
              h.revealsmap.TooltipString='reaveal current site in SMAP';
-            
+             
+             c=uicontextmenu;
+             h.sitelist.UIContextMenu=c;
+             m1=uimenu(c,'Label','duplicate','Callback',@obj.sitelistmenu);
              obj.guihandles=h;
              obj.updateFilelist;
              obj.hlines.rotationpos=[];
              obj.hlines.line1=[];
              obj.hlines.line2=[];
+             obj.hlines.line3=[];
              obj.hlines.sidemarker.rotationpos=[];
              obj.hlines.sidemarker.line1=[];
              obj.hlines.sidemarker.line2=[];
-             
+             obj.hlines.sidemarker.roi=[];
+
              
              
              obj.handle.WindowKeyPressFcn={@keypress,obj,0};
              obj.addSynchronization('filelist_long',[],[],@obj.updateFilelist);
             obj.addSynchronization('currentsite',[],[],@obj.updatesite);
         end
- 
+        function sitelistmenu(obj,a,b)
+            switch a.Text
+                case 'duplicate'
+                    siten=obj.guihandles.sitelist.Value;
+                    sitenew=obj.SE.sites(siten).copy;
+                    sitenew.info.originalsite=sitenew.ID;
+                    sitenew.ID=max([obj.SE.sites(:).ID])+1;            
+                    sitelistnew=[obj.SE.sites(1:siten) sitenew obj.SE.sites(siten+1:end) ];
+                    obj.SE.sites=sitelistnew;
+                    redraw_sitelist(obj);
+            end
+        end
         function updatesite(obj,varargin)
             if nargin>1
                 currentsiteid=varargin{1};
@@ -515,6 +531,13 @@ end
 if obj.SE.currentsite.annotation.line2.length>0
 obj.lineannotation(2)
 end
+
+%roi
+if isfield(obj.SE.currentsite.annotation,'line3') && numel(obj.SE.currentsite.annotation.line3.pos)>0
+obj.lineannotation(3)
+end
+
+
 %plot info
 %update annotations
 obj.SE.processors.annotation.sitechange(obj.SE.currentsite);
@@ -671,8 +694,15 @@ switch posfield
         color='c';
     case 'line2'
         color='m';
+    case 'line3'
+        color='y';
     otherwise
         color='b';
+end
+roistyle='none';
+if ischar(anglehandle)
+    roistyle=anglehandle;
+    anglehandle=[];
 end
 if nargin<3||isempty(anglehandle)
     anglehandle=[];
@@ -680,28 +710,70 @@ end
 hax=obj.guihandles.siteax;
 alphaimage=obj.SE.currentsite.image.angle;
 site=obj.SE.currentsite;
-pos=site.annotation.(posfield).pos;
-% posfield
-% site.annotation.(posfield)
-if isa(obj.hlines.(posfield),'imline')
-    delete(obj.hlines.(posfield))
-end
-if sum(pos(:).^2)==0
-    obj.hlines.(posfield)=imline(hax);
-%         obj.hlines.(posfield).wait
-    posin=obj.hlines.(posfield).getPosition;
-    roipositon(posin,obj,posfield,anglehandle,hax);
+
+
+if strcmp(posfield,'line3') %roi
+    switch roistyle
+        case 'rectangle'
+            roifun=@drawrectangle;
+        case 'ellipse'
+            roifun=@drawellipse;
+        case 'polygon'
+            roifun=@drawpolygon;
+        case 'free'
+            roifun=@drawfreehand;
+        case 'polyline'
+            roifun=@drawpolyline;   
+        case 'none'
+            if isfield(site.annotation.(posfield),'roifun')
+            roifun=site.annotation.(posfield).roifun;
+            else
+                return
+            end
+    end
+    if contains(class(obj.hlines.(posfield)),'images.roi')
+        delete(obj.hlines.(posfield))
+    end
+    if isfield(site.annotation,posfield)&&~isempty(site.annotation.(posfield).pos)
+        try
+            hroi=roifun(hax,'Position',site.annotation.(posfield).pos,'Color','y');
+        catch err
+            hroi=roifun(hax,'Color','y');
+        end
+    else
+        hroi=roifun(hax,'Color','y');
+    end
+    obj.hlines.(posfield)=hroi;
+    site.annotation.(posfield).pos=hroi.Position;
+    site.annotation.(posfield).roifun=roifun;
+    addlistener(hroi,'MovingROI',@(src,event) updateroiposition(src,event,site,posfield));
 else
-%     alphaimage
-    posr=rotatepos(pos,site.pos/1000,alphaimage);
-%      posr(2)
-    obj.hlines.(posfield)=imline(hax,posr);
-    roipositon(posr,obj,posfield,anglehandle,hax);
+    pos=site.annotation.(posfield).pos;
+    % posfield
+    % site.annotation.(posfield)
+    if isa(obj.hlines.(posfield),'imline')
+        delete(obj.hlines.(posfield))
+    end
+    if sum(pos(:).^2)==0
+        obj.hlines.(posfield)=imline(hax);
+    %         obj.hlines.(posfield).wait
+        posin=obj.hlines.(posfield).getPosition;
+        roipositon(posin,obj,posfield,anglehandle,hax);
+    else
+    %     alphaimage
+        posr=rotatepos(pos,site.pos/1000,alphaimage);
+    %      posr(2)
+        obj.hlines.(posfield)=imline(hax,posr);
+        roipositon(posr,obj,posfield,anglehandle,hax);
 
+    end
+    obj.hlines.(posfield).setColor(color);
+
+    addNewPositionCallback( obj.hlines.(posfield),@(pos) roipositon(pos,obj,posfield,anglehandle,hax));
 end
-obj.hlines.(posfield).setColor(color);
-
-addNewPositionCallback( obj.hlines.(posfield),@(pos) roipositon(pos,obj,posfield,anglehandle,hax));
+end
+function updateroiposition(src,event,site,posfield)
+site.annotation.(posfield).pos=src.Position;
 end
 
 function anglebutton_callback(data,b,obj)

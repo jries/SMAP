@@ -27,12 +27,12 @@ Installation
     a.  Use Terminal (MacOS) or Cmd (Win). Use cd to navigate to the
         target directory. (e.g. cd git)
 
-    b.  Type: `git clone` <https://github.com/jries/SMAP-light> and type
+    b.  Type: `git clone` <https://github.com/jries/SMAP> and type
         in your username and password for your git account.
 
     c.  Install the 3D fitter by typing
 
-> `git clone` https://github.com/jries/fit3Dcspline-light
+> `git clone` https://github.com/jries/fit3Dcspline
 
 2.  Install Micromanager 1.4.22 from https://micro-manager.org
 
@@ -399,7 +399,7 @@ Manually generating a list of ROIs
 9.  You can rotate a ROI by pressing **Angle** and drawing a line. The
     ROI is rotated so that the line is horizontal.
 
-Annotate ROis manually
+Annotate ROIs manually
 ----------------------
 
 1.  In the tab **ROIs/Annotation** ROIs can be manually annotated. There
