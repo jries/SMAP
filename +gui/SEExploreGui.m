@@ -533,8 +533,8 @@ obj.lineannotation(2)
 end
 
 %roi
-if isfield(obj.SE.currentsite.annotation,'line3') && numel(obj.SE.currentsite.annotation.line3.pos)>0
-obj.lineannotation(3)
+if isfield(obj.SE.currentsite.annotation,'line3') && isfield(obj.SE.currentsite.annotation.line3, 'pos') && numel(obj.SE.currentsite.annotation.line3.pos)>0
+    obj.lineannotation(3)
 end
 
 
