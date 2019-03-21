@@ -734,7 +734,7 @@ if strcmp(posfield,'line3') %roi
     if contains(class(obj.hlines.(posfield)),'images.roi')
         delete(obj.hlines.(posfield))
     end
-    if isfield(site.annotation,posfield)&&~isempty(site.annotation.(posfield).pos)
+    if isfield(site.annotation,posfield)&&isfield(site.annotation.(posfield),'pos')&&~isempty(site.annotation.(posfield).pos)
         try
             hroi=roifun(hax,'Position',site.annotation.(posfield).pos,'Color','y');
         catch err
