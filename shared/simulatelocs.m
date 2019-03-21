@@ -386,7 +386,7 @@ function locs=locsfromposi(locsi,p)
     
     a=100;
     PSF=100;
-    zfactor=1;
+    zfactor=3;
 %     sa=PSF+a/12;
     phot(phot<10)=10;
     indin=phot>=10;
