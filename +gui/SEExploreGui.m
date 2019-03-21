@@ -747,6 +747,7 @@ if strcmp(posfield,'line3') %roi
     site.annotation.(posfield).pos=hroi.Position;
     site.annotation.(posfield).roifun=roifun;
     addlistener(hroi,'MovingROI',@(src,event) updateroiposition(src,event,site,posfield));
+    addlistener(hroi,'DeletingROI',@(src,event) deleteroi(src,event,site,posfield));
 else
     pos=site.annotation.(posfield).pos;
     % posfield
@@ -774,6 +775,9 @@ end
 end
 function updateroiposition(src,event,site,posfield)
 site.annotation.(posfield).pos=src.Position;
+end
+function deleteroi(src,event,site,posfield)
+site.annotation.(posfield).pos=[];
 end
 
 function anglebutton_callback(data,b,obj)
