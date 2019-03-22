@@ -284,7 +284,7 @@ out=[];
 
 if p.copy2page
     sm=2;
-    sn=3;
+    sn=2;
     f=figure;
     f.Renderer='painters';
     ht2=ht.copy;
@@ -306,7 +306,7 @@ if p.copy2page
 %     subplot(sm,sn,8,axt)
         axt=ax3.copy;
     axt.Parent=f;
-    subplot(sm,sn,4,axt)
+    subplot(sm,sn,2,axt)
 %     
 %     axttime=axtt.copy;
 %     axttime.Parent=f;
@@ -314,17 +314,17 @@ if p.copy2page
     
     axt=axle.copy;
     axt.Parent=f;
-    subplot(sm,sn,5,axt)   
+    subplot(sm,sn,4,axt)   
 
     if exist('ax6','var')
         axt=ax6.copy;
     axt.Parent=f;
-    subplot(sm,sn,11,axt) 
+    subplot(sm,sn,5,axt) 
     end
     if exist('ax6b','var')
         axt=ax6b.copy;
     axt.Parent=f;
-    subplot(sm,sn,12,axt) 
+    subplot(sm,sn,6,axt) 
 
     end
     fn=se.files(p.filenumbers(1)).name;
