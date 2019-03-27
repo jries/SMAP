@@ -25,7 +25,7 @@ global rank lte rout
 % p.bootstrap=1;
 se=obj.SE;
 quantifyevaluator='NPCLabelingQuantify_s';
-% quantifyevaluator='NPCLabelingQuantify';
+%quantifyevaluator='NPCLabelingQuantify';
 fields={'evaluation',quantifyevaluator};
 fields2={'evaluation','generalStatistics'};
 
