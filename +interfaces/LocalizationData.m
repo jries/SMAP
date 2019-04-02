@@ -406,7 +406,23 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                 saveloc=copyfields(saveloc,additionalsave);
             end
             if ~isempty(obj.SE)
-                saveloc.siteexplorer=obj.SE.save;
+                if nargin>6 && ~isempty(filenumber)%filenumber
+                    SEtemp = obj.SE.copy;
+                    siteFilenumber = getFieldAsVector(SEtemp.sites,'info.filenumber');
+                    lsiteFilenumber = siteFilenumber == filenumber;
+                    SEtemp.sites = SEtemp.sites(lsiteFilenumber);
+                    
+                    cellFilenumber = getFieldAsVector(SEtemp.cells,'info.filenumber');
+                    lcellFilenumber = cellFilenumber == filenumber;
+                    SEtemp.cells = SEtemp.cells(lcellFilenumber);
+                    
+                    allFilenumber = getFieldAsVector(SEtemp.files,'ID');
+                    loneFilenumber = allFilenumber == filenumber;
+                    SEtemp.files = SEtemp.files(loneFilenumber);
+                    saveloc.siteexplorer=SEtemp.save;
+                else
+                    saveloc.siteexplorer=obj.SE.save;
+                end
             end
             saveloc=concentratefilelist(saveloc);
             try

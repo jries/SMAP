@@ -68,7 +68,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                     M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr)=M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr)-Mi(:,:,ih);
                     roiM=M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr);
                     startpar=coord(ih,:);
-                    [coordf,crlb(ih,:), LL(ih), iterations(ih)]=fitsingleMD(roiim,roiM,startpar,obj.splinePSF.modelpar,p.iterationsf);
+                    [coordf,crlb(ih,:), LL(ih), iterations(ih)]=fitsingleMD(roiim,roiM,startpar,obj.splinePSF.modelpar,p.iterationsf,p.useSEfitter);
                     coord(ih,:)=coordf;
 %                     bg=coordf(5);
                     coordf(5)=0; %take out fitted bg
@@ -85,17 +85,21 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                  subplot(2,2,2)
                  imagesc(M-image); colorbar
                  subplot(2,2,1)
+                 figure(90)
                  hold off
                  imagesc(image);
                  hold on
-                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'kx',maxima.x,maxima.y,'md')
+                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'ro');%,maxima.x,maxima.y,'md')
                 gt=obj.getPar('loc_gt_preview');
                 if ~isempty(gt)
-                    plot(gt.x,gt.y,'ko')
-                    subplot(2,2,3)
-                    plot(gt.x,gt.z,'ko',coord(:,1)+pos.x,coord(:,3),'kx')
-                    xlim([0,size(image,2)])
+                    plot(gt.x,gt.y,'k+')
+%                     subplot(2,2,3)
+%                     plot(gt.x,gt.z,'k+',coord(:,1)+pos.x,coord(:,3),'ro')
+%                     xlim([0,size(image,2)])
                 end
+                axis('equal')
+                colormap gray
+                figure(87)
                 subplot(2,2,4)
                 plot(coord(:,1)+pos.x,-LL/((2*dr+1)^2),'ko',coord(:,1)+pos.x,chi2,'x')
                 xlim([0,size(image,2)])
@@ -127,15 +131,19 @@ locout.frame=zeros(size(locout.xpix))+frame;
 locout.chi2=single(chi2);
 
 end
-function [coord,crlb, LogL, iterations]=fitsingleMD(roiim,roiM,startpar,spline,iterf)
+function [coord,crlb, LogL, iterations]=fitsingleMD(roiim,roiM,startpar,spline,iterf,useSEfitter)
 dr=round((size(roiim,1)-1)/2);
 
 %    cor(:,3)=-locs(:,3)/obj.modelpar.dz+obj.modelpar.z0;
 initp(3:4)=startpar(4:5);
 initp(5)=-startpar(3)/spline.dz+spline.z0;
 initp(1:2)=startpar([2 1])+dr;
+if useSEfitter
+    [P,CRLB,LogL]=mleFit_LM(roiim,5,50,spline.coeff);
+else
  [P,CRLB,LogL]=mleFit_LM_HD_SE(roiim,iterf,spline.coeff,roiM,initp);
-%   [P,CRLB,LogL]=mleFit_LM(roiim,5,50,spline.coeff);
+end
+%   
  coord(4:5)=P(3:4);
 coord(1:2)=P([2 1])-dr;
 coord(3)=-(P(5)-spline.z0)*spline.dz;
@@ -199,6 +207,10 @@ pard.iterationsft.Width=1;
 pard.iterationsf.object=struct('Style','edit','String','30');
 pard.iterationsf.position=[4,2];
 pard.iterationsf.Width=0.5;
+
+pard.useSEfitter.object=struct('Style','checkbox','String','use SE fitter','Value',0);
+pard.useSEfitter.position=[5,1];
+pard.useSEfitter.Width=1;
 
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 

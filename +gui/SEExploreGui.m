@@ -533,8 +533,8 @@ obj.lineannotation(2)
 end
 
 %roi
-if isfield(obj.SE.currentsite.annotation,'line3') && numel(obj.SE.currentsite.annotation.line3.pos)>0
-obj.lineannotation(3)
+if isfield(obj.SE.currentsite.annotation,'line3') && isfield(obj.SE.currentsite.annotation.line3, 'pos') && numel(obj.SE.currentsite.annotation.line3.pos)>0
+    obj.lineannotation(3)
 end
 
 
@@ -734,7 +734,7 @@ if strcmp(posfield,'line3') %roi
     if contains(class(obj.hlines.(posfield)),'images.roi')
         delete(obj.hlines.(posfield))
     end
-    if isfield(site.annotation,posfield)&&~isempty(site.annotation.(posfield).pos)
+    if isfield(site.annotation,posfield)&&isfield(site.annotation.(posfield),'pos')&&~isempty(site.annotation.(posfield).pos)
         try
             hroi=roifun(hax,'Position',site.annotation.(posfield).pos,'Color','y');
         catch err
@@ -747,6 +747,7 @@ if strcmp(posfield,'line3') %roi
     site.annotation.(posfield).pos=hroi.Position;
     site.annotation.(posfield).roifun=roifun;
     addlistener(hroi,'MovingROI',@(src,event) updateroiposition(src,event,site,posfield));
+    addlistener(hroi,'DeletingROI',@(src,event) deleteroi(src,event,site,posfield));
 else
     pos=site.annotation.(posfield).pos;
     % posfield
@@ -774,6 +775,9 @@ end
 end
 function updateroiposition(src,event,site,posfield)
 site.annotation.(posfield).pos=src.Position;
+end
+function deleteroi(src,event,site,posfield)
+site.annotation.(posfield).pos=[];
 end
 
 function anglebutton_callback(data,b,obj)

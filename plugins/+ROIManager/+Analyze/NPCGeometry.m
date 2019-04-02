@@ -171,6 +171,8 @@ if numel(aca1)>1
     ff='%2.2f';
      txtshift=[', shift: ' num2str(ddd,ff) char(176) ' ± ' num2str((cid(2)-cid(1))/2,ff) char(176) ' (95% confidence)'];
       plot([0 0],[ampmin ampm*1.1],'k')
+else 
+    ddd=[];cid=[0 0];
 end
 ylim([ampmin ampm*1.1]);
 xlim([tnn(1) tnn(end)])
