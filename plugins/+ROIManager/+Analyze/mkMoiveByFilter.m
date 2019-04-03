@@ -29,22 +29,22 @@ classdef mkMoiveByFilter<interfaces.DialogProcessor&interfaces.SEProcessor
                 lowB = lowB+p.stepSize;
             end
             
-            %% export the vedio
+            %% export the video
             if ~p.saveFrames%% preview
                 m = immovie(framesOfMovie);
                 if p.preview
                     implay(m,p.frameRate) % will initiate a pop-up asking the user saving or not
                 end
-                myVideo = VideoWriter([p.folderPath '\' p.videoPath]);
+                myVideo = VideoWriter([p.folderPath filesep p.videoPath]);
                 myVideo.FrameRate = p.frameRate;  % Default 30
                 myVideo.Quality = 100;    % Default 75
                 open(myVideo);
                 writeVideo(myVideo, m);
                 close(myVideo);
             else
-                mkdir([p.folderPath '\' p.videoPath]);
+                mkdir([p.folderPath filesep p.videoPath]);
                 for k = 1:size(framesOfMovie,4)
-                    imwrite(framesOfMovie(:,:,:,k), [p.folderPath '\' p.videoPath '\' p.videoPath '_' num2str(k) '.tif']);
+                    imwrite(framesOfMovie(:,:,:,k), [p.folderPath filesep p.videoPath filesep p.videoPath '_' num2str(k) '.tif']);
                 end
             end
             out=[];
