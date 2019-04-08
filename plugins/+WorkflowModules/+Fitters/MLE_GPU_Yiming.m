@@ -46,17 +46,19 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
                             pzernike=spline{X,Y}.zernikefit;
                             
                             pzernike.dz=p.dzZ;
+                            
                             pzernike.zmax=p.zmaxZ; 
-                            obj.zernike{X,Y}.coeff=vectorPSF2cspline(p.zobjective,pzernike);
+                            obj.zernike{X,Y}=vectorPSF2cspline(p.zobjective,pzernike);
                             obj.zernike{X,Y}.global=spline{X,Y}.cspline.global;
                             obj.zernike{X,Y}.mirror=spline{X,Y}.cspline.mirror;
                         end
                         %also define dz, z0, x0, global , mirror 
                     end
+                    obj.fitpar.dz=p.dzZ;
                     %update pixel size from calibration file
-                    obj.setPar('overwrite_pixelsize',[pzernike.pixelSizeX pzernike.pixelSizeY])
+                    obj.setPar('overwrite_pixelsize',[pzernike.pixelSizeX pzernike.pixelSizeY]/1000)
                     cs=obj.getPar('loc_cameraSettings');
-                    cs.cam_pixelsize_um=[pzernike.pixelSizeX pzernike.pixelSizeY];
+                    cs.cam_pixelsize_um=[pzernike.pixelSizeX pzernike.pixelSizeY]/1000;
                     obj.setPar('loc_cameraSettings',cs);
             end
             obj.setPar('loc_iterations',p.iterations);
@@ -66,12 +68,14 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
         end
 
         function locs=fit(obj,imstack,stackinfo)
-            if obj.fitpar.fitmode==3
-                X=stackinfo.X;Y=stackinfo.Y;
-                obj.fitpar.zparhere=[obj.fitpar.zpar{X,Y}(:)];
-            elseif obj.fitpar.fitmode==5 || obj.fitpar.fitmode==6
-                X=stackinfo.X;Y=stackinfo.Y;
-                obj.fitpar.splinefithere=[obj.fitpar.splinefit{X,Y}(:)];
+            X=stackinfo.X;Y=stackinfo.Y;
+            switch obj.fitpar.fitmode
+                case 3
+                    obj.fitpar.zparhere=[obj.fitpar.zpar{X,Y}(:)];
+                case 5 
+                    obj.fitpar.splinefithere=[obj.fitpar.splinefit{X,Y}(:)];
+                case 6
+                    obj.fitpar.splinefithere.cspline=obj.zernike{X,Y};
             end
             if obj.fitpar.issCMOS
                 varstack=getvarmap(obj.fitpar.varmap,stackinfo,size(imstack,1));
@@ -187,8 +191,8 @@ switch fitpar.fitmode
         locs.PSFypix=P(:,6);
         locs.PSFyerr=sqrt(CRLB(:,6));  
     case {5,6}
-        locs.znm=-((P(:,5)-fitpar.z0)*fitpar.dz)*fitpar.refractive_index_mismatch;
-        locs.zerr=sqrt(CRLB(:,5))*fitpar.dz*fitpar.refractive_index_mismatch;
+        locs.znm=-((P(:,5)-fitpar.splinefithere.cspline.z0)*fitpar.splinefithere.cspline.dz)*fitpar.refractive_index_mismatch;
+        locs.zerr=sqrt(CRLB(:,5))*fitpar.splinefithere.cspline.dz*fitpar.refractive_index_mismatch;
          sx=1*v1;
         locs.PSFxpix=sx;
         locs.PSFypix=sx;
@@ -264,6 +268,14 @@ end
             arguments{4}=single(coeffh);
                     imfit=single(imstack/EMexcess);
             arguments{1}=imfit;
+%         case 6 %Zernike   
+%             coeffh=(obj.zer	);
+%             if iscell(coeffh)
+%                 coeffh=coeffh{1};
+%             end
+%             arguments{4}=single(coeffh);
+%                     imfit=single(imstack/EMexcess);
+%             arguments{1}=imfit;
     end
 
     [P CRLB LogL]=fitpar.fitfunction(arguments{:});
