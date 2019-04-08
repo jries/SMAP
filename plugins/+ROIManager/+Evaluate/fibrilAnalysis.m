@@ -64,6 +64,10 @@ function pard = guidef(obj)
     pard.redoProjection.object = struct('Style','checkbox','String','Re run','Value', 0);
     pard.redoProjection.position = [3 1];
     pard.redoProjection.Width = 1;
+    
+    pard.old.object = struct('Style','checkbox','String','Old version','Value', 0);
+    pard.old.position = [4 1];
+    pard.old.Width = 1;
 
     pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
     pard.plugininfo.type='ROI_Evaluate';
