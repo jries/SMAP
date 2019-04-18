@@ -82,7 +82,7 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             %if one value: circular. vector: in x and y: rectangualr roi
             %size: freeroi: defined roi, or if not defined then site_roi
             %(circular)
-            
+            p=roiparser(varargin); 
             fields=varargin{1};
             fields={fields{:} ,'xnm','ynm','filenumber'};
             parameters=varargin(2:end);
@@ -90,7 +90,7 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             if ~isempty(inds)
                 parameters(inds:inds+1)=[];
             end
-            p=roiparser(varargin); 
+            
                 sx=obj.site.image.rangex;
                 fovsize=(sx(2)-sx(1))*1000*[1,1];             
             if isempty(p.position) %no position specified, that is the usual case
