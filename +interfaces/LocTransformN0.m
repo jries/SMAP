@@ -195,7 +195,7 @@ classdef LocTransformN0<handle
             imout=transformImage(obj.transform2Target{channel},image,cam_pixnm,roi);
         end
 
-        function imout=transformImageToReference(obj,image,cam_pixnm,roi)
+        function imout=transformImageToReference(obj,channel,image,cam_pixnm,roi)
             imout=transformImage(obj.transform2Reference{channel},image,cam_pixnm,roi);
         end  
         
