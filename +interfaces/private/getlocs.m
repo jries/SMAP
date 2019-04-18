@@ -217,7 +217,7 @@ else
                 sr_size=p.position(3:4);
                 indpos=locs.xnm>pos(1)-sr_size(1) & locs.xnm<pos(1)+sr_size(1) & locs.ynm>pos(2)-sr_size(2) & locs.ynm<pos(2)+sr_size(2);
             else
-            
+                indpos=true(size(locs.xnm));
                 disp('getlocs: position description not valid')
             end
     end

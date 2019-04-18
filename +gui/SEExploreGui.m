@@ -80,10 +80,20 @@ classdef SEExploreGui<interfaces.SEProcessor
         function sitelistmenu(obj,a,b)
             switch a.Text
                 case 'duplicate'
+                    
                     siten=obj.guihandles.sitelist.Value;
                     sitenew=obj.SE.sites(siten).copy;
-                    sitenew.info.originalsite=sitenew.ID;
-                    sitenew.ID=max([obj.SE.sites(:).ID])+1;            
+                    if ~isfield(sitenew.info , 'connectedsites') %not initialized
+                        for k=1:length(obj.SE.sites)
+                            if ~isfield(obj.SE.sites(k).info , 'connectedsites')
+                                obj.SE.sites(k).info.connectedsites=[];
+                            end
+                        end
+                    end
+                    
+                    sitenew.info.connectedsites=[sitenew.info.connectedsites sitenew.ID];
+                    sitenew.ID=max([obj.SE.sites(:).ID])+1; 
+                    obj.SE.sites(siten).info.connectedsites=[obj.SE.sites(siten).info.connectedsites sitenew.ID];
                     sitelistnew=[obj.SE.sites(1:siten) sitenew obj.SE.sites(siten+1:end) ];
                     obj.SE.sites=sitelistnew;
                     redraw_sitelist(obj);
@@ -717,7 +727,7 @@ if strcmp(posfield,'line3') %roi
         case 'rectangle'
             roifun=@drawrectangle;
         case 'ellipse'
-            roifun=@drawellipse;
+            roifun=@mydrawellipse;
         case 'polygon'
             roifun=@drawpolygon;
         case 'free'
@@ -744,7 +754,11 @@ if strcmp(posfield,'line3') %roi
         hroi=roifun(hax,'Color','y');
     end
     obj.hlines.(posfield)=hroi;
-    site.annotation.(posfield).pos=hroi.Position;
+    if isa(hroi,'images.roi.Ellipse')
+        site.annotation.(posfield).pos=[hroi.Center ,hroi.SemiAxes, hroi.RotationAngle];
+    else
+        site.annotation.(posfield).pos=hroi.Position;
+    end
     site.annotation.(posfield).roifun=roifun;
     addlistener(hroi,'MovingROI',@(src,event) updateroiposition(src,event,site,posfield));
     addlistener(hroi,'DeletingROI',@(src,event) deleteroi(src,event,site,posfield));
@@ -774,7 +788,11 @@ else
 end
 end
 function updateroiposition(src,event,site,posfield)
-site.annotation.(posfield).pos=src.Position;
+    if isa(src,'images.roi.Ellipse')
+        site.annotation.(posfield).pos=[src.Center,src.SemiAxes, src.RotationAngle];
+    else
+        site.annotation.(posfield).pos=src.Position;
+    end
 end
 function deleteroi(src,event,site,posfield)
 site.annotation.(posfield).pos=[];
@@ -879,4 +897,18 @@ function updatelist_callback(a,b,obj)
 redraw_sitelist(obj);
 redraw_celllist(obj);
 updateFilelist(obj);
+end
+
+function [hroi]=mydrawellipse(varargin)
+ind=find(strcmp(varargin,'Position'));
+if  ~isempty(ind)
+    varargin{end+1}='Center';
+    varargin{end+1}=varargin{ind+1}(1:2);
+    varargin{end+1}='SemiAxes';
+    varargin{end+1}=varargin{ind+1}(3:4);   
+    varargin{end+1}='RotationAngle';
+    varargin{end+1}=varargin{ind+1}(5);  
+    varargin{ind+1}=varargin{ind+1}(1:2);
+end
+hroi=drawellipse(varargin{:});
 end

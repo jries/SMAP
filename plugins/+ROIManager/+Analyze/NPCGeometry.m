@@ -238,12 +238,13 @@ function [d,cid,fitp]=getcorrangleglobal(ti,cci)
   ft=fittype('(b1+b2*x+b3*x.^2+b4*x.^3)+(a1+a2*x+a3*x.^2+a4*x.^3).*cos(2*pi*(x-d)/45)');
   [~,imcc]=max(cci);
   tm=ti(imcc);
-  sp=[(max(cc)-min(cc))/2,0,0,0, min(cc)+1,0,0,0,tm];
+  sp=[(quantile(cc,.9)-quantile(cc,.1))/2,0,0,0, 0,0,0,0,tm];
   lb=-inf*ones(size(sp));
   lb(1)=0;
   fitp=fit(t',cc',ft,'StartPoint',sp,'Lower',lb);
   t(round(length(t)/2))=nan;
   plot(t,fitp(t))
+%     plot(t,ft(sp(1),sp(2),sp(3),sp(4),sp(5),sp(6),sp(7),sp(8),sp(9),t))
   d=fitp.d;
   ci=confint(fitp);
   cid=ci(:,end);

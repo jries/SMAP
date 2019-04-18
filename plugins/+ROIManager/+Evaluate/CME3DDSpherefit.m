@@ -97,9 +97,10 @@ function out=runintern(obj,p)
 % obj.site.sePar.Settings
 % roisize=obj.site.sePar.Settings.siteroi/2;
 roisize=p.se_siteroi/2;
-locs=obj.getLocs({'xnm','ynm','znm'},'layer',1,'size',roisize);
-    locs2=obj.getLocs({'xnm','ynm','znm'},'layer',2,'size',roisize);
-
+locs=obj.getLocs({'xnm','ynm','znm'},'layer',1,'size','freeroi');
+locs2=obj.getLocs({'xnm','ynm','znm'},'layer',2,'size','freeroi');
+% locs=obj.getLocs({'xnm','ynm','znm'},'layer',1,'size',roisize);
+% locs2=obj.getLocs({'xnm','ynm','znm'},'layer',2,'size',roisize);
 
 lenbar=20;
 ranger=[0 roisize];
