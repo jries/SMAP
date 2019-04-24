@@ -229,7 +229,8 @@ classdef SEExploreGui<interfaces.SEProcessor
                 timerVal=tic;
                 end
                 sites(k).image=[];
-                obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
+                plotsite(obj,sites(k));
+%                 obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
                 obj.SE.processors.eval.evaluate(sites(k));
                 if ~obj.getPar('se_keeptempimages')
                 sites(k).image.composite=[];
