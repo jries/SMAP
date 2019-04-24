@@ -229,6 +229,7 @@ classdef SEExploreGui<interfaces.SEProcessor
                 timerVal=tic;
                 end
                 sites(k).image=[];
+                obj.SE.currentsite=sites(k);
                 plotsite(obj,sites(k));
 %                 obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
                 obj.SE.processors.eval.evaluate(sites(k));
@@ -241,7 +242,7 @@ classdef SEExploreGui<interfaces.SEProcessor
                     break
                 end
             end
-            obj.SE.currentsite=sites(k);
+            
         end
         obj.status('redrawall: completed')
         end
