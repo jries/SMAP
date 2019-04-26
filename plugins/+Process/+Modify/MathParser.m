@@ -10,10 +10,10 @@ classdef MathParser<interfaces.DialogProcessor
         function initGui(obj)
             if exist(obj.historyfile,'file')
                 obj.equationhistory=readtable(obj.historyfile,'Delimiter',',');
-                p=obj.getGuiParameters;
-                p.resultfieldh.String=obj.equationhistory.resultfield;
-                p.equationh.String=obj.equationhistory.equation;
-                obj.setGuiParameters(p);
+%                 p=obj.getGuiParameters;
+                obj.guihandles.resultfieldh.String=obj.equationhistory.resultfield;
+                obj.guihandles.equationh.String=obj.equationhistory.equation;
+%                 obj.setGuiParameters(p);
             else
                 tt=struct('resultfield',{{''}},'equation',{{''}});
                 obj.equationhistory=struct2table(tt);

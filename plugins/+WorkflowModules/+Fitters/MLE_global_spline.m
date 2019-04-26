@@ -359,6 +359,9 @@ if isempty(EMexcess)
 end
          
 dT=zeros(npar,2,(nfits));
+dT(1,1,:)=stackinfo.dy(1:numberOfChannels:end); %for nonrounding
+dT(2,1,:)=stackinfo.dx(1:numberOfChannels:end);
+
 dT(1,2,:)=stackinfo.dy(2:numberOfChannels:end);
 dT(2,2,:)=stackinfo.dx(2:numberOfChannels:end);
 
@@ -417,6 +420,22 @@ end
 
 [P CRLB LogL]=fitpar.fitfunction(arguments{:});
 
+
+%subtract dT for x, y
+if fitpar.link(1)
+    P(:,1)=P(:,1)+squeeze(dT(1,1,:));
+    ind2=1;
+else
+    P(:,1)=P(:,1)+squeeze(dT(1,1,:));
+    P(:,2)=P(:,2)+squeeze(dT(1,1,:));
+    ind2=2;
+end
+if fitpar.link(2)
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
+else
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
+    P(:,ind2+2)=P(:,ind2+2)+squeeze(dT(2,1,:));
+end
 
 % [PG,CRLBG, LLG] =  GPUmleFit_LM_MultiChannel_Gauss(d_data,2 (fitmode),uint32(sharedA),iterations,single(PSFstart),single(dT));
 
