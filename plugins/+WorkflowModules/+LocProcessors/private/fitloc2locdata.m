@@ -117,12 +117,16 @@ if isfield(locs,'znmerr')
 end
 
 if isfield(locs,'logLikelihood')
-    try
+%     try
     roisize=obj.getPar('loc_ROIsize');
-    catch
+    if isempty(roisize)
         roisize=10;
     end
-    locdat.LLrel=real(locs.logLikelihood(indin)*2/roisize^2);
+    numch=obj.getPar('loc_numberOfChannels');
+    if isempty(numch)
+        numch=1;
+    end
+    locdat.LLrel=real(locs.logLikelihood(indin)*2/roisize^2/numch);
 end
 
 locdat.filenumber=uint8(0*locdat.xnm+obj.filenumber);

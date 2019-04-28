@@ -22,7 +22,8 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                     obj.fitpar.link=obj.fitpar.link([2 1 4 5 3 6]);
                     obj.fitpar.fitfunction=@mleFit_LM_4Pi;
                 case 'Gauss'
-                     obj.fitpar.fitfunction=@GPUmleFit_LM_MultiChannel_Gauss;
+                     obj.fitpar.fitfunction=@mleFit_LM_global_gauss;
+                     disp('only implemented for symmetric Gauss: fittype=2');
                 otherwise
                     obj.fitpar.fitfunction=@mleFit_LM_global; %later: include single channel, decide here
 %                     GPUmleFit_LM_MultiChannel_Gauss
@@ -56,6 +57,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                 end
                  obj.setPar('loc_iterations',p.iterations);
             end   
+            obj.setPar('loc_numberOfChannels',2);
         end
         function nofound(obj,varargin)
             disp('fit function not working. Wrong Cuda version?')

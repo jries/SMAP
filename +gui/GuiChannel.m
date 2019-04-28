@@ -675,7 +675,7 @@ end
 
 % render or image
 switch lower(p.rendermode.selection)
-case {'hist','gauss','dl','other'}
+case {'hist','gauss','dl','other','constgauss'}
     if isstruct(obj.locData.loc)
         set(hgui.renderfield,'String',fieldnames(obj.locData.loc));
         hgui.renderfield.Value=min(hgui.renderfield.Value,length(hgui.renderfield.String));
