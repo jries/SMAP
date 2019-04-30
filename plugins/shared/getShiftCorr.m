@@ -10,15 +10,17 @@ end
  filtersize=1.5;
  winfit=3;
  s=size(im1);
- maxdisplacement=round(min(min(maxshift,s(1)/2-winfit),s(2)/2-winfit));
+
+ nFFT=2^ceil(log2(max(s)));
+ maxdisplacement=round(min(min(maxshift,nFFT/2-winfit),nFFT/2-winfit));
 displace=[0 0];
 % maxdisplacement=max(maxdisplacement/facs,2*filtersize+1)
 % pixrec=1*facs;
 % sx=512/facs;sy=512/facs;
 % nFFT=1024/facs;
 
-s=size(im1);
-nFFT=2^ceil(log2(max(s)));
+
+
 
 im1=im1-mean(im1(:));
 im2=im2-mean(im2(:));
