@@ -423,7 +423,7 @@ end
 [P CRLB LogL]=fitpar.fitfunction(arguments{:});
 
 
-%subtract dT for x, y
+%subtract dT for y
 if fitpar.link(1)
     P(:,1)=P(:,1)+squeeze(dT(1,1,:));
     ind2=1;
@@ -432,6 +432,8 @@ else
     P(:,2)=P(:,2)+squeeze(dT(1,1,:));
     ind2=2;
 end
+
+%subtract dT for x
 if fitpar.link(2)
     P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
 else
@@ -894,8 +896,8 @@ pard.cal_3Dfile.Width=1.75;
 pard.cal_3Dfile.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');
 
 
-p(1).value=0; p(1).on={}; p(1).off={'globaltable','linkt','link'};
-p(2).value=1; p(2).on={'globaltable','linkt','link'}; p(2).off={};
+p(1).value=0; p(1).on={}; p(1).off={'globaltable','linkt','link','mainchannelt','mainchannel'};
+p(2).value=1; p(2).on={'globaltable','linkt','link','mainchannelt','mainchannel'}; p(2).off={};
 
 pard.isglobal.object=struct('Style','checkbox','String','Global fit','Callback',{{@obj.switchvisible,p}});
 pard.isglobal.position=[3,3.5];
