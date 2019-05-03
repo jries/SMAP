@@ -280,7 +280,7 @@ end
     end
 
     [P CRLB LogL]=fitpar.fitfunction(arguments{:});
-    if fitpar.addgaussfit && fitpar.fitmode==5
+    if fitpar.addgaussfit && fitpar.fitmode>=5
         val2mode=[1 2 4];
         arguments{2}=val2mode(fitpar.addgaussfit_mode.Value);
         arguments{4}=1;
