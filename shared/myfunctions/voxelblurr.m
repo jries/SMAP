@@ -2,13 +2,14 @@ function v=voxelblurr(fun,par,sigma, pixelsize,rangex, rangey, rangez)
 % fun: function handle
 % par: parameters for function
 % sigma: scalar, 2-vector (x,y vs z) 
-factor=1; % sampling compared to sigma of Gauss
+factor=2; % sampling compared to sigma of Gauss
 roiks=2.7; % size of ROI in units of sigma
 [x,y,z,norm]=fun(par,single(min(sigma)*factor));
 
 %insert here rotation of coordinates
 
 x=x(:)-rangex(1);y=y(:)-rangey(1);z=z(:)-rangez(1);norm=norm(:);
+x=x/pixelsize; y=y/pixelsize; z=z/pixelsize;
 
 srec(1)=ceil((rangex(2)-rangex(1))/pixelsize);
 srec(2)=ceil((rangey(2)-rangey(1))/pixelsize);
