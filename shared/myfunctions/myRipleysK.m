@@ -1,4 +1,4 @@
-function K2=myRipleysK(locs,r,box)
+function K2=myRipleysK(x,y,r,box)
 
 % locs(:,1) x-coords
 % locs(:,2) y-coords
@@ -6,11 +6,12 @@ function K2=myRipleysK(locs,r,box)
 % box=[minX maxX minY maxY] here K is calcualted
 
 maxN=5000;
-N=length(locs);
+N=length(x);
 runs=ceil(N/maxN)
 maxNn=floor(N/runs)
 maxNn*runs
 % asdf
+locs=[x,y];
 
 h=0*r';
 % runs=1;
