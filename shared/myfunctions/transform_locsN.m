@@ -48,7 +48,7 @@ roinm([1 3])=roinm([1 3])*p.currentfileinfo.cam_pixelsize_um(1)*1000;
 roinm([2 4])=roinm([2 4])*p.currentfileinfo.cam_pixelsize_um(end)*1000;
 
 chipsizenm=p.currentfileinfo.cam_pixelsize_um*1000.*[p.currentfileinfo.Width p.currentfileinfo.Height]; 
-facsize=ones(2,1);
+% facsize=ones(2,1);
 % separator=chipsizenm;
 separator=roinm(1:2)+roinm(3:4);
 spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000)/2;
@@ -140,22 +140,23 @@ else %all initial estimation:
     loctT.y=loctT.ynm-dy+p.register_parameters.initialshifty;
     %  initial mirror
     midmirror=chipsizenm/4;
-    mirrorinfo.midmirror=midmirror;
-    mirrorinfo.targetmirror=p.targetmirror.selection;
+%     mirrorinfo.midmirror=midmirror;
+%     mirrorinfo.targetmirror=p.targetmirror.selection;
     
     switch p.targetmirror.selection
         case 'left-right'
             loctT.x=2*midmirror(1)-loctT.x+mirroradd(1);
-            
+            mirrorch2= 1;
         case 'up-down' 
             loctT.y=2*midmirror(2)-loctT.y+mirroradd(2);
-            
+            mirrorch2= 2;
         case 'both'  
             loctT.x=2*midmirror(1)-loctT.x+mirroradd(1);
             loctT.y=2*midmirror(2)-loctT.y+mirroradd(2);
-            
+            mirrorch2=[1 2];
         otherwise
             cutout=true;
+            mirrorch2=0;
            
     end
     if isfield(p.register_parameters,'initial_mag') && p.register_parameters.initial_mag~=1
@@ -263,13 +264,13 @@ loctarget.y=loctarget.ynm/pixtarget(end);
 if p.useT
     transform=Tinitial.copy;
 else
-    if contains(mirrorinfo.targetmirror,'up-down')
-        mirrorch2= 2;
-    elseif contains(mirrorinfo.targetmirror,'right-left')
-        mirrorch2= 1;
-    else
-        mirrorch2=0;
-    end
+%     if contains(mirrorinfo.targetmirror,'up-down')
+%         mirrorch2= 2;
+%     elseif contains(mirrorinfo.targetmirror,'left-right')
+%         mirrorch2= 1;
+%     else
+%         mirrorch2=0;
+%     end
     transform=interfaces.LocTransformN;
     transform.setTransform(1,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixref,'xrange',xrangecamr,'yrange',yrangecamr,'mirror',0);
     transform.setTransform(2,'type',p.transform.selection,'unit','pixel','parameter',p.transformparam,'cam_pixnm',pixtarget,'xrange',xrangecamt,'yrange',yrangecamt,'mirror',mirrorch2);

@@ -97,9 +97,10 @@ function out=runintern(obj,p)
 % obj.site.sePar.Settings
 % roisize=obj.site.sePar.Settings.siteroi/2;
 roisize=p.se_siteroi/2;
-locs=obj.getLocs({'xnm','ynm','znm'},'layer',1,'size',roisize);
-    locs2=obj.getLocs({'xnm','ynm','znm'},'layer',2,'size',roisize);
-
+locs=obj.getLocs({'xnm','ynm','znm'},'layer',1,'size','freeroi');
+locs2=obj.getLocs({'xnm','ynm','znm'},'layer',2,'size','freeroi');
+% locs=obj.getLocs({'xnm','ynm','znm'},'layer',1,'size',roisize);
+% locs2=obj.getLocs({'xnm','ynm','znm'},'layer',2,'size',roisize);
 
 lenbar=20;
 ranger=[0 roisize];
@@ -750,9 +751,9 @@ end
 function fitp=spherefit(xn,yn,zn,quantiles)
     fh=@sphere_implicit;
     
-    startptot=[quantiles(4),quantiles(1),quantiles(2),quantiles(3)+50];
+    startptot=[quantiles(4),quantiles(1),quantiles(2),quantiles(3)-50];
     
-    dz=[150  1000 -1000];
+    dz=[0  1000 -1000];
 %     lb=[0 -2 -2 -2]*1000*0.25;
 %     ub=[8 2 2 2]*1000*0.25;
     lb=[0    -200 -200 -2000];

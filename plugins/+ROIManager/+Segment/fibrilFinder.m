@@ -19,9 +19,13 @@ classdef fibrilFinder<interfaces.DialogProcessor&interfaces.SEProcessor
 end
 
 function pard = guidef(obj)
-    pard.t1.object = struct('Style','text','String','test');
+    pard.t1.object = struct('Style','text','String','Intensity cutoff:');
     pard.t1.position = [1,1];
     pard.t1.Width = 1;
+    
+    pard.cutoff.object = struct('Style','edit','String','0.017');
+    pard.cutoff.position = [1,2];
+    pard.cutoff.Width = 1;
     
     pard.plugininfo.type='ROI_Segment';
 end

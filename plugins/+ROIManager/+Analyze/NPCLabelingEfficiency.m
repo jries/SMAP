@@ -25,7 +25,7 @@ global rank lte rout
 % p.bootstrap=1;
 se=obj.SE;
 quantifyevaluator='NPCLabelingQuantify_s';
-% quantifyevaluator='NPCLabelingQuantify';
+%quantifyevaluator='NPCLabelingQuantify';
 fields={'evaluation',quantifyevaluator};
 fields2={'evaluation','generalStatistics'};
 
@@ -213,7 +213,7 @@ axsize=obj.initaxis('size');
 plotSElink(radius,numlocs,siteid,se,'o')
 xlabel('radius (nm)')
 ylabel('number of localizations')
-
+results(3).assigned=0;
 if gtexist %not from simulation
 ax6=obj.initaxis('GT filtered');
 %     p.ploton=false;
@@ -270,6 +270,7 @@ if p.filecheck
     results(1).file=(p.filenumbers(1));
     results(2).file=(p.filenumbers(end));
     results(3).file=0;
+
 end
 
 axp=ax0.Parent;
@@ -283,7 +284,7 @@ out=[];
 
 if p.copy2page
     sm=2;
-    sn=3;
+    sn=2;
     f=figure;
     f.Renderer='painters';
     ht2=ht.copy;
@@ -305,7 +306,7 @@ if p.copy2page
 %     subplot(sm,sn,8,axt)
         axt=ax3.copy;
     axt.Parent=f;
-    subplot(sm,sn,4,axt)
+    subplot(sm,sn,2,axt)
 %     
 %     axttime=axtt.copy;
 %     axttime.Parent=f;
@@ -313,17 +314,17 @@ if p.copy2page
     
     axt=axle.copy;
     axt.Parent=f;
-    subplot(sm,sn,5,axt)   
+    subplot(sm,sn,4,axt)   
 
     if exist('ax6','var')
         axt=ax6.copy;
     axt.Parent=f;
-    subplot(sm,sn,11,axt) 
+    subplot(sm,sn,5,axt) 
     end
     if exist('ax6b','var')
         axt=ax6b.copy;
     axt.Parent=f;
-    subplot(sm,sn,12,axt) 
+    subplot(sm,sn,6,axt) 
 
     end
     fn=se.files(p.filenumbers(1)).name;
@@ -333,6 +334,7 @@ end
 filen=se.files(filefile).name;
 %filename   LE  LEerrbs     numberofnpcs    locspernpcmean  locspernpcfit
    clipboard('copy',[filen sprintf(['\t' num2str(pf) '\t' num2str(berr_assigned) '\t' num2str(sum(indgood)) '\t' num2str(mean(numlocs)) '\t' num2str(fp.b1) ])])
+   display(sprintf('filename  \t LE \t LEerrbs \t  numberofnpcs \t locspernpcmean \t locspernpcfit'))
 end
 
 

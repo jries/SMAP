@@ -148,22 +148,26 @@ classdef PeakCombiner<interfaces.WorkflowModule
 %                     intf=vertcat(intf,(maxima.intensity(indchf(uiB),1)),(maxima.intensity(indchf(iA),1)));
                 end
             
-                cr=round(ccombined);
+%                 cr=round(ccombined);
+                %offset between true and rounded position in channel 1
+              
 
 %                 for k=2:transform.channels
-                ct=transform.transformToTargetAll(cr);
+%                 ct=transform.transformToTargetAll(cr);
+                ct=transform.transformToTargetAll(ccombined); %transfrom not rounded
                 ct(:,1,:)=ct(:,1,:)-roi(1); %bring back to ROI on camera
                 ct(:,2,:)=ct(:,2,:)-roi(2);
                 %test dc XXXXX
                 ctt=ct;
-                offsettest=ones(size(cr,1),1);
-                ctt(:,1,2)=ctt(:,1,2)+offsettest*0;
-            
+%                 offsettest=ones(size(ccombined,1),1);
+%                 ctt(:,1,2)=ctt(:,1,2)+offsettest*0;
+%             
             
                 ctr=round(ctt);
                 dc=ct-ctr;
-%                 dc(:,1,:)=dc(:,1,:)-roi(2);
-%                 dc(:,2,:)=dc(:,2,:)-roi(1);
+%                 dc(:,:,2)=dc(:,:,2)-dc(:,:,1);
+%                 dc(:,:,1)=dc(:,:,1)*0;
+
                 
 %                 cout=[];
 %                 dcout=[];

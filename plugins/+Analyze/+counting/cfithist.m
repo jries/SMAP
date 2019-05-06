@@ -44,9 +44,9 @@ classdef cfithist<interfaces.DialogProcessor
                     histogram=obj.getResults('counting_histogram');
                 end
 %               histogram=obj.locData.guiData.counting.histogram;
-                pout_ref=cluster_mmaple_fithist(p,histogram);
+                pout_ref=cluster_mmaple_fithist(p,histogram);pout=p_ref;
                 rep = 0;
-                while 1
+                while 0
                     pout=cluster_mmaple_fithist(pout_ref,histogram);
                     stopSignal = round(pout.N0_v ,3) == round(pout_ref.N0_v,3) & round(pout.pmature_v,3) == round(pout_ref.pmature_v,3) & round(pout.pblink_v,3) == round(pout_ref.pblink_v,3);
                     if stopSignal||(rep>10)
@@ -56,6 +56,7 @@ classdef cfithist<interfaces.DialogProcessor
                         rep=rep+1;
                     end
                 end
+                
                 meanlocs(i) = str2double(pout.meanlocs);
                 for ii = 1:nTicked
                     tickedFlag = ticked(ii);

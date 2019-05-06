@@ -439,7 +439,7 @@ pard.group_b.Width=1;
 pard.group_tdx.object=struct('Style','text','String','dX (nm)');
 pard.group_tdx.position=[6,4];
 pard.group_tdx.Width=0.65;
-pard.group_dx.object=struct('Style','edit','String','75');
+pard.group_dx.object=struct('Style','edit','String','35');
 pard.group_dx.position=[6,4.65];
 pard.group_dx.Width=0.35;
 
@@ -460,7 +460,7 @@ pard.add.object.TooltipString='add localization data or image';
 % pard.remove.object.TooltipString='remove file';
 pard.savemodule.object.TooltipString='select what to save';
 pard.group_b.object.TooltipString='group localizations in consecutive frames';
-pard.group_dx.object.TooltipString=sprintf('distance in nm which two locs can be apart \n and still grouped together');
+pard.group_dx.object.TooltipString=sprintf('distance in nm which two locs can be apart \n and still grouped together. Empty: automatic');
 pard.group_dt.object.TooltipString=sprintf('number of frames locs can be missing \n and still grouped together');
 pard.autosavecheck.object.TooltipString=sprintf('save localizations every XX minutes as settings/temp/autosave_sml.mat');
 end

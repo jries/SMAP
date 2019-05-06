@@ -39,6 +39,7 @@ classdef SEExploreGui<interfaces.SEProcessor
              
              
              h.redrawcell=uicontrol(obj.handle,'Position',[430,925,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawcell_callback,obj});
+              h.redrawcellall=uicontrol(obj.handle,'Position',[510,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawcellall_callback,obj});
              h.addcell=uicontrol(obj.handle,'Position',[650,925,60,40],'Style','pushbutton','String','Add','Units','normalized','FontSize',fontsize,'Callback',{@addcell,obj});
              h.removecell=uicontrol(obj.handle,'Position',[600+20,540,90,30],'Style','pushbutton','String','Remove','Units','normalized','FontSize',fontsize,'Callback',{@removecell_callback,obj});
              
@@ -55,23 +56,49 @@ classdef SEExploreGui<interfaces.SEProcessor
              
              h.revealsmap=uicontrol(obj.handle,'Position',[30,600,30,30],'Style','pushbutton','String','<-','Units','normalized','FontSize',fontsize,'Callback',{@revealsmap_callback,obj});
              h.revealsmap.TooltipString='reaveal current site in SMAP';
-            
+             
+             c=uicontextmenu;
+             h.sitelist.UIContextMenu=c;
+             m1=uimenu(c,'Label','duplicate','Callback',@obj.sitelistmenu);
              obj.guihandles=h;
              obj.updateFilelist;
              obj.hlines.rotationpos=[];
              obj.hlines.line1=[];
              obj.hlines.line2=[];
+             obj.hlines.line3=[];
              obj.hlines.sidemarker.rotationpos=[];
              obj.hlines.sidemarker.line1=[];
              obj.hlines.sidemarker.line2=[];
-             
+             obj.hlines.sidemarker.roi=[];
+
              
              
              obj.handle.WindowKeyPressFcn={@keypress,obj,0};
              obj.addSynchronization('filelist_long',[],[],@obj.updateFilelist);
             obj.addSynchronization('currentsite',[],[],@obj.updatesite);
         end
- 
+        function sitelistmenu(obj,a,b)
+            switch a.Text
+                case 'duplicate'
+                    
+                    siten=obj.guihandles.sitelist.Value;
+                    sitenew=obj.SE.sites(siten).copy;
+                    if ~isfield(sitenew.info , 'connectedsites') %not initialized
+                        for k=1:length(obj.SE.sites)
+                            if ~isfield(obj.SE.sites(k).info , 'connectedsites')
+                                obj.SE.sites(k).info.connectedsites=[];
+                            end
+                        end
+                    end
+                    
+                    sitenew.info.connectedsites=[sitenew.info.connectedsites sitenew.ID];
+                    sitenew.ID=max([obj.SE.sites(:).ID])+1; 
+                    obj.SE.sites(siten).info.connectedsites=[obj.SE.sites(siten).info.connectedsites sitenew.ID];
+                    sitelistnew=[obj.SE.sites(1:siten) sitenew obj.SE.sites(siten+1:end) ];
+                    obj.SE.sites=sitelistnew;
+                    redraw_sitelist(obj);
+            end
+        end
         function updatesite(obj,varargin)
             if nargin>1
                 currentsiteid=varargin{1};
@@ -117,26 +144,39 @@ classdef SEExploreGui<interfaces.SEProcessor
             redraw_celllist(obj)
         end
         
-        function redrawall(obj,onlysites)
+        function redrawall(obj,redrawwhat)
             global SMAP_stopnow
             if SMAP_stopnow
                 disp('STOP button is activated. Function not executed')
             end
-            if nargin<2|| isempty(onlysites)
-                onlysites=false;
+            drawcells=true;
+            drawsites=true;
+            if nargin>1 && ~isempty(redrawwhat)
+            	if ischar(redrawwhat)
+                    switch redrawwhat
+                        case 'sites'
+                            drawcells=false;
+                        case 'cells'
+                            drawsites=false;
+                    end
+                elseif islogical(redrawwhat)
+                    drawcells=~redrawwhat; %legacy: htis was only sites      
+                end
             end
+
             timerVal=tic;
             sites=obj.SE.sites;
             
             indselected=obj.getSingleGuiParameter('sitelist').Value;
             if length(indselected)>1 %selected sites
-                onlysites=true; %only redraw sites
+                drawsites=true; %only redraw sites
+                drawcells=false;
                 disp('redrawing only selected sites')
             else
                          indselected=1:length(sites);
             end
             se_keeptempimages=obj.getPar('se_keeptempimages');
-            if ~onlysites
+            if drawcells
                 files=obj.SE.files;
                 for k=1:length(files)
                     obj.guihandles.filelist.Value=k;
@@ -179,30 +219,32 @@ classdef SEExploreGui<interfaces.SEProcessor
 %         else
 %             indselected=1:length(sites);
 %         end
-        for k=indselected
+        if drawsites
+            for k=indselected
+
+                obj.guihandles.sitelist.Value=k;   
+                obj.status(['redrawall: site ' num2str(k) ' of ' num2str(length(sites))])
+                if obj.getPar('se_display') || toc(timerVal)>15
+                drawnow
+                timerVal=tic;
+                end
+                sites(k).image=[];
+                obj.SE.currentsite=sites(k);
+                plotsite(obj,sites(k));
+%                 obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
+                obj.SE.processors.eval.evaluate(sites(k));
+                if ~obj.getPar('se_keeptempimages')
+                sites(k).image.composite=[];
+                sites(k).image.layers=[];
+                end
+                sites(k).image.image=single(sites(k).image.image);
+                if SMAP_stopnow
+                    break
+                end
+            end
             
-            obj.guihandles.sitelist.Value=k;   
-            obj.status(['redrawall: site ' num2str(k) ' of ' num2str(length(sites))])
-            if obj.getPar('se_display') || toc(timerVal)>15
-            drawnow
-            timerVal=tic;
-            end
-            sites(k).image=[];
-            obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
-            obj.SE.processors.eval.evaluate(sites(k));
-            if ~obj.getPar('se_keeptempimages')
-            sites(k).image.composite=[];
-            sites(k).image.layers=[];
-            end
-            sites(k).image.image=single(sites(k).image.image);
-            if SMAP_stopnow
-                break
-            end
         end
-        obj.SE.currentsite=sites(k);
-        obj.status(['redrawall: completed'])
-% 
-%         obj.SE.plotsite(site,obj.guihandles.siteax,obj.guihandles.cellax);
+        obj.status('redrawall: completed')
         end
         function clearall(obj)
             obj.SE.clear;
@@ -501,6 +543,13 @@ end
 if obj.SE.currentsite.annotation.line2.length>0
 obj.lineannotation(2)
 end
+
+%roi
+if isfield(obj.SE.currentsite.annotation,'line3') && isfield(obj.SE.currentsite.annotation.line3, 'pos') && numel(obj.SE.currentsite.annotation.line3.pos)>0
+    obj.lineannotation(3)
+end
+
+
 %plot info
 %update annotations
 obj.SE.processors.annotation.sitechange(obj.SE.currentsite);
@@ -657,8 +706,15 @@ switch posfield
         color='c';
     case 'line2'
         color='m';
+    case 'line3'
+        color='y';
     otherwise
         color='b';
+end
+roistyle='none';
+if ischar(anglehandle)
+    roistyle=anglehandle;
+    anglehandle=[];
 end
 if nargin<3||isempty(anglehandle)
     anglehandle=[];
@@ -666,28 +722,82 @@ end
 hax=obj.guihandles.siteax;
 alphaimage=obj.SE.currentsite.image.angle;
 site=obj.SE.currentsite;
-pos=site.annotation.(posfield).pos;
-% posfield
-% site.annotation.(posfield)
-if isa(obj.hlines.(posfield),'imline')
-    delete(obj.hlines.(posfield))
-end
-if sum(pos(:).^2)==0
-    obj.hlines.(posfield)=imline(hax);
-%         obj.hlines.(posfield).wait
-    posin=obj.hlines.(posfield).getPosition;
-    roipositon(posin,obj,posfield,anglehandle,hax);
+
+
+if strcmp(posfield,'line3') %roi
+    switch roistyle
+        case 'rectangle'
+            roifun=@drawrectangle;
+        case 'ellipse'
+            roifun=@mydrawellipse;
+        case 'polygon'
+            roifun=@drawpolygon;
+        case 'free'
+            roifun=@drawfreehand;
+        case 'polyline'
+            roifun=@drawpolyline;   
+        case 'none'
+            if isfield(site.annotation.(posfield),'roifun')
+            roifun=site.annotation.(posfield).roifun;
+            else
+                return
+            end
+    end
+    if contains(class(obj.hlines.(posfield)),'images.roi')
+        delete(obj.hlines.(posfield))
+    end
+    if isfield(site.annotation,posfield)&&isfield(site.annotation.(posfield),'pos')&&~isempty(site.annotation.(posfield).pos)
+        try
+            hroi=roifun(hax,'Position',site.annotation.(posfield).pos,'Color','y');
+        catch err
+            hroi=roifun(hax,'Color','y');
+        end
+    else
+        hroi=roifun(hax,'Color','y');
+    end
+    obj.hlines.(posfield)=hroi;
+    if isa(hroi,'images.roi.Ellipse')
+        site.annotation.(posfield).pos=[hroi.Center ,hroi.SemiAxes, hroi.RotationAngle];
+    else
+        site.annotation.(posfield).pos=hroi.Position;
+    end
+    site.annotation.(posfield).roifun=roifun;
+    addlistener(hroi,'MovingROI',@(src,event) updateroiposition(src,event,site,posfield));
+    addlistener(hroi,'DeletingROI',@(src,event) deleteroi(src,event,site,posfield));
 else
-%     alphaimage
-    posr=rotatepos(pos,site.pos/1000,alphaimage);
-%      posr(2)
-    obj.hlines.(posfield)=imline(hax,posr);
-    roipositon(posr,obj,posfield,anglehandle,hax);
+    pos=site.annotation.(posfield).pos;
+    % posfield
+    % site.annotation.(posfield)
+    if isa(obj.hlines.(posfield),'imline')
+        delete(obj.hlines.(posfield))
+    end
+    if sum(pos(:).^2)==0
+        obj.hlines.(posfield)=imline(hax);
+    %         obj.hlines.(posfield).wait
+        posin=obj.hlines.(posfield).getPosition;
+        roipositon(posin,obj,posfield,anglehandle,hax);
+    else
+    %     alphaimage
+        posr=rotatepos(pos,site.pos/1000,alphaimage);
+    %      posr(2)
+        obj.hlines.(posfield)=imline(hax,posr);
+        roipositon(posr,obj,posfield,anglehandle,hax);
 
+    end
+    obj.hlines.(posfield).setColor(color);
+
+    addNewPositionCallback( obj.hlines.(posfield),@(pos) roipositon(pos,obj,posfield,anglehandle,hax));
 end
-obj.hlines.(posfield).setColor(color);
-
-addNewPositionCallback( obj.hlines.(posfield),@(pos) roipositon(pos,obj,posfield,anglehandle,hax));
+end
+function updateroiposition(src,event,site,posfield)
+    if isa(src,'images.roi.Ellipse')
+        site.annotation.(posfield).pos=[src.Center,src.SemiAxes, src.RotationAngle];
+    else
+        site.annotation.(posfield).pos=src.Position;
+    end
+end
+function deleteroi(src,event,site,posfield)
+site.annotation.(posfield).pos=[];
 end
 
 function anglebutton_callback(data,b,obj)
@@ -779,11 +889,28 @@ obj.setPar('filenumber',obj.SE.currentsite.info.filenumber)
 end
 
 function redrawsiteall_callback(a,b,obj)
-obj.redrawall(true);
+obj.redrawall('sites');
+end
+function redrawcellall_callback(a,b,obj)
+obj.redrawall('cells');
 end
 
 function updatelist_callback(a,b,obj)
 redraw_sitelist(obj);
 redraw_celllist(obj);
 updateFilelist(obj);
+end
+
+function [hroi]=mydrawellipse(varargin)
+ind=find(strcmp(varargin,'Position'));
+if  ~isempty(ind)
+    varargin{end+1}='Center';
+    varargin{end+1}=varargin{ind+1}(1:2);
+    varargin{end+1}='SemiAxes';
+    varargin{end+1}=varargin{ind+1}(3:4);   
+    varargin{end+1}='RotationAngle';
+    varargin{end+1}=varargin{ind+1}(5);  
+    varargin{ind+1}=varargin{ind+1}(1:2);
+end
+hroi=drawellipse(varargin{:});
 end

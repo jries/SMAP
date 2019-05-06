@@ -14,7 +14,7 @@ function [locsout,indcombined,hroio]=getlocs(locData,fields,varargin)
 %'position': 'all' (default),'roi','fov': position filter
 %'position': vector: [centerx, centery, widhtx widthy] or [centerx,
 %centery,radius] for circular ROI
-%   'interfaces.SEsites: locaizations in site.
+%   'interfaces.SEsites: localizations in site.
 %'layer': double number or vector of layers.
 
 %'removeFilter': cell array of filter names to remove 
@@ -217,7 +217,7 @@ else
                 sr_size=p.position(3:4);
                 indpos=locs.xnm>pos(1)-sr_size(1) & locs.xnm<pos(1)+sr_size(1) & locs.ynm>pos(2)-sr_size(2) & locs.ynm<pos(2)+sr_size(2);
             else
-            
+                indpos=true(size(locs.xnm));
                 disp('getlocs: position description not valid')
             end
     end
@@ -235,7 +235,10 @@ else
 end
 
 indcombined=indfilter&indpos&indwithin;
-% indf=find(indcombined);
+indf=find(indcombined);
+if numel(indf)/numel(indcombined)>0.05
+    indf=indcombined;
+end
 
 if isempty(p.fields)||any(strcmpi(p.fields,'all'))
     p.fields=fieldnames(locs);
@@ -247,7 +250,7 @@ end
          vh=addshift(locs.(field),field,p.shiftxy);
          
 %          vh3=vh(indf);
-         vh2=vh(indcombined);
+         vh2=vh(indf);
         locsout.(field)=vh2;
      elseif strcmp(p.fields{k},'ingrouped')
             locsout.(p.fields{k})=getindices(locData,indcombined,1);

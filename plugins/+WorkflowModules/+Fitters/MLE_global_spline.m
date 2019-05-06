@@ -22,7 +22,8 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                     obj.fitpar.link=obj.fitpar.link([2 1 4 5 3 6]);
                     obj.fitpar.fitfunction=@mleFit_LM_4Pi;
                 case 'Gauss'
-                     obj.fitpar.fitfunction=@GPUmleFit_LM_MultiChannel_Gauss;
+                     obj.fitpar.fitfunction=@mleFit_LM_global_gauss;
+                     disp('only implemented for symmetric Gauss: fittype=2');
                 otherwise
                     obj.fitpar.fitfunction=@mleFit_LM_global; %later: include single channel, decide here
 %                     GPUmleFit_LM_MultiChannel_Gauss
@@ -56,6 +57,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                 end
                  obj.setPar('loc_iterations',p.iterations);
             end   
+            obj.setPar('loc_numberOfChannels',2);
         end
         function nofound(obj,varargin)
             disp('fit function not working. Wrong Cuda version?')
@@ -359,6 +361,9 @@ if isempty(EMexcess)
 end
          
 dT=zeros(npar,2,(nfits));
+dT(1,1,:)=stackinfo.dy(1:numberOfChannels:end); %for nonrounding
+dT(2,1,:)=stackinfo.dx(1:numberOfChannels:end);
+
 dT(1,2,:)=stackinfo.dy(2:numberOfChannels:end);
 dT(2,2,:)=stackinfo.dx(2:numberOfChannels:end);
 
@@ -417,6 +422,24 @@ end
 
 [P CRLB LogL]=fitpar.fitfunction(arguments{:});
 
+
+%subtract dT for y
+if fitpar.link(1)
+    P(:,1)=P(:,1)+squeeze(dT(1,1,:));
+    ind2=1;
+else
+    P(:,1)=P(:,1)+squeeze(dT(1,1,:));
+    P(:,2)=P(:,2)+squeeze(dT(1,1,:));
+    ind2=2;
+end
+
+%subtract dT for x
+if fitpar.link(2)
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
+else
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
+    P(:,ind2+2)=P(:,ind2+2)+squeeze(dT(2,1,:));
+end
 
 % [PG,CRLBG, LLG] =  GPUmleFit_LM_MultiChannel_Gauss(d_data,2 (fitmode),uint32(sharedA),iterations,single(PSFstart),single(dT));
 
@@ -873,8 +896,8 @@ pard.cal_3Dfile.Width=1.75;
 pard.cal_3Dfile.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');
 
 
-p(1).value=0; p(1).on={}; p(1).off={'globaltable','linkt','link'};
-p(2).value=1; p(2).on={'globaltable','linkt','link'}; p(2).off={};
+p(1).value=0; p(1).on={}; p(1).off={'globaltable','linkt','link','mainchannelt','mainchannel'};
+p(2).value=1; p(2).on={'globaltable','linkt','link','mainchannelt','mainchannel'}; p(2).off={};
 
 pard.isglobal.object=struct('Style','checkbox','String','Global fit','Callback',{{@obj.switchvisible,p}});
 pard.isglobal.position=[3,3.5];

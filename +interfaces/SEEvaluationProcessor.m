@@ -72,11 +72,17 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             site.evaluation.(obj.name).GuiParameters=gp; 
         end
         
+        function [locsout,indloc]=getlocs(obj,varargin) 
+            [locsout,indloc]=obj.getLocs(varargin);
+        end
         function [locsout,indloc]=getLocs(obj,varargin) 
             %uses locData.getloc
             %size: size of ROI. Otherwise it takes the whole FoV, not ROI
             %(from image rangex, rangey)
             %if one value: circular. vector: in x and y: rectangualr roi
+            %size: freeroi: defined roi, or if not defined then site_roi
+            %(circular)
+            p=roiparser(varargin); 
             fields=varargin{1};
             fields={fields{:} ,'xnm','ynm','filenumber'};
             parameters=varargin(2:end);
@@ -84,13 +90,13 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             if ~isempty(inds)
                 parameters(inds:inds+1)=[];
             end
-            p=roiparser(varargin); 
+            
                 sx=obj.site.image.rangex;
                 fovsize=(sx(2)-sx(1))*1000*[1,1];             
             if isempty(p.position) %no position specified, that is the usual case
 
                 pos=obj.site.pos;
-                if ~isempty(p.size)
+                if ~isempty(p.size)&&isnumeric(p.size)
                     if length(p.size)==1
                         fovsize=p.size(1);
                     else
@@ -103,6 +109,17 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
                 pos=p.position;
             end
             [locsh, indloc]=obj.locData.getloc(fields,parameters{:},'removeFilter',{'filenumber'});
+            
+            inroi=true;
+            if ischar(p.size)&&contains(p.size,'freeroi')
+                hroi=obj.locData.SE.processors.preview.hlines.line3;
+                if ~isempty(hroi)&&isvalid(hroi)
+                    inroi=hroi.inROI(double(locsh.xnm/1000),double(locsh.ynm/1000));
+                    p.size=inf;
+                else
+                    p.size=obj.getPar('se_siteroi')/2;  
+                end
+            end
             
             locsh.xnmr=locsh.xnm-pos(1);
             locsh.ynmr=locsh.ynm-pos(2);
@@ -120,7 +137,7 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
                 indroi=locsh.xnmrot>-p.size(1) & locsh.xnmrot<p.size(1)&locsh.ynmrot>-p.size(2) & locsh.ynmrot<p.size(2);
             end
             indfile=locsh.filenumber==obj.site.info.filenumber;
-            indgood=indfile&indroi;
+            indgood=indfile&indroi&inroi;
             indloc(indloc)=indgood;
             
             fn=fieldnames(locsh);

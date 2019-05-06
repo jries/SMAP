@@ -55,15 +55,15 @@ getmask=p.getmask;
 %segment with free roi
 % if saveon==1
 if getmask
-figure(24)
-file=se.files(se.indexFromID(se.files,se.currentfile.ID));
-imagesc(file.image.image)
-colormap  hot
-h = imfreehand;
-bw=createMask(h);
-bw(1,:)=false;bw(:,1)=false;
-pf=file.image.parameters.sr_pixrec;
-sf=size(file.image.image);
+    figure(24)
+    file=se.files(se.indexFromID(se.files,se.currentfile.ID));
+    imagesc(file.image.image)
+    colormap  hot
+    h = imfreehand;
+    bw=createMask(h);
+    bw(1,:)=false;bw(:,1)=false;
+    pf=file.image.parameters.sr_pixrec;
+    sf=size(file.image.image);
 end
 % end
 
@@ -105,20 +105,17 @@ obj.initaxis('filter');imagesc(n,n,h);
 
 for cn=1:length(cells)
     cell=cells(cn);
-%     srim=sum(double(cell.image.image),3);
-srim=0;
-%     srim=cell.image.layers(1).images.rawimage.image;
+    if getmask && cell.info.filenumber ~= file.ID
+        continue
+    end
+    srim=0;
     for k=1:length(cell.image.layers)
         if ~isempty(cell.image.layers(k).images)
             srim=cell.image.layers(k).images.rawimage.image+srim;
         end
     end
-%     srims=size(srim);
-
-
     srimbw=sum(srim,3);
    
-
     % imfO=imfilter(imsrrem,hfilterO);
     % imfI=imfilter(imsrrem,hfilterI);
     imfD=imfilter(sqrt(srimbw),h);
@@ -164,16 +161,16 @@ ysite=ysite(indgood);
     obj.initaxis('images')
     subplot(1,2,1)
     srimp=srim;
-    maxi=myquantilefast(srimp,.99);
+    maxi=myquantilefast(srimp,.998);
     srimp(srimp>maxi)=maxi;
     imagesc(srimp)
     hold on
-    plot(maximaout(indgood,2),maximaout(indgood,1),'wo')
+    plot(maximaout(indgood,2),maximaout(indgood,1),'m+')
     hold off
         subplot(1,2,2)
     imagesc(srimf)
     hold on
-    plot(maximaout(indgood,2),maximaout(indgood,1),'wo')
+    plot(maximaout(indgood,2),maximaout(indgood,1),'m+')
     hold off
     colorbar
     

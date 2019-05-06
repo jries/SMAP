@@ -36,7 +36,11 @@ for k=length(p):-1:1
             vh=nv;
         end
         if ~isempty(ind) %index passed
+            if length(vh)>=ind
             vh=vh(ind);
+            else
+                vh=NaN;
+            end
         end
     else
        vh=NaN;

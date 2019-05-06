@@ -302,7 +302,7 @@ pard.t1.position=[3,1];
 pard.t2.object=struct('String','pixelsize (nm)','Style','text');
 pard.t2.position=[4,1];
 
-pard.pixrec_frc.object=struct('String','5','Style','edit');
+pard.pixrec_frc.object=struct('String','3','Style','edit');
 pard.pixrec_frc.position=[4,2];
 
 pard.t3.object=struct('String','binning of the data in blocks','Style','text');

@@ -21,8 +21,9 @@ classdef generalStatistics<interfaces.SEEvaluationProcessor
 %             end
             for k=1:p.numberOfLayers
                 if layerson(k)
+%                     locs=obj.getLocs({'locprecnm','PSFxnm','xnm','ynm','phot','bg','numberInGroup'},'layer',k,'size','freeroi');  
                     locs=obj.getLocs({'locprecnm','PSFxnm','xnm','ynm','phot','bg','numberInGroup'},'layer',k,'size',roisizeh);  
-                   
+%                    figure(88);plot(locs.xnm,locs.ynm,'.')
                     if isfield(locs,'PSFxnm')
                     psf=mean(locs.PSFxnm);
                     out.PSFlayers(end+1)=psf;

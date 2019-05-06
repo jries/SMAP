@@ -406,7 +406,23 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                 saveloc=copyfields(saveloc,additionalsave);
             end
             if ~isempty(obj.SE)
-                saveloc.siteexplorer=obj.SE.save;
+                if nargin>6 && ~isempty(filenumber)%filenumber
+                    SEtemp = obj.SE.copy;
+                    siteFilenumber = getFieldAsVector(SEtemp.sites,'info.filenumber');
+                    lsiteFilenumber = siteFilenumber == filenumber;
+                    SEtemp.sites = SEtemp.sites(lsiteFilenumber);
+                    
+                    cellFilenumber = getFieldAsVector(SEtemp.cells,'info.filenumber');
+                    lcellFilenumber = cellFilenumber == filenumber;
+                    SEtemp.cells = SEtemp.cells(lcellFilenumber);
+                    
+                    allFilenumber = getFieldAsVector(SEtemp.files,'ID');
+                    loneFilenumber = allFilenumber == filenumber;
+                    SEtemp.files = SEtemp.files(loneFilenumber);
+                    saveloc.siteexplorer=SEtemp.save;
+                else
+                    saveloc.siteexplorer=obj.SE.save;
+                end
             end
             saveloc=concentratefilelist(saveloc);
             try
@@ -635,7 +651,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
 %             obj.setPar('status','grouping')
             grouper=Grouper;
             grouper.attachLocData(obj);
-            groupfields={'frame','xnm','ynm','filenumber','channel'};
+            groupfields={'frame','xnm','ynm','locprecnm','filenumber','channel'};
             if isfield(obj.loc,'class')
                 groupfields{end+1}='class';
             end

@@ -76,7 +76,7 @@ end
 if narginh>3 && ~isempty(varargin{4})
     fitpar=single(varargin{4});
 else
-    if ~(fitmode==3) &&  ~(fitmode==5) 
+    if ~(fitmode==3) &&  ~(fitmode==5)  &&  ~(fitmode==6) 
         fitpar=1; %for Gaussian fit
     else
         disp('for z fitting (Gauss or spline) fitting parameters (e.g. spline coefficients) are required');
@@ -98,22 +98,24 @@ end
 
 coeffsize=size(fitpar);
 %backward compatibility
-if fitmode==6
-    fitmode=5;
-    varargin{7}=[-coeffsize(3)/6, coeffsize(3)/6];
-    narginh=max(narginh,7);
-end
+% if fitmode==6
+%     fitmode=5;
+%     varargin{7}=[-coeffsize(3)/6, coeffsize(3)/6];
+%     narginh=max(narginh,7);
+% end
 
-if narginh>6 && ~isempty(varargin{7}) && fitmode==5 %only for spline fitting
+if narginh>6 && ~isempty(varargin{7}) && (fitmode==5 || fitmode==6) %only for spline fitting
     z0=(varargin{7}); %in units of calibration stack distance
     zstart=single(z0+coeffsize(3)/2);
-elseif fitmode==5
+elseif (fitmode==5 || fitmode==6) 
     zstart=single(coeffsize(3)/2);
 else
     zstart=0;
 end
 %  zstart=[-70 -30 0 30 70]+75;
-
+if fitmode ==6
+    fitmode = 5;
+end
 [P,CRLB,LogL]=allfitters{fitter}(imagestack,fitmode, iterations,fitpar,varmap,silent,zstart(1));
 
 if length(zstart)>1

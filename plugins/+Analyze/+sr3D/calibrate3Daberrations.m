@@ -16,7 +16,7 @@ classdef calibrate3Daberrations<interfaces.DialogProcessor
             elseif isfield(fp,'MLE_GPU_Yiming')
                 fp=fp.MLE_GPU_Yiming;
             end
-            if fp.userefractive_index_mismatch
+            if ~isfield(fp,'userefractive_index_mismatch') || fp.userefractive_index_mismatch
                 p.RIM=fp.refractive_index_mismatch;
             else 
                 p.RIM=1;

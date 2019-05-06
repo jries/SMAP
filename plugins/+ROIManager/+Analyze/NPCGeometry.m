@@ -169,8 +169,10 @@ if numel(aca1)>1
      [ddd,cid]=getcorrangleglobal(tnn,acc12n);
     legend('all','ring1','ring2','cross-corr','cos fit')    
     ff='%2.2f';
-     txtshift=[', shift: ' num2str(ddd,ff) '° ± ' num2str((cid(2)-cid(1))/2,ff) '° (95% confidence)'];
+     txtshift=[', shift: ' num2str(ddd,ff) char(176) ' Â± ' num2str((cid(2)-cid(1))/2,ff) char(176) ' (95% confidence)'];
       plot([0 0],[ampmin ampm*1.1],'k')
+else 
+    ddd=[];cid=[0 0];
 end
 ylim([ampmin ampm*1.1]);
 xlim([tnn(1) tnn(end)])
@@ -236,12 +238,13 @@ function [d,cid,fitp]=getcorrangleglobal(ti,cci)
   ft=fittype('(b1+b2*x+b3*x.^2+b4*x.^3)+(a1+a2*x+a3*x.^2+a4*x.^3).*cos(2*pi*(x-d)/45)');
   [~,imcc]=max(cci);
   tm=ti(imcc);
-  sp=[(max(cc)-min(cc))/2,0,0,0, min(cc)+1,0,0,0,tm];
+  sp=[(quantile(cc,.9)-quantile(cc,.1))/2,0,0,0, 0,0,0,0,tm];
   lb=-inf*ones(size(sp));
   lb(1)=0;
   fitp=fit(t',cc',ft,'StartPoint',sp,'Lower',lb);
   t(round(length(t)/2))=nan;
   plot(t,fitp(t))
+%     plot(t,ft(sp(1),sp(2),sp(3),sp(4),sp(5),sp(6),sp(7),sp(8),sp(9),t))
   d=fitp.d;
   ci=confint(fitp);
   cid=ci(:,end);

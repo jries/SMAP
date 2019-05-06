@@ -88,6 +88,10 @@ classdef SEAnnotation< interfaces.SEProcessor
             end
             obj.SE.processors.preview.updateSitelist;
         end
+        function drawroi_callback(obj,a,b)
+            p=obj.getSingleGuiParameter('roiselect');
+             obj.SE.processors.preview.lineannotation(3,p.selection);
+        end
 %         function updateSingleParameter(obj, data,actionData,field)
 %             val=obj.getSingleGuiParameter(field);
 % %             obj.SE.sePar.(data.Parent.Title).(field)=val;
@@ -238,12 +242,19 @@ pard.loadlist.position=[2,3];
 pard.loadlist.Width=0.5;
 
 pard.line1.object=struct('Style','pushbutton','String','line 1');
-pard.line1.position=[5,4];
+pard.line1.position=[4,3];
 pard.line1.Height=1.5;
 
 pard.line2.object=struct('Style','pushbutton','String','line 2');
-pard.line2.position=[7,4];
+pard.line2.position=[4,4];
 pard.line2.Height=1.5;
+
+pard.roiselect.object=struct('Style','popupmenu','String',{{'rectangle','ellipse','polygon','polyline','free'}});
+pard.roiselect.position=[6,3];
+pard.roiselect.Height=1.5;
+pard.roi.object=struct('Style','pushbutton','String','ROI','Callback',@obj.drawroi_callback);
+pard.roi.position=[6,4];
+pard.roi.Height=1.5;
 
 pard.usesite.object=struct('Style','checkbox','String','use site','Callback',@obj.usesite_callback);
 pard.usesite.position=[2,4];

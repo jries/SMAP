@@ -6,26 +6,23 @@ imgr=imageloaderAll([path f]);
 % %%
 
 %%
-par.cutoffmin=600;
-par.mask=1;
-par.Rnear=5;
-par.sigmaf=0.5;
-par.file=f;
-par.regionfilter=false
-par.overwrite=true;
+par.cutoffmin=100; %minimum value. You can start by using a small value and then look at the histogram to determine this value
+par.mask=false; %if true, user can draw a mask, only local maxima within this mask are anlayzed
+par.Rnear=5; % minimum distance between NPCs
+par.sigmaf=0.5; % initial blurring (pixels)
+par.file=f; % directory. You can select this with the previous cell
+par.regionfilter=false;%if true: only keep clear maxima
+par.overwrite=true; %if true: overwrite histogram, otherwise add to existing histogram
 kbl=0;
-kbl=0.077;
-zlen=3;
+kbl=0.077; %bleaching between frames (exponential decay with kbl [1/frame])
+zlen=3; %maximum intensity projection over zlen images
+imgnum=1; %first image to be used
 %%
-
-imgnum=1;
 imga=double(imgr.getmanyimages((imgnum-1)*zlen+1:imgnum*zlen,'mat'));
 offset=quantile(imga(:),0.02);
 img=imga-offset;
 %from intensity vs frame fit:
 %I(f)=I0*exp(-kbl*f)
-
-
 
 for k=1:size(img,3)
     img(:,:,k)=img(:,:,k)/exp(-kbl*(k-1)); %first frame: no bleaching
@@ -37,21 +34,14 @@ hold off
 else
     hold on
 end
-% subplot(2,2,1)
 ax1=gca;
-% subplot(2,2,2)
-% ax2=gca;
-% subplot(2,2,3)
-% ax0=gca;
 ax0=[];ax2=[];
 maximaf=getmaxima(img,ax0,ax1,ax2,par);
-% colormap(ax0,'gray')
 
-% end
 %%
 function maximafi=getmaxima(img,ax0,ax1,ax2,par)
 cutoffmin=par.cutoffmin;
-Rnear=par.Rnear;
+% Rnear=par.Rnear;
 
 sigmaf=par.sigmaf;
 h2=fspecial('disk',3);h1=fspecial('gauss',size(h2,1),sigmaf);
@@ -81,7 +71,7 @@ end
 % mimg=mimg-background;
 %%
 
-binpos=0:50:3000;
+
 if 0
 maxima=zeros(0,3);
 for k=1:size(imghr,3)
@@ -96,9 +86,11 @@ else
     maxima=maximumfindcall(mimgr.*mask);
 end
 
+
 mint=maxima(:,3);
 indgood=mint>cutoffmin;
 maximafi=maxima(indgood,:);
+binpos=0:50:max(maximafi);
 % investigate local neighbourhood, only keep maxima that are clear maxima
 if par.regionfilter
 roi=3;
@@ -162,7 +154,7 @@ fitp2=fit(xfit',yfit','gauss2','Robust','LAR','StartPoint',[fitp1.a1,fitp1.b1,fi
 hold(ax1,'on')
 plot(ax1,xfit,fitp1(xfit))
 plot(ax1,xfit,fitp2(xfit))
-legend('hist','single G','double G')
+
 
 mv=sort([fitp2.b1 fitp2.b2]);
 title(ax1,{['maximum at ' num2str(fitp1.b1,4) ', 2G:'  num2str(mv(1),4) ', '  num2str(mv(2),4) ', bg ' num2str(background,2) ', std ' num2str(fitp1.c1/sqrt(2),3) ', sem ' num2str(fitp1.c1/sqrt(2)/sqrt(sum(indgood)),3)],par.file},...
@@ -171,6 +163,7 @@ title(ax1,{['maximum at ' num2str(fitp1.b1,4) ', 2G:'  num2str(mv(1),4) ', '  nu
 %     'Interpreter','none')
 xlabel('intensity at maximum')
 ylabel('frequency')
+legend('hist','single G','double G')
 % cftool(h.BinEdges(1:end-1),h.Values)
 end
 

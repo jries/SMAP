@@ -1,4 +1,10 @@
-function fitCircleImg
+function fitCircleImg(in)
+% fit blurred circles to images to extract radii.
+
+if nargin>0 & in==1
+    plotresults
+    return;
+end
 global pixelsize results path
 results=[];
 %fitting exm with circle
@@ -16,7 +22,7 @@ dcm_obj = datacursormode(fig);
 dcm_obj.UpdateFcn={@fitposition,img,fig};
 
 imf=imfinfo(file);
-pixelsize=1000/imf.XResolution %pixelsize in nm
+pixelsize=1000/imf.XResolution %pixelsize in nm. Define yourself if not determined correctly
 end
 
 function plotresults
@@ -26,10 +32,12 @@ cutoff=3.5;
 indb=results(:,1)<cutoff;
 figure(100);hold off; histogram(rnm(~indb,1),30);
 title([mean(rnm(~indb,1)) std(rnm(~indb,1))]);
+xlabel('radius(nm)')
 if size(rnm,2)>1
 
 figure(101)
 histogram(results(~indb,2),30);
+xlabel('Gaussfit sigma (nm)')
 end
 end
 %%

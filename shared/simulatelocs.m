@@ -78,7 +78,7 @@ indout=[(1:numlocs)'; indextra];
 for k=1:length(fn)
     locso.(fn{k})=locs.(fn{k})(indout);
 end
-timeonall=[lenfirst; timeon];
+timeonall=[min(lenfirst,lifetime); timeon];
 photons=timeonall*photonsperframe;
 photonsr=poissrnd(photons);
 locso.phot=photonsr;
@@ -246,7 +246,7 @@ for k=numberofsites:-1:1
     locs(k).dx_gt=dx*ones(size(locsh.x));
     locs(k).dy_gt=dy*ones(size(locsh.x));
     locs(k).dz_gt=dz*ones(size(locsh.x));
-    
+    locs(k).site=k*ones(size(locsh.x));
     possites(k).x=xh*distsites;
     possites(k).y=yh*distsites;
     parameters(k)=phere;
@@ -386,7 +386,7 @@ function locs=locsfromposi(locsi,p)
     
     a=100;
     PSF=100;
-    zfactor=1;
+    zfactor=3;
 %     sa=PSF+a/12;
     phot(phot<10)=10;
     indin=phot>=10;
@@ -413,6 +413,7 @@ function locs=locsfromposi(locsi,p)
     locs.angle=single(locsi.angle(indin));
     locs.frame=single(locsi.frame(indin));
     locs.channel=single(locsi.channel(indin));  %added
+    locs.site=single(locsi.site(indin)); 
 end
 
 
