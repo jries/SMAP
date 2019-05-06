@@ -13,6 +13,7 @@ classdef SMLMModelFitter<interfaces.SEEvaluationProcessor
         function pard=guidef(obj)
             %init
             obj.setPar('userDefinedPars', userDefinedParsTemp);
+            addpath('..\smlm_geomodel_fitter', '..\smlm_geomodel_fitter\external')
             pard=guidef(obj);
         end
     end
