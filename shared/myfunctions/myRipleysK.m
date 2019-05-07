@@ -7,9 +7,9 @@ function K2=myRipleysK(x,y,r,box)
 
 maxN=5000;
 N=length(x);
-runs=ceil(N/maxN)
-maxNn=floor(N/runs)
-maxNn*runs
+runs=ceil(N/maxN);
+maxNn=floor(N/runs);
+maxNn*runs;
 % asdf
 locs=[x,y];
 
@@ -96,7 +96,7 @@ DIST2=DIST(:,I);
 
 
 h=histc(DIST2(:),r);
-h(1)=h(1)-equal*sum(I); %subtract self-distance =0
+% h(1)=h(1)-equal*sum(I); %subtract self-distance =0
 h=h/(sum(I));
 % h(1)=0;
 % K=cumsum(h);
