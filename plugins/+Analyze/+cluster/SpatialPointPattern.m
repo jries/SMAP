@@ -1,5 +1,9 @@
 classdef SpatialPointPattern<interfaces.DialogProcessor
- 
+%  pair correlation functions calculated according to:
+%  Sengupta, Prabuddha, Tijana Jovanovic-Talisman, Dunja Skoko, Malte Renz, 
+%  Sarah L Veatch, and Jennifer Lippincott-Schwartz. “Probing Protein Heterogeneity 
+%  in the Plasma Membrane Using PALM and Pair Correlation Analysis.” 
+%  Nature Methods 8 (September 18, 2011): 969.
     properties
         
     end
@@ -100,7 +104,21 @@ classdef SpatialPointPattern<interfaces.DialogProcessor
            
            Rpc=cumsum(gr1r)*px^2;
            Lpc=sqrt(Rpc/pi);
-           
+             ax=obj.initaxis('Ripley');
+           if ~isempty(locs2)
+               R2=myRipleysK(locs2.xnm,locs2.ynm,nrx,[rx(1)+edge rx(end)-edge  ry(1)+edge  ry(end)-edge]);
+               L2=sqrt(R2/pi);
+
+               Rpc2=cumsum(gr2r)*px^2;
+               Lpc2=sqrt(Rpc2/pi);
+               plot(ax,nrx,L-nrx',nrx,L2-nrx',nrx,Lpc-nrx',nrx,Lpc2-nrx')%,nrx,Lf-Lm)%,nrx,Lpc-nrx')
+               legend(ax,'Ripley Ch1','Ch2','Riplex from PC with edge correction Ch1','Ch2')
+              
+           else
+               plot(ax,nrx,L-nrx',nrx,Lpc-nrx')%,nrx,Lf-Lm)%,nrx,Lpc-nrx')    
+               legend(ax,'Ripley','Riplex from PC with edge correction')
+           end
+            ylabel(ax,'L(r)-r');xlabel(ax,'r (nm)');
 %            if ~isempty(locs2)
 %                
 %                R2=myRipleysK(locs2.xnm,locs2.ynm,nrx,[rx(1)+edge rx(end)-edge  ry(1)+edge  ry(end)-edge]);
@@ -115,10 +133,8 @@ classdef SpatialPointPattern<interfaces.DialogProcessor
 %            else
 %            end
           
-           ax=obj.initaxis('Ripley');
-           plot(ax,nrx,L-nrx',nrx,Lpc-nrx')%,nrx,Lf-Lm)%,nrx,Lpc-nrx')
-           legend(ax,'Ripley','Riplex from PC with edge correction')
-           ylabel(ax,'L(r)-r');xlabel(ax,'r (nm)');
+         
+
            
 %            ax=obj.initaxis('Ripley from PC');
 %            plot(ax,nrx,Lpc-nrx')%,nrx,Lf-Lm)%,nrx,Lpc-nrx')
