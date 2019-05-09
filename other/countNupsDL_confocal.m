@@ -6,7 +6,7 @@ imgr=imageloaderAll([path f]);
 % %%
 
 %%
-par.cutoffmin=100; %minimum value. You can start by using a small value and then look at the histogram to determine this value
+par.cutoffmin=500; %minimum value. You can start by using a small value and then look at the histogram to determine this value
 par.mask=false; %if true, user can draw a mask, only local maxima within this mask are anlayzed
 par.Rnear=5; % minimum distance between NPCs
 par.sigmaf=0.5; % initial blurring (pixels)
@@ -14,8 +14,8 @@ par.file=f; % directory. You can select this with the previous cell
 par.regionfilter=false;%if true: only keep clear maxima
 par.overwrite=true; %if true: overwrite histogram, otherwise add to existing histogram
 kbl=0;
-kbl=0.077; %bleaching between frames (exponential decay with kbl [1/frame])
-zlen=3; %maximum intensity projection over zlen images
+%kbl=0.077; %bleaching between frames (exponential decay with kbl [1/frame])
+zlen=5; %maximum intensity projection over zlen images
 imgnum=1; %first image to be used
 %%
 imga=double(imgr.getmanyimages((imgnum-1)*zlen+1:imgnum*zlen,'mat'));
@@ -90,7 +90,7 @@ end
 mint=maxima(:,3);
 indgood=mint>cutoffmin;
 maximafi=maxima(indgood,:);
-binpos=0:50:max(maximafi);
+binpos=0:50:max(maximafi(:,3));
 % investigate local neighbourhood, only keep maxima that are clear maxima
 if par.regionfilter
 roi=3;
