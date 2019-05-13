@@ -32,7 +32,7 @@ if p.overview
     ax4=subplot(3,2,4);ax4.Position(3)=ax4.Position(3)*sf;
     ax5=subplot(3,2,5);ax5.Position(3)=ax5.Position(3)*sf;
    
-    ax6=subplot(3,2,6);ax6.Position(3)=ax6.Position(3)*sf;ax7=[];
+    ax6=subplot(3,2,6);ax6.Position(3)=ax6.Position(3)*sf;ax7=[];ax8=[];
 else
     ax1=initaxis(p.resultstabgroup,'Photons');
     ax1.Position(3)=0.55;
@@ -44,17 +44,19 @@ else
     ax4.Position(3)=0.55;
     ax5=initaxis(p.resultstabgroup,txt);
     ax5.Position(3)=0.55;
+    ax6=initaxis(p.resultstabgroup,'frames');
+    ax6.Position(3)=0.55;
     if zexist
-        ax6=initaxis(p.resultstabgroup,['err ' txt]);
-        ax6.Position(3)=0.55;
-        ax7=initaxis(p.resultstabgroup,['err(' txt ')']);
+        ax7=initaxis(p.resultstabgroup,['err ' txt]);
         ax7.Position(3)=0.55;
+        ax8=initaxis(p.resultstabgroup,['err(' txt ')']);
+        ax8.Position(3)=0.55;
     end
 
 
 end
 else
-    ax1=[];ax2=[];ax3=[];ax4=[];ax5=[];ax6=[];ax7=[];
+    ax1=[];ax2=[];ax3=[];ax4=[];ax5=[];ax6=[];ax7=[];ax8=[];
 end
 datrange=1:length(locs);
 
@@ -93,7 +95,8 @@ for k=datrange
 end
 
 if ploton
-    axf=initaxis(p.resultstabgroup,'frames');
+%     axf=initaxis(p.resultstabgroup,'frames');
+    axf=ax6;
     hold off
     for k=datrange
         plothf(k)=plot(axf,stat.frames.histogram(k).n,stat.frames.histogram(k).h);
@@ -102,6 +105,7 @@ if ploton
     end
     legend(plothf,slegend);
 end
+slf={'Frames'};
 
 %photon stats
 phot=getFieldAsVector(locs,'phot');
@@ -267,6 +271,7 @@ if p.overview
     uicontrol('Parent',ax3.Parent,'style','text','String',slt,'Units','normalized','Position',ax3.Position+pos,'FontSize',fontsize,'HorizontalAlignment','left')
     uicontrol('Parent',ax4.Parent,'style','text','String',slb,'Units','normalized','Position',ax4.Position+pos,'FontSize',fontsize,'HorizontalAlignment','left')
     uicontrol('Parent',ax5.Parent,'style','text','String',sls,'Units','normalized','Position',ax5.Position+pos,'FontSize',fontsize,'HorizontalAlignment','left')
+    uicontrol('Parent',ax6.Parent,'style','text','String',slf,'Units','normalized','Position',ax6.Position+pos,'FontSize',fontsize,'HorizontalAlignment','left')
 else
 pos=[.7,0.025,.3,.95];
 
@@ -275,12 +280,13 @@ uicontrol('Parent',ax2.Parent,'style','text','String',slp,'Units','normalized','
 uicontrol('Parent',ax3.Parent,'style','text','String',slt,'Units','normalized','Position',pos,'FontSize',fontsize,'HorizontalAlignment','left')
 uicontrol('Parent',ax4.Parent,'style','text','String',slb,'Units','normalized','Position',pos,'FontSize',fontsize,'HorizontalAlignment','left')
 uicontrol('Parent',ax5.Parent,'style','text','String',sls,'Units','normalized','Position',pos,'FontSize',fontsize,'HorizontalAlignment','left')
+uicontrol('Parent',ax6.Parent,'style','text','String',slf,'Units','normalized','Position',pos,'FontSize',fontsize,'HorizontalAlignment','left')
 end
 end
 
 if zexist
     v=getFieldAsVector(locs,'locprecznm');
-    hz=plothist(v,.99,[],0,ax6,modetxt);
+    hz=plothist(v,.99,[],0,ax7,modetxt);
     slp={'locprecznm'};
     for k=datrange
         slp{end+1}='';
@@ -294,8 +300,8 @@ if zexist
     rz=[-800 800];
     rsz=[0 100];
     him=myhist2(znm{1},v{1},10,1,rz,rsz);    
-    if ploton &&~isempty(ax7)
-        axes(ax7)
+    if ploton &&~isempty(ax8)
+        axes(ax8)
         imagesc(rz,rsz,him')
         axis xy
         xlabel('znm');ylabel('locprec z');
