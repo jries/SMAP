@@ -52,9 +52,9 @@ classdef FRCresolution<interfaces.DialogProcessor
             ylim([-0.2 1.2])
             xlabel('Spatial frequency (nm^{-1})');
             ylabel('FRC')
-            title(['FRC reoslution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
+            title(['FRC resolution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
             
-            out.clipboard=['FRC reoslution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f')];
+            out.clipboard=['FRC reosolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f')];
         end
         function pard=guidef(obj)
             pard=guidef;
