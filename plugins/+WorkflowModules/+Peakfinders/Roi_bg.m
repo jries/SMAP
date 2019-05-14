@@ -19,12 +19,6 @@ classdef Roi_bg<interfaces.WorkflowModule
         end
         function prerun(obj,p)
             obj.imindex=1;
-%             obj.imbuffer=[];
-%             p=obj.getAllParameters;
-%             obj.loc_ROIsize=p.loc_ROIsize;
-%             obj.preview=obj.getPar('loc_preview');
-%             obj.setPar('loc_ROIsize',p.loc_ROIsize);
-%             obj.disppreview=false;
            
         end
         function outputdat=run(obj,data,p)
@@ -32,16 +26,12 @@ classdef Roi_bg<interfaces.WorkflowModule
                 outputdat=data{1};
                 return
             end
-            persistent imbufferlocal
-%             outputdat=[];
-%             avlen=20; %define in GUI
-            
+            persistent imbufferlocal            
             roi=data{1}.data;%get;
             camimg=data{2}.data;
             scamimg=size(camimg);
             imindex=obj.imindex;
             if imindex==1
-%                 obj.imbuffer=zeros(scamimg(1),scamimg(2),obj.bufferlength,'single');
                 imbufferlocal=zeros(scamimg(1),scamimg(2),obj.bufferlength,'single');
             end
             indxhere=mod(imindex-1,obj.bufferlength)+1;
@@ -51,7 +41,6 @@ classdef Roi_bg<interfaces.WorkflowModule
                 return
             end
             obj.imindex=obj.imindex+1;
-%             obj.imbuffer(:,:,indxhere)=camimg;
             imbufferlocal(:,:,indxhere)=camimg;
             if ~isempty(roi)     
                 sroi=size(roi.img);
@@ -97,8 +86,6 @@ pard.t1.Width=2;
 pard.numframes_bg.object=struct('Style','edit','String','20');
 pard.numframes_bg.position=[2,3];
 pard.numframes_bg.Width=0.5;
-
-% pard.syncParameters={{'loc_ROIsize','loc_ROIsize',{'String'}},{'loc_filterforfit','loc_filterforfit',{'String'}}};
 
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='This plugin cuts out regions of interest of a defined size around the candidate positions and passes these on to the fitter';

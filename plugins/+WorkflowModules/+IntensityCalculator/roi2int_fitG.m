@@ -9,13 +9,13 @@ classdef roi2int_fitG<interfaces.GuiModuleInterface
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-        function out=evaluate(obj,roi,bg,dx,dy,PSFxpix,PSFypix)
-            out=roi2int_fit_e(roi,bg, dx,dy,PSFxpix,PSFypix);
+        function out=evaluate(obj,p,img,info) %evaluate(obj,roi,bg,dx,dy,PSFxpix,PSFypix)
+            out=roi2int_fit_e(p,img,info);
         end
         function prerun(obj,p)
             %TODO include PSF fit
-            global roi2int_fitG_parameters;
-            roi2int_fitG_parameters=obj.getAllParameters;
+%             global roi2int_fitG_parameters;
+%             roi2int_fitG_parameters=obj.getAllParameters;
             warning('off','MATLAB:rankDeficientMatrix');
 %             mp=round(sim+1)/2;
 %             dn=single(round((roi2int_fitG_parameters.roisize_fit-1)/2));
@@ -26,24 +26,35 @@ classdef roi2int_fitG<interfaces.GuiModuleInterface
 end
 
 
-function p=roi2int_fit_e(roi,bg, dx,dy,PSFxpix,PSFypix)
-global roi2int_fitG_parameters
+function outp=roi2int_fit_e(p,roi,info)
+% global roi2int_fitG_parameters
 %weights not implemented? Do htat!
+if ~isempty(info.bgim)
+    bg=info.bgim;
+else 
+    bg=info.bg;
+end
+dx=info.dx;
+dy=info.dy;
+PSFxpix=info.PSFxpix;
+PSFypix=info.PSFypix;
+
+
 sim=size(roi);
 if length(sim)==2
     sim(3)=1;
 end
 mp=round(sim+1)/2;
-dn=round((roi2int_fitG_parameters.roisize_fit-1)/2);
-p=zeros(sim(3),2,'single');
+dn=round((p.roisize_fit-1)/2);
+outp=zeros(sim(3),2,'single');
 % X=roi2int_fitG_parameters.X;
 % Y=roi2int_fitG_parameters.Y;
-if roi2int_fitG_parameters.fixpsf
-    PSFxpix=zeros(sim(3),1,'single')+roi2int_fitG_parameters.psfsize_fit;
+if p.fixpsf
+    PSFxpix=zeros(sim(3),1,'single')+p.psfsize_fit;
     PSFypix=PSFxpix;
 end
  nrange=-dn:dn;
-if ~roi2int_fitG_parameters.fitonbg%nargin<7||isempty(bgroi)
+if ~p.fitonbg%nargin<7||isempty(bgroi)
 
     for k=1:sim(3)
         gauss=make2DGaussfast(dx(k),dy(k),PSFxpix(k),PSFypix(k),nrange);
@@ -51,9 +62,9 @@ if ~roi2int_fitG_parameters.fitonbg%nargin<7||isempty(bgroi)
 %         weights=sqrt(gauss);
         Xmat=horzcat(gauss(:), gauss(:)*0+1);
         roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
-        p(k,:)=Xmat\roih(:);
+        outp(k,:)=Xmat\roih(:);
         if 0 %p(k,1)>2500 %any(roih(:))%p(k,1)>2500~
-            p(k,:)
+            outp(k,:)
             figure(67)
             subplot(2,2,1)
             imagesc(-dn:dn,-dn:dn,roih);
@@ -61,12 +72,12 @@ if ~roi2int_fitG_parameters.fitonbg%nargin<7||isempty(bgroi)
             plot(dx(k),dy(k),'+')
             hold off
             subplot(2,2,2);
-            imagesc(-dn:dn,-dn:dn,gauss*p(k,1)+p(k,2))
+            imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2))
             hold on
             plot(dx(k),dy(k),'+')
             hold off
             subplot(2,2,3);
-            imagesc(-dn:dn,-dn:dn,gauss*p(k,1)+p(k,2)-roih)
+            imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2)-roih)
             waitforbuttonpress
         end
     end
@@ -82,11 +93,11 @@ else %fit bg
         Xmat=horzcat(gauss(:));
 %         bgh=bg(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
         roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k)-bgh;
-        p(k,1)=Xmat\roih(:);
-        p(k,2)=bgh;
+        outp(k,1)=Xmat\roih(:);
+        outp(k,2)=bgh;
 %         p(k,2)=(sum(bgh(:)))/bgnorm;
         if 0%p(k,1)>2500~
-            p(k,:)
+            outp(k,:)
             figure(67)
             subplot(2,2,1)
             imagesc(-dn:dn,-dn:dn,roih);
@@ -94,12 +105,12 @@ else %fit bg
             plot(dx(k),dy(k),'+')
             hold off
             subplot(2,2,2);
-            imagesc(-dn:dn,-dn:dn,gauss*p(k,1)+p(k,2))
+            imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2))
             hold on
             plot(dx(k),dy(k),'+')
             hold off
             subplot(2,2,3);
-            imagesc(-dn:dn,-dn:dn,gauss*p(k,1)+p(k,2)-roih)
+            imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2)-roih)
             waitforbuttonpress
         end
     end

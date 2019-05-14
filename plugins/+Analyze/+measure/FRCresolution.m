@@ -33,7 +33,7 @@ classdef FRCresolution<interfaces.DialogProcessor
             
             image1f=filterimage(image1);
             image2f=filterimage(image2);
-            frc_curve=getFRC(image1f,image2f);
+            [frc_curve,frc_nom]=getFRC(image1f,image2f);
             [FRC_resolutionp,rl,rh]=frctoresolution(frc_curve,size(image1));
             FRC_resolution=FRC_resolutionp*p.pixrec_frc;
             errres=(rh-rl)/2*p.pixrec_frc;
@@ -55,6 +55,12 @@ classdef FRCresolution<interfaces.DialogProcessor
             title(['FRC resolution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
             
             out.clipboard=['FRC reosolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f')];
+            
+%             ax2=obj.initaxis('Q')
+%             q=linspace(0,qmax, length(frc_curve));
+%             locs=lochere.getloc({'locprecnm'},'position','roi','layer',1);
+%             norm=(mean(exp(-4*pi^2*locs.locprecnm.^2.*q.^2),1));
+%             plot(ax2,q,frc_nom./norm');
         end
         function pard=guidef(obj)
             pard=guidef;
@@ -76,7 +82,7 @@ for k=1:p.frc_blocks
 end
 end
 
-function frc_out=getFRC(image1,image2)
+function [frc_out,frc_num]=getFRC(image1,image2)
 in1=fftshift(fft2(image1));
 in2=fftshift(fft2(image2));
 inc=in1.*conj(in2);

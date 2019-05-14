@@ -216,12 +216,16 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                     if isfast
                         pk.groupcheck=false;
 %                         pk.sr_pixrec=pk.sr_pixrec*2;
-                        if strcmp(pk.rendermode.selection,'Gauss')
-                            pk.rendermode.selection='constGauss';
-                            pk.rendermode.Value=3;
-                        end
+
                             posh=[pk.sr_pos(1) pk.sr_pos(2) pk.sr_size(1)*2 pk.sr_size(2)*2];
                             fields={'xnm','ynm'};
+                            if strcmp(pk.rendermode.selection,'Gauss')
+                                pk.rendermode.selection='constGauss';
+                                pk.rendermode.Value=3;
+                                    calculatesigma=true;
+                                    fields{end+1}='locprecnm';
+
+                            end
 %                             if strcmp(pk.rendermode.selection,'DL')
 %                                 fields{end+1}='P';
 %                             end
@@ -239,6 +243,11 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                             end
 %                             {'xnm','ynm','znm','locprecnm','PSFxnm','phot',pk.renderfield.selection}
                             locD=obj.locData.getloc(fields,'layer',k,'position',posh);
+                            if calculatesigma
+                                
+                                pk.renderparameter=max(pk.sr_pixrec*pk.mingausspix,myquantilefast(locD.locprecnm,0.4,10000));
+                            end
+
 %                             maxlfast=2e5;
 %                             if length(locD.xnm)>maxlfast
 %                                 indin=false(size(locD.xnm));

@@ -6,7 +6,7 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
         splinecoeff
         spline
 %         transform
-        p
+%         p
         mirror
     end
     methods
@@ -16,8 +16,8 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-        function out=evaluate(obj,roi,loc)
-            out=roi2int_fit_e(obj,roi,loc);
+        function out=evaluate(obj,p,roi,loc)
+            out=roi2int_fit_e(obj,p,roi,loc);
         end
         function load3Dfile(obj,a,b)
             calf=obj.getSingleGuiParameter('cal_3Dfile');
@@ -63,7 +63,7 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
             if exist(fit3ddir,'file')
             addpath(fit3ddir);
             end
-            obj.p=obj.getGuiParameters;
+%             obj.p=obj.getGuiParameters;
             obj.load_spline;
             warning('off','MATLAB:lscov:RankDefDesignMat')
 %             dn=round((obj.p.roisize_fit-1)/2);
@@ -97,7 +97,7 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
 end
 
 
-function p=roi2int_fit_e(obj,roi,loc)
+function pout=roi2int_fit_e(obj,p,roi,loc)
 % persistent splinehere
 % if nargin==0
 %     splinehere=[];
@@ -120,8 +120,8 @@ end
 %     loc.dx=-loc.dx;
 % end
 mp=round(sim+1)/2;
-dn=round((obj.p.roisize_fit-1)/2);
-p=zeros(sim(3),2,'single');
+dn=round((p.roisize_fit-1)/2);
+pout=zeros(sim(3),2,'single');
 % n=-dn:dn;
 % [X,Y]=meshgrid(n);
 % Z=0*X;
@@ -129,38 +129,38 @@ p=zeros(sim(3),2,'single');
 % splinecoeff=obj.spline.SXY(sppos).cspline.coeff{sppos};
 zmp=obj.spline.SXY(1).cspline.z0;
 dz=obj.spline.SXY(1).cspline.dz;
-    if obj.p.fixz0
-        z=zeros(sim(3),1)+obj.p.z0;
+    if p.fixz0
+        z=zeros(sim(3),1)+p.z0;
     else
         z=loc.z/dz;
     end
     cor=horzcat(loc.dy+dn,loc.dx+dn,-z+zmp);
    
    % template = evalSpline(obj.p.roisize_fit,obj.splinecoeff,1,0,cor);
-    template = simSplinePSF_call(obj.p.roisize_fit,obj.splinecoeff,1,0,single(cor));
+    template = simSplinePSF_call(p.roisize_fit,obj.splinecoeff,1,0,single(cor));
    numrois=1;
 for k=1:sim(3)
     templateh=template(:,:,k);
     roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
-    switch obj.p.fitbg.selection
+    switch p.fitbg.selection
         case 'BG free fit'
             %fit bg
             Xmat=horzcat(templateh(:),ones((2*dn+1)^2,1));          
-            if obj.p.normalizeimage
+            if p.normalizeimage
                 ph=lscov(Xmat,roih(:),1./sqrt(roih(:)));
-                p(k,:)=ph;
+                pout(k,:)=ph;
             else
-                p(k,:)=Xmat\roih(:);
+                pout(k,:)=Xmat\roih(:);
             end
         otherwise
             if isfield(loc,'numrois') %grouped data
                 numrois=loc.numrois(k);
             end
-            switch obj.p.fitbg.selection
+            switch p.fitbg.selection
                 case 'BG from localizations'
                     bg=loc.bg(k);
                 case 'BG fixed to:'
-                    bg=obj.p.bgsetvalue*numrois;
+                    bg=p.bgsetvalue*numrois;
                 case 'BG fixed automatic'
                     bg=loc.bgim(k)*numrois;
                 otherwise
@@ -168,13 +168,13 @@ for k=1:sim(3)
             end
         %bg fixed
         Xmat=templateh(:);
-        if obj.p.normalizeimage
+        if p.normalizeimage
             ph=lscov(Xmat,(roih(:)-bg),1./sqrt(roih(:)));
-            p(k,1)=ph;
+            pout(k,1)=ph;
         else
-            p(k,1)=Xmat\(roih(:)-bg);
+            pout(k,1)=Xmat\(roih(:)-bg);
         end
-        p(k,2)=bg;
+        pout(k,2)=bg;
     end
 end
 
@@ -183,7 +183,7 @@ if 0%loc.frame(1)==60
     roia=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,:);
     tp=template;
     for k=1:size(roi,3)
-        tp(:,:,k)=tp(:,:,k)*p(k,1)+p(k,2);
+        tp(:,:,k)=tp(:,:,k)*pout(k,1)+pout(k,2);
     end
     impl=[roia,tp;roia-tp,0*tp];
     f=figure(88);
