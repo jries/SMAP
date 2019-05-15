@@ -136,7 +136,7 @@ dz=obj.spline.SXY(1).cspline.dz;
     else
         z=loc.z/dz;
     end
-    cor=horzcat(loc.dy+dn,loc.dx+dn,-z+zmp);
+    cor=horzcat(loc.dx+dn,loc.dy+dn,-z+zmp);
    
    % template = evalSpline(obj.p.roisize_fit,obj.splinecoeff,1,0,cor);
     template = simSplinePSF_call(p.roisize_fit,obj.splinecoeff,1,0,single(cor));
@@ -180,9 +180,9 @@ for k=1:sim(3)
         if multiply
             if p.normalizeimage
                 weights=1./sqrt(roih(:));
-                pout(k,1)=sum((roih(:)-bg).*templateh(:).*weights)/mean(weights);
+                pout(k,1)=sum((roih(:)-bg).*templateh(:).*weights)/mean(weights)/sum(templateh(:));
             else
-                pout(k,1)=sum((roih(:)-bg).*templateh(:));
+                pout(k,1)=sum((roih(:)-bg).*templateh(:))/sum(templateh(:));
             end
         else
         Xmat=templateh(:);
