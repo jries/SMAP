@@ -175,7 +175,7 @@ pard.loadbuttonT.TooltipString=pard.Tfile.TooltipString;
 
 p(1).value=0; p(1).on={}; p(1).off={'bgfunction','bgfunctionpar','t1','numframes_bg'};
 p(2).value=1; p(2).on=p(1).off; p(2).off={};
-pard.calculatebg.object=struct('Style','checkbox','String','subtract BG','Callback',{{@obj.switchvisible,p}});
+pard.calculatebg.object=struct('Style','checkbox','String','calculate BG','Callback',{{@obj.switchvisible,p}});
 pard.calculatebg.position=[1,3.8];
 pard.calculatebg.Width=1.2;
 

@@ -66,6 +66,7 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
 %             obj.p=obj.getGuiParameters;
             obj.load_spline;
             warning('off','MATLAB:lscov:RankDefDesignMat')
+
 %             dn=round((obj.p.roisize_fit-1)/2);
 %             zmp=obj.spline.SXY(1).cspline.z0;
 %             norm=evalSpline(obj.p.roisize_fit,obj.splinecoeff,1,0,[dn dn zmp]);
@@ -111,6 +112,7 @@ if length(sim)==2
     sim(3)=1;
 end
 
+multiply=strcmp(p.fitmode.selection,'multiply');
 % if obj.mirror(2)
 %     roi(:,:,:)=roi(end:-1:1,:,:);
 %     loc.dy=-loc.dy;
@@ -145,6 +147,9 @@ for k=1:sim(3)
     switch p.fitbg.selection
         case 'BG free fit'
             %fit bg
+            if multiply
+                error('free fit of BG not possible with multiplication mode')
+            end
             Xmat=horzcat(templateh(:),ones((2*dn+1)^2,1));          
             if p.normalizeimage
                 ph=lscov(Xmat,roih(:),1./sqrt(roih(:)));
@@ -152,6 +157,7 @@ for k=1:sim(3)
             else
                 pout(k,:)=Xmat\roih(:);
             end
+            
         otherwise
             if isfield(loc,'numrois') %grouped data
                 numrois=loc.numrois(k);
@@ -161,12 +167,24 @@ for k=1:sim(3)
                     bg=loc.bg(k);
                 case 'BG fixed to:'
                     bg=p.bgsetvalue*numrois;
-                case 'BG fixed automatic'
+                case 'BG calculated above'
+                    if isempty(loc.bgim)
+                        error('you need to select calcualte BG above')
+                    else
                     bg=loc.bgim(k)*numrois;
+                    end
                 otherwise
                     warning('not implemented')      
             end
         %bg fixed
+        if multiply
+            if p.normalizeimage
+                weights=1./sqrt(roih(:));
+                pout(k,1)=sum((roih(:)-bg).*templateh(:).*weights)/mean(weights);
+            else
+                pout(k,1)=sum((roih(:)-bg).*templateh(:));
+            end
+        else
         Xmat=templateh(:);
         if p.normalizeimage
             ph=lscov(Xmat,(roih(:)-bg),1./sqrt(roih(:)));
@@ -174,7 +192,9 @@ for k=1:sim(3)
         else
             pout(k,1)=Xmat\(roih(:)-bg);
         end
+        end
         pout(k,2)=bg;
+        
     end
 end
 
@@ -243,10 +263,16 @@ p(1).value=0; p(1).on={}; p(1).off={'bgsetvalue'};
 p(2)=p(1);p(2).value=2;p(3)=p(1);p(3).value=3;
 p(4).value=4; p(4).on={'bgsetvalue'}; p(4).off={};
             
-pard.fitbg.object=struct('Style','popupmenu','String',{{'BG free fit','BG from localizations','BG fixed automatic','BG fixed to:'}},'Value',1,...
+pard.fitbg.object=struct('Style','popupmenu','String',{{'BG free fit','BG from localizations','BG calculated above','BG fixed to:'}},'Value',1,...
     'Callback',{{@obj.switchvisible,p}});
-pard.fitbg.position=[1,2.5];
+pard.fitbg.position=[1,2];
 pard.fitbg.Width=2;
+
+pard.fitmode.object=struct('Style','popupmenu','String',{{'fit','multiply'}},'Value',1);
+pard.fitmode.position=[1,4];
+pard.fitmode.Width=1;
+
+
 
 pard.bgsetvalue.object=struct('Style','edit','String','0','Visible','off');
 pard.bgsetvalue.position=[1,4.5];

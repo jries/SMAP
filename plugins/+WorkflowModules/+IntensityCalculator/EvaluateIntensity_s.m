@@ -80,14 +80,15 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             obj.loccounter=0;
             obj.fields={};
             for k=1:length(obj.evaluators)
+                obj.peval{k}=obj.evaluators{k}.getAllParameters;
                 if obj.useevaluators(k)
-                    obj.evaluators{k}.prerun;
+                    obj.evaluators{k}.prerun(obj.peval{k});
                     fields=obj.evaluators{k}.info.fields;
                     for l=1:length(fields)
                         obj.fields={obj.fields{:} [fields{l}] };
                     end 
                 end
-                obj.peval{k}=obj.evaluators{k}.getAllParameters;
+                
             end
                obj.fields={obj.fields{:} 'int_xpix', 'int_ypix', 'int_frame' ,'phot','bg'};
             obj.intensities=single(0);

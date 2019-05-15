@@ -24,6 +24,9 @@ classdef Roi_bg<interfaces.WorkflowModule
         function outputdat=run(obj,data,p)
             if ~p.calculatebg
                 outputdat=data{1};
+                if ~isempty(outputdat.data)
+                    outputdat.data.info.bgim=[];
+                end
                 return
             end
             persistent imbufferlocal            
