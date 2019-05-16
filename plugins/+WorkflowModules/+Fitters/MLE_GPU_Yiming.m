@@ -40,6 +40,8 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
                     %calibration file and calibration date (in case
                     %calibration was done again)
                     %dz, zmax, z-pos, roisize
+                    obj.fitpar.refractive_index_mismatch=1; %included in model
+                  
                     spline=obj.fitpar.splinefit;
                     
                     for X=1:size(spline,1)
