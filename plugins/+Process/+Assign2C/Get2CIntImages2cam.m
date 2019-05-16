@@ -29,10 +29,10 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
       
             p.loaderclass=wf.module('TifLoader').getSingleGuiParameter('loaderclass'); 
             p.loaderclass.Value=1;%auto
-           
+            p.framestop=max(obj.locData.loc.frame);
             wf.module('TifLoader').setGuiParameters(p);
             
-            p.framestop=max(obj.locData.loc.frame);
+           
             file=obj.locData.files.file;
             wf.module('IntLoc2posN').filestruc=file;
             wf.module('IntLoc2posN').setGuiParameters(p);
