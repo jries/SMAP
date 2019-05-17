@@ -56,6 +56,7 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
                 wf.module('TifLoader').addFile(p.tiffiletarget,true);   
                 wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
+                overwritedefaultcamera(obj)
                 wf.run;
             end
             if p.evalref
@@ -67,7 +68,7 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
                 wf.module('TifLoader').addFile(p.tiffileref,true);   
                 wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
 %                 wf.module('EvaluateIntensity_s').extension='r';
-                
+                overwritedefaultcamera(obj)
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
                 wf.run;
             end
@@ -241,4 +242,14 @@ plugino.handle=handle;
 plugino.makeGui;
 pluginname=pluginpath{end};
 obj.children.(pluginname)=plugino;
+end
+
+function overwritedefaultcamera(obj)
+loc_cameraSettings=obj.getPar('loc_cameraSettings');
+if strcmp(loc_cameraSettings.comment,'Default camera')
+    disp('Default camera recognized. Overwrite settings with settings from locData')
+    loc_cameraSettingsnew=copyfields([],obj.locData.files.file(1).info,fieldnames(loc_cameraSettings));
+    obj.setPar('loc_fileinfo',loc_cameraSettingsnew);
+    obj.setPar('loc_fileinfo_set',loc_cameraSettingsnew);
+end
 end

@@ -179,8 +179,8 @@ end
 
 pixelsizerec=p.register_parameters.pixelsizenm;
 % if p.uselayers
-    rangex=[min(min(locref.x),min(loctT.x)) max(max(locref.x),max(loctT.x))] ;
-    rangey=[min(min(locref.y),min(loctT.y)) max(max(locref.y),max(loctT.y))] ;
+    rangex=[min(min(locref.x),min(loctT.x)) max(max(locref.x),max(loctT.x))] +[-1 1]*pixelsizerec*5;
+    rangey=[min(min(locref.y),min(loctT.y)) max(max(locref.y),max(loctT.y))] +[-1 1]*pixelsizerec*5;
 % else
 %     
 % roi=p.currentfileinfo.roi;

@@ -41,8 +41,8 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             f.Visible='on';
 %             wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
 %             wffile='settings/workflows/get2CIntensityImagesWF2';
-%             wffile='settings/workflows/get2CIntensityImagesWF3';
-            wffile='settings/workflows/get2CIntensityImagesWF_group_bg';
+            wffile='settings/workflows/get2CIntensityImagesWF3';
+%             wffile='settings/workflows/get2CIntensityImagesWF_group_bg';
             wf=interfaces.Workflow(f,obj.P);
             wf.attachLocData(obj.locData);
             wf.makeGui;
@@ -51,9 +51,10 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
       
             p.loaderclass=wf.module('TifLoader').getSingleGuiParameter('loaderclass'); 
             p.loaderclass.Value=1;%single MM
+            p.framestop=max(obj.locData.loc.frame);
             wf.module('TifLoader').setGuiParameters(p);
                   
-            p.framestop=max(obj.locData.loc.frame);
+            
             file=obj.locData.files.file;
             wf.module('IntLoc2posN').filestruc=file;
             wf.module('IntLoc2posN').transformation=transform;
@@ -61,7 +62,7 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             
             pe=obj.children.evaluate.getGuiParameters(true);
             bgmode=pe.children.panel_3.fitbg.Value;
-            p.calculatebg.Value=bgmode==3; 
+            p.calculatebg=bgmode==3; 
             wf.module('Roi_bg').setGuiParameters(p);          
 
             
@@ -71,14 +72,15 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             evalfit=wf.module('EvaluateIntensity_s').children.panel_3;
             rsfit=evalfit.getSingleGuiParameter('roisize_fit');
             pfit=evalfit.getAllParameters;
-             pfit.fixz0=1;
+              pfit.fixz0=1;
              evalfit.setGuiParameters(pfit)
             
             
             p.loc_ROIsize=rsfit+2;
 %             p.loc_fitgrouped=p.fitgrouped;
-            wf.module('RoiCutterWF_groupExt').setGuiParameters(p);
-%             wf.module('RoiCutterWF').setGuiParameters(p);
+%             wf.module('RoiCutterWF_groupExt').setGuiParameters(p);
+            wf.module('RoiCutterWF').setGuiParameters(p);
+
             
             
             % now first SA
@@ -87,6 +89,8 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
                 wf.module('TifLoader').addFile(p.tiffiletarget,true);   
                 wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirrorem))
 %                 wf.module('EvaluateIntensity_s').extension='t';
+
+                overwritedefaultcamera(obj)
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
                 wf.run;
         %then fit UA if needed with modified settings
@@ -105,6 +109,7 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
 %                 wf.module('EvaluateIntensity_s').extension='r';
                 
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
+                overwritedefaultcamera(obj)
                 wf.run;
             end
             delete(f);
@@ -223,6 +228,29 @@ pard.loc_fitgrouped.object=struct('Style','checkbox','String','evaluate grouped 
 pard.loc_fitgrouped.position=[4,3];
 pard.loc_fitgrouped.Width=2;
 
+
+
+p(1).value=0; p(1).on={}; p(1).off={'bgfunction','bgfunctionpar','t1','numframes_bg'};
+p(2).value=1; p(2).on=p(1).off; p(2).off={};
+pard.calculatebg.object=struct('Style','checkbox','String','calculate BG','Callback',{{@obj.switchvisible,p}});
+pard.calculatebg.position=[5,1];
+pard.calculatebg.Width=1.2;
+
+pard.bgfunction.object=struct('Style','popupmenu','String',{{'quantile'}},'Visible','off');
+pard.bgfunction.position=[5,2.2];
+pard.bgfunction.Width=0.9;
+pard.bgfunctionpar.object=struct('Style','edit','String','0.5','Visible','off');
+pard.bgfunctionpar.position=[5,3.1];
+pard.bgfunctionpar.Width=0.3;
+
+pard.t1.object=struct('Style','text','String','# frames','Visible','off');
+pard.t1.position=[5,3.8];
+pard.t1.Width=.9;
+pard.numframes_bg.object=struct('Style','edit','String','20','Visible','off');
+pard.numframes_bg.position=[5,4.7];
+pard.numframes_bg.Width=0.3;
+
+
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
 % pard.plugininfo.description=sprintf(['This plugin gets intensities from camera images at positions of localizations and at transformed positions \n',...
@@ -272,4 +300,14 @@ plugino.makeevaluators(1:2)=false;
 plugino.makeGui;
 pluginname=pluginpath{end};
 obj.children.(pluginname)=plugino;
+end
+
+function overwritedefaultcamera(obj)
+loc_cameraSettings=obj.getPar('loc_cameraSettings');
+if strcmp(loc_cameraSettings.comment,'Default camera')
+      disp('Default camera recognized. Overwrite settings with settings from locData')
+    loc_cameraSettingsnew=copyfields([],obj.locData.files.file(1).info,fieldnames(loc_cameraSettings));
+    obj.setPar('loc_fileinfo',loc_cameraSettingsnew);
+    obj.setPar('loc_fileinfo_set',loc_cameraSettingsnew);
+end
 end
