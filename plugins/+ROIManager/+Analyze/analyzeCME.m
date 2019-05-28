@@ -113,7 +113,7 @@ case 'theta plots'
         dy(k)=si.eval.qy(3)-si.eval.qy(1);
 %         dz(k)=si.eval.qz(3)-si.eval.qz(1);
         dz(k)=si.eval.allqz(end)-si.eval.allqz(1);
-%         allqz(1) is 5%, allqz(end) is 95%
+%         allqz(1) is 5%, allqz(end) is 95%f
         dtheta(k)=si.eval.allqtheta(end-1);
         dtheta10(k)=si.eval.allqtheta(2);
         diff(k)=abs(si.eval.allqtheta(end-3))-abs(si.eval.allqtheta(4));

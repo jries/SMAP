@@ -10,7 +10,7 @@ wx=0;wy=0;wz=0;
  opt=optimset('lsqnonlin');
  opt.Display='off';
  if coarse
- opt.TolFun=3e-3;
+ opt.TolFun=1e-3;
  opt.MaxFunEvals=50;
  end
 [fitp,residual,~,exitflag]=lsqnonlin(@callfit,double(startp),lb,ub,opt,fh,double(x),double(y),double(z),double(wx),double(wy),double(wz));

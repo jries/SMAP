@@ -248,6 +248,7 @@ if obj.display
 end 
 
 if 1 %p.refit||~isfield(obj.site.evaluation,'CME3DDSpherefit')
+    qr=max(50,abs(qr));
     quantiles=[qx(2),qy(2),qz(2),qr];
     out.spherefit=spherefit(xn,yn,zn,quantiles);
     
@@ -541,6 +542,7 @@ if ~isempty(hmap)
 %     plot(hmap,cbx,cby,'wx')
 %      plot(hmap,cdx,cdy,'w+')
     hmap.NextPlot='replace';
+    title(hmap,['area (nm^2): ' num2str(areanm)]);
 %     title(['coverage area (nm^2): ' num2str(stat.coverageArea,'%6.0f') ', fraction: ' num2str(stat.coverageFraction)],'Parent',hmap);
 end
 end
@@ -551,11 +553,31 @@ function stat=mapanalysis3D(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2)
 nump=128; %side length of reconstruction in pixels
 sigma=3.5;
 cutofffactor=1.1;
-
+filterpixelsize=10;
+radiuscutoff=500;
 rangex=[-pi pi];
 rangey=[-1 1+1/nump];
 pixelsize=[2*pi/nump,2/nump];
-      
+scalefactor=1;
+
+medianradius=median(rcB2);
+sigma=min(3.5,double(max(1,filterpixelsize/medianradius/min(pixelsize))));
+stat=mapanalysis3Dint(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor);
+drawnow
+if stat.rSphere>radiuscutoff
+    sigma=1;
+    pixelsize=[15 15]./stat.rSphere;
+    pos=stat.bwfit.centerpos;
+    pos=[median(tcB) median(sin(pcB))];
+    rangex=[pos(1)-nump/2*pixelsize(1) pos(1)+nump/2*pixelsize(1)];
+    rangey=[pos(2)-nump/2*pixelsize(2) pos(2)+nump/2*pixelsize(2)];
+    scalefactor=(rangex(2)-rangex(1))*(rangey(2)-rangey(1))/(2*pi*2);
+    stat=mapanalysis3Dint(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor);
+    
+end
+
+
+function stat=mapanalysis3Dint(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor)
 imh=myhist2(tcB,sin(pcB),pixelsize(1),pixelsize(2),rangex,rangey);
 imh=[imh ;imh];
 hk=fspecial('gauss',ceil(4*sigma),sigma);
@@ -574,6 +596,7 @@ imbw=imhf>cutoffone;
 %         coveragepix=sum(imbw(:));
 %         coverageFraction=coveragepix/numel(imbw);
 statb=areastats(imbw);
+statb.coverageFraction=statb.coverageFraction*scalefactor;
 stat.coverageFraction=statb.coverageFraction;
 stat.coverageArea=stat.coverageFraction*4*pi*rSphere.^2;
 stat.rSphere=rSphere;
@@ -625,6 +648,7 @@ stat.bwfit.theta0=fitp(1);
 stat.bwfit.phi0=fitp(2);
 stat.bwfit.thetacoverage=fitp(3);
 stat.bwfit.fraction=0.5*(1-cos(pi-fitp(3)));
+stat.bwfit.centerpos=[cbx cby];
 
 stat.imfit.theta0=fitp2(1);
 stat.imfit.phi0=fitp2(2);
@@ -690,6 +714,7 @@ end
       end
 
 end
+end
 
 function stat=areastats(imbw)
 
@@ -750,10 +775,12 @@ end
 
 function fitp=spherefit(xn,yn,zn,quantiles)
     fh=@sphere_implicit;
-    
-    startptot=[quantiles(4),quantiles(1),quantiles(2),quantiles(3)-50];
-    
+    radius=quantiles(4);
+%     radius=1000;
+    startptot=[radius,quantiles(1),quantiles(2),quantiles(3)+radius];
+    % r x y z
     dz=[0  1000 -1000];
+  
 %     lb=[0 -2 -2 -2]*1000*0.25;
 %     ub=[8 2 2 2]*1000*0.25;
     lb=[0    -200 -200 -2000];
@@ -762,17 +789,19 @@ function fitp=spherefit(xn,yn,zn,quantiles)
     tic
     [fitp,r]=implicitfit(fh,startptot,xn,yn,zn,lb,ub,1);
     indf=1;
+    fitbest=fitp;
     for k=1:length(dz)
         startp=startptot; startp(1)=sqrt(startp(1)^2+dz(k)^2);startp(4)=startp(4)+dz(k);
-        [fitph,rh]=implicitfit(fh,startp,xn,yn,zn,lb,ub,1);
+        [fitph,rh]=implicitfit(fh,startp,xn,yn,zn,lb,ub,0);
         if rh<r
             indf=k;
+            fitbest=fitph;
         end
     end
     toc
     tic
     startp=startptot; startp(1)=sqrt(startp(1)^2+dz(indf)^2);startp(4)=startp(4)+dz(indf);
-    [fitp,r]=implicitfit(fh,startp,xn,yn,zn,lb,ub,0);
+    [fitp,r]=implicitfit(fh,fitbest,xn,yn,zn,lb,ub,0);
     toc
 %     fitp
 end
