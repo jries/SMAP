@@ -139,10 +139,13 @@ classdef LocalizationData<interfaces.GuiParameterInterface
             %(due to grouping)
             %'removeFilter': cell array of filter names to remove 
             if any(strcmp(varargin,'locselector'))
-                [locsout,indout,hroi]=getlocs2(obj,fields,varargin{:});
+                [locsout,indout,hroi]=getlocs2ind(obj,fields,varargin{:});
+            elseif any(strcmp(varargin,'ingrouped')) || any(strcmp(varargin,'inungrouped'))
+                [locsout,indout,hroi]=getlocs2ind(obj,fields,varargin{:});
             else
                 [locsout,indout,hroi]=getlocs(obj,fields,varargin{:});
 %                 [locsout,indout,hroi]=getlocs2(obj,fields,varargin{:});
+
             end
         end
         

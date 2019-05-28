@@ -12,7 +12,7 @@ clearvars
     fmin0 = fmin1;
     fmax0 = fmax2;
 
-    gamma = 0.5;
+    gamma = 1;
 
     plot_frequencies = [43.7 48 48.9 49.4 50 98.1 100];
     plot_frequencies = sort(plot_frequencies);
@@ -74,7 +74,7 @@ figure
 %figure: color representation
 figure
 
-    set(gcf, 'Position', [1 55 1440 750])
+    set(gcf, 'Position', [1 55 875 750])
 
     subplot(1,2,1)
         ind_min0 = find( min( abs( frequency - fmin0 ) ) == abs( frequency - fmin0 ) );
@@ -88,6 +88,10 @@ figure
 
             xlabel('Time (min)')
             ylabel('Frequency (Hz)')
+            
+            colormap jet            
+            
+            colorbar
     
     % 3D plot of frequency range over time, window 1
     subplot(2,2,2)
@@ -103,6 +107,10 @@ figure
             xlabel('Time (min)')
             ylabel('Frequency (Hz)')
             
+            colormap jet
+            
+            colorbar
+            
     % 3D plot of frequency range over time, window 2
     subplot(2,2,4)
         ind_min2 = find( min( abs( frequency - fmin2 ) ) == abs( frequency - fmin2 ) );
@@ -116,3 +124,7 @@ figure
 
             xlabel('Time (min)')
             ylabel('Frequency (Hz)')
+            
+            colormap jet
+            
+            colorbar
