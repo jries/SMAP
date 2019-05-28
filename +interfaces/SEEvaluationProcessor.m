@@ -157,10 +157,10 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
                  end
 %                  end
              end  
-             if isfield(locsh,'ingrouped')
+             if isfield(locsh,'ingrouped') && length(indgood)==sum(locsh.ingrouped)
                  locsh.ingrouped(locsh.ingrouped)=indgood;
              end
-             if isfield(locsh,'inungrouped')
+             if isfield(locsh,'inungrouped') && length(indgood)==sum(locsh.inungrouped)
                  locsh.inungrouped(locsh.inungrouped)=indgood;
              end             
              locsout=copyfields(locsout,locsh,{'ingrouped','inungrouped'});
