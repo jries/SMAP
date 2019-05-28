@@ -85,7 +85,7 @@ pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','
 end
 
 function saveimagesb_callback(a,b,obj)
-p=obj.getGuiParameters.par;
+p=obj.getGuiParameters;
 f=p.saveimagesdir;
 d=uigetdir(f);
 if d
@@ -255,7 +255,7 @@ if obj.display
 
 end 
 
-if 1 %p.refit||~isfield(obj.site.evaluation,'CME3DDSpherefit')
+if p.refit||~isfield(obj.site.evaluation,'CME3DDSpherefit')
     qr=max(50,abs(qr));
     quantiles=[qx(2),qy(2),qz(2),qr];
     out.spherefit=spherefit(xn,yn,zn,quantiles);
@@ -277,8 +277,8 @@ if 1 %p.refit||~isfield(obj.site.evaluation,'CME3DDSpherefit')
         ympi4=cos(-pi/4)*yw-sin(-pi/4)*xw;
         
         
-%         out.plotsphere.xppi4=xppi4;
-%         out.plotsphere.xmpi4=xmpi4;
+        out.plotsphere.xppi4=xppi4;
+        out.plotsphere.xmpi4=xmpi4;
 
 %
         xc=xn-fitp(2);
@@ -308,6 +308,7 @@ if 1 %p.refit||~isfield(obj.site.evaluation,'CME3DDSpherefit')
             hmap3=[];
         end
         fitpsc=spherecoverage(tc,pc,rc,hsc);
+        out.fitpsc=fitpsc;
         out.fitcoverage_thetatop=min(max(-pi/2,fitpsc(2)),pi/2);
         out.fitcoverage_thetabottom=min(max(-pi/2,fitpsc(3)),pi/2);
 %          out.fitcoverage_thetatop=max(fitp(2));
@@ -326,8 +327,9 @@ else %use old fit
     oldeval=obj.site.evaluation.CME3DDSpherefit;
      out.spherefit=oldeval.spherefit;
      out.allqtheta=oldeval.allqtheta;
-     out.plotsphere=oldeval.plotsphere;
+%      out.plotsphere=oldeval.plotsphere;
      fitp=oldeval.spherefit;
+     fitpsc=oldeval.fitpsc;
      xppi4=oldeval.plotsphere.xppi4;
      xmpi4=oldeval.plotsphere.xmpi4;
 end
@@ -369,6 +371,15 @@ if p.saveimagescheck
     end
 end
 
+if p.saveon
+    maind=p.saveimagesdir;
+        thisd=[maind filesep 'figure' ];
+        if ~exist(thisd,'dir')
+            mkdir(thisd)
+        end
+    fo=[thisd filesep num2str(obj.site.indList) '_S' num2str(obj.site.ID) 'C' num2str(obj.site.info.cell) 'F' num2str(obj.site.info.filenumber) '.png']
+    saveas(hp,fo);
+end
 %filter from layer: or add with filter size and check box
 end
 
