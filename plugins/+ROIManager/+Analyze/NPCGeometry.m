@@ -28,7 +28,8 @@ sites=obj.SE.sites;
 % ind = dt>20&dt<100;
 % sites = sites(ind);
 ff='%2.1f';
-
+d=0;ddd=0;sigma=0;draw=0; drawerr=0;
+d2G=0;d2Gerr=0;pearsonc=0;
 if isfield(sites(1).evaluation.NPCgeomtryQuantify,'profile') %z-data is there
 
 z0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.b');
@@ -102,20 +103,23 @@ xlabel('z');ylabel('distance')
 title(['d(z=0) fit: ' num2str(fline.p2,ff) ' Corr:' num2str(corr(abs(d'),zt(indzin')))]);
 ylim([25 100])
 xlim([-200 200])
+pearsonc=corr(abs(d'),zt(indzin'));
 end
 
-pearsonc=corr(abs(d'),zt(indzin'));
+
 
 R0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.Rfit');
 ax5=obj.initaxis('R');
 ff='%2.3f';
 % figure(112)
 hold off
-rn=40:0.5:65;
+q=quantile(R0,[0.05,0.95]);
+qr=round(q/5)*5+[-5 5];
+rn=qr(1):0.5:qr(2);
 histogram(abs(R0),rn); xlabel('R (nm)')
 title(['fitted radius: ' num2str(mean(R0),ff) '\pm' num2str(std(R0),ff) '\pm' num2str(std(R0)/length(R0),2)])
 xlabel('radius (nm)')
-xlim([45 60])
+xlim([rn(1) rn(end)])
 ylabel('counts')
 hh=histcounts(R0,rn);
 fitp=fit(rn(1:end-1)'+(rn(2)-rn(1))/2,hh','gauss1');
@@ -184,7 +188,7 @@ ax.XMinorTick='on';
 ax.XGrid='on';
 xlabel('angle (theta) ')
 ylabel('auto/cross correlation')
-title(['angular correlation. Nlocs=' num2str(length(d)) txtshift])
+title(['angular correlation. Nlocs=' num2str(length(R0)) txtshift])
 if p.copytopage
     sm=3;sn=3;
     f=figure;
