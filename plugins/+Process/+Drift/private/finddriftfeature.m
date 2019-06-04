@@ -241,6 +241,9 @@ function Fmovier=makemovie %calculate fourier transforms of images
         indframe=pos.frame<frameranges(k+1)&pos.frame>=frameranges(k);
         posr.x=pos.xnm(indframe);posr.y=pos.ynm(indframe);
         imager=histrender(posr,mx, my, pixrec, pixrec)';
+        if k==1 %optimize with fftw
+            optimizefft(imager,nfftexp);
+        end
         Fmovier(:,:,k)=fft2(imager,nfftexp,nfftexp);
         if SMAP_stopnow
             error('execution stopped by user');
@@ -339,4 +342,18 @@ end
 function out=bindispf(fp,ddx)
 out=bindisp(fp);
 out=out(:);
+end
+
+function optimizefft(imager,nfftexp)
+tic
+    fft2(imager,nfftexp,nfftexp);
+toc
+fftw('swisdom',[]);
+fftw('planner','measure');
+tic
+fft2(imager,nfftexp,nfftexp);
+toc
+tic
+fft2(imager,nfftexp,nfftexp);
+toc
 end

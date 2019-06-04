@@ -161,15 +161,15 @@ end
 function pard=guidef
 pard.text.object=struct('Style','text','String','Size ROI (pix)');
 pard.text.position=[1,1];
-
+pard.text.Width=0.8;
 
 pard.loc_ROIsize.object=struct('Style','edit','String','7');
-pard.loc_ROIsize.position=[2,1];
-pard.loc_ROIsize.Width=0.7;
+pard.loc_ROIsize.position=[1,1.8];
+pard.loc_ROIsize.Width=0.4;
 pard.loc_ROIsize.TooltipString=sprintf('Size (pixels) of regions around each peak candidate which are used for fitting. \n Depends on fitter. Use larger ROIs for 3D data.');
 
 pard.loc_filterforfit.object=struct('Style','edit','String','0');
-pard.loc_filterforfit.position=[2,1.7];
+pard.loc_filterforfit.position=[2,2.2];
 pard.loc_filterforfit.TooltipString=sprintf('Filter before fit. Sigma of Gaussian kernel in pixels (0: no filter).');
 pard.loc_filterforfit.Width=0.3;
 

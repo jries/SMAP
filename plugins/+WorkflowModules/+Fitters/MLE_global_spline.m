@@ -185,6 +185,7 @@ switch fitpar.mode
         faccrlb{3}=fitpar.dz*fitpar.refractive_index_mismatch;
         names={'ypix','xpix','znm','phot','bg'};
         namesav={'ypix','xpix','znm','phot'};
+        namesphot={'bg','phot'};
 end
 
 % locs.phot=P(:,4)*EMexcess;
@@ -192,7 +193,7 @@ end
 
 locs.frame=frame;
 
-locs.logLikelihood=LogL;
+locs.logLikelihood=LogL;%/sum(fitpar.weightsch);
 
 locs.peakfindx=posx;
 locs.peakfindy=posy;
@@ -202,14 +203,32 @@ locs.peakfindy=posy;
         locs.PSFypix=sx;
 % end
 
+% fac and faccrlb should be of length(channels). Then use for each channel.
+% If linked, sum them up??? no. Careful if to sum up the inverses.
+
+%take care of weighting
+locs.logLikelihood=locs.logLikelihood/sum(fitpar.weightsch);
 
 
 linked=fitpar.link;
 ind=1;
 for k=1:length(names)
+    if any(contains(namesphot,names{k})) 
+        errfactor=1./sqrt(fitpar.weightsch);
+        valfactor=1./fitpar.weightsch;
+        valfactorlinked=min(valfactor);
+        errfactorlinked=min(errfactor);
+    else
+        errfactor=sqrt(fitpar.weightsch);
+        valfactor=ones(size(fitpar.weightsch));  
+%         errfactorlinked=max(errfactor);
+        errfactorlinked=(sqrt(mean(errfactor.^2)));
+        valfactorlinked=1;
+    end
+    
     if linked(k)
-        locs.(names{k})=P(:,ind).*fac{k}(1)+off{k};
-        locs.([names{k} 'err'])=sqrt(CRLB(:,ind)).*faccrlb{k};
+        locs.(names{k})=(P(:,ind).*fac{k}(1)+off{k})*valfactorlinked;
+        locs.([names{k} 'err'])=sqrt(CRLB(:,ind)).*faccrlb{k}*errfactorlinked;
         ind=ind+1;
     else
         v=zeros(numl,numchannels,'single');
@@ -217,17 +236,23 @@ for k=1:length(names)
         for c=1:numchannels
             ch=num2str(c);
             fach=fac{k}(min(length(fac{k}),c)); %channel-dependent factor, e.g. for normalization of PSF
-            locs.([names{k} ch])=P(:,ind).*fach+off{k};
-            locs.([names{k} ch 'err'])=sqrt(CRLB(:,ind)).*faccrlb{k};
+            locs.([names{k} ch])=(P(:,ind).*fach+off{k})*valfactor(c);
+            locs.([names{k} ch 'err'])=sqrt(CRLB(:,ind)).*faccrlb{k}*errfactor(c);
             v(:,c)=locs.([names{k} ch]);
             ve(:,c)=locs.([names{k} ch 'err']);
+%             if any(contains(namesphot,names{k}))  % correct for intensities
+%                 v(:,c)=v(:,c)/fitpar.weightsch(c);
+%                 locs.([names{k} ch])=locs.([names{k} ch])/fitpar.weightsch(c);
+%             end
             ind=ind+1;
         end
         if any(contains(namesav,names{k}))
             switch fitpar.mainchannel
                 case 1
-                    locs.(names{k})=sum(v./ve,2)./sum(1./ve,2);
-                    locs.([names{k} 'err'])=1./sqrt(1./ve(:,1).^2+1./ve(:,2).^2);
+                    locs.([names{k} 'err'])=1./sqrt(1./ve(:,1).^2+1./ve(:,2).^2)*sqrt(2);
+                    ve(:,1)=ve(:,1)/errfactor(1);
+                    ve(:,2)=ve(:,2)/errfactor(2);
+                    locs.(names{k})=sum(v./ve,2)./sum(1./ve,2); %average based on CRLB before weighting
                 case 2
                     locs.(names{k})=v(:,1);
                     locs.([names{k} 'err'])=ve(:,1);
@@ -239,7 +264,13 @@ for k=1:length(names)
     end
 end
 locs.iterations=P(:,end);
+global testloc
+testloc=locs;
 end
+
+% function errout=rescaleerr(errin,weight)
+% errout=errin/sqrt(weight);
+% end
 
 function locs=fit2locs_4pi(results,stackinfo,fitpar,image)
 if isempty(results)
@@ -390,6 +421,14 @@ elseif isfield(fitpar,'mirror')  %now only mirror channel two!
 else
     imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
 end
+
+if fitpar.weightsch(1)~=1
+    imfit(:,:,:,1)=imfit(:,:,:,1)*fitpar.weightsch(1);
+end
+if fitpar.weightsch(2)~=1
+    imfit(:,:,:,2)=imfit(:,:,:,2)*fitpar.weightsch(2);
+end
+
 numframes=size(imfit,3); 
 sharedA = repmat(int32(fitpar.link(1:5)'),[1 numframes]);
 out.indused=1:numberOfChannels:numframes*numberOfChannels;   %XXXXXXX check. Wrong? results shoud be only displayed in one channel
@@ -621,6 +660,10 @@ fitpar.fitmode=p.fitmode.Value;
 fitpar.roisperfit=p.roisperfit;
 fitpar.issCMOS=false;
 fitpar.mainchannel=p.mainchannel.Value;
+fitpar.weightsch=p.weightsch;
+if length(fitpar.weightsch)==1
+    fitpar.weightsch(2)=1;
+end
 for k=1:size(p.globaltable.Data,1)
     fitpar.factor{k}=str2num(p.globaltable.Data{k,2});
 end
@@ -896,31 +939,40 @@ pard.cal_3Dfile.Width=1.75;
 pard.cal_3Dfile.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');
 
 
-p(1).value=0; p(1).on={}; p(1).off={'globaltable','linkt','link','mainchannelt','mainchannel'};
-p(2).value=1; p(2).on={'globaltable','linkt','link','mainchannelt','mainchannel'}; p(2).off={};
+p(1).value=0; p(1).on={}; p(1).off={'globaltable','linkt','link','mainchannelt','mainchannel','weightch2t','weightch2'};
+p(2).value=1; p(2).on={'globaltable','linkt','link','mainchannelt','mainchannel','weightch2t','weightch2'}; p(2).off={};
 
 pard.isglobal.object=struct('Style','checkbox','String','Global fit','Callback',{{@obj.switchvisible,p}});
-pard.isglobal.position=[3,3.5];
+pard.isglobal.position=[3,3.];
 pard.isglobal.Width=.75;
 pard.isglobal.Optional=true;
 
 
 pard.mainchannelt.object=struct('Style','text','String','main x,y:');
-pard.mainchannelt.position=[4,3.5];
+pard.mainchannelt.position=[4,3.];
 pard.mainchannelt.Width=.75;
 pard.mainchannelt.Optional=true;
 
 pard.mainchannel.object=struct('Style','popupmenu','String',{{'mean','ch1','ch2'}});
-pard.mainchannel.position=[5,3.5];
+pard.mainchannel.position=[4,3.5];
 pard.mainchannel.Width=.75;
 pard.mainchannel.Optional=true;
 
+pard.weightscht.object=struct('Style','text','String','Weights r t');
+pard.weightscht.position=[5,3.];
+pard.weightscht.Width=.75;
+pard.weightscht.Optional=true;
+pard.weightsch.object=struct('Style','edit','String','1 1');
+pard.weightsch.position=[5,3.75];
+pard.weightsch.Width=.5;
+pard.weightsch.Optional=true;
+
 
 pard.globaltable.object=struct('Style','listbox','String','x');
-pard.globaltable.position=[6.5,4.25];
+pard.globaltable.position=[7,4.25];
 pard.globaltable.Width=.75;
 pard.globaltable.Optional=true;
-pard.globaltable.Height=4.5;
+pard.globaltable.Height=5;
 % pard.linkt.object=struct('Style','text','String','link: x y z N bg');
 % pard.linkt.position=[3,2];
 % pard.linkt.Width=1.5;
@@ -934,48 +986,49 @@ p(1).value=0; p(1).on={}; p(1).off={'refractive_index_mismatch'};
 p(2).value=1; p(2).on={'refractive_index_mismatch'}; p(2).off={};
 pard.userefractive_index_mismatch.object=struct('Style','checkbox','String','RI mismatch:','Callback',{{@obj.switchvisible,p}});
 pard.userefractive_index_mismatch.position=[3,1];
-pard.userefractive_index_mismatch.Width=1.5;
+pard.userefractive_index_mismatch.Width=1.25;
 pard.userefractive_index_mismatch.Optional=true;
 
 
 pard.refractive_index_mismatch.object=struct('Style','edit','String','.8');
-pard.refractive_index_mismatch.position=[3,2.5];
+pard.refractive_index_mismatch.position=[3,2.25];
 pard.refractive_index_mismatch.TooltipString=sprintf('Correction factor to take into account the different refracrive indices of immersion oil and buffer. \n This leads to smaller distances inside the sample compared to bead calibration. \n Bead calibration: in piezo positions (nm). \n This factor transforms z positions to real-space z positions. \n For high-NA oil objectives: typical 0.72 (range 0.7-1).');
 pard.refractive_index_mismatch.Optional=true;
-pard.refractive_index_mismatch.Width=0.5;
+pard.refractive_index_mismatch.Width=0.35;
 
 
 p(1).value=0; p(1).on={}; p(1).off={'pixelsizex','pixelsizey'};
 p(2).value=1; p(2).on={'pixelsizex','pixelsizey'}; p(2).off={};
-pard.overwritePixelsize.object=struct('Style','checkbox','String','New pixelsize X,Y (um):','Callback',{{@obj.switchvisible,p}});
+pard.overwritePixelsize.object=struct('Style','checkbox','String','pixelsize X,Y (um):','Callback',{{@obj.switchvisible,p}});
 pard.overwritePixelsize.position=[4,1];
-pard.overwritePixelsize.Width=1.5;
+pard.overwritePixelsize.Width=1.25;
 pard.overwritePixelsize.Optional=true;
 
 pard.pixelsizex.object=struct('Style','edit','String','.1');
-pard.pixelsizex.position=[4,2.5];
-pard.pixelsizex.Width=0.5;
+pard.pixelsizex.position=[4,2.25];
+pard.pixelsizex.Width=0.35;
 pard.pixelsizex.Optional=true;
 
 pard.pixelsizey.object=struct('Style','edit','String','.1');
-pard.pixelsizey.position=[4,3];
-pard.pixelsizey.Width=0.5;
+pard.pixelsizey.position=[4,2.6];
+pard.pixelsizey.Width=0.35;
 pard.pixelsizey.Optional=true;
 
 p(1).value=0; p(1).on={}; p(1).off={'selectscmos','scmosfile'};
 p(2).value=1; p(2).on={'selectscmos','scmosfile'}; p(2).off={};
 pard.isscmos.object=struct('Style','checkbox','String','sCMOS','Callback',{{@obj.switchvisible,p}});   
-pard.isscmos.position=[6,1];
+pard.isscmos.position=[7,1];
 pard.isscmos.Optional=true;
 pard.selectscmos.object=struct('Style','pushbutton','String','Load var map','Callback',{{@loadscmos_callback,obj}});   
 pard.selectscmos.TooltipString='Select sCMOS variance map (in ADU^2) of same size ROI on chip as image stack';
-pard.selectscmos.position=[6,1.75];
+pard.selectscmos.position=[7,1.6];
 pard.selectscmos.Optional=true;
+pard.selectscmos.Width=.9;
 pard.scmosfile.object=struct('Style','edit','String','');
 pard.scmosfile.TooltipString='Tiff/.mat image containing sCMOS variance map (same ROI on camera as tiff).';
-pard.scmosfile.position=[6,2.75];
+pard.scmosfile.position=[7,2.5];
 pard.scmosfile.Optional=true;
-    pard.scmosfile.Width=1.5;
+    pard.scmosfile.Width=.5;
     
 pard.asymmetry.object=struct('Style','checkbox','String','get asymmetry');   
 pard.asymmetry.position=[5,1];
