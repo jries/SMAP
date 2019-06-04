@@ -806,7 +806,7 @@ if fitpar.fitmode==3||fitpar.fitmode==5
 %     fitpar.objPos=p.objPos;
     
 else
-    fitpar.mode='Gauss'
+    fitpar.mode='Gauss';
     fitpar.PSFx0=p.PSFx0;
 end
 if p.loc_cameraSettings.EMon
