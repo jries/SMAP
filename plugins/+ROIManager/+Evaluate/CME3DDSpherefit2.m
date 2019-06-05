@@ -565,6 +565,10 @@ cby=statb.centroidy*pixelsize(2)-1;
 statd=areastats(~imbw);
 cdx=statd.centroidx*pixelsize(1)-pi;
 cdy=statd.centroidy*pixelsize(2)-1;
+if all(imbw==1) %hack: if no hole is found
+    cdx=cbx;cdy=cby;
+    statd=statb;
+end
 % statb.main
 % statd.main
 if statd.main.istop == statb.main.istop
