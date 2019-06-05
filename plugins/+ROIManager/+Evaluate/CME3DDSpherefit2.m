@@ -1,6 +1,7 @@
 classdef CME3DDSpherefit2<interfaces.SEEvaluationProcessor
     properties
         savedevals
+        plotfigure
     end
     methods
         function obj=CME3DDSpherefit2(varargin)        
@@ -174,8 +175,12 @@ end
 if obj.display
     immask=makeprojections(xn-dx,yn-dy,zn,rn,p.slice,ranger,rangex,rangez,pixelsx,pixelsz,p.renderfilter,lenbar);
     imout= makeprojections(x,y,z,r,p.slice*4,ranger,rangex,rangez,pixelsx,pixelsz,p.renderfilter,lenbar);
-    h=obj.setoutput('image');
-    hp=h.Parent;
+%     h=obj.setoutput('image');
+%     hp=h.Parent;
+    if isempty(obj.plotfigure)||~isvalid(obj.plotfigure)
+        obj.plotfigure=figure;
+    end
+    hp=obj.plotfigure;
     delete(hp.Children)
     hs1=axes('Parent',hp);subplot(4,6,1,hs1);imagesc(rangex,rangez,immask(6).image,'Parent',hs1); colormap(hs1,hot);
     hs2=axes('Parent',hp);subplot(4,6,2,hs2);imagesc(rangex,rangez,immask(2).image,'Parent',hs2); colormap(hs2,hot);
@@ -249,10 +254,10 @@ if p.refit||~isfield(obj.site.evaluation,'CME3DDSpherefit2')
     [tc,pc,rc]=cart2sph(xc,yc,zc);
     out.allqtheta=myquantile(pc,qrangeall);
         
-    fitpsc=spherecoverage(tc,pc,rc,hsc);
+    fitpsc=spherecoverage(pc,hsc);
     out.fitpsc=fitpsc;
-    out.fitcoverage_thetatop=min(max(-pi/2,fitpsc(2)),pi/2);
-    out.fitcoverage_thetabottom=min(max(-pi/2,fitpsc(3)),pi/2);      
+    out.fitcoverage_thetatop=min(max(-pi/2,fitpsc.fit(2)),pi/2);
+    out.fitcoverage_thetabottom=min(max(-pi/2,fitpsc.fit(3)),pi/2);      
     out.map2D=mapanalysis2D(xc,yc,zc,rSphere,hmap2);
     if length(layers)>1
         xc2=xn2-fitp_sphere(2);
@@ -273,13 +278,15 @@ else %use old fit
     xppi4=oldeval.plotsphere.xppi4;
     xmpi4=oldeval.plotsphere.xmpi4;
     mapanalysis3D(oldeval.map3D,hmap3all);
+    spherecoverage(oldeval.fitpsc,hsc);
+    mapanalysis2D(oldeval.map2D,hmap2);
 end
 
 if obj.display
     hs2.NextPlot='add';
     rectangle('Parent',hs2,'Position',[fitp_sphere(2)-fitp_sphere(1)-dx,fitp_sphere(4)-fitp_sphere(1),2*fitp_sphere(1),2*fitp_sphere(1)],'EdgeColor',[1 1 1], 'Curvature',[1,1])   
-    plotwedge(fitp_sphere(2)-dx,fitp_sphere(4),fitp_sphere(1),fitpsc(2),hs2,'c')
-    plotwedge(fitp_sphere(2)-dx,fitp_sphere(4),fitp_sphere(1),fitpsc(3),hs2,'c')
+    plotwedge(fitp_sphere(2)-dx,fitp_sphere(4),fitp_sphere(1),fitpsc.fit(2),hs2,'c')
+    plotwedge(fitp_sphere(2)-dx,fitp_sphere(4),fitp_sphere(1),fitpsc.fit(3),hs2,'c')
     hs3.NextPlot='add';
     rectangle('Parent',hs3,'Position',[fitp_sphere(3)-fitp_sphere(1)-dy,fitp_sphere(4)-fitp_sphere(1),2*fitp_sphere(1),2*fitp_sphere(1)],'EdgeColor',[1 1 1], 'Curvature',[1,1])
     plotwedge(fitp_sphere(2)-dx,fitp_sphere(4),fitp_sphere(1),out.allqtheta(1),hs2,'m')
@@ -466,6 +473,10 @@ plot([midx midx-radius*cos(thetm)],[midy midy+radius*sin(thetm)],appearence,'Par
 end
 
 function stat=mapanalysis2D(xc,yc,zc,rSphere,hmap)
+if nargin==2
+    stat=xc;
+    hmap=yc;
+else
 nump=256;
 roisize=500; %half size (nm)
 cutofffactor=1.5;
@@ -486,14 +497,19 @@ imbw=imfill(imbw,'holes');
 areapix=sum(imbw(:));
 areanm=areapix*pixelsize(1)*pixelsize(2);
 stat.areanm=areanm;
-
+stat.plot.rangex=rangex;
+stat.plot.rangey=rangey;
+stat.plot.imhf=imhf;
+stat.plot.imbw=imbw;
+stat.plot.areanm=areanm;
+end
 if ~isempty(hmap)
-    imagesc(rangex,rangey,(imhf)','Parent',hmap);
+    imagesc(stat.plot.rangex,stat.plot.rangey,(stat.plot.imhf)','Parent',hmap);
     hmap.NextPlot='add';
     colormap(hmap,'jet')
-    imagesc(rangex,rangey,(1-imbw')*max(imhf(:)*.5),'AlphaData',0.25,'Parent',hmap);
+    imagesc(stat.plot.rangex,stat.plot.rangey,(1-stat.plot.imbw')*max(stat.plot.imhf(:)*.5),'AlphaData',0.25,'Parent',hmap);
     hmap.NextPlot='replace';
-    title(hmap,['area (nm^2): ' num2str(areanm)]);
+    title(hmap,['area (nm^2): ' num2str(stat.plot.areanm)]);
 end
 end
 
