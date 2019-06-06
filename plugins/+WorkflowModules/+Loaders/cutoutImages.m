@@ -1,4 +1,7 @@
 classdef cutoutImages<interfaces.WorkflowModule
+%     Cuts out regions from the camera, based on a description in a text
+%     file. This can be used when multiple channels are image on one camera
+%     chip.
     properties
         settings3D
     end
@@ -60,5 +63,5 @@ pard.cal_3Dfile.TooltipString=sprintf('settings_3D.txt file specifying ROIs on t
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='Allows editing metadata, or loading from a file.';
+pard.plugininfo.description='Cuts out regions from the camera, based on a description in a text file. This can be used when multiple channels are image on one camera chip.';
 end

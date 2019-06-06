@@ -1,4 +1,6 @@
 classdef LoaderGUI<interfaces.WorkflowModule
+    % LoaderGUI
+    % Intermediate GUI to select a loader'
     properties
         loaders
         currentloader
@@ -10,7 +12,6 @@ classdef LoaderGUI<interfaces.WorkflowModule
             obj.inputChannels=1; %1: image. 2: background image
             obj.isstartmodule=true;
             obj.excludeFromSave={'loaderlist'};
-%             obj.inputParameters=obj.getInputParameters; 
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -18,8 +19,6 @@ classdef LoaderGUI<interfaces.WorkflowModule
         
         function initGui(obj)
             initGui@interfaces.WorkflowModule(obj);
-%             obj.guihandles.loaderlist.Callback={@loaderlist_callback,obj};
-%             obj.setInputChannels(obj.inputChannels,'frame');
             obj.loadloaders;
         end
         function prerun(obj,p)
@@ -27,11 +26,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
             p=copyfields(p,obj.currentloader.getAllParameters);
             obj.currentloader=obj.loaders{p.loaderlist.Value};
             obj.currentloader.outputModules=obj.outputModules;
-            obj.currentloader.prerun(p);
-%             obj.setInputChannels(2,'frame');
-%             p=obj.getGuiParameters.par;
-%             obj.loc_ROIsize=p.loc_ROIsize;
-           
+            obj.currentloader.prerun(p);    
         end
         function output=run(obj,data,p)
             p=copyfields(p,obj.currentloader.getGuiParameters);
@@ -87,11 +82,6 @@ classdef LoaderGUI<interfaces.WorkflowModule
                     obj.children.(fn{k}).fieldvisibility(varargin{:});
             end
         end
-%         function setGuiParameters(obj,varargin)
-%             setGuiParameters@interfaces.WorkflowModule(obj,varargin{:});
-%             
-%         end
-
     end
 end
 
@@ -117,7 +107,4 @@ pard.outputParameters={'loc_fitOnBackground'};
 pard.plugininfo.type='WorkflowModule';
 t1='Intermediate GUI to select a loader.';
 pard.plugininfo.description=t1;
-% pard.loaderPanel.object=struct('Style','uipanel','String','parameters');
-% pard.loaderPanel.position=[4,2];
-% pard.loaderPanel.Height=4;
 end

@@ -1,4 +1,11 @@
 classdef TifLoader<interfaces.WorkflowModule
+    % TifLoader
+    %     Loads raw camera images (single file or direcotry with single
+    %     images). These can be tiff, files, but also any OME compatible image
+    %     files. This plugin can load and process images during acquisition for
+    %     online fitting. With the help of the CameraManager metadata is parsed
+    %     and passed on to the CameraConverter.';
+
     properties   
         mirrorem
         loaders
@@ -298,30 +305,22 @@ addFile(obj,file)
 catch err
     obj.status('error in loading file. Choose different tiff loader')
     err
-end
-    
-
+end  
 end
 
 function mirrorem_callback(a,b,obj)
 if ~isempty(obj.imloader)
      fileinf=obj.imloader.metadata;
             if fileinf.EMon && obj.getSingleGuiParameter('mirrorem')  %if em gain on and mirrorem on: switch roi
-%                 fileinf.roi(1)=512-fileinf.roi(1)-fileinf.roi(3);
                 fileinf.EMmirror=true;
             else 
                 fileinf.EMmirror=false;
             end
             obj.mirrorem=fileinf.EMmirror;
             if obj.getSingleGuiParameter('padedges') 
-%                 locsettings=obj.getPar('loc_cameraSettings');
                 dr=obj.getSingleGuiParameter('padedgesdr');
-                %dr=ceil((roisize-1)/2);
                 fileinf.roi(1:2)=fileinf.roi(1:2)-dr;
                 fileinf.roi(3:4)=fileinf.roi(3:4)+2*dr;
-%                 fileinf.Width=fileinf.Width+2*dr;
-%                 fileinf.Height=fileinf.Height+2*dr;
-%                 obj.setPar('loc_cameraSettings',locsettings);
                 obj.edgesize=dr;
             end
             obj.setPar('loc_fileinfo',fileinf);
@@ -341,8 +340,6 @@ pard.tiffile.Width=4;
 pard.loadtifbutton.object=struct('Style','pushbutton','String','load images','Visible','on');
 pard.loadtifbutton.position=[3,1];
 pard.loadtifbutton.TooltipString=sprintf('Open raw camera image tif files. \n Either single images in directory. \n Or multi-image Tiff stacks');
-
-
 
 pard.loaderclass.object=struct('Style','popupmenu','String','auto','Callback',{{@changeloader,obj}});
 pard.loaderclass.position=[3,4];
@@ -386,35 +383,13 @@ pard.framestop.position=[5.2,2.5];
 pard.framestop.Width=0.5;
 pard.framestop.Optional=true;
 
-% pard.padedges.object=struct('Style','checkbox','String','Pad edges','Value',0,'Callback',@obj.loadedges,'Visible','off');
-% pard.padedges.position=[4.2,3];
-% pard.padedges.Width=1;
-% pard.padedges.Optional=true;
-% pard.padedges.TooltipString='Pad edges with minimum values to allow detection of localizations close to edges. Usually not necessary.';
-% 
-% pard.padedgesdr.object=struct('Style','edit','String','9','Callback',@obj.loadedges,'Visible','off');
-% pard.padedgesdr.position=[4.2,3.9];
-% pard.padedgesdr.Width=.3;
-% pard.padedgesdr.Optional=true;
-% pard.padedgesdr.TooltipString='Pad edges with minimum values to allow detection of localizations close to edges. Usually not necessary.';
-
 pard.mirrorem.object=struct('Style','checkbox','String','EM mirror','Value',1,'Callback',{{@mirrorem_callback,obj}});
 pard.mirrorem.position=[5.2,4.2];
 pard.mirrorem.TooltipString=sprintf('calibrate gain and offset from images');
 pard.mirrorem.Optional=true;
 pard.mirrorem.Width=0.8;
 
-
-% pard.mirrorimage.object=struct('Style','checkbox','String','mirror','Visible','off');
-% pard.mirrorimage.position=[4.2,4.3];
-% pard.mirrorimage.Width=.7;
-% pard.mirrorimage.Optional=true;
-% pard.mirrorimage.TooltipString='Mirror image. Useful for conventional vs EM gain, that swaps image.';
-
-% pard.locdata_empty.object=struct('Style','checkbox','String','Empty localizations','Value',1);
-% pard.locdata_empty.position=[4.2,3.5];
-% pard.locdata_empty.Width=1.5;
-% pard.locdata_empty.TooltipString=sprintf('Empty localization data before fitting. \n Important if post-processing (eg drift correction) is perfromed as part of workflow');
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='Loads tiff files. Can load single tiff files or tiff stacks, also while they are written. It also tries to locate the metadata.txt file from micromanger and passes it on to the camera converter.';
+t1='Loads raw camera images (single file or direcotry with single images). These can be tiff, files, but also any OME compatible image files. This plugin can load and process images during acquisition for online fitting. With the help of the CameraManager metadata is parsed and passed on to the CameraConverter.';
+pard.plugininfo.description=t1;
 end

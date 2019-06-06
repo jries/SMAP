@@ -1,11 +1,9 @@
 classdef CameraConverter<interfaces.WorkflowModule
+%     Interprets metadata and converts camera ADUs into photons- Metadata
+%     can be overwritten manually or loaded from a SMAP _sml.mat data file.
     properties
         calfile='settings/CameraCalibration.xls';
         loc_cameraSettings=interfaces.metadataSMAP;
-%         struct('camId','default','port','Conventional','exposure',1,'emgain',1,'conversion',1,'offset',400,'pixsize',0.1,...
-%             'roi',[],'temperature',0,'timediff',0,'comment','');
-%         loc_cameraSettingsStructure=struct('EMon',1,'emgain',1,'conversion',1,'offset',400,'pixsize',0.1,...
-%             'roi',[],'exposure',1,'timediff',0,'comment','');
         loc_cameraSettingsStructure=struct('EMon',1,'emgain',1,'conversion',1,'offset',400,'cam_pixelsize_um',0.1,...
             'roi',[],'exposure',1,'timediff',0,'comment','');        
         EMexcessNoise;
@@ -35,7 +33,6 @@ classdef CameraConverter<interfaces.WorkflowModule
            obj.guihandles.camparbutton.Callback={@camparbutton_callback,obj};
            obj.guihandles.calibrate.Callback={@calibrate_callback,obj};
             obj.outputParameters={'loc_cameraSettings'};
-%            obj.addSynchronization('loc_fileinfo',[],[],@obj.setmetadata)
            obj.addSynchronization('loc_fileinfo_set',[],[],@obj.setmetadata)
            
         end
@@ -174,12 +171,6 @@ end
 
 function camparbutton_callback(a,b,obj)
 fn=fieldnames(obj.loc_cameraSettingsStructure);
-%remove later: only there because parameters saved with workflow don't
-%include comments
-% if ~isfield(obj.loc_cameraSettings,'comment')
-%     obj.loc_cameraSettings.comment='no comments';
-% end
-%XXX
 
 fi=obj.getPar('loc_fileinfo');
 obj.loc_cameraSettings=copyfields(obj.loc_cameraSettings,fi);
@@ -200,14 +191,7 @@ if ~isempty(answer) && ~ obj.getSingleGuiParameter('lockcampar')
             obj.loc_cameraSettings.(fn{k})=(answer{k});
         end
     end
-%     obj.setPar('loc_cameraSettings',obj.loc_cameraSettings);
 obj.setmetadata(true);
-%     if obj.loc_cameraSettings.EMon
-%         obj.EMexcessNoise=2;
-%     else
-%         obj.EMexcessNoise=1;
-%     end
-%     obj.globpar.parameters.loc_cameraSettings=obj.loc_cameraSettings; %doesnt work
 end
 if obj.getSingleGuiParameter('lockcampar')
     warning('cannot update camera paramters because they are locked')
@@ -230,9 +214,6 @@ switch ext
     case '.mat'
         l=load([p f]);
         metadata=l.saveloc.file(1).info;
-
-
-
 %     case '.txt'
 %         par.metadatafile=[p f];
 %         obj.setGuiParameters(par);
@@ -248,24 +229,19 @@ end
 % obj.readmetadata;
 end
 
-% function parseMetatdata(obj)
-% fid=fopen(file);
-% metadatatxt=fread(fid,[1,10000],'*char');
-% fclose(fid);
-% minfo=minfoparsec(metadatatxt);
+
+% function calculategain(img)
+% img=double(img);
+% m=mean(img,3);
+% v=var(img,0,3);
+% figure(88);
+% plot(m(:),v(:),'.')
+% gain=15.6;offs=200;em=200;
+% pix2phot=gain/em;
+% hold on
+% plot(m(:),1/pix2phot*(m(:)-offs),'.')
+% hold off
 % end
-function calculategain(img)
-img=double(img);
-m=mean(img,3);
-v=var(img,0,3);
-figure(88);
-plot(m(:),v(:),'.')
-gain=15.6;offs=200;em=200;
-pix2phot=gain/em;
-hold on
-plot(m(:),1/pix2phot*(m(:)-offs),'.')
-hold off
-end
 
 function pard=guidef
 
@@ -273,10 +249,7 @@ pard.text.object=struct('Style','text','String','Metadata:');
 pard.text.position=[1,1];
 pard.text.Width=.7;
 pard.text.Optional=true;
-% pard.metadatafile.object=struct('Style','edit','String',' ');
-% pard.metadatafile.position=[2,1];
-% pard.metadatafile.Width=4;
-% pard.metadatafile.Optional=true;
+ 
 pard.loadmetadata.object=struct('Style','pushbutton','String','Load');
 pard.loadmetadata.position=[1,1.7];
 pard.loadmetadata.TooltipString=sprintf('Load camera settings metadata from image or _sml.mat file.');
@@ -288,7 +261,6 @@ pard.calibrate.TooltipString=sprintf('calibrate gain and offset from images');
 pard.calibrate.Optional=true;
 pard.calibrate.Width=0.6;
 
-
 pard.camparbutton.object=struct('Style','pushbutton','String','set Cam Parameters');
 pard.camparbutton.position=[1,3.2];
 pard.camparbutton.Width=1.3;
@@ -299,5 +271,5 @@ pard.lockcampar.Width=0.5;
 pard.lockcampar.TooltipString=sprintf('Do not overwrite camera parameters automatically, but keep those set manually.');
 
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='Allows editing metadata, or loading from a file.';
+pard.plugininfo.description='Interprets metadata and converts camera ADUs into photons- Metadata can be overwritten manually or loaded from a SMAP _sml.mat data file.';
 end
