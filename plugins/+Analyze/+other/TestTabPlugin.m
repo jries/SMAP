@@ -7,31 +7,32 @@ classdef TestTabPlugin<interfaces.DialogProcessor
         function obj=TestTabPlugin(varargin)    
             obj@interfaces.DialogProcessor(varargin{:}) ;
         end
-        function makeGui(obj,varargin)
-            Vrimold=obj.guiPar.Vrim;handleold=obj.handle;
-           
-            if nargin >2 && varargin{2}==true
-                 obj.guiPar.Vrim=50;
-                 makeGui@interfaces.GuiModuleInterface(obj,varargin{1});
-            else
-                makeGui@interfaces.DialogProcessor(obj,varargin{:});
-                obj.guiPar.Vrim=50;
-                obj.guihandles.tabgroup=uitabgroup(obj.handle,'Position',[0 0 1 .75],'SelectionChangedFcn',{@selectLayer_callback,obj});
-                obj.guihandles.tab1=uitab(obj.guihandles.tabgroup,'Title','Main');
-                obj.handle=obj.guihandles.tab1;
-                makeGui@interfaces.GuiModuleInterface(obj,guidef1);
-                
-                obj.addguitotab(1)
-                
-                obj.guihandles.tab3=uitab(obj.guihandles.tabgroup,'Title','+');
-            end
-            obj.handle=handleold;
-            obj.guiPar.Vrim=Vrimold;
-        end
+%         function makeGui(obj,varargin)
+%             Vrimold=obj.guiPar.Vrim;handleold=obj.handle;
+%            
+%             if nargin >2 && varargin{2}==true
+%                  obj.guiPar.Vrim=50;
+%                  makeGui@interfaces.GuiModuleInterface(obj,varargin{1});
+%             else
+%                 makeGui@interfaces.DialogProcessor(obj,varargin{:});
+%                 obj.guiPar.Vrim=50;
+%                 obj.guihandles.tabgroup=uitabgroup(obj.handle,'Position',[0 0 1 .75],'SelectionChangedFcn',{@selectLayer_callback,obj});
+%                 obj.guihandles.tab1=uitab(obj.guihandles.tabgroup,'Title','Main');
+%                 obj.handle=obj.guihandles.tab1;
+%                 makeGui@interfaces.GuiModuleInterface(obj,guidef1);
+%                 
+%                 obj.addguitotab(1)
+%                 
+%                 obj.guihandles.tab3=uitab(obj.guihandles.tabgroup,'Title','+');
+%             end
+%             obj.handle=handleold;
+%             obj.guiPar.Vrim=Vrimold;
+%         end
         function out=run(obj,p)  
            p
         end
         function pard=guidef(obj)
+            pard=guidef1;
             pard.plugininfo.name='Test Tab Gui';
             pard.plugininfo.description= 'x';
             pard.plugininfo.type='ProcessorPlugin';
@@ -74,12 +75,18 @@ end
 end
 
 function pard=guidef1
+
+pard.tab.tab1='first';
+pard.tab.tab2='2';
+
 pard.ch1t.object=struct('String','Ch 1','Style','text');
 pard.ch1t.position=[2,1];
 pard.ch1t.Width=0.3;
 pard.ch1.object=struct('String',{{'layer 1','layer 2','layer 3'}},'Style','popupmenu');
 pard.ch1.position=[2,1.3];
 pard.ch1.Width=1;
+pard.ch1.tab='tab2';
+
 pard.ch2t.object=struct('String','Ch 2','Style','text');
 pard.ch2t.position=[2,3];
 pard.ch2t.Width=0.3;

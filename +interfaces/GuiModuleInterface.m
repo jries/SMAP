@@ -494,6 +494,23 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                     end
 %                     guidef.syncParameters %extend 
                 end
+                
+                %tabs handling
+                if isfield(guidef,'tab')
+                    tabgroup=uitabgroup(obj.handle);
+                    tabgroup.Position(4)=tabgroup.Position(4)*(1-guiPar.Vrim/obj.handle.Position(4));
+                    guiPar.Vrim=guiPar.Vrim+20;
+                    fn=fieldnames(guidef.tab);
+                    for k=1:length(fn)
+                        obj.guihandles.(fn{k})=uitab(tabgroup,'Title',guidef.tab.(fn{k}));
+                    end
+                    istab=true;
+                    maintab=obj.guihandles.(fn{1});
+                    guidef=rmfield(guidef,'tab');
+                else
+                    istab=false;
+                end
+                
                 allFields=fieldnames(guidef);
                 anyoptional=false;
                 synchronizeguistate=obj.getPar('synchronizeguistate');
@@ -558,7 +575,16 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                             h.HorizontalAlignment='left';
                         end
                         
-                        hg=uicontrol(obj.handle,h);
+                        if istab
+                            if isfield(thisField,'tab')
+                                parenth=obj.guihandles.(thisField.tab);
+                            else
+                                parenth=maintab;
+                            end
+                        else
+                            parenth=obj.handle;
+                        end
+                        hg=uicontrol(parenth,h);
                         
                         obj.guihandles.(allFields{k})=hg;
                         thisField=myrmfield(thisField,{'Width','Height','position','object','load'});
