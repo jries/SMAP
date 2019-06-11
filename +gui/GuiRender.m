@@ -224,6 +224,8 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                                 pk.rendermode.Value=3;
                                     calculatesigma=true;
                                     fields{end+1}='locprecnm';
+                            else 
+                                calculatesigma=false;
 
                             end
 %                             if strcmp(pk.rendermode.selection,'DL')
