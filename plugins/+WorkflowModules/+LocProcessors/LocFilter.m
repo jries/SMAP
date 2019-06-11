@@ -1,4 +1,7 @@
 classdef LocFilter<interfaces.WorkflowModule
+% Filters localizations before saving according to photons, PSF,
+% localization precision, log-likelihood. This can dramatically reduce the
+% file size in case a too low cutoff was chosen during the peak finding.
     properties
          pixelsize   
     end

@@ -1,4 +1,11 @@
 classdef BG_wavelet<interfaces.WorkflowModule
+%     Wavelet based background estimation. Two implementeations: A trous
+%     (can be faster on GPU, but only level 2, adepted from I. Izeddin, J.
+%     Boulanger, V. Racine, C. G. Specht, A. Kechkar, D. Nair, A. Triller,
+%     D. Choquet, M. Dahan, and J. B. Sibarita, ?Wavelet analysis for
+%     single molecule localization microscopy,? Opt Express, vol. 20, no.
+%     3, pp. 2081?2095, Jan. 2012.) and a direct discreet wavelet
+%     transform.
     properties
         gpufit;
         cutoff;
@@ -101,10 +108,6 @@ pard.loc_subtractbg.object=struct('Style','checkbox','String','Subtract backgrou
 pard.loc_subtractbg.position=[1,1];
 pard.loc_subtractbg.Width=2;
 pard.loc_subtractbg.TooltipString=sprintf('If checked, the background is subtracted for Peak finding. \n This does NOT mean, that fitting is performed on the background corrected images.');
-% pard.text1.object=struct('Style','text','String','Wavelet filtering:');
-% pard.text1.position=[2,1];
-% pard.text1.Optional=true;
-
 
 pard.filtermode.object=struct('Style','popupmenu','String',{{'Wavelet','fast minimum filter', 'a trous'}},'Value',1,'Callback',{{@filtermode_callback,obj}});
 pard.filtermode.position=[2,1];
@@ -112,11 +115,6 @@ pard.filtermode.Width=2;
 pard.filtermode.TooltipString=sprintf('trous algorithm is used. Only level 2. Can be faster on GPU.');
 pard.filtermode.Optional=true;
 
-% pard.loc_wavelet_atrous.object=struct('Style','checkbox','String','fast a trous','Value',0,'Callback',{{@atrous_callback,obj}});
-% pard.loc_wavelet_atrous.position=[2,2];
-% pard.loc_wavelet_atrous.Width=1.3;
-% pard.loc_wavelet_atrous.TooltipString=sprintf('If checked, the a trous algorithm is used. Only level 2. Can be faster on GPU.');
-% pard.loc_wavelet_atrous.Optional=true;
 
 pard.min_filter_sizet.object=struct('Style','text','String','filter size');
 pard.min_filter_sizet.position=[3,1.3];

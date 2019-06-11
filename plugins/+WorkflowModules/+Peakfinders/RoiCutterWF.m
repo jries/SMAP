@@ -1,4 +1,6 @@
 classdef RoiCutterWF<interfaces.WorkflowModule
+%     This plugin cuts out regions of interest of a defined size around the
+%     candidate positions and passes these on to the fitter.
     properties
         loc_ROIsize
         preview
@@ -88,15 +90,9 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             outs.img=cutoutimages(:,:,1:ind);
             dato=data{1};%.copy;
             dato.data=outs;%set(outs);
-%             obj.output(dato)
             outputdat=dato;
 
-            
-            
-            
             if obj.preview 
-%                 figure(obj.globpar.parameters.outputfig)
-%                 ax=gca;
                 obj.disppreview=true;
                 outputfig=obj.getPar('loc_outputfig');
                 if ~isvalid(outputfig)
@@ -105,54 +101,25 @@ classdef RoiCutterWF<interfaces.WorkflowModule
                     
                 end
                 outputfig.Visible='on';
-
-
                 figure(outputfig)
-%                 hold off
-%                 imagesc(image);
-%                 colorbar;
-%                 axis equal
                 hold on
-                
-                
-%                 try
                     col=[0.3 0.3 0.3];
-%                 figure(obj.getPar('loc_outputfig'))
-%                 ax=findobj(obj.getPar('loc_outputfig').Children,'Type','Axes');
-%                 ax.NextPlot='add';
-%                 catch
-%                     figure(207);
-%                     ax=gca;
-%                     ax.NextPlot='replace';
-%                     imagesc(ax,image);
-%                      ax.NextPlot='add';
-%                     col=[1 0 1];
                     ax=gca;
-%                 end
-%                 hold on
 
                 for k=1:length(maxima.x)
                     pos=[maxima.x(k)-dn maxima.y(k)-dn maxima.x(k)+dn maxima.y(k)+dn ];
                     
                     plotrect(ax,pos,col);
                 end
-
-%             drawnow
-            
             end 
             else
                 if obj.preview && ~obj.disppreview
-%                     disp('no localizations found')
                     obj.status('image could not be loaded');drawnow
                     error('no image loaded')
                 end
-%                 obj.output(data{1});
                 outputdat=data{1};
             end
-%             outputdat=[];
         end
-        
-
     end
 end
 

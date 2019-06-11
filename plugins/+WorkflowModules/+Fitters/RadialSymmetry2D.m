@@ -1,4 +1,7 @@
 classdef RadialSymmetry2D<interfaces.WorkflowFitter
+%     Fast CPU-based radial symmetry localizer (2D) according to: R.
+%     Parthasarathy, ?Rapid, accurate particle tracking by calculation of
+%     radial symmetry centers,? Nat Methods, Jun. 2012.
     properties
         fitpar
     end

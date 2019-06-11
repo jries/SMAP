@@ -1,4 +1,13 @@
 classdef ImageNormalize_noBG<interfaces.WorkflowModule
+%     Performs an Anscombe transform. This converts Poisson noise into
+%     Normal distributed noise with unit variance. This can be used to
+%     convert the image into a probability map and facilitates segmentation
+%     for images with varying background. As ImageNormalize, but for the
+%     case when no background is calculated. According to: [1]	U. Koethe,
+%     F. Herrmannsdoerfer, I. Kats, and F. A. Hamprecht, SimpleSTORM: a
+%     fast, self-calibrating reconstruction algorithm for localization
+%     microscopy,HISTOCHEMISTRY AND CELL BIOLOGY, pp. 1-15, Apr. 2014.';
+       
     properties
         preview
 
@@ -10,7 +19,7 @@ classdef ImageNormalize_noBG<interfaces.WorkflowModule
         end
         function pard=guidef(obj)
             pard.plugininfo.type='WorkflowModule';
-            pard.plugininfo.description='Converts photons into a probability map. According to: [1]	U. Koethe, F. Herrmannsdoerfer, I. Kats, and F. A. Hamprecht, SimpleSTORM: a fast, self-calibrating reconstruction algorithm for localization microscopy,HISTOCHEMISTRY AND CELL BIOLOGY, pp. 1-15, Apr. 2014.';
+            pard.plugininfo.description='As ImageNormalize, but for the case when no background is calculated. Performs an Anscombe transform. This converts Poisson noise into Normal distributed noise with unit variance. This can be used to convert the image into a probability map and facilitates segmentation for images with varying background. According to: [1]	U. Koethe, F. Herrmannsdoerfer, I. Kats, and F. A. Hamprecht, SimpleSTORM: a fast, self-calibrating reconstruction algorithm for localization microscopy,HISTOCHEMISTRY AND CELL BIOLOGY, pp. 1-15, Apr. 2014.';
         end
         function initGui(obj)
             initGui@interfaces.WorkflowModule(obj);

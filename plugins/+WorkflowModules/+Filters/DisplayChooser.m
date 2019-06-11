@@ -1,4 +1,5 @@
 classdef DisplayChooser<interfaces.WorkflowModule
+%     Select which image to display during preview.
     properties
         filterkernel
     end
@@ -13,16 +14,7 @@ classdef DisplayChooser<interfaces.WorkflowModule
         end
         function initGui(obj)
             initGui@interfaces.WorkflowModule(obj);
-%            obj.guihandles.loadmetadata.Callback={@loadmetadata_callback,obj};
-%            obj.guihandles.camparbutton.Callback={@camparbutton_callback,obj};
         end
-%         function prerun(obj,p)
-%       
-%         end
-%         function run(obj,data,p)
-% 
-%         end
-  
     end
 end
 

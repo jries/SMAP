@@ -1,7 +1,6 @@
-classdef resetView<interfaces.WorkflowModule;
-    properties
-
-        
+classdef resetView<interfaces.WorkflowModule
+%     Resets the view of the rendered image to a defined size and position.
+    properties   
     end
     methods
        function obj=resetView(varargin)
@@ -67,5 +66,5 @@ pard.yrange.Width=.7;
 
 
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='resets view';
+pard.plugininfo.description='Resets the view of the rendered image to a defined size and position.';
 end

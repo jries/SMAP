@@ -1,11 +1,13 @@
 classdef SimulateCameraImages<interfaces.WorkflowModule
+%     Plugin to simulate camera raw frames using a realistic fluorophore
+%     blinking model, PSF model and camera noise model. Useful to test fitting
+%     workflows.
     properties
         locs
         simulator
         par
         PSF
-        file
-       
+        file 
     end
     methods
         function obj=SimulateCameraImages(varargin)        
@@ -404,4 +406,5 @@ pard.offset.position=[lu,4.7];
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Plugin to simulate camera raw frames using a realistic fluorophore blinking model, PSF model  and camera noise model. Useful to test fitting workflows.';
 end

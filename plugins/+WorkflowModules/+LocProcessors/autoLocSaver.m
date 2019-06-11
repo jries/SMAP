@@ -1,4 +1,5 @@
-classdef autoLocSaver<interfaces.WorkflowModule;
+classdef autoLocSaver<interfaces.WorkflowModule
+%     Saves the current localization data object
     properties
         
     end
@@ -45,5 +46,5 @@ pard.t1.Width=4;
 pard.postfix.object=struct('Style','edit','String','wf');
 pard.postfix.position=[6,1];
 pard.postfix.Width=0.5;
-
+pard.plugininfo.description='Saves the current localization data object';
 end

@@ -1,4 +1,5 @@
 classdef fitterGUI<interfaces.WorkflowModule
+%     Intermediate GUI to select a fitting plugin.
     properties
         fitters
         currentfitter
@@ -14,9 +15,6 @@ classdef fitterGUI<interfaces.WorkflowModule
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-%         function makeGui(obj)
-%             makeGui@recgui.WorkflowModule(obj);
-%         end
         function initGui(obj)
             initGui@interfaces.WorkflowModule(obj);
             obj.guihandles.fitterlist.Callback={@fitterlist_callback,obj};
@@ -28,19 +26,13 @@ classdef fitterGUI<interfaces.WorkflowModule
             p=obj.getGuiParameters;
             obj.currentfitter=obj.fitters{p.fitterlist.Value};
             obj.currentfitter.outputModules=obj.outputModules;
-            obj.currentfitter.prerun;
-%             obj.setInputChannels(2,'frame');
-%             p=obj.getGuiParameters.par;
-%             obj.loc_ROIsize=p.loc_ROIsize;
-           
+            obj.currentfitter.prerun;  
         end
         function output=run(obj,data,p)
             output=[];
             obj.currentfitter.run(data);
-
         end
 
-        
         function loadfitters(obj)
             t1=obj.plugininfo.description;
             fitnames={'MLE_GPU_Yiming','EMCCD_SE_MLE_GPU','RadialSymmetry2D','RadialSymmetry3D'};
@@ -78,11 +70,6 @@ classdef fitterGUI<interfaces.WorkflowModule
                     obj.children.(fn{k}).fieldvisibility(varargin{:});
             end
         end
-%         function setGuiParameters(obj,varargin)
-%             setGuiParameters@interfaces.WorkflowModule(obj,varargin{:});
-%             
-%         end
-
     end
 end
 
@@ -103,14 +90,9 @@ pard.fitterlist.Height=3;
 pard.fitterlist.Width=3;
 
 pard.fitterlist.TooltipString=sprintf('Select here which Fitter plugin is used.');
-% pard.loc_fitOnBackground.object=struct('Style','checkbox','String','fit on BG');
-% pard.loc_fitOnBackground.position=[4,4];
 
 pard.outputParameters={'loc_fitOnBackground'};
 pard.plugininfo.type='WorkflowModule';
-t1='Intermediate GUI to select a fitter.';
+t1='Intermediate GUI to select a fitting plugin.';
 pard.plugininfo.description=t1;
-% pard.fitterPanel.object=struct('Style','uipanel','String','parameters');
-% pard.fitterPanel.position=[4,2];
-% pard.fitterPanel.Height=4;
 end

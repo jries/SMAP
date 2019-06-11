@@ -1,4 +1,5 @@
 classdef MLE_global_spline<interfaces.WorkflowFitter
+%     Global fitter for multiple channels.
     properties
         fitpar
     end
@@ -1039,5 +1040,5 @@ pard.asymmetry.Optional=true;
 pard.syncParameters={{'cal_3Dfile','',{'String'}}};
 
 pard.plugininfo.type='WorkflowFitter';
-pard.plugininfo.description='Maximum likelyhood estimater, optimized for GPU processing. According to: C. S. Smith, N. Joseph, B. Rieger, and K. A. Lidke, ?Fast, single-molecule localization that achieves theoretically minimum uncertainty.,? Nat Methods, vol. 7, no. 5, pp. 373?375, May 2010.';
+pard.plugininfo.description='Global fitter for multiple channels.';
 end

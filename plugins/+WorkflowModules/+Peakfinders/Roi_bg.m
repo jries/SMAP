@@ -1,6 +1,7 @@
 classdef Roi_bg<interfaces.WorkflowModule
+%     Calculates the background in a ROI around a candidate position from
+%     quantile pixel values in a number of previous camera frames.
     properties
-%         imbuffer
         imindex=1;
         bufferlength=100;
     end
@@ -91,7 +92,7 @@ pard.numframes_bg.position=[2,3];
 pard.numframes_bg.Width=0.5;
 
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='This plugin cuts out regions of interest of a defined size around the candidate positions and passes these on to the fitter';
+pard.plugininfo.description='Calculates the background in a ROI around a candidate position from quantile pixel values in a number of previous camera frames.';
 end
 
 function bg=getbackground(roi,p)

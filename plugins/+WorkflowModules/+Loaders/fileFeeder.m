@@ -1,4 +1,6 @@
-classdef fileFeeder<interfaces.WorkflowModule;
+classdef fileFeeder<interfaces.WorkflowModule
+%     This plugin allows selecting many camera data sets. These are passed
+%     on to the Loader Plugin which fits them one after the other.
     properties
         
     end
@@ -94,5 +96,7 @@ pard.remove.Width=0.5;
 pard.clear.object=struct('Style','pushbutton','String','clear','Callback',{{@clear_callback,obj}});
 pard.clear.position=[6,4];
 pard.clear.Width=0.5;
+
+pard.plugininfo.description='This plugin allows selecting many camera data sets. These are passed on to the Loader Plugin which fits them one after the other.';
 
 end

@@ -1,4 +1,11 @@
 classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
+%     GPU and CPU-based fitter for 2D and 3D data sets. Uses MLE.
+%     Implements Gaussian and spline interpolated PSF models. According to:
+%     Li, Yiming, Markus Mund, Philipp Hoess, Joran Deschamps, Ulf Matti,
+%     Bianca Nijmeijer, Vilma Jimenez Sabinina, Jan Ellenberg, Ingmar
+%     Schoen, and Jonas Ries. “Real-Time 3D Single-Molecule Localization
+%     Using Experimental Point Spread Functions.” Nature Methods 15, no. 5
+%     (April 9, 2018): 367–69. https://doi.org/10.1038/nmeth.4661.
     properties
         fitpar
         zernike
@@ -664,5 +671,5 @@ pard.zmaxZ.Optional=true;
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 
 pard.plugininfo.type='WorkflowFitter';
-pard.plugininfo.description='Maximum likelyhood estimater, optimized for GPU processing. According to: C. S. Smith, N. Joseph, B. Rieger, and K. A. Lidke, ?Fast, single-molecule localization that achieves theoretically minimum uncertainty.,? Nat Methods, vol. 7, no. 5, pp. 373?375, May 2010.';
+pard.plugininfo.description='GPU and CPU-based fitter for 2D and 3D data sets. Uses MLE. Implements Gaussian and spline interpolated PSF models. According to: Li, Yiming, Markus Mund, Philipp Hoess, Joran Deschamps, Ulf Matti, Bianca Nijmeijer, Vilma Jimenez Sabinina, Jan Ellenberg, Ingmar Schoen, and Jonas Ries. “Real-Time 3D Single-Molecule Localization Using Experimental Point Spread Functions.” Nature Methods 15, no. 5 (April 9, 2018): 367–69. https://doi.org/10.1038/nmeth.4661.';
 end
