@@ -15,7 +15,7 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             out=[];
             % make T
             pt.uselayers=true;
-            pt.reflayer=p.salayer; pt.targetlayer=p.ualayer;
+            pt.reflayer=p.ualayer; pt.targetlayer=p.salayer;
             pt.currentfileinfo=obj.locData.files.file(1).info;
             pt.useT=true;
             cal3D=load(p.cal_3Dfile);
