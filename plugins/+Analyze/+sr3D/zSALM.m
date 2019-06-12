@@ -39,7 +39,7 @@ classdef zSALM<interfaces.DialogProcessor
             zrange=-0:10:800;
 %             rrange=-4.10:0.01:1.5;
             rrange=-0.2:0.01:1.5;
-            indf=znm>max(quantile(znm,0.01),zrange(1)) & znm<min(quantile(znm,0.985),zrange(end))...
+            indf=znm>max(quantile(znm,0.005),zrange(1)) & znm<min(quantile(znm,0.995),zrange(end))...
                 & rsu>max(quantile(rsu,0.015),rrange(1)) & rsu<min(quantile(rsu,0.995),rrange(end));
     
             
@@ -64,10 +64,12 @@ classdef zSALM<interfaces.DialogProcessor
 %             ft = fittype('a*exp(-b*x)+c');
             ft = fittype('a*exp(-b*x)+c');
             startp=[.7,.008,0.01];
+            startp(1)=0.5*exp(startp(2)*median(znm));
+%             startp(2)=-1/median(znm)*log(0.5);
 %             lb=[-inf -inf ];   
 %             ft='smoothingspline';
             
-            fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare');
+            fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare','Lower',[0 0 0])
             plot(ax2,zrange,fitp(zrange),'r')  
             plot(ax2,zrange,ft(startp(1),startp(2),startp(3),zrange),'y')
             drawnow
