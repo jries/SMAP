@@ -713,6 +713,8 @@ if fitpar.fitmode==3||fitpar.fitmode==5
                     cs.coeff=single(coeff);
                 end
                 splinefit{X,Y}=cs;
+                obj.spatialXrange{X,Y}=SS(X,Y).Xrange;
+                obj.spatialYrange{X,Y}=SS(X,Y).Yrange;
                 
 
             end
@@ -729,12 +731,12 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         else
             obj.spatial3Dcal=false;
         end
-        xr=SS(1,1).Xrangeall;
-        xr(1)=-inf;xr(end)=inf;
-        yr=SS(1,1).Yrangeall;
-        yr(1)=-inf;yr(end)=inf;
-        obj.spatialXrange=xr;
-        obj.spatialYrange=yr;
+%         xr=SS(1,1).Xrangeall;
+%         xr(1)=-inf;xr(end)=inf;
+%         yr=SS(1,1).Yrangeall;
+%         yr(1)=-inf;yr(end)=inf;
+%         obj.spatialXrange=xr;
+%         obj.spatialYrange=yr;
         fitpar.EMon=SS(1).EMon;
         fitpar.mode='cspline';
     elseif isfield(cal,'cspline')

@@ -4,7 +4,7 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
 %     Li, Yiming, Markus Mund, Philipp Hoess, Joran Deschamps, Ulf Matti,
 %     Bianca Nijmeijer, Vilma Jimenez Sabinina, Jan Ellenberg, Ingmar
 %     Schoen, and Jonas Ries. “Real-Time 3D Single-Molecule Localization
-%     Using Experimental Point Spread Functions.�? Nature Methods 15, no. 5
+%     Using Experimental Point Spread Functions.�? Nature Methods 15, no. 5
 %     (April 9, 2018): 367–69. https://doi.org/10.1038/nmeth.4661.
     properties
         fitpar
@@ -372,12 +372,19 @@ switch fitpar.fitmode
             else
                 obj.spatial3Dcal=false;
             end
-            xr=cal.SXY(1,1).Xrangeall;
-            xr(1)=-inf;xr(end)=inf;
-            yr=cal.SXY(1,1).Yrangeall;
-            yr(1)=-inf;yr(end)=inf;
-            obj.spatialXrange=xr;
-            obj.spatialYrange=yr;
+            ssxy=size(cal.SXY);
+            for xx=1:ssxy(1)
+                for yy=1:ssxy(2)
+                    obj.spatialXrange{xx,yy}=cal.SXY(xx,yy).Xrange;
+                    obj.spatialYrange{xx,yy}=cal.SXY(xx,yy).Yrange;
+                end
+            end
+%             xr=cal.SXY(1,1).Xrangeall;
+%             xr(1)=-inf;xr(end)=inf;
+%             yr=cal.SXY(1,1).Yrangeall;
+%             yr(1)=-inf;yr(end)=inf;
+%             obj.spatialXrange=xr;
+%             obj.spatialYrange=yr;
             fitpar.EMon=cal.SXY(1).EMon;
         elseif isfield(cal,'cspline')
             fitpar.zpar{1}=cal.gauss_zfit;
@@ -671,5 +678,5 @@ pard.zmaxZ.Optional=true;
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 
 pard.plugininfo.type='WorkflowFitter';
-pard.plugininfo.description='GPU and CPU-based fitter for 2D and 3D data sets. Uses MLE. Implements Gaussian and spline interpolated PSF models. According to: Li, Yiming, Markus Mund, Philipp Hoess, Joran Deschamps, Ulf Matti, Bianca Nijmeijer, Vilma Jimenez Sabinina, Jan Ellenberg, Ingmar Schoen, and Jonas Ries. “Real-Time 3D Single-Molecule Localization Using Experimental Point Spread Functions.�? Nature Methods 15, no. 5 (April 9, 2018): 367–69. https://doi.org/10.1038/nmeth.4661.';
+pard.plugininfo.description='GPU and CPU-based fitter for 2D and 3D data sets. Uses MLE. Implements Gaussian and spline interpolated PSF models. According to: Li, Yiming, Markus Mund, Philipp Hoess, Joran Deschamps, Ulf Matti, Bianca Nijmeijer, Vilma Jimenez Sabinina, Jan Ellenberg, Ingmar Schoen, and Jonas Ries. “Real-Time 3D Single-Molecule Localization Using Experimental Point Spread Functions.�? Nature Methods 15, no. 5 (April 9, 2018): 367–69. https://doi.org/10.1038/nmeth.4661.';
 end

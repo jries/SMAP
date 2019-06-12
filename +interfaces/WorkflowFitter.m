@@ -7,8 +7,8 @@ classdef WorkflowFitter<interfaces.WorkflowModule
         newID=1;
         fittedlocs=0;
         spatial3Dcal=false;
-        spatialXrange=[-inf inf];
-        spatialYrange=[-inf inf];
+        spatialXrange={[-inf inf]};
+        spatialYrange={[-inf inf]};
         infofields={'x','y'};
     end
     methods
@@ -108,7 +108,7 @@ classdef WorkflowFitter<interfaces.WorkflowModule
             
             xrange=obj.spatialXrange;
             yrange=obj.spatialYrange;
-            
+            sxy=size(xrange);
             if ~isempty(dstruc)&&~isempty(dstruc.img)       
                  imgstack=dstruc.img;
                  
@@ -135,10 +135,11 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                 stackindh=stackindh+1; %new pointer
                  
                 
-                for X=1:length(xrange)-1
-                    for Y=1:length(yrange)-1
+                for X=1:sxy(1)
+                    for Y=1:sxy(2)
                         if obj.spatial3Dcal&&numberInBlockh>1  %later: dont rearrange, but use instack pointer.
-                            inblock=find(stackinf.x>=xrange(X) & stackinf.x<=xrange(X+1) & stackinf.y>=yrange(Y) & stackinf.y<=yrange(Y+1)); 
+                            inblock=find(stackinf.x>=xrange{X,Y}(1) & stackinf.x<=xrange{X,Y}(2) & stackinf.y>=yrange{X,Y}(1) & stackinf.y<=yrange{X,Y}(2)); 
+%                             inblock=find(stackinf.x>=xrange(X) & stackinf.x<=xrange(X+1) & stackinf.y>=yrange(Y) & stackinf.y<=yrange(Y+1)); 
                         else
                             inblock=1:length(stackinf.x);
                         end
@@ -150,8 +151,8 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                 end
             end
             if eof
-             for X=1:length(xrange)-1
-                for Y=1:length(yrange)-1   
+             for X=1:sxy(1)
+                for Y=1:sxy(2)
                     fiteof
                 end
              end
@@ -254,8 +255,10 @@ global fitterstackinfo fitterimagestack fitterbgstack
 
  roisize=obj.getPar('loc_ROIsize');
 %             obj.numberInBlock=round(5500*100/roisize^2);
-            numx=length(obj.spatialXrange)-1;
-            numy=length(obj.spatialYrange)-1;
+            sxy=size(obj.spatialXrange);
+            numx=sxy(1);numy=sxy(2);
+%             numx=length(obj.spatialXrange)-1;
+%             numy=length(obj.spatialYrange)-1;
 %             disp(['number in block: ' num2str(obj.numberInBlock)]);
             obj.stackind=zeros(numx,numy);
             obj.fittedlocs=0;
