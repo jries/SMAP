@@ -91,7 +91,7 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
 %                 wf.module('EvaluateIntensity_s').extension='t';
 
                 overwritedefaultcamera(obj)
-                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
+                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
                 wf.run;
         %then fit UA if needed with modified settings
             if p.evalua
@@ -108,7 +108,7 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
                 wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
 %                 wf.module('EvaluateIntensity_s').extension='r';
                 
-                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
+                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
                 overwritedefaultcamera(obj)
                 wf.run;
             end
