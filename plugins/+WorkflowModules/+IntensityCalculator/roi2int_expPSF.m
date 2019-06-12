@@ -43,10 +43,10 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
                 return;
             end
             switch ic
-                case {'r' ,'s'}
-                    sppos=1;
-                case {'t','u'}
+                case {'t' ,'s'}
                     sppos=2;
+                case {'r','u'}
+                    sppos=1;
             end
 %                sppos        
             sind=min(length(obj.spline.SXY(sppos).cspline.coeff),sppos); %did not fix calibrator yet..
