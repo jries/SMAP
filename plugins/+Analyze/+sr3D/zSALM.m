@@ -36,8 +36,16 @@ classdef zSALM<interfaces.DialogProcessor
             rsu=double(is./(iu));
 %             rsu=real(log(rsu));
             znm=double(locs.znm(indbright));
-            zrange=-0:10:800;
-%             rrange=-4.10:0.01:1.5;
+            
+            dz=10;
+            if length(p.zrange)==1
+                zrange=-p.zrange:dz:p.zrange;
+            elseif length(p.zrange)==2
+                zrange=p.zrange(1):dz:p.zrange(2);
+            else
+                zrange=p.zrange;
+            end
+                 
             rrange=-0.2:0.01:1.5;
             indf=znm>max(quantile(znm,0.005),zrange(1)) & znm<min(quantile(znm,0.995),zrange(end))...
                 & rsu>max(quantile(rsu,0.005),rrange(1)) & rsu<min(quantile(rsu,0.995),rrange(end));
@@ -118,9 +126,18 @@ classdef zSALM<interfaces.DialogProcessor
             out=[];
         end
         
-        function initGui(obj)           
+        function initGuiFinal(obj)  
+            fields={'assignfield1','assignfield2','bgfield1','bgfield2'};
+            fieldnames={'psf_ns','psf_nu','psf_bgs','psf_bgu'};
+            for k=1:length(fields)
+                stri1=obj.guihandles.(fields{k}).String;
+                indg=find(contains(stri1,fieldnames{k}));
+                if ~isempty(indg)
+                    obj.guihandles.(fields{k}).Value=indg(1);
+                end
+            end   
         end
- 
+        
         function pard=guidef(obj)
             pard=guidef(obj);
         end
@@ -185,6 +202,14 @@ pard.NAmaskt.Width=0.7;
 pard.NAmask.object=struct('Style','edit','String','1.33');
 pard.NAmask.position=[4,2.9];
 pard.NAmask.Width=0.4;
+
+pard.zranget.object=struct('Style','text','String','Z range (nm)');
+pard.zranget.position=[4,3.5];
+pard.zranget.Width=0.7;
+pard.zrange.object=struct('Style','edit','String','-400 800');
+pard.zrange.position=[4,4.2];
+pard.zrange.Width=0.8;
+
 
  pard.syncParameters={{'locFields','assignfield1',{'String'}},{'locFields','assignfield2',{'String'}},...
      {'locFields','bgfield1',{'String'}},{'locFields','bgfield2',{'String'}}};
