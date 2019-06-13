@@ -46,7 +46,7 @@ classdef zSALM<interfaces.DialogProcessor
                 zrange=p.zrange;
             end
                  
-            rrange=-0.2:0.01:1.5;
+            rrange=-0.2:0.01:2;
             indf=znm>max(quantile(znm,0.005),zrange(1)) & znm<min(quantile(znm,0.995),zrange(end))...
                 & rsu>max(quantile(rsu,0.005),rrange(1)) & rsu<min(quantile(rsu,0.995),rrange(end));
     
@@ -64,13 +64,20 @@ classdef zSALM<interfaces.DialogProcessor
             startp(1)=0.5*exp(startp(2)*median(znm));
             
             fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare','Lower',[0 -inf 0]);
+            
+            
             ftsalm=fittype(@(b,x) intensitySALM(x-b,p),'independent','x','coefficients',{'b'});
             startpsalm=quantile(znm(indf),0.1);
+%             ftsalm=fittype(@(b,c,x) intensitySALM(x-b,p)*c,'independent','x','coefficients',{'b','c'});
+%             startpsalm=[quantile(znm(indf),0.1) 1];
+            
+            
             fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
             zglass=fitpsalm.b;
             
             plot(ax2,zrange,fitp(zrange),'m--')  
             plot(ax2,zrange,ftsalm(startpsalm(1),zrange),'y:')
+%             plot(ax2,zrange,ftsalm(startpsalm(1),startpsalm(2),zrange),'y:')
             plot(ax2,zrange,fitpsalm(zrange),'r') 
             legend(ax2,'exp','start','salm')
             
