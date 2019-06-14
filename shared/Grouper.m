@@ -3,6 +3,7 @@ classdef Grouper< interfaces.LocDataInterface
         combinemodes
         indsortlist
         dllistsort
+        mode=1;
     end
     methods
         function obj=Grouper(varargin)            
@@ -52,11 +53,11 @@ classdef Grouper< interfaces.LocDataInterface
             end
 %             obj.status('group localizations')
             %here not clear. like this or exchanged?
-            sigmafactor=2.5;
+            
             x=double(obj.locData.getloc(xf).(xf));
             y=double(obj.locData.getloc(yf).(yf));
-            locp=max(double(obj.locData.getloc(locpf).(locpf))*sigmafactor,10); %less than pixelsiz/10 is not resolvable also for HD
-            frame=double(obj.locData.getloc(framef).(framef));
+            
+             frame=double(obj.locData.getloc(framef).(framef));
             
             numfields=length(varargin);
             
@@ -96,11 +97,18 @@ classdef Grouper< interfaces.LocDataInterface
             
             
             clear sortmatrix 
-%             maxactive=10000;
-%             list=connectsingle2c(sortmatrixsort(:,end),double(y(indsort)),sortmatrixsort(:,end-1),double(dx),int32(dt),int32(maxactive));
 %             
-            list=connectsinglesigma(sortmatrixsort(:,end),double(y(indsort)),sortmatrixsort(:,end-1),double(dx),int32(dt),double(locp));
-            
+%             list=connectsingle2c(sortmatrixsort(:,end),double(y(indsort)),sortmatrixsort(:,end-1),double(dx),int32(dt),int32(maxactive));
+           
+            switch obj.mode
+                case 2 %locprec
+                    sigmafactor=2.5;
+                    locp=max(double(obj.locData.getloc(locpf).(locpf))*sigmafactor,dx(1)); %less than pixelsiz/10 is not resolvable also for HD
+                    list=connectsinglesigma(sortmatrixsort(:,end),double(y(indsort)),sortmatrixsort(:,end-1),double(dx(end)),int32(dt),double(locp));
+                case 1 %fix
+                   maxactive=10000;
+                   list=connectsingle2c(sortmatrixsort(:,end),double(y(indsort)),sortmatrixsort(:,end-1),double(dx),int32(dt),int32(maxactive));
+            end
             clear  sortmatrixsort
             clear frame
 %              listm=connectsingle2mat(double(x(indsort)),double(y(indsort)),double(frame(indsort)),double(dx),int32(dt),int32(maxactive));

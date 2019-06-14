@@ -8,7 +8,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
         useevaluators
         extension
         makeevaluators=true(3,1);
-%         outputfilename
+        peval
     end
     methods
         function obj=EvaluateIntensity_s(varargin)
@@ -23,7 +23,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             fw=obj.guiPar.FieldWidth;
             fh=obj.guiPar.FieldHeight;
             fs=obj.guiPar.fontsize;
-            huitable=uitable('Units','pixels','Position',[5,2*fh,fw,5*fh],'Parent',obj.handle,'FontSize',obj.guiPar.fontsize);
+            huitable=uitable('Units','pixels','Position',[5,0,fw,4.5*fh],'Parent',obj.handle,'FontSize',obj.guiPar.fontsize);
             huitable.ColumnEditable=[true false];
             huitable.RowName=[];
             huitable.ColumnName=[];
@@ -40,14 +40,13 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
              obj.evaluators(3)=ev3;
             p=obj.guiPar;
             p.Xpos=1;p.Vpos=1;p.Vrim=0;
-%             ind=1;
             for k=1:length(obj.evaluators)
                 if obj.makeevaluators(k)
                     ev=obj.evaluators{k};
                     data{k,1}=true;
                     data{k,2}=ev.info.name;
-                    hpanel=uipanel('Parent',obj.handle,'Units','pixels','Position',[fw,2*fh,3*fw,5*fh],'FontSize',fs,'Visible','off');
-                     obj.children.(['panel_' num2str(k)])=ev;
+                    hpanel=uipanel('Parent',obj.handle,'Units','pixels','Position',[fw,0,3*fw,4.5*fh],'FontSize',fs,'Visible','off');
+                    obj.children.(['panel_' num2str(k)])=ev;
                     obj.guihandles.(['panel_' num2str(k)])=hpanel;
                     ev.setGuiAppearence(p)
                     ev.handle=hpanel;
@@ -81,18 +80,15 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             obj.loccounter=0;
             obj.fields={};
             for k=1:length(obj.evaluators)
+                obj.peval{k}=obj.evaluators{k}.getAllParameters;
                 if obj.useevaluators(k)
-                    obj.evaluators{k}.prerun;
+                    obj.evaluators{k}.prerun(obj.peval{k});
                     fields=obj.evaluators{k}.info.fields;
                     for l=1:length(fields)
-                    obj.fields={obj.fields{:} [fields{l} '1'] };
-                    end
-%                     for l=1:length(fields)
-%                     obj.fields={obj.fields{:} [fields{l} '2'] };
-%                     end
-                    
+                        obj.fields={obj.fields{:} [fields{l}] };
+                    end 
                 end
-    
+                
             end
                obj.fields={obj.fields{:} 'int_xpix', 'int_ypix', 'int_frame' ,'phot','bg'};
             obj.intensities=single(0);
@@ -100,14 +96,9 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
         end
         function dato=run(obj,data,p) %
             global EvaluateIntensity_intensity
-            so1=2; %number of fields per evaluator
-            so2=2;
-            so3=2;
+            so=2;
             if ~isempty(data.data)
                 img=data.data.img;
-%                 bg=data{2}.data.img;
-%                 img=d1.img;
-%                 bg=d2.img;
                 loc=data.data.info;
                 s=size(img); 
                 if length(s)==2
@@ -117,66 +108,36 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                 numl=s(3);
                 memincrease=1e4;  
                 useevaluators=obj.useevaluators;
-%                 intensities=obj.intensities;
                 evaluators=obj.evaluators;
                 loccounter=obj.loccounter;
-                s=size(obj.intensities);
+                
                 s=size(EvaluateIntensity_intensity);
                 if loccounter>s(1)-memincrease/4
                     EvaluateIntensity_intensity(loccounter+memincrease,length(obj.fields))=single(0);
                 end
                 
-%                 for k=numl:-1:1
-                    inds=1;
-%                     im1=img(:,:,k);
-%                     im2=img(:,:,k+numl);
-%                     bg1=bg(:,:,k);
-%                     bg2=bg(:,:,k+numl);
-                    
-                    if useevaluators(1)
-                        out1=evaluators{1}.evaluate(img,bg);
-                        out1p=out1(1:numl,:);
-                        EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so1-1)=out1p;
-                         inds=inds+so1;
-                         out1p=out1(numl+1:end,:);
-                       EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so1-1)=out1p;
-                        inds=inds+so1;
+                inds=1; 
+                for ev=1:length(evaluators)
+                    if useevaluators(ev)
+                        out=evaluators{ev}.evaluate(obj.peval{ev},img,loc);
+                        EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so-1)=out(1:numl,:);
+                        inds=inds+so;
                     end
-                    if useevaluators(2)
-                        out2=evaluators{2}.evaluate(img,loc.bg,loc.dx,loc.dy,loc.PSFxpix,loc.PSFypix);
-                        EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so2-1)=out2(1:numl,:);
-                        inds=inds+so2;
-%                       EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so2-1)=out2(numl+1:end,:);
-%                         inds=inds+so2;
-                        
-%                         intensities(loccounter+k,inds:inds+length(out)-1)=out;
-%                         inds=inds+length(out);
-%                         out=evaluators{2}.evaluate(im2,bg2,loc.dx(k+numl),loc.dy(k+numl),loc.PSFxpix(k+numl),loc.PSFypix(k+numl));
-%                         intensities(loccounter+k,inds:inds+length(out)-1)=out;
-                    end
-                    if useevaluators(3)
-                        out3=evaluators{3}.evaluate(img,loc);
-                        EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so3-1)=out3(1:numl,:);
-                        inds=inds+so3;
-                    end
-                    EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+4)=horzcat(loc.x(1:numl),loc.y(1:numl),loc.frame(1:numl),loc.phot(1:numl),loc.bg(1:numl));
-                    if isfield(loc,'groupindex')
-                        EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds+5)=loc.groupindex(1:numl);
-                    end
-%                 end
+                end
+                                      
+                if isfield(loc,'groupindex')
+                    EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds+5)=loc.groupindex(1:numl);
+                end
                 loccounter=loccounter+numl;
-                
-                
+                           
                 obj.useevaluators=useevaluators;
-%                 obj.intensities=intensities;
                 obj.evaluators=evaluators;
                 obj.loccounter=loccounter;
-                 obj.setPar('fittedLocs',loccounter);
+                obj.setPar('fittedLocs',loccounter);
                 dato=[];
                 
             else
                 dato=data;
-%                 obj.output(data{1})
                 if data.eof
                     groupindex=EvaluateIntensity_intensity(1:obj.loccounter,end);
                     [~,indsortg]=sort(groupindex);

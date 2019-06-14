@@ -1,4 +1,6 @@
 classdef RoiCutterWF<interfaces.WorkflowModule
+%     This plugin cuts out regions of interest of a defined size around the
+%     candidate positions and passes these on to the fitter.
     properties
         loc_ROIsize
         preview
@@ -88,15 +90,9 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             outs.img=cutoutimages(:,:,1:ind);
             dato=data{1};%.copy;
             dato.data=outs;%set(outs);
-%             obj.output(dato)
             outputdat=dato;
 
-            
-            
-            
             if obj.preview 
-%                 figure(obj.globpar.parameters.outputfig)
-%                 ax=gca;
                 obj.disppreview=true;
                 outputfig=obj.getPar('loc_outputfig');
                 if ~isvalid(outputfig)
@@ -105,54 +101,25 @@ classdef RoiCutterWF<interfaces.WorkflowModule
                     
                 end
                 outputfig.Visible='on';
-
-
                 figure(outputfig)
-%                 hold off
-%                 imagesc(image);
-%                 colorbar;
-%                 axis equal
                 hold on
-                
-                
-%                 try
                     col=[0.3 0.3 0.3];
-%                 figure(obj.getPar('loc_outputfig'))
-%                 ax=findobj(obj.getPar('loc_outputfig').Children,'Type','Axes');
-%                 ax.NextPlot='add';
-%                 catch
-%                     figure(207);
-%                     ax=gca;
-%                     ax.NextPlot='replace';
-%                     imagesc(ax,image);
-%                      ax.NextPlot='add';
-%                     col=[1 0 1];
                     ax=gca;
-%                 end
-%                 hold on
 
                 for k=1:length(maxima.x)
                     pos=[maxima.x(k)-dn maxima.y(k)-dn maxima.x(k)+dn maxima.y(k)+dn ];
                     
                     plotrect(ax,pos,col);
                 end
-
-%             drawnow
-            
             end 
             else
                 if obj.preview && ~obj.disppreview
-%                     disp('no localizations found')
                     obj.status('image could not be loaded');drawnow
                     error('no image loaded')
                 end
-%                 obj.output(data{1});
                 outputdat=data{1};
             end
-%             outputdat=[];
         end
-        
-
     end
 end
 
@@ -161,15 +128,15 @@ end
 function pard=guidef
 pard.text.object=struct('Style','text','String','Size ROI (pix)');
 pard.text.position=[1,1];
-
+pard.text.Width=0.8;
 
 pard.loc_ROIsize.object=struct('Style','edit','String','7');
-pard.loc_ROIsize.position=[2,1];
-pard.loc_ROIsize.Width=0.7;
+pard.loc_ROIsize.position=[1,1.8];
+pard.loc_ROIsize.Width=0.4;
 pard.loc_ROIsize.TooltipString=sprintf('Size (pixels) of regions around each peak candidate which are used for fitting. \n Depends on fitter. Use larger ROIs for 3D data.');
 
 pard.loc_filterforfit.object=struct('Style','edit','String','0');
-pard.loc_filterforfit.position=[2,1.7];
+pard.loc_filterforfit.position=[1,2.2];
 pard.loc_filterforfit.TooltipString=sprintf('Filter before fit. Sigma of Gaussian kernel in pixels (0: no filter).');
 pard.loc_filterforfit.Width=0.3;
 

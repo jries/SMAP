@@ -1,4 +1,6 @@
 classdef OnlineReconstruction<interfaces.WorkflowModule
+%     Passes on the fitted localizations to the rendering engine of SMAP.
+%     This happens at user-defined time intervals or upon request.
     properties
         localupdatetime=10
         localtimervalue
@@ -158,5 +160,5 @@ pard.update_now.TooltipString=sprintf('If checked, the fitted localizations are 
  
 
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='Passes on the fitted localizations to the rendering engine of SMAP. This happens at user-defined time intervals.';
+pard.plugininfo.description='Passes on the fitted localizations to the rendering engine of SMAP. This happens at user-defined time intervals or upon request.';
 end

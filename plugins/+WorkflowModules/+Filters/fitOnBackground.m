@@ -1,7 +1,8 @@
 classdef fitOnBackground<interfaces.WorkflowModule
+%     Subtracts the background prior to fitting. Only recommended for
+%     strong static background or centroid-based algorithms.
     properties
         fitonbg
-
     end
     methods
         function obj=fitOnBackground(varargin)
@@ -17,7 +18,6 @@ classdef fitOnBackground<interfaces.WorkflowModule
         end
         function prerun(obj,p)
             obj.fitonbg=p.loc_fitonbg;
-%              obj.preview=obj.getPar('loc_preview');
         end
         function output=run(obj,data,p)
             output=[];
@@ -72,5 +72,5 @@ pard.loc_fitonbg.TooltipString=sprintf('If checked, fitting is performed on back
 pard.loc_fitonbg.Optional=true;
 
 pard.plugininfo.type='WorkflowModule';
-pard.plugininfo.description='Allows fitting on background-corrected images. Only recommended for strong static background or centroid-based algorithms.';
+pard.plugininfo.description='Subtracts the background prior to fitting. Only recommended for strong static background or centroid-based algorithms.';
 end

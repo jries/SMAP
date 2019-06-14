@@ -1,4 +1,9 @@
 classdef ImageFilter<interfaces.WorkflowModule
+%     Filters the image before peak finding. Included are a Gaussian filter
+%     (recommended for beads and if the background is determined
+%     independentely), a Difference-of-Gaussian filter  (works well on most
+%     SMLM data) and filtering with an experimental PSF (recommended for
+%     non-compact PSFs, e.g. the double-helix PSF.
     properties
         filterkernel
         preview
@@ -14,11 +19,6 @@ classdef ImageFilter<interfaces.WorkflowModule
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-%         function initGui(obj)
-%             initGui@interfaces.WorkflowModule(obj);
-% %            obj.guihandles.loadmetadata.Callback={@loadmetadata_callback,obj};
-% %            obj.guihandles.camparbutton.Callback={@camparbutton_callback,obj};
-%         end
         function prerun(obj,p)
             p=obj.getAllParameters;
             fs=p.loc_loc_filter_sigma(1);
@@ -159,9 +159,6 @@ switch obj.getPar('loc_previewmode').Value
         imd=imf;
     case 4 %bg
         imd=imgbg;
-%         draw=false;
-%           imd=img*0;
-%         imd=bg;
     otherwise 
         draw=false;
 end
@@ -177,18 +174,6 @@ hold on
 end
 end
 
-
-
-% function filtermode_callback(object,b,obj)
-% gauss={};
-% psf={'loadPSF'};
-% switch object.Value
-%     case 1 %Gauss
-%         obj.fieldvisibility('on',gauss,'off',psf);
-%     case 2 %PSF
-%         obj.fieldvisibility('off',gauss,'on',psf);
-% end
-% end
 
 function loadPSF_callback(object,b,obj)
 
@@ -210,12 +195,6 @@ if f
     if isfield(l,'PSF')
         PSF=l.PSF{1};
         dz=l.cspline.dz;
-%     elseif isfield(l,'splinefit')
-%         PSF=l.splinefit.PSF;
-%         dz=l.splinefit.dz;
-%     elseif isfield(l,'cspline_all')
-%         PSF=l.cspline_all.PSF;
-%         dz=l.cspline_all.dz;
     else
         disp('PSF not found')
     end
@@ -225,7 +204,6 @@ if f
     obj.filterkernelPSF.dz=dz;
     
 end
-% figure(99);imagesc(h);
 end
 
 function pard=guidef(obj)
@@ -266,6 +244,6 @@ pard.zrange.TooltipString=sprintf('For using experimetnal PSF for peak finding: 
 
 pard.plugininfo.type='WorkflowModule';
 pard.loc_loc_filter_sigma.Optional=true;
-pard.plugininfo.description='Gaussian filter, usually applied after background correction and before peak finding.';
+pard.plugininfo.description='Filters the image before peak finding. Included are a Gaussian filter (recommended for beads and if the background is determined independentely), a Difference-of-Gaussian filter  (works well on most SMLM data) and filtering with an experimental PSF (recommended for non-compact PSFs, e.g. the double-helix PSF.';
 pard.text.TooltipString=pard.loc_loc_filter_sigma.TooltipString;
 end

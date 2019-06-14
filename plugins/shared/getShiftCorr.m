@@ -1,4 +1,7 @@
 function [dx,dy,abg]=getShiftCorr(im1,im2,ploton,maxshift,subpixel)
+if nargin<3
+    ploton=false;
+end
 if nargin <4
     maxshift=2500;
 end
@@ -50,13 +53,15 @@ catch err
 end
 if subpixel
 fitp=my2Dgaussfit(Fcccut);
+% dx=fitp(:,1)+x-maxdisplacement-displace(1);
+% dy=fitp(:,2)+y-maxdisplacement-displace(2);
 dx=fitp(:,1)+x-maxdisplacement-winfit-1-displace(1);
 dy=fitp(:,2)+y-maxdisplacement-winfit-1-displace(2);
 abg=fitp(:,3)+fitp(:,4);
 else
     
-    dx=x-maxdisplacement-displace(1)-1;
-    dy=y-maxdisplacement-displace(2)-1;
+    dx=x-maxdisplacement-displace(1);
+    dy=y-maxdisplacement-displace(2);
     fitp=[0 0];
     abg=maxcc;
 end

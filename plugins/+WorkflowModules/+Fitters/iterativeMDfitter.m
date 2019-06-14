@@ -1,4 +1,7 @@
 classdef iterativeMDfitter<interfaces.WorkflowModule
+%     Single-emiiter fitter that considers all ther candidate
+%     localizations. More robust for high-density localization than a
+%     single-emitter fitter
     properties
         splinePSF
         splinenorm
@@ -215,5 +218,5 @@ pard.useSEfitter.Width=1;
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='This plugin cuts out regions of interest of a defined size around the candidate positions and passes these on to the fitter';
+pard.plugininfo.description='Single-emiiter fitter that considers all ther candidate localizations. More robust for high-density localization than a single-emitter fitter';
 end

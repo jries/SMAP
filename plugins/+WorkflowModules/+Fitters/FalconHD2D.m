@@ -1,4 +1,10 @@
 classdef FalconHD2D<interfaces.WorkflowModule
+%     FALCON high-density localizer. Speed-optimized version of:	J. Min,
+%     C. Vonesch, H. Kirshner, L. Carlini, N. Olivier, S. Holden, S.
+%     Manley, J. C. Ye, and M. Unser, ?FALCON: fast and unbiased
+%     reconstruction of high-density super-resolution microscopy data.,?
+%     Sci. Rep., vol. 4, p. 4577, 2014.';
+
     properties
         fitpar
         fitfunction
@@ -6,13 +12,7 @@ classdef FalconHD2D<interfaces.WorkflowModule
     methods
        function obj=FalconHD2D(varargin)
             obj@interfaces.WorkflowModule(varargin{:})
-%             obj.inputChannels=2; 
-%              obj.setInputChannels(2,'frame');
        end
-%        function initgui(obj)
-%            initgui@interfaces.WorkflowFitter(obj);
-% %            addpath('plugins/+WorkflowModules/+Fitters/FALCON')
-%        end
         function pard=guidef(obj)
             pard=guidef(obj);
         end
@@ -39,38 +39,10 @@ classdef FalconHD2D<interfaces.WorkflowModule
         end
         function locs=fit(obj,imagephot,p,frame)
             debug=false;
-   
-%             [Results,avgImg]= FALCON_CPU_rel3_WF(imagephot,p.Gsigma,p.speed.selection,debug);
-   
+      
             [Results,avgImg]= obj.fitfunction(imagephot,p.Gsigma,p.speed.selection,debug);
-
-%              s=size(imstack);
-%              if length(s)==2 
-%                  s(3)=1;
-%              end
-%              if s(3)==0
-%                  locs=[];
-%                  return
-%              end
-             
-%              x=zeros(s(3),1,'single');
-%              y=zeros(s(3),1,'single');
-%              bg=zeros(s(3),1,'single');
-%              phot=zeros(s(3),1,'single');
-%              sigma=zeros(s(3),1,'single');
-%              for k=1:s(3)
-%                  ims=imstack(:,:,k);
-%                  bgs=bgstack(:,:,k);
-%                  [x(k),y(k),sigma(k)]=radialcenter(ims); 
-%                  bg(k)=mean(bgs(:));
-%                  phot(k)=sum(ims(:))-bg(k)*s(1)*s(2);
-%              end
-             
-%              dn=ceil((s(1)-1)/2);
              shiftx=0;%-0.5; %deviation from ground truth
              shifty=0;%-0.5;
-%              posx=Results(:,2)+shiftx;
-%              posy=stackinfo.y+shifty;
              locs.frame=frame*ones(size(Results,1),1);
              locs.xpix=Results(:,2)+shiftx;
              locs.ypix=Results(:,3)+shifty;

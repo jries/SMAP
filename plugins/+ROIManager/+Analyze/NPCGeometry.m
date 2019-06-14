@@ -24,107 +24,121 @@ function out=runintern(obj,p)
 out=[];
 sites=obj.SE.sites;
 
+useind=getFieldAsVector(sites,'annotation.use');
+filenumber=getFieldAsVector(sites,'info.filenumber');
 % dt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',4);
 % ind = dt>20&dt<100;
 % sites = sites(ind);
 ff='%2.1f';
-
+d=0;ddd=0;sigma=0;draw=0; drawerr=0;
+d2G=0;d2Gerr=0;pearsonc=0;
 if isfield(sites(1).evaluation.NPCgeomtryQuantify,'profile') %z-data is there
+    z0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.b');
+    sigma=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.c');
+    d=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.d');
+    draw=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfitraw.d');
+    dt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',4);
 
-z0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.b');
-sigma=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.c');
-d=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfit.d');
-draw=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.profile.Gaussfitraw.d');
-dt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',4);
+    ax0=obj.initaxis('sigma_z');
+    n=0:1:25;
+    histogram(sigma,n); xlabel('sigma (nm)')
+    title(['sigma z: ' num2str(mean(sigma),ff) '\pm' num2str(std(sigma),ff)])
+    dindin=d>20&d<80;
+    drawindin=d>20&d<80;
+    dtindin=d>20&d<80;
 
-ax0=obj.initaxis('sigma_z');
-n=0:1:25;
-histogram(sigma,n); xlabel('sigma (nm)')
-title(['sigma z: ' num2str(mean(sigma),ff) '\pm' num2str(std(sigma),ff)])
-dindin=d>20&d<80;
-drawindin=d>20&d<80;
-dtindin=d>20&d<80;
+    d=d(dindin);
+    draw=draw(drawindin);
+    dt=dt(dtindin);
+    n=20:1:80;
 
-d=d(dindin);
-draw=draw(drawindin);
-dt=dt(dtindin);
-n=20:1:80;
+    ax1=obj.initaxis('d_Gauss');
+    histogram(abs(d),n); xlabel('d (nm)')
+    hn=histcounts(abs(d),n);
+    nf=n(1:end-1)+(n(2)-n(1))/2;
+    fitp=fit(nf',hn','gauss1');
+    hold on
+    plot(nf,fitp(nf))
+    hold off
+    title(['d2G: med ' num2str(median(d),ff) ', mean ' num2str(mean(d),ff) '\pm' num2str(std(d),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
 
-ax1=obj.initaxis('d_Gauss');
-histogram(abs(d),n); xlabel('d (nm)')
-hn=histcounts(abs(d),n);
-nf=n(1:end-1)+(n(2)-n(1))/2;
-fitp=fit(nf',hn','gauss1');
-hold on
-plot(nf,fitp(nf))
-hold off
-title(['d2G: med ' num2str(median(d),ff) ', mean ' num2str(mean(d),ff) '\pm' num2str(std(d),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
+    d2G=fitp.b1;
+    d2Gerr=fitp.c1/sqrt(2);
 
-d2G=fitp.b1;
-d2Gerr=fitp.c1/sqrt(2);
+    ax2=obj.initaxis('d_raw');
+    histogram(abs(draw),n); xlabel('d (nm)')
 
-ax2=obj.initaxis('d_raw');
-histogram(abs(draw),n); xlabel('d (nm)')
+    hn=histcounts(abs(draw),n);
+    nf=n(1:end-1)+(n(2)-n(1))/2;
+    fitp=fit(nf',hn','gauss1');
+    hold on
+    plot(nf,fitp(nf))
+    hold off
+    title(['draw2G: med ' num2str(median(draw),ff) ', mean ' num2str(mean(draw),ff) '\pm' num2str(std(draw),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
 
-hn=histcounts(abs(draw),n);
-nf=n(1:end-1)+(n(2)-n(1))/2;
-fitp=fit(nf',hn','gauss1');
-hold on
-plot(nf,fitp(nf))
-hold off
-title(['draw2G: med ' num2str(median(draw),ff) ', mean ' num2str(mean(draw),ff) '\pm' num2str(std(draw),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
+    draw=fitp.b1;drawerr=fitp.c1/sqrt(2);
 
-draw=fitp.b1;drawerr=fitp.c1/sqrt(2);
+    ax3=obj.initaxis('d_t');
+    histogram(abs(dt),n); xlabel('d (nm)')
+    % title(['template d: median' num2str(median(dt),ff) '\pm' num2str(std(dt),ff)])
 
-ax3=obj.initaxis('d_t');
-histogram(abs(dt),n); xlabel('d (nm)')
-% title(['template d: median' num2str(median(dt),ff) '\pm' num2str(std(dt),ff)])
+    hn=histcounts(abs(dt),n);
+    nf=n(1:end-1)+(n(2)-n(1))/2;
+    fitp=fit(nf',hn','gauss1');
+    hold on
+    plot(nf,fitp(nf))
+    hold off
+    title(['dtemplate: med ' num2str(median(dt),ff) ', mean ' num2str(mean(dt),ff) '\pm' num2str(std(dt),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
 
-hn=histcounts(abs(dt),n);
-nf=n(1:end-1)+(n(2)-n(1))/2;
-fitp=fit(nf',hn','gauss1');
-hold on
-plot(nf,fitp(nf))
-hold off
-title(['dtemplate: med ' num2str(median(dt),ff) ', mean ' num2str(mean(dt),ff) '\pm' num2str(std(dt),ff) ', fit ' num2str(fitp.b1,ff) '\pm' num2str(fitp.c1/sqrt(2),ff)] )
-
-% ind = dt<80&dt>20;
-zt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',3);
-dpl=d';
-indzin=dindin;
-ax4=obj.initaxis('d vs z');
-hold off
-plot(zt(indzin),abs(dpl),'.')
-fline=fit(zt(indzin),abs(dpl),'poly1');
-hold on
-plot(zt(indzin),fline(zt(indzin)),'r')
-xlabel('z');ylabel('distance')
-title(['d(z=0) fit: ' num2str(fline.p2,ff) ' Corr:' num2str(corr(abs(d'),zt(indzin')))]);
-ylim([25 100])
-xlim([-200 200])
+    % ind = dt<80&dt>20;
+    zt=getFieldAsVectorInd(sites,'evaluation.NPCgeomtryQuantify.templatefit.fitted',3);
+    dpl=d';
+    indzin=dindin;
+    ax4=obj.initaxis('d vs z');
+    hold off
+    plot(zt(indzin),abs(dpl),'.')
+    fline=fit(zt(indzin),abs(dpl),'poly1');
+    hold on
+    plot(zt(indzin),fline(zt(indzin)),'r')
+    xlabel('z');ylabel('distance')
+    title(['d(z=0) fit: ' num2str(fline.p2,ff) ' Corr:' num2str(corr(abs(d'),zt(indzin')))]);
+    ylim([25 100])
+    xlim([-200 200])
+    pearsonc=corr(abs(d'),zt(indzin'));
 end
-
-pearsonc=corr(abs(d'),zt(indzin'));
 
 R0=getFieldAsVector(sites,'evaluation.NPCgeomtryQuantify.Rfit');
 ax5=obj.initaxis('R');
-ff='%2.3f';
-% figure(112)
-hold off
-rn=40:0.5:65;
-histogram(abs(R0),rn); xlabel('R (nm)')
-title(['fitted radius: ' num2str(mean(R0),ff) '\pm' num2str(std(R0),ff) '\pm' num2str(std(R0)/length(R0),2)])
-xlabel('radius (nm)')
-xlim([45 60])
-ylabel('counts')
-hh=histcounts(R0,rn);
-fitp=fit(rn(1:end-1)'+(rn(2)-rn(1))/2,hh','gauss1');
-hold on
-plot(rn,fitp(rn))
+plotradiushistogram(R0(useind),ax5)
+files=unique(filenumber);
+for k=1:length(files)
+    infile=filenumber==files(k);
+    axh=obj.initaxis(['R' int2str(files(k))]);
+    plotradiushistogram(R0(useind&infile),axh)
+end
+
+% ff='%2.3f';
+% % figure(112)
+% hold off
+% q=quantile(R0,[0.05,0.95]);
+% qr=round(q/5)*5+[-5 5];
+% rn=qr(1):0.5:qr(2);
+% histogram(abs(R0),rn); xlabel('R (nm)')
+% title(['fitted radius: ' num2str(mean(R0),ff) '\pm' num2str(std(R0),ff) '\pm' num2str(std(R0)/length(R0),2)])
+% xlabel('radius (nm)')
+% xlim([rn(1) rn(end)])
+% ylabel('counts')
+% hh=histcounts(R0,rn);
+% fitp=fit(rn(1:end-1)'+(rn(2)-rn(1))/2,hh','gauss1');
+% hold on
+% plot(rn,fitp(rn))
 % fitp
 
 aca=0;aca1=0;aca2=0;acc12=0;
 for k=1:length(sites)
+    if ~isfield(sites(k).evaluation.NPCgeomtryQuantify,'angular') 
+        continue
+    end
     if isfield(sites(k).evaluation.NPCgeomtryQuantify.angular,'actheta')
     ach=sites(k).evaluation.NPCgeomtryQuantify.angular.actheta;
     aca=ach+aca;
@@ -184,7 +198,7 @@ ax.XMinorTick='on';
 ax.XGrid='on';
 xlabel('angle (theta) ')
 ylabel('auto/cross correlation')
-title(['angular correlation. Nlocs=' num2str(length(d)) txtshift])
+title(['angular correlation. Nlocs=' num2str(length(R0)) txtshift])
 if p.copytopage
     sm=3;sn=3;
     f=figure;
@@ -253,6 +267,24 @@ function [d,cid,fitp]=getcorrangleglobal(ti,cci)
 %  fitp
 end
 
+function plotradiushistogram(R0,ax)
+
+ff='%2.3f';
+% figure(112)
+hold off
+q=quantile(R0,[0.05,0.95]);
+qr=round(q/5)*5+[-5 5];
+rn=qr(1):0.5:qr(2);
+histogram(ax,abs(R0),rn); xlabel('R (nm)')
+title(ax,['fitted radius: ' num2str(mean(R0),ff) '\pm' num2str(std(R0),ff) '\pm' num2str(std(R0)/length(R0),2)])
+xlabel(ax,'radius (nm)')
+xlim(ax,[rn(1) rn(end)])
+ylabel(ax,'counts')
+hh=histcounts(R0,rn);
+fitp=fit(rn(1:end-1)'+(rn(2)-rn(1))/2,hh','gauss1');
+hold(ax, 'on')
+plot(ax,rn,fitp(rn))
+end
 
 function pard=guidef(obj)
 pard.t1.object=struct('String','Plot results from evaluator: NPCgeometryQuantify','Style','text');

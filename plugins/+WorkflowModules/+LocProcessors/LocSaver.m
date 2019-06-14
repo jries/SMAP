@@ -1,4 +1,8 @@
 classdef LocSaver<interfaces.WorkflowModule
+%     Assembles a localization data structure from the fitted localizations
+%     and saves it as a SMAP *.sml file. When fitting via a network,
+%     fitting a local copy which is then moved to the destination can be
+%     faster.
     properties
         timer
         filenumber
@@ -34,7 +38,7 @@ classdef LocSaver<interfaces.WorkflowModule
        end
         function pard=guidef(obj)
             pard.plugininfo.type='WorkflowModule'; 
-            pard.plugininfo.description='Saves the fitted localizations as a SMAP *.sml file. When fitting via a network, fitting a local copy which is then moved to the destination can be faster.';
+            pard.plugininfo.description='Assembles a localization data structure from the fitted localizations and saves it as a SMAP *.sml file. When fitting via a network, fitting a local copy which is then moved to the destination can be faster.';
            
             pard.selectfields.object=struct('Style','pushbutton','String','Fields to save','Callback',{{@outputfields_callback,obj}});
             pard.selectfields.object.TooltipString='Select which fields to save. Use preview before.';

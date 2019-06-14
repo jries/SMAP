@@ -1,6 +1,9 @@
 classdef GrabFijiStacks<interfaces.WorkflowModule
+% Opens an instance of Fiji in which you can open any image stack (if
+% large, use virtual stack). This image stack can then be selected in the
+% GUI and used for fitting.As metadata is not parsed, set it manually in
+% the Camera Converter
     properties     
-%         imloader
         framestop
         framestart
         numberOfFrames
@@ -20,8 +23,6 @@ classdef GrabFijiStacks<interfaces.WorkflowModule
         function initGui(obj)
             initGui@interfaces.WorkflowModule(obj);
              obj.inputParameters={'loc_subtractbg','loc_blocksize_frames'};            
-%             obj.guihandles.loadtifbutton.Callback={@loadtif_callback,obj};
-%             obj.addSynchronization('filelist_localize',obj.guihandles.tiffile,'String',{@loadtif_ext,obj});
         end
         function prerun(obj,p)
             p=obj.getAllParameters;
@@ -39,11 +40,9 @@ classdef GrabFijiStacks<interfaces.WorkflowModule
                     dt=p.loc_blocksize_frames;
                     frameload=max(1,previewframe-floor(dt/2));
                     obj.framestart=frameload;
-%                     obj.imloader.setImageNumber(frameload-1);
                     obj.currentImage=frameload;
                     obj.framestop=frameload+dt;
                 else
-%                     obj.imloader.setImageNumber(previewframe-1);
                    obj.currentImage=previewframe;
                     obj.framestop=previewframe;
                 end               
@@ -95,22 +94,15 @@ classdef GrabFijiStacks<interfaces.WorkflowModule
             obj.status('import images in fiji as (virtual) stack');
         end
         function refreshfilelist_callback(obj,a,b)
-%             mij=openfiji(obj);
-%             ij=mij.imagej;
             ijh=obj.getPar('IJ');
-            ij=ijh.getInstance();
-            
+            ij=ijh.getInstance();          
             frames=ij.getFrames;
-%             obj.windows.name='empty';
-%             obj.windows.stack=[];
-%             obj.windows.number=[];
             obj.windows=[];
             ind=1;
             for k=1:length(frames)
                 if strcmp(frames(k).class,'ij.gui.StackWindow')&&~isempty(frames(k).getImagePlus)
                     obj.windows(ind).name=char(frames(k).getTitle);
                     obj.windows(ind).number=k;
-                    
                     stack=frames(k).getImagePlus.getStack;
                     obj.windows(ind).stack=stack;
                     obj.windows(ind).imagePlus=frames(k).getImagePlus;
@@ -131,11 +123,7 @@ classdef GrabFijiStacks<interfaces.WorkflowModule
             info.numberOfFrames=obj.framestop;
             info.Width=window.size(1);
             info.Height=window.size(2);
-
-%             info=copyfields(info,getimageinfo(totalfile));
-%             obj.setPar('loc_metadatafile',info.metafile);
-            obj.setPar('loc_fileinfo',info);
-            
+            obj.setPar('loc_fileinfo',info);        
         end
         
         function selectfilelist_callback(obj,a,b)
@@ -181,29 +169,12 @@ pard.fijibutton.position=[1,1];
 pard.refreshfiles.object=struct('Style','pushbutton','String','Refresh list: ','Callback',@obj.refreshfilelist_callback);
 pard.refreshfiles.position=[2,1];
 
-
-% pard.text2.object=struct('Style','text','String','Select stack:');
-% pard.text2.position=[3,1];
-
 pard.filelist.object=struct('Style','popupmenu','String',{'empty'},'Callback',@obj.selectfilelist_callback);
 pard.filelist.position=[2,2];
 pard.filelist.Width=2;
 
 pard.fitall.object=struct('Style','checkbox','String','Fit all','Value',0);
 pard.fitall.position=[2,4];
-
-
-
-% pard.loadtifbutton.object=struct('Style','pushbutton','String','load images','Visible','on');
-% pard.loadtifbutton.position=[3,1];
-
-% pard.tiffile.object=struct('Style','edit','String',' ','HorizontalAlignment','right');
-% pard.tiffile.position=[2,1];
-% pard.tiffile.Width=4;
-
-% pard.onlineanalysis.object=struct('Style','checkbox','String','Online analysis','Value',0);
-% pard.onlineanalysis.position=[3,2.25];
-% pard.onlineanalysis.Width=1.25;
 
 pard.textf.object=struct('Style','text','String','Frame range: ');
 pard.textf.position=[4.2,1.25];

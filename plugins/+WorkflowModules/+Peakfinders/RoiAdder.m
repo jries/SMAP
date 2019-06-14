@@ -1,4 +1,6 @@
 classdef RoiAdder<interfaces.WorkflowModule
+%     Allows the user to select regions of interest on the preview image
+%     which to use for fitting, or which to exclude from fitting.
     properties
         maskrun
         mask

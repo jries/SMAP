@@ -1,4 +1,7 @@
 classdef PeakCombiner<interfaces.WorkflowModule
+%     Combines candidate positions from two separate channels into one, and
+%     then transforms it back to the second channel. Used for global
+%     fitting of multiple simultaneous channels.
     properties (Access=private)
         transform
     end
@@ -12,10 +15,6 @@ classdef PeakCombiner<interfaces.WorkflowModule
         end
         function initGui(obj)
             initGui@interfaces.WorkflowModule(obj);
-%             obj.guihandles.cutoffmode.Callback={@cutoffmode_callback,obj};
-%             obj.guihandles.cutoffvalue.Callback={@cutoffvalue_callback,obj};
-%              obj.guihandles.peakfindmethod.Callback={@peakfindmethod_callback,obj};
-%              cutoffvalue_callback(0,0,obj)
         end
         function prerun(obj,p)
             l=load(p.Tfile);
@@ -25,7 +24,6 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 obj.transform=l.SXY(1).cspline.global.transformation;
             end
             obj.setPar('loc_globaltransform',obj.transform);
-%             cutoffvalue_callback(0,0,obj)
         end
         function dato=run(obj,data,p)
             if isempty(data.data)
@@ -33,7 +31,6 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 return;
             end
             roi=p.loc_fileinfo.roi;
-%             roi=zeros(1,4);
             maxima=data.data;%get;
             transform=obj.transform;
             
@@ -61,10 +58,6 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 catch err
                     disp('error')
                 end
-    %             
-    %             xallr=vertcat(xnmref(uiA), xnmref(iA));
-    %             yallr=vertcat(ynmref(uiA), ynmref(iA));
-
 
                 xallrpix=round(xallr/pixelsize(1));
                 yallrpix=round(yallr/pixelsize(end));
@@ -105,9 +98,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
 
                 maxout.x=xout(:);
                 maxout.y=yout(:);
-%                 maxout.xfound=maxima.x;
-%                 maxout.yfound=maxima.y;
-%                 maxout.intensityfound=maxima.intensity;
+
                 maxout.ID=idout(:);
                 maxout.dx=dxout(:);
                 maxout.dy=dyout(:);
@@ -142,18 +133,12 @@ classdef PeakCombiner<interfaces.WorkflowModule
                     ccombined=vertcat(ccombined(uiA,:),ctarget(uiB,:),cnew);
                     Nc=vertcat(Nc(uiA),Nt(uiB),(Nc(iA)+Nt(iB)));
                     
-%                     indchf=find(indch);
-%                     xf=vertcat(xf,cpix(indchf(uiB),1),cpix(indchf(iA),1));
-%                     yf=vertcat(yf,cpix(indchf(uiB),2),cpix(indchf(iA),2));
-%                     intf=vertcat(intf,(maxima.intensity(indchf(uiB),1)),(maxima.intensity(indchf(iA),1)));
                 end
             
 %                 cr=round(ccombined);
                 %offset between true and rounded position in channel 1
               
 
-%                 for k=2:transform.channels
-%                 ct=transform.transformToTargetAll(cr);
                 ct=transform.transformToTargetAll(ccombined); %transfrom not rounded
                 ct(:,1,:)=ct(:,1,:)-roi(1); %bring back to ROI on camera
                 ct(:,2,:)=ct(:,2,:)-roi(2);
@@ -191,11 +176,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 
                 maxout.x=squeeze(xh(:));
                 maxout.y=squeeze(yh(:));
-%                 maxout.xref=cref(:,2);
-%                 maxout.yref=cref(:,1);
-%                 maxout.xfound=maxima.x;
-%                 maxout.yfound=maxima.y;
-%                 maxout.intensityfound=maxima.intensity;
+
                 maxout.ID=indout(:);
                 maxout.dx=squeeze(dxh(:));
                 maxout.dy=squeeze(dyh(:));
@@ -236,12 +217,7 @@ pard.loadbutton.object=struct('Style','pushbutton','String','load T','Callback',
 pard.loadbutton.position=[1,4];
 
 pard.syncParameters={{'transformationfile','Tfile',{'String'}}};
-% pard.cutoffmode.object=struct('Style','popupmenu','String',{{'dynamic (factor)','probability (p<1)','absolute (photons)'}},'Value',2);
-% pard.cutoffmode.position=[1,1];
-% pard.cutoffmode.Width=1.5;
-% pard.cutoffmode.TooltipString=sprintf('How to determine the cutoff: \n Dynamic: use the distribution of pixel intensity to estimate likely localizations. Factor: adjust sensitivity. \n Probability: use probabilistic model (SimpleSTORM) to determine the likelyhood for pixel being localization. \n Absolut: Pixel intensity in normalized image. \n Choose display=normalized to read out thes normalized values.');
-% pard.cutoffmode.Optional=true;
 
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='Performs peak-finding according either to local maximum finding  or to non-maximum suppression (A. Neubeck and L. Van Gool, ?Efficient non-maximum suppression,? presented at the 18th International Conference on Pattern Recognition, Vol 3, Proceedings, 10662 LOS VAQUEROS CIRCLE, PO BOX 3014, LOS ALAMITOS, CA 90720-1264 USA, 2006, pp. 850?855.).';
+pard.plugininfo.description='Combines candidate positions from two separate channels into one, and then transforms it back to the second channel. Used for global fitting of multiple simultaneous channels.';
 end

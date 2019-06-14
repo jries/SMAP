@@ -1,4 +1,12 @@
 classdef PeakFinder<interfaces.WorkflowModule
+%     Performs peak-finding according either to local maximum finding  or
+%     to non-maximum suppression. Cutoff based on absolute numbers,
+%     probabilities, or dynamically calculated difference from background.
+%     (A. Neubeck and L. Van Gool, ?Efficient non-maximum suppression,?
+%     presented at the 18th International Conference on Pattern
+%     Recognition, Vol 3, Proceedings, 10662 LOS VAQUEROS CIRCLE, PO BOX
+%     3014, LOS ALAMITOS, CA 90720-1264 USA, 2006, pp. 850?855.).';
+% 
     properties (Access=private)
         probability=0.05;
         dynamicfactor=1;
@@ -161,5 +169,5 @@ pard.NMS_kernel_size.position=[2,2.5];
 pard.NMS_kernel_size.Width=.5;
 pard.NMS_kernel_size.Optional=true;
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='Performs peak-finding according either to local maximum finding  or to non-maximum suppression (A. Neubeck and L. Van Gool, ?Efficient non-maximum suppression,? presented at the 18th International Conference on Pattern Recognition, Vol 3, Proceedings, 10662 LOS VAQUEROS CIRCLE, PO BOX 3014, LOS ALAMITOS, CA 90720-1264 USA, 2006, pp. 850?855.).';
+pard.plugininfo.description='Performs peak-finding according either to local maximum finding  or to non-maximum suppression. Cutoff based on absolute numbers, probabilities, or dynamically calculated difference from background. (A. Neubeck and L. Van Gool, ?Efficient non-maximum suppression,? presented at the 18th International Conference on Pattern Recognition, Vol 3, Proceedings, 10662 LOS VAQUEROS CIRCLE, PO BOX 3014, LOS ALAMITOS, CA 90720-1264 USA, 2006, pp. 850?855.).';
 end

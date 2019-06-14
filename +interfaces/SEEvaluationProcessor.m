@@ -72,7 +72,7 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             site.evaluation.(obj.name).GuiParameters=gp; 
         end
         
-        function [locsout,indloc]=getlocs(obj,varargin) 
+        function [locsout,indloc]=getloc(obj,varargin) 
             [locsout,indloc]=obj.getLocs(varargin);
         end
         function [locsout,indloc]=getLocs(obj,varargin) 
@@ -109,7 +109,7 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
                 pos=p.position;
             end
             [locsh, indloc]=obj.locData.getloc(fields,parameters{:},'removeFilter',{'filenumber'});
-            
+        
             inroi=true;
             if ischar(p.size)&&contains(p.size,'freeroi')
                 hroi=obj.locData.SE.processors.preview.hlines.line3;
@@ -138,9 +138,15 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             end
             indfile=locsh.filenumber==obj.site.info.filenumber;
             indgood=indfile&indroi&inroi;
+            if iscell(indloc)
+                indout=[];
+                disp('not implemented: SEEvaluation procesor line 142')
+            else
             indloc(indloc)=indgood;
+            end
             
-            fn=fieldnames(locsh);
+            fn=setdiff(fieldnames(locsh),{'ingrouped','inungrouped'});
+            
              for k=1:length(fn)
                  field=fn{k};
                  if ~isempty(locsh.(field))
@@ -150,7 +156,14 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
                       locsout.(field)=[];
                  end
 %                  end
-             end            
+             end  
+             if isfield(locsh,'ingrouped') && length(indgood)==sum(locsh.ingrouped)
+                 locsh.ingrouped(locsh.ingrouped)=indgood;
+             end
+             if isfield(locsh,'inungrouped') && length(indgood)==sum(locsh.inungrouped)
+                 locsh.inungrouped(locsh.inungrouped)=indgood;
+             end             
+             locsout=copyfields(locsout,locsh,{'ingrouped','inungrouped'});
         end
     end
 end

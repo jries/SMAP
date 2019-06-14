@@ -40,6 +40,9 @@ P=[];CRLB=[];LogL=[]; %
 persistent fitter
 allfitters={@GPUmleFit_LM_MultiChannel_Gauss,@CPUmleFit_global_Gauss};
 allfittersnames={'GPUmleFit_LM_MultiChannel_Gauss','CPUmleFit_global_Gauss'};
+
+% allfitters={@CPUmleFit_global_Gauss};
+% allfittersnames={'CPUmleFit_global_Gauss'};
 if isempty(fitter)
     for k=1:length(allfitters)
         try

@@ -1,8 +1,11 @@
 classdef MedianBGcalculator<interfaces.WorkflowModule
+%     Background calcualtion based on median filtering. For reasonable
+%     computational complexity, the median is calculated for blocks of
+%     dx*dx pixels and dt frames. Values are interpolated in x and y.';
+
     properties
         blockOfFrames=single(0);
         blockIndex;
-%         datablock=interfaces.WorkflowData;
         runparameters
     end
     methods
@@ -14,9 +17,6 @@ classdef MedianBGcalculator<interfaces.WorkflowModule
         function pard=guidef(obj)
             pard=guidef;
         end
-%         function initGui(obj)
-%             initGui@interfaces.WorkflowModule(obj);
-%         end
         function prerun(obj,p)
             obj.blockIndex=[];
            obj.runparameters=p;

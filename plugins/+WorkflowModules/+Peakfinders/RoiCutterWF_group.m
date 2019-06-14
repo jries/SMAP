@@ -1,4 +1,8 @@
 classdef RoiCutterWF_group<interfaces.WorkflowModule
+%     Similar to RoiCutterWF, but merges localizations persistent over
+%     several frames. This plugin cuts out regions of interest of a defined
+%     size around the candidate positions and passes these on to the
+%     fitter
     properties
         loc_ROIsize
         preview
@@ -305,5 +309,5 @@ pard.loc_dTdx.Width=0.5;
 pard.syncParameters={{'loc_ROIsize','loc_ROIsize',{'String'}}};
 
 pard.plugininfo.type='WorkflowModule'; 
-pard.plugininfo.description='This plugin cuts out regions of interest of a defined size around the candidate positions and passes these on to the fitter';
+pard.plugininfo.description='Similar to RoiCutterWF, but merges localizations persistent over several frames. This plugin cuts out regions of interest of a defined size around the candidate positions and passes these on to the fitter';
 end

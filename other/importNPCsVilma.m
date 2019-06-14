@@ -1,17 +1,26 @@
 %import ROIs from Vilma and write attributes to localizations
 addlocinfo=true;
-addsite=0;
+
+addsite=true;
+readclass=false;
+
 
 filename=g.locData.files.file(1).name;
 [path,file,ext]=fileparts(filename);
-infofile=[path filesep file '_3DVolume.txt'];
-siteposfile=[path filesep file '_3DVolume_1.txt'];
 
+filer=strrep(file,'driftc_','');
+infofile=[path filesep filer '_3DVolume.txt'];
+% siteposfile=[path filesep file '_3DVolume_1.txt'];
+
+siteposfile=[path filesep filer '_3DVolume_1.coordinates.txt'];
+
+if readclass
 classfile=[path filesep 'cluster_memberships-NUP-SNAP.txt'];
 classtable=readtable(classfile);
 for k=length(classtable.pore_source):-1:1    
     [~,ff]=fileparts(classtable.pore_source{k})  ;
     allclassfiles{k}=ff;
+end
 end
 
 siteattributes=readtable(siteposfile);
@@ -31,21 +40,25 @@ g.locData.loc.vilmaid=g.locData.loc.xnm*0;
 g.locData.loc.vilmaclass=g.locData.loc.xnm*0;
 for k=1:length(siteattributes.id)
     pos=[siteattributes.y(k)*pixxy+posoff(1) siteattributes.x(k)*pixxy+posoff(2) siteattributes.z(k)*pixz+zpos];
-    indc=siteattributes.id(k)==classtable.pore_id & contains(allclassfiles,file)';
-    class=classtable.cluster_id((indc));
+    if readclass
+        indc=siteattributes.id(k)==classtable.pore_id & contains(allclassfiles,file)';
+        class=classtable.cluster_id((indc));
+    end
     if addsite
         currentsite=interfaces.SEsites;
         currentsite.pos=pos;     
         currentsite.info.cell=SE.currentcell.ID;
         currentsite.info.filenumber=SE.currentfile.ID;
         currentsite.evaluation.Vilma.siteid=siteattributes.id(k);
-        currentsite.evaluation.Vilma.class=class;
+        if readclass
+            currentsite.evaluation.Vilma.class=class;
+        end
         currentsite.ID=SE.addSite(currentsite);
     end
     if addlocinfo
         inh=(g.locData.loc.xnm-pos(1)).^2+(g.locData.loc.ynm-pos(2)).^2<R^2;
         g.locData.loc.vilmaid(inh)=siteattributes.id(k);
-        if ~isempty(class)
+        if readclass && ~isempty(class)
         g.locData.loc.vilmaclass(inh)=class;
         end
     end

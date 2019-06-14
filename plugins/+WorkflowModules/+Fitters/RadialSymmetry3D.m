@@ -1,4 +1,8 @@
 classdef RadialSymmetry3D<interfaces.WorkflowFitter
+%     Radial Symmetry for 3D localization. Adapted from: H. Ma, J. Xu, J.
+%     Jin, Y. Gao, L. Lan, and Y. Liu, ?Fast and Precise 3D Fluorophore
+%     Localization based on Gradient Fitting.,? Sci. Rep., vol. 5, p.
+%     14335, 2015.
     properties
         fitpar
     end
@@ -21,7 +25,6 @@ classdef RadialSymmetry3D<interfaces.WorkflowFitter
                  locs=[];
                  return
              end
-             
              x=zeros(s(3),1,'single');
              y=zeros(s(3),1,'single');
              bg=zeros(s(3),1,'single');
@@ -56,8 +59,6 @@ classdef RadialSymmetry3D<interfaces.WorkflowFitter
              locs.peakfindx=posx(goodind);
              locs.peakfindy=posy(goodind);
              locs.gradient3Dellipticity=epsilon(goodind);
-             
-
     end
     end
 end
@@ -65,5 +66,5 @@ end
 
 function pard=guidef
 pard.plugininfo.type='WorkflowFitter';
-pard.plugininfo.description='Adepted from: H. Ma, J. Xu, J. Jin, Y. Gao, L. Lan, and Y. Liu, ?Fast and Precise 3D Fluorophore Localization based on Gradient Fitting.,? Sci. Rep., vol. 5, p. 14335, 2015.';
+pard.plugininfo.description='Radial Symmetry for 3D localization. Adapted from: H. Ma, J. Xu, J. Jin, Y. Gao, L. Lan, and Y. Liu, ?Fast and Precise 3D Fluorophore Localization based on Gradient Fitting.,? Sci. Rep., vol. 5, p. 14335, 2015.';
 end

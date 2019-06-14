@@ -1,4 +1,4 @@
-function [locsout,indcombined,hroio]=getlocs2(locData,fields,varargin)
+function [locsout,indcombined,hroio]=getlocs2ind(locData,fields,varargin)
 %now each layer is treated separately
 
 %returns subset of localizations. 
@@ -24,8 +24,17 @@ function [locsout,indcombined,hroio]=getlocs2(locData,fields,varargin)
 %'shiftxy', shifts x, y  and z by specified vector
 %'locselector',p structure from gui
 
+%'ingrouped','inungrouped': pass on indices to respective localizations.
+%Then only those are evaluated (for speed).
 
 
+%obtain parameters
+p=roiparser(varargin); 
+if ischar(fields)
+    p.fields={fields};
+else
+    p.fields=fields;
+end
 
 %no localizations present, return empty
 % indlayer={};
@@ -37,15 +46,10 @@ if isempty(locData.loc)||isempty(locData.loc.(getelement(fieldnames(locData.loc)
     return
 end
 
-%obtain parameters
-p=roiparser(varargin); 
-if ischar(fields)
-    p.fields={fields};
-else
-    p.fields=fields;
-end
-
 pd=p;
+%indices
+ ingroupedin=p.ingrouped;
+ inungroupedin=p.inungrouped;
 
  %pass on selector
  if ~isempty(p.locselector)
@@ -95,7 +99,7 @@ pd=p;
 
 %check if empty. necessary at beginning where xnm etc can be empty. Remove
 %later?
-if isempty(p.channel)&&strcmpi(p.grouping,'layer')&&isempty(p.layer)&&strcmpi(p.position,'default')&&isempty(p.filenumber)&&isempty(p.removeFilter)&&isempty(p.within)&&isempty(p.locselector)
+if isempty(p.channel)&&isempty(p.grouping)&&isempty(p.layer)&&isempty(p.position)&&isempty(p.filenumber)&&isempty(p.removeFilter)&&isempty(p.within)&&isempty(p.locselector)
 locs=locData.loc;
     for k=1:length(p.fields)
         if isfield(locs,p.fields{k})
@@ -168,17 +172,27 @@ for k=1:length(layers)
             grouping=false;
  
     end
+    useind=false;
     if grouping && ~isempty(locData.grouploc)
         locs=locData.grouploc;
+        if ~isempty(ingroupedin)
+            indh=ingroupedin;
+            useind=true;
+        end
     else
         grouping=false;
         locs=locData.loc;
+        if ~isempty(inungroupedin)
+            indh=inungroupedin;
+            useind=true;
+        end
     end
     grouplayer(k)=grouping;
 
     if ~isempty(p.layer)%get filters
-        if p.layer(k)>length(locData.layer)||p.layer(k)<1
+        if ~isempty(locData.layer) && p.layer(k)>length(locData.layer)||p.layer(k)<1
             disp('getloc layer out of range')
+            locslayer(k)=0;
             continue
         end
         filterold=locData.getFilter(p.layer(k),grouping); %use localizations if in any of the layers
@@ -186,47 +200,87 @@ for k=1:length(layers)
              filter=myrmfield(filterold,p.removeFilter);
              locData.setFilter(filter,p.layer(k),grouping);
         end
-        indfilter=locData.inFilter(p.layer(k),grouping);
+        indfilter=locData.inFilter(p.layer(k),grouping); %XIND
+        if useind
+            indfilter=indfilter(indh);
+        end
         locData.setFilter(filterold,p.layer(k),grouping);
     else
-        indfilter=true(size(locs.xnm));
+        if useind
+            indfilter=true(length(indh),1);
+        else
+            indfilter=true(size(locs.xnm));  %XIND
+        end
     end
     
      if ~isempty(p.channel)
-         indfilterh=(locs.channel==p.channel(1));
-         for c=2:length(p.channel)
-            indfilterh=indfilterh|(locs.channel==p.channel(c));
+         if useind
+             indfilterh=(locs.channel(indh)==p.channel(1)); %XIND
+             for c=2:length(p.channel)
+                indfilterh=indfilterh|(locs.channel(indh)==p.channel(c));%XIND
+             end
+         else
+             indfilterh=(locs.channel==p.channel(1)); %XIND
+             for c=2:length(p.channel)
+                indfilterh=indfilterh|(locs.channel==p.channel(c));%XIND
+             end
          end
-         indfilter=indfilter&indfilterh;
+         indfilter=indfilter&indfilterh;%XIND
      end
      if ~isempty(p.filenumber)
-         indfilterh=(locs.filenumber==p.filenumber(1));
-         for f=2:length(p.filenumber)
-            indfilterh=indfilterh|(locs.filenumber==p.filenumber(f));
+         if useind
+             indfilterh=(locs.filenumber(indh)==p.filenumber(1));%XIND
+             for f=2:length(p.filenumber)
+                indfilterh=indfilterh|(locs.filenumber(indh)==p.filenumber(f));%XIND
+             end             
+         else
+             indfilterh=(locs.filenumber==p.filenumber(1));%XIND
+             for f=2:length(p.filenumber)
+                indfilterh=indfilterh|(locs.filenumber==p.filenumber(f));%XIND
+             end
          end
-         indfilter=indfilter&indfilterh;
+         indfilter=indfilter&indfilterh;%XIND
      end
      
     %get positions
      
     if isnumeric(p.position)
         pos=p.position(1:2);
-        if length(p.position)==4
-            sr_size=p.position(3:4)/2;
-              indpos=abs(locs.xnm-pos(1))<sr_size(1) & abs(locs.ynm-pos(2))<sr_size(2);
-              
-        elseif length(p.position)==3
-            indpos=(locs.xnm-pos(1)).^2+(locs.ynm-pos(2)).^2<=p.position(3)^2;
-
+        
+        if useind
+            if length(p.position)==4
+                sr_size=p.position(3:4)/2;
+                  indpos=abs(locs.xnm(indh)-pos(1))<sr_size(1) & abs(locs.ynm(indh)-pos(2))<sr_size(2);%XIND       
+            elseif length(p.position)==3
+                indpos=(locs.xnm(indh)-pos(1)).^2+(locs.ynm(indh)-pos(2)).^2<=p.position(3)^2;%XIND
+            else
+                disp('wrong position parameter');
+            end
         else
-            disp('wrong position parameter');
+            if length(p.position)==4
+                sr_size=p.position(3:4)/2;
+                  indpos=abs(locs.xnm-pos(1))<sr_size(1) & abs(locs.ynm-pos(2))<sr_size(2);%XIND       
+            elseif length(p.position)==3
+                indpos=(locs.xnm-pos(1)).^2+(locs.ynm-pos(2)).^2<=p.position(3)^2;%XIND
+            else
+                disp('wrong position parameter');
+            end
         end
+        
     else
         switch p.position
             case {'all','default',''}
-                indpos=true(size(locs.xnm));
+                if useind
+                    indpos=true(length(indh),1);
+                else
+                    indpos=true(size(locs.xnm));%XIND
+                end
             case 'roi'
-                [indpos,hroio,strucout]=getinroi(locData,locs.xnm,locs.ynm,p.shiftxy);
+                if useind
+                    [indpos,hroio,strucout]=getinroi(locData,locs.xnm(indh),locs.ynm(indh),p.shiftxy);%XIND
+                else
+                    [indpos,hroio,strucout]=getinroi(locData,locs.xnm,locs.ynm,p.shiftxy);%XIND
+                end
 
                 if isfield(strucout,'xnmline')
                     p.shiftxy(1:2)=0;
@@ -236,12 +290,20 @@ for k=1:length(layers)
             case 'fov'
                 pos=locData.getPar('sr_pos');
                 sr_size=locData.getPar('sr_size');
-                indpos=locs.xnm>pos(1)-sr_size(1) & locs.xnm<pos(1)+sr_size(1) & locs.ynm>pos(2)-sr_size(2) & locs.ynm<pos(2)+sr_size(2);
+                if useind
+                    indpos=locs.xnm(indh)>pos(1)-sr_size(1) & locs.xnm(indh)<pos(1)+sr_size(1) & locs.ynm(indh)>pos(2)-sr_size(2) & locs.ynm(indh)<pos(2)+sr_size(2);%XIND
+                else
+                    indpos=locs.xnm>pos(1)-sr_size(1) & locs.xnm<pos(1)+sr_size(1) & locs.ynm>pos(2)-sr_size(2) & locs.ynm<pos(2)+sr_size(2);%XIND
+                end
             otherwise %numerical position vector
                 if isnumeric(p.position)
                     pos=p.position(1:2);
                     sr_size=p.position(3:4);
-                    indpos=locs.xnm>pos(1)-sr_size(1) & locs.xnm<pos(1)+sr_size(1) & locs.ynm>pos(2)-sr_size(2) & locs.ynm<pos(2)+sr_size(2);
+                     if useind
+                        indpos=locs.xnm(indh)>pos(1)-sr_size(1) & locs.xnm(indh)<pos(1)+sr_size(1) & locs.ynm(indh)>pos(2)-sr_size(2) & locs.ynm(indh)<pos(2)+sr_size(2);%XIND
+                     else                         
+                        indpos=locs.xnm>pos(1)-sr_size(1) & locs.xnm<pos(1)+sr_size(1) & locs.ynm>pos(2)-sr_size(2) & locs.ynm<pos(2)+sr_size(2);%XIND
+                     end
                 else
 
                     disp('getlocs: position description not valid')
@@ -250,6 +312,7 @@ for k=1:length(layers)
 
     end
     if ~isempty(p.within)
+        disp('check line 309 getlocs2ind')
         indwithin=p.within;
         if length(indwithin)<length(indfilter)
             indwithin=grouped2ungrouped(locData,indwithin);
@@ -260,18 +323,18 @@ for k=1:length(layers)
         indwithin=true;
     end
     
-    indcombined{k}=indfilter&indpos&indwithin;
+    indcombined{k}=indfilter&indpos&indwithin; %XIND
     if doinlayerg
-        inlayerg{k}=getindices(locData,indcombined{k},1);
-        ingrouped=inlayerg{k}&ingrouped;
+        inlayerg{k}=getindices(locData,indcombined{k},1);%XIND
+        ingrouped=inlayerg{k}&ingrouped;%XIND
     end
     
     if doinlayeru
-        inlayeru{k}=getindices(locData,indcombined{k},0);
-        inungrouped=inlayeru{k}&inungrouped;
+        inlayeru{k}=getindices(locData,indcombined{k},0);%XIND
+        inungrouped=inlayeru{k}&inungrouped;%XIND
     end
     
-    locslayer(k)=sum(indcombined{k});
+    locslayer(k)=sum(indcombined{k});%XIND
     locstot=locstot+locslayer(k);
 
 end 
@@ -282,9 +345,9 @@ end
 
 for k=1:length(p.fields)
     if isfield(locs,p.fields{k})
-        locsout.(p.fields{k})=zeros(locstot,1,'like',locs.(p.fields{k}));
+        locsout.(p.fields{k})=zeros(locstot,1,'like',locs.(p.fields{k}));%XIND
     else
-         locsout.(p.fields{k})=zeros(locstot,1,'single');
+         locsout.(p.fields{k})=zeros(locstot,1,'single');%XIND
     end
 end
 
@@ -299,9 +362,13 @@ for l=1:length(layers)
     for k=1:length(p.fields)
          field=p.fields{k};
          if isfield(locs,field)
-             vh=addshift(locs.(field),field,p.shiftxy);
-             vh2=vh(indcombined{l});
-            locsout.(field)(ind1:ind2)=vh2;         
+             if useind
+                vh=addshift(locs.(field)(indh),field,p.shiftxy);%XIND
+             else
+                vh=addshift(locs.(field),field,p.shiftxy);%XIND
+             end
+             vh2=vh(indcombined{l});%XIND
+            locsout.(field)(ind1:ind2)=vh2;    %XIND     
          else
              locsout.(field)=[];
          end
@@ -310,19 +377,19 @@ for l=1:length(layers)
 end
 
 if any(strcmp(p.fields,'ingrouped'))
-    locsout.ingrouped=ingrouped;
+    locsout.ingrouped=ingrouped;%XIND
 end
 if any(strcmp(p.fields,'inungrouped'))
-    locsout.inungrouped=inungrouped;
+    locsout.inungrouped=inungrouped;%XIND
 end
 if any(strcmp(p.fields,'indlayer'))
-    locsout.indlayer=indcombined;
+    locsout.indlayer=indcombined;%XIND
 end
 if any(strcmp(p.fields,'inlayerg'))
-    locsout.inlayerg=inlayerg;
+    locsout.inlayerg=inlayerg;%XIND
 end
 if any(strcmp(p.fields,'inlayeru'))
-    locsout.inlayeru=inlayeru;
+    locsout.inlayeru=inlayeru;%XIND
 end
 end
 
@@ -427,6 +494,8 @@ addParameter(p,'removeFilter',{});
 addParameter(p,'within',[]);
 addParameter(p,'shiftxy',[0,0,0]);
 addParameter(p,'locselector',[]);
+addParameter(p,'ingrouped',[]);
+addParameter(p,'inungrouped',[]);
 parse(p,args{:});
 pres=p.Results;
 if ~isempty(fieldnames(p.Unmatched))

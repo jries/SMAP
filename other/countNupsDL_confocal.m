@@ -6,8 +6,8 @@ imgr=imageloaderAll([path f]);
 % %%
 
 %%
-par.cutoffmin=500; %minimum value. You can start by using a small value and then look at the histogram to determine this value
-par.mask=false; %if true, user can draw a mask, only local maxima within this mask are anlayzed
+par.cutoffmin=700; %minimum value. You can start by using a small value and then look at the histogram to determine this value
+par.mask=true; %if true, user can draw a mask, only local maxima within this mask are anlayzed
 par.Rnear=5; % minimum distance between NPCs
 par.sigmaf=0.5; % initial blurring (pixels)
 par.file=f; % directory. You can select this with the previous cell
@@ -136,6 +136,7 @@ ax2.CLim=[500 2500];
 end
 % zinterp(imghr,maximaf(:,1),maximaf(:,2))
 
+
 if ~isempty(ax1)
 
 % cutoffmin=600;
@@ -164,6 +165,9 @@ title(ax1,{['maximum at ' num2str(fitp1.b1,4) ', 2G:'  num2str(mv(1),4) ', '  nu
 xlabel('intensity at maximum')
 ylabel('frequency')
 legend('hist','single G','double G')
+
+
+disp([' maxima in histogram: ' num2str(sum(indgood))]);
 % cftool(h.BinEdges(1:end-1),h.Values)
 end
 

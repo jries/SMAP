@@ -46,10 +46,10 @@ weighted=0;
     gxi(gxi<0)=0;gyi(gyi<0)=0;
     sxm=sqrt(sum((xi-xm).^2.*gxi)/sum(gxi));
     sym=sqrt(sum((yi-ym).^2.*gyi)/sum(gyi));
-    if ~isreal(sxm)
+    if ~isreal(sxm) || sxm<.2
         sxm=1;
     end
-    if ~isreal(sym)
+    if ~isreal(sym)|| sym<.2
         sym=1;
     end
     
