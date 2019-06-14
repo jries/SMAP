@@ -59,7 +59,7 @@ classdef Histograms<interfaces.DialogProcessor
             pard.quantile.Width=0.5;
             pard.plugininfo.name='Histograms';
             pard.plugininfo.description='calculates histograms and statistics for loc fields';
-            pard.plugininfo.type='ProcessorPlugin'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
+            pard.plugininfo.type='Histograms'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
   
             pard.syncParameters={{'locFields','locfield',{'String'}}};
             

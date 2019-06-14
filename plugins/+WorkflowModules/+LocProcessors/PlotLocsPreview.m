@@ -27,6 +27,9 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                     ax.NextPlot='add';
                     plot(locs.xpix,locs.ypix,'k.','Parent',ax,'MarkerSize',4)
                     dn=ceil((obj.getPar('loc_ROIsize')-1)/2);
+                    if isempty(dn)
+                        dn=3;
+                    end
                     for k=1:length(locs.xpix)
                         pos=[locs.xpix(k)-dn locs.ypix(k)-dn locs.xpix(k)+dn locs.ypix(k)+dn ];
                         col=[1 0. 1];
