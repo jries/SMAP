@@ -34,8 +34,8 @@ classdef deepSMLM<interfaces.WorkflowModule
         function dato=run(obj,data,p)
             %
             bufferfactor=1.2;
-            xfactor=1*bufferfactor;
-            yfactor=1*bufferfactor;
+            xfactor=.5*bufferfactor;
+            yfactor=.5*bufferfactor;
             zfactor=750*bufferfactor;
             photfactor=10000*bufferfactor;
             image=data.data;%get;
@@ -63,17 +63,18 @@ classdef deepSMLM<interfaces.WorkflowModule
             
             indsort=[bufferind:3 1:bufferind-1];indsort=indsort([2 3 1]);
             fitimage=obj.imagebuffer(1,indsort,:,:);
-           
+%             fitimage=permute(fitimage,[1 2 4 3]);
             [xf, x_shape] = pseudo_col2row_major(fitimage);
             
             [outf, out_size] = obj.deepobj.forward(xf, x_shape);
             deepim = pseudo_row2_col_major(outf, out_size);
+%             deepim=permute(deepim,[1 2 4 3]);
             probmap=squeeze(deepim(1,1,:,:));
             if all(size(obj.mask)==size(image)) %apply mask
                 probmap=probmap.*obj.mask;
             end
             maxima=maximumfindcall((probmap)); 
-            cutoff=0.3;
+            cutoff=p.pcutoff;
             maxind= (maxima(:,3)>cutoff);
             y=maxima(maxind,1);
             x=maxima(maxind,2);
@@ -130,6 +131,14 @@ pard.loadmodel.position=[1,2];
 pard.modelfile.object=struct('Style','edit','String','','HorizontalAlignment','right');
 pard.modelfile.position=[2,1];
 pard.modelfile.Width=2;
+
+pard.pcutofft.object=struct('Style','text','String','probability cutoff');
+pard.pcutofft.position=[3,1];
+pard.pcutofft.Width=1;
+pard.pcutoff.object=struct('Style','edit','String','0.3');
+pard.pcutoff.position=[3,2];
+pard.pcutoff.Width=.35;
+
 
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='';
