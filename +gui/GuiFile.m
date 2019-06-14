@@ -487,7 +487,7 @@ pard.group_dt.Width=0.35;
 
 
 pard.syncParameters={{'filelist_long','filelist_long',{'String'}}};
-pard.outputParameters= {'group_dx','group_dt','group_dxminmax','group_mode'};
+pard.outputParameters= {'group_dx','group_dt','group_dxminmax'};
 pard.inputParameters={'mainfile'};
 
 
