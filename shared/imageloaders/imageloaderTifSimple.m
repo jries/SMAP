@@ -52,7 +52,7 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
             allmd(end+1,:)={'Width info',size(imtest,2)};
             allmd(end+1,:)={'Height info',size(imtest,1)};
             allmd(end+1,:)={'FileName',obj.file};
-            
+            warning('off','imageio:tiffmexutils:libtiffWarning');
             ttt=Tiff(obj.file);
             numf=1;
             try

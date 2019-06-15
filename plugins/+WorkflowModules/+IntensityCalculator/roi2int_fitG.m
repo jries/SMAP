@@ -145,4 +145,5 @@ info.name='fit';
 info.fields={'fit_n','fit_bg'};
 pard.plugininfo=info;
 pard.plugininfo.type='WorkflowIntensity'; 
+pard.plugininfo.description='determines intensity around a localization by a regression of a Gaussian model with fixed positions and sigma. Either amplitude and background or only the amplitude are fitting parameters';
 end

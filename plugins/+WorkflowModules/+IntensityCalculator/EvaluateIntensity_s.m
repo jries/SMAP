@@ -17,6 +17,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
         end
         function pard=guidef(obj)
              pard.plugininfo.type='WorkflowModule'; 
+             pard.plugininfo.description='EvaluateIntensity Workflow module that calls intensity evaluators.';
         end
         function makeGui(obj)
             makeGui@interfaces.WorkflowModule(obj);

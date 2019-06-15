@@ -1,4 +1,5 @@
 function openstackinfiji(obj,imout3,title)
+% opens any image in Fiji. Current image can be opened in fiji with Menu/SMAP/Open current image in fiji
 obj.status('open image in fiji. Large stacks take some time.');
 disp('increase the Java heap memory (Matlab -> Preferences -> General) if problems occur duirng opening')
 drawnow

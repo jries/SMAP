@@ -1,4 +1,5 @@
 classdef workflowstarter<interfaces.WorkflowModule
+%     Starts a workflow, does not need input.
     properties
     end
     methods
@@ -25,6 +26,7 @@ classdef workflowstarter<interfaces.WorkflowModule
             pard.startb.object=struct('Style','pushbutton','String','Run','Callback',@obj.startcallback);
             pard.plugininfo.type='WorkflowModule'; 
             pard.startb.position=[1,1];
+            pard.plugininfo.description='Starts a workflow, does not need input.';
         end
         function startcallback(obj,a,b)
             obj.parent.run;

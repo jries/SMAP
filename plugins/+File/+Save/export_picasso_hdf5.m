@@ -1,4 +1,5 @@
 classdef export_picasso_hdf5<interfaces.DialogProcessor
+%     Exports localizations in the Picasso (Jungmann lab) hdf5 format
     properties
         exportfields={'xnm';'ynm';'znm';'frame';'locprecnm';'locprecznm';'phot';'bg';'layer'};
     end
@@ -128,17 +129,6 @@ pard.grouped.object=struct('Style','checkbox','Visible','on','String','grouped (
 pard.grouped.position=[1,2];
 pard.grouped.Width=2;
 
-% pard.format.object=struct('Style','popupmenu','Visible','on','String',{{'csv','txt','dat','xls'}});
-% pard.format.position=[1,4];
-% pard.format.Width=1;
-
-% pard.outputfields.object=struct('Style','text','Visible','on','String','xnm, ynm, frame');
-% pard.outputfields.position=[2,1];
-% pard.outputfields.Width=3;
-
-% pard.selectoutputfields.object=struct('Style','pushbutton','Visible','on','String','select','Callback',{{@selectfields,obj}});
-% pard.selectoutputfields.position=[2,4];
-% pard.selectoutputfields.Width=1;
-
 pard.plugininfo.type='SaverPlugin';
+pard.plugininfo.description='Exports localizations in the Picasso (Jungmann lab) hdf5 format';
 end

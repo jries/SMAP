@@ -1,4 +1,5 @@
 classdef Loader_auto<interfaces.DialogProcessor
+%     Selects the correct loader based on filename and content
     properties
         notfound=false;
     end
@@ -50,6 +51,7 @@ info.extensions={'*.mat;*.tif;*.csv;*.hdf5';'*.mat';'*.tif';'*.csv';'*.*'};
 info.dialogtitle='select any SMLM position, Tif, csv, settings or workflow file';
 pard.plugininfo=info;
 pard.plugininfo.type='LoaderPlugin';
+pard.plugininfo.description='Selects the correct loader based on filename and content';
 end
 
 function loadfile(obj,p,file,mode)            

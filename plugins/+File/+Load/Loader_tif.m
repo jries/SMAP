@@ -1,4 +1,6 @@
 classdef Loader_tif<interfaces.DialogProcessor
+%     Loads diffrction-limited tiff images and associates them to an
+%     already loaded SMAP data set.
     methods
         function obj=Loader_tif(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -48,6 +50,7 @@ pard.mirrortif.TooltipString='Mirror image. Might be required if EM gain was use
 
 pard.plugininfo=info;
 pard.plugininfo.type='LoaderPlugin';
+pard.plugininfo.description='Loads diffrction-limited tiff images and associates them to an already loaded SMAP data set.';
 end
 
 function loadfile(obj,p,file,mode)  

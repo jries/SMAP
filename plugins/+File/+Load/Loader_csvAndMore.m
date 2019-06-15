@@ -137,7 +137,10 @@ f=figure;
 end
 
 function loadfile(obj,p,file,mode)
-
+% loades localzation data from a variety of files including text (.csv,
+% .txt), hdf5 or MATLAB files. Localization data properties can be
+% converted to those used in SMAP, and conversions can be saved for
+% repeated use.
 [~,~,ext]=fileparts(file);
 switch ext
     case {'.csv','.txt'}
@@ -374,6 +377,7 @@ info.extensions={'*.csv;*.xls;*.mat;*.hdf5;*.txt','*.*'};
 info.dialogtitle='select any .csv .mat or .hdf5 file';
 pard.plugininfo=info;  
 pard.plugininfo.type='LoaderPlugin';
+pard.plugininfo.description='loades localzation data from a variety of files including text (.csv, .txt), hdf5 or MATLAB files. Localization data properties can be converted to those used in SMAP, and conversions can be saved for repeated use.';
 
 pard.importdef.object=struct('Style','popupmenu','String',{{'select import'}});
 pard.importdef.position=[1,1];

@@ -1,4 +1,5 @@
 classdef SMLMsaver<interfaces.DialogProcessor
+%     saves localizations in SMAP proprietary _sml.mat MATLAB format
     properties
         excludesavefields={'groupindex','numberInGroup','colorfield'};
     end
@@ -87,5 +88,6 @@ pard.selectfields.Optional=true;
             
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.type='SaverPlugin';
+pard.plugininfo.description='saves localizations in SMAP proprietary _sml.mat MATLAB format';
 
 end

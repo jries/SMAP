@@ -1,4 +1,5 @@
 classdef Loader_ioPlugin<interfaces.DialogProcessor
+%     loader for imagineOptics file format
     methods
         function obj=Loader_ioPlugin(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -38,6 +39,7 @@ info.extensions={'*.csv';'*.*'};
 info.dialogtitle='select any CSV file';
 pard.plugininfo=info;     
 pard.plugininfo.type='LoaderPlugin';
+pard.plugininfo.description='loader for imagineOptics file format';
 end
 
 function loadfile(obj,p,file,mode)

@@ -1,4 +1,5 @@
 classdef pushLocs<interfaces.WorkflowModule
+    %Inserts single-molecule localizations into workflow pipeline
     properties
         filestruc;
         locs
@@ -93,6 +94,7 @@ pard.locfields.object=struct('Style','edit','String',{'znm','xnm','ynm','frame'}
 pard.locfields.position=[1,1];
 pard.locfields.Width=1.3;
 pard.plugininfo.type='WorkflowModule'; 
+pard.plugininfo.description='Inserts single-molecule localizations into workflow pipeline';
 end
 
 function PSFx=sigmafromz_simple(z,p)%[d g sx0]);
