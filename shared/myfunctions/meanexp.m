@@ -1,5 +1,5 @@
 function meanfitpar=meanexp(v,dq,rangev,ax,fac)
-q=myquantilefast(abs(v),[0.005,0.995],100000);
+q=myquantilefast(abs(v),[0.005,0.995],1000000);
 if nargin<2||isempty(dq)
     dq=min((q(2)-q(1))/1000,max(max(q(2)/1000,q(1)),q(2)/length(v)*5));
 end
