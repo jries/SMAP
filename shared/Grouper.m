@@ -1,4 +1,6 @@
 classdef Grouper< interfaces.LocDataInterface
+%     Combines (merges, groups) localizations which persit over several
+%     frames into a single localization. Accessible in the File GUI.
     properties
         combinemodes
         indsortlist

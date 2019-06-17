@@ -1,4 +1,6 @@
 classdef SALMInt2z<interfaces.DialogProcessor
+%     Calculates z positions from relative intensities in
+%     Supercritical-angle localization microscopy
     methods
         function obj=SALMInt2z(varargin)  
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -134,4 +136,5 @@ pard.assignfield2.position=[5,2];
 pard.assignfield1.object.TooltipString='choose which field to use for splitting';
 pard.assignfield2.object.TooltipString=pard.assignfield1.object.TooltipString;
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Calculates z positions from relative intensities in Supercritical-angle localization microscopy';
 end

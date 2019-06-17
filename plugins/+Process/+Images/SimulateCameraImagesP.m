@@ -1,10 +1,10 @@
-classdef SimulateCameraImages<interfaces.DialogProcessor
+classdef SimulateCameraImagesP<interfaces.DialogProcessor
     properties
         locs
         par
     end
     methods
-        function obj=SimulateCameraImages(varargin)        
+        function obj=SimulateCameraImagesP(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
 %             obj.inputParameters={'se_sitefov','se_cellpixelsize','se_siteroi'};
             obj.history=true;

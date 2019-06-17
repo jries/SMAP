@@ -1,4 +1,9 @@
 classdef RegisterImages<interfaces.DialogProcessor
+%  Register Images calculates shift between rendered images in two layers
+%  and writes this shift into the channel tab of the target layer. Adjust
+%  pixel size and FoV so that the shift can be calculated from the
+%  reconstructed image. Transformation can also be saved for later use with
+%  Apply Transform'
     properties
         transformation
     end

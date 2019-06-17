@@ -1,6 +1,7 @@
 classdef Get2CIntImages2cam<interfaces.DialogProcessor
-    % gets intensities from camera images at positions of localizations and
-    % at transformed positions
+% Quantifies intensities in the camera images at the position of
+% fluorophores and at transformed positions in the other channel. Also
+% works with two separate cameras.
     properties (Access=private)
         figure
     end
@@ -205,6 +206,7 @@ pard.plugininfo.description=sprintf(['This plugin gets intensities from camera i
     '3.	Select one or several plugins which determine the intensity:\n',...
     '\t a.	Roi2int_sum: uses a ROI (set size) to determine intensity, and a larger ROI for the background.\n',...
     '\t b.	Roi2int_fit: Uses a Gaussian fit to determine intensity and background. The position is fixed to the fitted position. You can use the fitted PSF size or fix it. If fit on BG is checked, the background is subtracted prior to fitting and the fit is performed with background set to zero. Otherwise the background is a fitting parameter.\n',...
+    '\t c.  Roi2int_expPSF: Uses an experimental PSF model for fitting, or for a weighted intensity average',...
     '4.	Press Run and when asked select the original raw camera images. The results are automatically saved with the _dc in the file name.\n']);
 pard.plugininfo.name='2C intensities from images 2 cam';
 end

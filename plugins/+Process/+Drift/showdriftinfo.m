@@ -1,4 +1,6 @@
 classdef showdriftinfo<interfaces.DialogProcessor
+%     Displays the results of the drift correction for a drift corrected
+%     data set
     methods
         function obj=showdriftinfo(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -126,4 +128,5 @@ pard.dataselect.object=struct('Style','popupmenu','String','File');
 pard.dataselect.position=[2,1];
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Displays the results of the drift correction for a drift corrected data set';
 end

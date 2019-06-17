@@ -1,4 +1,5 @@
 classdef Rescale_tiff<interfaces.DialogProcessor
+%     Change position and magnification of an associated Tiffi mage
     methods
         function obj=Rescale_tiff(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -103,4 +104,5 @@ pard.overwrite.object.TooltipString='If checked, the original image is replaced.
 % pard.inputParameters={'cam_pixnm'
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Change position and magnification of an associated Tiffi mage';
 end

@@ -1,4 +1,5 @@
 classdef Show_Raw_Data<interfaces.DialogProcessor
+%     Shows raw camera images saved with the localization data.
     methods
         function obj=Show_Raw_Data(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -35,4 +36,5 @@ pard.dataselect.Width=2;
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Shows raw camera images saved with the localization data.';
 end
