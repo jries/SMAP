@@ -124,7 +124,7 @@ end
 % else
     pr=0.99;
 % end
-[hphot,mmax]=plothist(phot,pr,[],0,ax1,modetxt,20);
+[hphot,mmax]=plothist(phot,pr,[],0,ax1,modetxt,40);
 sphot={'Photons'};
 % phot1=1000;
 % phot2=3000;
