@@ -1,4 +1,5 @@
-classdef Loader_sml<interfaces.DialogProcessor;
+classdef Loader_sml<interfaces.DialogProcessor
+%     Loads  localization data in the SMAP proprietary format '_sml.mat'
     methods
         function obj=Loader_sml(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -44,5 +45,6 @@ info.extensions={'*.mat;*.*'};
 info.dialogtitle='select any SMLM file (_sml or _fitpos)';
 pard.plugininfo=info;
 pard.plugininfo.type='LoaderPlugin';
+pard.plugininfo.description='Loads  localization data in the SMAP proprietary format _sml.mat';
 end
 

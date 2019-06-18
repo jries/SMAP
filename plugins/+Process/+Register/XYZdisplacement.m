@@ -1,4 +1,5 @@
 classdef XYZdisplacement<interfaces.DialogProcessor
+%     Calculates the dsplacement in x, y and z between two layers
     properties
     end
     methods
@@ -43,46 +44,7 @@ classdef XYZdisplacement<interfaces.DialogProcessor
            
            obj.setGuiParameters(struct('foundd',[dx dy zpos]));
            clipboard('copy',sprintf([num2str(dx) ',' num2str(dy) ',' num2str(zpos) ]))
-
-%            [~,sindr]=sort(locr.xnm);
-%            [~,sindt]=sort(loct.xnm);
-%            x1r=1;x1t=1;
-%            ccc=zeros(1,length(zb)*2-3);
-%            for k=1:length(xb)-1
-%                x2r=x1r;x2t=x1t;
-%                while(locr.xnm(sindr(x2r))<xb(k+1))&&x2r<length(sindr)
-%                    x2r=x2r+1;
-%                end
-%                while(loct.xnm(sindt(x2t))<xb(k+1))&&x2t<length(sindt)
-%                    x2t=x2t+1;
-%                end
-%         
-%                zr=locr.znm(sindr(x1r:x2r-1));
-%                zt=loct.znm(sindt(x1t:x2t-1));
-% 
-%                hr=histcounts(zr,zb);
-%                ht=histcounts(zt,zb);
-%                hr=hr-mean(hr);
-%                 ht=ht-mean(ht);
-%                ch=conv(hr,ht(end:-1:1),'full');
-%                ccc=ccc+ch;
-%                x1r=x2r;x1t=x2t; 
-%            end
-%            ax=obj.initaxis('cross-correlation');
-%            zc=(-length(hr)+1:length(hr)-1)*p.binwidth;
-%            plot(zc,ccc)
-%            title(ax,['dz (mean): ' num2str(mean(locr.znm)-mean(loct.znm))])
-%            [mc,ind]=max(ccc);
-%            dh=find(ccc(ind:end)<mc/2,1,'first');
-%            dh=max(3,round(dh/2));
-%            zred=zc(ind-dh:ind+dh);
-%            [xpos,fp]=mypeakfit(zc(ind-dh:ind+dh),ccc(ind-dh:ind+dh));
-%            hold on
-%            plot(zred,fp(1)*zred.^2+zred*fp(2)+fp(3),'r');
-%            hold off
-%            
-%            title(ax,['dz (mean): ' num2str(mean(locr.znm)-mean(loct.znm)) ', cc: ' num2str(xpos)])
-           
+ 
         end
         function pard=guidef(obj)
             pard=guidef;
@@ -156,4 +118,5 @@ pard.foundd.Width=1.5;
 
 pard.plugininfo.name='XYZ displacement';
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Calculates the dsplacement in x, y and z between two layers';
 end

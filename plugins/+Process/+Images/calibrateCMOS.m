@@ -1,4 +1,6 @@
 classdef calibrateCMOS<interfaces.DialogProcessor
+%     calculates the mean and variancer maps of sCMOS cameras to be used as
+%     a camera noise model in the fitter
     methods
         function obj=calibrateCMOS(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -48,4 +50,5 @@ function pard=guidef(obj)
 
 
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='calculates the mean and variancer maps of sCMOS cameras to be used as a camera noise model in the fitter';
 end

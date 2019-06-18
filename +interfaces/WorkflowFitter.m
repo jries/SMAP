@@ -78,21 +78,6 @@ classdef WorkflowFitter<interfaces.WorkflowModule
             
             global fitterimagestack fitterstackinfo fitterbgstack 
             
-            if isempty(fitterstackinfo)
-                if isempty(data.data)
-%                     obj.status('error: image empty');drawnow
-%                     error ('image empty')
-                    out=[];
-                    return
-                else
-                initstacks(obj,data.data.info)
-                end
-            end
-            
-            persistent reporttimer
-            out=[];
-            passbg=(obj.inputChannels==2);%~isempty(fitterbgstack);
-            fninfo=fieldnames(fitterstackinfo{1});
             if ~iscell(data) 
                 dstruc=data.data;
                 eof=data.eof;
@@ -101,6 +86,22 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                 eof=data{1}.eof;
                 
             end
+            if isempty(fitterstackinfo)
+                if isempty(dstruc)
+%                     obj.status('error: image empty');drawnow
+%                     error ('image empty')
+                    out=[];
+                    return
+                else
+                initstacks(obj,dstruc.info)
+                end
+            end
+            
+            persistent reporttimer
+            out=[];
+            passbg=(obj.inputChannels==2);%~isempty(fitterbgstack);
+            fninfo=fieldnames(fitterstackinfo{1});
+
             
             if isempty(reporttimer)
                 reporttimer=tic;

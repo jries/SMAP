@@ -1,6 +1,7 @@
 classdef CombineChannels<interfaces.DialogProcessor
-    % CombineChannels applies transformation to localizations and combines
-    % associated localizations into one
+% CombineChannels applies transformation to localizations and combines
+% associated localizations into one by averaging localizations from both
+% channels.
     methods
         function obj=CombineChannels(varargin)        
             obj@interfaces.DialogProcessor(varargin{:});
@@ -145,7 +146,7 @@ pard.loadbutton.position=[7,4];
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 
-pard.plugininfo.description='ApplyTransform applies transformation to localizations or associated Tif images';
+pard.plugininfo.description='CombineChannels applies transformation to localizations and combines associated localizations into one by averaging localizations from both channels.';
 pard.plugininfo.name='Combine Channels';
 pard.plugininfo.type='ProcessorPlugin';
 end

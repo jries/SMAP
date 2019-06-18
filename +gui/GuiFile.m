@@ -80,6 +80,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             m1 = uimenu(c,'Label','info','Callback',{@menu_callback,obj});
             m1 = uimenu(c,'Label','remove','Callback',{@menu_callback,obj});
             m1 = uimenu(c,'Label','clear','Callback',{@menu_callback,obj});
+            groupmode_callback(0,0,obj);
             
         end
      
@@ -369,6 +370,23 @@ hsmap.Children=hsmap.Children(indnew);
 % hsmap.Children(ithis)=hdummy;
 end
 
+function groupmode_callback(a,b,obj) 
+% change visibility
+% setPar(mode)
+mode=obj.guihandles.group_mode.Value;
+obj.setPar('group_mode',mode);
+
+switch mode
+    case 1
+    obj.guihandles.group_dx.Visible='on';obj.guihandles.group_dxt.Visible='on';
+    obj.guihandles.group_dxminmax.Visible='off';obj.guihandles.group_dxminmaxt.Visible='off';
+    case 2
+    obj.guihandles.group_dx.Visible='off';obj.guihandles.group_dxt.Visible='off';
+    obj.guihandles.group_dxminmax.Visible='on';obj.guihandles.group_dxminmaxt.Visible='on';
+end
+end
+
+
 function pard=guidef(obj)
 pard.load.object=struct('Style','pushbutton','String','Load','FontWeight','bold','Callback',{{@obj.loadbutton_callback,0}});
 pard.load.position=[4.75,2.5];
@@ -436,22 +454,40 @@ pard.group_b.object=struct('Style','pushbutton','String','Group','Callback',{{@o
 pard.group_b.position=[5,4];
 pard.group_b.Width=1;
 
-pard.group_tdx.object=struct('Style','text','String','dX (nm)');
-pard.group_tdx.position=[6,4];
-pard.group_tdx.Width=0.65;
+pard.group_tdx.object=struct('Style','text','String','dX');
+pard.group_tdx.position=[7,4];
+pard.group_tdx.Width=0.3;
+
+
+pard.group_mode.object=struct('Style','popupmenu','String',{{'fix','locprec'}},'Callback',{{@groupmode_callback,obj}});
+pard.group_mode.position=[7,4.2];
+pard.group_mode.Width=0.8;
+
 pard.group_dx.object=struct('Style','edit','String','35');
-pard.group_dx.position=[6,4.65];
+pard.group_dx.position=[8,4.3];
 pard.group_dx.Width=0.35;
+pard.group_dxt.object=struct('Style','text','String','nm');
+pard.group_dxt.position=[8,4.65];
+pard.group_dxt.Width=0.35;
+
+pard.group_dxminmaxt.object=struct('Style','text','String','min max','Visible','off');
+pard.group_dxminmaxt.position=[8,4];
+pard.group_dxminmaxt.Width=0.5;
+
+pard.group_dxminmax.object=struct('Style','edit','String','10 100','Visible','off');
+pard.group_dxminmax.position=[8,4.5];
+pard.group_dxminmax.Width=0.5;
 
 pard.group_tdt.object=struct('Style','text','String','dT (frames)');
-pard.group_tdt.position=[7,4];
+pard.group_tdt.position=[6,4];
 pard.group_tdt.Width=0.65;
 pard.group_dt.object=struct('Style','edit','String','1');
-pard.group_dt.position=[7,4.65];
+pard.group_dt.position=[6,4.65];
 pard.group_dt.Width=0.35;
 
+
 pard.syncParameters={{'filelist_long','filelist_long',{'String'}}};
-pard.outputParameters= {'group_dx','group_dt'};
+pard.outputParameters= {'group_dx','group_dt','group_dxminmax'};
 pard.inputParameters={'mainfile'};
 
 
@@ -462,5 +498,8 @@ pard.savemodule.object.TooltipString='select what to save';
 pard.group_b.object.TooltipString='group localizations in consecutive frames';
 pard.group_dx.object.TooltipString=sprintf('distance in nm which two locs can be apart \n and still grouped together. Empty: automatic');
 pard.group_dt.object.TooltipString=sprintf('number of frames locs can be missing \n and still grouped together');
+
+pard.group_mode.object.TooltipString=sprintf('Maximum allowed distance: 1. fix: set to fix value (below). \n 2. locprec: from localizaton precision. dx^2< 2.5(lp1^2+lp2^2) \n dx>min, dx<max');
+
 pard.autosavecheck.object.TooltipString=sprintf('save localizations every XX minutes as settings/temp/autosave_sml.mat');
 end

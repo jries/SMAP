@@ -1,4 +1,5 @@
 classdef TifSaver<interfaces.DialogProcessor
+%     Saves reconstructed images in tiff format
     methods
         function obj=TifSaver(varargin)  
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -40,6 +41,7 @@ classdef TifSaver<interfaces.DialogProcessor
         end
         function pard=guidef(obj)
            pard.plugininfo.type='SaverPlugin';
+           pard.plugininfo.description='Saves reconstructed images in tiff format';
            
             pard.img_ext.object=struct('Style','popupmenu','String',{{'.tif','.png'}});
             pard.img_ext.position=[1,1];

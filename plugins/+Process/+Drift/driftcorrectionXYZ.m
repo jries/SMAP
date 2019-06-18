@@ -1,4 +1,16 @@
 classdef driftcorrectionXYZ<interfaces.DialogProcessor
+%     Drift correction based on cross-correlation.','Algorithm: the data
+%     set is divided into [timepoints] blocks, for which superresolution
+%     images are calculated. The displacement between all images is
+%     calcualted with a FFT-based cross-correlation algorithm. The position
+%     of the maxima of the cross-correlation curve are fitted with
+%     sub-pixel accuracy with a free elliptical Gaussian. A robust
+%     estimator is used to calculate the drift vs frame from all pairwise
+%     displacements.','All localiaztions visible in the superresolution
+%     image are used to infer the drift. Use [Render]...[Layer] to control
+%     this. If two files are loaded, their drift is calculated together and
+%     they are saved as one file with their filenumbers copied to the
+%     channel field.',' ','(c) Jonas Ries, EMBL, 2015'
     methods
         function obj=driftcorrectionXYZ(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;

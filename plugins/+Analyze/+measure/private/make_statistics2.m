@@ -124,7 +124,7 @@ end
 % else
     pr=0.99;
 % end
-[hphot,mmax]=plothist(phot,pr,[],0,ax1,modetxt);
+[hphot,mmax]=plothist(phot,pr,[],0,ax1,modetxt,40);
 sphot={'Photons'};
 % phot1=1000;
 % phot2=3000;
@@ -143,7 +143,8 @@ for k=datrange
     sphot{end+1}=['<P_range'  '> = ' num2str(meanphotrange(k),'%5.0f')];
 %     sphot{end+1}=['r'  ' = ' num2str(N1(k)/N2(k),'%5.2f')];
 %     dat(k)=fitexpphot(hphot{k},[],ploton);
-    dat(k)=meanexphere(phot{k}(inrange),hphot{k},p.photrange,ax1,mmax{k});
+%     dat(k)=meanexphere(phot{k}(inrange),hphot{k},p.photrange,ax1,mmax{k});
+    dat(k)=meanexphere(phot{k},hphot{k},p.photrange,ax1,mmax{k});
     
     sphot{end+1}=(['Pexp'  ' = ' num2str(dat(k).mu,'%5.0f')]);   
 end
@@ -347,7 +348,10 @@ else %use all values, plot for unconnected and connected
     datrange=1:2;
 end
 
-function [his,mmo]=plothist(v,quantile,dphot,hmin,ax,modetxt)
+function [his,mmo]=plothist(v,quantile,dphot,hmin,ax,modetxt,qfac)
+if nargin<7
+    qfac=5;
+end
 his=[];
 for k=1:length(v)
     if length(quantile)==1
@@ -367,7 +371,7 @@ if qmax==qmin
 end
 lmax=max(l);
 % qfac=log10(lmax)-1-1;
-qfac=5;
+% qfac=5;
 
 if nargin==2||isempty(dphot)
 dphot=(10^ceil(log10(qmax/qfac)))/100;

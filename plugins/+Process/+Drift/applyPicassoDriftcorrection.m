@@ -1,4 +1,6 @@
 classdef applyPicassoDriftcorrection<interfaces.DialogProcessor
+%     Applies drift correction file from Picasso to current localization
+%     data
     methods
         function obj=applyPicassoDriftcorrection(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -95,5 +97,6 @@ pard.save_dc.Optional=true;
 
 pard.plugininfo.name='apply drift correction from Picasso';
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Applies drift correction file from Picasso to current localization data';
 
 end

@@ -1,4 +1,6 @@
 classdef Loader_settings<interfaces.DialogProcessor
+%     loads SMAP GUI settings from any '_sml.mat' file and apply it to the
+%     current SMAP workspace.
     methods
         function obj=Loader_settings(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -100,4 +102,5 @@ info.extensions={'*.mat';'*.*'};
 info.dialogtitle='select any GUI settings file or _sml file';
 pard.plugininfo=info;
 pard.plugininfo.type='LoaderPlugin';
+pard.plugininfo.description='loads SMAP GUI settings from any _sml.mat file and apply it to the current SMAP workspace.';
 end

@@ -1,6 +1,6 @@
 classdef GetIntensitiesSALM<interfaces.DialogProcessor
     % gets intensities from camera images at positions of localizations and
-    % at transformed positions
+    % at transformed positions. Optimized for SALM
     properties (Access=private)
         figure
     end
@@ -15,7 +15,7 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             out=[];
             % make T
             pt.uselayers=true;
-            pt.reflayer=p.salayer; pt.targetlayer=p.ualayer;
+            pt.reflayer=p.ualayer; pt.targetlayer=p.salayer;
             pt.currentfileinfo=obj.locData.files.file(1).info;
             pt.useT=true;
             cal3D=load(p.cal_3Dfile);
@@ -253,16 +253,8 @@ pard.numframes_bg.Width=0.3;
 
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
-% pard.plugininfo.description=sprintf(['This plugin gets intensities from camera images at positions of localizations and at transformed positions \n',...
-%     'This plugin uses a transformation to find for every localization the position in the other channel and then determines the intensity in both channels.\n',...
-%     '1.	Load a transformation\n',...
-%     '2.	Per default, this plugin does median filtering. Select the spatial and temporal spacing for this (dx, dt).\n',...
-%     '3.	Select one or several plugins which determine the intensity:\n',...
-%     '\t a.	Roi2int_sum: uses a ROI (set size) to determine intensity, and a larger ROI for the background.\n',...
-%     '\t b.	Roi2int_fit: Uses a Gaussian fit to determine intensity and background. The position is fixed to the fitted position. You can use the fitted PSF size or fix it. If fit on BG is checked, the background is subtracted prior to fitting and the fit is performed with background set to zero. Otherwise the background is a fitting parameter.\n',...
-%     '4.	Press Run and when asked select the original raw camera images. The results are automatically saved with the _dc in the file name.\n']);
 pard.plugininfo.name='Intensities for SALM';
-% pard.plugininfo.description
+pard.plugininfo.description='gets intensities from camera images at positions of localizations and at transformed positions. Optimized for SALM.';
 end
 
 

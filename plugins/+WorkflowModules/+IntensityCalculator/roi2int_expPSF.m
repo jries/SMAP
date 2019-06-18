@@ -1,7 +1,7 @@
 classdef roi2int_expPSF<interfaces.GuiModuleInterface 
-    %determines intensity around a localization by a regression of a
-    %Gaussian model with fixed positions and sigma. Either amplitude and
-    %background or only the amplitude are fitting parameters
+%    Determines intensity around a localization by a) regression of an
+%    experimental PSF model (amplitude and background or only the amplitude
+%    free fitting), or b) by multipliation with an experimental PSF model.
     properties
         splinecoeff
         spline
@@ -286,4 +286,5 @@ info.fields={'psf_n','psf_bg'};
 pard.plugininfo=info;
 pard.plugininfo.type='WorkflowIntensity'; 
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
+pard.plugininfo.description='Determines intensity around a localization by a) regression of an experimental PSF model (amplitude and background or only the amplitude free fitting), or b) by multipliation with an experimental PSF model.';
 end

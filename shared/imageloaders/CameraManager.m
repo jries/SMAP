@@ -1,6 +1,7 @@
 classdef CameraManager<interfaces.GuiParameterInterface
-    %UNTITLED2 Summary of this class goes here
-    %   Detailed explanation goes here
+% Stores all cameras with metadata structure and default setttings in a
+% data base. This eliminates the need to specify camera or camera settings
+% when loading raw image data.
     
     properties
         handle

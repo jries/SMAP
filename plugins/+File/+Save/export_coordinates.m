@@ -1,4 +1,7 @@
 classdef export_coordinates<interfaces.DialogProcessor
+%     exports localization data in .txt, .csv, .xls format. The user can
+%     choose which localization attributes to export and if to export all
+%     localizations or filtered localizations.
     properties
         exportfields={'xnm';'ynm';'znm';'frame';'locprecnm';'phot';'bg';'layer'};
     end
@@ -133,4 +136,5 @@ pard.selectoutputfields.position=[2,4];
 pard.selectoutputfields.Width=1;
 
 pard.plugininfo.type='SaverPlugin';
+pard.plugininfo.description='exports localization data in .txt, .csv, .xls format. The user can choose which localization attributes to export and if to export all localizations or filtered localizations.';
 end

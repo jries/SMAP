@@ -61,7 +61,9 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
                 obj.guihandles.info=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*2, hpos(4)-vrim+50,100,25],...
                     'Style','pushbutton','String','Info','FontSize',obj.guiPar.fontsize,'Callback',{@info_callback,obj},'Visible',vis);
             end
-            
+            obj.initGuiFinal;
+        end
+        function initGuiFinal(obj)
         end
         function setvisibility(obj,name)
             %shows and hides the GUI. called from module selector

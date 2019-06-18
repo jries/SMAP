@@ -1,4 +1,5 @@
 classdef Loader_workflow<interfaces.DialogProcessor
+%     Loads SMAP workflows
     methods
         function obj=Loader_workflow(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -14,10 +15,11 @@ classdef Loader_workflow<interfaces.DialogProcessor
         function pard=guidef(obj)
             pard=guidef;
         end
-        function run(obj,p)
-            [f,p]=uigetfile(obj.info.extensions);
-            obj.load(p,[p f]);
+        function out=run(obj,p)
+            [f,path]=uigetfile(obj.info.extensions);
+            obj.load(p,[path f]);
             initGuiAfterLoad(obj);
+            out=[];
         end
         function clear(file,isadd)
         end
@@ -33,6 +35,7 @@ info.extensions={'*.mat';'*.*'};
 info.dialogtitle='select workflow file';
 pard.plugininfo=info;
 pard.plugininfo.type='LoaderPlugin';
+pard.plugininfo.description='Loads SMAP workflows';
 end
 
 function loadfile(obj,p,file,mode)            

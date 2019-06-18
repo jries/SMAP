@@ -1,6 +1,6 @@
 classdef Transform2C_interleaved<interfaces.DialogProcessor
-    % ApplyTransform applies transformation to localizations or associated
-    % Tif images
+% Applies transformation to localizations for which both channels have been
+% acquired using interleaved excitation.
     methods
         function obj=Transform2C_interleaved(varargin)        
             obj@interfaces.DialogProcessor(varargin{:});
@@ -144,7 +144,7 @@ pard.loadbutton.position=[7,4];
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 
-pard.plugininfo.description='ApplyTransform applies transformation to localizations or associated Tif images';
+pard.plugininfo.description='Applies transformation to localizations for which both channels have been acquired using interleaved excitation.';
 % pard.plugininfo.name='Apply Transformation';
 pard.plugininfo.type='ProcessorPlugin';
 end

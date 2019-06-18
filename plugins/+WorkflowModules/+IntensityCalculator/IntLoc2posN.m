@@ -1,4 +1,5 @@
 classdef IntLoc2posN<interfaces.WorkflowModule
+%     calculates pixel postions in tiff images from localization positions (nm)
     properties
         filestruc;
         locs
@@ -151,7 +152,8 @@ pard.transformtotarget.Width=.7;
 % pard.pixcam.position=[2,1];
 % pard.PSFxnm.object=struct('Style','edit','String','138');
 % pard.PSFxnm.position=[2,1];
-pard.plugininfo.type='WorkflowModule'; 
+pard.plugininfo.type='WorkflowModule';
+pard.pard.plugininfo.description='calculates pixel postions in tiff images from localization positions (nm)';
 end
 
 function PSFx=sigmafromz_simple(z,p)%[d g sx0]);

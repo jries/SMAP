@@ -1,7 +1,9 @@
 %import ROIs from Vilma and write attributes to localizations
 addlocinfo=true;
+
 addsite=true;
 readclass=false;
+
 
 filename=g.locData.files.file(1).name;
 [path,file,ext]=fileparts(filename);

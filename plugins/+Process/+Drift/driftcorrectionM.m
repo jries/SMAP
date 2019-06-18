@@ -1,4 +1,7 @@
 classdef driftcorrectionM<interfaces.DialogProcessor
+%     As DriftcorrectionXYZ, but additionally changes the magnification
+%     over time. This can sometimes locally correct the drift in live-cell
+%     imaging or in case the sample deforms.
     methods
         function obj=driftcorrectionM(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -181,7 +184,7 @@ pard.save_dc.Optional=true;
 
 pard.plugininfo.name='drift correction Magnification';
 pard.plugininfo.type='ProcessorPlugin';
-pard.plugininfo.description={'Needs modification for M. Drift correction based on cross-correlation.','Algorithm: the data set is divided into [timepoints] blocks, for which superresolution images are calculated. The displacement between all images is calcualted with a FFT-based cross-correlation algorithm. The position of the maxima of the cross-correlation curve are fitted with sub-pixel accuracy with a free elliptical Gaussian.',...
+pard.plugininfo.description={' As DriftcorrectionXYZ, but additionally changes the magnification over time. This can sometimes locally correct the drift in live-cell imaging or in case the sample deforms. Needs modification for M. Drift correction based on cross-correlation.','Algorithm: the data set is divided into [timepoints] blocks, for which superresolution images are calculated. The displacement between all images is calcualted with a FFT-based cross-correlation algorithm. The position of the maxima of the cross-correlation curve are fitted with sub-pixel accuracy with a free elliptical Gaussian.',...
     'A robust estimator is used to calculate the drift vs frame from all pairwise displacements.','All localiaztions visible in the superresolution image are used to infer the drift. Use [Render]...[Layer] to control this.',...
     'If two files are loaded, their drift is calculated together and they are saved as one file with their filenumbers copied to the channel field.',' ','(c) Jonas Ries, EMBL, 2015'};
 end

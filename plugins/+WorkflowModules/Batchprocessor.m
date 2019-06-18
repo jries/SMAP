@@ -1,4 +1,7 @@
 classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterface
+%     Batch processing for a) fitting of batch files, b) of multiple image
+%     stacks, c) automatic fitting of any data written to a default
+%     directory
     properties %(Access=private)
         mainbatchfile
         onlinebatch=false;
@@ -410,4 +413,5 @@ pard.stop.position=[12.3,4.5];
 pard.stop.Width=.5;
 
 pard.plugininfo.type='ProcessorPlugin'; 
+pard.plugininfo.description='Batch processing for a) fitting of batch files, b) of multiple image stacks, c) automatic fitting of any data written to a default directory';
 end

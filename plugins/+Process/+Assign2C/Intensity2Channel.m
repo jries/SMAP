@@ -1,4 +1,6 @@
 classdef Intensity2Channel<interfaces.DialogProcessor
+%     Assigns identity (color) to localizations based on intensities in
+%     both camerachannels
     methods
         function obj=Intensity2Channel(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -121,4 +123,5 @@ pard.combineunassigned.object=struct('String','Associate unassiged locs','Style'
 pard.combineunassigned.position=[7,1];
 pard.combineunassigned.Width=2;
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Assigns identity (color) to localizations based on intensities in both camerachannels';
 end

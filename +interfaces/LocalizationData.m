@@ -638,17 +638,24 @@ classdef LocalizationData<interfaces.GuiParameterInterface
             
         end
         
-        function regroup(obj,dx,dt)  
+        function regroup(obj,dx,dt,mode)  
             %groups localization data.  
             %regroup(dx,dt): dx: maximum distance to be grouped. dt:
             %maximum number of frames localzaiton can be dark. if not
             %specified: taken from global parameters 'group_dx' and
             %'group_dt'
+            %mode: 1. fix, 2. use locprec. Then dx is minmax vector
             if nargin<2
                 dx=obj.getPar('group_dx');
             end
             if nargin<3
                 dt=obj.getPar('group_dt');
+            end
+            if nargin<4
+                mode=obj.getPar('group_mode');
+                if mode==2 %locprec
+                    dx=obj.getPar('group_dxminmax');
+                end
             end
             
 %             obj.setPar('status','grouping')
@@ -658,6 +665,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
             if isfield(obj.loc,'class')
                 groupfields{end+1}='class';
             end
+            grouper.mode=mode;
             grouper.connect(dx,dt,groupfields{:})
             grouper.combine;  
             obj.filter;

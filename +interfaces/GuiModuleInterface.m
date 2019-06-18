@@ -614,8 +614,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 end 
             
             end
-           
-            obj.initGui;
+            obj.initGui; %exchanged 
             obj.setSyncParameters;
             obj.initializeGuiParameters;
        end

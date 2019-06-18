@@ -1,4 +1,5 @@
 classdef saver_settings<interfaces.DialogProcessor
+%     saves SMAP GUI settings
     methods
         function obj=saver_settings(varargin)  
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -6,6 +7,7 @@ classdef saver_settings<interfaces.DialogProcessor
         end
         function pard=guidef(obj)
             pard.plugininfo.type='SaverPlugin';
+            pard.plugininfo.description='saves SMAP GUI settings';
         end
             
         function out=save(obj,p)

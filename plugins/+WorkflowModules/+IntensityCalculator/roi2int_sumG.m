@@ -53,4 +53,5 @@ info.name='sum';
 info.fields={'sum_n','sum_bg'};
 pard.plugininfo=info;
 pard.plugininfo.type='WorkflowIntensity'; 
+pard.plugininfo.description='Determines intensity and background in a ROI around localizations by summing up the ROI and a larger ROI';
 end

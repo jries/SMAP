@@ -51,7 +51,7 @@ end
 function out=runintern(obj,p)
 R=p.R;
 dR=p.dR;
-
+legendtheta={};
 locs=obj.getLocs({'xnm','ynm','znm','xnmrot','ynmrot','locprecnm','locprecznm','frame'},'layer',1,'size',p.se_siteroi(1)/2);
 if isempty(locs.xnm)
     out=[];

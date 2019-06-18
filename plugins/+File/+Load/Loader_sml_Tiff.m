@@ -1,4 +1,7 @@
-classdef Loader_sml_Tiff<interfaces.DialogProcessor;
+classdef Loader_sml_Tiff<interfaces.DialogProcessor
+%     loads SMAP localiaztion data including single diffraction limited
+%     tiff images, transforms images and performs wavelet filtering on
+%     those images
     methods
         function obj=Loader_sml_Tiff(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -190,6 +193,7 @@ info.extensions={'*.mat';'*.*'};
 info.dialogtitle='select any SMLM file (_sml or _fitpos)';
 pard.plugininfo=info;
 pard.plugininfo.type='LoaderPlugin';
+pard.plugininfo.description='Loads SMAP localiaztion data including single diffraction limited tiff images, transforms images and performs wavelet filtering on those images';
 end
 
 % function loadfile(obj,p,file,mode)
