@@ -33,7 +33,7 @@ classdef zSALM<interfaces.DialogProcessor
             
             is=locs.(fsa)(indbright);
             iu=locs.(fua)(indbright);
-            rsu=double(is./(iu));
+            rsu=double(is./(iu))/p.rfactor*intensitySALM(0);
 %             rsu=real(log(rsu));
             znm=double(locs.znm(indbright));
             
@@ -130,6 +130,23 @@ classdef zSALM<interfaces.DialogProcessor
             obj.locData.setloc('locprecznm',locprecznmnew);
             obj.locData.setloc('locprecznm_salm',locprecznmnew);
             obj.locData.regroup;
+            
+            %determine maximum position
+            rrange=0:0.02:2.3;
+            zrange=zrange(1):5:zrange(end);
+              hzf=histcounts2(rsu(indf),znm(indf),rrange,zrange);
+            
+             h=fspecial('gaussian',11,4);
+             hf=imfilter(hzf,h);
+             factor=5;
+             hf=imresize(hf,factor,'cubic');
+             [~,linind]=max(hf(:));
+             [x,y]=ind2sub(size(hf),linind);
+             rmax= x/factor*(rrange(2)-rrange(1))+rrange(1);
+             zmax= y/factor*(zrange(2)-zrange(1))+zrange(1);
+             plot(ax2,zmax,rmax,'k*')
+             disp([rmax,zmax])
+             clipboard('copy',num2str([rmax,zmax]))
             out=[];
         end
         
@@ -216,6 +233,13 @@ pard.zranget.Width=0.7;
 pard.zrange.object=struct('Style','edit','String','-400 800');
 pard.zrange.position=[4,4.2];
 pard.zrange.Width=0.8;
+
+pard.rfactort.object=struct('Style','text','String','SA/UA ratio on coverslip');
+pard.rfactort.position=[5,1];
+pard.rfactort.Width=1.3;
+pard.rfactor.object=struct('Style','edit','String','1.');
+pard.rfactor.position=[5,2.3];
+pard.rfactor.Width=0.4;
 
 
  pard.syncParameters={{'locFields','assignfield1',{'String'}},{'locFields','assignfield2',{'String'}},...
