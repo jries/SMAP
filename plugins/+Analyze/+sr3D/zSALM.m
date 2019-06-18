@@ -46,7 +46,7 @@ classdef zSALM<interfaces.DialogProcessor
                 zrange=p.zrange;
             end
                  
-            rrange=-0.2:0.01:2;
+            rrange=-0.2:0.01:2.3;
             indf=znm>max(quantile(znm,0.005),zrange(1)) & znm<min(quantile(znm,0.995),zrange(end))...
                 & rsu>max(quantile(rsu,0.005),rrange(1)) & rsu<min(quantile(rsu,0.995),rrange(end));
     
@@ -146,7 +146,8 @@ classdef zSALM<interfaces.DialogProcessor
              zmax= y/factor*(zrange(2)-zrange(1))+zrange(1);
              plot(ax2,zmax,rmax,'k*')
              disp([rmax,zmax])
-             clipboard('copy',num2str([rmax,zmax]))
+             results=sprintf('%3.4f \t',[rmax,zmax]);
+             clipboard('copy',results)
             out=[];
         end
         
