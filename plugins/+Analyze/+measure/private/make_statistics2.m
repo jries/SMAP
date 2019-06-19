@@ -97,10 +97,10 @@ end
 if ploton
 %     axf=initaxis(p.resultstabgroup,'frames');
     axf=ax6;
-    hold off
+    hold(axf, 'off')
     for k=datrange
         plothf(k)=plot(axf,stat.frames.histogram(k).n,stat.frames.histogram(k).h);
-        hold on
+           hold(axf, 'on')
         plot(axf,ones(2,1)*stat.frames.falloff(k),[0,max(stat.frames.histogram(k).h)])
     end
     legend(plothf,slegend);
