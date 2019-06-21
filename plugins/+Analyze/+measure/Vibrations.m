@@ -59,9 +59,12 @@ classdef Vibrations<interfaces.DialogProcessor
 %             out.error='this error occured because you did something wrong'; %if an error occoured, you can output it in the status bar with this command.
         end
         function pard=guidef(obj)
-%             pard.locfield.object=struct('String',{{' '}},'Style','popupmenu','Value',1);
-%             pard.locfield.position=[1,1];
-%             
+            pard.text.object=struct('String','Analyze vibration measurements. Only 1 bead in ROI.','Style','text');
+            pard.text.position=[1,1];
+            pard.text.Width=4;
+            pard.text2.object=struct('String','Manually click Refresh in MM property browser after changing exposure time.','Style','text');
+            pard.text2.position=[2,1];
+            pard.text2.Width=4;
 %             pard.setbinwidth.object=struct('String','set binwidth','Style','checkbox','Value',0);
 %             pard.setbinwidth.position=[1,2];
 %             pard.binwidth.object=struct('String','','Style','edit','Value',0);
