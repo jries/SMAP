@@ -49,8 +49,13 @@ classdef Vibrations<interfaces.DialogProcessor
                     plot(axfx(f),freq,xfp);
                     xlabel(axfx(f),'frequency (Hz)')
                     ylabel(axfx(f),'Amplitude (nm), 2*fft (x)');
+                    
                     hold(axx(f),'on')
                     hold(axfx(f),'on')
+                    [m,ind]=max(xfp);
+                    mfreq=freq(ind);
+                    title(axfx(f),['maximum at ' num2str(mfreq) ' Hz']);
+                    plot(axfx(f),mfreq,m,'x')
                 end
 
             end
