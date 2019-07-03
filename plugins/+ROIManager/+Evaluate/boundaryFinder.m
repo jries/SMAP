@@ -44,7 +44,7 @@ pard.t_DistFScale.object=struct('Style','text','String','DistF scale');
 pard.t_DistFScale.position=[3,1];
 pard.t_DistFScale.Width=1;
 
-pard.DistFScale.object=struct('Style','edit','String',4e-2);
+pard.DistFScale.object=struct('Style','edit','String',7e-2);
 pard.DistFScale.position=[3,2];
 pard.DistFScale.TooltipString = 'Higher this value to tolerate slower increase of foreground density (Df)';
 pard.DistFScale.Width=1;
@@ -53,7 +53,7 @@ pard.t_offSetScale.object=struct('Style','text','String','Offset scale');
 pard.t_offSetScale.position=[3,3];
 pard.t_offSetScale.Width=1;
 
-pard.offSetScale.object=struct('Style','edit','String',5e-2);
+pard.offSetScale.object=struct('Style','edit','String',1e-1);
 pard.offSetScale.position=[3,4];
 pard.offSetScale.TooltipString = 'Higher this value to allow higher background density';
 
