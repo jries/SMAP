@@ -40,13 +40,22 @@ pard.slideStep.object=struct('Style','edit','String',5);
 pard.slideStep.position=[2,3];
 pard.slideStep.TooltipString = 'If you set it as 5, it means during the density comparison, every grid value will be campared to its following 4 (5 minus 1, which means the reference grid itself) right neighbors';
 
-pard.t_adjM.object=struct('Style','text','String','Adjustment of M');
-pard.t_adjM.position=[3,1];
-pard.t_adjM.Width=2;
+pard.t_DistFScale.object=struct('Style','text','String','DistF scale');
+pard.t_DistFScale.position=[3,1];
+pard.t_DistFScale.Width=1;
 
-pard.adjM.object=struct('Style','edit','String',1.0003);
-pard.adjM.position=[3,3];
-pard.adjM.TooltipString = 'If you set it as 1.0003, it means during the optimization, if the measurment of current step (Mcur) is 0.0003-time worse than the measurment of the previous step (Mpre), Mcur will still be considered as a good result. The measurment, which defines the boundary is good or not, can be definde by users.';
+pard.DistFScale.object=struct('Style','edit','String',4e-2);
+pard.DistFScale.position=[3,2];
+pard.DistFScale.TooltipString = 'Higher this value to tolerate slower increase of foreground density (Df)';
+pard.DistFScale.Width=1;
+
+pard.t_offSetScale.object=struct('Style','text','String','Offset scale');
+pard.t_offSetScale.position=[3,3];
+pard.t_offSetScale.Width=1;
+
+pard.offSetScale.object=struct('Style','edit','String',5e-2);
+pard.offSetScale.position=[3,4];
+pard.offSetScale.TooltipString = 'Higher this value to allow higher background density';
 
 pard.t_mergeSteps.object = struct('Style','text','String','Order of merging steps');
 pard.t_mergeSteps.position=[4,1];
