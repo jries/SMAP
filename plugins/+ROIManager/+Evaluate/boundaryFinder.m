@@ -46,7 +46,7 @@ pard.t_DistFScale.Width=1;
 
 pard.DistFScale.object=struct('Style','edit','String',7e-2);
 pard.DistFScale.position=[3,2];
-pard.DistFScale.TooltipString = 'Higher this value to tolerate slower increase of foreground density (Df)';
+pard.DistFScale.TooltipString = 'Lower this value to tolerate slower increase of foreground density (Df)';
 pard.DistFScale.Width=1;
 
 pard.t_offSetScale.object=struct('Style','text','String','Offset scale');
@@ -81,44 +81,9 @@ pard.minWidth.object = struct('Style','edit','String',2);
 pard.minWidth.position=[6,3];
 pard.minWidth.TooltipString = 'minimum width of a step (arbitrary unit)';
 
-pard.t_method.object=struct('Style','text','String','Method (rough boundary)');
-pard.t_method.position=[7,1];
-pard.t_method.Width=2;
-
-pard.method.object=struct('Style','popupmenu','String',{{'Contour line','Percentile','cumulative'}}, 'Value', 3, 'Callback', {{@mathod_callBack,obj}});
-pard.method.position=[7,3];
-pard.method.Width=2;
-
-pard.t_std.object = struct('Style','text','String','Std.');
-pard.t_std.position=[8,1];
-pard.t_std.Width = 0.5;
-pard.t_std.Visible = 'off';
-
-pard.std.object = struct('Style','edit','String',100);
-pard.std.position=[8,1.5];
-pard.std.TooltipString = 'minimum width of a step (arbitrary unit)';
-pard.std.Width = 0.5;
-pard.std.Visible = 'off';
-
-pard.t_contourLevel.object = struct('Style','text','String','Level');
-pard.t_contourLevel.position=[8,2];
-pard.t_contourLevel.Width = 0.5;
-pard.t_contourLevel.Visible = 'off';
-
-pard.contourLevel.object = struct('Style','edit','String',90);
-pard.contourLevel.position=[8,2.5];
-pard.contourLevel.TooltipString = 'The level (out of 100) chosen as the outline of the rough boundary';
-pard.contourLevel.Width = 0.5;
-pard.contourLevel.Visible = 'off';
-
-pard.t_prctile.object = struct('Style','text','String','Prctile');
-pard.t_prctile.position=[8,1];
-pard.t_prctile.Width = 1;
-
-pard.prctile.object = struct('Style','edit','String',85);
-pard.prctile.position=[8,2];
-pard.prctile.TooltipString = 'Percentile of dx at each time point';
-pard.prctile.Width = 0.5;
+pard.displayOpt.object = struct('Style','checkbox','String','show optimisation');
+pard.displayOpt.position=[7,1];
+pard.displayOpt.Width = 2;
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
