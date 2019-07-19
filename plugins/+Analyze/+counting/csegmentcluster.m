@@ -1,4 +1,5 @@
 classdef csegmentcluster<interfaces.DialogProcessor
+%     Watershed-based segmentation of clusters
     methods
         function obj=csegmentcluster(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});  
@@ -41,4 +42,5 @@ pard.segment_maxPSF.isnumeric=1;
 
 pard.plugininfo.name='segment cluster';
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Watershed-based segmentation of clusters';
 end

@@ -1,4 +1,5 @@
 classdef keepfiltered<interfaces.DialogProcessor
+%     Keeps only filtered localizations. Can be used to reduce file size.
     methods
         function obj=keepfiltered(varargin)     
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -6,7 +7,6 @@ classdef keepfiltered<interfaces.DialogProcessor
         
         function out=run(obj,p) 
             out=[];
-%            switch p.connectmode.selection
                 obj.setPar('undoModule','RemoveLocs');
                 notify(obj.P,'backup4undo');
                 
@@ -20,23 +20,7 @@ classdef keepfiltered<interfaces.DialogProcessor
                 indbad=~indgood;
                 obj.locData.removelocs(indbad)
                 obj.locData.filter;
-                obj.locData.regroup;
-%                 
-%                 
-%                case 'connect->unconnect'
-%                    disp('if problems, tell Jonas')
-%                    indunc=obj.locData.loc.channel==p.channel;
-%                    indcon=obj.locData.grouploc.channel==p.channel;
-%                    obj.locData.removelocs(indunc);
-%                    loccopy=obj.locData.copy;
-%                    loccopy.removelocs(~indcon,'grouploc');
-%                    loccopy.loc=loccopy.grouploc;
-%                    obj.locData.addLocData(loccopy);
-%                    obj.locData.regroup;
-% 
-%                otherwise 
-%                    disp('not implemented')
-%            end  
+                obj.locData.regroup; 
         end
         function pard=guidef(obj)
             pard=guidef;
@@ -53,12 +37,6 @@ function pard=guidef
 
 pard.textb.object=struct('String','keeps only the filtered localizations','Style','text');
 pard.textb.position=[1,1];
-% pard.channel.object=struct('String','1','Style','edit');
-% pard.channel.position=[1,2];
-% 
-% 
-% 
-% pard.connectmode.object=struct('String','connect->unconnect|unconnect->connect','Style','popupmenu','Value',1);
-% pard.connectmode.position=[2,1];
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Keeps only filtered localizations. Can be used to reduce file size.';
 end

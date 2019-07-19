@@ -1,5 +1,7 @@
 classdef Viewer3DV01<interfaces.DialogProcessor
-    % Viewer3DV01 localization based 3D viewer for superresolution data.
+    % Viewer3DV01 Interactive 3D viewerfor localization data. Same render
+    % options as the standard 2D renderer, includes stereoscopic rendering
+    % and export of animations.
     properties
         axis
         timer

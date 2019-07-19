@@ -1,5 +1,5 @@
-
 function imout=drawerSMAP(him,p)
+% Normalizes rendered superresolution images based on settings in a parameter structure
 if nargin==0
     imout={'imaxtoggle','imax_min','sr_sizeRecPix','lut','colorfield_min','colorfield_max','gamma','normalizeFoV','lutinv'};
     return

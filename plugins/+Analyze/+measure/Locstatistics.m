@@ -1,6 +1,12 @@
 classdef Locstatistics<interfaces.DialogProcessor
-    % Locstatistics calculates all kind of statistics for localization
-    % data.
+% Locstatistics calculates all kind of statistics for localization data.
+%     'photons: N: number of localizations. <P>: mean.  mu: decay constant of exponential fit. 
+%     'locprec: max, median and position of rising edge. 
+%     'lifetime: how many frames does a fluorophore live (from grouping). mu: from exponential fit.
+%     'background: mean
+%     'either znm or PSFxnm.
+%     'locprecznm 
+%     'frames: number of lcoalizations vs. frame. To see when localizations drop off.
     methods
         function obj=Locstatistics(varargin)           
             obj@interfaces.DialogProcessor(varargin{:}) 

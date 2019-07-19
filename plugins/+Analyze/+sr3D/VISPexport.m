@@ -1,5 +1,8 @@
 classdef VISPexport<interfaces.DialogProcessor
-
+% Exports localizations in a format compatible with VISP: El Beheiry,
+% Mohamed, and Maxime Dahan. “ViSP: Representing Single-Particle
+% Localizations in Three Dimensions.” Nature Methods 10, no. 8 (August 1,
+% 2013): 689–90. https://doi.org/10.1038/nmeth.2566.
     methods
         function obj=VISPexport(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -9,6 +12,7 @@ classdef VISPexport<interfaces.DialogProcessor
             pard.plugininfo.type='ProcessorPlugin';
             pard.vispformat.object=struct('Style','popupmenu','String',{{'2D','2D LP','3D','3D LP'}},'Value',3);
             pard.vispformat.position=[1,1];
+            pard.plugininfo.description='exports localizations in a format compatible with VISP. Exports localizations to be used with: El Beheiry, Mohamed, and Maxime Dahan. “ViSP: Representing Single-Particle Localizations in Three Dimensions.” Nature Methods 10, no. 8 (August 1, 2013): 689–90. https://doi.org/10.1038/nmeth.2566.';
         end
         
         function out=run(obj,p)

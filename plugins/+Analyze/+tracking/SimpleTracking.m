@@ -1,5 +1,5 @@
 classdef SimpleTracking<interfaces.DialogProcessor
-    %
+    %Links molecules in consecutive frames for SPT analysis
     methods
         function obj=SimpleTracking(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -112,7 +112,7 @@ pard.overwritetracks.Width=1.5;
 % pard.overwritetracks.TooltipString=pard.goodt.TooltipString;
 
 
-pard.plugininfo.description=sprintf('uTrack');
+pard.plugininfo.description=sprintf('Links molecules in consecutive frames for SPT analysis');
 pard.plugininfo.type='ProcessorPlugin';
 pard.plugininfo.Name='uTrack';
 end

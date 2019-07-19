@@ -1,4 +1,5 @@
 classdef cloadhist<interfaces.DialogProcessor
+%     loads histogram of localizations/cluster
     methods
         function obj=cloadhist(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -92,4 +93,5 @@ pard.savehist.position=[5,1];
 
 pard.plugininfo.name='load brightness histograms';
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='loads histogram of localizations/cluster';
 end

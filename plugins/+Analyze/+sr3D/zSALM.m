@@ -1,4 +1,6 @@
 classdef zSALM<interfaces.DialogProcessor
+%     converts reltive intensities of super- and undercritical channel into
+%     z position
     properties
         
     end
@@ -250,7 +252,7 @@ pard.rfactor.Width=0.4;
 %             obj.addSynchronization('filelist_short',obj.guihandles.dataselect,'String')
 pard.plugininfo.type='ProcessorPlugin';
 
-
+pard.plugininfo.description='converts reltive intensities of super- and undercritical channel into z position.'
 end
 
 function err=zerrSALM(fitp,Ns,Nu,bgs,bgu)

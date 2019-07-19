@@ -1,4 +1,6 @@
 classdef CheckCalibration<interfaces.DialogProcessor
+%     Plots real position of beady vs fitted position of beads to validate
+%     calibration
     properties
         zold
     end
@@ -162,5 +164,5 @@ pard.dz.object=struct('String','10','Style','edit');
 pard.dz.position=[2,2];
 
 pard.plugininfo.type='ProcessorPlugin';
-pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Plots real position of beady vs fitted position of beads to validate calibration';
 end

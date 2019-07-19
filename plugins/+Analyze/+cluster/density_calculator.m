@@ -164,7 +164,7 @@ pard.countingsize_z.position=[4,2];
 pard.countingsize_z.isnumeric=1;
 pard.countingsize_z.object.TooltipString=sprintf('size of cylinder or sigma of gauss in z direction');
 pard.plugininfo.name='density calculator (number of neighbours)';
-pard.plugininfo.description= 'density_calculator looks at the neighborhood and counts number of neighbours. If grouped or ungrouped data is used depends on setting in layers.';
+pard.plugininfo.description= 'density_calculator looks at the neighborhood of each localizations and counts number of neighbours in a defined region If grouped or ungrouped data is used depends on setting in layers.';
 pard.plugininfo.type='ProcessorPlugin';
 
 end
