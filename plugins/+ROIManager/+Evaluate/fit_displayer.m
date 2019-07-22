@@ -13,18 +13,30 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             % fitting = SMLMModelFit({m1}, 'SolverName', 'particleswarm','SolverOptions',{'UseVectorized',true, 'Display','iter'});
             fitting.init                     % initiation
             fitting.roiSize = 500;
-            fitResult = g.locData.SE.sites(k).evaluation.SMLMModelFit.fitResult;
+            fitResult = obj.site.evaluation.SMLMModelFit.fitResult;
             fitting.allParsArg = fitResult;
             
+            locs = obj.getLocs({'xnm','ynm','znm','locprecnm'},'grouping','grouped','layer',1, 'size', p.se_siteroi);
+            locs.xnm = locs.xnmrot;
+            locs.ynm = locs.ynmrot;
             ax1 = obj.setoutput('Projection',1);
             subplot(2,2,1,ax1);
+            axes(ax1);
             ax1_2 = subplot(2,2,2);
+            axes(ax1);
             ax1_3 = subplot(2,2,3);
             fitting.plot(locs,'Projection', 'xy', 'pixelSize', 2, 'axes', ax1);
             fitting.plot(locs,'Projection', 'xz', 'pixelSize', 2, 'axes', ax1_2);
             fitting.plot(locs,'Projection', 'yz', 'pixelSize', 2, 'axes', ax1_3);
             
+            title(ax1, 'xy')
+            title(ax1_2, 'zy')
+            title(ax1_3, 'xz')
+            
             ax2 = obj.setoutput('Point_cloud',1);
+            xlabel(ax2, 'x')
+            ylabel(ax2, 'y')
+            zlabel(ax2, 'z')
             fitting.plot(locs, 'plotType', 'point', 'pixelSize', 2, 'axes',ax2);
         end
         function pard=guidef(obj)
