@@ -1,5 +1,5 @@
 classdef AnalyzeSPT<interfaces.DialogProcessor
-    %
+    %Interactive analysis of SPT data
     methods
         function obj=AnalyzeSPT(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -910,7 +910,7 @@ pard.saveD.position=[4,1];
 pard.saveD.Width=3;
 
 
-pard.plugininfo.description=sprintf('AnalyzeSPT');
+pard.plugininfo.description=sprintf('Interactive analysis of SPT data');
 pard.plugininfo.type='ProcessorPlugin';
 pard.plugininfo.Name='AnalyzeSPT';
 end

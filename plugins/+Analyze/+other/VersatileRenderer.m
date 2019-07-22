@@ -1,4 +1,5 @@
 classdef VersatileRenderer<interfaces.DialogProcessor
+%     Render any field vs any other using any 3rd field for coloring
     methods
         function obj=VersatileRenderer(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -159,5 +160,6 @@ pard.max2.position=[5,3];
 
 pard.syncParameters={{'locFields','assignfield1',{'String'}},{'locFields','assignfield2',{'String'}}};%,{'locFields','sigmafield2',{'String'}},{'locFields','sigmafield1',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Render any field vs any other using any 3rd field for coloring';
 end
 

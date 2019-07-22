@@ -1,5 +1,9 @@
 classdef lineprofile<interfaces.DialogProcessor
-    % LINEPROFILE Calculates profiles along a linear ROI and fits it with a model of choice
+    % LINEPROFILE Calculates profiles along a linear ROI and fits it with a
+    % model of choice. Flat: step function convolved with Gaussian
+    % (=Erf). Disk: Projection of a homogeneously filled disk, convolved
+    % with Gaussian. Ring: Projection of a ring, convolved with
+    % Gaussian. Distance: Two Gaussians in a distance d.
     methods
         function obj=lineprofile(varargin)        
             obj@interfaces.DialogProcessor(varargin{:});

@@ -182,7 +182,7 @@ pard.rpix.position=[3,4];
 pard.rpix.Width=.5;
 
 pard.plugininfo.name='Spatial Point Patterns';
-pard.plugininfo.description= 'Calculates spatial statistics based on pair correlation and Ripleys K function.';
+pard.plugininfo.description= 'Calculates spatial statistics based on pair correlation and Ripleys K function. pair correlation functions calculated according to: Sengupta, Prabuddha, Tijana Jovanovic-Talisman, Dunja Skoko, Malte Renz, Sarah L Veatch, and Jennifer Lippincott-Schwartz. â€œProbing Protein Heterogeneity  Nature Methods 8 (September 18, 2011): 969.';
 pard.plugininfo.type='ProcessorPlugin';
 
 end

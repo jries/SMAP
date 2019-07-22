@@ -1,4 +1,6 @@
 function [image,layers]=TotalRender(locData,pall,filterremove,indin)
+% Executes renderSMAP, drawerSMAP and displayerSMAP to directly go from
+% localizations to final image
 if nargin<4
     noindin=true;
 else

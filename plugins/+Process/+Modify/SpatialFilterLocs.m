@@ -1,4 +1,7 @@
 classdef SpatialFilterLocs<interfaces.DialogProcessor
+%     Calculates  mean / median / max / min / quantile of a specific field
+%     of localizations in an area around each localization. Useful for
+%     displaying color-coded images.
     methods
         function obj=SpatialFilterLocs(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -150,6 +153,7 @@ pard.dataselectall.object.TooltipString='apply on all';
 pard.syncParameters={{'filelist_short','dataselect',{'String'}},{'locFields','locfield',{'String'}}};
 
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Calculates  mean / median / max / min / quantile of a specific field of localizations in an area around each localization. Useful for displaying color-coded images.';
 end
 
 

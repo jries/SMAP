@@ -1,4 +1,6 @@
 classdef CompareToGroundTruth<interfaces.DialogProcessor
+%     Compares fitted data of simulated images to ground truth and
+%     calculates several quality metrices
     methods
         function obj=CompareToGroundTruth(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -215,10 +217,6 @@ pard.t3.Width=1;
 pard.searchradius.object=struct('Style','edit','String','100 300');
 pard.searchradius.position=[1,4.5];
 pard.searchradius.Width=.5;
-% pard.onlyfiltered.object=struct('Style','checkbox','String','Export filtered (displayed) localizations.','Value',1);
-% pard.onlyfiltered.position=[2,1];
-% pard.onlyfiltered.Width=2;
-% pard.t1.Width=2;
 
 
 pard.checklayer.object=struct('Style','checkbox','String','','Value',1);
@@ -246,28 +244,7 @@ pard.targetdata.position=[3,2.5];
 pard.targetdata.Width=1;
 
 
-% pard.forceungrouped.object=struct('Style','checkbox','String','Force ungrouped localiyations','Value',1);
-% pard.forceungrouped.position=[3,3];
-% pard.forceungrouped.Width=2;
-% 
-% pard.shiftpix.object=struct('Style','checkbox','String','Shift by 0.5 camera pixels','Value',1);
-% pard.shiftpix.position=[3,1];
-% pard.shiftpix.Width=2;
-% 
-% 
-% 
-% 
-% pard.shiftframe.object=struct('Style','checkbox','String','Shift frame by +1','Value',1);
-% pard.shiftframe.position=[4,1];
-% pard.shiftframe.Width=4;
-% 
-% pard.comparer.object=struct('Style','popupmenu','String',{{'2D, 2013','3D, 2016'}},'Value',2);
-% pard.comparer.position=[5,1];
-% pard.comparer.Width=4;
-% 
-% pard.wobblebutton.object=struct('Style','pushbutton','String','Wobble.m','Callback',{{@wobble_callback,obj}});
-% pard.wobblebutton.position=[4,4];
-% pard.wobblebutton.Width=1;
 pard.syncParameters={{'filelist_short','refdata',{'String'}},{'filelist_short','targetdata',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Compares fitted data of simulated images to ground truth and calculates several quality metrices';
 end
