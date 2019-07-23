@@ -19,7 +19,7 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             fitting.allParsArg = fitResult;
             
             % fetch locs
-            locs = obj.getLocs({'xnm','ynm','znm','locprecnm'},'grouping','grouped','layer',1, 'size',[p.se_siteroi p.se_siteroi]);
+            locs = obj.getLocs({'xnm','ynm','znm','locprecnm','locprecznm'},'grouping','grouped','layer',1, 'size',[p.se_siteroi p.se_siteroi]);
             locs.xnm = locs.xnmrot;
             locs.ynm = locs.ynmrot;
             
@@ -45,10 +45,12 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             locs2 = fitting.locsHandler(locs, lPars);
             
             %% XY section
-            indXY = locs2.znm<70&locs2.znm>-70; % +-70 round the znm
+            halfThickness=25;
+            gaussFactor=0.4;
+            indXY = locs2.znm<halfThickness&locs2.znm>-halfThickness; % +-70 round the znm
             x = locs2.xnm(indXY);
             y = locs2.ynm(indXY);
-            sigma = locs2.locprecnm(indXY);
+            sigma = gaussFactor*locs2.locprecnm(indXY);
             img = renderImage(x,y,sigma,sigma);
             ax3 = obj.setoutput('Cross_section',1);
             imagesc(ax3, img)
@@ -82,11 +84,12 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             ax3_3 = subplot(2,2,3);
             
             %% YZ section
-            indYZ = locs2.xnm<70&locs2.xnm>-70; % +-70 round the xnm
+            indYZ = locs2.xnm<halfThickness&locs2.xnm>-halfThickness; % +-70 round the xnm
             y = locs2.ynm(indYZ);
             z = locs2.znm(indYZ);
-            sigma = locs2.locprecnm(indYZ);
-            img = renderImage(y,z,sigma,sigma.*2);
+            sigma = gaussFactor*locs2.locprecnm(indYZ);
+            sigmaZ = gaussFactor*locs2.locprecznm(indYZ);
+            img = renderImage(y,z,sigma,sigmaZ);
             imagesc(ax3_2, img)
             colormap(ax3_2, mymakelut('red hot'))
             
@@ -115,11 +118,12 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             set(ax3_2, 'Xdir','reverse')
             
             %% ZX section
-            indZX = locs2.ynm<70&locs2.ynm>-70; % +-70 round the ynm
+            indZX = locs2.ynm<halfThickness&locs2.ynm>-halfThickness; % +-70 round the ynm
             x = locs2.xnm(indZX);
             z = locs2.znm(indZX);
-            sigma = locs2.locprecnm(indZX);
-            img = renderImage(z,x,sigma.*2,sigma);
+            sigma = gaussFactor*locs2.locprecnm(indZX);
+            sigmaZ = gaussFactor*locs2.locprecznm(indZX);
+            img = renderImage(z,x,sigmaZ,sigma);
             imagesc(ax3_3, img)
             colormap(ax3_3, mymakelut('red hot'))
             set(ax3_3, 'Ydir','normal')
