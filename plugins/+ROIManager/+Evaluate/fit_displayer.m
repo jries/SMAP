@@ -6,6 +6,12 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj,p)
+            if p.reverse_z
+                reverseFactor = -1;
+            else
+                reverseFactor = 1;
+            end
+            
             out=[];
             % make use of the SMLMModelFit class
             m1 = functionModel('C:\Users\ries\git\ries-private\SMLMModelFitter\models\CME3DContinuous.m');         % model 1
@@ -22,6 +28,7 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             locs = obj.getLocs({'xnm','ynm','znm','locprecnm','locprecznm'},'grouping','grouped','layer',1, 'size',[p.se_siteroi p.se_siteroi]);
             locs.xnm = locs.xnmrot;
             locs.ynm = locs.ynmrot;
+            locs.znm = reverseFactor*locs.znm;
             
             % plot the result of DBSCAN clustering
             [~,re] = DBSCANsmap(locs, 30, 10);
@@ -44,9 +51,19 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             lPars = fitting.exportPars(1,'lPar');
             locs2 = fitting.locsHandler(locs, lPars);
             
-            %% XY section
+            %% Sections
+            % get mPars
+            mPars = fitting.exportPars(1,'mPar');
+            closeAngle = mPars.closeAngle*pi/180;
+            R = mPars.radius;           % radius of the sphere
+            r = R*cos(closeAngle);      % radius of the open
+            pixelSize = 2;
+            theta = 0:pi/360:2*pi;      % full circle
             halfThickness=25;
             gaussFactor=0.4;
+            
+            % XY section
+            [~,modP] = fitting.model{1}.modelFun(mPars,4); % offset determined by the model
             indXY = locs2.znm<halfThickness&locs2.znm>-halfThickness; % +-70 round the znm
             x = locs2.xnm(indXY);
             y = locs2.ynm(indXY);
@@ -56,13 +73,7 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             imagesc(ax3, img)
             colormap(ax3, mymakelut('red hot'))
             
-            % get mPars
-            mPars = fitting.exportPars(1,'mPar');
-            closeAngle = mPars.closeAngle*pi/180;
-            R = mPars.radius;           % radius of the sphere
-            r = R*cos(closeAngle);      % radius of the open
-            pixelSize = 2;
-            theta = 0:pi/180:2*pi;      % full circle
+            
             
             % open
             xref = (r.*cos(theta)+fitting.roiSize/2)./pixelSize;
@@ -83,7 +94,7 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             axes(ax3)
             ax3_3 = subplot(2,2,3);
             
-            %% YZ section
+            % YZ section
             indYZ = locs2.xnm<halfThickness&locs2.xnm>-halfThickness; % +-70 round the xnm
             y = locs2.ynm(indYZ);
             z = locs2.znm(indYZ);
@@ -96,10 +107,9 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             % close angle
             % open to the top
             thetaAnchor2 = pi-closeAngle;       % the reflection of the close angle in the 2nd quadrant
-            theta = [closeAngle:-pi/180:-pi/2 3*pi/2:-pi/180:thetaAnchor2];
+            theta = [closeAngle:-pi/360:-pi/2 3*pi/2:-pi/360:thetaAnchor2];
             theta = -theta;                     % reverse the circle (up-side-down)
             % after the reverse, now the open is to the bottom
-            [~,modP] = fitting.model{1}.modelFun(mPars,4);
             zrefClose = (R.*sin(theta)-modP.zOffset+fitting.roiSize/2)./pixelSize;
             yrefClose = (R.*cos(theta)+fitting.roiSize/2)./pixelSize;
             
@@ -117,7 +127,7 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             hold(ax3_2,'off')
             set(ax3_2, 'Xdir','reverse')
             
-            %% ZX section
+            % ZX section
             indZX = locs2.ynm<halfThickness&locs2.ynm>-halfThickness; % +-70 round the ynm
             x = locs2.xnm(indZX);
             z = locs2.znm(indZX);
@@ -158,6 +168,10 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
 end
 
 function pard = guidef(obj)
+    pard.reverse_z.object = struct('Style','checkbox','String','Reverse Z', 'Value', 0);
+    pard.reverse_z.position = [1 1]
+    pard.reverse_z.Width = 1;
+    
     pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
     pard.plugininfo.type='ROI_Evaluate';
 end
