@@ -1,4 +1,6 @@
 function imageo=renderSMAP(locs,p,layer,indin,transparency)
+% Renders a superresolution image from localizations based on settings in a
+% parameter structure
 %locs: interface.LocalizationData OR locs.xnm/ynm/locprecnm OR locs.x,y,s
 %(then take as is)
 if nargin==0

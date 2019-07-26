@@ -1,4 +1,9 @@
 classdef GainOffsetFFT<interfaces.DialogProcessor
+%     Estimates the camera gain and offset from raw data images. According
+%     to: Heintzmann, Rainer, Peter K. Relich, Robert P. J. Nieuwenhuizen,
+%     Keith A. Lidke, and Bernd Rieger. “Calibrating Photon Counts from a
+%     Single Image.” ArXiv:1611.05654 [Astro-Ph, Physics:Physics], November
+%     17, 2016. http://arxiv.org/abs/1611.05654.
     methods
         function obj=GainOffsetFFT(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -197,4 +202,5 @@ pard.setcampar.Width=2;
 
 % pard.syncParameters={{'loc_filename','imagefile',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Estimates the camera gain and offset from raw data images. According to: Heintzmann, Rainer, Peter K. Relich, Robert P. J. Nieuwenhuizen, Keith A. Lidke, and Bernd Rieger. “Calibrating Photon Counts from a Single Image.” ArXiv:1611.05654 [Astro-Ph, Physics:Physics], November 17, 2016. http://arxiv.org/abs/1611.05654.';
 end

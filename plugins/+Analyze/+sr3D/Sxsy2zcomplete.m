@@ -1,4 +1,5 @@
 classdef Sxsy2zcomplete<interfaces.DialogProcessor
+%     calculates z from size of PSF in x or y / channel 1/2. For biplane and astigmatic 3D
     properties
 %         cal3D
 %         outsx2sy2
@@ -174,5 +175,6 @@ pard.savebutton.position=[8,4];
 pard.syncParameters={{'cal3D_file','calfile',{'String'}}};
 
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='calculates z from size of PSF in x or y / channel 1/2. For biplane and astigmatic 3D';
 
 end

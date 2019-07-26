@@ -1,4 +1,5 @@
 classdef GuiFilterTable< interfaces.LayerInterface
+%     Filter on any attribute of the localizations
     properties
         filter
         excludefields;

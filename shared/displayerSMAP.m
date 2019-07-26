@@ -1,5 +1,5 @@
 function [imout,sr_imagehandle]=displayerSMAP(layers,p)
-
+% Combines rendered images from different channels and adds scale and color bars.
 if nargin==0
     %input parameters
     imout={'sr_layerson','sr_axes','sr_sizeRecPix','roihandle','sr_pixrec','rotationangle','sr_pos','sr_size','sr_layersseparate','layernames','sr_plotlayernames','sr_plotscalebar','sr_colorbarthickness'};

@@ -1,10 +1,10 @@
 function [srim,nlocs,Gc]=gaussrender(pos,rangex, rangey, pixelsx, pixelsy, lut,rangec,template)
+% Renders each localization as a Gaussian with a sigma proportional to the localization precision
 %pos.x, pos.y, pos.c, pos.N,pos.s
 %global variables
 persistent G
 roiks=2.7;
-if isempty(G)
-    
+if isempty(G)    
     G=creategausstemplate(roiks);
 end
 Gc=G;
@@ -13,17 +13,7 @@ if isfield(pos,'N')
     N=pos.N;
 else
     N=ones(length(pos.x),1,'like',pos.x);
-end;
-
-
-% roiks=2.7; %roiks*sigma: size of Roi used in units of sigma
-% if nargin==8
-%     G=template;
-% else
-%     G=creategausstemplate(roiks);
-% end
-
-% sG=size(G.template);
+end
 
 xpix=(pos.x-rangex(1))/pixelsx;ypix=(pos.y-rangey(1))/pixelsy; %renormalize x, y in units of pixelsize (reconsturcted image)
 spix=pos.s/pixelsx;
@@ -37,15 +27,7 @@ if nargin<6||length(lut)==1||isempty(lut)||isempty(rangec) %only one color
 else
     uselut=1;
     srec(3)=3;
-%     pos.s(pos.s<1)=.2;
-%     pos.c(pos.c>rangec(2))=rangec(2);
-%     pos.c(pos.c<rangec(1))=rangec(1);
 end
-
-
-
-
-
     srec(1)=round((rangex(2)-rangex(1))/pixelsx); %size of reconstructed image. maybe ceil is better?
     srec(2)=round((rangey(2)-rangey(1))/pixelsy);
     

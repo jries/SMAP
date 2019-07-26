@@ -1,4 +1,11 @@
 classdef CompareToGroundTruthChallenge<interfaces.DialogProcessor
+%     Compares fitted localization data to the ground truth for the SMLM
+%     challange data, using the SMLM challenge java tool. From: Sage,
+%     Daniel, Thanh-An Pham, Hazen Babcock, Tomas Lukes, Thomas Pengo,
+%     Jerry Chao, Ramraj Velmurugan, et al. “Super-Resolution Fight Club:
+%     Assessment of 2D and 3D Single-Molecule Localization Microscopy
+%     Software.” Nature Methods, April 8, 2019.
+%     https://doi.org/10.1038/s41592-019-0364-4
     properties
         induse
     end
@@ -191,5 +198,6 @@ pard.photonfactor.object=struct('Style','edit','String','1');
 pard.photonfactor.position=[7,2];
 pard.photonfactor.Width=1;
 
-pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.type='ProcessorPlugin'; 
+pard.plugininfo.description='Compares fitted localization data to the ground truth for the SMLM challange data, using the SMLM challenge java tool. From: Sage, Daniel, Thanh-An Pham, Hazen Babcock, Tomas Lukes, Thomas Pengo, Jerry Chao, Ramraj Velmurugan, et al. “Super-Resolution Fight Club: Assessment of 2D and 3D Single-Molecule Localization Microscopy Software.” Nature Methods, April 8, 2019. https://doi.org/10.1038/s41592-019-0364-4.';
 end

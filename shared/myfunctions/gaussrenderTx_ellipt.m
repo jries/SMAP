@@ -1,4 +1,5 @@
 function [srim,nlocs,Gc]=gaussrenderTx_ellipt(pos,rangex, rangey, pixelsx, pixelsy, lut,rangec,transparency)
+% Renders each localization as an elliptical ball, completely blocking localizations behind.
 %pos.x, pos.y, pos.c, pos.N,pos.sx pos.sy
 %global variables
 if isempty(pos.x)

@@ -1,4 +1,5 @@
 classdef Mathematics<interfaces.DialogProcessor
+%     Simple mathematics on localization fields
     methods
         function obj=Mathematics(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -55,15 +56,12 @@ pard.operator.position=[3,2];
 pard.value.object=struct('Style','edit','String','0');
 pard.value.position=[3,3];
 
-
-
 pard.assignfield1.object=struct('Style','popupmenu','String','n1|n2');
 pard.assignfield1.position=[3,1];
-% pard.assignfield2.object=struct('Style','popupmenu','String','n1|n2');
-% pard.assignfield2.position=[5,2];
+
 pard.syncParameters={{'filelist_short','dataselect',{'String'}},{'locFields','assignfield1',{'String'}}};
 
 pard.assignfield1.object.TooltipString='choose  field';
 pard.plugininfo.type='ProcessorPlugin';
-% pard.assignfield2.object.TooltipString=pard.assignfield1.object.TooltipString;
+pard.plugininfo.description='Simple mathematics on localization fields';
 end

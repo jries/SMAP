@@ -1,4 +1,5 @@
 function [srim,nlocs,template]=histrender(pos,rangex, rangey, pixelsx, pixelsy, lut,rangec,template)
+% Renders the superresolution image by counting the number of localizations in each pixel
 %pos.x, pos.y, pos.c, pos.N,pos.s
 %global variables
 
@@ -47,57 +48,6 @@ end
 
 srim=permute(srim,[2 1 3]);
 end
-% 
-% figure(3);
-% subplot(2,2,2);imagesc(srimc/max(srimc(:)))
-% title(sum(srimc(:)))
-% colorbar
-% subplot(2,2,1);imagesc(srim/max(srim(:)))
-% title(max(srim(:)))
-% colorbar
-% imdiff=srim-srimc;
-% subplot(2,2,3);imagesc(imdiff/max(imdiff(:)))
-% title(max(imdiff(:)))
-% colorbar
-
-% function srim=gaussrenderi(xpix,ypix,srec,sigma,Gtemplate,Gsigma,roiks,N,uselut,c,lut, rangec)
-%     s=size(Gtemplate);
-%     Gsizegauss=(s(1)-1)/2;
-%     sl=length(lut);
-%     srim=zeros(srec);
-%     for k=1:length(xpix) %all localizations 
-%         dn=ceil(roiks*sigma(k));   
-%         xr=round(xpix(k));yr=round(ypix(k));
-%         dx=xpix(k)-xr;dy=ypix(k)-yr;
-%         intcorrection=erf((dn+0.5)/sigma(k)/sqrt(2))^2; %integrate(G,-k sigma, k sigma)= (Erf (k/sqrt(2)))^2: normalization. 0.5: since -dn:dn
-%         gaussnorm=N(k)/(2*pi*sigma(k)^2*intcorrection);  
-%         if uselut   
-%             indc=ceil((c(k)-rangec(1))/(rangec(2)-rangec(1))*(sl));
-%         end
-% 
-%         for xax=-dn:dn
-%             xt=round((xax-dx)*Gsigma/sigma(k))+Gsizegauss+1;
-%             for yax=-dn:dn
-%                 yt=round((yax-dy)*Gsigma/sigma(k))+Gsizegauss+1;
-%                 xp=xr+xax;yp=yr+yax;
-%                 if xp>0&&xp<=srec(1) && yp>0&&yp<=srec(2)
-%                     if uselut
-%                         for col=1:3
-%                             srim(xp+(yp-1)*srec(1)+(col-1)*srec(1)*srec(2))=srim(xp+(yp-1)*srec(1)+(col-1)*srec(1)*srec(2))...
-%                                 +Gtemplate(xt+(yt-1)*sG(1))*gaussnorm*lut(indc+(col-1)*length(lut));
-% %                             srim(xp,yp,col)=srim(xp,yp,col)+Gtemplate(xt,yt)*gaussnorm*lut(indc,col);
-%                         end
-%                     else
-%                         srim(xp,yp)=srim(xp,yp)+Gtemplate(xt,yt)*gaussnorm;
-%                     end
-%                 end
-%             end
-%         end
-% 
-%     end
-% 
-% end
-% end
 
         
 function gausstemplate=creategausstemplate(roiks) % create template

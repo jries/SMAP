@@ -266,6 +266,9 @@ for k=1:dnumframesh-1
     
     for l=k+1:dnumframesh
         cc=Fmovier(:,:,k).*conj(Fmovier(:,:,l));
+        
+%         cc=cc./abs(Fmovier(:,:,k))./abs(Fmovier(:,:,l)); %try out phase correlation
+        
         ccf=fftshift(ifft2(cc));
         [mx,my,outim,outimnorm,errx(k,l),erry(k,l)]=findmaximumgauss(real(ccf),window); %maximum by Gaussian fitting
         dxh=mx-noff; dyh=my-noff;

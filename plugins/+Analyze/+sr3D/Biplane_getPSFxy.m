@@ -1,4 +1,6 @@
 classdef Biplane_getPSFxy<interfaces.DialogProcessor
+%     associates size of the PSF in two channels to the localizations in
+%     both channels
     methods
         function obj=Biplane_getPSFxy(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;   
@@ -93,5 +95,5 @@ pard.Tfile.Width=3;
 pard.loadbutton.object=struct('Style','pushbutton','String','load');
 pard.loadbutton.position=[8,4];
 pard.plugininfo.type='ProcessorPlugin';
-
+pard.plugininfo.description='associates size of the PSF in two channels to the localizations in both channels';
 end

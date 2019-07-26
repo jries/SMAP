@@ -296,7 +296,7 @@ end
 
 
 function pard=guidef
-pard.t0.object=struct('String','FRC resolution. Uses ROI or FoV (if rendered image)','Style','text');
+pard.t0.object=struct('String','FRC resolution, Layer 1. Uses ROI or FoV (if rendered image). ','Style','text');
 pard.t0.position=[1,1];
 pard.t0.Width=4;
 

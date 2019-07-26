@@ -1,4 +1,5 @@
 classdef cmakehist<interfaces.DialogProcessor
+%     make histogram of localizations/cluster
     methods
         function obj=cmakehist(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -82,4 +83,5 @@ pard.savehist.position=[5,1];
 
 pard.plugininfo.name='make brightness histogram';
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='make histogram of localizations/cluster';
 end
