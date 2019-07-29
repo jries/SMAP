@@ -25,18 +25,38 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             fitting.allParsArg = fitResult;
             
             % fetch locs
-            locs = obj.getLocs({'xnm','ynm','znm','locprecnm','locprecznm'},'grouping','grouped','layer',1, 'size',[p.se_siteroi p.se_siteroi]);
+            if isfield(obj.locData.SE.currentsite.annotation,'line3')
+                locs = obj.getLocs({'xnm','ynm','znm','locprecnm','locprecznm'},'grouping','grouped','layer',1, 'size','freeroi');
+            else
+                locs = obj.getLocs({'xnm','ynm','znm','locprecnm','locprecznm'},'grouping','grouped','layer',1, 'size',[p.se_siteroi p.se_siteroi]);
+            end
+           
             locs.xnm = locs.xnmrot;
             locs.ynm = locs.ynmrot;
             locs.znm = reverseFactor*locs.znm;
             
             % plot the result of DBSCAN clustering
-            [~,re] = DBSCANsmap(locs, 30, 10);
-            ind = re(:,4);
-            indRange =1:1:max(ind)+1;
-            [~,bestInd] = max(histcounts(ind(ind>0),indRange));
-            indGood = ismember(ind,indRange(bestInd));
-            indGood = indGood>0;
+            if 0
+                [clusterCen,ind,~] = MeanShiftCluster([locs.xnm'; locs.ynm'; locs.znm'],60,0);
+                bestInd = max(histcounts(ind,1:1:max(ind)));
+                indInd = find(histcounts(ind,1:1:max(ind))>150);
+                indGood = ismember(ind,[bestInd indInd]);
+                indGood = indGood>0;
+
+            elseif 0
+                [~,re] = DBSCANsmap(locs, 30, 10);
+                ind = re(:,4);
+                indRange =1:1:max(ind)+1;
+                [~,bestInd] = max(histcounts(ind(ind>0),indRange));
+                indGood = ismember(ind,indRange(bestInd));
+                indGood = indGood>0;
+            else
+                idx = DBSCAN([locs.xnm locs.ynm locs.znm], 20, 10);
+                idxRange =1:1:max(idx)+1;
+                [~,largestIdx] = max(histcounts(idx(idx>0),idxRange));
+                indGood = ismember(idx,idxRange(largestIdx));
+                indGood = indGood>0;
+            end
             ax1 = obj.setoutput('DBSCAN',1);
             plot3(ax1, locs.xnm(indGood), locs.ynm(indGood), locs.znm(indGood), ' or')
             hold(ax1,'on')
