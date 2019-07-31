@@ -67,7 +67,7 @@ imcombine(:,:,1)=imin'/max(imin(:))*3;
 imcombine(:,:,3)=imfit';
 imcombine(:,:,2)=imcombine(:,:,1);
 % imcombine(:,:,2)=imstart';
-imagesc(ax,pr,tr,imcombine);
+imagesc(ax,pr,trsin,imcombine);
 title(ax,['Image: Theta=' num2str(180-fitp(3)/pi*180,'%3.0f') '°'])
 % figure(81);imagesc(tr,pr,imfit);
 end
