@@ -1,4 +1,4 @@
-function fitp=fitcoverageangle_image(imin,startp,ax)
+function fitp=fitcoverageangle_image(imin,startp,ax,rangex,rangey)
 sin=size(imin);
 % imin=sqrt(imin);
 % dangle(1)=2*pi/sin(1);
@@ -7,9 +7,13 @@ sin=size(imin);
 % tr=-pi/2:dangle(2):pi/2;
 % pr=-pi:dangle(1):pi;
 % r=linspace(-pi/2,pi/2,sin(2));
-trsin=linspace(-1,1,sin(1));
+% trsin=linspace(-1,1,sin(1));
+% tr=asin(trsin);
+% pr=linspace(-pi,pi,sin(1));
+
+trsin=double(linspace(rangey(1),rangey(2),sin(2)));
 tr=asin(trsin);
-pr=linspace(-pi,pi,sin(1));
+pr=double(linspace(rangex(1),rangex(2),sin(1)));
 
 [Theta,Phi]=meshgrid(tr,pr);
 
@@ -42,11 +46,14 @@ options=optimset('lsqnonlin');
 imstart=startp(4)*(coverage_sphere(startp(1),startp(2),startp(3),Theta,Phi)+1);
 try
 [fitp,resnorm]=lsqnonlin(@coverageerr,startp,[],[],options,Theta,Phi,imin);
-catch
+catch err
     startp
+    err
     fitp=[0 0 0];
 end
 
+% fitp(1)=fitp(1)-rangey(1);
+% fitp(2)=fitp(2)-rangex(1);
 % [fitp2,resnorm2]=lsqnonlin(@coverageerr,startph,[],[],options,Theta,Phi,-bwim);
 
 % if resnorm2<resnorm
@@ -56,10 +63,12 @@ if nargin>2
 imfit=startp(4)*(coverage_sphere(fitp(1),fitp(2),fitp(3),Theta,Phi)+1);
 % im=coverage(-pi/4,pi/4,pi/16,Theta,Phi);
 imcombine=zeros(size(imstart,2),size(imstart,1),3);
-imcombine(:,:,1)=imin'/max(imin(:))*2;
-imcombine(:,:,2)=imfit';
-imcombine(:,:,3)=imstart';
+imcombine(:,:,1)=imin'/max(imin(:))*3;
+imcombine(:,:,3)=imfit';
+imcombine(:,:,2)=imcombine(:,:,1);
+% imcombine(:,:,2)=imstart';
 imagesc(ax,pr,tr,imcombine);
+title(ax,['Image: Theta=' num2str(180-fitp(3)/pi*180,'%3.0f') '°'])
 % figure(81);imagesc(tr,pr,imfit);
 end
 
@@ -75,7 +84,7 @@ if 0
 imcombine=zeros(size(imin,1),size(imin,2),3);
 imcombine(:,:,1)=(imin+1)/2;
 imcombine(:,:,2)=(imtest+1)/2;
-% imcombine(:,:,3)=imstart;
+imcombine(:,:,3)=imstart;
 figure(77);imagesc(imcombine);title(fitp)
 drawnow
 end
