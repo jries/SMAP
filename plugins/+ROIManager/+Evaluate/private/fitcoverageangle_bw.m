@@ -74,7 +74,7 @@ imfit=coverage_sphere(fitp(1),fitp(2),fitp(3),Elevation,Azimuth);
 imcombine=zeros(size(imstart,2),size(imstart,1),3);
 imcombine(:,:,1)=(bwim'+1)/2;
 imcombine(:,:,2)=(imfit'+1)/2;
-% imcombine(:,:,3)=imstart';
+imcombine(:,:,3)=imstart';
 imagesc(ax,azimuth,el,imcombine);
 hold(ax,'on')
 plot(ax,fitp(2)+pi/2,sin(fitp(1)),'*')

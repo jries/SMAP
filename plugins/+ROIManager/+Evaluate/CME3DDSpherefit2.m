@@ -568,12 +568,12 @@ if stat.rSphere>radiuscutoff
     rangex=[pos(1)-nump/2*pixelsize(1) pos(1)+nump/2*pixelsize(1)];
     rangey=[max(-1,pos(2)-nump/2*pixelsize(2)) min(1,pos(2)+nump/2*pixelsize(2))];
     scalefactor=(rangex(2)-rangex(1))*(rangey(2)-rangey(1))/(2*pi*2);
-    [stat,imgs]=mapanalysis3Dint;%(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor);
+    [stat,imgs]=mapanalysis3Dint(stat);%(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor);
     
 end
 plot3Dmaps(stat,hmap)
 
-function [stat,imgs]=mapanalysis3Dint%(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor)
+function [stat,imgs]=mapanalysis3Dint(statold)%(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor)
 %     global imtest
 % imh=myhist2(tcB,sin(pcB),pixelsize(1),pixelsize(2),rangex,rangey);
 % imh=[imh ;imh];
@@ -642,9 +642,15 @@ tt=asin((main.centroidy*pixelsize(2)-1))+corrt;
 startp=double([-tt,pp,tfrac]);
 % 
 if refine
-    if abs(mean(rangex))<1 %somehow to test for negative curvature.
-        startp(1)=startp(1)+pi;
-    end
+    startp(2)=mean(rangex)+pi/2;
+    startp(1)=mean(rangey);
+    startp(3)=statold.bwfit.thetacoverage;
+%     startp(1)=statold.bwfit.theta0;
+%     startp(2)=statold.bwfit.phi0;
+%     startp(3)=statold.bwfit.thetacoverage;
+%     if abs(mean(rangex))<1 %somehow to test for negative curvature.
+%         startp(1)=startp(1)+pi;
+%     end
 %     startp(1)=mean(rangex);
 %     startp(2);
 end
