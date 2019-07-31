@@ -12,7 +12,7 @@ classdef UseSitesInROI<interfaces.DialogProcessor&interfaces.SEProcessor
           pr=obj.getPar('sr_pixrec');
           srpos=obj.getPar('sr_pos');
           srsize=obj.getPar('sr_size');
-          prel=(pos(:,1:2)-(srpos-srsize))/pr;
+          prel=(pos(:,1:2)-(srpos(1:2)-srsize))/pr;
           ing=withinmask(imbw,prel(:,1),prel(:,2));
           for k=1:length(obj.SE.sites)
               obj.SE.sites(k).annotation.use=ing(k);
