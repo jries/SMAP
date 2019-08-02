@@ -1,4 +1,5 @@
 classdef generalStatistics<interfaces.SEEvaluationProcessor
+%     number of localizations, average PSF size etc.
     methods
         function obj=generalStatistics(varargin)        
                 obj@interfaces.SEEvaluationProcessor(varargin{:});
@@ -88,4 +89,5 @@ pard.circularroi.position=[1,1];
 pard.circularroi.Width=4;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
 pard.plugininfo.type='ROI_Evaluate';
+pard.plugininfo.description='number of localizations, average PSF size etc.';
 end

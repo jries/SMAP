@@ -1,4 +1,6 @@
 classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Adds two field to the localization data containing the site number
+%     and the cell number, respectively.
     methods
         function obj=Sitenumbers2loc(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -45,8 +47,6 @@ pard.t1.object=struct('String','Write site and cell numbers to locData.loc','Sty
 pard.t1.position=[1,1];
 pard.t1.Width=4;
 
-
+pard.plugininfo.description='Adds two field to the localization data containing the site number and the cell number, respectively.';
 pard.plugininfo.type='ROI_Analyze';
-
-
 end

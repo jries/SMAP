@@ -1,4 +1,6 @@
 classdef intensityTiff<interfaces.SEEvaluationProcessor
+%     intensity of a diffraction limited reference image at the position of
+%     structure in the ROI.
     methods
         function obj=intensityTiff(varargin)        
                 obj@interfaces.SEEvaluationProcessor(varargin{:});
@@ -241,6 +243,7 @@ pard.dyfield.Width=3.5;
 % pard.fitxy.Width=4;
 
 pard.plugininfo.type='ROI_Evaluate';
+pard.plugininfo.description='intensity of a diffraction limited reference image at the position of structure in the ROI.';
 
 end
 

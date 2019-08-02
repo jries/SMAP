@@ -1,4 +1,13 @@
 classdef NPCsegmentCleanup<interfaces.SEEvaluationProcessor
+%     Evaluates properties of the structure (number of localizations, size
+%     of radius of ring, localizations inside or outside of ring,… to
+%     determine if an automatically segmented structure resembles a nuclear
+%     pore complex. Used to clean up automatic segmentation. See:
+%     Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński,
+%     Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid,
+%     et al. “Nuclear Pores as Versatile Reference Standards for
+%     Quantitative Superresolution Microscopy.” BioRxiv, March 20, 2019,
+%     582668. https://doi.org/10.1101/582668.
     properties
         savedevals
     end
@@ -96,6 +105,8 @@ pard.maxPSF.Width=.5;
 
 pard.plugininfo.type='ROI_Evaluate';
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer1_','layer2_','se_sitepixelsize'};
+pard.plugininfo.description=' Evaluates properties of the structure (number of localizations, size of radius of ring, localizations inside or outside of ring,… to determine if an automatically segmented structure resembles a nuclear pore complex. Used to clean up automatic segmentation. See: Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards for Quantitative Superresolution Microscopy.” BioRxiv, March 20, 2019, 582668. https://doi.org/10.1101/582668. ';
+
 end
 
 

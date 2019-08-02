@@ -1,4 +1,5 @@
 classdef export_3Dvolumes<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Exports selected ROIs as 3D volumes (.em or .tiff format).
     methods
         function obj=export_3Dvolumes(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -139,5 +140,6 @@ pard.blinkcoded.position=[5,1];
 pard.blinkcoded.Width=2;
 
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Exports selected ROIs as 3D volumes (.em or .tiff format).';
 
 end

@@ -1,4 +1,6 @@
 classdef lineprofile<interfaces.SEEvaluationProcessor
+%     Calculates the line-profile along user-defined direction and fits it
+%     with a Gaussian or double-Gaussian model
     properties
         boundary
     end
@@ -52,6 +54,7 @@ pard.fitmodel.Width=2;
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
 pard.plugininfo.type='ROI_Evaluate';
+pard.plugininfo.description='Calculates the line-profile along user-defined direction and fits it with a Gaussian or double-Gaussian model';
 end
 
 function M = calMeasurement(x,y,qx,qy,Size)
