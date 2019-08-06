@@ -25,8 +25,8 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
                 sitenumbers(indh)=sites(k).ID;
                 cellnumbers(indh)=sites(k).info.cell;
             end
-            obj.locData.addloc('sitenumbers',sitenumbers);
-            obj.locData.addloc('cellnumbers',cellnumbers);
+            obj.locData.setloc('sitenumbers',sitenumbers);
+            obj.locData.setloc('cellnumbers',cellnumbers);
             obj.locData.regroup;
           
         end
