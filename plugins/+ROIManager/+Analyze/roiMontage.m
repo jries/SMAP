@@ -1,4 +1,5 @@
 classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
+%     makes a montage of many ROIs
     methods
         function obj=roiMontage(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -130,12 +131,8 @@ pard.selectFolder.object=struct('String','Select folder...','Style','pushbutton'
 pard.selectFolder.position=[5,2];
 pard.selectFolder.Width=1;
 
-
-
-
-
+pard.plugininfo.description='makes a montage of many ROIs';
 pard.plugininfo.type='ROI_Analyze';
-
 end
 
 function setvisibility_callback(a,b,obj)

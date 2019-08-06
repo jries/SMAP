@@ -477,23 +477,39 @@ if nargin==2
     stat=xc;
     hmap=yc;
 else
-nump=256;
-roisize=500; %half size (nm)
-cutofffactor=1.5;
-sigma=2.5;
-
-rangex=[-roisize roisize];
-rangey=rangex;
-pixelsize=[2*roisize/nump,2*roisize/nump];
+% nump=256;
+% roisize=500; %half size (nm)
+% cutofffactor=1.5;
+% sigma=2.5;
+% 
+% rangex=[-roisize roisize];
+% rangey=rangex;
+% pixelsize=[2*roisize/nump,2*roisize/nump];
+pixelsize=[2 2];
+sigma=5;
       
-imh=myhist2(xc,yc,pixelsize(1),pixelsize(2),rangex,rangey);
+% [imbw,imhf]=segmentpointclouds([xc,yc],pixelsize,'rangex',rangex,'rangey',rangey,'periodicx',false,'sigma',sigma);
+[imbw,imhf,rangex,rangey]=segmentpointclouds([xc,yc],pixelsize,'sigma',sigma);
 
-hk=fspecial('gauss',20,sigma);
-imhf=imfilter(sqrt(imh),hk,'replicate');
+% imh=myhist2(xc,yc,pixelsize(1),pixelsize(2),rangex,rangey);
+% 
+% % nrangex=rangex(1):pixelsize(1):rangex(2);
+% % nrangey=rangey(1):pixelsize(2):rangey(2);
+% % imhxx=histcounts2(xc,yc,nrangex,nrangey);
+% 
+% hk=fspecial('gauss',20,sigma);
+% imhf=imfilter(sqrt(imh),hk,'replicate');
+% 
+% cutoffone=max(hk(:))*cutofffactor;
+% imbw=imhf>cutoffone;
+% imbw=imfill(imbw,'holes');
+% 
+% %%% try new segmentation
+% mask = zeros(size(imhf));
+% mask(25:end-25,25:end-25) = 1;
+% imbw=activecontour(imhf,mask);
 
-cutoffone=max(hk(:))*cutofffactor;
-imbw=imhf>cutoffone;
-imbw=imfill(imbw,'holes');
+
 areapix=sum(imbw(:));
 areanm=areapix*pixelsize(1)*pixelsize(2);
 stat.areanm=areanm;
@@ -526,42 +542,51 @@ if nargin>5
 end
 nump=128; %side length of reconstruction in pixels
 sigma=3.5;
-cutofffactor=1.1;
+% cutofffactor=1.1;
 filterpixelsize=10;
 radiuscutoff=500;
 rangex=[-pi pi];
-rangey=[-1 1+1/nump];
+rangey=[-1 1];
 pixelsize=[2*pi/nump,2/nump];
 scalefactor=1;
 
 medianradius=median(rcB);
 sigma=min(3.5,double(max(1,filterpixelsize/medianradius/min(pixelsize))));
+isperiodic=true;
+refine=false;
 [stat,imgs]=mapanalysis3Dint; %(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor);
 % drawnow
 if stat.rSphere>radiuscutoff
-    sigma=1;
-    pixelsize=[15 15]./stat.rSphere;
+    refine=true;
+    isperiodic=false;
+    sigma=3;
+    pixelsize=[5 5]./stat.rSphere;
 %     pos=stat.bwfit.centerpos;
-    pos=[median(tcB) median(sin(pcB))];
+    pos=double([median(tcB) median(sin(pcB))]);
+    tcB(tcB>pos(1)+pi)=tcB(tcB>pos(1)+pi)-2*pi;
+    tcB(tcB<pos(1)-pi)=tcB(tcB<pos(1)-pi)+2*pi;
     rangex=[pos(1)-nump/2*pixelsize(1) pos(1)+nump/2*pixelsize(1)];
-    rangey=[pos(2)-nump/2*pixelsize(2) pos(2)+nump/2*pixelsize(2)];
+    rangey=[max(-1,pos(2)-nump/2*pixelsize(2)) min(1,pos(2)+nump/2*pixelsize(2))];
     scalefactor=(rangex(2)-rangex(1))*(rangey(2)-rangey(1))/(2*pi*2);
-    [stat,imgs]=mapanalysis3Dint;%(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor);
+    [stat,imgs]=mapanalysis3Dint(stat);%(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor);
     
 end
 plot3Dmaps(stat,hmap)
 
-function [stat,imgs]=mapanalysis3Dint%(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor)
-imh=myhist2(tcB,sin(pcB),pixelsize(1),pixelsize(2),rangex,rangey);
-imh=[imh ;imh];
-hk=fspecial('gauss',ceil(4*sigma),sigma);
-imhf=imfilter(sqrt(imh),hk,'replicate');
-imhf=imhf(nump/4+1:2.5*nump/2,:);
+function [stat,imgs]=mapanalysis3Dint(statold)%(xc,yc,zc,rSphere,hmap,xc2,yc2,zc2,scalefactor)
+%     global imtest
+% imh=myhist2(tcB,sin(pcB),pixelsize(1),pixelsize(2),rangex,rangey);
+% imh=[imh ;imh];
+% hk=fspecial('gauss',ceil(4*sigma),sigma);
+% imhf=imfilter(sqrt(imh),hk,'replicate');
+% imhf=imhf(nump/4+1:2.5*nump/2,:);
+% 
+% imtest=imhf;
+% 
+% cutoffone=max(hk(:))*cutofffactor;
+% imbw=imhf>cutoffone;
 
-
-
-cutoffone=max(hk(:))*cutofffactor;
-imbw=imhf>cutoffone;
+[imbw,imhf]=segmentpointclouds([tcB,sin(pcB)],pixelsize,'rangex',rangex,'rangey',rangey,'periodicx',isperiodic,'sigma',sigma);
 
 %         coveragepix=sum(imbw(:));
 %         coverageFraction=coveragepix/numel(imbw);
@@ -575,12 +600,12 @@ stat.coordinates.t=tcB;
 stat.coordinates.p=pcB;
 stat.coordinates.r=rcB;
 
-cbx=statb.centroidx*pixelsize(1)-pi;
-cby=statb.centroidy*pixelsize(2)-1;
+cbx=statb.centroidx*pixelsize(1)+rangex(1);
+cby=statb.centroidy*pixelsize(2)+rangey(1);
 
 statd=areastats(~imbw);
-cdx=statd.centroidx*pixelsize(1)-pi;
-cdy=statd.centroidy*pixelsize(2)-1;
+cdx=statd.centroidx*pixelsize(1)+rangex(1);
+cdy=statd.centroidy*pixelsize(2)+rangey(1);
 if all(imbw==1) %hack: if no hole is found
     cdx=cbx;cdy=cby;
     statd=statb;
@@ -611,11 +636,26 @@ end
 tfrac=pi-(acos((1-2*stat.mainFraction)));
 
 pp=main.centroidx*pixelsize(1)-pi/2;
+pp=main.centroidx*pixelsize(1)+range(1)-pi/2;
+% pp=mean(rangex)
 tt=asin((main.centroidy*pixelsize(2)-1))+corrt;
+startp=double([-tt,pp,tfrac]);
 % 
-
-fitp=fitcoverageangle_bw(mainbw,[-tt,pp,tfrac],hmap{2});
-fitp2=fitcoverageangle_image(imhf,fitp,hmap{3});
+if refine
+    startp(2)=mean(rangex)+pi/2;
+    startp(1)=mean(rangey);
+    startp(3)=statold.bwfit.thetacoverage;
+%     startp(1)=statold.bwfit.theta0;
+%     startp(2)=statold.bwfit.phi0;
+%     startp(3)=statold.bwfit.thetacoverage;
+%     if abs(mean(rangex))<1 %somehow to test for negative curvature.
+%         startp(1)=startp(1)+pi;
+%     end
+%     startp(1)=mean(rangex);
+%     startp(2);
+end
+fitp=fitcoverageangle_bw(mainbw,startp,hmap{2},rangex,rangey);
+fitp2=fitcoverageangle_image(sqrt(imhf),fitp,hmap{3},rangex,rangey);
 
 stat.bwfit.theta0=fitp(1);
 stat.bwfit.phi0=fitp(2);
@@ -679,7 +719,7 @@ imgs=stat.plot.imgs;
         plot(hmap{1},stat.bwfit.centerpos(1),stat.bwfit.centerpos(2),'wx')
         plot(hmap{1},stat.bwfit.centerposd(1),stat.bwfit.centerposd(2),'w+')
         hmap{1}.NextPlot='replace';
-        title(['coverage area (nm^2): ' num2str(stat.coverageArea,'%6.0f') ', fraction: ' num2str(stat.coverageFraction)],'Parent',hmap{1});
+        title(['coverage area (nm^2): ' num2str(stat.coverageArea,'%6.0f') ', fraction: ' num2str(stat.coverageFraction,2)],'Parent',hmap{1});
 
         sss=size(imhf);
         outdc=zeros(sss(2),sss(1),3);

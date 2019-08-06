@@ -1,4 +1,6 @@
 classdef circleFitter<interfaces.SEEvaluationProcessor
+%     Fits circular model to localizations in the ROI to determine the
+%     radius and center coordinates of circular structures.
     properties
         boundary
     end
@@ -215,6 +217,7 @@ pard.adjM.TooltipString = 'If you set it as 1.0003, it means during the optimiza
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
 pard.plugininfo.type='ROI_Evaluate';
+pard.plugininfo.description='Fits circular model to localizations in the ROI to determine the radius and center coordinates of circular structures.';
 end
 
 function M = calMeasurement(x,y,qx,qy,Size)

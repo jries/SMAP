@@ -1,4 +1,5 @@
 classdef BatchAnalyze<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Performs the same evaluation (list of evaluation plugins) and analysis on many files.
     properties
     end
     methods
@@ -81,4 +82,5 @@ pard.redrawall.object=struct('String','redraw all','Style','checkbox','Value',1)
 pard.redrawall.position=[2,1];
 
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Performs the same evaluation (list of evaluation plugins) and analysis on many files.';
 end
