@@ -1,4 +1,5 @@
 classdef SortROIs< interfaces.DialogProcessor&interfaces.SEProcessor
+%     Sort ROIs (sites) according to any parameter (e.g. evaluation results) or to combination of parameters.
     properties
         menue
     end
@@ -319,6 +320,7 @@ pard.direction4.object=struct('String','ascend|descend','Style','popupmenu');
 pard.direction4.position=[8,1.05];
 pard.direction4.Width=.95;
 
+pard.plugininfo.description='Sort ROIs (sites) according to any parameter (e.g. evaluation results) or to combination of parameters.';
 % pard.sort.object=struct('String','Sort','Style','pushbutton');
 % pard.sort.position=[10,3];
 % pard.sort.Height=2;

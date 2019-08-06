@@ -1,4 +1,6 @@
 classdef segmentNPC<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Segmenter for nuclear pore complexes. Looks for circular structures
+%     of a defined size.
     methods
         function obj=segmentNPC(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -44,6 +46,7 @@ pard.saveon.position=[1,3];
 pard.getmask.object=struct('String','getmask','Style','checkbox');
 pard.getmask.position=[2,3];
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Segmenter for nuclear pore complexes. Looks for circular structures of a defined size.';
 end
 
 function segmentNPCi(se,p,obj)

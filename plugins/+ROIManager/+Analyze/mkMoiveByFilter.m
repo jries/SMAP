@@ -1,4 +1,5 @@
 classdef mkMoiveByFilter<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Export ROIs as a  movie (running window averaging)
     methods
         function obj=mkMoiveByFilter(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -119,6 +120,8 @@ pard.folderPath.Width=1;
 pard.videoPath.object=struct('String', 'my_video.avi', 'Style','edit');
 pard.videoPath.position=[8,2:3];
 pard.videoPath.Width=2;    
+
+pard.plugininfo.description='Export ROIs as a  movie (running window averaging)';
 end
 
 function saveTo_callback(a,b,obj)

@@ -1,4 +1,5 @@
 classdef export_tiffs<interfaces.DialogProcessor&interfaces.SEProcessor
+%     export superresolution reconstructions of selected ROIs
     methods
         function obj=export_tiffs(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -89,5 +90,6 @@ pard.export_cells.object=struct('String','export cell images as well','Style','c
 pard.export_cells.position=[2,1];
 pard.export_cells.Width=2;
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='export superresolution reconstructions of selected ROIs';
 
 end

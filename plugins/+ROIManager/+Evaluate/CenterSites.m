@@ -1,4 +1,7 @@
 classdef CenterSites<interfaces.SEEvaluationProcessor
+%     Calculates the center coordinates of structres in a ROI based on
+%     median, mean, circular fit or cross-correlation with a mask and
+%     shifts thte ROI to center the structure.
     properties
         
     end
@@ -49,6 +52,7 @@ pard.cz.Width=2;
 
 pard.plugininfo.type='ROI_Evaluate';
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer1_','layer2_','se_sitepixelsize'};
+pard.plugininfo.description='Calculates the center coordinates of structres in a ROI based on median, mean, circular fit or cross-correlation with a mask and shifts thte ROI to center the structure.';
 end
 
 

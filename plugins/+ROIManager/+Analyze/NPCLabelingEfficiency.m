@@ -1,4 +1,11 @@
 classdef NPCLabelingEfficiency<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Calculates the absolute effective labeling efficiency from NPC images
+%     using the results of evaluator: NPCLabelingQuantify_s.
+%     See:Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty
+%     Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger,
+%     Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards
+%     for Quantitative Superresolution Microscopy.” BioRxiv, March 20,
+%     2019, 582668. https://doi.org/10.1101/582668.
     properties
     end
     methods
@@ -524,5 +531,6 @@ pard.copy2page.position=[6,1];
 pard.copy2page.Width=2;
 
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Calculates the absolute effective labeling efficiency from NPC images using the results of evaluator: NPCLabelingQuantify_s. See:Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards for Quantitative Superresolution Microscopy.” BioRxiv, March 20, 2019, 582668. https://doi.org/10.1101/582668.';
 
 end

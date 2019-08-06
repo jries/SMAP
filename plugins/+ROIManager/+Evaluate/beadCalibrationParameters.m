@@ -1,4 +1,6 @@
 classdef beadCalibrationParameters<interfaces.SEEvaluationProcessor
+%     Plots PSF size in x,y for an elliptical Gaussian fit vs the frame to
+%     check for consistencies of beads in a bead stack
     properties
         
     end
@@ -85,6 +87,7 @@ function pard=guidef
 % pard.cz.Width=2;
 % 
  pard.plugininfo.type='ROI_Evaluate';
+ pard.plugininfo.description='Plots PSF size in x,y for an elliptical Gaussian fit vs the frame to check for consistencies of beads in a bead stack';
 % pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer1_','layer2_','se_sitepixelsize'};
 end
 
