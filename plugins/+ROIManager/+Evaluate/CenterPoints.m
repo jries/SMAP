@@ -1,4 +1,7 @@
 classdef CenterPoints<interfaces.SEEvaluationProcessor
+%     Centers the ends of a linear ROI onto the median or mean of the
+%     coordinates of the localizations in the ROI. Used to improve manual
+%     selectin in selectCoordinates2Color.
     properties
         
     end
@@ -55,6 +58,7 @@ pard.iterations.Width=1;
 
 pard.plugininfo.type='ROI_Evaluate';
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer1_','layer2_','se_sitepixelsize'};
+pard.plugininfo.description='Centers the ends of a linear ROI onto the median or mean of the coordinates of the localizations in the ROI. Used to improve manual selectin in selectCoordinates2Color.';
 end
 
 

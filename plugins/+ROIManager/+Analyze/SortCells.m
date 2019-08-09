@@ -1,4 +1,5 @@
 classdef SortCells<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Sort cell list according to user-defined parameter
     methods
         function obj=SortCells(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -62,6 +63,5 @@ pard.sortselection.position=[1,1];
 pard.sortselection.Width=2;
 
 pard.plugininfo.type='ROI_Analyze';
-
-
+pard.plugininfo.description='Sort cell list according to user-defined parameter';
 end

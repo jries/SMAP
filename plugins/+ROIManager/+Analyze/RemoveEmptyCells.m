@@ -1,4 +1,5 @@
 classdef RemoveEmptyCells<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Removes cells that do not contain any sites
     methods
         function obj=RemoveEmptyCells(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -37,6 +38,5 @@ end
 
 function pard=guidef
 pard.plugininfo.type='ROI_Analyze';
-
-
+pard.plugininfo.description='Removes cells that do not contain any sites';
 end

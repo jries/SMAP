@@ -1,4 +1,6 @@
 classdef RemoveLocsOutsideSites<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Removes all localizations that are not part of a segmented ROI. Can
+%     dramatically reduce file size.
     methods
         function obj=RemoveLocsOutsideSites(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -67,6 +69,7 @@ function pard=guidef
 % pard.t11.position=[8,1];
 % pard.t11.Width=4;
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Removes all localizations that are not part of a segmented ROI. Can dramatically reduce file size.';
 end
 
 function removeLocsSites(obj,p)

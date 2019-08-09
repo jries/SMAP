@@ -1,4 +1,6 @@
 classdef FilterSites<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Filter sites based on any logical combination or arbitrary
+%     mathematical expression of evaluation results
     properties
     end
     methods
@@ -155,6 +157,6 @@ pard.logiceq3.Width=.7;
 pard.reset.object=struct('String','use all','Style','pushbutton','Callback',{{@obj.useall}});
 pard.reset.position=[8,1];
 pard.reset.Width=1;
-
+pard.plugininfo.description='Filter sites based on any logical combination or arbitrary mathematical expression of evaluation results';
 pard.plugininfo.type='ROI_Analyze';
 end

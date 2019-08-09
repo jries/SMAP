@@ -1,4 +1,5 @@
 classdef files2sites<interfaces.DialogProcessor&interfaces.SEProcessor
+%     generates a site (ROI) and a cell for each file
     methods
         function obj=files2sites(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -47,7 +48,7 @@ pard.t1.Width=2;
 pard.position.object=struct('String','','Style','edit');
 pard.position.position=[1,3];
 
-
+pard.plugininfo.description='generates a site (ROI) and a cell for each file';
 pard.plugininfo.type='ROI_Analyze';
 end
 
