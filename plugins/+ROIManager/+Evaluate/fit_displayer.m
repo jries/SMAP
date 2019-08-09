@@ -51,7 +51,7 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
                 indGood = ismember(ind,indRange(bestInd));
                 indGood = indGood>0;
             else
-                idx = DBSCAN([locs.xnm locs.ynm locs.znm], 20, 10);
+                idx = DBSCAN([locs.xnm locs.ynm locs.znm], 25, 10);
                 idxRange =1:1:max(idx)+1;
                 [~,largestIdx] = max(histcounts(idx(idx>0),idxRange));
                 indGood = ismember(idx,idxRange(largestIdx));
@@ -75,8 +75,19 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             % get mPars
             mPars = fitting.exportPars(1,'mPar');
             closeAngle = mPars.closeAngle*pi/180;
+            
+            % initial
+            initR = fitting.allParsArg.init(10);
+            initCloseAngle = fitting.allParsArg.init(11);
+            mParsInit.radius = initR;
+            mParsInit.closeAngle = initCloseAngle;
+            initCloseAngle = initCloseAngle*pi/180;
+            rInit = initR*cos(initCloseAngle);      % radius of the initial open
+            
+            % finial result
             R = mPars.radius;           % radius of the sphere
             r = R*cos(closeAngle);      % radius of the open
+            
             pixelSize = 2;
             theta = 0:pi/360:2*pi;      % full circle
             halfThickness=25;
@@ -84,6 +95,8 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             
             % XY section
             [~,modP] = fitting.model{1}.modelFun(mPars,4); % offset determined by the model
+            [~,modPInit] = fitting.model{1}.modelFun(mParsInit,4); % offset determined by the model
+            
             indXY = locs2.znm<halfThickness&locs2.znm>-halfThickness; % +-70 round the znm
             x = locs2.xnm(indXY);
             y = locs2.ynm(indXY);
@@ -94,18 +107,24 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             colormap(ax3, mymakelut('red hot'))
             
             
-            
             % open
             xref = (r.*cos(theta)+fitting.roiSize/2)./pixelSize;
             yref = (r.*sin(theta)+fitting.roiSize/2)./pixelSize;
+            xrefInit = (rInit.*cos(theta)+fitting.roiSize/2)./pixelSize;
+            yrefInit = (rInit.*sin(theta)+fitting.roiSize/2)./pixelSize;
             
             % eqitorial
             xrefEq = (R.*cos(theta)+fitting.roiSize/2)./pixelSize;
             yrefEq = (R.*sin(theta)+fitting.roiSize/2)./pixelSize;
             
+            xrefEqInit = (initR.*cos(theta)+fitting.roiSize/2)./pixelSize;
+            yrefEqInit = (initR.*sin(theta)+fitting.roiSize/2)./pixelSize;
+            
             hold(ax3,'on')
-            plot(ax3, xref, yref, '- b')
-            plot(ax3, xrefEq, yrefEq, '- g')
+            plot(ax3, xref, yref, '- g', 'LineWidth',2)
+            plot(ax3, xrefEq, yrefEq, '- b', 'LineWidth',2)
+            plot(ax3, xrefInit, yrefInit, '--', 'Color', [0.5 1 0.5])
+            plot(ax3, xrefEqInit, yrefEqInit, '--', 'Color', [0.5 0.5 1])
             hold(ax3,'off')
             
             subplot(2,2,1,ax3)
@@ -123,27 +142,24 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             img = renderImage(y,z,sigma,sigmaZ);
             imagesc(ax3_2, img)
             colormap(ax3_2, mymakelut('red hot'))
+
+            % init
+            % close part
+            [yrefCloseInit, zrefCloseInit, thetaAnchor2] = closePart(initCloseAngle, initR, modPInit.zOffset, pixelSize, fitting);
+            % open part
+            [yrefOpenInit, zrefOpenInit] = openPart(thetaAnchor2, initCloseAngle, initR, modPInit.zOffset, pixelSize, fitting);
             
-            % close angle
-            % open to the top
-            thetaAnchor2 = pi-closeAngle;       % the reflection of the close angle in the 2nd quadrant
-            theta = [closeAngle:-pi/360:-pi/2 3*pi/2:-pi/360:thetaAnchor2];
-            theta = -theta;                     % reverse the circle (up-side-down)
-            % after the reverse, now the open is to the bottom
-            zrefClose = (R.*sin(theta)-modP.zOffset+fitting.roiSize/2)./pixelSize;
-            yrefClose = (R.*cos(theta)+fitting.roiSize/2)./pixelSize;
-            
-            % open angle
-            % open to the top
-            theta = closeAngle:pi/180:thetaAnchor2;
-            theta = -theta;                     % reverse the circle (up-side-down)
-            % after the reverse, now the open is to the bottom
-            zrefOpen = (R.*sin(theta) -modP.zOffset +fitting.roiSize/2)./pixelSize;
-            yrefOpen = (R.*cos(theta)+fitting.roiSize/2)./pixelSize;
+            % final result
+            % close part
+            [yrefClose, zrefClose, thetaAnchor2] = closePart(closeAngle, R, modP.zOffset, pixelSize, fitting);
+            % open part
+            [yrefOpen, zrefOpen] = openPart(thetaAnchor2, closeAngle, R, modP.zOffset, pixelSize, fitting);
             
             hold(ax3_2,'on')
-            plot(ax3_2, zrefClose, yrefClose, '- g')
-            plot(ax3_2, zrefOpen, yrefOpen, '- b')
+            plot(ax3_2, zrefClose, yrefClose, '- g', 'LineWidth',2)
+            plot(ax3_2, zrefOpen, yrefOpen, '- b', 'LineWidth',2)
+            plot(ax3_2, zrefCloseInit, yrefCloseInit, '--', 'Color', [0.5 1 0.5])
+            plot(ax3_2, zrefOpenInit, yrefOpenInit, '--', 'Color', [0.5 0.5 1])
             hold(ax3_2,'off')
             set(ax3_2, 'Xdir','reverse')
             
@@ -161,8 +177,10 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             % the referece is just the axis-exchanged version as for the YZ
             % section
             hold(ax3_3,'on')
-            plot(ax3_3, yrefClose, zrefClose, '- g')
-            plot(ax3_3, yrefOpen, zrefOpen, '- b')
+            plot(ax3_3, yrefClose, zrefClose, '- g', 'LineWidth',2)
+            plot(ax3_3, yrefOpen, zrefOpen, '- b', 'LineWidth',2)
+            plot(ax3_3, yrefCloseInit, zrefCloseInit, '--', 'Color', [0.5 1 0.5])
+            plot(ax3_3, yrefOpenInit, zrefOpenInit, '--', 'Color', [0.5 0.5 1])
             hold(ax3_3,'off')
             
             axis(ax3,'equal')
@@ -219,7 +237,7 @@ function v = renderImage(a,b,sigmaA,sigmaB)
     srec(1)=ceil((rangex(2)-rangex(1))/pixelsize);
     srec(2)=ceil((rangey(2)-rangey(1))/pixelsize);
     srec(3)=ceil((rangez(2)-rangez(1))/pixelsize);
-    roiks=2.7
+    roiks=2.7;
     G=creategausstemplate(roiks);
 
     [v,nlocs]=gaussrender_elliptc(single(a),single(b),uint32(srec),single(sigmaA),single(sigmaB),single(G.template),single(G.sigmatemplate),...
@@ -238,3 +256,22 @@ function gausstemplate=creategausstemplate(roiks) % create template
     gausstemplate.sizegauss=sizegauss;
     gausstemplate.sigmatemplate=sigmatemplate;
 end
+
+function [yrefClose, zrefClose, thetaAnchor2] = closePart(closeAngle, R, zOffset, pixelSize, fitting)
+    % in the begining, the open is to the top
+    thetaAnchor2 = pi-closeAngle;       % the reflection of the close angle in the 2nd quadrant
+    theta = [closeAngle:-pi/360:-pi/2 3*pi/2:-pi/360:thetaAnchor2];
+    theta = -theta;                     % reverse the circle (up-side-down)
+    % after the reverse, now the open is to the bottom
+    zrefClose = (R.*sin(theta)-zOffset+fitting.roiSize/2)./pixelSize;
+    yrefClose = (R.*cos(theta)+fitting.roiSize/2)./pixelSize;
+end
+
+function [yrefOpen, zrefOpen] = openPart(thetaAnchor2, closeAngle, R, zOffset, pixelSize, fitting)
+    theta = closeAngle:pi/180:thetaAnchor2;
+    theta = -theta;                     % reverse the circle (up-side-down)
+    % after the reverse, now the open is to the bottom
+    zrefOpen = (R.*sin(theta) -zOffset +fitting.roiSize/2)./pixelSize;
+    yrefOpen = (R.*cos(theta)+fitting.roiSize/2)./pixelSize;
+end
+            
