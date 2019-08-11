@@ -54,7 +54,7 @@ classdef CompareToGroundTruthChallenge<interfaces.DialogProcessor
             [descfile]=saveLocalizationsCSV(lochere,filenew,p.onlyfiltered,p.numberOfLayers,p.sr_layerson,obj.induse);
             
             %modify challenge data
-            challengepath=['External' filesep 'SMLMChallenge' filesep];
+            challengepath=['shared' filesep 'externaltools' filesep 'SMLMChallenge' filesep];
             switch p.comparer.Value
                 case 1
                     javapath=['"' pwd filesep challengepath 'challenge.jar"'];

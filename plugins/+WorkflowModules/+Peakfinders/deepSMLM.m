@@ -3,9 +3,12 @@ classdef deepSMLM<interfaces.WorkflowModule
         deepobj
         mask
         imagebuffer
+        bufferinfo
         buffercounter
         Xgrid
         Ygrid
+        buffersize
+        preview
     end
     methods
         function obj=deepSMLM(varargin)
@@ -17,8 +20,8 @@ classdef deepSMLM<interfaces.WorkflowModule
         end
         function initGui(obj)
              initGui@interfaces.WorkflowModule(obj);
-            obj.setPar('loc_subtractbg',true) %hack to have 3 images in preview
-            obj.setPar('loc_blocksize_frames',3);
+%             obj.setPar('loc_subtractbg',true) %hack to have 3 images in preview
+%             obj.setPar('loc_blocksize_frames',3);
         end
         function prerun(obj,p)
             gitdir=fileparts(pwd);
@@ -27,18 +30,25 @@ classdef deepSMLM<interfaces.WorkflowModule
             obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile);
             
             obj.imagebuffer=[];
-            
+            if obj.getPar('loc_preview')
+                obj.buffersize=1;
+            else
+                obj.buffersize=p.buffersize;
+            end
+            obj.preview=obj.getPar('loc_preview');
             
 
         end
         function dato=run(obj,data,p)
             %
+            dato=[];
             bufferfactor=1.2;
-            xfactor=.5*bufferfactor;
-            yfactor=.5*bufferfactor;
+            xfactor=.6*bufferfactor;
+            yfactor=.6*bufferfactor;
             zfactor=750*bufferfactor;
-            photfactor=10000*bufferfactor;
+            photfactor=50000*bufferfactor;
             image=data.data;%get;
+            image=single(image); %now we use directly camera frames
             if isempty(image)
                 dato=data;
                 dato.data=[];
@@ -47,64 +57,110 @@ classdef deepSMLM<interfaces.WorkflowModule
             
             
             if isempty(obj.imagebuffer)
-                obj.imagebuffer=zeros(1,3,size(image,1),size(image,2),'single');
+                obj.imagebuffer=zeros(obj.buffersize,size(image,1),size(image,2),'single');
+                obj.bufferinfo.frame=zeros(obj.buffersize,1,'double');
                 obj.buffercounter=0;
-                nx=1:size(image,1);ny=1:size(image,2);
+                nx=1:size(image,2);ny=1:size(image,1);
                 [obj.Xgrid,obj.Ygrid]=meshgrid(nx,ny);
                 obj.mask=obj.getPar('loc_roimask'); %run at first time
             end
             obj.buffercounter=obj.buffercounter+1;
-            bufferind=mod(obj.buffercounter-1,3)+1;
-            obj.imagebuffer(1,bufferind,:,:)=image;
-            if obj.buffercounter<3 %we need to wait for 3 images
-                dato=[];
+%             bufferind=mod(obj.buffercounter-1,3)+1;
+            obj.imagebuffer(obj.buffercounter,:,:)=image;
+            obj.bufferinfo.frame(obj.buffercounter)=data.frame;
+            if obj.buffercounter<obj.buffersize %we need to wait for buffersize images. check if eof, then process the rest.
+                
                 return
             end
             
-            indsort=[bufferind:3 1:bufferind-1];indsort=indsort([2 3 1]);
-            fitimage=obj.imagebuffer(1,indsort,:,:);
-%             fitimage=permute(fitimage,[1 2 4 3]);
-            [xf, x_shape] = pseudo_col2row_major(fitimage);
+%             indsort=[bufferind:3 1:bufferind-1];indsort=indsort([2 3 1]);
+%             fitimage=obj.imagebuffer(1,indsort,:,:);
+%             fitimage=permute(obj.imagebuffer,[1 3 2]);
+            
+            
+            %XXXX later remove
+%             fitimage=obj.imagebuffer;
+%             camsettings=obj.getPar('loc_cameraSettings');
+%             imbufferadu=fitimage/camsettings.pix2phot+camsettings.offset;
+
+            imbufferadu=obj.imagebuffer; %already in ADU
+            [xf, x_shape] = pseudo_col2row_major(imbufferadu);
             
             [outf, out_size] = obj.deepobj.forward(xf, x_shape);
             deepim = pseudo_row2_col_major(outf, out_size);
+             deepim(:,6,:,:)=imbufferadu;
 %             deepim=permute(deepim,[1 2 4 3]);
-            probmap=squeeze(deepim(1,1,:,:));
-            if all(size(obj.mask)==size(image)) %apply mask
-                probmap=probmap.*obj.mask;
+            
+            for k=1:size(deepim,1) %process each frame individually
+                probmap=squeeze(deepim(k,1,:,:));
+                if all(size(obj.mask)==size(image)) %apply mask
+                    probmap=probmap.*obj.mask;
+                end
+                maxima=maximumfindcall((probmap)); 
+                cutoff=p.pcutoff;
+                maxind= (maxima(:,3)>cutoff);
+                y=maxima(maxind,1);
+                x=maxima(maxind,2);
+                linind=sub2ind(size(image),x,y);
+                Ymap=squeeze(deepim(k,3,:,:))*yfactor+obj.Ygrid;
+                Xmap=squeeze(deepim(k,4,:,:))*xfactor+obj.Xgrid;
+                photmap=squeeze(deepim(k,2,:,:));
+                Zmap=squeeze(deepim(k,5,:,:));
+                dxmap=squeeze(deepim(k,4,:,:))*yfactor;
+                dymap=squeeze(deepim(k,3,:,:))*yfactor;
+
+                xfit=Xmap(linind);
+                yfit=Ymap(linind);
+                intensity=photmap(linind)*photfactor;
+                zfit=Zmap(linind)*zfactor;
+                pfit=probmap(linind);
+                dx=dxmap(linind);
+                dy=dymap(linind);
+
+                %export for SMAP
+                v1=0*xfit+1;
+                locs.frame=v1*obj.bufferinfo.frame(k);
+                locs.xcnn=xfit;
+                locs.ycnn=yfit;
+                locs.zcnn=zfit;
+%                 locs.phot=intensity;
+                locs.prob=pfit;
+%                 locs.PSFxpix=v1;
+%                 locs.bg=0*v1; %now set to zero, later determine from CNN or from photon converted image
+%                 locs.xpixerr=sqrt((locs.PSFxpix.*locs.PSFxpix+1/12*v1)./( locs.phot)+8*pi*(locs.PSFxpix.*locs.PSFxpix).^2.* locs.bg./( locs.phot).^2);
+%                 locs.ypixerr=locs.xpixerr;
+                locs.dx=dx;
+                locs.dy=dy;
+                
+                %to be used as a peak finder:
+                locs.x=xfit;
+                locs.y=yfit;
+                locs.N=intensity;
+                locs.znm=zfit;
+                
+                dato=data; 
+                dato.frame=obj.bufferinfo.frame(k);
+                dato.ID=dato.frame;
+                dato.data=locs; 
+                obj.output(dato);
             end
-            maxima=maximumfindcall((probmap)); 
-            cutoff=p.pcutoff;
-            maxind= (maxima(:,3)>cutoff);
-            y=maxima(maxind,1);
-            x=maxima(maxind,2);
-            linind=sub2ind(size(image),x,y);
-            Ymap=squeeze(deepim(1,3,:,:))*yfactor+obj.Ygrid;
-            Xmap=squeeze(deepim(1,4,:,:))*xfactor+obj.Xgrid;
-            photmap=squeeze(deepim(1,2,:,:));
-            Zmap=squeeze(deepim(1,5,:,:));
-            
-            
-            xfit=Xmap(linind);
-            yfit=Ymap(linind);
-            intensity=photmap(linind)*photfactor;
-            zfit=Zmap(linind)*zfactor;
-            pfit=probmap(linind);
-            
-            %export for SMAP
-            v1=0*xfit+1;
-            locs.frame=v1*data.frame;
-            locs.xpix=xfit;
-            locs.ypix=yfit;
-            locs.znm=zfit;
-            locs.phot=intensity;
-            locs.prob=pfit;
-            locs.PSFxpix=v1;
-            locs.bg=median(image(:))*v1;
-            locs.xpixerr=sqrt((locs.PSFxpix.*locs.PSFxpix+1/12*v1)./( locs.phot)+8*pi*(locs.PSFxpix.*locs.PSFxpix).^2.* locs.bg./( locs.phot).^2);
-            locs.ypixerr=locs.xpixerr;
-            dato=data;         
-            dato.data=locs; 
+%             if obj.preview
+%                 outputfig=obj.getPar('loc_outputfig');
+%                 if ~isvalid(outputfig)
+%                     outputfig=figure(209);
+%                     obj.setPar('loc_outputfig',outputfig);
+%                 end
+%                 outputfig.Visible='on';
+%                 figure(outputfig)
+%                 hold off
+%                 imagesc(image);
+%                 colormap jet
+%                 colorbar;
+%                 axis equal
+%                 hold on
+%                 plot(xfit,yfit,'yo')
+%             end
+            obj.buffercounter=0;
         end
     end
 end
@@ -138,6 +194,13 @@ pard.pcutofft.Width=1;
 pard.pcutoff.object=struct('Style','edit','String','0.3');
 pard.pcutoff.position=[3,2];
 pard.pcutoff.Width=.35;
+
+pard.buffersizet.object=struct('Style','text','String','buffer (frames)');
+pard.buffersizet.position=[4,1];
+pard.buffersizet.Width=1;
+pard.buffersize.object=struct('Style','edit','String','100');
+pard.buffersize.position=[4,2];
+pard.buffersize.Width=.35;
 
 
 pard.plugininfo.type='WorkflowModule'; 
