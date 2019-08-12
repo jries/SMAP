@@ -86,6 +86,8 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 end   
             end
             locout=coord2loc(coord,crlb,LL,iterations,pos,data{1}.frame,chi2);
+%             locout=copyfields(maxima,locout);
+            locout=copyfields(locout,maxima,{'xcnn','ycnn','zcnn','prob','dx','dy'});
             if obj.preview
                 
                  figure(87);

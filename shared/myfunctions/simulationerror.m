@@ -1,20 +1,41 @@
-function simulationerror(locgt,locfit,psf)
+function simulationerror(locgt,locfit,psf,searchradius)
+
 pixelsize=100
-locfit.x=locfit.xnm;locfit.y=locfit.ynm;
-maxd=200;%search radius in x,y
-[iAa,iBa,nA,nB,nseen]=matchlocsall(locgt,locfit,0,0,maxd);
+if ~isfield(locgt,'x'), locgt.x=locgt.xnm; end
+if ~isfield(locfit,'x'), locfit.x=locfit.xnm; end
+if ~isfield(locgt,'y'), locgt.x=locgt.ynm; end
+if ~isfield(locfit,'y'), locfit.x=locfit.ynm; end
+if ~isfield(locgt,'z'), locgt.x=locgt.znm; end
+if ~isfield(locfit,'z'), locfit.x=locfit.znm; end
+
+if nargin<4 || isempty(searchradius)
+    searchradius=200;
+end
+
+[iAa,iBa,nA,nB,nseen]=matchlocsall(locgt,locfit,0,0,searchradius(1));
 totallocs=length(locfit.x);
 falsepositives=length(nB);
 falsenegatives=length(nA);
 matched=length(iAa);
-dx=locgt.x(iAa)-locfit.x(iBa);
-dy=locgt.y(iAa)-locfit.y(iBa);
-dz=locgt.znm(iAa)-locfit.znm(iBa);
 
-crlb=psf.crlb(locgt.phot(iAa),locgt.bg(iAa),locgt.znm(iAa));
-dxr=dx./sqrt(crlb(:,2))/pixelsize; %xeems to be closer to 1
-dyr=dy./sqrt(crlb(:,1))/pixelsize;
-dzr=dz./sqrt(crlb(:,5));
+dz=locgt.z(iAa)-locfit.z(iBa);
+indinz=abs(dz)<searchradius(end);
+dz=dz(indinz);
+dx=locgt.x(iAa(indinz))-locfit.x(iBa(indinz));
+dy=locgt.y(iAa(indinz))-locfit.y(iBa(indinz));
+
+
+if nargin<3 || isempty(psf)
+    crlb=1000./sqrt(locgt.phot(iAa(indinz))); %
+    dxr=dx./sqrt(crlb); %xeems to be closer to 1
+    dyr=dy./sqrt(crlb);
+    dzr=dz./sqrt(crlb)/3; 
+else    
+    crlb=psf.crlb(locgt.phot(iAa(indinz)),locgt.bg(iAa(indinz)),locgt.znm(iAa(indinz)));
+    dxr=dx./sqrt(crlb(:,2))/pixelsize; %xeems to be closer to 1
+    dyr=dy./sqrt(crlb(:,1))/pixelsize;
+    dzr=dz./sqrt(crlb(:,5));
+end
 
 figure(88);
 subplot(3,3,1)
@@ -38,7 +59,11 @@ fithistr(dzr,0.2)
 xlabel('dz/sqrt(CRLBz)')
 
 subplot(3,3,7)
-plot(locgt.znm(iAa),locfit.znm(iBa),'.',locgt.znm(iAa),locgt.znm(iAa),'k')
+hold off
+dscatter(locgt.z(iAa),locfit.z(iBa))
+hold on
+plot([min(locgt.z(iAa)),max(locgt.z(iAa))],[min(locgt.z(iAa)),max(locgt.z(iAa))],'m')
+% ,'.',locgt.z(iAa),locgt.z(iAa),'k')
 xlabel('z_gt')
 ylabel('z_fit')
 
