@@ -1,4 +1,6 @@
 classdef locsfromSE<interfaces.DialogProcessor
+%     makes histogram of localizations/cluster from segmented clusters in
+%     the ROI manager
     methods
         function obj=locsfromSE(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -203,4 +205,5 @@ pard.numberOfSubsets.width = 0.5;
 
 pard.plugininfo.name='histogram from Roimanager';
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='makes histogram of localizations/cluster from segmented clusters in the ROI manager';
 end

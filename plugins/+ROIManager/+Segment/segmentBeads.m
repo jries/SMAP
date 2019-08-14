@@ -1,4 +1,5 @@
 classdef segmentBeads<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Segements beads
     methods
         function obj=segmentBeads(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -216,6 +217,7 @@ pard.frameranget.position=[6,1];
 pard.frameranget.Width=2;
 pard.framerange.object=struct('String','15','Style','edit');
 pard.framerange.position=[6,3];
+pard.plugininfo.description='Segements beads';
 % pard.t3.object=struct('String','diameterNPC','Style','text');
 % pard.t3.position=[3,1];
 % pard.diameterNPC.object=struct('String','110','Style','edit');

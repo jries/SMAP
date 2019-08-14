@@ -1,5 +1,6 @@
 classdef Vibrations<interfaces.DialogProcessor
-    % Histograms calculates histograms and statistics for fields  
+    % Vibrations calculates the fourier transform of x, y and z to
+    % visualize vibrations
     properties
     end
     methods
@@ -95,7 +96,7 @@ classdef Vibrations<interfaces.DialogProcessor
 %             pard.quantile.position=[1,4.5];
 %             pard.quantile.Width=0.5;
             pard.plugininfo.name='Vibrations';
-            pard.plugininfo.description='calculates histograms and statistics for loc fields';
+            pard.plugininfo.description='Calculates the fourier transform of x, y and z to visualize vibrations';
             pard.plugininfo.type='ProcessorPlugin'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
   
 %             pard.syncParameters={{'locFields','locfield',{'String'}}};

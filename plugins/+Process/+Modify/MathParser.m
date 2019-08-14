@@ -1,4 +1,7 @@
 classdef MathParser<interfaces.DialogProcessor
+%     Complex mathematics on localization fields. Equations using matlab
+%     functions are parsed. Previous calculations are saved for quick
+%     access.
     properties
         equationhistory
         historyfile='settings/temp/MathParser.txt';
@@ -167,4 +170,5 @@ pard.dataselect_all.object.TooltipString='choose localization file data set';
 pard.syncParameters={{'filelist_short','dataselect',{'String'}},{'MathParserHistory','resultfieldh',{'Value'}},{'MathParserHistory','equationh',{'Value'}}};
 
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Complex mathematics on localization fields. Equations using matlab functions are parsed. Previous calculations are saved for quick access.';
 end

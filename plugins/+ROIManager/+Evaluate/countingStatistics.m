@@ -1,4 +1,6 @@
 classdef countingStatistics<interfaces.SEEvaluationProcessor
+%     calcuculate number of localizations with different dark times. Used
+%     for locsfromSE plugin (see counting)
     methods
         function obj=countingStatistics(varargin)        
                 obj@interfaces.SEEvaluationProcessor(varargin{:});
@@ -38,4 +40,5 @@ pard.noblinktime.object=struct('Style','edit','String','20');
 pard.noblinktime.position=[2,3];
 pard.noblinktime.Width=2;
 pard.plugininfo.type='ROI_Evaluate';
+pard.plugininfo.description='calcuculate number of localizations with different dark times. Used for locsfromSE plugin (see counting)';
 end

@@ -46,9 +46,12 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 outputdat=dato;
                 return;
             end
-            maxima.N=image(sub2ind(size(image),maxima.y,maxima.x))*obj.splinenorm;
-            maxima.z=0*maxima.N;
+%             maxima.N=image(sub2ind(size(image),maxima.y,maxima.x))*obj.splinenorm;
+%             maxima.z=0*maxima.N;
+%             maxima.z=maxima.znm;
+%             maxima.N=maxima.intensity;
             dr=round((obj.splinePSF.roisize-1)/2);
+            maxima.z=-maxima.znm; %XXXXX 
 
             pos.x=max(dr+1,min(size(image,2)-dr,round(maxima.x)));
             pos.y=max(dr+1,min(size(image,1)-dr,round(maxima.y)));
@@ -57,7 +60,8 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             maximainit.y=pos.y;
             
             v0=0*maxima.N;
-            coord=[maxima.x-pos.x,maxima.y-pos.y,v0,maxima.N,v0];
+            coord=[maxima.x-pos.x,maxima.y-pos.y,maxima.z,maxima.N,v0];
+            coord0=coord;
             M=single(obj.splinePSF.render(maxima,[0 size(image,2)],[0 size(image,1)]));
 %             Mstart=M;
             Mi=single(obj.splinePSF.PSF(coord));      
@@ -82,17 +86,20 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 end   
             end
             locout=coord2loc(coord,crlb,LL,iterations,pos,data{1}.frame,chi2);
+%             locout=copyfields(maxima,locout);
+            locout=copyfields(locout,maxima,{'xcnn','ycnn','zcnn','prob','dx','dy'});
             if obj.preview
                 
                  figure(87);
                  subplot(2,2,2)
                  imagesc(M-image); colorbar
                  subplot(2,2,1)
-                 figure(90)
+%                  figure(90)
                  hold off
-                 imagesc(image);
+                 imagesc(image);colorbar
                  hold on
-                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'ro');%,maxima.x,maxima.y,'md')
+                 plot(coord0(:,1)+pos.x,coord0(:,2)+pos.y,'mo');
+                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+');%,maxima.x,maxima.y,'md')
                 gt=obj.getPar('loc_gt_preview');
                 if ~isempty(gt)
                     plot(gt.x,gt.y,'k+')
@@ -101,10 +108,10 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %                     xlim([0,size(image,2)])
                 end
                 axis('equal')
-                colormap gray
+                colormap parula
                 figure(87)
                 subplot(2,2,4)
-                plot(coord(:,1)+pos.x,-LL/((2*dr+1)^2),'ko',coord(:,1)+pos.x,chi2,'x')
+                plot(coord(:,1)+pos.x,-LL/((2*dr+1)^2),'k+',coord(:,1)+pos.x,chi2,'x')
                 xlim([0,size(image,2)])
     %             pause(.5)
 
@@ -120,7 +127,7 @@ end
 function locout=coord2loc(coord,crlb,LL,iterations,pos,frame,chi2)
 locout.xpix=single(coord(:,1)+pos.x);
 locout.ypix=single(coord(:,2)+pos.y);
-locout.znm=single(coord(:,3));
+locout.znm=-single(coord(:,3)); %XXXXX
 locout.phot=single(coord(:,4));
 locout.bg=single(coord(:,5));
 locout.xpixerr=single(sqrt(crlb(:,1)));

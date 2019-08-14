@@ -518,6 +518,8 @@ end
 
 
 function redrawov_callback(callobj,event,obj)
+% render overview image, click in overview image centers superresolution
+% image on that spot
 if isempty(obj.locData.loc)
     return
 end
@@ -634,6 +636,9 @@ end
 end
 
 function roi_callback(callobj,data,obj,roimode,roiposition)
+% Define ROI in reconstructed superresolution image (point, linear,
+% elliptical, rectengular, polynomial or free hand). Used in numerous
+% plugins.
 global roimodecallback
 roimodecallback=roimode;
 p=obj.getGuiParameters;

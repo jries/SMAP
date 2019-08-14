@@ -1,6 +1,6 @@
 classdef volume3D_hist<interfaces.DialogProcessor
-    % volume3D renders dataset as 3D volumes with 3D elliptical Gaussiancs
-    % corresponding to locprecnm and locprecznm.
+    % volume3D renders dataset as 3D volumes with intensities corresponding
+    % to the number of localizations in voxel
     properties
         imagestack
         imageinfo
@@ -226,5 +226,5 @@ pard.volumeviewer.Width=1.5;
 pard.plugininfo.name='3D_volume_hist';
 pard.plugininfo.type='ProcessorPlugin';
 
-pard.plugininfo.description= 'volume3D renders dataset as 3D volumes with 3D elliptical Gaussiancs corresponding to locprecnm and locprecznm.';
+pard.plugininfo.description= 'Renders dataset as 3D volumes with intensities corresponding to the number of localizations in voxel';
 end

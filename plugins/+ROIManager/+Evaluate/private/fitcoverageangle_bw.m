@@ -1,4 +1,4 @@
-function fitp=fitcoverageangle_bw(bwim,startp,ax)
+function fitp=fitcoverageangle_bw(bwim,startp,ax,rangex,rangey)
 bwim=2*bwim-1;
 sizein=size(bwim);
 % dangle(1)=2*pi/sin(1);
@@ -7,9 +7,10 @@ sizein=size(bwim);
 % tr=-pi/2:dangle(2):pi/2;
 % pr=-pi:dangle(1):pi;
 % r=linspace(-pi/2,pi/2,sin(2));
-elsin=linspace(-1,1,sizein(1));
-el=asin(elsin);
-azimuth=linspace(-pi,pi,sizein(1));
+
+elsin=linspace(rangey(1),rangey(2),sizein(2));
+el=double(asin(elsin));
+azimuth=double(linspace(rangex(1),rangex(2),sizein(1)));
 
 [Elevation,Azimuth]=meshgrid(el,azimuth);
 
@@ -34,7 +35,7 @@ options=optimset('lsqnonlin');
 % options.Algorithm='levenberg-marquardt';
 
 
-[fitp,resnorm]=lsqnonlin(@coverageerr,startph,[],[],options,Elevation,Azimuth,bwim);
+[fitp,resnorm]=lsqnonlin(@coverageerr,startph,[-inf -inf 0],[inf inf pi],options,Elevation,Azimuth,bwim);
 
 % [fitp2,resnorm2]=lsqnonlin(@coverageerr,startph,[],[],options,Theta,Phi,-bwim);
 
@@ -62,21 +63,27 @@ end
 % [x,y,z]=sph2cart(fitp(2),fitp(1),1);
 % [ph,th]=cart2sph(x,y,z);
  fitp(1)=th;fitp(2)=ph; 
-    
+ 
+ 
+
 
 if nargin>2
     hold(ax,'off')
 imfit=coverage_sphere(fitp(1),fitp(2),fitp(3),Elevation,Azimuth);
 % im=coverage(-pi/4,pi/4,pi/16,Theta,Phi);
 imcombine=zeros(size(imstart,2),size(imstart,1),3);
-imcombine(:,:,1)=bwim'*3;
-imcombine(:,:,2)=imfit';
+imcombine(:,:,1)=(bwim'+1)/2;
+imcombine(:,:,2)=(imfit'+1)/2;
 imcombine(:,:,3)=imstart';
-imagesc(ax,azimuth,el,imcombine);
+imagesc(ax,azimuth,elsin,imcombine);
 hold(ax,'on')
 plot(ax,fitp(2)+pi/2,sin(fitp(1)),'*')
 plot(ax,fitp(2)+pi/2-2*pi,sin(fitp(1)),'*')
+title(ax,['Mask: Theta=' num2str(180-fitp(3)/pi*180,'%3.0f') '°'])
 end
+
+%   fitp(1)=fitp(1)-rangey(1)-1;
+% fitp(2)=fitp(2)-rangex(1)-pi;  
 % figure(81);imagesc(tr,pr,imfit);
 end
 

@@ -1,4 +1,8 @@
 classdef gradientEllipticity3D2z<interfaces.DialogProcessor
+%     calculates z from ellipticity (from 3D gradient fit)
+% according to: H. Ma, J. Xu, J. Jin, Y. Gao, L. Lan, and Y. Liu, “Fast and
+% Precise 3D Fluorophore Localization based on Gradient Fitting.,” Sci.
+% Rep., vol. 5, p. 14335, 2015.
     properties
         cal3D
         outsx2sy2
@@ -85,4 +89,6 @@ pard.syncParameters={{'fit_gradient3Dellipticity','fitpol',{'String'}}};
 
 pard.plugininfo.name='z from gradient3D fit';
 pard.plugininfo.type='ProcessorPlugin';
+
+pard.plugininfo.description='calculates z from ellipticity (from 3D gradient fit). According to: H. Ma, J. Xu, J. Jin, Y. Gao, L. Lan, and Y. Liu, “Fast and Precise 3D Fluorophore Localization based on Gradient Fitting.,” Sci. Rep., vol. 5, p. 14335, 2015.';
 end

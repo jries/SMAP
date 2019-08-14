@@ -1,4 +1,5 @@
 classdef segmentCellsCME<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Segements yeast cells with labeled endocytic sites. Foucs on top or bottom pole.
     methods
         function obj=segmentCellsCME(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -28,7 +29,8 @@ pard.cutoff.position=[1,2];
 pard.preview.object=struct('String','preview','Style','checkbox','Value',1);
 pard.preview.position=[3,1];
 pard.plugininfo.type='ROI_Analyze';
-% 
+pard.plugininfo.description='Segements yeast cells with labeled endocytic sites. Foucs on top or bottom pole.';
+
 % pard.t2.object=struct('String','sigmaNMS','Style','text');
 % pard.t2.position=[2,1];
 % pard.sigmaNMS.object=struct('String','5','Style','edit');

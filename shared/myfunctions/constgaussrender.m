@@ -1,4 +1,5 @@
 function [srim,nlocs,template]=constgaussrender(pos,rangex, rangey, pixelsx, pixelsy, lut,rangec,template)
+% Renders each localization as a Gaussian with a constant sigma.
 [srim,nlocs,template]=histrender(pos,rangex, rangey, pixelsx, pixelsy, lut,rangec,template);
 if isfield(pos,'gaussset')
     s(1)=pos.gaussset/pixelsx;

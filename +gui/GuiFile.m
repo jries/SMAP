@@ -271,6 +271,7 @@ end
 end
 
 function autosave_timer(a,b,obj)
+% saves localization data and SMAP settings in user-defined invervals
 p.mainGui=obj.getPar('mainGui');
 p.saveroi=false;
 if obj.guihandles.autosavecheck.Value
@@ -281,6 +282,7 @@ end
 end
 
 function autosavetime_callback(a,b,obj)
+% saves localization data and SMAP settings in user-defined invervals
 p=obj.getGuiParameters;
 t=obj.autosavetimer;
 if ~isempty(t)||isa(t,'timer')
