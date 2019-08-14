@@ -123,7 +123,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 locs.xcnn=xfit;
                 locs.ycnn=yfit;
                 locs.zcnn=zfit;
-%                 locs.phot=intensity;
+                locs.photcnn=intensity;
                 locs.prob=pfit;
 %                 locs.PSFxpix=v1;
 %                 locs.bg=0*v1; %now set to zero, later determine from CNN or from photon converted image

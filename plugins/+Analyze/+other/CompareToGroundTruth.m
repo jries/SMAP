@@ -10,7 +10,7 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         
         function out=run(obj,p)
             out=[];
-            fieldsR={'xnm','ynm','znm','phot','bg','frame'};
+            fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm'};
             fieldsT=fieldsR;
             if p.overwritefieldsR
                 fieldsR={p.xfieldR.selection,p.yfieldR.selection,p.zfieldR.selection,p.NfieldR.selection,'bg','frame'};
@@ -40,20 +40,44 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
             % do something with grouping? at least warn?
             obj.locData.sort('frame');
             obj.locData.filter;
-            lR=obj.locData.getloc(fieldsR,'layer',p.layerR.Value);
-            lT=obj.locData.getloc(fieldsT,'layer',p.layerT.Value);
+            lR=obj.locData.getloc(fieldsR,'layer',p.layerR.Value,'position','roi');
+            lT=obj.locData.getloc(fieldsT,'layer',p.layerT.Value,'position','roi');
             
             lRn.x=lR.(fieldsR{1})*factorR(2)+p.offsetxyzR(1); 
             lRn.y=lR.(fieldsR{2})*factorR(3)+p.offsetxyzR(2);
             lRn.z=lR.(fieldsR{3})*factorR(4)+p.offsetxyzR(3); 
             lRn.phot=lR.(fieldsR{4})*factorR(1);
-            lRn.bg=lR.bg;lRn.frame=lR.frame;
+            lRn.bg=lR.bg+p.offsetxyzR(4);lRn.frame=lR.frame;
+            
             lTn.x=lT.(fieldsT{1})*factorT(2)+p.offsetxyzT(1); 
             lTn.y=lT.(fieldsT{2})*factorT(3)+p.offsetxyzT(2);
             lTn.z=lT.(fieldsT{3})*factorT(4)+p.offsetxyzT(3); 
             lTn.phot=lT.(fieldsT{4})*factorT(1);
-            lTn.bg=lT.bg;lTn.frame=lT.frame;            
-            simulationerror(lTn,lRn,[],p.searchradius)
+            lTn.bg=lT.bg+p.offsetxyzT(4);lTn.frame=lT.frame;  
+            % PSF model
+            switch p.cal_3Dfile_use.selection
+                case 'use 3D cal'
+                    pixelsize=obj.getPar('cam_pixelsize_nm');
+                    psfmodel=splinePSF;
+                    psfmodel.loadmodel(p.cal_3Dfile);
+                    crlb=psfmodel.crlb(lRn.phot,lRn.bg,-lRn.z);
+%                     crlb=psfmodel.crlb(lTn.phot,lTn.bg,-lTn.z);
+                    lRn.xerr=sqrt(crlb(:,2))*pixelsize(1);
+                    lRn.yerr=sqrt(crlb(:,1))*pixelsize(end);
+                    lRn.zerr=sqrt(crlb(:,5));
+                    whicherr=1;
+                case 'fiterrors ref'
+                    lRn=copyfields(lRn,lR,fieldsR(7:end));
+                    whicherr=1;
+                case 'fiterrors target'
+                    lTn=copyfields(lTn,lT,fieldsT(7:end));
+                    whicherr=2;
+                otherwise
+                    whicherr=1;
+            end
+
+              
+            simulationerror(lRn,lTn,whicherr,p.searchradius)
             
 %                 lt.frame=lt.frame+1;
 %             [outlayer2D, outlayer3D,mr,mt]=getmatch(lr,lt,p);
@@ -174,81 +198,22 @@ end
 tab=struct2table(ss);
 
 end
-function wobble_callback(a,b,obj)
-filename=(obj.locData.files.file(1).name);
-path=fileparts(filename);
-gtfile=[path filesep 'activations.csv','load ground truth for data'];
-if ~exist(gtfile,'file')
-    ind=strfind(path,filesep); 
-    gtfile=[path(1:ind(end))  'activations.csv'];
-end
- 
-if ~exist(gtfile,'file')
-    [fi,pa]=uigetfile(gtfile);
-    if fi
-    gtfile=[pa fi];
-    else
-        return
-    end
-end
 
-gtData=csvread(gtfile);
-% fullnameLoc = get(handles.text5,'String');
-%hasHeader = fgetl(fopen(fullnameLoc));
-%hasHeader = 1*(sum(isstrprop(hasHeader,'digit'))/length(hasHeader) < .6);
-%localData = csvread(fullnameLoc, hasHeader, 0);
-%SH: switched to importdata tool and defined columns to make more general
-% localData =importdata(fullnameLoc);
-% if isstruct(localData)
-%     %strip the header
-%     localData = localData.data;
-% end
-% xCol = str2num(get(handles.edit_x,'String'));
-% yCol = str2num(get(handles.editY,'String'));
-% frCol = str2num(get(handles.editFr,'String'));
-% 
-% fullnameGT = get(handles.text6,'String');
-% %assumes GT file is as defined in competition
-% %CSV file. X col 3, y col 4.
-% gtData = importdata(fullnameGT);
-XCOLGT =3;
-YCOLGT =4;
-gtAll = gtData(:,[XCOLGT,YCOLGT]);
-gt = unique(gtAll,'rows');
-
-% frameIsOneIndexed = get(handles.radiobutton_is1indexed,'Value');
-% 
-% [pathstr,~,~] = fileparts(fullnameLoc); 
-% output_path = pathstr;
-% xnm = localData(:,xCol);
-% ynm = localData(:,yCol);
-% frame = localData(:,frCol);
-cam_pixelsize_nm=obj.getPar('cam_pixelsize_nm');
-p=obj.getGuiParameters;
-if p.shiftpix
-shiftx=-0.5*cam_pixelsize_nm;
-shifty=-0.5*cam_pixelsize_nm;
-else
-    shiftx=0;
-    shifty=0;
-end
-%might be set by the users in future updates
-zmin = -750;zmax = 750;zstep = 10;%nm
-roiRadius = 500;%nm
-frameIsOneIndexed=true;
-output_path=path;
-wobbleCorrectSimBead(double(obj.locData.loc.xnm+shiftx),double(obj.locData.loc.ynm+shifty),double(obj.locData.loc.frame), gt,zmin,zstep,zmax,roiRadius,frameIsOneIndexed,filename)
-
-% addpath('External/SMLMChallenge')
-% wobble_correct;
-end
 
 function load3Dfile(a,b,obj)
+file=obj.getSingleGuiParameter('cal_3Dfile');
+if isempty(file)
+    file=[fileparts(obj.getPar('lastSMLFile')) filesep '*.mat'];
+end
+[f,p]=uigetfile(file);
+if f
+    obj.setGuiParameters(struct('cal_3Dfile',[p f]));
+end
 end
 
 function pard=guidef(obj)
 
-pard.t1.object=struct('Style','text','String','Reference');
+pard.t1.object=struct('Style','text','String','Reference (GT)');
 pard.t1.position=[1,2];
 pard.t2.object=struct('Style','text','String','Target');
 pard.t2.position=[1,3.5];
@@ -262,15 +227,15 @@ pard.layerT.position=[2,3.5];
 pard.layerT.Width=1;
 
 
-pard.offsetxyzt.object=struct('Style','text','String','Shift x,y,z');
+pard.offsetxyzt.object=struct('Style','text','String','Shift x,y,z,bg');
 pard.offsetxyzt.position=[3,1];
 pard.offsetxyzt.Width=1;
 
-pard.offsetxyzR.object=struct('Style','edit','String','0 0 0');
+pard.offsetxyzR.object=struct('Style','edit','String','0 0 0 0');
 pard.offsetxyzR.position=[3,2];
 pard.offsetxyzR.Width=1;
 
-pard.offsetxyzT.object=struct('Style','edit','String','0 0 0');
+pard.offsetxyzT.object=struct('Style','edit','String','0 0 0 0');
 pard.offsetxyzT.position=[3,3.5];
 pard.offsetxyzT.Width=1;
 
@@ -342,12 +307,19 @@ pard.searchradius.object=struct('Style','edit','String','100 300');
 pard.searchradius.position=[7,2];
 pard.searchradius.Width=.5;
 
-pard.cal_3Dfile_load.object=struct('Style','pushbutton','String','load 3D calibration','Callback',{{@load3Dfile,obj}});
-pard.cal_3Dfile_load.position=[8,1];
-pard.cal_3Dfile_load.Width=1;
+            p(1).value=0; p(1).on={}; p(1).off={'cal_3Dfile_load','cal_3Dfile'};
+            p(2).value=1; p(2).on=p(1).off; p(2).off={};
+            
+pard.cal_3Dfile_use.object=struct('Style','popupmenu','String',{{'use 3D cal','fiterrors ref','fiterrors target','estimate'}},'Callback',{{@obj.switchvisible,p}});
+pard.cal_3Dfile_use.position=[8,1];
+pard.cal_3Dfile_use.Width=1;
+
+pard.cal_3Dfile_load.object=struct('Style','pushbutton','String','load','Callback',{{@load3Dfile,obj}});
+pard.cal_3Dfile_load.position=[8,4.5];
+pard.cal_3Dfile_load.Width=.5;
 pard.cal_3Dfile.object=struct('Style','edit','String','');
 pard.cal_3Dfile.position=[8,2];
-pard.cal_3Dfile.Width=3;
+pard.cal_3Dfile.Width=2.5;
 
 
 
