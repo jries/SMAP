@@ -300,7 +300,7 @@ pard.NfieldT.object=struct('Style','popupmenu','String','phot','Visible','off');
 pard.NfieldT.position=[6,4.3];
 pard.NfieldT.Width=.7;
 
-pard.t3.object=struct('Style','text','String','search radius x,y (nm)');
+pard.t3.object=struct('Style','text','String','search radius x,z (nm)');
 pard.t3.position=[7,1];
 pard.t3.Width=1;
 pard.searchradius.object=struct('Style','edit','String','100 300');

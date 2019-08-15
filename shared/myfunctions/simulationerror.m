@@ -85,21 +85,22 @@ if ~isfield(locerr,'zerr')
 end
 
 
-dxr=dx./locerr.xerr(inderr(indinz));
-dyr=dy./locerr.yerr(inderr(indinz));
-dzr=dz./locerr.zerr(inderr(indinz));
     
 figure(188);
 subplot(3,4,1)
-fithistr(dx,1)
+fitx=fithistr(dx,1);
 xlabel('dx')
 subplot(3,4,2)
-fithistr(dy,1)
+fity=fithistr(dy,1);
 xlabel('dy')
 subplot(3,4,3)
-fithistr(dz,5)
+fitz=fithistr(dz,5);
 xlabel('dz')
 
+%renormalized
+dxr=(dx-fitx.b1)./locerr.xerr(inderr(indinz));
+dyr=(dy-fity.b1)./locerr.yerr(inderr(indinz));
+dzr=(dz-fitz.b1)./locerr.zerr(inderr(indinz));
 subplot(3,4,5)
 fithistr(dxr,0.2)
 xlabel('dx/sqrt(CRLBx)')
@@ -156,7 +157,7 @@ title(['fpos: ' num2str(falsepositives/totallocs*100,ff), '%, fneg: ' num2str(fa
 
 end
 
-function fithistr(de,dn)
+function fitp2=fithistr(de,dn)
 ff='%1.1f';
 ff2='%1.2f';
 qq=quantile(de,[0.002 0.998]);
@@ -165,7 +166,7 @@ hold off
 histogram(de,n);
 hn=histcounts(de,n);
 nf=n(1:end-1)+(n(2)-n(1))/2;
-fitp=fit(nf',hn','gauss1');
+fitp=fit(double(nf'),double(hn'),'gauss1');
 ss=fitp.c1/sqrt(2);
 
 % try fitting with second gauss
@@ -174,17 +175,21 @@ dn2=ceil(2*ss/dn);
 n2=(mp-dn2:mp+dn2)';
 
 % fitp2=fit(nf(n2)',hn(n2)','gauss2','StartPoint',[fitp.a1,fitp.b1,fitp.c1,fitp.a1/10,fitp.b1,fitp.c1*10]);
-fitp2=fit(nf(n2)',hn(n2)','gauss1','StartPoint',[fitp.a1,fitp.b1,fitp.c1]);
-ss2=fitp2.c1/sqrt(2);
+fitp2=fit(double(nf(n2)'),double(hn(n2)'),'gauss1','StartPoint',[fitp.a1,fitp.b1,fitp.c1]);
+
 hold on
 plot(nf,fitp(nf),'g')
 plot(nf(n2),fitp2(nf(n2)),'r')
-ingauss=fitp2.a1*sqrt(pi)*fitp2.c1/length(de)/dn;
+
+fituse=fitp;
+ss2=fituse.c1/sqrt(2);
+ingauss=fituse.a1*sqrt(pi)*fituse.c1/length(de)/dn;
 % de=de(abs(de)<3);
-title([num2str(mean(de),2) '±' num2str(std(de),ff) ', fit: ' num2str(fitp2.b1,ff) '±' num2str(ss2,ff2) ', in Gauss ' num2str(ingauss*100,'%2.0f') '%'])
+title([num2str(mean(de),2) '±' num2str(std(de),ff) ', fit: ' num2str(fituse.b1,ff) '±' num2str(ss2,ff2) ', in Gauss ' num2str(ingauss*100,'%2.0f') '%'])
 xlim([-5*ss 5*ss])
 axh=gca;
 text(5*ss/3,axh.YLim(2)*0.9,[ '\sigma=' num2str(ss2,ff2)],'FontSize',18)
+t2=text(5*ss/3*1.4,axh.YLim(2)*0.8,[num2str(ingauss*100,'%2.0f') '%'],'FontSize',18);
 end
 
 
