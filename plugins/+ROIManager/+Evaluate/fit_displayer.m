@@ -11,8 +11,10 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             else
                 reverseFactor = 1;
             end
-            
+            modeXY = 'projection';
             out=[];
+            rotxy = p.rotxy;
+            plotInit = 0;
             % make use of the SMLMModelFit class
             m1 = functionModel('C:\Users\ries\git\ries-private\SMLMModelFitter\models\CME3DContinuous.m');         % model 1
             fitting = SMLMModelFit({m1}, 'SolverName', 'fminsearchbnd','SolverOptions',{'Display','iter'});
@@ -70,19 +72,22 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             % align the site based on the fit result
             lPars = fitting.exportPars(1,'lPar');
             locs2 = fitting.locsHandler(locs, lPars);
+            [locs2.xnm, locs2.ynm] = rotcoord(locs2.xnm, locs2.ynm,rotxy*pi/180);
             
             %% Sections
             % get mPars
             mPars = fitting.exportPars(1,'mPar');
             closeAngle = mPars.closeAngle*pi/180;
             
-            % initial
-            initR = fitting.allParsArg.init(10);
-            initCloseAngle = fitting.allParsArg.init(11);
-            mParsInit.radius = initR;
-            mParsInit.closeAngle = initCloseAngle;
-            initCloseAngle = initCloseAngle*pi/180;
-            rInit = initR*cos(initCloseAngle);      % radius of the initial open
+            % initial guess
+            if plotInit
+                initR = fitting.allParsArg.init(10);
+                initCloseAngle = fitting.allParsArg.init(11);
+                mParsInit.radius = initR;
+                mParsInit.closeAngle = initCloseAngle;
+                initCloseAngle = initCloseAngle*pi/180;
+                rInit = initR*cos(initCloseAngle);      % radius of the initial open
+            end
             
             % finial result
             R = mPars.radius;           % radius of the sphere
@@ -93,11 +98,19 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             halfThickness=25;
             gaussFactor=0.4;
             
-            % XY section
             [~,modP] = fitting.model{1}.modelFun(mPars,4); % offset determined by the model
-            [~,modPInit] = fitting.model{1}.modelFun(mParsInit,4); % offset determined by the model
+            if plotInit
+                [~,modPInit] = fitting.model{1}.modelFun(mParsInit,4); % offset determined by the model
+            end
             
-            indXY = locs2.znm<halfThickness&locs2.znm>-halfThickness; % +-70 round the znm
+            % XY section
+            switch modeXY
+                case 'crosssection'
+                    indXY = locs2.znm<halfThickness&locs2.znm>-halfThickness; % +-70 round the znm
+                case 'projection'
+                    indXY = true(size(locs2.xnm));
+            end
+          
             x = locs2.xnm(indXY);
             y = locs2.ynm(indXY);
             sigma = gaussFactor*locs2.locprecnm(indXY);
@@ -110,21 +123,27 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             % open
             xref = (r.*cos(theta)+fitting.roiSize/2)./pixelSize;
             yref = (r.*sin(theta)+fitting.roiSize/2)./pixelSize;
-            xrefInit = (rInit.*cos(theta)+fitting.roiSize/2)./pixelSize;
-            yrefInit = (rInit.*sin(theta)+fitting.roiSize/2)./pixelSize;
+            if plotInit
+                xrefInit = (rInit.*cos(theta)+fitting.roiSize/2)./pixelSize;
+                yrefInit = (rInit.*sin(theta)+fitting.roiSize/2)./pixelSize;
+            end
             
             % eqitorial
             xrefEq = (R.*cos(theta)+fitting.roiSize/2)./pixelSize;
             yrefEq = (R.*sin(theta)+fitting.roiSize/2)./pixelSize;
             
-            xrefEqInit = (initR.*cos(theta)+fitting.roiSize/2)./pixelSize;
-            yrefEqInit = (initR.*sin(theta)+fitting.roiSize/2)./pixelSize;
+            if plotInit
+                xrefEqInit = (initR.*cos(theta)+fitting.roiSize/2)./pixelSize;
+                yrefEqInit = (initR.*sin(theta)+fitting.roiSize/2)./pixelSize;
+            end
             
             hold(ax3,'on')
             plot(ax3, xref, yref, '- g', 'LineWidth',2)
             plot(ax3, xrefEq, yrefEq, '- b', 'LineWidth',2)
-            plot(ax3, xrefInit, yrefInit, '--', 'Color', [0.5 1 0.5])
-            plot(ax3, xrefEqInit, yrefEqInit, '--', 'Color', [0.5 0.5 1])
+            if plotInit
+                plot(ax3, xrefInit, yrefInit, '--', 'Color', [0.5 1 0.5])
+                plot(ax3, xrefEqInit, yrefEqInit, '--', 'Color', [0.5 0.5 1])
+            end
             hold(ax3,'off')
             
             subplot(2,2,1,ax3)
@@ -142,12 +161,14 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             img = renderImage(y,z,sigma,sigmaZ);
             imagesc(ax3_2, img)
             colormap(ax3_2, mymakelut('red hot'))
-
-            % init
-            % close part
-            [yrefCloseInit, zrefCloseInit, thetaAnchor2] = closePart(initCloseAngle, initR, modPInit.zOffset, pixelSize, fitting);
-            % open part
-            [yrefOpenInit, zrefOpenInit] = openPart(thetaAnchor2, initCloseAngle, initR, modPInit.zOffset, pixelSize, fitting);
+            
+            if plotInit
+                % init
+                % close part
+                [yrefCloseInit, zrefCloseInit, thetaAnchor2] = closePart(initCloseAngle, initR, modPInit.zOffset, pixelSize, fitting);
+                % open part
+                [yrefOpenInit, zrefOpenInit] = openPart(thetaAnchor2, initCloseAngle, initR, modPInit.zOffset, pixelSize, fitting);
+            end
             
             % final result
             % close part
@@ -158,8 +179,10 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             hold(ax3_2,'on')
             plot(ax3_2, zrefClose, yrefClose, '- g', 'LineWidth',2)
             plot(ax3_2, zrefOpen, yrefOpen, '- b', 'LineWidth',2)
-            plot(ax3_2, zrefCloseInit, yrefCloseInit, '--', 'Color', [0.5 1 0.5])
-            plot(ax3_2, zrefOpenInit, yrefOpenInit, '--', 'Color', [0.5 0.5 1])
+            if plotInit
+                plot(ax3_2, zrefCloseInit, yrefCloseInit, '--', 'Color', [0.5 1 0.5])
+                plot(ax3_2, zrefOpenInit, yrefOpenInit, '--', 'Color', [0.5 0.5 1])
+            end
             hold(ax3_2,'off')
             set(ax3_2, 'Xdir','reverse')
             
@@ -179,8 +202,10 @@ classdef fit_displayer<interfaces.SEEvaluationProcessor
             hold(ax3_3,'on')
             plot(ax3_3, yrefClose, zrefClose, '- g', 'LineWidth',2)
             plot(ax3_3, yrefOpen, zrefOpen, '- b', 'LineWidth',2)
-            plot(ax3_3, yrefCloseInit, zrefCloseInit, '--', 'Color', [0.5 1 0.5])
-            plot(ax3_3, yrefOpenInit, zrefOpenInit, '--', 'Color', [0.5 0.5 1])
+            if plotInit
+                plot(ax3_3, yrefCloseInit, zrefCloseInit, '--', 'Color', [0.5 1 0.5])
+                plot(ax3_3, yrefOpenInit, zrefOpenInit, '--', 'Color', [0.5 0.5 1])
+            end
             hold(ax3_3,'off')
             
             axis(ax3,'equal')
@@ -207,11 +232,23 @@ end
 
 function pard = guidef(obj)
     pard.reverse_z.object = struct('Style','checkbox','String','Reverse Z', 'Value', 0);
-    pard.reverse_z.position = [1 1]
+    pard.reverse_z.position = [1 1];
     pard.reverse_z.Width = 1;
     
     pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
     pard.plugininfo.type='ROI_Evaluate';
+ 
+    pard.rotxy.object = struct('Style','text','String','Reverse Z', 'Value', 0);
+    pard.rotxy.position = [2 1];
+    pard.rotxy.Width = 0.5;
+    
+    pard.rotxy.object = struct('Style','edit','String','0');
+    pard.rotxy.position = [2 1.5];
+    pard.rotxy.Width = 1;
+    
+    pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
+    pard.plugininfo.type='ROI_Evaluate';
+
 end
 
 function filterCallback(a,b,obj)
@@ -237,10 +274,10 @@ function v = renderImage(a,b,sigmaA,sigmaB)
     srec(1)=ceil((rangex(2)-rangex(1))/pixelsize);
     srec(2)=ceil((rangey(2)-rangey(1))/pixelsize);
     srec(3)=ceil((rangez(2)-rangez(1))/pixelsize);
-    roiks=2.7;
+    roiks=9;%2.7
     G=creategausstemplate(roiks);
 
-    [v,nlocs]=gaussrender_elliptc(single(a),single(b),uint32(srec),single(sigmaA),single(sigmaB),single(G.template),single(G.sigmatemplate),...
+    [v,nlocs]=gaussrender_elliptc(single(a),single(b),uint32(srec),single(sigmaA),single(sigmaB),single(G.template),single(G.sigmatemplate)/2,...
     single(roiks),single(ones(size(a))),int32(0),single(0),single(0), single([0 0]));
 end
 
