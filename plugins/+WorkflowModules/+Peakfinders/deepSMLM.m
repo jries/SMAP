@@ -41,6 +41,7 @@ classdef deepSMLM<interfaces.WorkflowModule
         end
         function dato=run(obj,data,p)
             %
+            timeblock=3; %3 frames analyzed together
             dato=[];
             bufferfactor=1.2;
             xfactor=.6*bufferfactor;
@@ -63,25 +64,28 @@ classdef deepSMLM<interfaces.WorkflowModule
                 nx=1:size(image,2);ny=1:size(image,1);
                 [obj.Xgrid,obj.Ygrid]=meshgrid(nx,ny);
                 obj.mask=obj.getPar('loc_roimask'); %run at first time
+                firstframe=true;
+            else
+                firstframe=false;
             end
             obj.buffercounter=obj.buffercounter+1;
-%             bufferind=mod(obj.buffercounter-1,3)+1;
             obj.imagebuffer(obj.buffercounter,:,:)=image;
             obj.bufferinfo.frame(obj.buffercounter)=data.frame;
+            
+            lastframe=false;
             if obj.buffercounter<obj.buffersize %we need to wait for buffersize images. check if eof, then process the rest.
-                
-                return
+                if ~data.eof
+                    return
+                else
+                    lastframe=true;
+                end
             end
             
-%             indsort=[bufferind:3 1:bufferind-1];indsort=indsort([2 3 1]);
-%             fitimage=obj.imagebuffer(1,indsort,:,:);
-%             fitimage=permute(obj.imagebuffer,[1 3 2]);
+            %first block: only remove last frame in block
+            %last block: only remove first frame in block
+            %otherwise remove first and last
+            %always create overlap of two frames
             
-            
-            %XXXX later remove
-%             fitimage=obj.imagebuffer;
-%             camsettings=obj.getPar('loc_cameraSettings');
-%             imbufferadu=fitimage/camsettings.pix2phot+camsettings.offset;
 
             imbufferadu=obj.imagebuffer; %already in ADU
             [xf, x_shape] = pseudo_col2row_major(imbufferadu);
@@ -90,8 +94,17 @@ classdef deepSMLM<interfaces.WorkflowModule
             deepim = pseudo_row2_col_major(outf, out_size);
              deepim(:,6,:,:)=imbufferadu;
 %             deepim=permute(deepim,[1 2 4 3]);
-            
-            for k=1:size(deepim,1) %process each frame individually
+            if obj.buffersize==1
+                frange=1;
+            elseif firstframe
+                frange=1:obj.buffersize-1;
+            elseif lastframe
+                frange=2:obj.buffercounter;
+            else
+                frange=2:obj.buffersize-1;
+            end
+                
+            for k=frange %process each frame individually
                 probmap=squeeze(deepim(k,1,:,:));
                 if all(size(obj.mask)==size(image)) %apply mask
                     probmap=probmap.*obj.mask;
@@ -123,7 +136,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 locs.xcnn=xfit;
                 locs.ycnn=yfit;
                 locs.zcnn=zfit;
-%                 locs.phot=intensity;
+                locs.photcnn=intensity;
                 locs.prob=pfit;
 %                 locs.PSFxpix=v1;
 %                 locs.bg=0*v1; %now set to zero, later determine from CNN or from photon converted image
@@ -144,6 +157,10 @@ classdef deepSMLM<interfaces.WorkflowModule
                 dato.data=locs; 
                 obj.output(dato);
             end
+            if obj.buffersize>1
+            obj.imagebuffer(1:2,:,:)=obj.imagebuffer(obj.buffersize-1:end,:,:);
+            obj.bufferinfo.frame(1:2)=obj.bufferinfo.frame(obj.buffersize-1:end,:,:);
+            end
 %             if obj.preview
 %                 outputfig=obj.getPar('loc_outputfig');
 %                 if ~isvalid(outputfig)
@@ -160,7 +177,7 @@ classdef deepSMLM<interfaces.WorkflowModule
 %                 hold on
 %                 plot(xfit,yfit,'yo')
 %             end
-            obj.buffercounter=0;
+            obj.buffercounter=3;
         end
     end
 end

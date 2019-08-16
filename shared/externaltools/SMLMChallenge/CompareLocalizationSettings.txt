@@ -1,5 +1,5 @@
 #CompareLocalization
-#Wed Aug 07 17:27:47 GMT+01:00 2019
+#Mon Aug 12 15:36:55 GMT+01:00 2019
 colF1=1.0
 txtWooble=
 colF0=1.0
@@ -10,24 +10,24 @@ shiftY1=0.0
 shiftY0=0.0
 colX1=2.0
 colX0=2.0
-txtFile1=/Volumes/Ries_Data/DataSSD/working directory/Lucas/MT0 LD/F_activations_T449_temp.csv
+txtFile1=/Volumes/Ries_Data/DataSSD/working directory/Lucas/MT0 LD/F_activations_T395_temp.csv
 txtFile0=/Volumes/Ries_Data/DataSSD/working directory/Lucas/MT0 LD/activations.csv
 locationUnit1=nm
 locationUnit0=nm
-shiftZ1=8.0
+shiftZ1=0.0
 shiftZ0=0.0
 colY1=3.0
-spnToleranceXY=250.0
 colY0=3.0
+spnToleranceXY=250.0
 shiftF1=0.0
 shiftF0=0.0
 spnToleranceZ=500.0
-firstRow1=0.0
 shiftX1=0.0
-shiftX0=0.0
+firstRow1=0.0
 firstRow0=1.0
-spnPixelsize=100.0
+shiftX0=0.0
 colZ1=4.0
-spnFieldoFViewY=6400.0
+spnPixelsize=100.0
 colZ0=4.0
+spnFieldoFViewY=6400.0
 spnFieldoFViewX=6400.0
