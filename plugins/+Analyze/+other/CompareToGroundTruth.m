@@ -47,13 +47,13 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
             lRn.y=lR.(fieldsR{2})*factorR(3)+p.offsetxyzR(2);
             lRn.z=lR.(fieldsR{3})*factorR(4)+p.offsetxyzR(3); 
             lRn.phot=lR.(fieldsR{4})*factorR(1);
-            lRn.bg=lR.bg+p.offsetxyzR(4);lRn.frame=lR.frame;
+            lRn.bg=lR.bg+p.offsetxyzR(4);lRn.frame=lR.frame+p.offsetxyzR(5) ;
             
             lTn.x=lT.(fieldsT{1})*factorT(2)+p.offsetxyzT(1); 
             lTn.y=lT.(fieldsT{2})*factorT(3)+p.offsetxyzT(2);
             lTn.z=lT.(fieldsT{3})*factorT(4)+p.offsetxyzT(3); 
             lTn.phot=lT.(fieldsT{4})*factorT(1);
-            lTn.bg=lT.bg+p.offsetxyzT(4);lTn.frame=lT.frame;  
+            lTn.bg=lT.bg+p.offsetxyzT(4);lTn.frame=lT.frame+p.offsetxyzT(5);  
             % PSF model
             switch p.cal_3Dfile_use.selection
                 case 'use 3D cal'
@@ -227,19 +227,19 @@ pard.layerT.position=[2,3.5];
 pard.layerT.Width=1;
 
 
-pard.offsetxyzt.object=struct('Style','text','String','Shift x,y,z,bg');
+pard.offsetxyzt.object=struct('Style','text','String','Shift x,y,z,bg,frame');
 pard.offsetxyzt.position=[3,1];
 pard.offsetxyzt.Width=1;
 
-pard.offsetxyzR.object=struct('Style','edit','String','0 0 0 0');
+pard.offsetxyzR.object=struct('Style','edit','String','0 0 0 0 0');
 pard.offsetxyzR.position=[3,2];
 pard.offsetxyzR.Width=1;
 
-pard.offsetxyzT.object=struct('Style','edit','String','0 0 0 0');
+pard.offsetxyzT.object=struct('Style','edit','String','0 0 0 0 0');
 pard.offsetxyzT.position=[3,3.5];
 pard.offsetxyzT.Width=1;
 
-pard.factort.object=struct('Style','text','String','Factor phot,x,y,z');
+pard.factort.object=struct('Style','text','String','Factor phot,x,y,z,frame');
 pard.factort.position=[4,1];
 pard.factort.Width=1;
 

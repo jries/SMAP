@@ -1,9 +1,9 @@
 %mammalian cells: temporal reconstruction
 %parameters
 p.cutoff=4; % for isosurface, at max(V(:))/cutoff
-p.cutoffdc=3; % for isosurface, at max(V(:))/cutoff
+p.cutoffdc=[3 3]; % for isosurface, at max(V(:))/cutoff
 p.sgauss=2;%smoothing of volume
-p.sgauss2=.6;%smoothing of volume
+p.sgauss2=1;%smoothing of volume
 p.winsize=200; %plotting
 p.minx=0; %x: use 0 for central cut
 p.pixelsize=5; %nm, for volume reconstruction
@@ -13,9 +13,9 @@ p.pixelsize=5; %nm, for volume reconstruction
 p.polarfactor=[.5 1]; %intensity factor for layer1, layer2
 rot=1; % rotate sites to align bottom holes
 
-timewindows=20; % number of sites per average: (number of sites / this number)
-timepoints=100; % increment: (number of sites / this number)
-framerate=25;
+timewindows=20; % number of stes per average: (number of sites / this number)
+timepoints=120; % increment: (number of sites / this number)
+framerate=15;
 
 global se
 sites=[];
@@ -56,6 +56,7 @@ rmean=zeros(1,length(indsort));
 rcorr=zeros(1,length(indsort));
 F(length(range))=struct('cdata',[],'colormap',[]);
 polall=[];
+clear F
 for k=1:length(range)
     numloc=0;
     numloc2=0;
@@ -135,12 +136,17 @@ polalln(:,:,2,:)=polalln(:,:,2,:)/m2;
 %polalln(polalln>1)=1;
 
 h=fspecial('gauss',5,1.2);
-if 1 %if you want to save polar plot
+if 0%if you want to save polar plot
     for k=1:size(polall,4)
         imh=polalln(:,:,:,k);
         imhf=imfilter(imh,h);
+        imhf2=imhf;imhf2(:,:,1)=0;
+        imhf3=imhf;imhf3(:,:,2)=0;
+        implot=horzcat(imhf,imhf2,imhf3);
         f=figure(111);
-        imagesc([-1 1]*p.winsize,[-1 1]*p.winsize,imhf);
+%         imagesc([-1 1]*p.winsize,[-1 1]*p.winsize,imhf);
+        imagesc(implot);
+        axis equal
         drawnow
         
         F(k)=getframe(f);
@@ -179,16 +185,21 @@ xr=xrange(1)+p.pixelsize:p.pixelsize:xrange(2)-p.pixelsize;
 yr=yrange(1)+p.pixelsize:p.pixelsize:yrange(2)-p.pixelsize;
 zr=zrange(1)+p.pixelsize:p.pixelsize:zrange(2)-p.pixelsize;
 V=myhist3(x,y,-(z+dz),p.pixelsize,xrange,yrange,zrange);
+%increase sampling by adding other half as well:
+Vo=myhist3(x,y,-(z+dz),p.pixelsize,sort(-xrange),yrange,zrange);
+V=V+Vo(end:-1:1,:,:);
 Vs=smooth3(V,'gaussian',[1 1 1]*(round(2*p.sgauss/2)*2+1),p.sgauss);
 
 
 V2=myhist3(x2,y2,-(z2+dz),p.pixelsize,xrange,yrange,zrange);
+Vo2=myhist3(x2,y2,-(z2+dz),p.pixelsize,sort(-xrange),yrange,zrange);
+V2=V2+Vo2(end:-1:1,:,:);
 Vs2=smooth3(V2,'gaussian',[1 1 1]*(round(2*p.sgauss/2)*2+1),p.sgauss2);
 
 [X,Y,Z]=meshgrid(yr,xr,zr);
 
 co=max(Vs(:))/p.cutoff;
-codc=max(Vs(:))/p.cutoffdc;
+codc=max(Vs(:))/p.cutoffdc(1);
 
 f1=figure(90);
 clf
@@ -205,21 +216,27 @@ zlim(zrange)
 
 lightangle(45,30);
 lighting gouraud
+colormap hot;
+
 
 f2=figure(91);
 clf
-hiso=patch(isosurface(X,Y,Z,Vs,codc),'EdgeColor','none','FaceColor',[1,.75,.65],'FaceAlpha',0.75);
+hiso=patch(isosurface(X,Y,Z,Vs,codc),'EdgeColor','none','FaceColor',[1,.8,.75],'FaceAlpha',1);
 isonormals(X,Y,Z,Vs,hiso);
 hold on
+
+
+hcap=patch(isocaps(X,Y,Z,Vs,co),'FaceColor','interp','EdgeColor','none');
+colormap hot
 if 0
 indin=x2>0;
 scatter3(y2(indin),x2(indin),-z2(indin)-dz,2,'k')
 else
-codc2=max(Vs2(:))/p.cutoffdc;
+codc2=max(Vs2(:))/p.cutoffdc(end);
 % codc2=.5;
-hiso2=patch(isosurface(X,Y,Z,Vs2,codc2),'EdgeColor','none','FaceColor',[0,.75,1]);
+hiso2=patch(isosurface(X,Y,Z,Vs2,codc2),'EdgeColor','none','FaceColor',[0,1,1]);
 isonormals(X,Y,Z,Vs2,hiso2);
-hcap2=patch(isocaps(X,Y,Z,Vs2,codc2),'FaceColor','interp','EdgeColor','none');
+hcap2=patch(isocaps(X,Y,Z,Vs2,codc2),'FaceColor',[0,.7,1],'EdgeColor','none');
 end
 
 axis equal
@@ -231,8 +248,8 @@ zlim(zrange)
 
 lightangle(45,30);
 lighting gouraud
-
-
+whitebg('black')
+f2.Children(1).CLim=f1.Children(1).CLim;
 
 %2D analysis
 
@@ -240,13 +257,17 @@ img=getpolarimage(x,y,z,R,p)*p.polarfactor(1);
 img2=getpolarimage(x2,y2,z2,R,p)*p.polarfactor(2);
 s=size(img);
 imcomp=zeros(s(2),s(1),3);
+% imcomp2=imcomp;imcomp3=imcomp;
 imcomp(:,:,1)=img';
 imcomp(:,:,2)=img2';
+% imcomp2(:,:,1)=img';
+% imcomp3(:,:,2)=img2';
+% implot=horzcat(imcomp,imcomp2,imcomp3);
 f3=figure(45);
 imagesc(imcomp);
 axis equal
 
-f=f1; %select which figure is saved
+f=f2; %select which figure is saved
 % indg=r~=0;
 % % [z,x]=pol2cart(p(indg),r(indg));
 % [z,x,y]=sph2cart(t(indg),p(indg),r(indg));

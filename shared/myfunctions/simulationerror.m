@@ -54,9 +54,9 @@ switch whicherr
         disp('third argument should be 1 if error is taken from first argument, 2 if error is in second')
 end
 if ~isfield(locerr,'xerr')
-    if isfield(locerr,'xnmerr')
+    if isfield(locerr,'xnmerr')&&~isempty(locerr.xnmerr)
         locerr.xerr=locerr.xnmerr;
-    elseif isfield(locerr,'locprecnm')
+    elseif isfield(locerr,'locprecnm')&&~isempty(locerr.locprecnm)
         locerr.xerr=locerr.locprecnm;
     else
         locerr.xerr=Mortensen(locgt.phot,locgt.bg,150,100,0);
@@ -64,9 +64,9 @@ if ~isfield(locerr,'xerr')
     end
 end
 if ~isfield(locerr,'yerr')
-    if isfield(locerr,'ynmerr')
+    if isfield(locerr,'ynmerr')&&~isempty(locerr.ynmerr)
         locerr.yerr=locerr.ynmerr;
-    elseif isfield(locerr,'locprecnm')
+    elseif isfield(locerr,'locprecnm')&&~isempty(locerr.locprecnm)
         locerr.yerr=locerr.locprecnm;
     else
         locerr.yerr=Mortensen(locgt.phot,locgt.bg,150,100,0);
@@ -74,9 +74,9 @@ if ~isfield(locerr,'yerr')
     end
 end
 if ~isfield(locerr,'zerr')
-    if isfield(locerr,'znmerr')
+    if isfield(locerr,'znmerr')&&~isempty(locerr.znmerr)
         locerr.zerr=locerr.znmerr;
-    elseif isfield(locerr,'locprecznm')
+    elseif isfield(locerr,'locprecznm')&&~isempty(locerr.locprecznm)
         locerr.zerr=locerr.locprecznm;
     else
         locerr.zerr=Mortensen(locgt.phot,locgt.bg,150,100,0)*3;
