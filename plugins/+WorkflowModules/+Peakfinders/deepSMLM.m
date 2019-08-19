@@ -219,6 +219,14 @@ pard.buffersize.object=struct('Style','edit','String','100');
 pard.buffersize.position=[4,2];
 pard.buffersize.Width=.35;
 
+pard.context_framest.object=struct('Style','text','String','Channels');
+pard.context_framest.position=[5,1];
+pard.context_framest.Width=1;
+pard.context_frames.object=struct('Style','edit','String','3');
+pard.context_frames.position=[5,2];
+pard.context_frames.Width=.35;
+pard.context_frames.TooltipString='Number of frames ananlyzed simultaneously';
+pard.context_framest.TooltipString=pard.context_frames.TooltipString;
 
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='';

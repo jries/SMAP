@@ -239,7 +239,7 @@ pard.offsetxyzT.object=struct('Style','edit','String','0 0 0 0 0');
 pard.offsetxyzT.position=[3,3.5];
 pard.offsetxyzT.Width=1;
 
-pard.factort.object=struct('Style','text','String','Factor phot,x,y,z,frame');
+pard.factort.object=struct('Style','text','String','Factor N,x,y,z,fr');
 pard.factort.position=[4,1];
 pard.factort.Width=1;
 
