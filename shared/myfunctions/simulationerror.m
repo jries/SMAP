@@ -7,7 +7,8 @@ if ~isfield(locgt,'y'), locgt.x=locgt.ynm; end
 if ~isfield(locfit,'y'), locfit.x=locfit.ynm; end
 if ~isfield(locgt,'z'), locgt.x=locgt.znm; end
 if ~isfield(locfit,'z'), locfit.x=locfit.znm; end
-
+if ~isfield(locgt,'N'), locgt.N=locgt.phot; end
+if ~isfield(locfit,'N'), locfit.N=locfit.phot; end
 
 
 
@@ -27,6 +28,7 @@ dz=dz(indinz);
 dx=locgt.x(iAa(indinz))-locfit.x(iBa(indinz));
 dy=locgt.y(iAa(indinz))-locfit.y(iBa(indinz));
 
+dphot=locgt.N(iAa(indinz))./locfit.N(iBa(indinz));
 
 % if nargin<3 || isempty(psf)
 %     % test if errors are transferred
@@ -85,31 +87,51 @@ if ~isfield(locerr,'zerr')
 end
 
 
+if ~isfield(locerr,'Nerr')
+    if isfield(locerr,'photerr')&&~isempty(locerr.photerr)
+        locerr.Nerr=locerr.photerr;
+    else
+        [~,locerr.Nerr]=Mortensen(locgt.phot,locgt.bg,150,100,0);
+        
+        disp('error in phtons estimated using Rieger');
+    end
+end
+
+
     
 figure(188);
 subplot(3,4,1)
-fitx=fithistr(dx,1);
+fitx=fithistr(dx,2);
 xlabel('dx')
 subplot(3,4,2)
-fity=fithistr(dy,1);
+fity=fithistr(dy,2);
 xlabel('dy')
 subplot(3,4,3)
 fitz=fithistr(dz,5);
 xlabel('dz')
 
+subplot(3,4,4)
+fitphot=fithistr(dphot,.01);
+xlabel('dphot')
+
 %renormalized
 dxr=(dx-fitx.b1)./locerr.xerr(inderr(indinz));
 dyr=(dy-fity.b1)./locerr.yerr(inderr(indinz));
 dzr=(dz-fitz.b1)./locerr.zerr(inderr(indinz));
+dphotr=(locgt.N(iAa(indinz))/fitphot.b1-locfit.N(iBa(indinz)))./locerr.Nerr(inderr(indinz));
 subplot(3,4,5)
-fithistr(dxr,0.2)
+fithistr(dxr,0.25)
 xlabel('dx/sqrt(CRLBx)')
 subplot(3,4,6)
-fithistr(dyr,0.2)
+fithistr(dyr,0.25)
 xlabel('dy/sqrt(CRLBy)')
 subplot(3,4,7)
-fithistr(dzr,0.2)
+fithistr(dzr,0.25)
 xlabel('dz/sqrt(CRLBz)')
+
+subplot(3,4,8)
+fithistr(dphotr,.5)
+xlabel('phot/sqrt(CRLBphot)')
 
 subplot(3,4,10)
 hold off
@@ -186,10 +208,12 @@ ss2=fituse.c1/sqrt(2);
 ingauss=fituse.a1*sqrt(pi)*fituse.c1/length(de)/dn;
 % de=de(abs(de)<3);
 title([num2str(mean(de),2) '±' num2str(std(de),ff) ', fit: ' num2str(fituse.b1,ff) '±' num2str(ss2,ff2) ', in Gauss ' num2str(ingauss*100,'%2.0f') '%'])
-xlim([-5*ss 5*ss])
+xlim([fituse.b1-5*ss fituse.b1+5*ss])
 axh=gca;
-text(5*ss/3,axh.YLim(2)*0.9,[ '\sigma=' num2str(ss2,ff2)],'FontSize',18)
-t2=text(5*ss/3*1.4,axh.YLim(2)*0.8,[num2str(ingauss*100,'%2.0f') '%'],'FontSize',18);
+
+wx=mean(axh.XLim(:)); dx=axh.XLim(2)-axh.XLim(1);
+text(wx+dx/7,axh.YLim(2)*0.9,[ '\sigma=' num2str(ss2,ff2)],'FontSize',16)
+t2=text(wx+dx/4,axh.YLim(2)*0.8,[num2str(ingauss*100,'%2.0f') '%'],'FontSize',16);
 end
 
 
@@ -203,5 +227,6 @@ lp=sqrt(v);
 
 s_a=PSF/pixel; %sigmapsf/pixelsize
 tau=2*pi*(Bg)*(s_a^2+1/12)./N;
-errphot=N.*(1+4*tau+sqrt(tau./(14*(1+2*tau)))); %This is Thompson...
+errphot2=N.*(1+4*tau+sqrt(tau./(14*(1+2*tau)))); %This is Rieger...
+errphot=sqrt(errphot2);
 end

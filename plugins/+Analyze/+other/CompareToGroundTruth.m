@@ -10,7 +10,7 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         
         function out=run(obj,p)
             out=[];
-            fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm'};
+            fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm','photerr'};
             fieldsT=fieldsR;
             if p.overwritefieldsR
                 fieldsR={p.xfieldR.selection,p.yfieldR.selection,p.zfieldR.selection,p.NfieldR.selection,'bg','frame'};
@@ -65,6 +65,7 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
                     lRn.xerr=sqrt(crlb(:,2))*pixelsize(1);
                     lRn.yerr=sqrt(crlb(:,1))*pixelsize(end);
                     lRn.zerr=sqrt(crlb(:,5));
+                    lTn.Nerr=sqrt(crlb(:,3));
                     whicherr=1;
                 case 'fiterrors ref'
                     lRn=copyfields(lRn,lR,fieldsR(7:end));
@@ -202,8 +203,13 @@ end
 
 function load3Dfile(a,b,obj)
 file=obj.getSingleGuiParameter('cal_3Dfile');
+
 if isempty(file)
-    file=[fileparts(obj.getPar('lastSMLFile')) filesep '*.mat'];
+    lastfile=obj.getPar('lastSMLFile');
+    if isempty(lastfile)
+        lastfile='*.mat';
+    end
+    file=[fileparts(lastfile) filesep '*.mat'];
 end
 [f,p]=uigetfile(file);
 if f

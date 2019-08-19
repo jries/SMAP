@@ -41,7 +41,7 @@ classdef deepSMLM<interfaces.WorkflowModule
         end
         function dato=run(obj,data,p)
             %
-            timeblock=3; %3 frames analyzed together
+            timeblocks=p.context_frames; %3 frames analyzed together
             dato=[];
             bufferfactor=1.2;
             xfactor=.6*bufferfactor;
@@ -94,14 +94,22 @@ classdef deepSMLM<interfaces.WorkflowModule
             deepim = pseudo_row2_col_major(outf, out_size);
              deepim(:,6,:,:)=imbufferadu;
 %             deepim=permute(deepim,[1 2 4 3]);
-            if obj.buffersize==1
-                frange=1;
-            elseif firstframe
-                frange=1:obj.buffersize-1;
-            elseif lastframe
-                frange=2:obj.buffercounter;
-            else
-                frange=2:obj.buffersize-1;
+            if timeblocks ==1 
+                if lastframe
+                    frange=1:obj.buffercounter;
+                else 
+                    frange=1:obj.buffersize;
+                end
+            else %later extend to any number
+                if obj.buffersize==1
+                    frange=1;
+                elseif firstframe
+                    frange=1:obj.buffersize-1;
+                elseif lastframe
+                    frange=2:obj.buffercounter;
+                else
+                    frange=2:obj.buffersize-1;
+                end
             end
                 
             for k=frange %process each frame individually
@@ -157,7 +165,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 dato.data=locs; 
                 obj.output(dato);
             end
-            if obj.buffersize>1
+            if obj.buffersize>1 && timeblocks>1
             obj.imagebuffer(1:2,:,:)=obj.imagebuffer(obj.buffersize-1:end,:,:);
             obj.bufferinfo.frame(1:2)=obj.bufferinfo.frame(obj.buffersize-1:end,:,:);
             end
@@ -177,7 +185,7 @@ classdef deepSMLM<interfaces.WorkflowModule
 %                 hold on
 %                 plot(xfit,yfit,'yo')
 %             end
-            obj.buffercounter=3;
+            obj.buffercounter=timeblocks-1; %before timeblocks: did we lose frames? XXXX
         end
     end
 end
