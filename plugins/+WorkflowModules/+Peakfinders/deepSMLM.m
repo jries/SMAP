@@ -9,6 +9,7 @@ classdef deepSMLM<interfaces.WorkflowModule
         Ygrid
         buffersize
         preview
+        scaling
     end
     methods
         function obj=deepSMLM(varargin)
@@ -27,7 +28,7 @@ classdef deepSMLM<interfaces.WorkflowModule
             gitdir=fileparts(pwd);
             deeppath= [gitdir '/ries-private/InferenceSMLM/Inference_SMLM'];
             addpath([deeppath  '/src/matlab'])
-            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile);
+            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile,p.context_frames);
             
             obj.imagebuffer=[];
             if obj.getPar('loc_preview')
@@ -36,18 +37,21 @@ classdef deepSMLM<interfaces.WorkflowModule
                 obj.buffersize=p.buffersize;
             end
             obj.preview=obj.getPar('loc_preview');
-            
-
+            ind=strfind(p.modelfile,'_');
+            jsonfile=[p.modelfile(1:ind(end-2)) 'param.json'];
+            jsontxt=fileread(jsonfile);
+            param=jsondecode(jsontxt);
+            obj.scaling=param.Scaling;
         end
         function dato=run(obj,data,p)
             %
             timeblocks=p.context_frames; %3 frames analyzed together
             dato=[];
-            bufferfactor=1.2;
-            xfactor=.6*bufferfactor;
-            yfactor=.6*bufferfactor;
-            zfactor=750*bufferfactor;
-            photfactor=50000*bufferfactor;
+            bufferfactor=obj.scaling.linearisation_buffer;
+            xfactor=obj.scaling.dy_max*bufferfactor;
+            yfactor=obj.scaling.dx_max*bufferfactor;
+            zfactor=obj.scaling.z_max*bufferfactor;
+            photfactor=obj.scaling.phot_max*bufferfactor;
             image=data.data;%get;
             image=single(image); %now we use directly camera frames
             if isempty(image)

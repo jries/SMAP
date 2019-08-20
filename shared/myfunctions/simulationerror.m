@@ -20,6 +20,10 @@ end
 totallocs=length(locgt.x);
 falsepositives=length(nB);
 falsenegatives=length(nA);
+truepositives=length(iAa);
+precision=truepositives/(truepositives+falsepositives);
+recall=truepositives/(truepositives+falsenegatives);
+
 matched=length(iAa);
 
 dz=locgt.z(iAa)-locfit.z(iBa);
@@ -120,24 +124,32 @@ dyr=(dy-fity.b1)./locerr.yerr(inderr(indinz));
 dzr=(dz-fitz.b1)./locerr.zerr(inderr(indinz));
 dphotr=(locgt.N(iAa(indinz))/fitphot.b1-locfit.N(iBa(indinz)))./locerr.Nerr(inderr(indinz));
 subplot(3,4,5)
-fithistr(dxr,0.25)
+fithistr(dxr,0.25);
 xlabel('dx/sqrt(CRLBx)')
 subplot(3,4,6)
-fithistr(dyr,0.25)
+fithistr(dyr,0.25);
 xlabel('dy/sqrt(CRLBy)')
 subplot(3,4,7)
-fithistr(dzr,0.25)
+fithistr(dzr,0.25);
 xlabel('dz/sqrt(CRLBz)')
 
 subplot(3,4,8)
-fithistr(dphotr,.5)
+fithistr(dphotr,.5);
 xlabel('phot/sqrt(CRLBphot)')
 
+q=quantile(vertcat(unique(locfit.bg(iBa)),unique(locgt.bg(iAa))),[0.02 0.98]);
+edges=floor(q(1)):1:ceil(q(2));
+[h1,edges1]=histcounts(locfit.bg(iBa),edges);
+[h2,edges2]=histcounts(locgt.bg(iAa),edges);
+h1(end+1)=0;
+h2(end+1)=0;
 subplot(3,4,10)
 hold off
-histogram(locfit.bg(iBa))
+bar(edges,h2/max(h2))
+
 hold on
-histogram(locgt.bg(iAa))
+bb=bar(edges,h1/max(h1));
+bb.FaceAlpha=0.5;
 xlabel('bg')
 % hold off
 % dscatter(locgt.bg(iAa),locfit.bg(iBa))
@@ -174,7 +186,8 @@ subplot(3,4,9);
 hold off
 plot(locfit.x,locfit.y,'.',locgt.x,locgt.y,'.')
 ff='%2.0f';
-title(['fpos: ' num2str(falsepositives/totallocs*100,ff), '%, fneg: ' num2str(falsenegatives/totallocs*100,ff) '%'])
+title(['FP: ' num2str(falsepositives/totallocs*100,ff), '%, FN: ' num2str(falsenegatives/totallocs*100,ff) '%'...
+    ', P: ' num2str(precision,2) ', R: ' num2str(recall,2)]);
 
 
 end
