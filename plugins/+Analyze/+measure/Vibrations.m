@@ -39,7 +39,7 @@ classdef Vibrations<interfaces.DialogProcessor
                     xfp=xf(1:L/2+1);
                     xfp(1)=0;
                     freq=Fs*(0:(L/2))/L;
-                    plot(axfx(f),freq,xfp);
+                    semilogy(axfx(f),freq,xfp);
                     xlabel(axfx(f),'frequency (Hz)')
                     ylabel(axfx(f),'fft (x)');
                     hold(axx(f),'on')
