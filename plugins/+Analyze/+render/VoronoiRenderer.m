@@ -1,4 +1,10 @@
 classdef VoronoiRenderer<interfaces.Renderer
+%     Voronoi-tesselation based image reconstruction. From: Andronov,
+%     Leonid, Yves Lutz, Jean-Luc Vonesch, and Bruno P Klaholz. “SharpViSu:
+%     Integrated Analysis and Segmentation of Super-Resolution Microscopy
+%     Data.” Bioinformatics, March 18, 2016, btw123.
+%     https://doi.org/10.1093/bioinformatics/btw123.';
+
     methods
         function obj=VoronoiRenderer(varargin)        
             obj@interfaces.Renderer(varargin{:}) ;
@@ -52,6 +58,8 @@ pard.t1.object=struct('String','Voronoi Renderer from SharpViSu','Style','text')
 pard.t1.position=[1,2];
 pard.t1.Width=4;
 pard.plugininfo.type='Renderer';
+pard.plugininfo.description='Voronoi-tesselation based image reconstruction. From: Andronov, Leonid, Yves Lutz, Jean-Luc Vonesch, and Bruno P Klaholz. “SharpViSu: Integrated Analysis and Segmentation of Super-Resolution Microscopy Data.” Bioinformatics, March 18, 2016, btw123. https://doi.org/10.1093/bioinformatics/btw123.';
+
 
 end
 

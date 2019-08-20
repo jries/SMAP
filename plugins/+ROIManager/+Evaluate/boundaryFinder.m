@@ -40,13 +40,22 @@ pard.slideStep.object=struct('Style','edit','String',5);
 pard.slideStep.position=[2,3];
 pard.slideStep.TooltipString = 'If you set it as 5, it means during the density comparison, every grid value will be campared to its following 4 (5 minus 1, which means the reference grid itself) right neighbors';
 
-pard.t_adjM.object=struct('Style','text','String','Adjustment of M');
-pard.t_adjM.position=[3,1];
-pard.t_adjM.Width=2;
+pard.t_DistFScale.object=struct('Style','text','String','DistF scale');
+pard.t_DistFScale.position=[3,1];
+pard.t_DistFScale.Width=1;
 
-pard.adjM.object=struct('Style','edit','String',1.0003);
-pard.adjM.position=[3,3];
-pard.adjM.TooltipString = 'If you set it as 1.0003, it means during the optimization, if the measurment of current step (Mcur) is 0.0003-time worse than the measurment of the previous step (Mpre), Mcur will still be considered as a good result. The measurment, which defines the boundary is good or not, can be definde by users.';
+pard.DistFScale.object=struct('Style','edit','String',7e-2);
+pard.DistFScale.position=[3,2];
+pard.DistFScale.TooltipString = 'Lower this value to tolerate slower increase of foreground density (Df)';
+pard.DistFScale.Width=1;
+
+pard.t_offSetScale.object=struct('Style','text','String','Offset scale');
+pard.t_offSetScale.position=[3,3];
+pard.t_offSetScale.Width=1;
+
+pard.offSetScale.object=struct('Style','edit','String',1e-1);
+pard.offSetScale.position=[3,4];
+pard.offSetScale.TooltipString = 'Higher this value to allow higher background density';
 
 pard.t_mergeSteps.object = struct('Style','text','String','Order of merging steps');
 pard.t_mergeSteps.position=[4,1];
@@ -72,44 +81,9 @@ pard.minWidth.object = struct('Style','edit','String',2);
 pard.minWidth.position=[6,3];
 pard.minWidth.TooltipString = 'minimum width of a step (arbitrary unit)';
 
-pard.t_method.object=struct('Style','text','String','Method (rough boundary)');
-pard.t_method.position=[7,1];
-pard.t_method.Width=2;
-
-pard.method.object=struct('Style','popupmenu','String',{{'Contour line','Percentile','cumulative'}}, 'Value', 3, 'Callback', {{@mathod_callBack,obj}});
-pard.method.position=[7,3];
-pard.method.Width=2;
-
-pard.t_std.object = struct('Style','text','String','Std.');
-pard.t_std.position=[8,1];
-pard.t_std.Width = 0.5;
-pard.t_std.Visible = 'off';
-
-pard.std.object = struct('Style','edit','String',100);
-pard.std.position=[8,1.5];
-pard.std.TooltipString = 'minimum width of a step (arbitrary unit)';
-pard.std.Width = 0.5;
-pard.std.Visible = 'off';
-
-pard.t_contourLevel.object = struct('Style','text','String','Level');
-pard.t_contourLevel.position=[8,2];
-pard.t_contourLevel.Width = 0.5;
-pard.t_contourLevel.Visible = 'off';
-
-pard.contourLevel.object = struct('Style','edit','String',90);
-pard.contourLevel.position=[8,2.5];
-pard.contourLevel.TooltipString = 'The level (out of 100) chosen as the outline of the rough boundary';
-pard.contourLevel.Width = 0.5;
-pard.contourLevel.Visible = 'off';
-
-pard.t_prctile.object = struct('Style','text','String','Prctile');
-pard.t_prctile.position=[8,1];
-pard.t_prctile.Width = 1;
-
-pard.prctile.object = struct('Style','edit','String',85);
-pard.prctile.position=[8,2];
-pard.prctile.TooltipString = 'Percentile of dx at each time point';
-pard.prctile.Width = 0.5;
+pard.displayOpt.object = struct('Style','checkbox','String','show optimisation');
+pard.displayOpt.position=[7,1];
+pard.displayOpt.Width = 2;
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};

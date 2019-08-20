@@ -1,5 +1,5 @@
 classdef sideview<interfaces.DialogProcessor
-    % sideview Side view from ROI
+    % reconstructs side view from localizations in selected ROI
     methods
         function obj=sideview(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -114,6 +114,6 @@ pard.pixrecset.object=struct('Style','edit','String','5, 5');
 pard.pixrecset.position=[4,2];
 
 pard.plugininfo.name='Side view';
-pard.plugininfo.description= 'Side view from ROI';
+pard.plugininfo.description= 'Reconstructs side view from localizations in selected ROI';
 pard.plugininfo.type='ProcessorPlugin';
 end

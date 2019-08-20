@@ -1,4 +1,5 @@
 classdef RenameFields<interfaces.DialogProcessor
+%     Renames localization fields
     methods
         function obj=RenameFields(varargin)     
             obj@interfaces.DialogProcessor(varargin{:});
@@ -75,4 +76,5 @@ pard.keepold.object.TooltipString='If checked: keep old field (duplicate), if un
 
 pard.syncParameters={{'locFields','fieldselect',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Renames localization fields';
 end

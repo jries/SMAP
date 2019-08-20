@@ -1,4 +1,6 @@
 classdef CompareToGroundTruth<interfaces.DialogProcessor
+%     Compares fitted data of simulated images to ground truth and
+%     calculates several quality metrices
     methods
         function obj=CompareToGroundTruth(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -7,65 +9,129 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         end
         
         function out=run(obj,p)
-            if p.checklayer
-                % do something with grouping? at least warn?
-                obj.locData.sort('frame');
-                obj.locData.filter;
-                lr=obj.locData.getloc({'xnm','ynm','znm','phot','frame'},'layer',p.reflayer.Value);
-                lt=obj.locData.getloc({'xnm','ynm','znm','phot','frame'},'layer',p.targetlayer.Value);
-%                 lt.frame=lt.frame+1;
-                [outlayer2D, outlayer3D,mr,mt]=getmatch(lr,lt,p);
-                outlayer2D.name='layer2D';
-                outlayer3D.name='layer3D';
-            end
-            if p.checkdata
-            end
-            tab=maketable(outlayer2D,outlayer3D);
-            ax=obj.initaxis('results');
-            f=ax.Parent;
-            delete(ax);
-%             pos=f.Position;pos(1:2)=20;pos(3:4)=pos(3:4)*.9;
-            uit=uitable(f,'Units','normalized','Position',[0 0 1 0.9]);
-            uit.Units='pixels';
-            uit.Data=table2cell(tab);
-            uit.ColumnName=tab.Properties.VariableNames;
-            ncol=length(uit.ColumnName);
-            w=uit.Position(3)/(ncol+1);
-            for k=1:ncol
-              cw{k}=w;
-            end
-            uit.ColumnWidth=cw;
-            
-            ax=obj.initaxis('z compare gt');
-            plot(ax,lr.znm(mr),lt.znm(mt),'.');
-            zrh=lr.znm(mr);
-            zth=lt.znm(mt);
-            inrange=abs(zrh)<300;
-            zrh=zrh(inrange);
-            zth=zth(inrange);
-            B=[zrh ones(length(zrh),1)];
-            fit=B\zth;
-            slope=fit(1);off=fit(2);
-            hold(ax,'on');
-            plot(ax, zrh,slope*zrh+off);
-            hold(ax,'off');
-            title(ax,['slope: ' num2str(slope) ', off: ' num2str(off)])
-            xlabel(ax,'z reference (nm)')
-            ylabel(ax,'z target(nm)')
-            
-            
             out=[];
-            ax=obj.initaxis(' phot');
-            photr=lr.phot(mr);photr=photr(inrange);
-            phott=lt.phot(mt);phott=phott(inrange);
-            plot(ax,lr.phot(mr),lt.phot(mt),'.');
-            plot(ax,photr,phott,'r.');
-            xlabel('reference')
-            ylabel('target')
-            title(['reference/target' num2str(nanmedian(photr./phott))])
+            fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm','photerr'};
+            fieldsT=fieldsR;
+            if p.overwritefieldsR
+                fieldsR={p.xfieldR.selection,p.yfieldR.selection,p.zfieldR.selection,p.NfieldR.selection,'bg','frame'};
+            end
+            if p.overwritefieldsT
+                 fieldsT={p.xfieldT.selection,p.yfieldT.selection,p.zfieldT.selection,p.NfieldT.selection,'bg','frame'};
+            end
             
-            ax=obj.initaxis('phot (z)');
-            plot(ax,lr.znm(mr),lr.phot(mr)./lt.phot(mt),'.')
+            if ~p.usefactorR
+                factorR=[1 1 1 1];
+            elseif length(p.factorR)<2 
+                factorR=[p.factorR(1) 1 1 1];
+            elseif length(p.factorR)<4
+                factorR=[p.factorR(1) p.factorR(2) p.factorR(2) 1];
+            else
+                factorR=p.factorR;
+            end
+            if ~p.usefactorT
+                factorT=[1 1 1 1];
+            elseif length(p.factorT)<2 
+                factorT=[p.factorT(1) 1 1 1];
+            elseif length(p.factorT)<4
+                factorT=[p.factorT(1) p.factorT(2) p.factorT(2) 1];
+            else
+                factorT=p.factorT;
+            end
+            % do something with grouping? at least warn?
+            obj.locData.sort('frame');
+            obj.locData.filter;
+            lR=obj.locData.getloc(fieldsR,'layer',p.layerR.Value,'position','roi');
+            lT=obj.locData.getloc(fieldsT,'layer',p.layerT.Value,'position','roi');
+            
+            lRn.x=lR.(fieldsR{1})*factorR(2)+p.offsetxyzR(1); 
+            lRn.y=lR.(fieldsR{2})*factorR(3)+p.offsetxyzR(2);
+            lRn.z=lR.(fieldsR{3})*factorR(4)+p.offsetxyzR(3); 
+            lRn.phot=lR.(fieldsR{4})*factorR(1);
+            lRn.bg=lR.bg+p.offsetxyzR(4);lRn.frame=lR.frame+p.offsetxyzR(5) ;
+            
+            lTn.x=lT.(fieldsT{1})*factorT(2)+p.offsetxyzT(1); 
+            lTn.y=lT.(fieldsT{2})*factorT(3)+p.offsetxyzT(2);
+            lTn.z=lT.(fieldsT{3})*factorT(4)+p.offsetxyzT(3); 
+            lTn.phot=lT.(fieldsT{4})*factorT(1);
+            lTn.bg=lT.bg+p.offsetxyzT(4);lTn.frame=lT.frame+p.offsetxyzT(5);  
+            % PSF model
+            switch p.cal_3Dfile_use.selection
+                case 'use 3D cal'
+                    pixelsize=obj.getPar('cam_pixelsize_nm');
+                    psfmodel=splinePSF;
+                    psfmodel.loadmodel(p.cal_3Dfile);
+                    crlb=psfmodel.crlb(lRn.phot,lRn.bg,-lRn.z);
+%                     crlb=psfmodel.crlb(lTn.phot,lTn.bg,-lTn.z);
+                    lRn.xerr=sqrt(crlb(:,2))*pixelsize(1);
+                    lRn.yerr=sqrt(crlb(:,1))*pixelsize(end);
+                    lRn.zerr=sqrt(crlb(:,5));
+                    lTn.Nerr=sqrt(crlb(:,3));
+                    whicherr=1;
+                case 'fiterrors ref'
+                    lRn=copyfields(lRn,lR,fieldsR(7:end));
+                    whicherr=1;
+                case 'fiterrors target'
+                    lTn=copyfields(lTn,lT,fieldsT(7:end));
+                    whicherr=2;
+                otherwise
+                    whicherr=1;
+            end
+
+              
+            simulationerror(lRn,lTn,whicherr,p.searchradius)
+            
+%                 lt.frame=lt.frame+1;
+%             [outlayer2D, outlayer3D,mr,mt]=getmatch(lr,lt,p);
+%             outlayer2D.name='layer2D';
+%             outlayer3D.name='layer3D';
+%             
+% 
+%             tab=maketable(outlayer2D,outlayer3D);
+%             ax=obj.initaxis('results');
+%             f=ax.Parent;
+%             delete(ax);
+% %             pos=f.Position;pos(1:2)=20;pos(3:4)=pos(3:4)*.9;
+%             uit=uitable(f,'Units','normalized','Position',[0 0 1 0.9]);
+%             uit.Units='pixels';
+%             uit.Data=table2cell(tab);
+%             uit.ColumnName=tab.Properties.VariableNames;
+%             ncol=length(uit.ColumnName);
+%             w=uit.Position(3)/(ncol+1);
+%             for k=1:ncol
+%               cw{k}=w;
+%             end
+%             uit.ColumnWidth=cw;
+%             
+%             ax=obj.initaxis('z compare gt');
+%             plot(ax,lr.znm(mr),lt.znm(mt),'.');
+%             zrh=lr.znm(mr);
+%             zth=lt.znm(mt);
+%             inrange=abs(zrh)<300;
+%             zrh=zrh(inrange);
+%             zth=zth(inrange);
+%             B=[zrh ones(length(zrh),1)];
+%             fit=B\zth;
+%             slope=fit(1);off=fit(2);
+%             hold(ax,'on');
+%             plot(ax, zrh,slope*zrh+off);
+%             hold(ax,'off');
+%             title(ax,['slope: ' num2str(slope) ', off: ' num2str(off)])
+%             xlabel(ax,'z reference (nm)')
+%             ylabel(ax,'z target(nm)')
+%             
+%             
+%             out=[];
+%             ax=obj.initaxis(' phot');
+%             photr=lr.phot(mr);photr=photr(inrange);
+%             phott=lt.phot(mt);phott=phott(inrange);
+%             plot(ax,lr.phot(mr),lt.phot(mt),'.');
+%             plot(ax,photr,phott,'r.');
+%             xlabel('reference')
+%             ylabel('target')
+%             title(['reference/target' num2str(nanmedian(photr./phott))])
+%             
+%             ax=obj.initaxis('phot (z)');
+%             plot(ax,lr.znm(mr),lr.phot(mr)./lt.phot(mt),'.')
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -133,141 +199,143 @@ end
 tab=struct2table(ss);
 
 end
-function wobble_callback(a,b,obj)
-filename=(obj.locData.files.file(1).name);
-path=fileparts(filename);
-gtfile=[path filesep 'activations.csv','load ground truth for data'];
-if ~exist(gtfile,'file')
-    ind=strfind(path,filesep); 
-    gtfile=[path(1:ind(end))  'activations.csv'];
-end
- 
-if ~exist(gtfile,'file')
-    [fi,pa]=uigetfile(gtfile);
-    if fi
-    gtfile=[pa fi];
-    else
-        return
+
+
+function load3Dfile(a,b,obj)
+file=obj.getSingleGuiParameter('cal_3Dfile');
+
+if isempty(file)
+    lastfile=obj.getPar('lastSMLFile');
+    if isempty(lastfile)
+        lastfile='*.mat';
     end
+    file=[fileparts(lastfile) filesep '*.mat'];
 end
-
-gtData=csvread(gtfile);
-% fullnameLoc = get(handles.text5,'String');
-%hasHeader = fgetl(fopen(fullnameLoc));
-%hasHeader = 1*(sum(isstrprop(hasHeader,'digit'))/length(hasHeader) < .6);
-%localData = csvread(fullnameLoc, hasHeader, 0);
-%SH: switched to importdata tool and defined columns to make more general
-% localData =importdata(fullnameLoc);
-% if isstruct(localData)
-%     %strip the header
-%     localData = localData.data;
-% end
-% xCol = str2num(get(handles.edit_x,'String'));
-% yCol = str2num(get(handles.editY,'String'));
-% frCol = str2num(get(handles.editFr,'String'));
-% 
-% fullnameGT = get(handles.text6,'String');
-% %assumes GT file is as defined in competition
-% %CSV file. X col 3, y col 4.
-% gtData = importdata(fullnameGT);
-XCOLGT =3;
-YCOLGT =4;
-gtAll = gtData(:,[XCOLGT,YCOLGT]);
-gt = unique(gtAll,'rows');
-
-% frameIsOneIndexed = get(handles.radiobutton_is1indexed,'Value');
-% 
-% [pathstr,~,~] = fileparts(fullnameLoc); 
-% output_path = pathstr;
-% xnm = localData(:,xCol);
-% ynm = localData(:,yCol);
-% frame = localData(:,frCol);
-cam_pixelsize_nm=obj.getPar('cam_pixelsize_nm');
-p=obj.getGuiParameters;
-if p.shiftpix
-shiftx=-0.5*cam_pixelsize_nm;
-shifty=-0.5*cam_pixelsize_nm;
-else
-    shiftx=0;
-    shifty=0;
+[f,p]=uigetfile(file);
+if f
+    obj.setGuiParameters(struct('cal_3Dfile',[p f]));
 end
-%might be set by the users in future updates
-zmin = -750;zmax = 750;zstep = 10;%nm
-roiRadius = 500;%nm
-frameIsOneIndexed=true;
-output_path=path;
-wobbleCorrectSimBead(double(obj.locData.loc.xnm+shiftx),double(obj.locData.loc.ynm+shifty),double(obj.locData.loc.frame), gt,zmin,zstep,zmax,roiRadius,frameIsOneIndexed,filename)
-
-% addpath('External/SMLMChallenge')
-% wobble_correct;
 end
 
 function pard=guidef(obj)
 
-pard.t1.object=struct('Style','text','String','Reference');
-pard.t1.position=[1,1.5];
+pard.t1.object=struct('Style','text','String','Reference (GT)');
+pard.t1.position=[1,2];
 pard.t2.object=struct('Style','text','String','Target');
-pard.t2.position=[1,2.5];
+pard.t2.position=[1,3.5];
 
-pard.t3.object=struct('Style','text','String','search radius x,y (nm)');
-pard.t3.position=[1,3.5];
+pard.layerR.object=struct('Style','popupmenu','String',{{'layer1','layer2','layer3','layer4','layer5'}},'Value',1);
+pard.layerR.position=[2,2];
+pard.layerR.Width=1;
+
+pard.layerT.object=struct('Style','popupmenu','String',{{'layer1','layer2','layer3','layer4','layer5'}},'Value',2);
+pard.layerT.position=[2,3.5];
+pard.layerT.Width=1;
+
+
+pard.offsetxyzt.object=struct('Style','text','String','Shift x,y,z,bg,frame');
+pard.offsetxyzt.position=[3,1];
+pard.offsetxyzt.Width=1;
+
+pard.offsetxyzR.object=struct('Style','edit','String','0 0 0 0 0');
+pard.offsetxyzR.position=[3,2];
+pard.offsetxyzR.Width=1;
+
+pard.offsetxyzT.object=struct('Style','edit','String','0 0 0 0 0');
+pard.offsetxyzT.position=[3,3.5];
+pard.offsetxyzT.Width=1;
+
+pard.factort.object=struct('Style','text','String','Factor N,x,y,z,fr');
+pard.factort.position=[4,1];
+pard.factort.Width=1;
+
+pard.usefactorR.object=struct('Style','checkbox','String','');
+pard.usefactorR.position=[4,2];
+pard.usefactorR.Width=1;
+pard.factorR.object=struct('Style','edit','String','1');
+pard.factorR.position=[4,2.15];
+pard.factorR.Width=.75;
+
+pard.usefactorT.object=struct('Style','checkbox','String','');
+pard.usefactorT.position=[4,3.5];
+pard.usefactorT.Width=1;
+pard.factorT.object=struct('Style','edit','String','1');
+pard.factorT.position=[4,3.65];
+pard.factorT.Width=.75;
+
+pard.overwritefieldst.object=struct('Style','text','String','Set fields x, y');
+pard.overwritefieldst.position=[5,1];
+pard.overwritefieldst.Width=1;
+pard.overwritefieldst2.object=struct('Style','text','String',' z, photons');
+pard.overwritefieldst2.position=[6,1.25];
+pard.overwritefieldst2.Width=.75;
+
+            p(1).value=0; p(1).on={}; p(1).off={'xfieldR','yfieldR','zfieldR','NfieldR'};
+            p(2).value=1; p(2).on=p(1).off; p(2).off={};
+pard.overwritefieldsR.object=struct('Style','checkbox','String','','Callback',{{@obj.switchvisible,p}});
+pard.overwritefieldsR.position=[5.5,2];
+pard.overwritefieldsR.Width=.25;
+pard.xfieldR.object=struct('Style','popupmenu','String','xnm','Visible','off');
+pard.xfieldR.position=[5,2.1];
+pard.xfieldR.Width=.7;
+pard.yfieldR.object=struct('Style','popupmenu','String','ynm','Visible','off');
+pard.yfieldR.position=[5,2.8];
+pard.yfieldR.Width=.7;
+pard.zfieldR.object=struct('Style','popupmenu','String','znm','Visible','off');
+pard.zfieldR.position=[6,2.1];
+pard.zfieldR.Width=.7;
+pard.NfieldR.object=struct('Style','popupmenu','String','phot','Visible','off');
+pard.NfieldR.position=[6,2.8];
+pard.NfieldR.Width=.7;
+
+            p(1).value=0; p(1).on={}; p(1).off={'xfieldT','yfieldT','zfieldT','NfieldT'};
+            p(2).value=1; p(2).on=p(1).off; p(2).off={};
+pard.overwritefieldsT.object=struct('Style','checkbox','String','','Callback',{{@obj.switchvisible,p}});
+pard.overwritefieldsT.position=[5.5,3.5];
+pard.overwritefieldsT.Width=.25;
+pard.xfieldT.object=struct('Style','popupmenu','String','xnm','Visible','off');
+pard.xfieldT.position=[5,3.6];
+pard.xfieldT.Width=.7;
+pard.yfieldT.object=struct('Style','popupmenu','String','ynm','Visible','off');
+pard.yfieldT.position=[5,4.3];
+pard.yfieldT.Width=.7;
+pard.zfieldT.object=struct('Style','popupmenu','String','znm','Visible','off');
+pard.zfieldT.position=[6,3.6];
+pard.zfieldT.Width=.7;
+pard.NfieldT.object=struct('Style','popupmenu','String','phot','Visible','off');
+pard.NfieldT.position=[6,4.3];
+pard.NfieldT.Width=.7;
+
+pard.t3.object=struct('Style','text','String','search radius x,z (nm)');
+pard.t3.position=[7,1];
 pard.t3.Width=1;
 pard.searchradius.object=struct('Style','edit','String','100 300');
-pard.searchradius.position=[1,4.5];
+pard.searchradius.position=[7,2];
 pard.searchradius.Width=.5;
-% pard.onlyfiltered.object=struct('Style','checkbox','String','Export filtered (displayed) localizations.','Value',1);
-% pard.onlyfiltered.position=[2,1];
-% pard.onlyfiltered.Width=2;
-% pard.t1.Width=2;
+
+            p(1).value=0; p(1).on={}; p(1).off={'cal_3Dfile_load','cal_3Dfile'};
+            p(2).value=1; p(2).on=p(1).off; p(2).off={};
+            
+pard.cal_3Dfile_use.object=struct('Style','popupmenu','String',{{'use 3D cal','fiterrors ref','fiterrors target','estimate'}},'Callback',{{@obj.switchvisible,p}});
+pard.cal_3Dfile_use.position=[8,1];
+pard.cal_3Dfile_use.Width=1;
+
+pard.cal_3Dfile_load.object=struct('Style','pushbutton','String','load','Callback',{{@load3Dfile,obj}});
+pard.cal_3Dfile_load.position=[8,4.5];
+pard.cal_3Dfile_load.Width=.5;
+pard.cal_3Dfile.object=struct('Style','edit','String','');
+pard.cal_3Dfile.position=[8,2];
+pard.cal_3Dfile.Width=2.5;
 
 
-pard.checklayer.object=struct('Style','checkbox','String','','Value',1);
-pard.checklayer.position=[2,1];
-pard.checklayer.Width=.5;
-
-pard.reflayer.object=struct('Style','popupmenu','String',{{'layer1','layer2','layer3','layer4','layer5'}},'Value',1);
-pard.reflayer.position=[2,1.5];
-pard.reflayer.Width=1;
-
-pard.targetlayer.object=struct('Style','popupmenu','String',{{'layer1','layer2','layer3','layer4','layer5'}},'Value',2);
-pard.targetlayer.position=[2,2.5];
-pard.targetlayer.Width=1;
-
-pard.checkdata.object=struct('Style','checkbox','String','','Value',0);
-pard.checkdata.position=[3,1];
-pard.checkdata.Width=.5;
-
-pard.refdata.object=struct('Style','popupmenu','String',{{'layer1','layer2','layer3','layer4','layer5'}},'Value',1);
-pard.refdata.position=[3,1.5];
-pard.refdata.Width=1;
-
-pard.targetdata.object=struct('Style','popupmenu','String',{{'layer1','layer2','layer3','layer4','layer5'}},'Value',2);
-pard.targetdata.position=[3,2.5];
-pard.targetdata.Width=1;
 
 
-% pard.forceungrouped.object=struct('Style','checkbox','String','Force ungrouped localiyations','Value',1);
-% pard.forceungrouped.position=[3,3];
-% pard.forceungrouped.Width=2;
-% 
-% pard.shiftpix.object=struct('Style','checkbox','String','Shift by 0.5 camera pixels','Value',1);
-% pard.shiftpix.position=[3,1];
-% pard.shiftpix.Width=2;
-% 
-% 
-% 
-% 
-% pard.shiftframe.object=struct('Style','checkbox','String','Shift frame by +1','Value',1);
-% pard.shiftframe.position=[4,1];
-% pard.shiftframe.Width=4;
-% 
-% pard.comparer.object=struct('Style','popupmenu','String',{{'2D, 2013','3D, 2016'}},'Value',2);
-% pard.comparer.position=[5,1];
-% pard.comparer.Width=4;
-% 
-% pard.wobblebutton.object=struct('Style','pushbutton','String','Wobble.m','Callback',{{@wobble_callback,obj}});
-% pard.wobblebutton.position=[4,4];
-% pard.wobblebutton.Width=1;
-pard.syncParameters={{'filelist_short','refdata',{'String'}},{'filelist_short','targetdata',{'String'}}};
+
+pard.syncParameters={{'locFields','xfieldR' ,{'String'}},{'locFields','yfieldR' ,{'String'}},...
+    {'locFields','zfieldR', {'String'}},{'locFields','NfieldR',{'String'}},...
+    {'locFields','xfieldT' ,{'String'}},{'locFields','yfieldT' ,{'String'}},...
+    {'locFields','zfieldT', {'String'}},{'locFields','NfieldT',{'String'}}};
+
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Compares fitted data of simulated images to ground truth and calculates several quality metrices';
 end

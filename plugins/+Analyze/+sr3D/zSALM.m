@@ -1,4 +1,6 @@
 classdef zSALM<interfaces.DialogProcessor
+%     converts reltive intensities of super- and undercritical channel into
+%     z position
     properties
         
     end
@@ -87,7 +89,7 @@ classdef zSALM<interfaces.DialogProcessor
            
             isall=obj.locData.loc.(fsa);
             iuall=obj.locData.loc.(fua);
-            rall=isall./iuall;
+            rall=isall./iuall/p.rfactor*intensitySALM(0);
             
              %exponential model
             zr=-log((rall-fitp.c)/fitp.a)/fitp.b;
@@ -119,6 +121,7 @@ classdef zSALM<interfaces.DialogProcessor
             dzr=diff(zr);
             dz_dr=fit(r(1:end-1)+rdiff/2,dzr/rdiff,'cubicinterp');
             
+            %late: take into account the factor in zerr
             zerrs=zerrSALMspline(dz_dr,isall,iuall,bgs,bgu);
             zerrs(zoutofrange)=inf;
             errza=obj.locData.loc.locprecznm_a;
@@ -250,7 +253,7 @@ pard.rfactor.Width=0.4;
 %             obj.addSynchronization('filelist_short',obj.guihandles.dataselect,'String')
 pard.plugininfo.type='ProcessorPlugin';
 
-
+pard.plugininfo.description='converts reltive intensities of super- and undercritical channel into z position.'
 end
 
 function err=zerrSALM(fitp,Ns,Nu,bgs,bgu)

@@ -1,4 +1,5 @@
 classdef Mirror<interfaces.DialogProcessor
+%     Mirrors localizations
     methods
         function obj=Mirror(varargin)    
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -99,4 +100,5 @@ pard.mirrormode.position=[4,2];
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Mirrors localizations';
 end

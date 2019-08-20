@@ -1,4 +1,6 @@
 classdef ImportSitePositions<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Import positions of ROIs from existing file and add those as ROIs in
+%     the current file.
     methods
         function obj=ImportSitePositions(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -31,25 +33,19 @@ end
 
 
 function pard=guidef(obj)
-
 pard.t1.object=struct('String','Import sites and cells from other file. ','Style','text');
 pard.t1.position=[1,1];
 pard.t1.Width=4;
 pard.t1.object.TooltipString='If multiple files were loaded, make sure the corresponding ones are loaded here and have the same order';
 
-
 pard.oldfile.object=struct('String','','Style','edit');
 pard.oldfile.position=[2,1];
 pard.oldfile.Width=3;
-
 
 pard.loadfile.object=struct('String','load','Style','pushbutton','Callback',@obj.load_callback);
 pard.loadfile.position=[2,4];
 pard.loadfile.Width=1;
 
-
-
+pard.plugininfo.description='Import positions of ROIs from existing file and add those as ROIs in the current file.';
 pard.plugininfo.type='ROI_Analyze';
-
-
 end

@@ -1,4 +1,6 @@
 classdef SEAnnotation< interfaces.SEProcessor
+%     Annotate ROIs using lists of user-defined tags or up to four
+%     user-defined linear or arbitrary image-ROIs.
     properties
 %         SEpreview
 %         list

@@ -1,4 +1,5 @@
 classdef analyzeNPCquantification<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Performs statistics on the results of NPCLabelingQuantify_s
     properties
     end
     methods
@@ -519,5 +520,6 @@ pard.copy2page.position=[6,1];
 pard.copy2page.Width=2;
 
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Performs statistics on the results of NPCLabelingQuantify_s';
 
 end

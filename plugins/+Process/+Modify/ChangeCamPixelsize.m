@@ -1,4 +1,5 @@
 classdef ChangeCamPixelsize<interfaces.DialogProcessor
+%     Changes the camera pixel size of a data set
     methods
         function obj=ChangeCamPixelsize(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -83,6 +84,6 @@ pard.factorxy.position=[4,2];
 
 
 pard.syncParameters={{'filelist_short','file1',{'String'}}};
-
+pard.plugininfo.description='Changes the camera pixel size of a data set';
 pard.plugininfo.type='ProcessorPlugin';
 end

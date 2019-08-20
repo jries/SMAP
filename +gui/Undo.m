@@ -1,4 +1,5 @@
 classdef Undo< interfaces.GuiModuleInterface & interfaces.LocDataInterface
+%     backs up localization data before executing plugin, restores it
     properties
         locDataOld
         undoModule

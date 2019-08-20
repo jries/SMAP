@@ -1,4 +1,6 @@
 classdef GuiHistSlider< interfaces.LayerInterface
+%     Show histogram of values of localization field and use sliders to
+%     adjust filter range
     properties
         field
         data

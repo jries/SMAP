@@ -1,4 +1,5 @@
 function [srim,nlocs,Gc]=gaussrender_ellipt(pos,rangex, rangey, pixelsx, pixelsy, lut,rangec,template)
+% Renders each localization as an elliptical Gaussian 
 %pos.x, pos.y, pos.c, pos.N,pos.sx pos.sy
 %global variables
 if isempty(pos.x)

@@ -1,4 +1,5 @@
 classdef makeCellGrid<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Generates a grid of cells for all files
     methods
         function obj=makeCellGrid(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -70,5 +71,6 @@ function pard=guidef(obj)
 % pard.getmask.object=struct('String','getmask','Style','checkbox');
 % pard.getmask.position=[2,3];
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Generates a grid of cells for all files';
 end
 

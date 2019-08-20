@@ -1,4 +1,9 @@
 classdef selectCoordinates2Color<interfaces.SEEvaluationProcessor
+%     Displayes the images of layer 1 and layer 2 next to each other and
+%     allows user to precisely position a point-ROI. This is then
+%     translated to the endpoints of a linear ROI associated to the
+%     structure. Used to measure precise distances between two structures
+%     of different color.
     properties
         hax1
         hax2
@@ -141,7 +146,7 @@ pard.shiftval.position=[2,3];
 pard.shiftval.Width=2;
 
 pard.plugininfo.type='ROI_Evaluate';
-
+pard.plugininfo.description='Displayes the images of layer 1 and layer 2 next to each other and allows user to precisely position a point-ROI. This is then translated to the endpoints of a linear ROI associated to the structure. Used to measure precise distances between two structures of different color.';
 end
 
 

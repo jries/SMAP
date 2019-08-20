@@ -1,5 +1,6 @@
 classdef Vibrations<interfaces.DialogProcessor
-    % Histograms calculates histograms and statistics for fields  
+    % Vibrations calculates the fourier transform of x, y and z to
+    % visualize vibrations
     properties
     end
     methods
@@ -14,6 +15,7 @@ classdef Vibrations<interfaces.DialogProcessor
         function out=run(obj,p)
             layers=find(obj.getPar('sr_layerson'));
             plotfields={'xnm','ynm','znm'};
+            plotfieldserr={'xnmerr','ynmerr','locprecznm'};
             for k=1:length(plotfields)
                 axx(k)=obj.initaxis(plotfields{k}(1));
                 axfx(k)=obj.initaxis(['fft(' plotfields{k}(1) ')']);
@@ -22,8 +24,13 @@ classdef Vibrations<interfaces.DialogProcessor
             legends={};
             for k=1:length(layers)
                 legends{k}=['layer' num2str(layers(k))];
-                locs=obj.locData.getloc({'xnm','ynm','znm','frame','filenumber'},'position','roi','layer',layers(k),'grouping','ungrouped');
-                dt=obj.locData.files.file(locs.filenumber(1)).info.timediff
+                locs=obj.locData.getloc({'xnm','ynm','znm','frame','filenumber','xnmerr','ynmerr','locprecznm'},'position','roi','layer',layers(k),'grouping','ungrouped');
+                if p.overwriteframetime
+                    dt=p.frametime;
+                else
+                dt=obj.locData.files.file(locs.filenumber(1)).info.timediff;
+                end
+                dt
                 Fs=1000/dt;
                 t=locs.frame*dt;
                 for f=1:length(plotfields)
@@ -34,16 +41,22 @@ classdef Vibrations<interfaces.DialogProcessor
                     plot(axx(f),t,x-mean(x))
                     xlabel(axx(f),'time(ms)')
                     ylabel(axx(f),['d' plotfields{f} '(nm)']);
+                    title(axx(f),['SD = ' num2str(std(x),3) ', mean(locprec) = ' num2str(mean(locs.(plotfieldserr{f})),3) ' nm']);
                     L=length(x);
                     xf=abs(fft(x)/L);
-                    xfp=xf(1:L/2+1);
+                    xfp=2*xf(1:L/2+1);
                     xfp(1)=0;
                     freq=Fs*(0:(L/2))/L;
                     semilogy(axfx(f),freq,xfp);
                     xlabel(axfx(f),'frequency (Hz)')
-                    ylabel(axfx(f),'fft (x)');
+                    ylabel(axfx(f),'Amplitude (nm), 2*fft (x)');
+                    
                     hold(axx(f),'on')
                     hold(axfx(f),'on')
+                    [m,ind]=max(xfp);
+                    mfreq=freq(ind);
+                    title(axfx(f),['maximum at ' num2str(mfreq) ' Hz']);
+                    plot(axfx(f),mfreq,m,'x')
                 end
 
             end
@@ -65,6 +78,12 @@ classdef Vibrations<interfaces.DialogProcessor
             pard.text2.object=struct('String','Manually click Refresh in MM property browser after changing exposure time.','Style','text');
             pard.text2.position=[2,1];
             pard.text2.Width=4;
+            pard.overwriteframetime.object=struct('String','Overwrite frame time, set to (ms):','Style','checkbox');
+            pard.overwriteframetime.position=[3,1];
+            pard.overwriteframetime.Width=2;
+            pard.frametime.object=struct('String','20','Style','edit');
+            pard.frametime.position=[3,3];
+            pard.frametime.Width=0.5;
 %             pard.setbinwidth.object=struct('String','set binwidth','Style','checkbox','Value',0);
 %             pard.setbinwidth.position=[1,2];
 %             pard.binwidth.object=struct('String','','Style','edit','Value',0);
@@ -77,7 +96,7 @@ classdef Vibrations<interfaces.DialogProcessor
 %             pard.quantile.position=[1,4.5];
 %             pard.quantile.Width=0.5;
             pard.plugininfo.name='Vibrations';
-            pard.plugininfo.description='calculates histograms and statistics for loc fields';
+            pard.plugininfo.description='Calculates the fourier transform of x, y and z to visualize vibrations';
             pard.plugininfo.type='ProcessorPlugin'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
   
 %             pard.syncParameters={{'locFields','locfield',{'String'}}};

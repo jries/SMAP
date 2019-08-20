@@ -65,4 +65,6 @@ pard.outputFormat.Width=2;
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.name='BlinkingMoviePresentation';
 pard.plugininfo.type='ProcessorPlugin';
+
+pard.plugininfo.description='BlinkingMoviePresentation renders a movie with the left side showing the camera images and the right side showing sngle molecule localizations slowly building up a superresolution image';
 end

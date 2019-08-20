@@ -1,4 +1,5 @@
 classdef SaveSiteParameters<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Exports evaluation results and additional ROI parameters
     properties
     end
     methods
@@ -42,6 +43,6 @@ function pard=guidef(obj)
 pard.saveselection.object=struct('String',{{'all site info','evaluation'}},'Style','popupmenu');
 pard.saveselection.position=[1,1];
 pard.saveselection.Width=2;
-
+pard.plugininfo.description='Exports evaluation results and additional ROI parameters';
 pard.plugininfo.type='ROI_Analyze';
 end

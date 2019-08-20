@@ -1,4 +1,6 @@
 classdef AverageSites<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Calculates an average of selected ROIs by overlaying them and
+%     plotting all localizations into a new file.
     methods
         function obj=AverageSites(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -58,10 +60,10 @@ classdef AverageSites<interfaces.DialogProcessor&interfaces.SEProcessor
             if p.addfile
                 locnew.xnm=locnew.xnm+x0;
                 locnew.ynm=locnew.ynm+y0;
-            
-                for k=1:length(fn)
-                    obj.locData.addloc(fn{k},locnew.(fn{k}))
-                end
+                obj.locData.addLocData(locnew);
+%                 for k=1:length(fn)
+%                     obj.locData.addloc(fn{k},locnew.(fn{k}))
+%                 end
                 obj.locData.regroup;
                 obj.locData.filter;
             end
@@ -147,6 +149,6 @@ pard.addfile.position=[3,3];
 pard.addfile.Width=2;
 
 pard.plugininfo.type='ROI_Analyze';
-
+pard.plugininfo.description='Calculates an average of selected ROIs by overlaying them and plotting all localizations into a new file.';
 
 end

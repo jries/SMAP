@@ -62,7 +62,7 @@ pard.runClusterdensity.object = struct('String', 'Run clusterdensity', 'Style','
 pard.runClusterdensity.position = [7,1];
 pard.runClusterdensity.Width = 1;
 
-
+pard.plugininfo.description='This plug-in is designed for segmentation of yeast cells at their equatorial planes. First, noise will be removed according to their clustered density. Locs will then be converted to pixel images. Next, mask will be generated based on the images and thresholding after gaussian filtering applied. An watershed segmentation algorithm will then be applied. Regions attached to the edge of fields will be further removed. After small objects in the images are removed, cell centers will be set to the mid points of cells along x and y axises.';
 % 
 % pard.t2.object=struct('String','sigmaNMS','Style','text');
 % pard.t2.position=[2,1];

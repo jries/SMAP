@@ -2,7 +2,9 @@ classdef cfithist<interfaces.DialogProcessor
     %  Copyright (c)2017 Ries Lab, European Molecular Biology Laboratory,
     %  Heidelberg. This file is part of Single Molecule Analysis Platform (SMAP).
     
-    % cfithist fits a histogram 
+    % fits histogram of localizaitons/cluster with an analytical model to
+    % determine number of proteins, maturation efficiency,  number of
+    % re-activations
     
     methods
         function obj=cfithist(varargin)        
@@ -174,6 +176,7 @@ pard.bin.Width=1;
 
 pard.plugininfo.name='fit brightness histogram';
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='fits histogram of localizaitons/cluster with an analytical model to determine number of proteins, maturation efficiency,  number of re-activations';
 % pard.text2.object=struct('String','length scale nm','Style','text');
 % pard.text2.position=[8,1];
 % 
