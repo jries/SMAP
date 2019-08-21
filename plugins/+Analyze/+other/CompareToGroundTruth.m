@@ -1,6 +1,9 @@
 classdef CompareToGroundTruth<interfaces.DialogProcessor
 %     Compares fitted data of simulated images to ground truth and
 %     calculates several quality metrices
+    properties
+        figure
+    end
     methods
         function obj=CompareToGroundTruth(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -81,7 +84,12 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
                 otherwise
                     whicherr=1;
             end
-
+            
+            %figure
+            if isempty(obj.figure) || ~isvalid(obj.figure)
+                obj.figure=figure;
+            end
+            figure(obj.figure);
               
             simulationerror(lRn,lTn,whicherr,p.searchradius)
             
@@ -140,6 +148,9 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         end
         function pard=guidef(obj)
             pard=guidef(obj);
+        end
+        function newfigure(obj,a,b)
+            obj.figure=figure;
         end
     end
 end
@@ -317,6 +328,10 @@ pard.t3.Width=1;
 pard.searchradius.object=struct('Style','edit','String','100 300');
 pard.searchradius.position=[7,2];
 pard.searchradius.Width=.5;
+
+pard.newfig.object=struct('Style','pushbutton','String','new figure','Callback',@obj.newfigure);
+pard.newfig.position=[7,4];
+pard.newfig.Width=1;
 
             p(1).value=0; p(1).on={}; p(1).off={'cal_3Dfile_load','cal_3Dfile'};
             p(2).value=1; p(2).on=p(1).off; p(2).off={};
