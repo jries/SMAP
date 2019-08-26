@@ -1,6 +1,9 @@
 classdef CompareToGroundTruth<interfaces.DialogProcessor
 %     Compares fitted data of simulated images to ground truth and
 %     calculates several quality metrices
+    properties
+        figure
+    end
     methods
         function obj=CompareToGroundTruth(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -10,13 +13,13 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         
         function out=run(obj,p)
             out=[];
-            fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm','photerr'};
+            fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm','photerr','filenumber'};
             fieldsT=fieldsR;
             if p.overwritefieldsR
-                fieldsR={p.xfieldR.selection,p.yfieldR.selection,p.zfieldR.selection,p.NfieldR.selection,'bg','frame'};
+                fieldsR={p.xfieldR.selection,p.yfieldR.selection,p.zfieldR.selection,p.NfieldR.selection,'bg','frame','filenumber'};
             end
             if p.overwritefieldsT
-                 fieldsT={p.xfieldT.selection,p.yfieldT.selection,p.zfieldT.selection,p.NfieldT.selection,'bg','frame'};
+                 fieldsT={p.xfieldT.selection,p.yfieldT.selection,p.zfieldT.selection,p.NfieldT.selection,'bg','frame','filenumber'};
             end
             
             if ~p.usefactorR
@@ -57,15 +60,20 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
             % PSF model
             switch p.cal_3Dfile_use.selection
                 case 'use 3D cal'
+                    %see if EMon
+                    fn=lT.filenumber(1);
+                    EMon=obj.locData.files.file(fn).info.EMon;
+                    crlbfac=sqrt(EMon+1);
+                    disp(['EM ' num2str(EMon)]);
                     pixelsize=obj.getPar('cam_pixelsize_nm');
                     psfmodel=splinePSF;
                     psfmodel.loadmodel(p.cal_3Dfile);
                     crlb=psfmodel.crlb(lRn.phot,lRn.bg,-lRn.z);
 %                     crlb=psfmodel.crlb(lTn.phot,lTn.bg,-lTn.z);
-                    lRn.xerr=sqrt(crlb(:,2))*pixelsize(1);
-                    lRn.yerr=sqrt(crlb(:,1))*pixelsize(end);
-                    lRn.zerr=sqrt(crlb(:,5));
-                    lTn.Nerr=sqrt(crlb(:,3));
+                    lRn.xerr=sqrt(crlb(:,2))*pixelsize(1)*crlbfac;
+                    lRn.yerr=sqrt(crlb(:,1))*pixelsize(end)*crlbfac;
+                    lRn.zerr=sqrt(crlb(:,5))*crlbfac;
+                    lRn.Nerr=sqrt(crlb(:,3))*crlbfac;
                     whicherr=1;
                 case 'fiterrors ref'
                     lRn=copyfields(lRn,lR,fieldsR(7:end));
@@ -76,7 +84,12 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
                 otherwise
                     whicherr=1;
             end
-
+            
+            %figure
+            if isempty(obj.figure) || ~isvalid(obj.figure)
+                obj.figure=figure;
+            end
+            figure(obj.figure);
               
             simulationerror(lRn,lTn,whicherr,p.searchradius)
             
@@ -135,6 +148,9 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         end
         function pard=guidef(obj)
             pard=guidef(obj);
+        end
+        function newfigure(obj,a,b)
+            obj.figure=figure;
         end
     end
 end
@@ -312,6 +328,10 @@ pard.t3.Width=1;
 pard.searchradius.object=struct('Style','edit','String','100 300');
 pard.searchradius.position=[7,2];
 pard.searchradius.Width=.5;
+
+pard.newfig.object=struct('Style','pushbutton','String','new figure','Callback',@obj.newfigure);
+pard.newfig.position=[7,4];
+pard.newfig.Width=1;
 
             p(1).value=0; p(1).on={}; p(1).off={'cal_3Dfile_load','cal_3Dfile'};
             p(2).value=1; p(2).on=p(1).off; p(2).off={};
