@@ -321,6 +321,9 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
         function rerender(obj,varargin)
             notify(obj.P,'sr_render')
         end
+        function resetview(obj)
+            resetview_callback(0,0,obj);
+        end
     end
 end
 
