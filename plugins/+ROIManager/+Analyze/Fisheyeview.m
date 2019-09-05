@@ -23,6 +23,7 @@ classdef Fisheyeview<interfaces.DialogProcessor&interfaces.SEProcessor
             y0=p.sr_pos(2);
             if ~isfield(locnew,'class')
                 locnew.class=0*locnew.xnm;
+                locnew.filenumbernew=0*locnew.xnm;
             end
             ticc=tic;
             for k=1:length(sites)
@@ -30,26 +31,31 @@ classdef Fisheyeview<interfaces.DialogProcessor&interfaces.SEProcessor
                     [locs,indloc]=obj.locData.getloc({'xnm','ynm'},'position',sites(k),'grouping','ungrouped','layer',find(p.sr_layeron));
                     [phisite,rsite]=cart2pol(sites(k).pos(1)-p.sr_pos(1),sites(k).pos(2)-p.sr_pos(2));
                     maxr=mean(p.sr_size)/2; %to scale r between 0 and 1
-                    rsites=rsite/maxr;
-                    rref0=p.se_siteroi(1)/maxr/12;
-                    rfac=max(rref0,rsites-p.se_siteroi(1)/maxr/3);
-                    rsiten=rsites.^p.scaleexponent;
-                    dr=p.scaleexponent.*rfac.^(p.scaleexponent-1);
+%                     rsites=(rsite+p.offset)/maxr;
+%                     rref0=p.se_siteroi(1)/maxr/12;
+%                     rfac=max(rref0,rsites-(p.se_siteroi(1)/3)/maxr);
+%                     rsiten=rsites.^p.scaleexponent-(p.offset/maxr).^p.scaleexponent;
+                    rsiten=log(rsite+p.offset)-log(p.offset);
+                    dr=1/(rsite+p.offset);
+%                     maxr=1;
+%                     dr=p.scaleexponent.*rfac.^(p.scaleexponent-1);
 %                     dr0=p.scaleexponent.*rref0.^(p.scaleexponent-1);
 %                     factor=min(dr0,dr);
-                    factor=dr;
+                    factor=dr*1.4;
                     
-                    [xsnew,ysnew]=pol2cart(phisite,rsiten*maxr);
-                    locnew.xnm(indloc)=(locs.xnm-sites(k).pos(1))*factor+xsnew;
-                    locnew.ynm(indloc)=(locs.ynm-sites(k).pos(2))*factor+ysnew;
-                    locnew.phot(indloc)=locnew.phot(indloc)*factor^2;
-                    locnew.locprecnm(indloc)=locnew.locprecnm(indloc)*factor;
+                    facexphot=1.5;
+                    [xsnew,ysnew]=pol2cart(phisite,rsiten);
+                    locnew.xnm(indloc)=((locs.xnm-sites(k).pos(1))*factor+xsnew)*maxr;
+                    locnew.ynm(indloc)=((locs.ynm-sites(k).pos(2))*factor+ysnew)*maxr;
+                    locnew.phot(indloc)=locnew.phot(indloc)*factor^facexphot;
+                    locnew.locprecnm(indloc)=max(10,locnew.locprecnm(indloc))*factor*maxr;
                     %also locprecnm
                     %rescale photons by factor^2
     %                 figure(88)
     %                 plot(locnew.xnm(indloc),locnew.ynm(indloc),'+')
                     locnew.filenumber(indloc)=newfile;
                     locnew.class(indloc)=sites(k).ID;
+                    locnew.filenumbernew(indloc)=newfile;
                     used=used|indloc;
                     drall(k)=dr;
                 end
@@ -107,13 +113,13 @@ pard.scaleexponent.object=struct('String','0.4','Style','edit');
 pard.scaleexponent.position=[2,2.5];
 pard.scaleexponent.Width=.5;
 
-% pard.maxmagt.object=struct('String','Maximum magnification','Style','text');
-% pard.maxmagt.position=[2,3];
-% pard.maxmagt.Width=1.5;
-% 
-% pard.maxmag.object=struct('String','5','Style','edit');
-% pard.maxmag.position=[2,4.5];
-% pard.maxmag.Width=.5;
+pard.offsett.object=struct('String','offset R (nm)','Style','text');
+pard.offsett.position=[2,3];
+pard.offsett.Width=1.5;
+
+pard.offset.object=struct('String','0','Style','edit');
+pard.offset.position=[2,4.5];
+pard.offset.Width=.5;
 
 pard.namet.object=struct('String','name','Style','text');
 pard.namet.position=[3,1];

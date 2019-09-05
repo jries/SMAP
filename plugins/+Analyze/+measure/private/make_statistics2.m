@@ -165,8 +165,18 @@ for k=datrange
     px = mylognfit(loch);
     [~,ind]=max(hlocp{k}.h);
     smx=hlocp{k}.n(ind);
-    stat.locprec.max(k)=smx;
-    slp{end+1}=['max: ' num2str(smx,3)];
+    
+    %refine
+    dwin=ceil(ind/4);
+    rn=max(1,ind-dwin+1):min(ind+dwin,length(hlocp{k}.h));
+    fpol=fit(hlocp{k}.n(rn)',hlocp{k}.h(rn)','poly3');
+    smxf=fzero(@(x) 3*fpol.p1*x.^2+2*fpol.p2*x+fpol.p3,smx);
+    if ~isempty(ax2)
+        plot(hlocp{k}.n(rn),fpol(hlocp{k}.n(rn)),'g')
+    end
+    
+    stat.locprec.max(k)=smxf;
+    slp{end+1}=['max: ' num2str(smxf,3)];
 %     hf=mylognpdf(hlocp{k}.n,px(1),px(2))*sum(hlocp{k}.h)*(hlocp{k}.n(2)-hlocp{k}.n(1));
 %     if ploton
 %     plot(hlocp{k}.n,hf/max(hlocp{k}.h),'k:')
@@ -256,7 +266,12 @@ for k=1:length(datrange)
         continue
     end
     [~,ind]=max(hz{datrange(k)}.h);
-    mx=hz{datrange(k)}.n(ind);    
+    mx=hz{datrange(k)}.n(ind);   
+    mx2=max(hz{datrange(k)}.h(1:ceil(ind*0.5)));
+    if mx2>0.3*mx2 %if by grouping second max is higher select the first max.
+        mx=mx2;
+    end
+    
     sls{end+1}=['max: ' num2str(mx,3)];
     stat.(txt).max(k)=mx;
 end
@@ -465,6 +480,7 @@ dq=hin.n(2)-hin.n(1);
 % end
 ax.NextPlot='add';
 dat.mu=meanexp(v,dq,fitrange,ax,fac);
+xlim(ax,[hin.n(1) hin.n(end)])
 catch
     dat.mu=0;  
 end

@@ -61,6 +61,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             uimenu(h.wfcontext,'label','Info on workflow','Callback',{@wfinfo_callback,obj});
             uimenu(h.wfcontext,'label','Change workflow','Callback',{@wfload_callback,obj});
             uimenu(h.wfcontext,'label','Load raw WF','Callback',{@wfload_callback,obj});
+            uimenu(h.wfcontext,'label','Load WF','Callback',{@wfload_callback,obj});
              uimenu(h.wfcontext,'label','Edit workflow','Callback',{@wfedit_callback,obj});
             uimenu(h.wfcontext,'label','Save workflow settings','Callback',{@savepar_callback,obj});
             uimenu(h.wfcontext,'label','Save workflow as...','Callback',{@wsave_callback,obj});
@@ -203,6 +204,13 @@ else
     obj.loadpar=true;
 end
 
+if (isprop(a,'Text') && contains(a.Text,'Change')) || (isprop(a,'String') && contains(a.String,'Change'))
+    restorepar=true;
+    oldsettings=obj.mainworkflow.getGuiParameters(true);
+else
+    restorepar=false;
+end
+
 obj.status('load workflow *.txt file');
 drawnow
 settingsfile=obj.getGlobalSetting('mainLocalizeWFFile');
@@ -210,6 +218,9 @@ settingsfile=obj.getGlobalSetting('mainLocalizeWFFile');
 if f
     settingsfilen=[p filesep f];
     loadwf(obj,settingsfilen)
+    if restorepar
+        obj.mainworkflow.setGuiParameters(oldsettings,true,false);
+    end
     obj.status('new workflow loaded');
 else
     obj.status('no workflow *.txt selected');
