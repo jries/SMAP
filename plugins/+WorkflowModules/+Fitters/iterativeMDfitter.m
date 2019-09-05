@@ -24,9 +24,10 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             p=obj.getAllParameters;
       
             psf=splinePSF;
-            psf.roisize=p.roisize;
+%             psf.roisize=p.roisize;
             obj.setPar('loc_ROIsize',p.roisize)
             psf.loadmodel(p.cal_3Dfile);
+            psf.roisize=min(round(1.3*p.roisize*2)+1,  size(psf.modelpar.coeff,1)-3);
                  
             obj.splinePSF=psf;
             pim=psf.PSF(struct('x',0,'y',0,'z',0));
@@ -49,15 +50,23 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 outputdat=dato;
                 return;
             end
+            sim=size(image);
+            
+            %render image and errors with maximum PSF size!
+            
 %             maxima.N=image(sub2ind(size(image),maxima.y,maxima.x))*obj.splinenorm;
 %             maxima.z=0*maxima.N;
 %             maxima.z=maxima.znm;
 %             maxima.N=maxima.intensity;
-            dr=round((obj.splinePSF.roisize-1)/2);
+            drfit=round((p.roisize-1)/2);
+            drpsf=round((obj.splinePSF.roisize-1)/2);
+            spsf=obj.splinePSF.roisize;
+            ddr=drpsf-drfit;
             maxima.z=-maxima.znm; %XXXXX 
+            
 
-            pos.x=max(dr+1,min(size(image,2)-dr,round(maxima.x)));
-            pos.y=max(dr+1,min(size(image,1)-dr,round(maxima.y)));
+            pos.x=max(drfit+1,min(size(image,2)-drfit,round(maxima.x)));
+            pos.y=max(drfit+1,min(size(image,1)-drfit,round(maxima.y)));
             maximainit=maxima;
             maximainit.x=pos.x;
             maximainit.y=pos.y;
@@ -73,26 +82,36 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             for iter=1:p.iterations
                 for k=1:length(inds)
                     ih=inds(k);
-                    roiim=image(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr);
+                    roiim=image(pos.y(ih)-drfit:pos.y(ih)+drfit,pos.x(ih)-drfit:pos.x(ih)+drfit);
                     %update image
-                    M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr)=M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr)-Mi(:,:,ih);
-                    roiM=M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr);
+                    %calculate ranges 
+                    
+                    yrange=max(1,pos.y(ih)-drpsf):min(pos.y(ih)+drpsf,sim(1)); 
+                    yrangepsf=yrange(1)-(pos.y(ih)-drpsf)+1:yrange(end)-(pos.y(ih)+drpsf)+spsf;
+                    xrange=max(1,pos.x(ih)-drpsf):min(pos.x(ih)+drpsf,sim(2)); 
+                    xrangepsf=xrange(1)-pos.x(ih)+drpsf+1:xrange(end)-pos.x(ih)-drpsf+spsf;
+                    
+                    M(yrange,xrange)=M(yrange,xrange)-Mi(yrangepsf,xrangepsf,ih);
+                    roiM=M(pos.y(ih)-drfit:pos.y(ih)+drfit,pos.x(ih)-drfit:pos.x(ih)+drfit);
                     startpar=coord(ih,:);
-                    [coordf,crlb(ih,:), LL(ih), iterations(ih)]=fitsingleMD(roiim,roiM,startpar,obj.splinePSF.modelpar,p.iterationsf,p.useSEfitter,obj.EMon);
+                    EMexcess=obj.EMon;
+%                     EMexcess=1;
+                    [coordf,crlb(ih,:), LL(ih), iterations(ih)]=fitsingleMD(roiim,roiM,startpar,obj.splinePSF.modelpar,p.iterationsf,p.useSEfitter,EMexcess);
                     coord(ih,:)=coordf;
-%                     bg=coordf(5);
+                    bgh=coordf(5);
                     coordf(5)=0; %take out fitted bg
                     Mi(:,:,ih)=obj.splinePSF.PSF(coordf);
-                    M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr)=M(pos.y(ih)-dr:pos.y(ih)+dr,pos.x(ih)-dr:pos.x(ih)+dr)+Mi(:,:,ih);
-                    dim=(roiM+Mi(:,:,ih)-roiim+coord(ih,5)).^2./(roiM+Mi(:,:,ih)+coord(ih,5));
+                    M(yrange,xrange)=M(yrange,xrange)+Mi(yrangepsf,xrangepsf,ih);
+                    dim=(roiM+Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih)-roiim+coord(ih,5)).^2./(roiM+Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih)+coord(ih,5));
                     chi2(k)=(mean(dim(:)));
+%                     disp([num2str(iter) '. ' num2str(coordf(1:2)-startpar(1:2),2) ' ,dN/N=' num2str((coordf(4)-startpar(4))/coordf(4)) ' ,dz=' num2str((coordf(3)-startpar(3)))])
                 end   
             end
             locout=coord2loc(coord,crlb,LL,iterations,pos,data{1}.frame,chi2);
 %             locout=copyfields(maxima,locout);
             locout=copyfields(locout,maxima,{'xcnn','ycnn','zcnn','prob','dx','dy','photcnn'});
             if obj.preview
-                
+                figure(89);imagesc(vertcat(horzcat(roiim-Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih),roiM+bgh),horzcat(roiim,roiM+Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih)+bgh),horzcat(roiim-roiM,Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih)+bgh)))
                  figure(87);
                  subplot(2,2,2)
                  imagesc(M-image); colorbar
@@ -114,7 +133,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 colormap parula
                 figure(87)
                 subplot(2,2,4)
-                plot(coord(:,1)+pos.x,-LL/((2*dr+1)^2),'k+',coord(:,1)+pos.x,chi2,'x')
+                plot(coord(:,1)+pos.x,-LL/((2*drfit+1)^2),'k+',coord(:,1)+pos.x,chi2,'x')
                 xlim([0,size(image,2)])
     %             pause(.5)
 
@@ -146,7 +165,6 @@ locout.chi2=single(chi2);
 end
 function [coord,crlb, LogL, iterations]=fitsingleMD(roiim,roiM,startpar,spline,iterf,useSEfitter,EMexcess)
 dr=round((size(roiim,1)-1)/2);
-
 %    cor(:,3)=-locs(:,3)/obj.modelpar.dz+obj.modelpar.z0;
 initp(3:4)=startpar(4:5)/EMexcess;
 initp(5)=-startpar(3)/spline.dz+spline.z0;
