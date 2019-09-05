@@ -74,6 +74,7 @@ obj.locData.files.filenumberEnd=length(obj.locData.files.file);
 if ~ isfield(p,'updateGuiPar')
     p.updateGuiPar=false;
 end
+
 if ~isempty(GUIsettings) %write back parameters
 %     button=questdlg('Restore saved GUI Parameters?','GUI parameters','Yes','No','No');
     if  p.updateGuiPar %strcmpi(button,'Yes')
@@ -81,6 +82,15 @@ if ~isempty(GUIsettings) %write back parameters
             GUIsettings=convertparameters(GUIsettings);
         end
         p.mainGui.setGuiParameters(GUIsettings,true)
+    end
+    if p.restoreROI && isfield(GUIsettings.children.guiRender.children.guiFormat,'roiposition')
+        proi.roiposition=GUIsettings.children.guiRender.children.guiFormat.roiposition;
+        proi.roimode=GUIsettings.children.guiRender.children.guiFormat.roimode;
+        proi.restoreROI=true;
+        proi.roishow=GUIsettings.children.guiRender.children.guiFormat.roishow;
+        obj.setPar('ROIrestore',proi);
+   
+        
     end
 end
 
@@ -98,7 +108,7 @@ else
     end
 end
 se=obj.locData.SE;
-   se.addSites(siteexplorer,newfilenumbers, templocData.files.file)
-   
+se.addSites(siteexplorer,newfilenumbers, templocData.files.file)
+
    
 end

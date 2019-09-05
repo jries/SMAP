@@ -127,7 +127,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %                 else
 %                     obj.locData.empty;
 %                 endgl
-                
+                obj.setPar('ROIrestore',[]);
                 for k=1:length(f)
                     [~,~,ext]=fileparts(f{k});
                     if ~isempty(strfind(f{k},'_sml'))||~isempty(strfind(f{k},'.csv'))
@@ -155,6 +155,13 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
 
                 initGuiAfterLoad(obj)
                 autosavecheck_callback(0,0,obj)
+                
+                roirestore=obj.getPar('ROIrestore');
+                if ~isempty(roirestore) && roirestore.restoreROI
+                    gsmap=obj.getPar('mainGui');
+                    gsmap.children.guiRender.children.guiFormat.roiset(struct('isvalid',1,'roimode',roirestore.roimode,'position',roirestore.roiposition));
+                end
+%                      
             end 
         end
         

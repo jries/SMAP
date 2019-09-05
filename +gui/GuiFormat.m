@@ -2,6 +2,7 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
     properties 
         roihandle
         roiposition
+        roimode
         roicallbackid
         ovboxhandle
         sraxis
@@ -11,6 +12,7 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
         function obj=GuiFormat(varargin)
             obj@interfaces.GuiModuleInterface(varargin{:})     
             obj.outputParameters={'sr_layersseparate','sr_plotlayernames'};
+            obj.propertiesToSave={'roimode','roiposition'};
         end
         function makeGui(obj)
             widtht=105;
@@ -644,6 +646,7 @@ function roi_callback(callobj,data,obj,roimode,roiposition)
 % plugins.
 global roimodecallback
 roimodecallback=roimode;
+obj.roimode=roimode;
 p=obj.getGuiParameters;
 sr_axes=obj.sraxis;
 f=sr_axes.Parent;
