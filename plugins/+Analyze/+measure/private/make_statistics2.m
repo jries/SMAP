@@ -246,6 +246,11 @@ for k=datrange
     [~,mind]=max(hbg{k}.h);
     
     maxbg=hbg{k}.n(mind);
+        mx2=max(hbg{datrange(k)}.h(1:ceil(mind*0.55)));
+    if mx2>0.3*maxbg %if by grouping second max is higher select the first max.
+        maxbg=mx2;
+    end
+    
     slb{end+1}=['max: ' num2str(maxbg,'%5.0f')];
     stat.background.mean(k)=mbg;
     stat.background.max(k)=maxbg;
@@ -267,13 +272,23 @@ for k=1:length(datrange)
     end
     [~,ind]=max(hz{datrange(k)}.h);
     mx=hz{datrange(k)}.n(ind);   
-    mx2=max(hz{datrange(k)}.h(1:ceil(ind*0.5)));
-    if mx2>0.3*mx2 %if by grouping second max is higher select the first max.
-        mx=mx2;
+
+
+
+    
+    %refine
+%     dwin=ceil(ind/4);
+    dwin=8;
+    rn=max(1,ind-dwin+1):min(ind+dwin,length(hz{datrange(k)}.h));
+    fpol=fit(hz{datrange(k)}.n(rn)',hz{datrange(k)}.h(rn)','poly3');
+    smxf=fzero(@(x) 3*fpol.p1*x.^2+2*fpol.p2*x+fpol.p3,mx);
+    if ~isempty(ax2)
+        plot(hz{datrange(k)}.n(rn),fpol(hz{datrange(k)}.n(rn)),'g')
     end
     
-    sls{end+1}=['max: ' num2str(mx,3)];
-    stat.(txt).max(k)=mx;
+    
+    sls{end+1}=['max: ' num2str(smxf,4)];
+    stat.(txt).max(k)=smxf;
 end
 
 
