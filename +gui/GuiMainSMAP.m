@@ -15,10 +15,14 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 set(0,'DefaultUIControlFontSize',12);
             end
             SMAP_stopnow=false;
-            addpath('shared');
-            addpath(pwd);
-            if ~exist(['settings' filesep 'temp'],'dir')
-                mkdir(['settings' filesep 'temp'])
+            if ~isdeployed
+                addpath('shared');
+                addpath(pwd);
+                if ~exist(['settings' filesep 'temp'],'dir')
+                    mkdir(['settings' filesep 'temp'])
+                end
+            else
+                disp(pwd)
             end
             obj.setPar('maindirectory',pwd);
             
@@ -31,7 +35,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %             try
 %                 bfpath='/Users/ries/Downloads/bfmatlab/';
                 bfpath=obj.getGlobalSetting('bioformatspath');
-            if exist(bfpath,'dir')
+            if exist(bfpath,'dir') && ~isdeployed
                 addpath(bfpath)
                 try
                     bfCheckJavaPath;

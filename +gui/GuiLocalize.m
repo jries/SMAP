@@ -216,7 +216,7 @@ drawnow
 settingsfile=obj.getGlobalSetting('mainLocalizeWFFile');
 [f,p]=uigetfile(settingsfile,'Select workflow *.txt file');
 if f
-    settingsfilen=[p filesep f];
+    settingsfilen=[p f];
     loadwf(obj,settingsfilen)
     if restorepar
         obj.mainworkflow.setGuiParameters(oldsettings,true,false);
@@ -258,7 +258,7 @@ end
 
 
 function loadwf(obj,settingsfilen)
-    obj.setGlobalSetting('mainLocalizeWFFile',settingsfilen);
+    obj.setGlobalSetting('mainLocalizeWFFile',makerelativetopwr(settingsfilen));
     obj.mainworkflow.clear;
     delete(obj.handle.Children)
     obj.makeGui;

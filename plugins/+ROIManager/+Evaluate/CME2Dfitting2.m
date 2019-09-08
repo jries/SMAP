@@ -257,7 +257,7 @@ imgR = zeros([roisize+1 roisize+1]);
 [x, y] = meshgrid(1:roisize+1, 1:1:roisize+1);
 indImg = sub2ind([roisize+1 roisize+1], x(:), y(:));
 
-v1 = 4([c(1)+roisize/2+1, c(2)+roisize/2+1, c(3), c(4), c(7)], x(:), y(:));
+% v1 = 4([c(1)+roisize/2+1, c(2)+roisize/2+1, c(3), c(4), c(7)], x(:), y(:));
 v2 = cap([c(1)+roisize/2+1, c(2)+roisize/2+1, c(5), c(6), c(7)], x(:), y(:));
 
 imgR(indImg) = v1;

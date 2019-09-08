@@ -31,20 +31,24 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
 %             icon=rand(round(fieldheight*1.5),round(fieldheight*1.5),3);
             h.roi5=uicontrol('Parent',h.hroi,'Style','pushbutton','String','','FontSize',fontsize,'Position',[0,3.3*fieldheight,swidth,fieldheight*1.5],'Callback',{@roi_callback,obj,5});
-            h.roi5.CData=imread('+gui/icons/point.tif');            
+            if isdeployed
+                h.roi5.CData=imread('point.tif');    
+            else
+                h.roi5.CData=imread('shared/icons/point.tif');        
+            end
             h.roi4=uicontrol('Parent',h.hroi,'Style','pushbutton','String','','FontSize',fontsize,'Position',[swidth,3.3*fieldheight,swidth,fieldheight*1.5],'Callback',{@roi_callback,obj,4});
-            h.roi4.CData=imread('+gui/icons/line.tif');
+            h.roi4.CData=imread('shared/icons/line.tif');
             
             h.roi1=uicontrol('Parent',h.hroi,'Style','pushbutton','String','','FontSize',fontsize,'Position',[0*swidth,1.8*fieldheight,swidth,fieldheight*1.5],'Callback',{@roi_callback,obj,1});
-            h.roi1.CData=imread('+gui/icons/rec.tif');
+            h.roi1.CData=imread('shared/icons/rec.tif');
             h.roi2=uicontrol('Parent',h.hroi,'Style','pushbutton','String','','FontSize',fontsize,'Position',[swidth,1.8*fieldheight,swidth,fieldheight*1.5],'Callback',{@roi_callback,obj,2});
-            h.roi2.CData=imread('+gui/icons/ellipse.tif');
+            h.roi2.CData=imread('shared/icons/ellipse.tif');
             h.roi3=uicontrol('Parent',h.hroi,'Style','pushbutton','String','','FontSize',fontsize,'Position',[2*swidth,1.8*fieldheight,swidth,fieldheight*1.5],'Callback',{@roi_callback,obj,3});
-            h.roi3.CData=imread('+gui/icons/free.tif');
+            h.roi3.CData=imread('shared/icons/free.tif');
 
 
             h.roi6=uicontrol('Parent',h.hroi,'Style','pushbutton','String','','FontSize',fontsize,'Position',[3*swidth,1.8*fieldheight,swidth,fieldheight*1.5],'Callback',{@roi_callback,obj,6});
-            h.roi6.CData=imread('+gui/icons/polygon.tif');
+            h.roi6.CData=imread('shared/icons/polygon.tif');
             %format
             h.hformat=uipanel('Parent',obj.handle,'Title','format','Units','pixel','Position',[1 8.5*fieldheight+5 widtht 6*fieldheight]);
              h.picrt=uicontrol('Parent',h.hformat,'Style','text','String','Pixrec (nm)','Position',[0 4.1*fieldheight,width,fieldheight*1.2]);
