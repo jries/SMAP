@@ -19,7 +19,9 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
             switch obj.fitpar.mode
                 case '4pi'
                     fitterpath=[fileparts(obj.getPar('maindirectory')) filesep 'ries-private' filesep 'PSF4Pi'];
-                    addpath(fitterpath)
+                    if ~isdeployed
+                        addpath(fitterpath)
+                    end
                     obj.fitpar.link=obj.fitpar.link([2 1 4 5 3 6]);
                     obj.fitpar.fitfunction=@mleFit_LM_4Pi;
                 case 'Gauss'

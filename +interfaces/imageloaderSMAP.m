@@ -170,7 +170,7 @@ classdef imageloaderSMAP<interfaces.GuiParameterInterface
             catch
                 usedef=true;
             end
-            md=getCameraCalibration(obj,[],usedef,camfile);
+            md=getCameraCalibration(obj,[],usedef,findsettingsfile(camfile,obj));
             if isempty(md)
                 metao=[];
                 return

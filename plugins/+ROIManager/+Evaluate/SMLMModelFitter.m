@@ -12,7 +12,9 @@ classdef SMLMModelFitter<interfaces.SEEvaluationProcessor
         end
         function pard=guidef(obj)
             %init
-            addpath(['..' filesep 'ries-private' filesep 'SMLMModelFitter'], ['..' filesep 'ries-private' filesep 'SMLMModelFitter' filesep 'external'])
+            if ~isdeployed
+                addpath(['..' filesep 'ries-private' filesep 'SMLMModelFitter'], ['..' filesep 'ries-private' filesep 'SMLMModelFitter' filesep 'external'])
+            end
             pard=SMLMModelFitter_guidef(obj);
         end
     end

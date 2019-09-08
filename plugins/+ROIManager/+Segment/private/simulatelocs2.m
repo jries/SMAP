@@ -128,9 +128,13 @@ else
         case '.m'
             cf=pwd;
             [ph,fh]=fileparts(p.coordinatefile);
+            if ~isdeployed
             cd(ph)
+            end
             l=eval(fh);
+            if ~isdeployed
             cd(cf);
+            end
     %         l=eval(p.coordinatefile);
             if isfield(l,'image')
                 image=l.image;
