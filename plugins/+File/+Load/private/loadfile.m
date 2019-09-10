@@ -83,14 +83,12 @@ if ~isempty(GUIsettings) %write back parameters
         end
         p.mainGui.setGuiParameters(GUIsettings,true)
     end
-    if p.restoreROI && isfield(GUIsettings.children.guiRender.children.guiFormat,'roiposition')
+    if isfield(p,'restoreROI') && p.restoreROI && isfield(GUIsettings.children.guiRender.children.guiFormat,'roiposition')
         proi.roiposition=GUIsettings.children.guiRender.children.guiFormat.roiposition;
         proi.roimode=GUIsettings.children.guiRender.children.guiFormat.roimode;
         proi.restoreROI=true;
         proi.roishow=GUIsettings.children.guiRender.children.guiFormat.roishow;
         obj.setPar('ROIrestore',proi);
-   
-        
     end
 end
 
