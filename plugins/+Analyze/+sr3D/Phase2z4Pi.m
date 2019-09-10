@@ -49,7 +49,7 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
                 z0all(k)=z0;
             end
             axp=obj.initaxis('phase vs z');
-            z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0,axp);
+%             z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0,axp);
             
             frameposc=framepos(1:end-1)+(framepos(2)-framepos(1))/2;
             z0int=fit(frameposc',z0all','smoothingspline');
