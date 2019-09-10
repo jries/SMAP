@@ -144,6 +144,10 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
             %'layer',layer: access layer parameters. layerN_ used as prefix to
             %parametername
             %if  not GUI parameter: calls interfaces.ParameterInterface
+            if isempty(obj.P)
+                value=[];
+                return
+            end
             ind=find(strcmp(varargin,'layer'));
             if ~isempty(ind)
                 prefix=['layer' int2str(varargin{ind+1}) '_'];
