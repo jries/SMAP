@@ -20,14 +20,21 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
              %settings directory 
              settingsdir='settings';
              if ~exist(settingsdir,'dir')
-                 hwd=warndlg('please select the directory /settings/ with the SMAP settings','select settings','modal');
-                 waitfor(hwd);
-                 d=uigetdir(pwd,'select settings directory');
-                 if d
-                     settingsdir=d;
-                    
-                    obj.setPar('maindirectory',fileparts(settingsdir));
+                 settingsdir=[pwd filesep 'MATLAB' filesep 'settings'];
+                 if ~exist(settingsdir,'dir')
+                     settingsdir=[pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'];
+                     if ~exist(settingsdir,'dir')
+                 
+                         hwd=warndlg('please select the directory /settings/ with the SMAP settings','select settings','modal');
+                         waitfor(hwd);
+                         d=uigetdir(pwd,'select settings directory');
+                         if d
+                             settingsdir=d;
+
+                         end
+                     end
                  end
+                 obj.setPar('maindirectory',fileparts(settingsdir));
              end
 %              obj.setPar('maindirectory',pwd);
             obj.setPar('SettingsDirectory',makerelativetopwr(settingsdir));
