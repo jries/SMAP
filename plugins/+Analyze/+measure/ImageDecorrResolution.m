@@ -23,8 +23,8 @@ classdef ImageDecorrResolution<interfaces.DialogProcessor
             yedges=min(locs.ynm):p.pixrec_frc:max(locs.ynm);
             image1=histcounts2(locs.xnm,locs.ynm,xedges,yedges);
          
-            
-            pps = p.pixrec_frc; % projected pixel size of 15nm
+            imclipboard('copy',(image1/max(image1(:))));
+
             % typical parameters for resolution estimate
             Nr = 50;
             Ng = 10;
@@ -39,6 +39,9 @@ classdef ImageDecorrResolution<interfaces.DialogProcessor
             delete(ax)
             f.Children.Parent=parent;
             delete(f)
+            
+            resnm=p.pixrec_frc*2/kcMax;
+            text(parent.Children,0.5,0.9,['res: ' num2str(resnm,'%2.1f') 'nm'],'FontSize',20);
 
         end
         function pard=guidef(obj)
