@@ -121,7 +121,7 @@ frame=mod(number,obj.blocksize)+1;
 %     image=transpose(dcimgmex( 'readframe', obj.reader, frame)); 
 %    image=transpose(obj.reader{filenumber}.getSpecificFrames(frame));
      image=(obj.reader{filenumber}.getSpecificFrames(frame));
-%      image=image';
+      image=image';
 % catch err
 %     err
 %     pause(obj.waittime*2)

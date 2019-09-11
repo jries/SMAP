@@ -1,8 +1,8 @@
-y4pi=90   461  1399  1774
-x4pi=0  0  0  0
+x4pi=90   461  1399  1774
+y4pi=0  0  0  0
 width4pi=168
 height4pi=168
-mirror4pi=0 0 2 2
+mirror4pi=0 0 1 1
 pixelsize_nm=100
 offset=100
 conversion=0.5
