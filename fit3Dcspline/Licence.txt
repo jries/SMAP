@@ -1,0 +1,34 @@
+
+Terms of Use 
+
+Copyright (c) 2017 Ries Lab, European Molecular Biology Laboratory, Heidelberg. 
+
+This file is part of fit3Dcspline. 
+
+GPUmleFit_LM Fitter is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. 
+
+GPUmleFit_LM Fitter is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. 
+
+You should have received a copy of the GNU General Public License along with GPUmleFit_LM Fitter. If not, see <http://www.gnu.org/licenses/>. 
+
+Additional permission under GNU GPL version 3 section 7 
+
+CUDA (r)
+
+This distribution includes CUDA(r) binary libraries under the terms of Chapter 1
+of the End User License Agreement for the NVIDIA(r) CUDA(r) Toolkit, found in
+CUDA_EULA.pdf. Users agree to the terms of that license, including the
+following restrictions:
+
+the Redistributable SOFTWARE shall be distributed solely in binary form to
+Licensee's licensees ("Customers") only as a component of Licensee's own
+software products (each, a "Licensee Application")
+
+Licensee shall design the Licensee Application such that the Redistributable
+SOFTWARE files are installed only in a private (non-shared) directory location
+that is used only by the Licensee Application;
+
+Licensee shall obtain each Customer's written or clickwrap agreement to the
+license terms under a written, legally enforceable agreement that has the
+effect of protecting the SOFTWARE and the rights of NVIDIA under terms no less
+restrictive than this Agreement.

@@ -17,15 +17,16 @@ classdef calibrater3D_so<interfaces.DialogProcessor
         end
         function out=run(obj,p)
             
-            fit3ddir=strrep(pwd,'SMAP','fit3D');
-            if exist(fit3ddir,'file') && ~isdeployed
-                addpath(fit3ddir);
-            end
-            
-            fit3ddir=strrep(pwd,'SMAP','fit3Dcspline');
-            if exist(fit3ddir,'file') && ~isdeployed
-                addpath(fit3ddir);
-            end          
+%             fit3ddir=strrep(pwd,'SMAP','fit3D');
+%             if exist(fit3ddir,'file') && ~isdeployed
+%                 addpath(fit3ddir);
+%             end
+%             
+%             fit3ddir=strrep(pwd,'SMAP','fit3Dcspline');
+%             if exist(fit3ddir,'file') && ~isdeployed
+%                 addpath(fit3ddir);
+%             end          
+            fit3ddir='fit3Dcspline';
             smapdir=pwd;
              smappos.P=obj.P;
 

@@ -49,7 +49,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 disp(pwd)
             end
 
-            
+            addpath('fit3dcspline')
             makeplugincallfile('plugins');
             
             %add java path

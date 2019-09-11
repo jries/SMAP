@@ -3,16 +3,16 @@ SMAP
 %mainGui
 addpath('shared');
 addpath(pwd);
-%fit3Dcspline:
-fit3ddir=strrep(pwd,'SMAP','fit3D');
-if exist(fit3ddir,'file')
-    addpath(fit3ddir);
-end
-
-fit3ddir=strrep(pwd,'SMAP','fit3Dcspline');
-if exist(fit3ddir,'file')
-    addpath(fit3ddir);
-end      
+% %fit3Dcspline:
+% fit3ddir=strrep(pwd,'SMAP','fit3D');
+% if exist(fit3ddir,'file')
+%     addpath(fit3ddir);
+% end
+% 
+% fit3ddir=strrep(pwd,'SMAP','fit3Dcspline');
+% if exist(fit3ddir,'file')
+%     addpath(fit3ddir);
+% end      
 
 
 %MM
