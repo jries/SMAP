@@ -22,7 +22,11 @@ classdef ImageDecorrResolution<interfaces.DialogProcessor
             xedges=min(locs.xnm):p.pixrec_frc:max(locs.xnm);
             yedges=min(locs.ynm):p.pixrec_frc:max(locs.ynm);
             image1=histcounts2(locs.xnm,locs.ynm,xedges,yedges);
-         
+            
+            if p.filtergauss
+                h=fspecial('gaussian',ceil(7*p.gausssigma),p.gausssigma);
+                image1=imfilter(image1,h);
+            end
             imclipboard('copy',(image1/max(image1(:))));
 
             % typical parameters for resolution estimate
@@ -95,7 +99,12 @@ pard.t2.position=[4,1];
 
 pard.pixrec_frc.object=struct('String','3','Style','edit');
 pard.pixrec_frc.position=[4,2];
-% 
+% +
+pard.filtergauss.object=struct('String','filter with Gaussian','Style','checkbox','Value',0);
+pard.filtergauss.position=[5,1];
+pard.filtergauss.Width=2;
+pard.gausssigma.object=struct('String','1','Style','edit');
+pard.gausssigma.position=[5,3];
 
 pard.plugininfo.description='FRCresolution calculates FRC resolution "Descloux, A., K. S. Grußmayer, and A. Radenovic. "Parameter-free image  resolution estimation based on decorrelation analysis.", Nature methods (2019): 1-7."';
 pard.plugininfo.type='ProcessorPlugin';
