@@ -45,11 +45,12 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 if ~exist([settingsdir filesep 'temp'],'dir')
                     mkdir([settingsdir filesep 'temp'])
                 end
+                addpath('fit3dcspline')
             else
                 disp(pwd)
             end
-
-            addpath('fit3dcspline')
+        
+            
             makeplugincallfile('plugins');
             
             %add java path
