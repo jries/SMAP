@@ -14,11 +14,11 @@ classdef PushToFiji<interfaces.DialogProcessor
                 case 'rendered image with scalebar'
                     srimage=obj.getPar('sr_image');
                     outimage=uint8(srimage.image*255);
-                       mij.createColor(title,outimage,true);
+%                        mij.createColor(title,outimage,true);
                 case 'rendered image'
                     srimage=obj.getPar('sr_image');
                     outimage=uint8(srimage.composite*255);
-                       mij.createColor(title,outimage,true);
+%                        mij.createColor(title,outimage,true);
                 case 'layer 1-3 as RGB'
                     s1=obj.locData.layer(1).images.srimage.image;
                     sizes=size(s1);
@@ -46,7 +46,7 @@ classdef PushToFiji<interfaces.DialogProcessor
                           end
                     end
                     outimage=uint8(outimage/max(outimage(:))*255);
-                       mij.createColor(title,outimage,true);
+%                        mij.createColor(title,outimage,true);
                         
                 case 'layer1 as grayscale'
                     s1=obj.locData.layer(1).images.srimage.image;
@@ -56,8 +56,10 @@ classdef PushToFiji<interfaces.DialogProcessor
                     end
                     outimage=s1;
                     outimage=uint16(outimage/max(outimage(:))*(2^16));
-                       mij.createImage(title,outimage,true);
-            end        
+%                        mij.createImage(title,outimage,true);
+            end      
+            img=copytoImagePlus(outimage);
+            img.show;
         end
         function exitfiji(obj,a,b)
             mij=obj.getPar('MIJ');
