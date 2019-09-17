@@ -12,8 +12,9 @@ classdef BlinkingMoviePresentation<interfaces.DialogProcessor
         function out=run(obj,p)         
             out=[];
             file=obj.locData.files.file(p.dataselect.Value);
-            locs=obj.locData.getloc({'xnm','ynm','frame','locprecnm'},'layer',1,'position','roi');
-            makeBlinkMovie(locs,file,p);
+            locs=obj.locData.getloc({'xnm','ynm','frame','locprecnm','channel'},'layer',find(obj.getPar('sr_layeron')),'position','roi');
+            makeBlinkMovie(locs,file,p,obj);
+%               makeBlinkMovie2(locs,file,p,obj);
 
         end
         function pard=guidef(obj)

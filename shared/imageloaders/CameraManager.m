@@ -88,6 +88,7 @@ hui=uimenu('Parent',hc,'Label','add','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','remove','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','move up','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','move down','Callback',{@menu_callback,obj});
+hui=uimenu('Parent',hc,'Label','rename','Callback',{@menu_callback,obj});
 
 tcam.UIContextMenu=hc;
 tpar=uitable(obj.handle,'Position',[10 height-lineheight*17-80 width-40,lineheight*9.5]);
@@ -476,6 +477,18 @@ switch label
        newpos=max(obj.currentcam-1,1);
     case 'move down'
         newpos=min(obj.currentcam+1,length(obj.cameras));
+    case 'rename'
+        if isempty(obj.lastcamtableselected)
+            warndlg('select first the camera you want to change the name of')
+            return
+        end   
+        oldname=obj.cameras(obj.lastcamtableselected(1)).ID.name;
+        newname=inputdlg('New camera name','Camera name',1,{oldname});
+        if ~isempty(newname)
+            obj.cameras(obj.lastcamtableselected(1)).ID.name=newname{1};
+        end
+        newpos=obj.currentcam;
+        
 end
 oldpos=obj.currentcam;
 obj.cameras([oldpos newpos])=obj.cameras([newpos oldpos]);

@@ -27,6 +27,13 @@ classdef cutoutImages<interfaces.WorkflowModule
             else
                 obj.settings3D=[];
             end
+            campar=obj.getPar('loc_cameraSettings');
+            campar.camerainfo.settings3D=obj.settings3D;
+            campar.Width=length(obj.settings3D.x4pi)*obj.settings3D.width4pi;
+            campar.roi=[0 0 campar.Width campar.Height];
+            obj.setPar('loc_cameraSettings',campar)
+            obj.setPar('loc_fileinfo',campar)
+
         end
         function datao=run(obj,data,p)
            img=data.data;
@@ -45,6 +52,8 @@ classdef cutoutImages<interfaces.WorkflowModule
                 obj.setGuiParameters(struct('cal_3Dfile',[path file]));
                 obj.setPar('cal_3Dfile',[path file]);
             end
+            %we need to overwrite camera settings: width, height roi,
+            %conversion, offset,...
         end
     end
 end
@@ -57,7 +66,7 @@ pard.loadcal.position=[2,1];
 pard.loadcal.Width=1;
 pard.cal_3Dfile.object=struct('Style','edit','String','');
 pard.cal_3Dfile.position=[2,2];
-pard.cal_3Dfile.Width=3;
+pard.cal_3Dfile.Width=2;
 pard.cal_3Dfile.TooltipString=sprintf('settings_3D.txt file specifying ROIs on the chip and mirroring, or 3Dcal.mat file containing this.');
 
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};

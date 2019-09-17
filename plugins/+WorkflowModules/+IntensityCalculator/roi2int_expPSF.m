@@ -54,15 +54,15 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
             
         end
         function prerun(obj,p)
-             fit3ddir=strrep(pwd,'SMAP','fit3D');
-            if exist(fit3ddir,'file')
-            addpath(fit3ddir);
-            end
-            
-            fit3ddir=strrep(pwd,'SMAP','fit3Dcspline');
-            if exist(fit3ddir,'file')
-            addpath(fit3ddir);
-            end
+%              fit3ddir=strrep(pwd,'SMAP','fit3D');
+%             if exist(fit3ddir,'file') && ~isdeployed
+%             addpath(fit3ddir);
+%             end
+%             
+%             fit3ddir=strrep(pwd,'SMAP','fit3Dcspline');
+%             if exist(fit3ddir,'file')&& ~isdeployed
+%             addpath(fit3ddir);
+%             end
 %             obj.p=obj.getGuiParameters;
             obj.load_spline;
             warning('off','MATLAB:lscov:RankDefDesignMat')

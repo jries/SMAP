@@ -18,14 +18,18 @@ classdef RunAnalysisScript<interfaces.DialogProcessor&interfaces.SEProcessor
         function out=run(obj,p)  
             [~,funs]=fileparts(p.scripts.selection);
             oldpath=pwd;
+            if ~isdeployed
             cd(obj.scriptpath)
+            end
             funct=str2func(funs);
             try
             funct()
             catch err
                 warning err
             end
+            if ~isdeployed
             cd(oldpath)
+            end
 
             out=[];
            

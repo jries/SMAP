@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GPUmleFit_LM", "GPUmleFit_LM\GPUmleFit_LM.vcxproj", "{4B630F09-5B37-4433-8F7A-5867F5BD590E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPUmleFit_LM", "CPUmleFit_LM\CPUmleFit_LM.vcxproj", "{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4B630F09-5B37-4433-8F7A-5867F5BD590E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4B630F09-5B37-4433-8F7A-5867F5BD590E}.Debug|Win32.Build.0 = Debug|Win32
+		{4B630F09-5B37-4433-8F7A-5867F5BD590E}.Debug|x64.ActiveCfg = Debug|x64
+		{4B630F09-5B37-4433-8F7A-5867F5BD590E}.Debug|x64.Build.0 = Debug|x64
+		{4B630F09-5B37-4433-8F7A-5867F5BD590E}.Release|Win32.ActiveCfg = Release|Win32
+		{4B630F09-5B37-4433-8F7A-5867F5BD590E}.Release|Win32.Build.0 = Release|Win32
+		{4B630F09-5B37-4433-8F7A-5867F5BD590E}.Release|x64.ActiveCfg = Release|x64
+		{4B630F09-5B37-4433-8F7A-5867F5BD590E}.Release|x64.Build.0 = Release|x64
+		{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}.Debug|Win32.Build.0 = Debug|Win32
+		{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}.Debug|x64.ActiveCfg = Debug|x64
+		{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}.Debug|x64.Build.0 = Debug|x64
+		{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}.Release|Win32.ActiveCfg = Release|Win32
+		{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}.Release|Win32.Build.0 = Release|Win32
+		{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}.Release|x64.ActiveCfg = Release|x64
+		{9CF9EEFD-F4A3-45D9-B139-F6ACABE552C2}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

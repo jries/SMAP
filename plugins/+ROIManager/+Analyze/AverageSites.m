@@ -60,10 +60,10 @@ classdef AverageSites<interfaces.DialogProcessor&interfaces.SEProcessor
             if p.addfile
                 locnew.xnm=locnew.xnm+x0;
                 locnew.ynm=locnew.ynm+y0;
-            
-                for k=1:length(fn)
-                    obj.locData.addloc(fn{k},locnew.(fn{k}))
-                end
+                obj.locData.addLocData(locnew);
+%                 for k=1:length(fn)
+%                     obj.locData.addloc(fn{k},locnew.(fn{k}))
+%                 end
                 obj.locData.regroup;
                 obj.locData.filter;
             end

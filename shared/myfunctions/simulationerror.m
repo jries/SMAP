@@ -1,5 +1,6 @@
 function simulationerror(locgt,locfit,whicherr,searchradius)
 
+f=gcf;
 % pixelsize=100
 if ~isfield(locgt,'x'), locgt.x=locgt.xnm; end
 if ~isfield(locfit,'x'), locfit.x=locfit.xnm; end
@@ -7,7 +8,8 @@ if ~isfield(locgt,'y'), locgt.x=locgt.ynm; end
 if ~isfield(locfit,'y'), locfit.x=locfit.ynm; end
 if ~isfield(locgt,'z'), locgt.x=locgt.znm; end
 if ~isfield(locfit,'z'), locfit.x=locfit.znm; end
-
+if ~isfield(locgt,'N'), locgt.N=locgt.phot; end
+if ~isfield(locfit,'N'), locfit.N=locfit.phot; end
 
 
 
@@ -19,6 +21,10 @@ end
 totallocs=length(locgt.x);
 falsepositives=length(nB);
 falsenegatives=length(nA);
+truepositives=length(iAa);
+precision=truepositives/(truepositives+falsepositives);
+recall=truepositives/(truepositives+falsenegatives);
+
 matched=length(iAa);
 
 dz=locgt.z(iAa)-locfit.z(iBa);
@@ -27,6 +33,7 @@ dz=dz(indinz);
 dx=locgt.x(iAa(indinz))-locfit.x(iBa(indinz));
 dy=locgt.y(iAa(indinz))-locfit.y(iBa(indinz));
 
+dphot=locgt.N(iAa(indinz))./locfit.N(iBa(indinz));
 
 % if nargin<3 || isempty(psf)
 %     % test if errors are transferred
@@ -54,9 +61,9 @@ switch whicherr
         disp('third argument should be 1 if error is taken from first argument, 2 if error is in second')
 end
 if ~isfield(locerr,'xerr')
-    if isfield(locerr,'xnmerr')
+    if isfield(locerr,'xnmerr')&&~isempty(locerr.xnmerr)
         locerr.xerr=locerr.xnmerr;
-    elseif isfield(locerr,'locprecnm')
+    elseif isfield(locerr,'locprecnm')&&~isempty(locerr.locprecnm)
         locerr.xerr=locerr.locprecnm;
     else
         locerr.xerr=Mortensen(locgt.phot,locgt.bg,150,100,0);
@@ -64,9 +71,9 @@ if ~isfield(locerr,'xerr')
     end
 end
 if ~isfield(locerr,'yerr')
-    if isfield(locerr,'ynmerr')
+    if isfield(locerr,'ynmerr')&&~isempty(locerr.ynmerr)
         locerr.yerr=locerr.ynmerr;
-    elseif isfield(locerr,'locprecnm')
+    elseif isfield(locerr,'locprecnm')&&~isempty(locerr.locprecnm)
         locerr.yerr=locerr.locprecnm;
     else
         locerr.yerr=Mortensen(locgt.phot,locgt.bg,150,100,0);
@@ -74,9 +81,9 @@ if ~isfield(locerr,'yerr')
     end
 end
 if ~isfield(locerr,'zerr')
-    if isfield(locerr,'znmerr')
+    if isfield(locerr,'znmerr')&&~isempty(locerr.znmerr)
         locerr.zerr=locerr.znmerr;
-    elseif isfield(locerr,'locprecznm')
+    elseif isfield(locerr,'locprecznm')&&~isempty(locerr.locprecznm)
         locerr.zerr=locerr.locprecznm;
     else
         locerr.zerr=Mortensen(locgt.phot,locgt.bg,150,100,0)*3;
@@ -85,37 +92,68 @@ if ~isfield(locerr,'zerr')
 end
 
 
-    
-figure(188);
-subplot(3,4,1)
-fitx=fithistr(dx,1);
+if ~isfield(locerr,'Nerr')
+    if isfield(locerr,'photerr')&&~isempty(locerr.photerr)
+        locerr.Nerr=locerr.photerr;
+    else
+        [~,locerr.Nerr]=Mortensen(locgt.phot,locgt.bg,150,100,0);
+        
+        disp('error in phtons estimated using Rieger');
+    end
+end
+
+
+subplot(3,4,1,'Parent',f)
+fitx=fithistr(dx,2);
 xlabel('dx')
-subplot(3,4,2)
-fity=fithistr(dy,1);
+subplot(3,4,2,'Parent',f)
+fity=fithistr(dy,2);
 xlabel('dy')
-subplot(3,4,3)
+subplot(3,4,3,'Parent',f)
 fitz=fithistr(dz,5);
 xlabel('dz')
 
+subplot(3,4,4,'Parent',f)
+fitphot=fithistr(dphot,.01);
+xlabel('dphot')
+% shifted dx
+dxshift=(dx-fitx.b1);
+dyshift=(dy-fity.b1);
+dzshift=(dz-fitz.b1);
+RMSElat=sqrt(mean(dxshift.^2+dyshift.^2));
+RMSEvol=sqrt(mean(dxshift.^2+dyshift.^2+dzshift.^2));
 %renormalized
 dxr=(dx-fitx.b1)./locerr.xerr(inderr(indinz));
 dyr=(dy-fity.b1)./locerr.yerr(inderr(indinz));
 dzr=(dz-fitz.b1)./locerr.zerr(inderr(indinz));
-subplot(3,4,5)
-fithistr(dxr,0.2)
+dphotr=(locgt.N(iAa(indinz))/fitphot.b1-locfit.N(iBa(indinz)))./locerr.Nerr(inderr(indinz));
+subplot(3,4,5,'Parent',f)
+fithistr(dxr,0.25);
 xlabel('dx/sqrt(CRLBx)')
-subplot(3,4,6)
-fithistr(dyr,0.2)
+subplot(3,4,6,'Parent',f)
+fithistr(dyr,0.25);
 xlabel('dy/sqrt(CRLBy)')
-subplot(3,4,7)
-fithistr(dzr,0.2)
+subplot(3,4,7,'Parent',f)
+fithistr(dzr,0.25);
 xlabel('dz/sqrt(CRLBz)')
 
-subplot(3,4,10)
+subplot(3,4,8,'Parent',f)
+fithistr(dphotr,.5);
+xlabel('phot/sqrt(CRLBphot)')
+
+q=quantile(vertcat(unique(locfit.bg(iBa)),unique(locgt.bg(iAa))),[0.02 0.98]);
+edges=floor(q(1)):1:ceil(q(2));
+[h1,edges1]=histcounts(locfit.bg(iBa),edges);
+[h2,edges2]=histcounts(locgt.bg(iAa),edges);
+h1(end+1)=0;
+h2(end+1)=0;
+subplot(3,4,10,'Parent',f)
 hold off
-histogram(locfit.bg(iBa))
+bar(edges,h2/max(h2))
+
 hold on
-histogram(locgt.bg(iAa))
+bb=bar(edges,h1/max(h1));
+bb.FaceAlpha=0.5;
 xlabel('bg')
 % hold off
 % dscatter(locgt.bg(iAa),locfit.bg(iBa))
@@ -125,7 +163,7 @@ xlabel('bg')
 % xlabel('bg gt')
 % ylabel('bg fit')
 
-subplot(3,4,11)
+subplot(3,4,11,'Parent',f)
 hold off
 dscatter(locgt.z(iAa),locfit.z(iBa))
 hold on
@@ -134,7 +172,9 @@ plot([min(locgt.z(iAa)),max(locgt.z(iAa))],[min(locgt.z(iAa)),max(locgt.z(iAa))]
 xlabel('z gt')
 ylabel('z fit')
 
-subplot(3,4,12);
+title(['RMSElat = ' num2str(RMSElat,3) ' nm, RMSEvol = ' num2str(RMSEvol,3) ' nm'])
+
+subplot(3,4,12,'Parent',f);
 
 hold off
 dscatter(locgt.phot(iAa),locfit.phot(iBa))
@@ -148,11 +188,12 @@ ylim([0 1.7*max(locgt.phot(iAa))])
 % false pos, false neg
 % matched: histogram dx/crlbx dy/crlby dz/crlbz
 % std of these quantities vs phot, vs z
-subplot(3,4,9);
+subplot(3,4,9,'Parent',f);
 hold off
 plot(locfit.x,locfit.y,'.',locgt.x,locgt.y,'.')
 ff='%2.0f';
-title(['fpos: ' num2str(falsepositives/totallocs*100,ff), '%, fneg: ' num2str(falsenegatives/totallocs*100,ff) '%'])
+title(['FP: ' num2str(falsepositives/totallocs*100,ff), '%, FN: ' num2str(falsenegatives/totallocs*100,ff) '%'...
+    ', P: ' num2str(precision,2) ', R: ' num2str(recall,2)]);
 
 
 end
@@ -186,10 +227,12 @@ ss2=fituse.c1/sqrt(2);
 ingauss=fituse.a1*sqrt(pi)*fituse.c1/length(de)/dn;
 % de=de(abs(de)<3);
 title([num2str(mean(de),2) '±' num2str(std(de),ff) ', fit: ' num2str(fituse.b1,ff) '±' num2str(ss2,ff2) ', in Gauss ' num2str(ingauss*100,'%2.0f') '%'])
-xlim([-5*ss 5*ss])
+xlim([fituse.b1-5*ss fituse.b1+5*ss])
 axh=gca;
-text(5*ss/3,axh.YLim(2)*0.9,[ '\sigma=' num2str(ss2,ff2)],'FontSize',18)
-t2=text(5*ss/3*1.4,axh.YLim(2)*0.8,[num2str(ingauss*100,'%2.0f') '%'],'FontSize',18);
+
+wx=mean(axh.XLim(:)); dx=axh.XLim(2)-axh.XLim(1);
+text(wx+dx/7,max(hn)*0.9,[ '\sigma=' num2str(ss2,ff2)],'FontSize',16)
+t2=text(wx+dx/4,max(hn)*0.8,[num2str(ingauss*100,'%2.0f') '%'],'FontSize',16);
 end
 
 
@@ -203,5 +246,6 @@ lp=sqrt(v);
 
 s_a=PSF/pixel; %sigmapsf/pixelsize
 tau=2*pi*(Bg)*(s_a^2+1/12)./N;
-errphot=N.*(1+4*tau+sqrt(tau./(14*(1+2*tau)))); %This is Thompson...
+errphot2=N.*(1+4*tau+sqrt(tau./(14*(1+2*tau)))); %This is Rieger...
+errphot=sqrt(errphot2);
 end

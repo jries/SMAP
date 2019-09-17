@@ -85,10 +85,10 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
             %initializes axis in results window
             ax=initaxis(obj.resultstabgroup,varargin{:});
         end
-        function processgo(obj)
+        function results=processgo(obj)
             %provides external access to run module (usually via process
             %button)
-            processgo_callback(0,0,obj);
+            results=processgo_callback(0,0,obj);
         end
         function addhistory(obj)
             p.parameters=obj.getGuiParameters(true,true);
@@ -127,9 +127,9 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
     end
 end
 
-function processgo_callback(~,~,obj)
+function results=processgo_callback(~,~,obj)
 % notify(obj.locData,'undo',recgui.simpleEvent('backup'));
-
+results=[];
 obj.status(['executing ' class(obj)])
 drawnow;
 if isempty(obj.resultshandle)||~isvalid(obj.resultshandle)

@@ -92,17 +92,21 @@ classdef CompareToGroundTruthChallenge<interfaces.DialogProcessor
             replacements={'firstRow1','0','shiftY1','0','txtFile1',strrep(filenew,'\','/'),'colY1','3','colX1','2','colZ1','4','shiftX1','0','colF1','1','colI1','5','shiftUnit1','nm','txtDesc1',strrep(descfile,'\','/')};
             modifySettingsFile(settingsfile,replacements{:});
             oldp=pwd;
-            cd(challengepath);
-            disp('to contintue with Matlab, close SMLMChallenge application');
-            if ispc
-                system(javapath)
+            if ~isdeployed
+                cd(challengepath);
+                disp('to contintue with Matlab, close SMLMChallenge application');
+                if ispc
+                    system(javapath)
+                else
+                    system(['java -jar ' javapath]) 
+                end
+                %later fix jave program and call via
+                %smlm.assessment.application.Application
+                %after adding javaclasspath(javapath)
+                cd(oldp)
             else
-            system(['java -jar ' javapath]) 
+                disp('not implemented in compiled version');
             end
-            %later fix jave program and call via
-            %smlm.assessment.application.Application
-            %after adding javaclasspath(javapath)
-            cd(oldp)
         end
         function pard=guidef(obj)
             pard=guidef(obj);

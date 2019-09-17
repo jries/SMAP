@@ -61,6 +61,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             uimenu(h.wfcontext,'label','Info on workflow','Callback',{@wfinfo_callback,obj});
             uimenu(h.wfcontext,'label','Change workflow','Callback',{@wfload_callback,obj});
             uimenu(h.wfcontext,'label','Load raw WF','Callback',{@wfload_callback,obj});
+            uimenu(h.wfcontext,'label','Load WF','Callback',{@wfload_callback,obj});
              uimenu(h.wfcontext,'label','Edit workflow','Callback',{@wfedit_callback,obj});
             uimenu(h.wfcontext,'label','Save workflow settings','Callback',{@savepar_callback,obj});
             uimenu(h.wfcontext,'label','Save workflow as...','Callback',{@wsave_callback,obj});
@@ -116,27 +117,26 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             par=myrmfield(par,{'workflowinfo','tab'});
             if isempty(par)
                 warndlg('cannot find settings file for fit workflow. Please set in menu SMAP/Preferences')
-            end
-            wffile=findsettingsfile(par.all.file);
-            [~,wfname]=fileparts(wffile);
-            h.wfname.String=['Workflow: ' wfname];
-            
+            else
+                wffile=findsettingsfile(par.all.file,obj);
+                [~,wfname]=fileparts(wffile);
+                h.wfname.String=['Workflow: ' wfname];
+           
+                mainworkflow=interfaces.Workflow([],obj.P);
+                mainworkflow.attachLocData(obj.locData);
+                mainworkflow.setGuiAppearence(obj.guiPar)
+                mainworkflow.setGuiAppearence(par.all)
+                mainworkflow.processorgui=false;
 
-            mainworkflow=interfaces.Workflow([],obj.P);
-            mainworkflow.attachLocData(obj.locData);
-            mainworkflow.setGuiAppearence(obj.guiPar)
-            mainworkflow.setGuiAppearence(par.all)
-            mainworkflow.processorgui=false;
-
-%             mainworkflow.pluginpath=wffile;
-            mainworkflow.makeGui;
-            mainworkflow.load(wffile,par,obj.loadpar);
-            if ~isempty(wfinfo)
-                mainworkflow.description=wfinfo;
+    %             mainworkflow.pluginpath=wffile;
+                mainworkflow.makeGui;
+                mainworkflow.load(wffile,par,obj.loadpar);
+                if ~isempty(wfinfo)
+                    mainworkflow.description=wfinfo;
+                end
+                obj.mainworkflow=mainworkflow; 
+                obj.children.mainworkflow=mainworkflow;
             end
-            obj.mainworkflow=mainworkflow; 
-            obj.children.mainworkflow=mainworkflow;
-            
             f=getParentFigure(obj.handle);
             c=uicontextmenu(f);
             h.loctab.UIContextMenu=c;
@@ -203,13 +203,23 @@ else
     obj.loadpar=true;
 end
 
+if (isprop(a,'Text') && contains(a.Text,'Change')) || (isprop(a,'String') && contains(a.String,'Change'))
+    restorepar=true;
+    oldsettings=obj.mainworkflow.getGuiParameters(true);
+else
+    restorepar=false;
+end
+
 obj.status('load workflow *.txt file');
 drawnow
 settingsfile=obj.getGlobalSetting('mainLocalizeWFFile');
 [f,p]=uigetfile(settingsfile,'Select workflow *.txt file');
 if f
-    settingsfilen=[p filesep f];
+    settingsfilen=[p f];
     loadwf(obj,settingsfilen)
+    if restorepar
+        obj.mainworkflow.setGuiParameters(oldsettings,true,false);
+    end
     obj.status('new workflow loaded');
 else
     obj.status('no workflow *.txt selected');
@@ -247,7 +257,7 @@ end
 
 
 function loadwf(obj,settingsfilen)
-    obj.setGlobalSetting('mainLocalizeWFFile',settingsfilen);
+    obj.setGlobalSetting('mainLocalizeWFFile',makerelativetopwr(settingsfilen));
     obj.mainworkflow.clear;
     delete(obj.handle.Children)
     obj.makeGui;

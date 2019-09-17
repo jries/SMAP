@@ -14,12 +14,16 @@ if isempty(ijm) %open fiji
     
     dir=pwd;
     obj.setPar('status','open Fiji');
-    addpath(fijipath)
+    if ~isdeployed
+        addpath(fijipath)
+    end
     ImageJ
     ijm=evalin('base','IJM');
 %     Miji();
 %     mij=MIJ;
-    cd(dir);
+    if ~isdeployed
+        cd(dir);
+    end
     obj.setPar('IJM',ijm);
     obj.setPar('IJ',ij.IJ);
 %     obj.setPar('MIJ',mij);

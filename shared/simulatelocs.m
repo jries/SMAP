@@ -443,14 +443,18 @@ end
 function [out,parameters]=getcoordm(p)
         cf=pwd;
         [ph,fh]=fileparts(p.coordinatefile);
+        if ~isdeployed
         cd(ph)
+        end
         try
         [l,parameters]=eval(fh);
         catch
             [l]=eval(fh);
             parameters=[];
         end
+        if ~isdeployed
         cd(cf);
+        end
 %         l=eval(p.coordinatefile);
         if isfield(l,'image')
            

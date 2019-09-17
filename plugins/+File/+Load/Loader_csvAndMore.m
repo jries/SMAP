@@ -164,6 +164,8 @@ while length(fn)==1
     end
 end
 % remove other entries
+if isstruct(tab)
+
 fn=fieldnames(tab);
 tabo=[];
 for k=1:length(fn)
@@ -173,6 +175,7 @@ for k=1:length(fn)
     end
 end
 tab=tabo;
+end
 end
 
 if isnumeric(tab)
