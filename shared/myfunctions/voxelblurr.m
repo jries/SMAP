@@ -2,10 +2,15 @@ function v=voxelblurr(fun,par,sigma, pixelsize,rangex, rangey, rangez)
 % fun: function handle
 % par: parameters for function
 % sigma: scalar, 2-vector (x,y vs z) 
-factor=1; % sampling compared to sigma of Gauss
+factor=pixelsize/2; % sampling compared to sigma of Gauss
 roiks=2.7; % size of ROI in units of sigma
 [x,y,z,norm]=fun(par,single(min(sigma)*factor));
+indRm = norm == 0;
+x = x(~indRm); y = y(~indRm); norm = norm(~indRm);
 
+if ~isempty(z)
+    z = z(~indRm);
+end
 %insert here rotation of coordinates
 
 x=x(:)-rangex(1);y=y(:)-rangey(1);z=z(:)-rangez(1);norm=norm(:);

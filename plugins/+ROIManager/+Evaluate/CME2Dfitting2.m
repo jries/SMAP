@@ -3,7 +3,10 @@ classdef CME2Dfitting2<interfaces.SEEvaluationProcessor
         function obj=CME2Dfitting2(varargin)        
                 obj@interfaces.SEEvaluationProcessor(varargin{:});
         end
-        
+        function makeGui(obj)
+            makeGui@interfaces.SEEvaluationProcessor(obj);
+%             obj.guihandles.saveimagesb.Callback={@saveimagesb_callback,obj};
+        end
         function out=run(obj,p)
             %% Parameters
             if p.method.Value ==2               %p.method.Value is the corresponding value of the chosen method.
@@ -36,7 +39,7 @@ classdef CME2Dfitting2<interfaces.SEEvaluationProcessor
             end
             
             info = [];
-            locs = obj.getLocs({'xnmrot','ynmrot', 'channel'},'size',obj.P.par.se_siteroi.content/2,'grouping','ungrouped', 'layer', 1);
+            locs = obj.getLocs({'xnmrot','ynmrot', 'channel'},'size',obj.P.par.se_siteroi.content/2,'grouping','grouped', 'layer', 1);
             if p.filterByMeanshift
                 locs = structfun(@(x)x(obj.site.evaluation.CME2CSide_pg.filter'),locs, 'UniformOutput', 0);
             end
@@ -244,6 +247,9 @@ pard.filterByMeanshift.object = struct('String', 'Filter(mean-shift)', 'Style','
 pard.filterByMeanshift.position =[6,1]; 
 pard.filterByMeanshift.Width = 1.5;
 
+pard.plugininfo.type='ROI_Evaluate';
+pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer1_','layer2_','se_sitepixelsize'};
+
 end
 function newC = transPar(c)
     newC = [-c(1) -c(3) -(c(2)-c(3)) c(4) c(5) c(6)];
@@ -257,7 +263,7 @@ imgR = zeros([roisize+1 roisize+1]);
 [x, y] = meshgrid(1:roisize+1, 1:1:roisize+1);
 indImg = sub2ind([roisize+1 roisize+1], x(:), y(:));
 
-v1 = 4([c(1)+roisize/2+1, c(2)+roisize/2+1, c(3), c(4), c(7)], x(:), y(:));
+v1 = thickRing([c(1)+roisize/2+1, c(2)+roisize/2+1, c(3), c(4), c(7)], x(:), y(:));
 v2 = cap([c(1)+roisize/2+1, c(2)+roisize/2+1, c(5), c(6), c(7)], x(:), y(:));
 
 imgR(indImg) = v1;
