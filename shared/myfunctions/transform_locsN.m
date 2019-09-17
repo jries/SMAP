@@ -47,6 +47,8 @@ roinm=p.currentfileinfo.roi;
 roinm([1 3])=roinm([1 3])*p.currentfileinfo.cam_pixelsize_um(1)*1000;
 roinm([2 4])=roinm([2 4])*p.currentfileinfo.cam_pixelsize_um(end)*1000;
 
+roiend(1)=p.currentfileinfo.roi(1)+p.currentfileinfo.roi(3);
+roiend(2)=p.currentfileinfo.roi(2)+p.currentfileinfo.roi(4);
 chipsizenm=p.currentfileinfo.cam_pixelsize_um*1000.*[p.currentfileinfo.Width p.currentfileinfo.Height]; 
 % facsize=ones(2,1);
 % separator=chipsizenm;
@@ -61,44 +63,52 @@ if p.useT
 else
 switch p.targetpos.selection
     case 'top'
-        dy=-chipsizenm(2)/2;
+%         dy=-chipsizenm(2)/2;
+        dy=0;
         dx=0;
 %         separator(2)=chipsizenm(2)/2;
         separator(2)=roinm(2)+roinm(4)/2;
+        spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000);
         indtarget=indtarget&loctarget.ynm<separator(2);
         indref=indref&locref.ynm>=separator(2);
-        xrangecamr=[0 spix(1)*2];yrangecamr=[spix(2) 2*spix(2)];
-        xrangecamt=[0 spix(1)*2];yrangecamt=[0 spix(2)];
+        xrangecamr=[0 roiend(1)];yrangecamr=[spix(2) roiend(2)];
+        xrangecamt=[0 roiend(1)];yrangecamt=[0 spix(2)];
         mirroradd(2)=chipsizenm(2);
     case 'bottom'
-        dy=chipsizenm(2)/2;
+%         dy=chipsizenm(2)/2;
+        dy=0;
         dx=0;
 %         separator(2)=chipsizenm(2)/2;
         separator(2)=roinm(2)+roinm(4)/2;
+        spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000);
         indtarget=indtarget&loctarget.ynm>separator(2);
         indref=indref&locref.ynm<=separator(2);
-        xrangecamr=[0 spix(1)*2];yrangecamr=[0 spix(2)];
-        xrangecamt=[0 spix(1)*2];yrangecamt=[spix(2) 2*spix(2)];
+        xrangecamr=[0 spix(1)];yrangecamr=[0 spix(2)];
+        xrangecamt=[0 spix(1)];yrangecamt=[spix(2) roiend(2)];
     case 'left'
-        dx=-chipsizenm(1)/2;
+%         dx=-chipsizenm(1)/2;
+        dx=0;
         dy=0;
 %         separator(1)=chipsizenm(1)/2;
         separator(1)=roinm(1)+roinm(3)/2;
         indtarget=indtarget&loctarget.xnm<separator(1);
         indref=indref&locref.xnm>=separator(1);
-        xrangecamr=[spix(1) spix(1)*2];yrangecamr=[0 spix(2)*2];
-        xrangecamt=[0 spix(1)];yrangecamt=[0 spix(2)*2];
+        spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000);
+        xrangecamr=[spix(1) roiend(1)];yrangecamr=[0 spix(2)];
+        xrangecamt=[0 spix(1)];yrangecamt=[0 spix(2)];
          mirroradd(1)=chipsizenm(2);
     case 'right'
-        dx=chipsizenm(1)/2;
+%         dx=chipsizenm(1)/2;
+        dx=0; %XXXXXX
         dy=0;
 %         separator(1)=chipsizenm(1)/2;
         separator(1)=roinm(1)+roinm(3)/2;
         indtarget=loctarget.xnm>separator(1);
         indtarget=indtarget&loctarget.xnm>separator(1);
         indref=indref&locref.xnm<=separator(1);
-        xrangecamr=[0 spix(1)];yrangecamr=[0 spix(2)*2];
-        xrangecamt=[spix(1) spix(1)*2];yrangecamt=[0 spix(2)*2];
+        spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000);
+        xrangecamr=[0 spix(1)];yrangecamr=[0 spix(2)];
+        xrangecamt=[spix(1) roiend(1)];yrangecamt=[0 spix(2)];
     otherwise
         dx=0;
         dy=0;
@@ -138,8 +148,14 @@ else %all initial estimation:
    
     loctT.x=loctT.xnm-dx+p.register_parameters.initialshiftx;
     loctT.y=loctT.ynm-dy+p.register_parameters.initialshifty;
+    
+    midmirror=separator;
     %  initial mirror
-    midmirror=chipsizenm/4;
+%     qx=myquantile(vertcat(locref.x,loctarget.x),[0.01,0.99]);
+%     midmirror(1)=mean(qx);
+%     qy=myquantile(vertcat(locref.y,loctarget.y),[0.01,0.99]);
+%     midmirror(2)=mean(qy);
+%     midmirror=chipsizenm/4;
 %     mirrorinfo.midmirror=midmirror;
 %     mirrorinfo.targetmirror=p.targetmirror.selection;
     
@@ -202,6 +218,8 @@ pixelsizerec=p.register_parameters.pixelsizenm;
 imr=myhist2(locref.x,locref.y,pixelsizerec,pixelsizerec,rangex,rangey);
 imt=myhist2(loctT.x,loctT.y,pixelsizerec,pixelsizerec,rangex,rangey);
 
+axim=initaxis(p.resultstabgroup,['img' p.repetition]);
+imagesc(axim,horzcat(imr,imt))
 % implot=zeros(size(imr,1),size(imr,2),3);
 % implot(:,:,1)=imr;implot(:,:,2)=imt;
 % ax1=initaxis(p.resultstabgroup,'images');
