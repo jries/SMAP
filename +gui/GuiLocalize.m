@@ -121,23 +121,22 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
                 wffile=findsettingsfile(par.all.file,obj);
                 [~,wfname]=fileparts(wffile);
                 h.wfname.String=['Workflow: ' wfname];
-            end
+           
+                mainworkflow=interfaces.Workflow([],obj.P);
+                mainworkflow.attachLocData(obj.locData);
+                mainworkflow.setGuiAppearence(obj.guiPar)
+                mainworkflow.setGuiAppearence(par.all)
+                mainworkflow.processorgui=false;
 
-            mainworkflow=interfaces.Workflow([],obj.P);
-            mainworkflow.attachLocData(obj.locData);
-            mainworkflow.setGuiAppearence(obj.guiPar)
-            mainworkflow.setGuiAppearence(par.all)
-            mainworkflow.processorgui=false;
-
-%             mainworkflow.pluginpath=wffile;
-            mainworkflow.makeGui;
-            mainworkflow.load(wffile,par,obj.loadpar);
-            if ~isempty(wfinfo)
-                mainworkflow.description=wfinfo;
+    %             mainworkflow.pluginpath=wffile;
+                mainworkflow.makeGui;
+                mainworkflow.load(wffile,par,obj.loadpar);
+                if ~isempty(wfinfo)
+                    mainworkflow.description=wfinfo;
+                end
+                obj.mainworkflow=mainworkflow; 
+                obj.children.mainworkflow=mainworkflow;
             end
-            obj.mainworkflow=mainworkflow; 
-            obj.children.mainworkflow=mainworkflow;
-            
             f=getParentFigure(obj.handle);
             c=uicontextmenu(f);
             h.loctab.UIContextMenu=c;
