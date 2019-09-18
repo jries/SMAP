@@ -221,7 +221,7 @@ classdef calibrate3D_GUI_g<handle
                 obj.guihandles.setframes=uicontrol('style','checkbox','String','set frames','Position',[xpos1+2*xw,top-24*vsep,xw*1,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha,'Callback',@obj.setframes_callback);
                 obj.guihandles.framerange=uicontrol('style','edit','String','50 250','Position',[xpos1+3*xw,top-24*vsep,xw,fieldheight],'FontSize',fontsize,'Visible','off');
                 
-                obj.guihandles.zernikefit=uicontrol('style','checkbox','String','Fit Zernike coefficients','Position',[xpos1,top-26*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',hatitle,'FontWeight','bold','Callback',@obj.zernike_callback,'Value',1);    
+                obj.guihandles.zernikefit=uicontrol('style','checkbox','String','Fit Zernike coefficients','Position',[xpos1,top-26*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',hatitle,'FontWeight','bold','Callback',@obj.zernike_callback,'Value',0);    
                 obj.guihandles.zernikepar=uicontrol('style','pushbutton','String','Parameters','Position',[xpos1+2*xw,top-26*vsep,xw*1,fieldheight],'FontSize',fontsize,'Callback',@obj.zernikepar_callback);    
                 
                 obj.guihandles.emgain=uicontrol('style','checkbox','String','EM gain used (mirrored)','Position',[xpos1,top-27*vsep,2*xw,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha); 

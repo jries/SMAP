@@ -170,7 +170,7 @@ switch p.Tmode
             end
         else
             xrange1=([p.xrange splitpos]);xrange1(xrange1>splitpos)=splitpos;xrange1=unique(xrange1);
-            xrange2=([p.xrange+ splitpos]);xrange2(xrange2<splitpos)=splitpos;xrange2=unique(xrange2);
+            xrange2=([p.xrange splitpos]);xrange2(xrange2<splitpos)=splitpos;xrange2=unique(xrange2);
          end
             
         pr.yrange1=p.yrange;pr.yrange2=p.yrange;
