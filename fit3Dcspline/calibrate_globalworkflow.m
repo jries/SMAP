@@ -51,6 +51,9 @@ tt=uitab(tg,'Title','transformation');
 p.tabgroup=  uitabgroup(tt);
 % p.separator=p.Tsplitpos+parameters1.roi{1}(pr.roiind);
 p.separator=p.Tsplitpos;
+
+p.parameters1=parameters1;
+p.parameters2=parameters2; %for ROI
 % find transform
 % if p.makeT || isempty(p.Tfile)
 %     transform=transform_locs_simple(beadpos1{1},beadpos2{1},p);
@@ -109,6 +112,7 @@ calibrationfigure=f;
 if ~isempty(p.outputfile)
     if p.smap
         parameters1.smappos.P=[]; parameters2.smappos.P=[]; parameters_g.smappos.P=[];
+        parameters_g.parameters1.smappos.P=[];parameters_g.parameters2.smappos.P=[];
         save(p.outputfile,'SXY','SXY_g','parameters_g','parameters1','parameters2','transformation');
         
     else
@@ -209,11 +213,16 @@ end
 % 
 function transform=makeglobalTransform(bead1,bead2,ph)
 %calculate transformN
+%ROI on cam
+camroi1=ph.parameters1.roi{1};
+camroi2=ph.parameters2.roi{1};
+ph.ref1=camroi1(1:2);
+ph.ref2=camroi2(1:2);
 pp=getranges(ph);
 transform=interfaces.LocTransformN;
 pt.mirror=[false false]; %ref
-pt.xrange=pp.xrange1;
-pt.yrange=pp.yrange1;
+pt.xrange=pp.xrange1+camroi1(1); 
+pt.yrange=pp.yrange1+camroi1(2);
 pt.unit='pixel';
 pt.type='projective';
 transform.setTransform(1,pt)
@@ -228,8 +237,8 @@ else
     pt.mirror=0;
 end
 end
-pt.xrange=pp.xrange2;
-pt.yrange=pp.yrange2;
+pt.xrange=pp.xrange2+camroi2(1);
+pt.yrange=pp.yrange2+camroi2(2);
 transform.setTransform(2,pt)
 th=ph.tabgroup;
 ph.ax=th;
@@ -245,6 +254,12 @@ bc2=horzcat(reshape(bead2.x(range,:),[],1),...
     reshape(bead2.z(range,:),[],1),...
     reshape(bead2.filenumber(range,:)*100+bead2.frame(range,:),[],1));
 ph.sepscale=5;
+switch pp.split
+    case 'rl'
+        ph.separator=ph.separator+camroi1(1);
+    case 'ud'
+        ph.separator=ph.separator+camroi1(2);
+end
 [transform ,iAa,iBa]=transform_locs_simpleN(transform,1, bc1,2,bc2,ph); 
 
 end

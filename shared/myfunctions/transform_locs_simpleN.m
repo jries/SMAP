@@ -17,22 +17,27 @@ if isfield(p,'Tfile') && exist(p.Tfile,'file')
 else %all initial estimation:
     inforef=transform.info{channelref};
     infotarget=transform.info{channeltarget};
-    inforef=takeoutinf(inforef, 2*p.separator);
-    infotarget=takeoutinf(infotarget, 2*p.separator);
-    locT(:,1)=loctarget(:,1)-infotarget.xrange(1);locT(:,2)=loctarget(:,2)-infotarget.yrange(1);
-    locR(:,1)=locref(:,1)-inforef.xrange(1);locR(:,2)=locref(:,2)-inforef.yrange(1);
+    inforef=takeoutinf(inforef, p.ref1,2*p.separator);
+    infotarget=takeoutinf(infotarget,p.ref2, 2*p.separator);
     
+%     locT(:,1)=loctarget(:,1)-infotarget.xrange(1);locT(:,2)=loctarget(:,2)-infotarget.yrange(1);
+%     locR(:,1)=locref(:,1)-inforef.xrange(1);locR(:,2)=locref(:,2)-inforef.yrange(1);
+   locT(:,1)=loctarget(:,1)-infotarget.xrange(1);locT(:,2)=loctarget(:,2)-infotarget.yrange(1);
+    locR(:,1)=locref(:,1)-inforef.xrange(1);locR(:,2)=locref(:,2)-inforef.yrange(1);
+     
     %mirror if neede
-    sref=[inforef.xrange(2)-inforef.xrange(1) inforef.yrange(2)-inforef.yrange(1)];
+%     sref=[inforef.xrange(2)-inforef.xrange(1) inforef.yrange(2)-inforef.yrange(1)];
 %     if any(isinf(sref))
-%        sref= [2*p.separator 2*p.separator];
+      separator=p.separator-p.parameters1.roi{1}(1);
+       sref= [separator separator];
 %     end
     for k=1:length(inforef.mirror)
         if inforef.mirror(k)>0
             locR(:,inforef.mirror(k))=sref(inforef.mirror(k))-locR(:,inforef.mirror(k));
         end
     end
-    star=[infotarget.xrange(2)-infotarget.xrange(1) infotarget.yrange(2)-infotarget.yrange(1)];
+%     star=[infotarget.xrange(2)-infotarget.xrange(1) infotarget.yrange(2)-infotarget.yrange(1)];
+      star=sref;
     for k=1:length(infotarget.mirror)
         if infotarget.mirror(k)>0
             locT(:,infotarget.mirror(k))=star(infotarget.mirror(k))-locT(:,infotarget.mirror(k));
@@ -116,11 +121,11 @@ end
 
 end
 
-function struct=takeoutinf(struct, replace)
-    struct.xrange(struct.xrange==-Inf)=0;
-    struct.xrange(struct.xrange==Inf)=replace;
-    struct.yrange(struct.yrange==-Inf)=0;
-    struct.yrange(struct.yrange==Inf)=replace;
+function struct=takeoutinf(struct, replace1, replace2)
+    struct.xrange(struct.xrange==-Inf)=replace1(1);
+    struct.xrange(struct.xrange==Inf)=replace2(1);
+    struct.yrange(struct.yrange==-Inf)=replace1(end);
+    struct.yrange(struct.yrange==Inf)=replace2(end);
 end
 
 function pos=reducepos(posin,df)
