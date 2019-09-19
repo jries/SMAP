@@ -27,10 +27,12 @@ pixelsize=100;
              roi=r.metadata.roi;
              pixelsize=r.metadata.cam_pixelsize_um;
              r.close;
+             disp('SMAP image loader used');
         catch err
             err
             imstack=readfile_tif(file);
             roi=[0 0 size(imstack,1) size(imstack,2)]; %check x,y
+            disp('simple image loder used because SMAP loader did not wok');
         end
         if isempty(imstack)
             disp('using simple reader')

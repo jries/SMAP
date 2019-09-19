@@ -92,11 +92,17 @@ ph.filelist=p.filelist;
     S2.PSF=S2.PSF(2);
     S2.cspline.coeff={S2.cspline.global.coeffrawtar};
     S2.cspline.normf=S2.cspline.normf(2);
-    S1.Xrange=pr.xrange1;S2.Xrange=pr.xrange2;
-    S1.Yrange=pr.yrange1;S2.Yrange=pr.yrange2;
+    S1.Xrange=transform.info{1}.xrange;
+    S1.Yrange=transform.info{1}.yrange;
+    S2.Xrange=transform.info{2}.xrange;
+    S2.Yrange=transform.info{2}.yrange;
+    xrangeall=[-Inf mean([S1.Xrange(~isinf(S1.Xrange)) S2.Xrange(~isinf(S2.Xrange))]) Inf];
+    yrangeall=[-Inf mean([S1.Yrange(~isinf(S1.Yrange)) S2.Yrange(~isinf(S2.Yrange))]) Inf];
+%     S1.Xrange=pr.xrange1;S2.Xrange=pr.xrange2;
+%     S1.Yrange=pr.yrange1;S2.Yrange=pr.yrange2;
 % end
-S1.Yrangeall=pr.yrangeall;S1.Xrangeall=pr.xrangeall;
-S2.Yrangeall=pr.yrangeall;S2.Xrangeall=pr.xrangeall;
+S1.Yrangeall=yrangeall(~isnan(yrangeall));S1.Xrangeall=xrangeall(~isnan(xrangeall));
+S2.Yrangeall=yrangeall(~isnan(yrangeall));S2.Xrangeall=xrangeall(~isnan(xrangeall));
 S2.posind=pr.XYpos;
 
 if strcmp(pr.split,'rl') 
