@@ -83,7 +83,7 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
         end
         function ax=initaxis(obj,varargin)
             %initializes axis in results window
-            if ~isvalid(obj.resultstabgroup)
+            if isempty(obj.resultstabgroup) || ~isvalid(obj.resultstabgroup)
                 obj.makeResultsWindow;
                 obj.resultshandle.Visible='on';
             end
