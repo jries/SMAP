@@ -83,6 +83,10 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
         end
         function ax=initaxis(obj,varargin)
             %initializes axis in results window
+            if ~isvalid(obj.resultstabgroup)
+                obj.makeResultsWindow;
+                obj.resultshandle.Visible='on';
+            end
             ax=initaxis(obj.resultstabgroup,varargin{:});
         end
         function results=processgo(obj)
