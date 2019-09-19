@@ -45,6 +45,7 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
             end
             obj.locData.loc.channel=channel;
             obj.locData.regroup;
+            obj.setPar('locFields',fieldnames(obj.locData.loc))
 %             
         end
         function pard=guidef(obj)
