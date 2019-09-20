@@ -32,6 +32,7 @@ results_ax3=initaxis(par.resultstabgroup,['normalized CC' rn]);
 lastframe=round(par.framestop);
 firstframe=round(par.framestart);
 numframes=lastframe-firstframe+1;
+binframes=1; %intialize to be shared;
 
 %% calculate movie and FFT of movie
 pixrec=par.drift_pixrec; %in nm
