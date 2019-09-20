@@ -24,12 +24,17 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
             field2=p.assignfield2.selection;
             dx=obj.imparameters.dx;
             Nmax=double(ceil(obj.imparameters.max/dx));
-            n1=log10(obj.locData.loc.(field1))/dx;
-            n2=log10(obj.locData.loc.(field2))/dx;
-            n1(n1>Nmax)=1;
-            n2(n2>Nmax)=1;
+            n1r=obj.locData.loc.(field1);
+            n2r=obj.locData.loc.(field2);
+            n1r(n1r<1)=1;
+            n2r(n2r<1)=1;
+            n1=log10(n1r)/dx;
+            n2=log10(n2r)/dx;
             n1(n1<1)=1;
             n2(n2<1)=1;
+            n1(n1>Nmax)=Nmax;
+            n2(n2>Nmax)=Nmax;
+
             roi_callback(0,0,obj,0);
             channel=n1*0;
             for k=1:length(obj.rois)
@@ -162,9 +167,11 @@ end
 end
 
 function drawhistogram(obj,ax,n1,n2,islog)
-mx=(max(quantile(n1,.9995), quantile(n2,.9995)));
-m0=(min(quantile(n1,.005), quantile(n2,.005)));
+mx=(max(quantile(n1,.99995), quantile(n2,.99995)));
+% m0=(min(quantile(n1,.005), quantile(n2,.005)));
+
 dp=0.02;
+m0=-dp;
 obj.imparameters.min=m0;
 obj.imparameters.max=mx;
 obj.imparameters.dx=dp;
@@ -184,8 +191,12 @@ function [n1,n2]=getintensities(obj)
 field1=obj.getSingleGuiParameter('assignfield1').selection;
 field2=obj.getSingleGuiParameter('assignfield2').selection;
 [ll,ind]=obj.locData.getloc({'xnm',field1,field2},'Position','roi','layer',find(obj.getPar('sr_layerson')),'removeFilter','channel','grouping','ungrouped');
-n1=log10(ll.(field1));
-n2=log10(ll.(field2));
+n1r=(ll.(field1));
+n2r=(ll.(field2));
+n1r(n1r<1)=1;
+n2r(n2r<1)=1;
+n1=log10(n1r);
+n2=log10(n2r);
 end
 
 function pard=guidef(obj)
