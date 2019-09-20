@@ -128,7 +128,9 @@ if ~isempty(f2v)
     obj.setGuiParameters(struct('assignfield2',field2));
 end
 
+if nargin<4 %only when called from load.
 roi_callback(0,0,obj,0);
+end
 
 end
 
