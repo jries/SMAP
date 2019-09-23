@@ -129,7 +129,7 @@ if p.useT
         Tinitial=loadtransformation(locData,p.Tfile,p.dataselect.Value);
     end
     if isa(Tinitial,'interfaces.LocTransformN')
-        Tinitial.setTransform([],'cam_pixnm',p.currentfileinfo.cam_pixelsize_um*1000)
+%         Tinitial.setTransform([],'cam_pixnm',p.currentfileinfo.cam_pixelsize_um*1000)
         pos=Tinitial.transformToReference(2,horzcat(loctarget.xnm,loctarget.ynm),'nm');
         loctT.x=pos(:,1);loctT.y=pos(:,2);
            indref=Tinitial.getPart(1,horzcat(locref.xnm,locref.ynm),'nm');
@@ -217,6 +217,14 @@ pixelsizerec=p.register_parameters.pixelsizenm;
 
 imr=myhist2(locref.x,locref.y,pixelsizerec,pixelsizerec,rangex,rangey);
 imt=myhist2(loctT.x,loctT.y,pixelsizerec,pixelsizerec,rangex,rangey);
+
+qimr=quantile(imr(:),.998);
+imr(imr>qimr)=qimr;
+qimt=quantile(imt(:),.998);
+imt(imt>qimt)=qimt;
+
+imr=sqrt(imr);
+imt=sqrt(imt);
 
 axim=initaxis(p.resultstabgroup,['img' p.repetition]);
 imagesc(axim,horzcat(imr,imt))
