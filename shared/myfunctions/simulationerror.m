@@ -1,13 +1,29 @@
 function simulationerror(locgt,locfit,whicherr,searchradius)
 
 f=gcf;
+isz=true;
 % pixelsize=100
 if ~isfield(locgt,'x'), locgt.x=locgt.xnm; end
 if ~isfield(locfit,'x'), locfit.x=locfit.xnm; end
-if ~isfield(locgt,'y'), locgt.x=locgt.ynm; end
-if ~isfield(locfit,'y'), locfit.x=locfit.ynm; end
-if ~isfield(locgt,'z'), locgt.x=locgt.znm; end
-if ~isfield(locfit,'z'), locfit.x=locfit.znm; end
+if ~isfield(locgt,'y'), locgt.y=locgt.ynm; end
+if ~isfield(locfit,'y'), locfit.y=locfit.ynm; end
+if ~isfield(locgt,'z')
+    if isfield(locgt,'znm')
+        locgt.z=locgt.znm; 
+    else
+        locgt.z=0*locgt.x;
+        isz=false;
+    end
+end
+if ~isfield(locfit,'z')
+    if isfield(locfit,'znm')
+        locfit.z=locfit.znm; 
+    else
+        locfit.z=0*locfit.x;
+        isz=false;
+    end
+end
+
 if ~isfield(locgt,'N'), locgt.N=locgt.phot; end
 if ~isfield(locfit,'N'), locfit.N=locfit.phot; end
 
@@ -26,10 +42,13 @@ precision=truepositives/(truepositives+falsepositives);
 recall=truepositives/(truepositives+falsenegatives);
 
 matched=length(iAa);
-
+if isz
 dz=locgt.z(iAa)-locfit.z(iBa);
 indinz=abs(dz)<searchradius(end);
 dz=dz(indinz);
+else
+    indinz=true(size(iAa));
+end
 dx=locgt.x(iAa(indinz))-locfit.x(iBa(indinz));
 dy=locgt.y(iAa(indinz))-locfit.y(iBa(indinz));
 
@@ -80,7 +99,7 @@ if ~isfield(locerr,'yerr')
         disp('error in y estimated using Mortensen');
     end
 end
-if ~isfield(locerr,'zerr')
+if ~isfield(locerr,'zerr') && isz
     if isfield(locerr,'znmerr')&&~isempty(locerr.znmerr)
         locerr.zerr=locerr.znmerr;
     elseif isfield(locerr,'locprecznm')&&~isempty(locerr.locprecznm)
@@ -109,23 +128,23 @@ xlabel('dx')
 subplot(3,4,2,'Parent',f)
 fity=fithistr(dy,2);
 xlabel('dy')
-subplot(3,4,3,'Parent',f)
-fitz=fithistr(dz,5);
-xlabel('dz')
-
+if isz
+    subplot(3,4,3,'Parent',f)
+    fitz=fithistr(dz,5);
+    xlabel('dz')
+end
 subplot(3,4,4,'Parent',f)
 fitphot=fithistr(dphot,.01);
 xlabel('dphot')
 % shifted dx
 dxshift=(dx-fitx.b1);
 dyshift=(dy-fity.b1);
-dzshift=(dz-fitz.b1);
+
 RMSElat=sqrt(mean(dxshift.^2+dyshift.^2));
-RMSEvol=sqrt(mean(dxshift.^2+dyshift.^2+dzshift.^2));
 %renormalized
 dxr=(dx-fitx.b1)./locerr.xerr(inderr(indinz));
 dyr=(dy-fity.b1)./locerr.yerr(inderr(indinz));
-dzr=(dz-fitz.b1)./locerr.zerr(inderr(indinz));
+
 dphotr=(locgt.N(iAa(indinz))/fitphot.b1-locfit.N(iBa(indinz)))./locerr.Nerr(inderr(indinz));
 subplot(3,4,5,'Parent',f)
 fithistr(dxr,0.25);
@@ -133,13 +152,20 @@ xlabel('dx/sqrt(CRLBx)')
 subplot(3,4,6,'Parent',f)
 fithistr(dyr,0.25);
 xlabel('dy/sqrt(CRLBy)')
-subplot(3,4,7,'Parent',f)
-fithistr(dzr,0.25);
-xlabel('dz/sqrt(CRLBz)')
+
 
 subplot(3,4,8,'Parent',f)
 fithistr(dphotr,.5);
 xlabel('phot/sqrt(CRLBphot)')
+
+if isz
+    dzshift=(dz-fitz.b1);
+    RMSEvol=sqrt(mean(dxshift.^2+dyshift.^2+dzshift.^2));
+    dzr=(dz-fitz.b1)./locerr.zerr(inderr(indinz));
+    subplot(3,4,7,'Parent',f)
+fithistr(dzr,0.25);
+xlabel('dz/sqrt(CRLBz)')
+end
 
 q=quantile(vertcat(unique(locfit.bg(iBa)),unique(locgt.bg(iAa))),[0.02 0.98]);
 edges=floor(q(1)):1:ceil(q(2));
@@ -202,6 +228,10 @@ function fitp2=fithistr(de,dn)
 ff='%1.1f';
 ff2='%1.2f';
 qq=quantile(de,[0.002 0.998]);
+if qq(1)==qq(2)
+    fitp2=zeros(5);
+    return
+end
 n=floor(qq(1)):dn:ceil(qq(end));
 hold off
 histogram(de,n);
@@ -212,7 +242,7 @@ ss=fitp.c1/sqrt(2);
 
 % try fitting with second gauss
 mp=find(nf>fitp.b1,1,'first');
-dn2=ceil(2*ss/dn);
+dn2=min(mp-1,ceil(2*ss/dn));
 n2=(mp-dn2:mp+dn2)';
 
 % fitp2=fit(nf(n2)',hn(n2)','gauss2','StartPoint',[fitp.a1,fitp.b1,fitp.c1,fitp.a1/10,fitp.b1,fitp.c1*10]);

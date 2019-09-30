@@ -271,6 +271,9 @@ classdef SEExploreGui<interfaces.SEProcessor
         function nextsite(obj,direction)
             v=obj.guihandles.sitelist.Value+direction;
             s=obj.guihandles.sitelist.String;
+            if isempty(s)
+                return
+            end
             vnew=max(1,min(v,length(s)));
             obj.SE.currentsite=obj.SE.sites(vnew);
             obj.guihandles.sitelist.Value=vnew;
