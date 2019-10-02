@@ -1,4 +1,6 @@
 classdef RegisterLocs2<interfaces.DialogProcessor
+%     calculates transformation (global or local) based on localizations
+%     (e.g. multi-color beads or fluorophores in ratiometric imaging)
     properties
         isz=0;
         transformation=[];
@@ -105,7 +107,7 @@ classdef RegisterLocs2<interfaces.DialogProcessor
             if isempty(obj.register_parameters)        
                 par.pixelsizenm=[500 50];
                 par.maxshift_corr=5000;
-                par.maxlocsused=50000;
+                par.maxlocsused=500000;
                 par.maxshift_match=[1250 150];
                 par.initial_mag=1;
                 par.initialshiftx=0;
@@ -249,7 +251,7 @@ pard.save.Height=1.5;
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.inputParameters={'currentfileinfo'};
-
+pard.plugininfo.description='calculates transformation (global or local) based on localizations (e.g. multi-color beads or fluorophores in ratiometric imaging)';
 pard.plugininfo.name='Register Localizations';
 pard.plugininfo.type='ProcessorPlugin';
 end
