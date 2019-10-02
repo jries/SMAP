@@ -22,6 +22,8 @@ classdef Grouper< interfaces.LocDataInterface
             obj.combinemodes.znm='mean';
             obj.combinemodes.bg='sum';
             obj.combinemodes.phot='sum';
+            obj.combinemodes.phot1='sum';
+            obj.combinemodes.phot2='sum';
             obj.combinemodes.PSFxnm='square';
             obj.combinemodes.PSFynm='square';
             obj.combinemodes.locprecnm='locp';
@@ -33,6 +35,7 @@ classdef Grouper< interfaces.LocDataInterface
             obj.combinemodes.channel='first';
             obj.combinemodes.logLikelihood='max';
             obj.combinemodes.loglikelihood='max';
+            obj.combinemodes.LLrel='max';
             obj.combinemodes.numberInGroup='first';
             obj.combinemodes.groupindex='first';
             obj.combinemodes.filenumber='first';
