@@ -21,6 +21,8 @@ classdef Grouper< interfaces.LocDataInterface
             obj.combinemodes.ynm='mean';
             obj.combinemodes.znm='mean';
             obj.combinemodes.bg='sum';
+            obj.combinemodes.bg1='sum';
+            obj.combinemodes.bg2='sum';
             obj.combinemodes.phot='sum';
             obj.combinemodes.phot1='sum';
             obj.combinemodes.phot2='sum';
