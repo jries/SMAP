@@ -24,8 +24,13 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
             field2=p.assignfield2.selection;
             dx=obj.imparameters.dx;
             Nmax=double(ceil(obj.imparameters.max/dx));
-            n1r=obj.locData.loc.(field1);
-            n2r=obj.locData.loc.(field2);
+            if p.usegrouped
+                n1r=obj.locData.grouploc.(field1);
+                n2r=obj.locData.grouploc.(field2);
+            else
+                n1r=obj.locData.loc.(field1);
+                n2r=obj.locData.loc.(field2);
+            end
             n1r(n1r<1)=1;
             n2r(n2r<1)=1;
             n1=log10(n1r)/dx;
@@ -48,8 +53,17 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
                     channel(ischannel)=k;
                 end
             end
-            obj.locData.loc.channel=channel;
-            obj.locData.regroup;
+            if p.usegrouped %convert back to single
+                obj.locData.grouploc.channel=channel;
+                channelu= obj.locData.grouped2ungrouped(1:length(channel),channel);
+                obj.locData.loc.channel=channelu;
+            else
+                obj.locData.loc.channel=channel;
+                obj.locData.regroup;
+%                 obj.locData.grouploc.channel=channel(obj.locData.grouploc.groupindex);
+            end
+            
+%             
             obj.setPar('locFields',fieldnames(obj.locData.loc))
 %             
         end
@@ -154,18 +168,27 @@ end
 for k=1:length(obj.rois)
     if ~isempty(obj.rois{k}) 
         hroi=images.roi.Polygon(ax,'Position',obj.rois{k}.Position,'Color',cmap(k+1,:));
+%         hroi.Tag=num2str(k);
+        addlistener(hroi,'MovingROI',@(src,evt) updatePosition(src,evt,obj,k));
         obj.roihandles{k}=hroi;
     end
 end
 if channel>0
 if length(obj.rois)<channel || isempty(obj.rois{channel})
     hroi=images.roi.Polygon(ax,'Color',cmap(channel+1,:));
+    addlistener(hroi,'MovingROI',@(src,evt) updatePosition(src,evt,obj,channel));
+%     hroi.Tag=num2str(channel);
     draw(hroi);
     obj.rois{channel}.Position=hroi.Position;
     
     obj.roihandles{channel}=hroi;
 end
 end
+end
+
+function updatePosition(src,evt,obj,channel)
+% channel=str2double(src.Tag);
+obj.rois{channel}.Position=src.Position;
 end
 
 function drawhistogram(obj,ax,n1,n2,islog)
@@ -184,15 +207,19 @@ him=histcounts2(n1,n2,range,range);
 if islog
     him=log(him);
 else
-    him=(him);
+%     him=(him);
+    q=quantile(him(:),0.9995);
+    him(him>q)=q;
 end
+
 imagesc(ax,range,range,him)
 
 end
 function [n1,n2]=getintensities(obj)
 field1=obj.getSingleGuiParameter('assignfield1').selection;
 field2=obj.getSingleGuiParameter('assignfield2').selection;
-[ll,ind]=obj.locData.getloc({'xnm',field1,field2},'Position','roi','layer',find(obj.getPar('sr_layerson')),'removeFilter','channel','grouping','ungrouped');
+
+[ll,ind]=obj.locData.getloc({'xnm',field1,field2},'Position','roi','layer',find(obj.getPar('sr_layerson')),'removeFilter','channel','grouping',obj.getSingleGuiParameter('usegrouped'));
 n1r=(ll.(field1));
 n2r=(ll.(field2));
 n1r(n1r<1)=1;
@@ -222,6 +249,9 @@ pard.chN.Width=0.45;
 pard.chNroi.object=struct('String','ROI N','Style','pushbutton','Callback',{{@roi_callback,obj,3}});
 pard.chNroi.position=[3,4];
 
+pard.showrois.object=struct('String','Show ROIs','Style','pushbutton','Callback',{{@roi_callback,obj,0}});
+pard.showrois.position=[4,4];
+
 pard.deleterois.object=struct('String','Delete ROIs','Style','pushbutton','Callback',{{@roi_callback,obj,-1}});
 pard.deleterois.position=[5,4];
 
@@ -235,6 +265,10 @@ pard.assignfield2.position=[3,1];
 
 pard.logscale.object=struct('Style','checkbox','String','log scale','Value',1);
 pard.logscale.position=[4,1];
+
+pard.usegrouped.object=struct('Style','checkbox','String','use grouped','Value',0);
+pard.usegrouped.position=[4,2];
+
 
 pard.loadbutton.object=struct('String','load','Style','pushbutton','Callback',{{@load_callback,obj}});
 pard.loadbutton.position=[5,1];
