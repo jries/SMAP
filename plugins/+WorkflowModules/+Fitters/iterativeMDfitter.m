@@ -27,7 +27,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %             psf.roisize=p.roisize;
             obj.setPar('loc_ROIsize',p.roisize)
             psf.loadmodel(p.cal_3Dfile);
-            psf.roisize=min(round(1.3*p.roisize*2)+1,  size(psf.modelpar.coeff,1)-3);
+            psf.roisize=min(max(15,round(1.3*p.roisize*2)+1),  size(psf.modelpar.coeff,1)-3);
                  
             obj.splinePSF=psf;
             pim=psf.PSF(struct('x',0,'y',0,'z',0));
@@ -62,13 +62,13 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             drpsf=round((obj.splinePSF.roisize-1)/2);
             spsf=obj.splinePSF.roisize;
             ddr=drpsf-drfit;
-            calculatebg=true;
+%             calculatebg=true;
 %             bgestimate=min(image(:));
             sizepixfit=(2*drfit+1)^2;
             
             v0=0*maxima.x;
             bgglobal=quantile(image(:),0.5);
-            sigma2=1^2; %estimated sigma of PSF squared
+            sigma2=1.5^2; %estimated sigma of PSF squared
             pos.x=max(drfit+1,min(size(image,2)-drfit,round(maxima.x)));
             pos.y=max(drfit+1,min(size(image,1)-drfit,round(maxima.y)));
             maximainit=maxima; %what are these needed for???
@@ -91,6 +91,9 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 maxima.bg=bgglobal; %currently not calculated
             end
             
+            if obj.preview
+                previewcollage=zeros(3*(2*drfit+1),2*(2*drfit+1),length(maxima.x),'single');
+            end
             coord=[maxima.x-pos.x,maxima.y-pos.y,maxima.z,maxima.N,maxima.bg]; %BG set to zero
             % in iterations, previous bg used for starting value. BG always
             % as offset of single molecule model.
@@ -102,8 +105,17 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             LL=ones(length(inds),1,'single');iterations=ones(length(inds),1,'single');crlb=ones(length(inds),1,5,'single');chi2=ones(length(inds),1,'single');
             for iter=1:p.iterations
                 for k=1:length(inds)
+                    if iter==1 && p.estimateStartParameters
+                        drfith=round((p.roistart-1)/2);
+                        ddrh=drpsf-drfith;
+                        dzstart=single(p.zstart);
+                    else
+                        dzstart=0;
+                        drfith=drfit;
+                        ddrh=ddr;
+                    end
                     ih=inds(k);
-                    roiim=image(pos.y(ih)-drfit:pos.y(ih)+drfit,pos.x(ih)-drfit:pos.x(ih)+drfit);
+                    roiim=image(pos.y(ih)-drfith:pos.y(ih)+drfith,pos.x(ih)-drfith:pos.x(ih)+drfith);
                     %update image
                     %calculate ranges 
                     
@@ -113,7 +125,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                     xrangepsf=xrange(1)-pos.x(ih)+drpsf+1:xrange(end)-pos.x(ih)-drpsf+spsf;
                     
                     M(yrange,xrange)=M(yrange,xrange)-Mi(yrangepsf,xrangepsf,ih);
-                    roiM=M(pos.y(ih)-drfit:pos.y(ih)+drfit,pos.x(ih)-drfit:pos.x(ih)+drfit);
+                    roiM=M(pos.y(ih)-drfith:pos.y(ih)+drfith,pos.x(ih)-drfith:pos.x(ih)+drfith);
                     startpar=coord(ih,:);
 %                     if iter==1 && calculatebg %if no bg is passed on, use the minimum as an estimate.
 %                         startpar(5)=min(roiim(:));
@@ -121,22 +133,29 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                     
                     EMexcess=obj.EMon;
 %                     EMexcess=1;
-                    [coordf,crlb(ih,:), LL(ih), iterations(ih)]=fitsingleMD(roiim,roiM,startpar,obj.splinePSF.modelpar,p.iterationsf,p.useSEfitter,EMexcess);
+                    [coordf,crlb(ih,:), LL(ih), iterations(ih)]=fitsingleMD(roiim,roiM,startpar,obj.splinePSF.modelpar,p.iterationsf,p.useSEfitter,EMexcess,dzstart);
                     coord(ih,:)=coordf;
                     bgh=coordf(5);
                     coordf(5)=0; %take out fitted bg
                     Mi(:,:,ih)=obj.splinePSF.PSF(coordf);
                     M(yrange,xrange)=M(yrange,xrange)+Mi(yrangepsf,xrangepsf,ih);
-                    dim=(roiM+Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih)-roiim+coord(ih,5)).^2./(roiM+Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih)+coord(ih,5));
+                    dim=(roiM+Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)-roiim+coord(ih,5)).^2./(roiM+Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+coord(ih,5));
                     chi2(k)=(mean(dim(:)));
 %                     disp([num2str(iter) '. ' num2str(coordf(1:2)-startpar(1:2),2) ' ,dN/N=' num2str((coordf(4)-startpar(4))/coordf(4)) ' ,dz=' num2str((coordf(3)-startpar(3)))])
+                    if obj.preview
+                        previewcollage(1:3*(2*drfith+1),1:2*(2*drfith+1),ih)=(vertcat(horzcat(roiim-Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih),roiM+bgh),horzcat(roiim,roiM+Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+bgh),horzcat(roiim-roiM,Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+bgh)));
+              
+                    end
+                    
                 end   
             end
             locout=coord2loc(coord,crlb,LL,iterations,pos,data{1}.frame,chi2);
 %             locout=copyfields(maxima,locout);
             locout=copyfields(locout,maxima,{'xcnn','ycnn','zcnn','prob','dx','dy','photcnn'});
             if obj.preview
-                figure(89);imagesc(vertcat(horzcat(roiim-Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih),roiM+bgh),horzcat(roiim,roiM+Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih)+bgh),horzcat(roiim-roiM,Mi(1+ddr:end-ddr,1+ddr:end-ddr,ih)+bgh)))
+                f=figure(89);
+                imx(previewcollage,'Parent',f)
+%                 figure(89);imagesc(vertcat(horzcat(roiim-Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih),roiM+bgh),horzcat(roiim,roiM+Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+bgh),horzcat(roiim-roiM,Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+bgh)))
                  figure(87);
                  subplot(2,2,2)
                  imagesc(M-image); colorbar
@@ -191,17 +210,34 @@ locout.frame=zeros(size(locout.xpix))+frame;
 locout.chi2=single(chi2);
 
 end
-function [coord,crlb, LogL, iterations]=fitsingleMD(roiim,roiM,startpar,spline,iterf,useSEfitter,EMexcess)
+function [coord,crlb, LogL, iterations]=fitsingleMD(roiim,roiM,startpar,spline,iterf,useSEfitter,EMexcess,dzstart)
 dr=round((size(roiim,1)-1)/2);
 %    cor(:,3)=-locs(:,3)/obj.modelpar.dz+obj.modelpar.z0;
 initp(3:4)=startpar(4:5)/EMexcess;
 initp(5)=-startpar(3)/spline.dz+spline.z0;
 initp(1:2)=startpar([2 1])+dr;
+LogLold=-inf;
+
 if useSEfitter
-    [P,CRLB,LogL]=mleFit_LM(roiim/EMexcess,5,50,spline.coeff);
+    [P,CRLB,LogL]=mleFit_LM(roiim/EMexcess,5,50,spline.coeff,[],[],dzstart);
 else
-    [P,CRLB,LogL]=mleFit_LM_HD_SE(roiim/EMexcess,iterf,spline.coeff,roiM/EMexcess,initp);
+    for k=1:length(dzstart)
+        initph=single(initp);
+        initph(3)=initph(3)+dzstart(k);
+
+        [P,CRLB,LogL]=mleFit_LM_HD_SE(roiim/EMexcess,iterf,spline.coeff,roiM/EMexcess,initph);
+
+        if LogL>LogLold
+            Pf=P;
+            CRLBf=CRLB;
+            LogLf=LogL;
+        end
+    end
+    P=Pf;
+    CRLB=CRLBf;
+    LogL=LogLf;
 end
+
 %   
  coord(4:5)=P(3:4)*EMexcess;
 coord(1:2)=P([2 1])-dr;
@@ -273,8 +309,22 @@ pard.useSEfitter.position=[5,1];
 pard.useSEfitter.Width=1;
 
 pard.estimateStartParameters.object=struct('Style','checkbox','String','estimate start par','Value',0);
-pard.estimateStartParameters.position=[5,2];
-pard.estimateStartParameters.Width=1;
+pard.estimateStartParameters.position=[6,1];
+pard.estimateStartParameters.Width=1.5;
+
+pard.zstartt.object=struct('Style','text','String','1st zstart');
+pard.zstartt.position=[6,2.5];
+pard.zstartt.Width=.5;
+pard.zstart.object=struct('Style','edit','String','-300 0 300');
+pard.zstart.position=[6,3];
+pard.zstart.Width=1;
+
+pard.roistartt.object=struct('Style','text','String','1st ROI');
+pard.roistartt.position=[6,4];
+pard.roistartt.Width=.5;
+pard.roistart.object=struct('Style','edit','String','7');
+pard.roistart.position=[6,4.5];
+pard.roistart.Width=.5;
 
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 
