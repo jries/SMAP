@@ -62,19 +62,40 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             drpsf=round((obj.splinePSF.roisize-1)/2);
             spsf=obj.splinePSF.roisize;
             ddr=drpsf-drfit;
-            maxima.z=-maxima.znm; %XXXXX 
+            calculatebg=true;
+%             bgestimate=min(image(:));
+            sizepixfit=(2*drfit+1)^2;
             
-
+            v0=0*maxima.x;
+            bgglobal=quantile(image(:),0.5);
+            sigma2=1^2; %estimated sigma of PSF squared
             pos.x=max(drfit+1,min(size(image,2)-drfit,round(maxima.x)));
             pos.y=max(drfit+1,min(size(image,1)-drfit,round(maxima.y)));
-            maximainit=maxima;
+            maximainit=maxima; %what are these needed for???
             maximainit.x=pos.x;
-            maximainit.y=pos.y;
+            maximainit.y=pos.y;  
+            if p.estimateStartParameters
+                maxima.z=v0;
+                maxima.bg=v0;
+                maxima.N=v0;
+                for k=1:length(maxima.x)
+                    roiim=image(pos.y(k)-drfit:pos.y(k)+drfit,pos.x(k)-drfit:pos.x(k)+drfit);
+%                     maxima.bg(k)=quantile(roiim(:),0.2);
+                    maxima.bg(k)=bgglobal;
+%                     maxima.N(k)=(sum(roiim(:))-maxima.bg(k)*sizepixfit);
+                    maxima.N(k)=(max(roiim(:))-maxima.bg(k)*sigma2*pi);
+                end
+
+            else %use this now for deepStorm
+                maxima.z=-maxima.znm; %XXXXX 
+                maxima.bg=bgglobal; %currently not calculated
+            end
             
-            v0=0*maxima.N;
-            coord=[maxima.x-pos.x,maxima.y-pos.y,maxima.z,maxima.N,v0];
+            coord=[maxima.x-pos.x,maxima.y-pos.y,maxima.z,maxima.N,maxima.bg]; %BG set to zero
+            % in iterations, previous bg used for starting value. BG always
+            % as offset of single molecule model.
             coord0=coord;
-            M=single(obj.splinePSF.render(maxima,[0 size(image,2)],[0 size(image,1)]));
+            M=single(obj.splinePSF.render(maxima,[0 size(image,2)],[0 size(image,1)])); %start image without background. 
 %             Mstart=M;
             Mi=single(obj.splinePSF.PSF(coord));      
             [~,inds]=sort(maxima.N,'descend');
@@ -94,6 +115,10 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                     M(yrange,xrange)=M(yrange,xrange)-Mi(yrangepsf,xrangepsf,ih);
                     roiM=M(pos.y(ih)-drfit:pos.y(ih)+drfit,pos.x(ih)-drfit:pos.x(ih)+drfit);
                     startpar=coord(ih,:);
+%                     if iter==1 && calculatebg %if no bg is passed on, use the minimum as an estimate.
+%                         startpar(5)=min(roiim(:));
+%                     end
+                    
                     EMexcess=obj.EMon;
 %                     EMexcess=1;
                     [coordf,crlb(ih,:), LL(ih), iterations(ih)]=fitsingleMD(roiim,roiM,startpar,obj.splinePSF.modelpar,p.iterationsf,p.useSEfitter,EMexcess);
@@ -120,8 +145,10 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                  hold off
                  imagesc(image);colorbar
                  hold on
+                 
                  plot(coord0(:,1)+pos.x,coord0(:,2)+pos.y,'mo');
                  plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+');%,maxima.x,maxima.y,'md')
+%                  plot(pos.x,pos.y,'ks');
                 gt=obj.getPar('loc_gt_preview');
                 if ~isempty(gt)
                     plot(gt.x,gt.y,'k+')
@@ -134,6 +161,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 figure(87)
                 subplot(2,2,4)
                 plot(coord(:,1)+pos.x,-LL/((2*drfit+1)^2),'k+',coord(:,1)+pos.x,chi2,'x')
+                
                 xlim([0,size(image,2)])
     %             pause(.5)
 
@@ -243,6 +271,10 @@ pard.iterationsf.Width=0.5;
 pard.useSEfitter.object=struct('Style','checkbox','String','use SE fitter','Value',0);
 pard.useSEfitter.position=[5,1];
 pard.useSEfitter.Width=1;
+
+pard.estimateStartParameters.object=struct('Style','checkbox','String','estimate start par','Value',0);
+pard.estimateStartParameters.position=[5,2];
+pard.estimateStartParameters.Width=1;
 
 pard.syncParameters={{'cal_3Dfile','cal_3Dfile',{'String'}}};
 
