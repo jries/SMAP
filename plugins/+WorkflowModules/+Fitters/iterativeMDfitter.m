@@ -267,6 +267,7 @@ if f
         msgbox('no 3D data recognized. Select other file.');
     end
     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
+    obj.setPar('cal_3Dfile',[p f]);
     
 end
 end
