@@ -198,6 +198,12 @@ classdef Workflow<interfaces.DialogProcessor
                 obj.description=loaded.description;
             end
             obj.fieldvisibility;
+            obj.connectModules;
+             for k=1:length(obj.modules)
+                 if isa(obj.modules{k}.module,'interfaces.WorkflowModule')
+                 obj.modules{k}.module.updateGui; %call after loading
+                 end
+             end
         end
         function save(obj,fn,descriptiononly)
             if nargin<2||isempty(fn)

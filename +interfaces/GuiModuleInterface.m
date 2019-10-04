@@ -139,6 +139,18 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             end
 %             end
         end
+        function switchvisibleall(obj)
+            h=obj.guihandles;
+            fn=fieldnames(h);
+            
+            for k=1:length(fn)
+                
+                if isfield(h,fn{k})&&isprop(h.(fn{k}),'Callback') && length(h.(fn{k}).Callback)>1 &&contains(func2str(h.(fn{k}).Callback{1}),'switchvisible')
+                    fnc=h.(fn{k}).Callback;
+                    fnc{1}(h.(fn{k}),0,fnc{2});
+                end
+            end
+        end
         function switchvisible(obj,control,data,p,callbackfnc)
             val=control.Value;
             for k=1:length(p)
