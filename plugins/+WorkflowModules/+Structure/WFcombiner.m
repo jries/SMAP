@@ -1,6 +1,5 @@
 classdef WFcombiner<interfaces.WorkflowModule
-%     This plugin cuts out regions of interest of a defined size around the
-%     candidate positions and passes these on to the fitter.
+%     This workflow module combines two 
     properties
         loc_ROIsize
         preview
