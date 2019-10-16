@@ -57,7 +57,7 @@ classdef imageloaderOME<interfaces.imageloaderSMAP
         if parselist  &&      ~isempty(sm) 
                 k=sm.keys;
                 ind=1;
-                allmd=[];
+                allmd={};
                 while (ismethod(k,'hasNext') && k.hasNext) || (ismethod(k,'hasMoreElements') && k.hasMoreElements) 
                     kh=k.nextElement;
                     if ~any(strncmp(exclude,kh,10))
@@ -67,7 +67,7 @@ classdef imageloaderOME<interfaces.imageloaderSMAP
                                 allmd(ind,1:2)={kh ,v};
                                 ind=ind+1;
                             end
-                        catch
+                        catch err
                         end
                      
                     end
@@ -84,7 +84,7 @@ classdef imageloaderOME<interfaces.imageloaderSMAP
         catch
         end
         f=getnumberofframes(allmd);
-        allmd(end+1,:)={'frames direct',num2str(f)};        
+        allmd(end+1,:)={'frames direct',(f)};        
         obj.allmetadatatags=allmd;
         end
         

@@ -1,8 +1,10 @@
 classdef ImageDecorrResolution<interfaces.DialogProcessor
-    %FRCresolution calculates FRC resolution
-    % "Descloux, A., K. S. Grußmayer, and A. Radenovic. "Parameter-free image 
-    % resolution estimation based on decorrelation analysis."
-    % Nature methods (2019): 1-7."
+% Calculates decorrelation based resolution. Careful! Returns mainly the
+% size of the Gaussian kernel. Not suitable to assess image resolution in
+% SMLM. According to "Descloux, A., K. S. Grußmayer, and A. Radenovic.
+% "Parameter-free image  resolution estimation based on decorrelation
+% analysis.", Nature methods (2019): 1-7."';
+
  
     methods
         function obj=ImageDecorrResolution(varargin)           
@@ -16,8 +18,10 @@ classdef ImageDecorrResolution<interfaces.DialogProcessor
             %binning: works only with layer1.
             out=[];
             if p.takeimage
+                image1=obj.getPar('sr_image');
+                image1=sum(image1.composite,3);
                  p.pixrec_frc=p.sr_pixrec;
-            end
+            else
             locs=obj.locData.getloc({'xnm','ynm'},'layer',1,'Position','roi');
             xedges=min(locs.xnm):p.pixrec_frc:max(locs.xnm);
             yedges=min(locs.ynm):p.pixrec_frc:max(locs.ynm);
@@ -26,6 +30,7 @@ classdef ImageDecorrResolution<interfaces.DialogProcessor
             if p.filtergauss
                 h=fspecial('gaussian',ceil(7*p.gausssigma),p.gausssigma);
                 image1=imfilter(image1,h);
+            end
             end
             imclipboard('copy',(image1/max(image1(:))));
 
@@ -85,27 +90,35 @@ end
 
 
 function pard=guidef
-pard.t0.object=struct('String','Image Decorr resolution, Layer 1. Uses ROI or FoV (if rendered image). ','Style','text');
+pard.t0.object=struct('String','Image Decorr resolution, Layer 1. Uses rendered image or ROI / FoV. ','Style','text');
 pard.t0.position=[1,1];
 pard.t0.Width=4;
 
-pard.takeimage.object=struct('String','use settings from rendered image','Style','checkbox','Value',0);
-pard.takeimage.position=[2,1];
+pard.t0b.object=struct('String','Careful! Returns mainly the size of the Gaussian kernel. ','Style','text');
+pard.t0b.position=[2,1];
+pard.t0b.Width=4;
+
+pard.t0c.object=struct('String','Not suitable to assess image resolution in SMLM. ','Style','text');
+pard.t0c.position=[3,1];
+pard.t0c.Width=4;
+
+pard.takeimage.object=struct('String','use rendered image','Style','checkbox','Value',0);
+pard.takeimage.position=[4,1];
 pard.takeimage.Width=2;
 pard.t1.object=struct('String','otherwise:','Style','text');
-pard.t1.position=[3,1];
+pard.t1.position=[4,3];
 pard.t2.object=struct('String','pixelsize (nm)','Style','text');
-pard.t2.position=[4,1];
+pard.t2.position=[5,1];
 
 pard.pixrec_frc.object=struct('String','3','Style','edit');
-pard.pixrec_frc.position=[4,2];
+pard.pixrec_frc.position=[5,2];
 % +
 pard.filtergauss.object=struct('String','filter with Gaussian','Style','checkbox','Value',0);
-pard.filtergauss.position=[5,1];
+pard.filtergauss.position=[6,1];
 pard.filtergauss.Width=2;
 pard.gausssigma.object=struct('String','1','Style','edit');
-pard.gausssigma.position=[5,3];
+pard.gausssigma.position=[6,3];
 
-pard.plugininfo.description='FRCresolution calculates FRC resolution "Descloux, A., K. S. Grußmayer, and A. Radenovic. "Parameter-free image  resolution estimation based on decorrelation analysis.", Nature methods (2019): 1-7."';
+pard.plugininfo.description='Calculates decorrelation based resolution. Careful! Returns mainly the size of the Gaussian kernel. Not suitable to assess image resolution in SMLM. According to "Descloux, A., K. S. Grußmayer, and A. Radenovic. "Parameter-free image  resolution estimation based on decorrelation analysis.", Nature methods (2019): 1-7."';
 pard.plugininfo.type='ProcessorPlugin';
 end
