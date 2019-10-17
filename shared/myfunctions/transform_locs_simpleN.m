@@ -28,7 +28,12 @@ else %all initial estimation:
     %mirror if neede
 %     sref=[inforef.xrange(2)-inforef.xrange(1) inforef.yrange(2)-inforef.yrange(1)];
 %     if any(isinf(sref))
-      separator=p.separator-p.parameters1.roi{1}(1);
+      if contains(p.Tmode,'up-down') %
+          splitdir=2;
+      else
+          splitdir=1;
+      end
+      separator=p.separator-p.parameters1.roi{1}(splitdir);
        sref= [separator separator];
 %     end
     for k=1:length(inforef.mirror)
