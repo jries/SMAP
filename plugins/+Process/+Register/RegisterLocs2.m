@@ -107,7 +107,7 @@ classdef RegisterLocs2<interfaces.DialogProcessor
             if isempty(obj.register_parameters)        
                 par.pixelsizenm=[500 50];
                 par.maxshift_corr=5000;
-                par.maxlocsused=500000;
+                par.maxlocsused=[500000 1e9];
                 par.maxshift_match=[1250 150];
                 par.initial_mag=1;
                 par.initialshiftx=0;
