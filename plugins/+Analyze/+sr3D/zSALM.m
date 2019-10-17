@@ -20,9 +20,11 @@ classdef zSALM<interfaces.DialogProcessor
                 'layer', find(obj.getPar('sr_layerson')),'position','roi');
             if ~isempty(locs.znm_a)
                 locs.znm=locs.znm_a;
+                
             else
                 obj.locData.setloc('znm_a',obj.locData.loc.znm);
                 obj.locData.setloc('locprecznm_a',obj.locData.loc.locprecznm);
+                obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
             end
             nfit=5e4;
             goodLL=locs.LLrel>-1.3;
@@ -31,7 +33,7 @@ classdef zSALM<interfaces.DialogProcessor
             indref=max(1,length(ind)-nfit);
             photref=photll(ind(indref));
 %             photref=0;
-            indbright=(locs.phot>photref)&goodLL;
+            indbright=(locs.phot>photref) & goodLL & (locs.(fsa)~=0); %take out r=0
             
             is=locs.(fsa)(indbright);
             iu=locs.(fua)(indbright);
@@ -67,14 +69,20 @@ classdef zSALM<interfaces.DialogProcessor
             
             fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare','Lower',[0 -inf 0]);
             
-            
+            p.limit=true;
+           
             ftsalm=fittype(@(b,x) intensitySALM(x-b,p),'independent','x','coefficients',{'b'});
             startpsalm=quantile(znm(indf),0.1);
 %             ftsalm=fittype(@(b,c,x) intensitySALM(x-b,p)*c,'independent','x','coefficients',{'b','c'});
 %             startpsalm=[quantile(znm(indf),0.1) 1];
             
-            
+%              fitSALMmodel(znm(indf),rsu(indf),p)
             fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
+            %only fit data above coverglass
+            zabove = znm>fitpsalm.b;
+            indf=indf&zabove;
+            fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
+            
             zglass=fitpsalm.b;
             
             plot(ax2,zrange,fitp(zrange),'m--')  
@@ -92,7 +100,7 @@ classdef zSALM<interfaces.DialogProcessor
             rall=isall./iuall/p.rfactor*intensitySALM(0);
             
              %exponential model
-            zr=-log((rall-fitp.c)/fitp.a)/fitp.b;
+%             zr=-log((rall-fitp.c)/fitp.a)/fitp.b;
            
             
             %SALM model
@@ -100,13 +108,16 @@ classdef zSALM<interfaces.DialogProcessor
             zinterp=(zglass-200:0.5:zrange(end)+500)';
             rinterp=fitpsalm(zinterp);
             interpsalm=fit(rinterp,zinterp,'cubicinterp');
+            
+            
             zr=interpsalm(rall);
-            zmax=zrange(end)+500;
+            zmax=zrange(end)+1500;
             zoutofrange=zr>zmax;
             zr(zoutofrange)=zmax; %avoid too large numbers
 
             obj.locData.loc.zSALM=zr;
-            
+            obj.locData.loc.locprecnm=obj.locData.loc.locprecnm_a;
+            obj.locData.loc.locprecnm(zoutofrange)=1000; %for grouping.
             %calculate error of zr
             %use CRLB as error for znm
             % weighted average
@@ -170,6 +181,17 @@ classdef zSALM<interfaces.DialogProcessor
             pard=guidef(obj);
         end
     end
+end
+
+function fitSALMmodel(z,r,p)
+zs=z/1000; %scaling to make r and z similar magnitude
+
+zr=(zs-r)/sqrt(2);
+rr=(r+zs)/sqrt(2);
+
+ ftsalm=fittype(@(b,x) (intensitySALM(x*1000-b,p)+x)/sqrt(2),'independent','x','coefficients',{'b'});
+            startpsalm=quantile(z,0.1);
+            fitpsalm=fit(zr,rr,ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
 end
 
 function pard=guidef(obj)
