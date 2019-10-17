@@ -67,7 +67,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             obj.setInputChannels(1,'frame');  
         end
         function prerun(obj,data1,data2,data3)
-            global EvaluateIntensity_intensity
+            global EvaluateIntensity_intensity timershow
             obj.extension=obj.getPar('intensity_channel');
             p=obj.getAllParameters;
             for k=1:size(p.evalmodules.Data,1)
@@ -94,9 +94,10 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                obj.fields={obj.fields{:} 'int_xpix', 'int_ypix', 'int_frame' ,'phot','bg'};
             obj.intensities=single(0);
             EvaluateIntensity_intensity=single(0);
+            timershow=tic;
         end
         function dato=run(obj,data,p) %
-            global EvaluateIntensity_intensity
+            global EvaluateIntensity_intensity timershow
             so=2;
             if ~isempty(data.data)
                 img=data.data.img;
@@ -134,7 +135,10 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                 obj.useevaluators=useevaluators;
                 obj.evaluators=evaluators;
                 obj.loccounter=loccounter;
-                obj.setPar('fittedLocs',loccounter);
+                if toc(timershow)>1
+                    obj.setPar('fittedLocs',loccounter);
+                    timershow=tic;
+                end
                 dato=[];
                 
             else
