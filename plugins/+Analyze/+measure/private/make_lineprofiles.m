@@ -56,9 +56,9 @@ for layer=1:length(p.sr_layerson)
         my=mean(pos(:,2));
     end
    
-    z=locs.znm;
-        locprecnm=locs.locprecnm;
-    locprecznm=locs.locprecznm;
+    z=double(locs.znm);
+        locprecnm=double(locs.locprecnm);
+    locprecznm=double(locs.locprecznm);
     if isempty(z)
         z=x*0;
         locprecznm=z;
@@ -218,15 +218,21 @@ fitprof=mygaussforfit(fitp,x);
 fittext=['sigma: ' 9 num2str(fitp(3),4)];
 
 function [fitp,fitprof,fittext]=fit2gauss(profile,x)
+%try with two Gaussian fits.
+fp1=fit(x',profile','gauss1','Lower',[0 -inf 0],'Robust','Bisquare');
+fp2=fit(x',profile'-(fp1(x)),'gauss1','Lower',[0 -inf 0],'Robust','Bisquare');
+
 ft=fittype('a1*exp(-((x-b1)/c1)^2) + a2*exp(-((x-b2)/c1)^2)+d');
-fp=fit(x',profile','gauss2','Lower',[0 -inf 0 0 -inf 0]);
-fitp=[fp.a1 fp.b1 fp.c1 fp.a2 fp.b2 fp.c2];
-fp=fit(x',profile',ft,'Lower',[0 0 -inf -inf 0 0],'StartPoint',[fitp(1:5) 0]);
+% fp=fit(x',profile','gauss2','Lower',[0 -inf 0 0 -inf 0]);
+% fitp=[fp.a1 fp.b1 fp.c1 fp.a2 fp.b2 fp.c2];
+startp=[fp1.a1 fp2.a1 fp1.b1 fp2.b1 fp2.c1 0];
+
+fp=fit(x',profile',ft,'Lower',[0 0 -inf -inf 0 0],'StartPoint',startp);
 % [~,s]=getFWHM(profile,x);
 % s=s/2.6*(x(2)-x(1));
 % [mp, ip]=max(profile);
 % startp=[mp x(ip) s 0];
 % fitp=mygaussfit(x,profile,startp);
-fitp=[fp.a1 fp.a2 fp.b1 fp.b2 fp.c1 fp.d ];
+fitp=[fp.a1 fp.a2 fp.b1 fp.b2-fp.b1 fp.c1 fp.d ];
 fitprof=fp(x);
 fittext=['Distance d: ' 9 num2str(abs(fp.b2-fp.b1),4)];
