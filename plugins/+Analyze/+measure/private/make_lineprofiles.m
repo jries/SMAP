@@ -219,8 +219,8 @@ fittext=['sigma: ' 9 num2str(fitp(3),4)];
 
 function [fitp,fitprof,fittext]=fit2gauss(profile,x)
 %try with two Gaussian fits.
-fp1=fit(x',profile','gauss1','Lower',[0 -inf 0],'Robust','Bisquare');
-fp2=fit(x',profile'-(fp1(x)),'gauss1','Lower',[0 -inf 0],'Robust','Bisquare');
+fp1=fit(x',profile','gauss1','Lower',[0 -inf 0]);
+fp2=fit(x',profile'-(fp1(x)),'gauss1','Lower',[0 -inf 0]);
 
 ft=fittype('a1*exp(-((x-b1)/c1)^2) + a2*exp(-((x-b2)/c1)^2)+d');
 % fp=fit(x',profile','gauss2','Lower',[0 -inf 0 0 -inf 0]);
