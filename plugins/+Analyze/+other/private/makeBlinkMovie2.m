@@ -57,8 +57,8 @@ pos2.x=pos.x(inch2);pos2.y=pos.y(inch2);pos2.s=pos.s(inch2);
 [srimfinal1,nlocs,G]=gaussrender(pos1,rangex, rangey, p.sr_pixrec, p.sr_pixrec);
 [srimfinal2,nlocs,G]=gaussrender(pos2,rangex, rangey, p.sr_pixrec, p.sr_pixrec);
 
-srimadd1=0*srimfinal1;
-srimadd2=0*srimfinal1;
+srimadd1=0*srimfinal1; %
+srimadd2=0*srimfinal1; %
 average=0;
 
 ssr=size(srimfinal1);
@@ -113,7 +113,7 @@ ind=find(loc.frame==frames(k));
 if ~isempty(ind)
   
 pos.x=loc.xnm(ind);pos.y=loc.ynm(ind);pos.s=max(loc.locprecnm*gaussfac,p.sr_pixrec);ch=loc.channel(ind);
-inch1=ch==1;
+inch1=ch==1 | ch==0;
 inch2=ch==2;
 pos1.x=pos.x(inch1);pos1.y=pos.y(inch1);pos1.s=pos.s(inch1);
 pos2.x=pos.x(inch2);pos2.y=pos.y(inch2);pos2.s=pos.s(inch2);
