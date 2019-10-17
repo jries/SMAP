@@ -34,7 +34,8 @@ else %all initial estimation:
           splitdir=1;
       end
       separator=p.separator-p.parameters1.roi{1}(splitdir);
-       sref= [separator separator];
+       sref= [separator separator]*2;
+       sref(splitdir)=sref(splitdir)/2;
 %     end
     for k=1:length(inforef.mirror)
         if inforef.mirror(k)>0
