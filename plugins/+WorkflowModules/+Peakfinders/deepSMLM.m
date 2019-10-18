@@ -3,9 +3,13 @@ classdef deepSMLM<interfaces.WorkflowModule
         deepobj
         mask
         imagebuffer
+        bufferinfo
         buffercounter
         Xgrid
         Ygrid
+        buffersize
+        preview
+        scaling
     end
     methods
         function obj=deepSMLM(varargin)
@@ -17,28 +21,39 @@ classdef deepSMLM<interfaces.WorkflowModule
         end
         function initGui(obj)
              initGui@interfaces.WorkflowModule(obj);
-            obj.setPar('loc_subtractbg',true) %hack to have 3 images in preview
-            obj.setPar('loc_blocksize_frames',3);
+%             obj.setPar('loc_subtractbg',true) %hack to have 3 images in preview
+%             obj.setPar('loc_blocksize_frames',3);
         end
         function prerun(obj,p)
             gitdir=fileparts(pwd);
             deeppath= [gitdir '/ries-private/InferenceSMLM/Inference_SMLM'];
             addpath([deeppath  '/src/matlab'])
-            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile);
+            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile,p.context_frames);
             
             obj.imagebuffer=[];
-            
-            
-
+            if obj.getPar('loc_preview')
+                obj.buffersize=1;
+            else
+                obj.buffersize=p.buffersize;
+            end
+            obj.preview=obj.getPar('loc_preview');
+            ind=strfind(p.modelfile,'_');
+            jsonfile=[p.modelfile(1:ind(end-2)) 'param.json'];
+            jsontxt=fileread(jsonfile);
+            param=jsondecode(jsontxt);
+            obj.scaling=param.Scaling;
         end
         function dato=run(obj,data,p)
             %
-            bufferfactor=1.2;
-            xfactor=.5*bufferfactor;
-            yfactor=.5*bufferfactor;
-            zfactor=750*bufferfactor;
-            photfactor=10000*bufferfactor;
+            timeblocks=p.context_frames; %3 frames analyzed together
+            dato=[];
+            bufferfactor=obj.scaling.linearisation_buffer;
+            xfactor=obj.scaling.dy_max*bufferfactor;
+            yfactor=obj.scaling.dx_max*bufferfactor;
+            zfactor=obj.scaling.z_max*bufferfactor;
+            photfactor=obj.scaling.phot_max*bufferfactor;
             image=data.data;%get;
+            image=single(image); %now we use directly camera frames
             if isempty(image)
                 dato=data;
                 dato.data=[];
@@ -47,64 +62,134 @@ classdef deepSMLM<interfaces.WorkflowModule
             
             
             if isempty(obj.imagebuffer)
-                obj.imagebuffer=zeros(1,3,size(image,1),size(image,2),'single');
+                obj.imagebuffer=zeros(obj.buffersize,size(image,1),size(image,2),'single');
+                obj.bufferinfo.frame=zeros(obj.buffersize,1,'double');
                 obj.buffercounter=0;
-                nx=1:size(image,1);ny=1:size(image,2);
+                nx=1:size(image,2);ny=1:size(image,1);
                 [obj.Xgrid,obj.Ygrid]=meshgrid(nx,ny);
                 obj.mask=obj.getPar('loc_roimask'); %run at first time
+                firstframe=true;
+            else
+                firstframe=false;
             end
             obj.buffercounter=obj.buffercounter+1;
-            bufferind=mod(obj.buffercounter-1,3)+1;
-            obj.imagebuffer(1,bufferind,:,:)=image;
-            if obj.buffercounter<3 %we need to wait for 3 images
-                dato=[];
-                return
+            obj.imagebuffer(obj.buffercounter,:,:)=image;
+            obj.bufferinfo.frame(obj.buffercounter)=data.frame;
+            
+            lastframe=false;
+            if obj.buffercounter<obj.buffersize %we need to wait for buffersize images. check if eof, then process the rest.
+                if ~data.eof
+                    return
+                else
+                    lastframe=true;
+                end
             end
             
-            indsort=[bufferind:3 1:bufferind-1];indsort=indsort([2 3 1]);
-            fitimage=obj.imagebuffer(1,indsort,:,:);
-%             fitimage=permute(fitimage,[1 2 4 3]);
-            [xf, x_shape] = pseudo_col2row_major(fitimage);
+            %first block: only remove last frame in block
+            %last block: only remove first frame in block
+            %otherwise remove first and last
+            %always create overlap of two frames
+            
+
+            imbufferadu=obj.imagebuffer; %already in ADU
+            [xf, x_shape] = pseudo_col2row_major(imbufferadu);
             
             [outf, out_size] = obj.deepobj.forward(xf, x_shape);
             deepim = pseudo_row2_col_major(outf, out_size);
+             deepim(:,6,:,:)=imbufferadu;
 %             deepim=permute(deepim,[1 2 4 3]);
-            probmap=squeeze(deepim(1,1,:,:));
-            if all(size(obj.mask)==size(image)) %apply mask
-                probmap=probmap.*obj.mask;
+            if timeblocks ==1 
+                if lastframe
+                    frange=1:obj.buffercounter;
+                else 
+                    frange=1:obj.buffersize;
+                end
+            else %later extend to any number
+                if obj.buffersize==1
+                    frange=1;
+                elseif firstframe
+                    frange=1:obj.buffersize-1;
+                elseif lastframe
+                    frange=2:obj.buffercounter;
+                else
+                    frange=2:obj.buffersize-1;
+                end
             end
-            maxima=maximumfindcall((probmap)); 
-            cutoff=p.pcutoff;
-            maxind= (maxima(:,3)>cutoff);
-            y=maxima(maxind,1);
-            x=maxima(maxind,2);
-            linind=sub2ind(size(image),x,y);
-            Ymap=squeeze(deepim(1,3,:,:))*yfactor+obj.Ygrid;
-            Xmap=squeeze(deepim(1,4,:,:))*xfactor+obj.Xgrid;
-            photmap=squeeze(deepim(1,2,:,:));
-            Zmap=squeeze(deepim(1,5,:,:));
-            
-            
-            xfit=Xmap(linind);
-            yfit=Ymap(linind);
-            intensity=photmap(linind)*photfactor;
-            zfit=Zmap(linind)*zfactor;
-            pfit=probmap(linind);
-            
-            %export for SMAP
-            v1=0*xfit+1;
-            locs.frame=v1*data.frame;
-            locs.xpix=xfit;
-            locs.ypix=yfit;
-            locs.znm=zfit;
-            locs.phot=intensity;
-            locs.prob=pfit;
-            locs.PSFxpix=v1;
-            locs.bg=median(image(:))*v1;
-            locs.xpixerr=sqrt((locs.PSFxpix.*locs.PSFxpix+1/12*v1)./( locs.phot)+8*pi*(locs.PSFxpix.*locs.PSFxpix).^2.* locs.bg./( locs.phot).^2);
-            locs.ypixerr=locs.xpixerr;
-            dato=data;         
-            dato.data=locs; 
+                
+            for k=frange %process each frame individually
+                probmap=squeeze(deepim(k,1,:,:));
+                if all(size(obj.mask)==size(image)) %apply mask
+                    probmap=probmap.*obj.mask;
+                end
+                maxima=maximumfindcall((probmap)); 
+                cutoff=p.pcutoff;
+                maxind= (maxima(:,3)>cutoff);
+                y=maxima(maxind,1);
+                x=maxima(maxind,2);
+                linind=sub2ind(size(image),x,y);
+                Ymap=squeeze(deepim(k,3,:,:))*yfactor+obj.Ygrid;
+                Xmap=squeeze(deepim(k,4,:,:))*xfactor+obj.Xgrid;
+                photmap=squeeze(deepim(k,2,:,:));
+                Zmap=squeeze(deepim(k,5,:,:));
+                dxmap=squeeze(deepim(k,4,:,:))*yfactor;
+                dymap=squeeze(deepim(k,3,:,:))*yfactor;
+
+                xfit=Xmap(linind);
+                yfit=Ymap(linind);
+                intensity=photmap(linind)*photfactor;
+                zfit=Zmap(linind)*zfactor;
+                pfit=probmap(linind);
+                dx=dxmap(linind);
+                dy=dymap(linind);
+
+                %export for SMAP
+                v1=0*xfit+1;
+                locs.frame=v1*obj.bufferinfo.frame(k);
+                locs.xcnn=xfit;
+                locs.ycnn=yfit;
+                locs.zcnn=zfit;
+                locs.photcnn=intensity;
+                locs.prob=pfit;
+%                 locs.PSFxpix=v1;
+%                 locs.bg=0*v1; %now set to zero, later determine from CNN or from photon converted image
+%                 locs.xpixerr=sqrt((locs.PSFxpix.*locs.PSFxpix+1/12*v1)./( locs.phot)+8*pi*(locs.PSFxpix.*locs.PSFxpix).^2.* locs.bg./( locs.phot).^2);
+%                 locs.ypixerr=locs.xpixerr;
+                locs.dx=dx;
+                locs.dy=dy;
+                
+                %to be used as a peak finder:
+                locs.x=xfit;
+                locs.y=yfit;
+                locs.N=intensity;
+                locs.znm=zfit;
+                
+                dato=data; 
+                dato.frame=obj.bufferinfo.frame(k);
+                dato.ID=dato.frame;
+                dato.data=locs; 
+                obj.output(dato);
+            end
+            if obj.buffersize>1 && timeblocks>1
+            obj.imagebuffer(1:2,:,:)=obj.imagebuffer(obj.buffersize-1:end,:,:);
+            obj.bufferinfo.frame(1:2)=obj.bufferinfo.frame(obj.buffersize-1:end,:,:);
+            end
+%             if obj.preview
+%                 outputfig=obj.getPar('loc_outputfig');
+%                 if ~isvalid(outputfig)
+%                     outputfig=figure(209);
+%                     obj.setPar('loc_outputfig',outputfig);
+%                 end
+%                 outputfig.Visible='on';
+%                 figure(outputfig)
+%                 hold off
+%                 imagesc(image);
+%                 colormap jet
+%                 colorbar;
+%                 axis equal
+%                 hold on
+%                 plot(xfit,yfit,'yo')
+%             end
+            obj.buffercounter=timeblocks-1; %before timeblocks: did we lose frames? XXXX
         end
     end
 end
@@ -139,6 +224,21 @@ pard.pcutoff.object=struct('Style','edit','String','0.3');
 pard.pcutoff.position=[3,2];
 pard.pcutoff.Width=.35;
 
+pard.buffersizet.object=struct('Style','text','String','buffer (frames)');
+pard.buffersizet.position=[4,1];
+pard.buffersizet.Width=1;
+pard.buffersize.object=struct('Style','edit','String','100');
+pard.buffersize.position=[4,2];
+pard.buffersize.Width=.35;
+
+pard.context_framest.object=struct('Style','text','String','Channels');
+pard.context_framest.position=[5,1];
+pard.context_framest.Width=1;
+pard.context_frames.object=struct('Style','edit','String','3');
+pard.context_frames.position=[5,2];
+pard.context_frames.Width=.35;
+pard.context_frames.TooltipString='Number of frames ananlyzed simultaneously';
+pard.context_framest.TooltipString=pard.context_frames.TooltipString;
 
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='';

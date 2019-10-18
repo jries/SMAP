@@ -1,4 +1,7 @@
 function [srim,nlocs,Gc]=gaussrenderT_ellipt(pos,rangex, rangey, pixelsx, pixelsy, lut,rangec,transparency)
+%  Renders each localization as an elliptical Gaussian. Gaussian kernels
+% are not transparent but opaque and partially block localizations behind
+% for a better 3D effect. 
 %pos.x, pos.y, pos.c, pos.N,pos.sx pos.sy
 %global variables
 if isempty(pos.x)

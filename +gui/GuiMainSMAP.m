@@ -15,23 +15,47 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 set(0,'DefaultUIControlFontSize',12);
             end
             SMAP_stopnow=false;
-            addpath('shared');
-            addpath(pwd);
-            if ~exist(['settings' filesep 'temp'],'dir')
-                mkdir(['settings' filesep 'temp'])
-            end
-            obj.setPar('maindirectory',pwd);
             
-             %global settings
+            obj.setPar('maindirectory',pwd);
+             %settings directory 
+             settingsdir='settings';
+             if ~exist(settingsdir,'dir')
+                 settingsdir=[pwd filesep 'MATLAB' filesep 'settings'];
+                 if ~exist(settingsdir,'dir')
+                     settingsdir=[pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'];
+                     if ~exist(settingsdir,'dir')
+                 
+                         hwd=warndlg('please select the directory /settings/ with the SMAP settings','select settings','modal');
+                         waitfor(hwd);
+                         d=uigetdir(pwd,'select settings directory');
+                         if d
+                             settingsdir=d;
+
+                         end
+                     end
+                 end
+                 obj.setPar('maindirectory',fileparts(settingsdir));
+             end
+%              obj.setPar('maindirectory',pwd);
+            obj.setPar('SettingsDirectory',makerelativetopwr(settingsdir));
             initglobalsettings(obj);
+            if ~isdeployed
+                addpath('shared');
+                addpath(pwd);
+                if ~exist([settingsdir filesep 'temp'],'dir')
+                    mkdir([settingsdir filesep 'temp'])
+                end
+                addpath('fit3dcspline')
+            else
+                disp(pwd)
+            end
+        
             
             makeplugincallfile('plugins');
             
             %add java path
-%             try
-%                 bfpath='/Users/ries/Downloads/bfmatlab/';
                 bfpath=obj.getGlobalSetting('bioformatspath');
-            if exist(bfpath,'dir')
+            if exist(bfpath,'dir') && ~isdeployed
                 addpath(bfpath)
                 try
                     bfCheckJavaPath;
@@ -39,17 +63,13 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                     disp('bioformats not found')
                 end
             else
-%             catch err %no bioformats found
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
                 disp('you can download the Matalb toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
             end
            
             
             handle=figure(199);
-%             clf(handle,'reset')
              delete(handle.Children)
-%              
-
             obj.setPar('mainGuihandle',handle);
             obj.setPar('mainGui',obj);
             obj.setPar('synchronizeguistate',true);
@@ -71,28 +91,26 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             set(handle,'Position',[vpossmap hpos obj.guiPar.width height]);            
             set(handle,'ButtonDownFcn',{@figure_selected,obj},...
                 'SizeChangedFcn',{@sizechanged_callback,obj},'NumberTitle','off')
-drawnow
-%             set(handle, 'Name','SMAP');
+            drawnow
+
             tabpos=[2 32 obj.guiPar.width-2 368];
 
    
             
             gfile=obj.getGlobalSetting('guiPluginConfigFile');
-            gfile=findsettingsfile(gfile);
+            if ~exist(gfile,'file')
+                gfile=strrep(gfile,'settings', settingsdir);
+            end
+                
+%             gfile=findsettingsfile(gfile);
             
             if exist(gfile,'file')
                 guimodules=readstruct(gfile,[],true);
-
             else
                 guimodules=pmenu;
-%                 guimodules.globalGuiState='a';
             end
             guimodulespure=myrmfield(guimodules,{'GuiParameters','globalGuiState'});
             obj.setPar('guimodules',guimodulespure);
-            
-            
-           
-            
             
             h.maintab = uitabgroup(handle,'Units','pixels','Position',tabpos);
             if ispc
@@ -138,9 +156,6 @@ drawnow
 
             obj.status('init plugins')
            
-%             obj.locData.guiData.siteexplorer=gsites;
-            
-            
             %file
             h.filepanel=uipanel(h.tab_file,'Units','pixel','Position',obj.guiPar.tabsize1);
             obj.status('init GuiFile')

@@ -20,8 +20,8 @@ classdef CME2DfittingUpdate<interfaces.SEEvaluationProcessor
                 refyRoi = roisize/2-p.setMargin;
                 refxRoi = 0;
 
-                refxSite = obj.site.evaluation.CME2Dfitting.fitting(2)-500/2;
-                refySite = obj.site.evaluation.CME2Dfitting.fitting(1)-500/2;
+                refxSite = obj.site.evaluation.CME2Dfitting2.parameters(1)-500/2;
+                refySite = obj.site.evaluation.CME2Dfitting2.parameters(2)-500/2;
                 syRoiRot = refxSite-refyRoi;
                 sxRoiRot = refySite-refxRoi;
                 [sxRoi, syRoi] = rotcoord(sxRoiRot, syRoiRot, (-(obj.site.annotation.rotationpos.angle)/180)*pi);
@@ -29,7 +29,7 @@ classdef CME2DfittingUpdate<interfaces.SEEvaluationProcessor
 
                 % update angle
                 siteRotPos = obj.site.annotation.rotationpos.pos;
-                [obj.site.annotation.rotationpos.pos(:,1),obj.site.annotation.rotationpos.pos(:,2)] = rotcoord(siteRotPos(:,1), siteRotPos(:,2), obj.site.evaluation.CME2Dfitting.fitting(6)*pi/180);
+                [obj.site.annotation.rotationpos.pos(:,1),obj.site.annotation.rotationpos.pos(:,2)] = rotcoord(siteRotPos(:,1), siteRotPos(:,2), obj.site.evaluation.CME2Dfitting2.parameters(6)*pi/180);
                 out.modified = 1;
              else
                 disp('This site had been modified by CME2DfittingUpdate already.')

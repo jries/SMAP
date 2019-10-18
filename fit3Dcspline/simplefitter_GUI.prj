@@ -1,0 +1,123 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration build-checksum="2359016182" file="C:\Users\ries\git\fit3Dcspline\simplefitter_GUI.prj" location="C:\Users\ries\git\fit3Dcspline" name="simplefitter_GUI" preferred-package-location="C:\Users\ries\git\fit3Dcspline\simplefitter_GUI\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>simplefitter_GUI</param.appname>
+    <param.icon />
+    <param.icons />
+    <param.version>1.0</param.version>
+    <param.authnamewatermark>Jonas Ries</param.authnamewatermark>
+    <param.email>ries@embl.de</param.email>
+    <param.company />
+    <param.summary />
+    <param.description />
+    <param.screenshot>${PROJECT_ROOT}\shared\psf.png</param.screenshot>
+    <param.guid />
+    <param.installpath.string>\simplefitter_GUI\</param.installpath.string>
+    <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
+    <param.logo />
+    <param.install.notes>In the following directions, replace MR by the directory where MATLAB or the MATLAB Runtime is installed on the target machine.
+
+If the environment variable DYLD_LIBRARY_PATH is undefined, set it to the following string:
+
+MR/v93/runtime/maci64:MR/v93/sys/os/maci64:MR/v93/bin/maci64
+
+If it is defined, set it to the following:
+
+${DYLD_LIBRARY_PATH}:MR/v93/runtime/maci64:MR/v93/sys/os/maci64:MR/v93/bin/maci64</param.install.notes>
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}\simplefitter_GUI\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\simplefitter_GUI\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\simplefitter_GUI\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\simplefitter_GUI</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>true</param.create.log>
+    <param.log.file>log.txt</param.log.file>
+    <unset>
+      <param.icon />
+      <param.icons />
+      <param.version />
+      <param.company />
+      <param.summary />
+      <param.description />
+      <param.guid />
+      <param.installpath.string />
+      <param.installpath.combo />
+      <param.logo />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.web.mcr.name />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\simplefitter_GUI.m</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>${PROJECT_ROOT}\ImageJ</file>
+    </fileset.resources>
+    <fileset.package />
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\bfmatlab\bfCheckJavaMemory.m</file>
+      <file>${PROJECT_ROOT}\bfmatlab\bfCheckJavaPath.m</file>
+      <file>${PROJECT_ROOT}\bfmatlab\bfGetPlane.m</file>
+      <file>${PROJECT_ROOT}\bfmatlab\bfGetReader.m</file>
+      <file>${PROJECT_ROOT}\bfmatlab\private\is_octave.m</file>
+      <file>${PROJECT_ROOT}\private\contains.m</file>
+      <file>${PROJECT_ROOT}\shared\CPUmleFit_LM.mexw64</file>
+      <file>${PROJECT_ROOT}\shared\getRoiTif.m</file>
+      <file>${PROJECT_ROOT}\shared\GPUmleFit_LM.mexw64</file>
+      <file>${PROJECT_ROOT}\shared\maximumfind.mexw64</file>
+      <file>${PROJECT_ROOT}\shared\maximumfindcall.m</file>
+      <file>${PROJECT_ROOT}\shared\mleFit_LM.m</file>
+      <file>${PROJECT_ROOT}\shared\myMiji.m</file>
+      <file>${PROJECT_ROOT}\shared\mytiffreader.m</file>
+      <file>${PROJECT_ROOT}\shared\strfindfast.m</file>
+      <file>${PROJECT_ROOT}\simplefitter_cspline.m</file>
+    </fileset.depfun>
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\simplefitter_GUI\for_testing" name="simplefitter_GUI.exe" optional="false">C:\Users\ries\git\fit3Dcspline\simplefitter_GUI\for_testing\simplefitter_GUI.exe</file>
+      <file location="${PROJECT_ROOT}\simplefitter_GUI\for_testing" name="splash.png" optional="false">C:\Users\ries\git\fit3Dcspline\simplefitter_GUI\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\simplefitter_GUI\for_testing" name="readme.txt" optional="true">C:\Users\ries\git\fit3Dcspline\simplefitter_GUI\for_testing\readme.txt</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2017a</root>
+      <toolboxes />
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>6.1</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

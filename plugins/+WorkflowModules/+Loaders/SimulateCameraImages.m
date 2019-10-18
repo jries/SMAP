@@ -42,7 +42,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
                   data=interfaces.WorkflowData;
                   data.frame=allframes(k);
                   data.ID=k;
-                  [img,simulpar]=simulatecamera(obj.locs,p,allframes(k),obj.PSF);
+                  [img,simulpar]=simulatecamera(obj.locs,p,allframes(k),obj.PSF); %obj.PSF not working
                   data.data=img;
                   if p.savetiffs &&~obj.getPar('loc_preview')
                       if isempty(allimgs)
@@ -70,7 +70,8 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
               end
               locgt.bg=locgt.bg+p.background;
               if ~obj.getPar('loc_preview')
-                simulationerror(locgt,locfit,obj.PSF)
+                  figure
+                simulationerror(locgt,locfit,2)
               end
               
               if p.savetiffs && ~obj.getPar('loc_preview')
@@ -118,7 +119,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
            %get PSF
            switch p.psfmodel.selection
                case {'Symm Gauss','Astig Gauss' }
-                   
+                   psf=GaussPSF
                case {'Spline'}
                    f=p.cal_3Dfile;
                    if isempty(f)
@@ -193,6 +194,7 @@ function [locs,p]=storelocs(obj,p)
           locs=l.saveloc.loc;
       case 3
             locs=obj.simulator.locData.loc;
+            obj.simulator.locData.clear;
   end
   
   if isfield(locs,'xnm_gt') && ~isempty(locs.xnm_gt)
@@ -233,13 +235,14 @@ filestruct=initfile('');
 filestruct.info=interfaces.metadataSMAP;
 filestruct.info.numberOfFrames=max(obj.locs.frame);
 obj.setPar('loc_fileinfo',filestruct.info);
-
+obj.setPar('status','localizations transferred');
 end
 
 function simulation_callback(a,b,obj)
 if a.Value==3 %make with simulation plugin
     if isempty(obj.simulator) 
         obj.simulator=ROIManager.Segment.SimulateSites;
+%         obj.simulator.attchLocData(obj.locData);
         obj.simulator.attachPar(obj.P);
         obj.simulator.locData.attachPar(obj.P);
     end

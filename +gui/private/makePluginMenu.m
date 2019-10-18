@@ -240,5 +240,6 @@ h.refresh;
 end
 
 function helpnpc_callback(a,b,obj)
-open('Documentation/Manual/SMAP_manual_NPC.pdf');
+myopenpdf('Documentation/Manual/SMAP_manual_NPC.pdf');
+
 end

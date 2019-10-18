@@ -1,4 +1,5 @@
 classdef RemoveDoubleSites<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Removes ROIs that are too close together
     methods
         function obj=RemoveDoubleSites(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -44,6 +45,7 @@ pard.mind.Width=0.5;
 
 
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Removes ROIs that are too close together';
 
 
 end

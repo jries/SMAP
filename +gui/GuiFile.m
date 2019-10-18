@@ -127,7 +127,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %                 else
 %                     obj.locData.empty;
 %                 endgl
-                
+                obj.setPar('ROIrestore',[]);
                 for k=1:length(f)
                     [~,~,ext]=fileparts(f{k});
                     if ~isempty(strfind(f{k},'_sml'))||~isempty(strfind(f{k},'.csv'))
@@ -155,6 +155,13 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
 
                 initGuiAfterLoad(obj)
                 autosavecheck_callback(0,0,obj)
+                
+                roirestore=obj.getPar('ROIrestore');
+                if ~isempty(roirestore) && roirestore.restoreROI
+                    gsmap=obj.getPar('mainGui');
+                    gsmap.children.guiRender.children.guiFormat.roiset(struct('isvalid',1,'roimode',roirestore.roimode,'position',roirestore.roiposition));
+                end
+%                      
             end 
         end
         
@@ -271,6 +278,7 @@ end
 end
 
 function autosave_timer(a,b,obj)
+% saves localization data and SMAP settings in user-defined invervals
 p.mainGui=obj.getPar('mainGui');
 p.saveroi=false;
 if obj.guihandles.autosavecheck.Value
@@ -281,6 +289,7 @@ end
 end
 
 function autosavetime_callback(a,b,obj)
+% saves localization data and SMAP settings in user-defined invervals
 p=obj.getGuiParameters;
 t=obj.autosavetimer;
 if ~isempty(t)||isa(t,'timer')

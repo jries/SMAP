@@ -1,4 +1,10 @@
 classdef correct3Daberrations<interfaces.DialogProcessor
+%     apply correction calibrated with calibrate3Daberrations to a data
+%     set. Li, Yiming, Yu-Le Wu, Philipp Hoess, Markus Mund, and Jonas
+%     Ries. “Depth-Dependent PSF Calibration and Aberration Correction for
+%     3D Single-Molecule Localization.” Biomedical Optics Express 10, no. 6
+%     (June 1, 2019): 2708–18. https://doi.org/10.1364/BOE.10.002684.
+
     properties
         SXY
     end
@@ -90,6 +96,6 @@ pard.loadbutton.Width=1;
 
 pard.inputParameters={'cam_pixelsize_nm'};
 pard.plugininfo.type='ProcessorPlugin';
-
+pard.plugininfo.description='apply correction calibrated with calibrate3Daberrations to a data set. From: Li, Yiming, Yu-Le Wu, Philipp Hoess, Markus Mund, and Jonas Ries. “Depth-Dependent PSF Calibration and Aberration Correction for 3D Single-Molecule Localization.” Biomedical Optics Express 10, no. 6 (June 1, 2019): 2708–18. https://doi.org/10.1364/BOE.10.002684.';
 
 end

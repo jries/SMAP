@@ -149,6 +149,7 @@ classdef LocTransformN0<handle
                 end
     %             co(1,:)=ci(1,:)*cf(1);
     %             co(2,:)=ci(2,:)*cf(end);
+                co=ci;
                 co(:,1)=ci(:,1)*cf(1);
                 co(:,2)=ci(:,2)*cf(end);
             end

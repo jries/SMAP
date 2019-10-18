@@ -1,4 +1,5 @@
 function im=tif2srimage(file,p,form)
+% Displays Tiff images together with localizations
 if nargin<3
     form='tif';
 end

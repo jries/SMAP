@@ -80,15 +80,23 @@ classdef WorkflowInterface<handle
                 end
             else
                 syncmode=inputinfo.syncmode;
-                tag=data.(syncmode);
-                 inputData=obj.inputData;
-                inputData.add(data,tag,inputchannel);
-                indc=inputData.iscomplete;
-                for k=1:length(indc) 
-                    dat=inputData.get(indc(k));
-                    output=obj.run(dat,p); 
+                if strcmp(syncmode,'none')
+                     output=obj.run(data,p); %simple: only one package, no sync needed
                     if ~isempty(output)
                         obj.output(output);
+                    end
+                else
+                    tag=data.(syncmode);
+                
+                    inputData=obj.inputData;
+                    inputData.add(data,tag,inputchannel);
+                    indc=inputData.iscomplete;
+                    for k=1:length(indc) 
+                        dat=inputData.get(indc(k));
+                        output=obj.run(dat,p); 
+                        if ~isempty(output)
+                            obj.output(output);
+                        end
                     end
                 end
 

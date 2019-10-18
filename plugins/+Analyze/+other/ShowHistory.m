@@ -1,4 +1,6 @@
 classdef ShowHistory<interfaces.DialogProcessor
+%     Displays parameters of all plugins which were used previously to
+%     procss localization data
     methods
         function obj=ShowHistory(varargin)    
             obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -53,4 +55,5 @@ end
 function pard=guidef
 pard.plugininfo.name='Show History';
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Displays parameters of all plugins which were used previously to procss localization data';
 end

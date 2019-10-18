@@ -1,4 +1,11 @@
 classdef CompareToGroundTruthChallenge<interfaces.DialogProcessor
+%     Compares fitted localization data to the ground truth for the SMLM
+%     challange data, using the SMLM challenge java tool. From: Sage,
+%     Daniel, Thanh-An Pham, Hazen Babcock, Tomas Lukes, Thomas Pengo,
+%     Jerry Chao, Ramraj Velmurugan, et al. “Super-Resolution Fight Club:
+%     Assessment of 2D and 3D Single-Molecule Localization Microscopy
+%     Software.” Nature Methods, April 8, 2019.
+%     https://doi.org/10.1038/s41592-019-0364-4
     properties
         induse
     end
@@ -36,18 +43,43 @@ classdef CompareToGroundTruthChallenge<interfaces.DialogProcessor
             if p.shiftframe
                 lochere.loc.frame=lochere.loc.frame+1;
             end
-            lochere.loc.xnm=lochere.loc.xnm+shiftx;
-            lochere.loc.ynm=lochere.loc.ynm+shifty;
+            
+            %check if fields are set 
+            if p.overwritefields
+                xfield=p.xfield.selection;
+                yfield=p.yfield.selection;
+                zfield=p.zfield.selection;
+                Nfield=p.Nfield.selection;
+            else
+                xfield='xnm';
+                yfield='ynm';
+                zfield='znm';
+                Nfield='phot';            
+            end
+            if length(p.photonfactor)<2
+                factors=[p.photonfactor(1) 1 1 1];
+            elseif length(p.photonfactor)<4
+                factors=[p.photonfactor(1) p.photonfactor(2) p.photonfactor(2) 1];
+            else
+                factors=p.photonfactor;
+            end
+            lochere.loc.xnm=(lochere.loc.(xfield)+shiftx)*factors(2);
+            lochere.loc.ynm=(lochere.loc.(yfield)+shifty)*factors(3);
             lochere.loc.xnm=lochere.loc.xnm+p.offsetxyz(1);
             lochere.loc.ynm=lochere.loc.ynm+p.offsetxyz(2);
-            if isfield(lochere.loc,'znm')
-            lochere.loc.znm=lochere.loc.znm+p.offsetxyz(3);
+            if isfield(lochere.loc,zfield)
+                if p.invertz
+                    signz=-1*factors(4);
+                else
+                    signz=1*factors(4);
+                end
+                lochere.loc.znm=signz*lochere.loc.(zfield)+p.offsetxyz(3);
             end
-             lochere.loc.phot=lochere.loc.phot*p.photonfactor;
+            lochere.loc.phot=lochere.loc.(Nfield)*p.photonfactor;
             [descfile]=saveLocalizationsCSV(lochere,filenew,p.onlyfiltered,p.numberOfLayers,p.sr_layerson,obj.induse);
             
             %modify challenge data
-            challengepath=['External' filesep 'SMLMChallenge' filesep];
+            challengepath=['shared' filesep 'externaltools' filesep 'SMLMChallenge' filesep];
             switch p.comparer.Value
                 case 1
                     javapath=['"' pwd filesep challengepath 'challenge.jar"'];
@@ -60,17 +92,21 @@ classdef CompareToGroundTruthChallenge<interfaces.DialogProcessor
             replacements={'firstRow1','0','shiftY1','0','txtFile1',strrep(filenew,'\','/'),'colY1','3','colX1','2','colZ1','4','shiftX1','0','colF1','1','colI1','5','shiftUnit1','nm','txtDesc1',strrep(descfile,'\','/')};
             modifySettingsFile(settingsfile,replacements{:});
             oldp=pwd;
-            cd(challengepath);
-            disp('to contintue with Matlab, close SMLMChallenge application');
-            if ispc
-                system(javapath)
+            if ~isdeployed
+                cd(challengepath);
+                disp('to contintue with Matlab, close SMLMChallenge application');
+                if ispc
+                    system(javapath)
+                else
+                    system(['java -jar ' javapath]) 
+                end
+                %later fix jave program and call via
+                %smlm.assessment.application.Application
+                %after adding javaclasspath(javapath)
+                cd(oldp)
             else
-            system(['java -jar ' javapath]) 
+                disp('not implemented in compiled version');
             end
-            %later fix jave program and call via
-            %smlm.assessment.application.Application
-            %after adding javaclasspath(javapath)
-            cd(oldp)
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -153,20 +189,26 @@ pard.onlyfiltered.object=struct('Style','checkbox','String','Export filtered (di
 pard.onlyfiltered.position=[2,1];
 pard.onlyfiltered.Width=2;
 
-pard.forceungrouped.object=struct('Style','checkbox','String','Force ungrouped localiyations','Value',1);
+pard.forceungrouped.object=struct('Style','checkbox','String','Force ungrouped localiyations','Value',0);
 pard.forceungrouped.position=[3,3];
 pard.forceungrouped.Width=2;
 
-pard.shiftpix.object=struct('Style','checkbox','String','Shift by 0.5 camera pixels','Value',1);
+pard.shiftpix.object=struct('Style','checkbox','String','Shift by 0.5 camera pixels','Value',0);
 pard.shiftpix.position=[3,1];
 pard.shiftpix.Width=2;
 
 
 
 
-pard.shiftframe.object=struct('Style','checkbox','String','Shift frame by +1','Value',1);
+pard.shiftframe.object=struct('Style','checkbox','String','Shift frame by +1','Value',0);
 pard.shiftframe.position=[4,1];
-pard.shiftframe.Width=4;
+pard.shiftframe.Width=2;
+
+pard.invertz.object=struct('Style','checkbox','String','Invert z');
+pard.invertz.position=[4,3];
+pard.invertz.Width=1;
+
+
 
 pard.comparer.object=struct('Style','popupmenu','String',{{'2D, 2013','3D, 2016'}},'Value',2);
 pard.comparer.position=[5,1];
@@ -184,12 +226,32 @@ pard.offsetxyz.object=struct('Style','edit','String','0 0 0');
 pard.offsetxyz.position=[6,2];
 pard.offsetxyz.Width=1;
 
-pard.photonfactort.object=struct('Style','text','String','factor for photon count');
-pard.photonfactort.position=[7,1];
-pard.photonfactort.Width=1;
+pard.photonfactort.object=struct('Style','text','String','factor (photon x y z)');
+pard.photonfactort.position=[6,3];
+pard.photonfactort.Width=1.2;
 pard.photonfactor.object=struct('Style','edit','String','1');
-pard.photonfactor.position=[7,2];
+pard.photonfactor.position=[6,4];
 pard.photonfactor.Width=1;
 
-pard.plugininfo.type='ProcessorPlugin';
+pard.overwritefields.object=struct('Style','checkbox','String','Set (x,y,z,phot)');
+pard.overwritefields.position=[7,1];
+pard.overwritefields.Width=1;
+
+pard.xfield.object=struct('Style','popupmenu','String','xnm');
+pard.xfield.position=[7,2];
+pard.xfield.Width=.75;
+pard.yfield.object=struct('Style','popupmenu','String','ynm');
+pard.yfield.position=[7,2.75];
+pard.yfield.Width=.75;
+pard.zfield.object=struct('Style','popupmenu','String','znm');
+pard.zfield.position=[7,3.5];
+pard.zfield.Width=.75;
+pard.Nfield.object=struct('Style','popupmenu','String','phot');
+pard.Nfield.position=[7,4.25];
+pard.Nfield.Width=.75;
+
+pard.syncParameters={{'locFields','xfield' ,{'String'}},{'locFields','yfield' ,{'String'}},{'locFields','zfield', {'String'}},{'locFields','Nfield',{'String'}}};
+
+pard.plugininfo.type='ProcessorPlugin'; 
+pard.plugininfo.description='Compares fitted localization data to the ground truth for the SMLM challange data, using the SMLM challenge java tool. From: Sage, Daniel, Thanh-An Pham, Hazen Babcock, Tomas Lukes, Thomas Pengo, Jerry Chao, Ramraj Velmurugan, et al. “Super-Resolution Fight Club: Assessment of 2D and 3D Single-Molecule Localization Microscopy Software.” Nature Methods, April 8, 2019. https://doi.org/10.1038/s41592-019-0364-4.';
 end

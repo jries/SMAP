@@ -1,4 +1,6 @@
 classdef zSALM<interfaces.DialogProcessor
+%     converts reltive intensities of super- and undercritical channel into
+%     z position
     properties
         
     end
@@ -16,11 +18,16 @@ classdef zSALM<interfaces.DialogProcessor
             fsubg=p.bgfield2.selection;
             locs=obj.locData.getloc({fsa,fua,'znm','phot','LLrel','znm_a'},...
                 'layer', find(obj.getPar('sr_layerson')),'position','roi');
+            if ~isfield(obj.locData.loc,'locprecnm_a')
+                 obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
+            end
             if ~isempty(locs.znm_a)
                 locs.znm=locs.znm_a;
+                
             else
                 obj.locData.setloc('znm_a',obj.locData.loc.znm);
                 obj.locData.setloc('locprecznm_a',obj.locData.loc.locprecznm);
+                obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
             end
             nfit=5e4;
             goodLL=locs.LLrel>-1.3;
@@ -29,7 +36,7 @@ classdef zSALM<interfaces.DialogProcessor
             indref=max(1,length(ind)-nfit);
             photref=photll(ind(indref));
 %             photref=0;
-            indbright=(locs.phot>photref)&goodLL;
+            indbright=(locs.phot>photref) & goodLL & (locs.(fsa)~=0); %take out r=0
             
             is=locs.(fsa)(indbright);
             iu=locs.(fua)(indbright);
@@ -65,14 +72,20 @@ classdef zSALM<interfaces.DialogProcessor
             
             fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare','Lower',[0 -inf 0]);
             
-            
+            p.limit=true;
+           
             ftsalm=fittype(@(b,x) intensitySALM(x-b,p),'independent','x','coefficients',{'b'});
             startpsalm=quantile(znm(indf),0.1);
 %             ftsalm=fittype(@(b,c,x) intensitySALM(x-b,p)*c,'independent','x','coefficients',{'b','c'});
 %             startpsalm=[quantile(znm(indf),0.1) 1];
             
+%              fitSALMmodel(znm(indf),rsu(indf),p)
+            fitpsalm1=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
+            %only fit data above coverglass
+            zabove = znm>fitpsalm1.b;
+            indf=indf&zabove;
+            fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',fitpsalm1.b,'Robust','Bisquare');
             
-            fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
             zglass=fitpsalm.b;
             
             plot(ax2,zrange,fitp(zrange),'m--')  
@@ -90,7 +103,7 @@ classdef zSALM<interfaces.DialogProcessor
             rall=isall./iuall/p.rfactor*intensitySALM(0);
             
              %exponential model
-            zr=-log((rall-fitp.c)/fitp.a)/fitp.b;
+%             zr=-log((rall-fitp.c)/fitp.a)/fitp.b;
            
             
             %SALM model
@@ -98,13 +111,16 @@ classdef zSALM<interfaces.DialogProcessor
             zinterp=(zglass-200:0.5:zrange(end)+500)';
             rinterp=fitpsalm(zinterp);
             interpsalm=fit(rinterp,zinterp,'cubicinterp');
+            
+            
             zr=interpsalm(rall);
-            zmax=zrange(end)+500;
+            zmax=zrange(end)+1500;
             zoutofrange=zr>zmax;
             zr(zoutofrange)=zmax; %avoid too large numbers
 
             obj.locData.loc.zSALM=zr;
-            
+            obj.locData.loc.locprecnm=obj.locData.loc.locprecnm_a;
+            obj.locData.loc.locprecnm(zoutofrange)=1000; %for grouping.
             %calculate error of zr
             %use CRLB as error for znm
             % weighted average
@@ -124,12 +140,21 @@ classdef zSALM<interfaces.DialogProcessor
             zerrs(zoutofrange)=inf;
             errza=obj.locData.loc.locprecznm_a;
             
-            %also here change sign of z.
-            znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
-            locprecznmnew=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
+            switch p.fieldznm.Value
+                case 1 %weighted average
+                    %also here change sign of z.
+                    znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
+                    locprecznmnew=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
+                case 2 %salm
+                    znmnew=obj.locData.loc.zSALM;
+                    locprecznmnew=zerrs;
+                case 3 %astig
+                    znmnew=obj.locData.loc.znm_a;
+                    locprecznmnew=errza;
+            end
             obj.locData.setloc('znm',znmnew);
             obj.locData.setloc('locprecznm',locprecznmnew);
-            obj.locData.setloc('locprecznm_salm',locprecznmnew);
+            obj.locData.setloc('locprecznm_salm',zerrs);
             obj.locData.regroup;
             
             %determine maximum position
@@ -168,6 +193,17 @@ classdef zSALM<interfaces.DialogProcessor
             pard=guidef(obj);
         end
     end
+end
+
+function fitSALMmodel(z,r,p)
+zs=z/1000; %scaling to make r and z similar magnitude
+
+zr=(zs-r)/sqrt(2);
+rr=(r+zs)/sqrt(2);
+
+ ftsalm=fittype(@(b,x) (intensitySALM(x*1000-b,p)+x)/sqrt(2),'independent','x','coefficients',{'b'});
+            startpsalm=quantile(z,0.1);
+            fitpsalm=fit(zr,rr,ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
 end
 
 function pard=guidef(obj)
@@ -243,7 +279,12 @@ pard.rfactor.object=struct('Style','edit','String','1.');
 pard.rfactor.position=[5,2.3];
 pard.rfactor.Width=0.4;
 
+pard.tss.object=struct('String','Field znm','Style','text');
+pard.tss.position=[5,3];
 
+pard.fieldznm.object=struct('Style','popupmenu','String',{{'weighted average','SALM','astigmatism'}});
+pard.fieldznm.position=[5,3.5];
+pard.fieldznm.Width=1.5;
  pard.syncParameters={{'locFields','assignfield1',{'String'}},{'locFields','assignfield2',{'String'}},...
      {'locFields','bgfield1',{'String'}},{'locFields','bgfield2',{'String'}}};
             
@@ -251,7 +292,7 @@ pard.rfactor.Width=0.4;
 %             obj.addSynchronization('filelist_short',obj.guihandles.dataselect,'String')
 pard.plugininfo.type='ProcessorPlugin';
 
-
+pard.plugininfo.description='converts reltive intensities of super- and undercritical channel into z position.';
 end
 
 function err=zerrSALM(fitp,Ns,Nu,bgs,bgu)

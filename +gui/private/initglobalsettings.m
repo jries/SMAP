@@ -12,7 +12,8 @@ if ispc
 else
     fijipath='/Applications/Fiji.app/scripts';
 end
-obj.createGlobalSetting('DataDirectory','Directories','Default data directory:',struct('Style','dir','String',pwd))   
+% obj.createGlobalSetting('SettingsDirectory','Directories','settings directory:',struct('Style','dir','String',['settings']))   
+obj.createGlobalSetting('DataDirectory','Directories','Default data directory:',struct('Style','dir','String',pwd))
 
 obj.createGlobalSetting('MMpath','Directories','The directory of Micro-Manager in which ij.jar is found:',struct('Style','dir','String','MMpath'))   
 obj.createGlobalSetting('fijipath','Directories','The directory of /Fiji/scripts:',struct('Style','dir','String',fijipath))

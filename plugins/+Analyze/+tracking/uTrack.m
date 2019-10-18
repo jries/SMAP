@@ -16,7 +16,9 @@ classdef uTrack<interfaces.DialogProcessor
     end
 end
 function out=uTracki(obj,p)
+if ~isdeployed
 addpath(genpath('External/u-track/software'))
+end
 
 %prepare input parameters
 

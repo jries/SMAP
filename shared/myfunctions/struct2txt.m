@@ -1,6 +1,7 @@
 function txt=struct2txt(p,prefix)
+txt={};
 if isstruct(p)||isobject(p)
-    txt={};
+    
     fn=fieldnames(p);
     for k=1:length(fn)
         prefixn=[ prefix,'.'  fn{k}];
@@ -20,7 +21,9 @@ else
             if isnumeric(th)||islogical(th)
                 th=num2str(th);
             end
-            to=[to ',' th];
+            if ischar(th)
+                to=[to ',' th];
+            end
         end
         p=to;
     end
@@ -29,7 +32,9 @@ else
     end
     if ~isempty(p)
         tx=p(1,:);
-    txt={[prefix '=' tx]};
+        if ischar(tx)
+            txt={[prefix '=' tx]};
+        end
     else
         txt={[prefix '=']};
     end

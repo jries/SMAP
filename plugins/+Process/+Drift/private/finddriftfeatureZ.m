@@ -27,6 +27,7 @@ global SMAP_stopnow
 lastframe=round(par.framestop);
 firstframe=round(par.framestart);
 numframes=lastframe-firstframe+1;
+binframes=1; %intialize to be shared;
 
 %% calculate movie and FFT of movie
 pixrec=par.drift_pixrecz; %in nm

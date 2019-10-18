@@ -12,8 +12,9 @@ classdef BlinkingMoviePresentation<interfaces.DialogProcessor
         function out=run(obj,p)         
             out=[];
             file=obj.locData.files.file(p.dataselect.Value);
-            locs=obj.locData.getloc({'xnm','ynm','frame','locprecnm'},'layer',1,'position','roi');
-            makeBlinkMovie(locs,file,p);
+            locs=obj.locData.getloc({'xnm','ynm','frame','locprecnm','channel'},'layer',find(obj.getPar('sr_layeron')),'position','roi');
+%            makeBlinkMovie(locs,file,p);
+               makeBlinkMovie2(locs,file,p,obj);
 
         end
         function pard=guidef(obj)
@@ -65,4 +66,6 @@ pard.outputFormat.Width=2;
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.name='BlinkingMoviePresentation';
 pard.plugininfo.type='ProcessorPlugin';
+
+pard.plugininfo.description='BlinkingMoviePresentation renders a movie with the left side showing the camera images and the right side showing sngle molecule localizations slowly building up a superresolution image';
 end

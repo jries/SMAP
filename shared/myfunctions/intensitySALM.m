@@ -5,12 +5,14 @@ if nargin==1
     lambda=680; %nm
     NA=1.70;
     NA0=1.33;
+
 else
     n1=p.n1;
     n2=p.n2;
     lambda=p.lambda;
     NA=p.NA;
     NA0=p.NAmask;
+
 end
 lb=lambda/2/pi;
 numax=sqrt(NA^2-n1^2)/lb;
@@ -34,6 +36,9 @@ end
 IS=integral(@dis,numin,numax,'ArrayValued',true)+ISoff;
 IU=integral(@diu,wmin,wmax)+IUoff;
 r=IS./IU;
+% if limit
+%     r(r>2)=2;
+% end
 
     function is=dis(nu) %integration of supercritical part
         in = 2*(n1^2+n2^2)*nu*lb.*sqrt(n2^2-n1^2-nu.^2*lb^2).*(n1^1+nu.^2*lb^2);

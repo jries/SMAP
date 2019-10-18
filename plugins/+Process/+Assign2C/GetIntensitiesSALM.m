@@ -27,6 +27,10 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             pt.resultstabgroup=obj.resultstabgroup;
             pt.register_parameters.maxlocsused=50000;
             if p.makeT
+                if ~isfield(transform.info{1},'cam_pixnm') %not assigned
+                    transform.setTransform(1,'cam_pixnm',obj.getPar('cam_pixelsize_nm'))
+                    transform.setTransform(2,'cam_pixnm',obj.getPar('cam_pixelsize_nm'))
+                end
             transform=transform_locsN(obj.locData,pt);
             end
 %             [locsa,xx]=obj.locData.getloc({'xnm','ynm','frame','filenumber','znm','PSFxnm'},'layer',p.salayer.Value,'position','roi','grouping','ungrouped');

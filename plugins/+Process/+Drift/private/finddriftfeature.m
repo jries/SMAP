@@ -32,6 +32,7 @@ results_ax3=initaxis(par.resultstabgroup,['normalized CC' rn]);
 lastframe=round(par.framestop);
 firstframe=round(par.framestart);
 numframes=lastframe-firstframe+1;
+binframes=1; %intialize to be shared;
 
 %% calculate movie and FFT of movie
 pixrec=par.drift_pixrec; %in nm
@@ -266,6 +267,9 @@ for k=1:dnumframesh-1
     
     for l=k+1:dnumframesh
         cc=Fmovier(:,:,k).*conj(Fmovier(:,:,l));
+        
+%         cc=cc./abs(Fmovier(:,:,k))./abs(Fmovier(:,:,l)); %try out phase correlation
+        
         ccf=fftshift(ifft2(cc));
         [mx,my,outim,outimnorm,errx(k,l),erry(k,l)]=findmaximumgauss(real(ccf),window); %maximum by Gaussian fitting
         dxh=mx-noff; dyh=my-noff;

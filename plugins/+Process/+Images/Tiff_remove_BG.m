@@ -1,4 +1,6 @@
 classdef Tiff_remove_BG<interfaces.DialogProcessor
+    % Calculates the background of a tiff image based on wavelet filtering
+    % and substracts it
     methods
         function obj=Tiff_remove_BG(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -79,4 +81,5 @@ pard.overwrite.object.TooltipString='If checked, the original image is replaced.
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Calculates the background of a tiff image based on wavelet filtering and substracts it';
 end

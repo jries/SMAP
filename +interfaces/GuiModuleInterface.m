@@ -139,6 +139,18 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             end
 %             end
         end
+        function switchvisibleall(obj)
+            h=obj.guihandles;
+            fn=fieldnames(h);
+            
+            for k=1:length(fn)
+                
+                if isfield(h,fn{k})&&isprop(h.(fn{k}),'Callback') && length(h.(fn{k}).Callback)>1 &&contains(func2str(h.(fn{k}).Callback{1}),'switchvisible')
+                    fnc=h.(fn{k}).Callback;
+                    fnc{1}(h.(fn{k}),0,fnc{2});
+                end
+            end
+        end
         function switchvisible(obj,control,data,p,callbackfnc)
             val=control.Value;
             for k=1:length(p)
@@ -255,7 +267,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %             for all p.on: smapvisible='on'. if optional: switch on if state=advanced. 
 %             for all p.off: smapvisible, visible='off';
         end
-        function setGuiParameters(obj,p,setchildren)
+        function setGuiParameters(obj,p,setchildren,setmenulist)
             %sets parameters in GUI uicontrols
             %setGuiParameters(p,setchildren)
             % if setchildren=true (optional): set also gui parameters in
@@ -266,13 +278,16 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             if nargin<3
                 setchildren=false;
             end
-            
+            if nargin<4
+                setmenulist=true;
+            end
             if isstruct(p)
                 fn=fieldnames(p);
                 phere=p;
                 h=obj.guihandles;
                 for k=1:length(fn)
                     if isfield(h,fn{k})&&isprop(h.(fn{k}),'Style')&&~strcmp(h.(fn{k}).Style,'text')&&~any(ismember(obj.excludeFromSave,fn))                        
+                        
                         hs=obj.value2handle(phere.(fn{k}),h.(fn{k}));                      
 %                         if (strcmp(h.(fn{k}).Style,'popupmenu'))
 %                             htmp.Value=hs.Value;
@@ -281,6 +296,10 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %                             end
 %                             hs=htmp;                   
 %                         end
+                        if ~setmenulist && strcmp(h.(fn{k}).Style,'popupmenu')&&isprop(h.(fn{k}),'String')
+                            hs=myrmfield(hs,'String');
+                            hs.Value=min(hs.Value, length(h.(fn{k}).String));
+                        end
                         h.(fn{k})=copyfields(h.(fn{k}),hs);
 %                     elseif strcmp(fn{k},'globaltable')
                     elseif isfield(h,fn{k}) && isa(h.(fn{k}),'matlab.ui.control.Table') %Table    
@@ -322,7 +341,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                     child=obj.children.(fn{k});
                     pchild=p.children.(fn{k});
                     try
-                    child.setGuiParameters(pchild,true);
+                    child.setGuiParameters(pchild,true,setmenulist);
                     catch err
                         child
                         err

@@ -1,4 +1,11 @@
 classdef calibrateSALM<interfaces.DialogProcessor
+%     Calibrates the relationship between z position and ratio between
+%     super- and under-criticl intensities for supercritical-angle
+%     localization microscopy.
+% Deschamps, Joran, Markus Mund, and Jonas Ries. “3D Superresolution
+% Microscopy by Supercritical Angle Detection.” Optics Express 22, no. 23
+% (November 17, 2014): 29081–91. https://doi.org/10.1364/OE.22.029081.
+
     properties
         
     end
@@ -274,5 +281,6 @@ pard.assignfield2.position=[5,2];
 %             obj.addSynchronization('filelist_short',obj.guihandles.dataselect,'String')
 pard.plugininfo.type='ProcessorPlugin';
 
+pard.plugininfo.description='Calibrates the relationship between z position and ratio between super- and under-criticl intensities for supercritical-angle localization microscopy. According to: Deschamps, Joran, Markus Mund, and Jonas Ries. “3D Superresolution Microscopy by Supercritical Angle Detection.” Optics Express 22, no. 23 (November 17, 2014): 29081–91. https://doi.org/10.1364/OE.22.029081.';
 
 end

@@ -147,7 +147,7 @@ function out=runintern(obj,p)
             end
 
             ckept = eightCornerCheck(locs, center, cluster,15);
-            usedMem = ismember(cluster, ckept);
+            usedMem = ismember(cluster, ckept);                     % locs in the cluster
             if p.plotCluster
                 ffUsed = figure(9999);
                 clf(ffUsed, 'reset');
@@ -161,7 +161,7 @@ function out=runintern(obj,p)
         end
 
         %histcounts()
-        
+        %profileViewer(locs, subset, nLocsLimit, binSize, setPad, p, doPlot, varargin)
         [siteProfile, qcFlag]= profileViewer(locs, usedMem', 25, 10, 30, p, p.doPlot, p.xrangeestDensityCutoff,p.yrangeestDensityCutoff);
         [siteProfileFull, ~]= profileViewer(locs, logical(ones(size(locs.xnmrot))), 25, 10, 30, p, 0, p.xrangeestDensityCutoff,p.yrangeestDensityCutoff);
         
@@ -252,7 +252,7 @@ function out=runintern(obj,p)
         peakRange = findPeakRange(siteProfile.xdensity, siteProfile.xq, cutoff);
         
         
-        estRad = range(peakRange(:)); % measure the diameter (the name should be chaged: estRad->estDia) by the x profile
+        estDia = range(peakRange(:)); % measure the diameter (the name should be chaged: estRad->estDia) by the x profile
         
         estYR = range(prctile(locs.ynmrot(usedMem'), [15 95])); % estimate the z range based on major cluster(s)
 %         aucDensity = sum(cumDensity(siteProfile, p));
@@ -268,7 +268,7 @@ function out=runintern(obj,p)
 %         fy = fit( siteProfile.yq', siteProfile.ydensity', fty, 'StartPoint', [0.01, 100, 20, -70, 0.01, 20], 'Lower', [0, 0, 2.5,-300, 0,2.5], 'Upper', [inf, 150, 70, 0, 10,70]);
         %figure(99); plot( fy, siteProfile.yq', siteProfile.ydensity' )
         
-        out.estimatedRadius = estRad;
+        out.estimatedDiameter = estDia;
         out.estimatedZRange = estYR;
 %         out.aucDensity = aucDensity;
         out.estimatedZRangeByDensity = estYRbyDensity;
@@ -276,6 +276,7 @@ function out=runintern(obj,p)
 %         out.fx = fx;
         out.siteProfile = siteProfile;
         out.filter = usedMem;
+        out.xRangeEst = xRangeEst;
     end
     out.originalPos = originalPos;
     %obj.site.image = [];

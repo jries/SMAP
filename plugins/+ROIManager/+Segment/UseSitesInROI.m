@@ -1,4 +1,6 @@
 classdef UseSitesInROI<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Selects only those sites (ROIs) for further analysis that are insied
+%     a user-defined ROI in the main SMAP superresolution figure
     methods
         function obj=UseSitesInROI(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -12,7 +14,7 @@ classdef UseSitesInROI<interfaces.DialogProcessor&interfaces.SEProcessor
           pr=obj.getPar('sr_pixrec');
           srpos=obj.getPar('sr_pos');
           srsize=obj.getPar('sr_size');
-          prel=(pos(:,1:2)-(srpos-srsize))/pr;
+          prel=(pos(:,1:2)-(srpos(1:2)-srsize))/pr;
           ing=withinmask(imbw,prel(:,1),prel(:,2));
           for k=1:length(obj.SE.sites)
               obj.SE.sites(k).annotation.use=ing(k);
@@ -31,4 +33,5 @@ end
 function pard=guidef
 
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Selects only those sites (ROIs) for further analysis that are insied a user-defined ROI in the main SMAP superresolution figure ';
 end

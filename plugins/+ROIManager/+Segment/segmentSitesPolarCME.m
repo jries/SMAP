@@ -1,4 +1,6 @@
 classdef segmentSitesPolarCME<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Segments endocytic sites in yeast in a top view (focus at poles of
+%     cells).
     methods
         function obj=segmentSitesPolarCME(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -74,6 +76,7 @@ pard.t11.object=struct('String','Works best with: PSF filtered, locprec filter l
 pard.t11.position=[8,1];
 pard.t11.Width=4;
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='Segments endocytic sites in yeast in a top view (focus at poles of cells).';
 end
 
 function segmentCME(obj,p)

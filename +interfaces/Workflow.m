@@ -198,6 +198,12 @@ classdef Workflow<interfaces.DialogProcessor
                 obj.description=loaded.description;
             end
             obj.fieldvisibility;
+            obj.connectModules;
+             for k=1:length(obj.modules)
+                 if isa(obj.modules{k}.module,'interfaces.WorkflowModule')
+                 obj.modules{k}.module.updateGui; %call after loading
+                 end
+             end
         end
         function save(obj,fn,descriptiononly)
             if nargin<2||isempty(fn)
@@ -388,7 +394,9 @@ classdef Workflow<interfaces.DialogProcessor
 %             pard.clearbutton.Width=0.4;
         end
         function graph(obj,object,b)
-            modulenames=obj.guihandles.modulelist.String;
+            for k=1:length(obj.modules)
+                modulenames{k}=obj.modules{k}.tag;
+            end
             for k=1:length(modulenames)
                 modulenames{k}=[num2str(k) '. ' modulenames{k}];
             end

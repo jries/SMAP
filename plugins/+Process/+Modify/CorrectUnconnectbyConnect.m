@@ -1,4 +1,6 @@
 classdef CorrectUnconnectbyConnect<interfaces.DialogProcessor
+%     Writes the coordiates of the connected (merged) localizations to the
+%     correspondng non-connected localizations.
     methods
         function obj=CorrectUnconnectbyConnect(varargin)     
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -43,16 +45,6 @@ end
 
 function pard=guidef
 
-
-% 
-% pard.textb.object=struct('String','Channel','Style','text');
-% pard.textb.position=[1,1];
-% pard.channel.object=struct('String','1','Style','edit');
-% pard.channel.position=[1,2];
-% 
-
-
-% pard.connectmode.object=struct('String','connect->unconnect|unconnect->connect','Style','popupmenu','Value',1);
-% pard.connectmode.position=[2,1];
 pard.plugininfo.type='ProcessorPlugin';
+pard.plugininfo.description='Writes the coordiates of the connected (merged) localizations to the correspondng non-connected localizations.';
 end

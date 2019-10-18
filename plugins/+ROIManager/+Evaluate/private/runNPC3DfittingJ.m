@@ -10,6 +10,7 @@ function out = runNPC3DfittingJ(obj, p,locsin,startcoord)
 %     plot(locs.xnmrot,locs.ynmrot,'.')
     % Build the model/template
     img3d = obj.getPar('img3d');
+    img3d = img3d-min(img3d(:));
     xcor3d =  obj.getPar('xcor3d');
     ycor3d =  obj.getPar('ycor3d');
     zcor3d =  obj.getPar('zcor3d');
@@ -28,7 +29,7 @@ function out = runNPC3DfittingJ(obj, p,locsin,startcoord)
     options=optimset('TolX',1e-7,'MaxFunEvals',5000);
     dstart=60;
     if nargin<4||isempty(startcoord)
-        st=[double(median(locs.xnmrot)) double(mean(locs.xnmrot)) double(mean(locs.znm))-dstart dstart 0 0 ];
+        st=[double(median(locs.xnmrot)) double(mean(locs.ynmrot)) double(mean(locs.znm))-dstart dstart 0 0 ];
     else
         st=[double(startcoord(1)) double(startcoord(2))  double(mean(locs.znm))-dstart dstart 0 0 ];
     end

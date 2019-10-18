@@ -44,8 +44,15 @@ function pard=guidef
 
 pard.updateGuiPar.object=struct('Style','checkbox','String','load Gui Parameters');
 pard.updateGuiPar.position=[1,1];
- pard.updateGuiPar.Width=2;
+pard.updateGuiPar.Width=2;
 pard.updateGuiPar.TooltipString='Restore Gui parameters saved with localization data';
+
+pard.restoreROI.object=struct('Style','checkbox','String','restore ROI');
+pard.restoreROI.position=[2,1];
+pard.restoreROI.Width=2;
+pard.restoreROI.TooltipString='Restore ROI if saved with data.';
+
+
 info.name='auto loader';
 info.extensions={'*.mat;*.tif;*.csv;*.hdf5';'*.mat';'*.tif';'*.csv';'*.*'};
 info.dialogtitle='select any SMLM position, Tif, csv, settings or workflow file';

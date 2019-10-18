@@ -132,6 +132,9 @@ switch ext
             tif='off';            
         end
     case '.m'
+        if isdeployed
+            return
+        end
         cf=pwd;
         cd(p)
         [~,fh]=fileparts(f);

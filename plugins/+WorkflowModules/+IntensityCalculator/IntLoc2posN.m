@@ -153,7 +153,7 @@ pard.transformtotarget.Width=.7;
 % pard.PSFxnm.object=struct('Style','edit','String','138');
 % pard.PSFxnm.position=[2,1];
 pard.plugininfo.type='WorkflowModule';
-pard.pard.plugininfo.description='calculates pixel postions in tiff images from localization positions (nm)';
+pard.plugininfo.description='calculates pixel postions in tiff images from localization positions (nm)';
 end
 
 function PSFx=sigmafromz_simple(z,p)%[d g sx0]);

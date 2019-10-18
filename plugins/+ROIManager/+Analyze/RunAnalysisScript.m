@@ -1,4 +1,5 @@
 classdef RunAnalysisScript<interfaces.DialogProcessor&interfaces.SEProcessor
+%     Simple analysis scripts can be saved under +ROIManager/+Anlaysis/scripts. These can be called from the GUI using this plugin.
     properties
         scriptpath='plugins/+ROIManager/+Analyze/scripts/';
     end
@@ -17,14 +18,18 @@ classdef RunAnalysisScript<interfaces.DialogProcessor&interfaces.SEProcessor
         function out=run(obj,p)  
             [~,funs]=fileparts(p.scripts.selection);
             oldpath=pwd;
+            if ~isdeployed
             cd(obj.scriptpath)
+            end
             funct=str2func(funs);
             try
             funct()
             catch err
                 warning err
             end
+            if ~isdeployed
             cd(oldpath)
+            end
 
             out=[];
            
@@ -42,6 +47,6 @@ pard.scripts.object=struct('String',{{''}},'Style','listbox');
 pard.scripts.position=[5,1];
 pard.scripts.Width=4;
 pard.scripts.Height=5;
-
+pard.plugininfo.description='Simple analysis scripts can be saved under +ROIManager/+Anlaysis/scripts. These can be called from the GUI using this plugin.';
 pard.plugininfo.type='ROI_Analyze';
 end

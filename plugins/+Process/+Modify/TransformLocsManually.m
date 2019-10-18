@@ -1,4 +1,6 @@
 classdef TransformLocsManually<interfaces.DialogProcessor
+%     Manually change position, magnification and rotation of localization
+%     data
     methods
         function obj=TransformLocsManually(varargin)    
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -128,4 +130,5 @@ pard.rotc.Width=1;
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.plugininfo.type='ProcessorPlugin';
 pard.inputParameters={'sr_pos','sr_size'};
+pard.plugininfo.description='Manually change position, magnification and rotation of localization data.';
 end

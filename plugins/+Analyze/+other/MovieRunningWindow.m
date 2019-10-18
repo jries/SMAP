@@ -1,5 +1,5 @@
 classdef MovieRunningWindow<interfaces.DialogProcessor
-    % MovieRunning Window Running window movie reconstruction
+    % MovieRunningWindow reconstruct a movie with running average from live-cell data
     properties
         imagestack
         movie
@@ -25,12 +25,6 @@ end
 
 function makemovie(obj,p)
 global SMAP_stopnow
-
-% persistent f
-% if isempty(f) || ~isvalid(f)
-%     f=figure;
-% end
-% figure(f)
 
 lochere=obj.locData.copy;
 [locsout,indout,hroi]=lochere.getloc({'xnm','ynm','znm','xnmline','ynmline','frame'},'position','roi','layer',find(p.sr_layerson),'grouping','ungrouped');
@@ -177,5 +171,5 @@ pard.play.position=[4,4];
 pard.plugininfo.name='Movie';
 pard.plugininfo.type='ProcessorPlugin';
 
-pard.plugininfo.description= 'Running window movie reconstruction';
+pard.plugininfo.description= 'Reconstruct a movie with running average from live-cell data';
 end

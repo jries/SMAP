@@ -1,0 +1,8 @@
+y4pi=102   364  1393  1665
+x4pi=0  0  0  0
+width4pi=168
+height4pi=271
+mirror4pi=0 0 1 1
+pixelsize_nm=100
+offset=100
+conversion=0.5
