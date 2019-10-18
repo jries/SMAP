@@ -1,4 +1,4 @@
-classdef WFsplitter<interfaces.WorkflowModule
+classdef WFsplitter1ch<interfaces.WorkflowModule
 %     This plugin cuts out regions of interest of a defined size around the
 %     candidate positions and passes these on to the fitter.
     properties
@@ -6,9 +6,9 @@ classdef WFsplitter<interfaces.WorkflowModule
         guistates
     end
     methods
-        function obj=WFsplitter(varargin)
+        function obj=WFsplitter1ch(varargin)
             obj@interfaces.WorkflowModule(varargin{:})
-            obj.inputChannels=2; 
+            obj.inputChannels=1; 
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -16,38 +16,24 @@ classdef WFsplitter<interfaces.WorkflowModule
         function initGui(obj)
             initGui@interfaces.WorkflowModule(obj);
    
-            obj.setInputChannels(2,'frame');
+            obj.setInputChannels(1,'frame');
         end
         function prerun(obj,p)
          
         end
         function nooutput=run(obj,data,p)
            nooutput=[];
-            emptydat=data{1};
-            emptydat.data=[];
             switch p.splitWFselection.Value
                 case 1
-                    dato{1}=data{1};
-                    dato{3}=data{2};
-                    dato{2}=emptydat;
-                    dato{4}=emptydat;
-                    obj.output(dato{1},1);
-                    obj.output(dato{3},3);
+                    obj.output(data{1},1);
                 case 2
-                    dato{2}=data{1};
-                    dato{4}=data{2};
-                    dato{1}=emptydat;
-                    dato{3}=emptydat;
-                    obj.output(dato{2},2);
-                    obj.output(dato{4},4);
+                    obj.output(data{2},2);
             end
         end
         function modelchanged(obj,a,b)
-            splitselection=obj.getSingleGuiParameter('splitWFselection');
-            br=splitselection.Value;
-            offbranches=1:length(splitselection.String);
-            offbranches=setdiff(offbranches,br);
-   
+            br=obj.getSingleGuiParameter('splitWFselection').Value;
+            br2=2-br+1;
+     
                 for k=1:length(obj.modules{br})
                     guih=obj.modules{br}{k}.guihandles;                    
                     if isempty(guih)
@@ -60,30 +46,22 @@ classdef WFsplitter<interfaces.WorkflowModule
                     end
                         obj.modules{br}{k}.switchvisibleall;
                 end
-                for b=1:length(offbranches)
-                    br2=offbranches(b)
-                    for k=1:length(obj.modules{br2})
-                        guih=obj.modules{br2}{k}.guihandles;
-                        if isempty(guih)
-                            continue
-                        end
-                        fn=fieldnames(guih);
-                        for l=1:length(fn)
-                            guih.(fn{l}).Visible='off';
-                        end
-                    end  
-                end
+                for k=1:length(obj.modules{br2})
+                    guih=obj.modules{br2}{k}.guihandles;
+                    if isempty(guih)
+                        continue
+                    end
+                    fn=fieldnames(guih);
+                    for l=1:length(fn)
+                        guih.(fn{l}).Visible='off';
+                    end
+                end            
         end
         function updateGui(obj)
            %populate here the splitWFselection menu. 
             %change visibility of sub-WF
-            %later: really figure out the different path ways. input can be
-            %one or two channels
-            for k=1:ceil(length(obj.outputModules)/2)
-                if length(obj.outputModules(2*k-1))>2*k-1
-                    break
-                end
-                module=obj.outputModules(2*k-1).module;
+            for k=1:2
+                module=obj.outputModules(k).module;
                 ind=1;
                 name{k}='';
                 while ~contains(module.info.name,'WFcombiner')
