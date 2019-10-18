@@ -215,7 +215,9 @@ lifetime=getFieldAsVector(locs,'numberInGroup');
 
 
 [hlifet,mmax]=plothist(lifetime,plr,1,0,ax3,modetxt);
+if ~isempty(ax3)
  ax3.NextPlot='add';
+end
 slt={'lifetime'};
 for k=datrange
     inrange=lifetime{k}>p.lifetimerange(1)&lifetime{k}<p.lifetimerange(2);
@@ -493,10 +495,14 @@ dq=hin.n(2)-hin.n(1);
 % else
 %     ax=[];
 % end
+if ~isempty(ax)
 ax.NextPlot='add';
-dat.mu=meanexp(v,dq,fitrange,ax,fac);
 xlim(ax,[hin.n(1) hin.n(end)])
-catch
+end
+dat.mu=meanexp(v,dq,fitrange,ax,fac);
+
+catch err
+    err
     dat.mu=0;  
 end
 

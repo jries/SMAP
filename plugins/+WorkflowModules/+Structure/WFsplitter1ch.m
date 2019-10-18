@@ -31,9 +31,11 @@ classdef WFsplitter1ch<interfaces.WorkflowModule
             end
         end
         function modelchanged(obj,a,b)
-            br=obj.getSingleGuiParameter('splitWFselection').Value;
-            br2=2-br+1;
-     
+            splitselection=obj.getSingleGuiParameter('splitWFselection');
+            br=splitselection.Value;
+            offbranches=1:length(splitselection.String);
+            offbranches=setdiff(offbranches,br);
+   
                 for k=1:length(obj.modules{br})
                     guih=obj.modules{br}{k}.guihandles;                    
                     if isempty(guih)
@@ -46,21 +48,24 @@ classdef WFsplitter1ch<interfaces.WorkflowModule
                     end
                         obj.modules{br}{k}.switchvisibleall;
                 end
-                for k=1:length(obj.modules{br2})
-                    guih=obj.modules{br2}{k}.guihandles;
-                    if isempty(guih)
-                        continue
-                    end
-                    fn=fieldnames(guih);
-                    for l=1:length(fn)
-                        guih.(fn{l}).Visible='off';
-                    end
-                end            
+                for b=1:length(offbranches)
+                    br2=offbranches(b);
+                    for k=1:length(obj.modules{br2})
+                        guih=obj.modules{br2}{k}.guihandles;
+                        if isempty(guih)
+                            continue
+                        end
+                        fn=fieldnames(guih);
+                        for l=1:length(fn)
+                            guih.(fn{l}).Visible='off';
+                        end
+                    end  
+                end          
         end
         function updateGui(obj)
            %populate here the splitWFselection menu. 
             %change visibility of sub-WF
-            for k=1:2
+            for k=1:ceil(length(obj.outputModules))
                 module=obj.outputModules(k).module;
                 ind=1;
                 name{k}='';
