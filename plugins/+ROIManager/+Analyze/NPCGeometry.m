@@ -103,7 +103,7 @@ if isfield(sites(1).evaluation.NPCgeomtryQuantify,'profile') %z-data is there
     xlabel('z');ylabel('distance')
     title(['d(z=0) fit: ' num2str(fline.p2,ff) ' Corr:' num2str(corr(abs(d'),zt(indzin')))]);
     ylim([25 100])
-    xlim([-200 200])
+    xlim([-300 300])
     pearsonc=corr(abs(d'),zt(indzin'));
 end
 

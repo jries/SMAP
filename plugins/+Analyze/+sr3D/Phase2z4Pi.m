@@ -37,7 +37,7 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
             z0=0;
             for k=1:length(framepos)-1
                 inframe=locs.frame>framepos(k)&locs.frame<framepos(k+1);
-                z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0);
+                z0=getz0phase(zastig(inframe),phase(inframe),frequency,1);
                 z0all(k)=z0;
             end
             axp=obj.initaxis('phase vs z');
