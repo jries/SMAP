@@ -61,7 +61,7 @@ classdef WFsplitter<interfaces.WorkflowModule
                         obj.modules{br}{k}.switchvisibleall;
                 end
                 for b=1:length(offbranches)
-                    br2=offbranches(b)
+                    br2=offbranches(b);
                     for k=1:length(obj.modules{br2})
                         guih=obj.modules{br2}{k}.guihandles;
                         if isempty(guih)
