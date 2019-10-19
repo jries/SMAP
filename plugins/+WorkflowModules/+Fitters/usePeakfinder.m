@@ -17,7 +17,7 @@ classdef usePeakfinder<interfaces.WorkflowModule
         function prerun(obj,p)  
         end
         function outputdat=run(obj,data,p)
-            outputdat=data{1};
+            outputdat=data;
            %do some conversions here
         end
     end

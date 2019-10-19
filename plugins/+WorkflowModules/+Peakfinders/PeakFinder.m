@@ -9,7 +9,7 @@ classdef PeakFinder<interfaces.WorkflowModule
 % 
     properties (Access=private)
         probability=0.05;
-        dynamicfactor=1;
+        dynamicfactor=1.7;
         absolutecutoff=1;
 %         preview
     end
@@ -55,6 +55,7 @@ classdef PeakFinder<interfaces.WorkflowModule
             maxout.y=maxima(maxind,1);
             maxout.x=maxima(maxind,2);
             maxout.intensity=maxima(maxind,3);
+            maxout.frame=0*maxout.x+data.frame;
             dato=data;         
             dato.data=(maxout); 
             else
@@ -148,13 +149,13 @@ function pard=guidef
 pard.cutoffstring.object=struct('Style','text','String','       Cutoff: ');
 pard.cutoffstring.position=[1,1];
 
-pard.cutoffmode.object=struct('Style','popupmenu','String',{{'dynamic (factor)','probability (p<1)','absolute (photons)'}},'Value',2);
+pard.cutoffmode.object=struct('Style','popupmenu','String',{{'dynamic (factor)','probability (p<1)','absolute (photons)'}},'Value',1);
 pard.cutoffmode.position=[1,1];
 pard.cutoffmode.Width=1.5;
 pard.cutoffmode.TooltipString=sprintf('How to determine the cutoff: \n Dynamic: use the distribution of pixel intensity to estimate likely localizations. Factor: adjust sensitivity. \n Probability: use probabilistic model (SimpleSTORM) to determine the likelyhood for pixel being localization. \n Absolut: Pixel intensity in normalized image. \n Choose display=normalized to read out thes normalized values.');
 pard.cutoffmode.Optional=true;
 
-pard.cutoffvalue.object=struct('Style','edit','String','.05');
+pard.cutoffvalue.object=struct('Style','edit','String','1.7');
 pard.cutoffvalue.position=[1,2.5];
 pard.cutoffvalue.Width=.5;
 pard.cutoffvalue.TooltipString=sprintf('Dynamic: relative factor. \n Probability: directly probability p. \n absolute: cutoff in photons');
