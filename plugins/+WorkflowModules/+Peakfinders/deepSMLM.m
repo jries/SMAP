@@ -158,10 +158,11 @@ classdef deepSMLM<interfaces.WorkflowModule
                 locs.dy=dy;
                 
                 %to be used as a peak finder:
-                locs.x=xfit;
-                locs.y=yfit;
-                locs.N=intensity;
+                locs.xpix=xfit;
+                locs.ypix=yfit;
+                locs.phot=intensity;
                 locs.znm=zfit;
+                locs.bg=0*xfit;
                 
                 dato=data; 
                 dato.frame=obj.bufferinfo.frame(k);
@@ -173,22 +174,9 @@ classdef deepSMLM<interfaces.WorkflowModule
             obj.imagebuffer(1:2,:,:)=obj.imagebuffer(obj.buffersize-1:end,:,:);
             obj.bufferinfo.frame(1:2)=obj.bufferinfo.frame(obj.buffersize-1:end,:,:);
             end
-%             if obj.preview
-%                 outputfig=obj.getPar('loc_outputfig');
-%                 if ~isvalid(outputfig)
-%                     outputfig=figure(209);
-%                     obj.setPar('loc_outputfig',outputfig);
-%                 end
-%                 outputfig.Visible='on';
-%                 figure(outputfig)
-%                 hold off
-%                 imagesc(image);
-%                 colormap jet
-%                 colorbar;
-%                 axis equal
-%                 hold on
-%                 plot(xfit,yfit,'yo')
-%             end
+            if obj.preview
+                obj.setPar('preview_peakfind',locs);
+            end
             obj.buffercounter=timeblocks-1; %before timeblocks: did we lose frames? XXXX
         end
     end

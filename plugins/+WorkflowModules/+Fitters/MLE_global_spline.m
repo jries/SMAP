@@ -142,8 +142,8 @@ dn=ceil((s(1)-1)/2)*v1;
 
 shiftx=0;%-0.5; %deviation from ground truth
 shifty=0;%-0.5;
-posx=stackinfo.x(results.indused)+shiftx;
-posy=stackinfo.y(results.indused)+shifty;
+posx=stackinfo.xpix(results.indused)+shiftx;
+posy=stackinfo.ypix(results.indused)+shifty;
 frame=stackinfo.frame(results.indused);
 P=results.P;
 EMexcess=fitpar.EMexcessNoise;
@@ -290,8 +290,8 @@ dn=ceil((s(1)-1)/2)*v1;
 
 shiftx=0;%-0.5; %deviation from ground truth
 shifty=0;%-0.5;
-posx=stackinfo.x(results.indused)+shiftx;
-posy=stackinfo.y(results.indused)+shifty;
+posx=stackinfo.xpix(results.indused)+shiftx;
+posy=stackinfo.ypix(results.indused)+shifty;
 frame=stackinfo.frame(results.indused);
 P=results.P;
 EMexcess=fitpar.EMexcessNoise;
@@ -823,13 +823,13 @@ end
 end
 
 function varstack=getvarmap(varmap,stackinfo,roisize)
-numim=length(stackinfo.x);
+numim=length(stackinfo.xpix);
 varstack=zeros(roisize,roisize,numim,'single');
 dn=floor(roisize/2);
 for k=1:numim
 %     stackinfo.x(k)
 %     stackinfo.y(k)
-    varstack(:,:,k)=varmap(stackinfo.x(k)-dn:stackinfo.x(k)+dn,stackinfo.y(k)-dn:stackinfo.y(k)+dn);
+    varstack(:,:,k)=varmap(stackinfo.xpix(k)-dn:stackinfo.xpix(k)+dn,stackinfo.ypix(k)-dn:stackinfo.ypix(k)+dn);
 end
 end
 

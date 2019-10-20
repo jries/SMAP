@@ -36,11 +36,7 @@ classdef ImageNormalize<interfaces.WorkflowModule
                 imnorm(indnan)=0;
                 dato=data{1};%{1}.copy;
                 dato.data=imnorm;%set(imnorm);
-                if ~obj.preview
-%                     obj.output(dato)
-                else
-                    
-
+                if obj.preview
                     if data{1}.frame==obj.getPar('loc_previewframe')
                         drawimage(obj,imnorm,image,bg)
                     else
@@ -59,33 +55,36 @@ end
 
 
 function drawimage(obj,imnorm,img,bg)
-outputfig=obj.getPar('loc_outputfig');
-if ~isvalid(outputfig)
-    outputfig=figure(209);
-    obj.setPar('loc_outputfig',outputfig);
-end
+% outputfig=obj.getPar('loc_outputfig');
+% if ~isvalid(outputfig)
+%     outputfig=figure(209);
+%     obj.setPar('loc_outputfig',outputfig);
+% end
 
-outputfig.Visible='on';
-draw=true;
-switch obj.getPar('loc_previewmode').Value
-    case 1 %image-bg
-        imd=img-bg;
-    case 2%image
-        imd=img;
-    case 4 %bg
-        imd=bg;
-    otherwise 
-        draw=false;
-end
-        
-if draw
-figure(outputfig)
-hold off
-imagesc(imd);
-colormap jet
-colorbar;
-axis equal
-end
+% outputfig.Visible='on';
+% draw=true;
+% switch obj.getPar('loc_previewmode').Value
+%     case 1 %image-bg
+%         imd=img-bg;
+%     case 2%image
+%         imd=img;
+%     case 4 %bg
+%         imd=bg;
+%     otherwise 
+%         draw=false;
+% end
+     
+obj.setPar('preview_image',img);
+obj.setPar('preview_background',bg);
+obj.setPar('preview_image_background',img-bg);
+% if draw
+% figure(outputfig)
+% hold off
+% imagesc(imd);
+% colormap jet
+% colorbar;
+% axis equal
+% end
 end
 
 function out=poissonNormalize(in)

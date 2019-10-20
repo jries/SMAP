@@ -9,7 +9,7 @@ classdef WorkflowFitter<interfaces.WorkflowModule
         spatial3Dcal=false;
         spatialXrange={[-inf inf]};
         spatialYrange={[-inf inf]};
-        infofields={'x','y'};
+        infofields={'xpix','ypix'};
     end
     methods
 
@@ -90,7 +90,12 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                 if isempty(dstruc)
 %                     obj.status('error: image empty');drawnow
 %                     error ('image empty')
-                    out=[];
+                    if data.eof 
+                        out=data;
+                    else
+                        out=[];
+                    
+                    end
                     return
                 else
                 initstacks(obj,dstruc.info)
@@ -139,10 +144,10 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                 for X=1:sxy(1)
                     for Y=1:sxy(2)
                         if obj.spatial3Dcal&&numberInBlockh>1  %later: dont rearrange, but use instack pointer.
-                            inblock=find(stackinf.x+roi(1)>=xrange{X,Y}(1) & stackinf.x+roi(1)<=xrange{X,Y}(2) & stackinf.y+roi(2)>=yrange{X,Y}(1) & stackinf.y+roi(2)<=yrange{X,Y}(2)); 
+                            inblock=find(stackinf.xpix+roi(1)>=xrange{X,Y}(1) & stackinf.xpix+roi(1)<=xrange{X,Y}(2) & stackinf.ypix+roi(2)>=yrange{X,Y}(1) & stackinf.ypix+roi(2)<=yrange{X,Y}(2)); 
 %                             inblock=find(stackinf.x>=xrange(X) & stackinf.x<=xrange(X+1) & stackinf.y>=yrange(Y) & stackinf.y<=yrange(Y+1)); 
                         else
-                            inblock=1:length(stackinf.x);
+                            inblock=1:length(stackinf.xpix);
                         end
                         fitstack
 %                         if eof

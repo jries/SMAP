@@ -34,12 +34,12 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             image=data{1}.data;%get;
             if ~isempty(image)     
             maxima=data{2}.data;%get;
-            if isempty(maxima.x)
-                if obj.preview
-                    obj.status('no localizations found');drawnow
-                    error ('no localizations found')
-
-                end
+            if isempty(maxima.xpix)
+%                 if obj.preview
+%                     obj.status('no localizations found');drawnow
+%                     error ('no localizations found')
+% 
+%                 end
 %                  outs.info=info;
 %                     outs.img=cutoutimages(:,:,1:ind);
                 dato=data{1};%.copy;
@@ -61,29 +61,29 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             %XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             end
             
-            cutoutimages=zeros(kernelSize,kernelSize,length(maxima.x),'single');
+            cutoutimages=zeros(kernelSize,kernelSize,length(maxima.xpix),'single');
             ind=0;
-            goodind=~(maxima.y<=dn|maxima.y>sim(1)-dn|maxima.x<=dn|maxima.x>sim(2)-dn);
-            outside=(maxima.y<=1|maxima.y>sim(1)-1|maxima.x<=1|maxima.x>sim(2)-1);
+            goodind=~(maxima.ypix<=dn|maxima.ypix>sim(1)-dn|maxima.xpix<=dn|maxima.xpix>sim(2)-dn);
+            outside=(maxima.ypix<=1|maxima.ypix>sim(1)-1|maxima.xpix<=1|maxima.xpix>sim(2)-1);
 
-            for k=1:length(maxima.x)
+            for k=1:length(maxima.xpix)
                  ind=ind+1;
                 if goodind(k)
-                    cutoutimages(:,:,ind)=image(maxima.y(k)-dn:maxima.y(k)+dn,maxima.x(k)-dn:maxima.x(k)+dn); %coordinates exchanged.
+                    cutoutimages(:,:,ind)=image(maxima.ypix(k)-dn:maxima.ypix(k)+dn,maxima.xpix(k)-dn:maxima.xpix(k)+dn); %coordinates exchanged.
                 elseif outside(k)
-                    maxima.y(k)=max(dn+1,min(maxima.y(k),sim(1)-dn));
-                    maxima.x(k)=max(dn+1,min(maxima.x(k),sim(2)-dn));  
+                    maxima.ypix(k)=max(dn+1,min(maxima.ypix(k),sim(1)-dn));
+                    maxima.xpix(k)=max(dn+1,min(maxima.xpix(k),sim(2)-dn));  
                     cutoutimages(:,:,ind)=zeros(2*dn+1,'single');
                 else
-                    maxima.y(k)=max(dn+1,min(maxima.y(k),sim(1)-dn));
-                    maxima.x(k)=max(dn+1,min(maxima.x(k),sim(2)-dn));
-                    cutoutimages(:,:,ind)=image(maxima.y(k)-dn:maxima.y(k)+dn,maxima.x(k)-dn:maxima.x(k)+dn); %coordinates exchanged.
+                    maxima.ypix(k)=max(dn+1,min(maxima.ypix(k),sim(1)-dn));
+                    maxima.xpix(k)=max(dn+1,min(maxima.xpix(k),sim(2)-dn));
+                    cutoutimages(:,:,ind)=image(maxima.ypix(k)-dn:maxima.ypix(k)+dn,maxima.xpix(k)-dn:maxima.xpix(k)+dn); %coordinates exchanged.
 %                     cutoutimages(:,:,ind)=zeros(kernelSize,kernelSize,1,'single');
                 end  
             end 
             info=maxima;
             frameh=data{1}.frame;
-            info.frame=maxima.x*0+frameh;
+            info.frame=maxima.xpix*0+frameh;
            
 
             outs.info=info;
@@ -92,31 +92,31 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             dato.data=outs;%set(outs);
             outputdat=dato;
 
-            if obj.preview 
-                obj.disppreview=true;
-                outputfig=obj.getPar('loc_outputfig');
-                if ~isvalid(outputfig)
-                    outputfig=figure(209);
-                    obj.setPar('loc_outputfig',outputfig);
-                    
-                end
-                outputfig.Visible='on';
-                figure(outputfig)
-                hold on
-                    col=[0.3 0.3 0.3];
-                    ax=gca;
-
-                for k=1:length(maxima.x)
-                    pos=[maxima.x(k)-dn maxima.y(k)-dn maxima.x(k)+dn maxima.y(k)+dn ];
-                    
-                    plotrect(ax,pos,col);
-                end
-            end 
+%             if obj.preview 
+%                 obj.disppreview=true;
+%                 outputfig=obj.getPar('loc_outputfig');
+%                 if ~isvalid(outputfig)
+%                     outputfig=figure(209);
+%                     obj.setPar('loc_outputfig',outputfig);
+%                     
+%                 end
+%                 outputfig.Visible='on';
+%                 figure(outputfig)
+%                 hold on
+%                     col=[0.3 0.3 0.3];
+%                     ax=gca;
+% 
+%                 for k=1:length(maxima.xpix)
+%                     pos=[maxima.xpix(k)-dn maxima.ypix(k)-dn maxima.xpix(k)+dn maxima.ypix(k)+dn ];
+%                     
+%                     plotrect(ax,pos,col);
+%                 end
+%             end 
             else
-                if obj.preview && ~obj.disppreview
-                    obj.status('image could not be loaded');drawnow
-                    error('no image loaded')
-                end
+%                 if obj.preview && ~obj.disppreview
+%                     obj.status('image could not be loaded');drawnow
+%                     error('no image loaded')
+%                 end
                 outputdat=data{1};
             end
         end

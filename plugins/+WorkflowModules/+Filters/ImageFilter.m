@@ -136,42 +136,48 @@ end
 
 
 function drawimage(obj,imnorm,imf)
+if isempty(imf)
+    return
+end
 
 img=(imnorm/2).^2-0.375;
 imgbg=(imf/2).^2-0.375;
 
 imbg=((imnorm-imf)/2).^2-0.375;
 
-outputfig=obj.getPar('loc_outputfig');
-if ~isvalid(outputfig)
-    outputfig=figure(209);
-    obj.setPar('loc_outputfig',outputfig);
-end
+% outputfig=obj.getPar('loc_outputfig');
+% if ~isvalid(outputfig)
+%     outputfig=figure(209);
+%     obj.setPar('loc_outputfig',outputfig);
+% end
 
-outputfig.Visible='on';
-draw=~isempty(imnorm);
-switch obj.getPar('loc_previewmode').Value
-    case 1 %image-bg
-        imd=imbg;
-    case 2%image
-        imd=img;
-    case 3 %norm
-        imd=imf;
-    case 4 %bg
-        imd=imgbg;
-    otherwise 
-        draw=false;
-end
+% outputfig.Visible='on';
+% draw=~isempty(imnorm);
+% switch obj.getPar('loc_previewmode').Value
+%     case 1 %image-bg
+%         imd=imbg;
+%     case 2%image
+%         imd=img;
+%     case 3 %norm
+%         imd=imf;
+%     case 4 %bg
+%         imd=imgbg;
+%     otherwise 
+%         draw=false;
+% end
         
-if draw
-figure(outputfig)
-hold off
-imagesc(imd);
-colormap jet
-colorbar;
-axis equal
-hold on
-end
+% if draw
+% figure(outputfig)
+% hold off
+% imagesc(imd);
+% colormap jet
+% colorbar;
+% axis equal
+% hold on
+% end
+obj.setPar('preview_filtered',imf);
+obj.setPar('preview_background',imgbg);
+obj.setPar('preview_image_background',imbg);
 end
 
 

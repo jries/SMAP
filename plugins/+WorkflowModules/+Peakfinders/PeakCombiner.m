@@ -43,13 +43,13 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 if isfield(transform.tinfo,'units')&&strcmp(transform.tinfo.units,'pixels')
                     pixelsize=[1 1];
                 end
-                xnm=(maxima.x+roi(1))*pixelsize(1);
-                ynm=(maxima.y+roi(2))*pixelsize(end);
+                xnm=(maxima.xpix+roi(1))*pixelsize(1);
+                ynm=(maxima.xpix+roi(2))*pixelsize(end);
                 indref=obj.transform.getRef(xnm,ynm);
                 xnmref=xnm(indref);
                 ynmref=ynm(indref);
-                Nref=maxima.intensity(indref).^2; %rather sqrt???
-                Nt=maxima.intensity(~indref).^2;
+                Nref=maxima.phot(indref).^2; %rather sqrt???
+                Nt=maxima.phot(~indref).^2;
                 [xt,yt]=transform.transformCoordinatesInv(xnm(~indref),ynm(~indref));
                 [iA,iB,uiA,uiB]=matchlocs(xnmref,ynmref,xt,yt,[0 0],pixelsize(1)*4);
                 try
@@ -96,8 +96,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 dyout=vertcat(0*dy',dy');
                 idout=vertcat(1:sum(indgood),1:sum(indgood));
 
-                maxout.x=xout(:);
-                maxout.y=yout(:);
+                maxout.xpix=xout(:);
+                maxout.ypix=yout(:);
 
                 maxout.ID=idout(:);
                 maxout.dx=dxout(:);
@@ -110,14 +110,14 @@ classdef PeakCombiner<interfaces.WorkflowModule
                     disp('calibration should be in pixel units for 4pi');
                     %set pixelsize in transform here
                 end
-                xpix=(maxima.x+roi(1)); %still x,y inconsistency! solve
-                ypix=(maxima.y+roi(2)); %put on camera chip
+                xpix=(maxima.xpix+roi(1)); %still x,y inconsistency! solve
+                ypix=(maxima.ypix+roi(2)); %put on camera chip
                 cpix=[xpix,ypix];
                 indref=transform.getPart(1,cpix);
                 
                 cref=cpix(indref,:);
-                Nall=sqrt(maxima.intensity);
-                Nc=sqrt(maxima.intensity(indref));
+                Nall=sqrt(maxima.phot);
+                Nc=sqrt(maxima.phot(indref));
 %                 xf=cpix(indref,1);yf=cpix(indref,2);intf=maxima.intensity(indref);
                 ccombined=cref;
                 for k=2:transform.channels
@@ -174,8 +174,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 xh=cout(1,:,:);yh=cout(2,:,:);
                 dxh=dcout(1,:,:);dyh=dcout(2,:,:);
                 
-                maxout.x=squeeze(xh(:));
-                maxout.y=squeeze(yh(:));
+                maxout.xpix=squeeze(xh(:));
+                maxout.ypix=squeeze(yh(:));
 
                 maxout.ID=indout(:);
                 maxout.dx=squeeze(dxh(:));

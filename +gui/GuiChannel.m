@@ -310,7 +310,7 @@ classdef GuiChannel< interfaces.LayerInterface
 %                 sdfdy
 %                 defaultChannelParameters=obj.getGuiParameters;
 %                 globalParameters=obj.getLayerParameters(obj.layer);
-%                 globalParameters=myrmfield(globalParameters,{'guimodules','mainGuihandle','mainGui','loc_outputfig','filterpanel','ov_axes','guiFormat',...
+%                 globalParameters=myrmfield(globalParameters,{'guimodules','mainGuihandle','mainGui','filterpanel','ov_axes','guiFormat',...
 %                     'sr_image','sr_imagehandle','sr_figurehandle','sr_axes','ROI_lineannotation_handle_1','ROI_lineannotation_handle_2'});
 % %                 save(deffile,'defaultChannelParameters','globalParameters');
                 save(deffile,'defaultChannelParameters');

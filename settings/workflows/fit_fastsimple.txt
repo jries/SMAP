@@ -23,9 +23,9 @@ ImageFilter.Vpos=5.5;
 ImageFilter.handle=hfilter; 
 PeakFinder.Vpos=7;
 PeakFinder.handle=hfilter; 
-DisplayChooser.Vpos=7;
-DisplayChooser.Xpos=3.5;
-DisplayChooser.handle=hfilter;             
+PlotLocsPreview.Vpos=7;
+PlotLocsPreview.Xpos=3.5;
+PlotLocsPreview.handle=hfilter;             
            
 RoiCutterWF.Vpos=1;
 RoiCutterWF.Xpos=4;

@@ -33,7 +33,8 @@ end
 locdat.xnm=(locs.xpix(indin)+roi(1))*pixelsize(1);
 locdat.ynm=(locs.ypix(indin)+roi(2))*pixelsize(end);
 
-locdat.xerrpix=locdat.xnm*0+1;
+% locdat.xerrpix=locdat.xnm*0+1;
+% locdat.yerrpix=locdat.xerrpix;
 % if isfield(locs,'xerrpix')
 % locdat.xerr=locs.xerrpix(indin)*pixelsize(1);
 % end
@@ -46,7 +47,7 @@ locdat.xerrpix=locdat.xnm*0+1;
 % locdat.xerr=min(locdat.xerr1,locdat.xerr2);
 % end
 
-locdat.yerrpix=locdat.xerrpix;
+
 % if isfield(locs,'yerrpix')
 % locdat.yerr=locs.yerrpix(indin)*pixelsize(end);
 % end
@@ -108,7 +109,12 @@ if isfield(locs,'PSFypix')
 else
     locdat.PSFynm=locdat.PSFxnm;
 end
-locdat.locprecnm=sqrt((locdat.xnmerr.^2+locdat.ynmerr.^2)/2);
+
+if isfield(locdat,'xnmerr')
+    locdat.locprecnm=sqrt((locdat.xnmerr.^2+locdat.ynmerr.^2)/2);
+else
+    locdat.locprecnm=locdat.xnm*0+1;
+end
 if isfield(locs,'zerr')
     locdat.locprecznm=locs.zerr(indin);
 end
