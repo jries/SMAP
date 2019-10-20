@@ -1,5 +1,5 @@
 classdef DefineMainCoordinates<interfaces.DialogProcessor
-
+%     Define any fields as main x, y and z coordinates
     methods
         function obj=DefineMainCoordinates(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
@@ -132,5 +132,5 @@ pard.syncParameters={{'locFields','xfield',{'String'}},...
 
 
 pard.plugininfo.type='ProcessorPlugin';
-pard.plugininfo.description='';
+pard.plugininfo.description='Define any fields as main x, y and z coordinates';
 end

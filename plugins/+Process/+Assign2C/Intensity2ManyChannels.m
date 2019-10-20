@@ -13,6 +13,7 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
             obj@interfaces.DialogProcessor(varargin{:}) ;  
             obj.history=true;
             obj.showresults=true;
+            obj.propertiesToSave={'rois'};
         end
         function out=run(obj,p)
             out=[];
