@@ -89,7 +89,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                 intLoc2pos_ind2=ind1;
                 if ~(intLoc2pos_locframes(intLoc2pos_ind2)==frame) %no localizatiaon in frame
                       datout=data;%.copy;
-                     datout.data=struct('x',[]);%.set(maxout);
+                     datout.data=struct('xpix',[]);%.set(maxout);
                     return
                 end
                 while intLoc2pos_ind2<=lf&&intLoc2pos_locframes(intLoc2pos_ind2)==frame
@@ -104,11 +104,11 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                yrel=(obj.locs.yA(ind1:intLoc2pos_ind2)-obj.roi(2));
              
                 
-               maxout.x=round(xrel);
-               maxout.y=round(yrel);
-               maxout.frame=frame+0*maxout.y;
-               maxout.dx=xrel-maxout.x;
-               maxout.dy=yrel-maxout.y;
+               maxout.xpix=round(xrel);
+               maxout.ypix=round(yrel);
+               maxout.frame=frame+0*maxout.ypix;
+               maxout.dx=xrel-maxout.xpix;
+               maxout.dy=yrel-maxout.ypix;
                maxout.PSFxpix=obj.locs.PSFxpix(ind1:intLoc2pos_ind2);
                maxout.PSFypix=(obj.locs.PSFypix(ind1:intLoc2pos_ind2));
                maxout.groupindex=obj.locs.groupindex(ind1:intLoc2pos_ind2);
@@ -116,7 +116,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                maxout.phot=obj.locs.phot(ind1:intLoc2pos_ind2);
                maxout.bg=obj.locs.bg(ind1:intLoc2pos_ind2);
                if ~isempty(obj.locs.znm)
-                   maxout.z=obj.locs.znm(ind1:intLoc2pos_ind2);
+                   maxout.znm=obj.locs.znm(ind1:intLoc2pos_ind2);
                end
                datout=data;%.copy;
                datout.data=maxout;%.set(maxout);
@@ -124,7 +124,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                 else
              
                    datout=data;
-                    datout.data=struct('x',[]);
+                    datout.data=struct('xpix',[]);
                     datout.eof=true;
                 end
                 

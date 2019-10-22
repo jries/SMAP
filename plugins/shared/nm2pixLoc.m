@@ -1,6 +1,6 @@
 function [loc,locr]=nm2pixLoc(x,y,pixelsize,roi)
-loc.x=(x/pixelsize(1))-roi(1);
-loc.y=(y/pixelsize(end))-roi(2);
-locr.x=round(loc.x);
-locr.y=round(loc.y);
+loc.xpix=(x/pixelsize(1))-roi(1);
+loc.ypix=(y/pixelsize(end))-roi(2);
+locr.xpix=round(loc.xpix);
+locr.ypix=round(loc.ypix);
 end
