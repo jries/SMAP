@@ -42,7 +42,7 @@ classdef RoiAdder<interfaces.WorkflowModule
             if p.excluderim
             obj.setrim;
             end
-            obj.setPar('loc_roimask',obj.mask) %to use later;
+            obj.setPar('loc_roimask',obj.maskrun) %to use later;
  
         end
         function resetmask(obj,a,b)
@@ -63,32 +63,33 @@ classdef RoiAdder<interfaces.WorkflowModule
             obj.maskrun(end-dn+1:end,1:end)=false;  
         end
         function dato=run(obj,data,p)
-
-            img=data.data;%get;
-            if isempty(img)
-                dato=data;
-                return;
-            end
-            if ~all(size(obj.maskrun)==size(img))
-                obj.maskrun=imresize(obj.maskrun, size(img));
-                %resize
-                %set rim
-                obj.setrim
-                 
-            end
-            obj.setPar('loc_roimask',obj.maskrun)
-            img(~obj.maskrun)=-1;
-           
-            dato=data;%.copy;
-            dato.data=img;%set(img);
-            if obj.preview && data.frame==obj.getPar('loc_previewframe')
-                initPreviewFigure(obj)
-%                 figure(obj.getPar('loc_outputfig'));
-%                 imagesc(img);
-                ax=gca;
-                maxv=ax.CLim(2)/2;
-                imagesc('CData',obj.maskrun*0+maxv,'AlphaData',double(~obj.maskrun)*0.5) 
-            end  
+            dato=data;
+%             img=data.data;%get;
+%             if isempty(img)
+%                 dato=data;
+%                 return;
+%             end
+%             if ~all(size(obj.maskrun)==size(img))
+%                 obj.maskrun=imresize(obj.maskrun, size(img));
+%                 %resize
+%                 %set rim
+%                 obj.setrim
+%                  
+%             end
+%             obj.setPar('loc_roimask',obj.maskrun)
+%             img(~obj.maskrun)=-1;
+%            
+%             dato=data;%.copy;
+%             dato.data=img;%set(img);
+%             if obj.preview && data.frame==obj.getPar('loc_previewframe')
+%                 obj.setPar('preview_mask',obj.maskrun)
+%                 initPreviewFigure(obj)
+% %                 figure(obj.getPar('loc_outputfig'));
+% %                 imagesc(img);
+%                 ax=gca;
+%                 maxv=ax.CLim(2)/2;
+%                 imagesc('CData',obj.maskrun*0+maxv,'AlphaData',double(~obj.maskrun)*0.5) 
+%             end  
         end
     end
 end

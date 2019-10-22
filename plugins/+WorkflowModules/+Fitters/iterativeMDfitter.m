@@ -44,7 +44,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 return
             end
             maxima=data{2}.data;%get;
-            if isempty(maxima.x)
+            if isempty(maxima.xpix)
                 dato=data{1};%.copy;
                 dato.data=[];
                 outputdat=dato;
@@ -54,7 +54,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             
             %render image and errors with maximum PSF size!
             
-%             maxima.N=image(sub2ind(size(image),maxima.y,maxima.x))*obj.splinenorm;
+%             maxima.N=image(sub2ind(size(image),maxima.ypix,maxima.xpix))*obj.splinenorm;
 %             maxima.z=0*maxima.N;
 %             maxima.z=maxima.znm;
 %             maxima.N=maxima.intensity;
@@ -66,11 +66,11 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %             bgestimate=min(image(:));
             sizepixfit=(2*drfit+1)^2;
             
-            v0=0*maxima.x;
+            v0=0*maxima.xpix;
             bgglobal=quantile(image(:),0.5);
             sigma2=1.5^2; %estimated sigma of PSF squared
-            pos.x=max(drfit+1,min(size(image,2)-drfit,round(maxima.x)));
-            pos.y=max(drfit+1,min(size(image,1)-drfit,round(maxima.y)));
+            pos.x=max(drfit+1,min(size(image,2)-drfit,round(maxima.xpix)));
+            pos.y=max(drfit+1,min(size(image,1)-drfit,round(maxima.ypix)));
             maximainit=maxima; %what are these needed for???
             maximainit.x=pos.x;
             maximainit.y=pos.y;  
@@ -78,7 +78,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 maxima.z=v0;
                 maxima.bg=v0;
                 maxima.N=v0;
-                for k=1:length(maxima.x)
+                for k=1:length(maxima.xpix)
                     roiim=image(pos.y(k)-drfit:pos.y(k)+drfit,pos.x(k)-drfit:pos.x(k)+drfit);
 %                     maxima.bg(k)=quantile(roiim(:),0.2);
                     maxima.bg(k)=bgglobal;
@@ -92,16 +92,16 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             end
             
             if obj.preview
-                previewcollage=zeros(3*(2*drfit+1),2*(2*drfit+1),length(maxima.x),'single');
+                previewcollage=zeros(3*(2*drfit+1),2*(2*drfit+1),length(maxima.xpix),'single');
             end
-            coord=[maxima.x-pos.x,maxima.y-pos.y,maxima.z,maxima.N,maxima.bg]; %BG set to zero
+            coord=[maxima.xpix-pos.x,maxima.ypix-pos.y,maxima.z,maxima.N,maxima.bg]; %BG set to zero
             % in iterations, previous bg used for starting value. BG always
             % as offset of single molecule model.
             coord0=coord;
             M=single(obj.splinePSF.render(maxima,[0 size(image,2)],[0 size(image,1)])); %start image without background. 
 %             Mstart=M;
             Mi=single(obj.splinePSF.PSF(coord));      
-            [~,inds]=sort(maxima.N,'descend');
+            [~,inds]=sort(maxima.phot,'descend');
             LL=ones(length(inds),1,'single');iterations=ones(length(inds),1,'single');crlb=ones(length(inds),1,5,'single');chi2=ones(length(inds),1,'single');
             for iter=1:p.iterations
                 for k=1:length(inds)
@@ -166,7 +166,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                  hold on
                  
                  plot(coord0(:,1)+pos.x,coord0(:,2)+pos.y,'mo');
-                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+');%,maxima.x,maxima.y,'md')
+                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+');%,maxima.xpix,maxima.ypix,'md')
 %                  plot(pos.x,pos.y,'ks');
                 gt=obj.getPar('loc_gt_preview');
                 if ~isempty(gt)

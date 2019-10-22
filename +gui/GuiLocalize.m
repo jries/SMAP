@@ -79,9 +79,9 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
                 'FontSize',obj.guiPar.fontsize,'Callback',{@wfsimplegui_callback,obj});
             h.wfsimple.TooltipString=sprintf('Show or hide advanced controls.');  
             
-            outputfig=figure(207);
-            outputfig.Visible='off';
-            obj.setPar('loc_outputfig',outputfig)
+%             outputfig=figure(207);
+%             outputfig.Visible='off';
+%             obj.setPar('loc_outputfig',outputfig)
 
             tabsizeh=obj.guiPar.tabsize2;
             tabsizeh(4)=tabsizeh(4)-dh;            

@@ -13,6 +13,7 @@ classdef CameraConverter<interfaces.WorkflowModule
         offset
         adu2phot
         autocalhandle
+        preview;
     end
     methods
         function obj=CameraConverter(varargin)
@@ -107,35 +108,17 @@ classdef CameraConverter<interfaces.WorkflowModule
             end
             obj.offset=pc.offset;
             obj.adu2phot=(pc.conversion/pc.emgain);
+            obj.preview=obj.getPar('loc_preview');
         end
         function datao=run(obj,data,p)
-            
-            %calibrate gain offset from images
-%             global SMAP_stopnow           
-             
-%             if obj.calibrategain
-%                 datao=[];
-%                 if data.eof            
-%                     SMAP_stopnow=false;
-%                     calculategain(obj.calibrateimages);
-%                     obj.calibrategain=false;
-%                     return
-%                 end
-% 
-%                 obj.calibrateimages(:,:,obj.calibratecounter)=data.data;
-%                 obj.calibratecounter=obj.calibratecounter+1;
-%                 if obj.calibratecounter>140
-%                     SMAP_stopnow=true;
-%                 end
-%                 
-%                 
-%                 
-%                 return
-%             end
+
            imgp=makepositive(data.data);
             imphot=(single(imgp)-obj.offset)*obj.adu2phot;
                datao=data;
                datao.data=imphot;  
+           if obj.preview && ~isempty(imgp)
+               obj.setPar('preview_image',imgp);
+           end
         end
        
     end

@@ -110,7 +110,7 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
             
             if ~isempty(locs)  
                 fn=fieldnames(stackinfo);
-                infonames=setdiff(setdiff(fn,fieldnames(locs)), {'x','y','frame','Y','X'});
+                infonames=setdiff(setdiff(fn,fieldnames(locs)), {'xpix','ypix','frame','Y','X'});
                 locs=copyfields(locs,stackinfo,infonames);
             end
         end
@@ -148,8 +148,8 @@ dn=ceil((s(1)-1)/2)*v1;
 
 shiftx=0;%-0.5; %deviation from ground truth
 shifty=0;%-0.5;
-posx=stackinfo.x+shiftx;
-posy=stackinfo.y+shifty;
+posx=stackinfo.xpix+shiftx;
+posy=stackinfo.ypix+shifty;
 frame=stackinfo.frame;
 P=results.P;
 EMexcess=fitpar.EMexcessNoise;

@@ -46,31 +46,31 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
             image=data{1}.data;%get;
             if ~isempty(image)     
             maxima=data{2}.data;%get;
-            if isempty(maxima.x)
+            if isempty(maxima.xpix)
                 return;
             end
             
             if p.loc_fitgrouped
-%                 for k=1:length(maxima.x)
+%                 for k=1:length(maxima.xpix)
 %                     obj.addroi(image,copystructReduce(maxima,k))
 %                 end 
                 obj.addroi(image,maxima)
             end
             if obj.preview 
-                outputfig=obj.getPar('loc_outputfig');
-                if ~isvalid(outputfig)
-                    outputfig=figure(209);
-                    obj.setPar('loc_outputfig',outputfig);
-                end
-                outputfig.Visible='on';
-                figure(outputfig)
-                hold on
-                col=[0.3 0.3 0.3];
-                    ax=gca;
-                for k=1:length(maxima.x)
-                    pos=[maxima.x(k)-obj.dn maxima.y(k)-obj.dn maxima.x(k)+obj.dn maxima.y(k)+obj.dn ];
-                    plotrect(ax,pos,col);
-                end
+%                 outputfig=obj.getPar('loc_outputfig');
+%                 if ~isvalid(outputfig)
+%                     outputfig=figure(209);
+%                     obj.setPar('loc_outputfig',outputfig);
+%                 end
+%                 outputfig.Visible='on';
+%                 figure(outputfig)
+%                 hold on
+%                 col=[0.3 0.3 0.3];
+%                     ax=gca;
+%                 for k=1:length(maxima.xpix)
+%                     pos=[maxima.xpix(k)-obj.dn maxima.ypix(k)-obj.dn maxima.xpix(k)+obj.dn maxima.ypix(k)+obj.dn ];
+%                     plotrect(ax,pos,col);
+%                 end
                 if p.loc_fitgrouped
                     [cutoutimages,maximap]=obj.purgeall;
                 end
@@ -84,7 +84,7 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
             end
              info=maximap;
             frameh=data{1}.frame;
-            info.frame=maximap.x*0+frameh;
+            info.frame=maximap.xpix*0+frameh;
             if ~isempty(cutoutimages)
                 outs.info=info;
                 outs.img=cutoutimages;
@@ -104,23 +104,23 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
             dn=obj.dn;
             kernelSize=2*dn+1;
             sim=size(image);
-            cutoutimages=zeros(kernelSize,kernelSize,length(maxima.x),'single');
+            cutoutimages=zeros(kernelSize,kernelSize,length(maxima.xpix),'single');
             ind=0;
-            goodind=~(maxima.y<=dn|maxima.y>sim(1)-dn|maxima.x<=dn|maxima.x>sim(2)-dn);
-            outside=(maxima.y<=1|maxima.y>sim(1)-1|maxima.x<=1|maxima.x>sim(2)-1);
+            goodind=~(maxima.ypix<=dn|maxima.ypix>sim(1)-dn|maxima.xpix<=dn|maxima.xpix>sim(2)-dn);
+            outside=(maxima.ypix<=1|maxima.ypix>sim(1)-1|maxima.xpix<=1|maxima.xpix>sim(2)-1);
 
-            for k=1:length(maxima.x)
+            for k=1:length(maxima.xpix)
                  ind=ind+1;
                 if goodind(k)
-                    cutoutimages(:,:,ind)=image(maxima.y(k)-dn:maxima.y(k)+dn,maxima.x(k)-dn:maxima.x(k)+dn); %coordinates exchanged.
+                    cutoutimages(:,:,ind)=image(maxima.ypix(k)-dn:maxima.ypix(k)+dn,maxima.xpix(k)-dn:maxima.xpix(k)+dn); %coordinates exchanged.
                 elseif outside(k)
-                    maxima.y(k)=max(dn+1,min(maxima.y(k),sim(1)-dn));
-                    maxima.x(k)=max(dn+1,min(maxima.x(k),sim(2)-dn));  
+                    maxima.ypix(k)=max(dn+1,min(maxima.ypix(k),sim(1)-dn));
+                    maxima.xpix(k)=max(dn+1,min(maxima.xpix(k),sim(2)-dn));  
                     cutoutimages(:,:,ind)=zeros(2*dn+1,'single');
                 else
-                    maxima.y(k)=max(dn+1,min(maxima.y(k),sim(1)-dn));
-                    maxima.x(k)=max(dn+1,min(maxima.x(k),sim(2)-dn));
-                    cutoutimages(:,:,ind)=image(maxima.y(k)-dn:maxima.y(k)+dn,maxima.x(k)-dn:maxima.x(k)+dn); %coordinates exchanged.
+                    maxima.ypix(k)=max(dn+1,min(maxima.ypix(k),sim(1)-dn));
+                    maxima.xpix(k)=max(dn+1,min(maxima.xpix(k),sim(2)-dn));
+                    cutoutimages(:,:,ind)=image(maxima.ypix(k)-dn:maxima.ypix(k)+dn,maxima.xpix(k)-dn:maxima.xpix(k)+dn); %coordinates exchanged.
 %                     cutoutimages(:,:,ind)=zeros(kernelSize,kernelSize,1,'single');
                 end  
             end 
@@ -134,15 +134,15 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
             global tempinfo temprois
             inuse=tempinfo.inuse;
             fn=setdiff(fieldnames(maxima),{'x','y'});
-            for k=1:length(maxima.x)
-                x=maxima.x(k);y=maxima.y(k);
+            for k=1:length(maxima.xpix)
+                x=maxima.xpix(k);y=maxima.ypix(k);
                 %later: keep x0 as cut out position (has to be same), but
                 %update xsearch
                 inxy=find(tempinfo.groupindex(inuse)==maxima.groupindex(k));
                 if ~isempty(inxy) %already there
                     finuse=find(inuse);
                     indtemp=finuse(inxy(1)); %later: choose closest
-                    coi=cutoutimage(image,tempinfo.x(indtemp),tempinfo.y(indtemp),obj.dn);
+                    coi=cutoutimage(image,tempinfo.xpix(indtemp),tempinfo.ypix(indtemp),obj.dn);
                     temprois(:,:,indtemp)=temprois(:,:,indtemp)+coi;
                     %fill info
                     tempinfo.numrois(indtemp)=tempinfo.numrois(indtemp)+1;
@@ -163,8 +163,8 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
                     for ff=1:length(fn)
                         tempinfo.(fn{ff})(newind,1)=maxima.(fn{ff})(k);
                     end
-                    tempinfo.x(newind,1)=xh;
-                    tempinfo.y(newind,1)=yh; 
+                    tempinfo.xpix(newind,1)=xh;
+                    tempinfo.ypix(newind,1)=yh; 
                 end
             end
         end
@@ -188,8 +188,8 @@ classdef RoiCutterWF_groupExt<interfaces.WorkflowModule
             finuse=find(tempinfo.inuse);
             fout=finuse;
             cutoutimages=temprois(:,:,fout);
-            maximap.x=tempinfo.x(fout);
-            maximap.y=tempinfo.y(fout);
+            maximap.xpix=tempinfo.xpix(fout);
+            maximap.ypix=tempinfo.ypix(fout);
             
             tempinfo.inuse(fout)=false;
 %             tempinfo.dT(finuse)=tempinfo.dT(finuse)-1;% count down dark frames

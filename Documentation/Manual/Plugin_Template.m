@@ -12,6 +12,7 @@ classdef Plugin_Template<interfaces.DialogProcessor
             obj.history=false; %if set true, every time the plugin is called, its parameters are added to the history. Makes sense only if plugin changes the data
             obj.guiselector.show=true; %if true, the selector for simple vs complex GUI is shown.
             obj.excludeFromSave={'field'}; %dont save or load this GUI component
+            obj.propertiesToSave={'property'}; %save these properties along with the parameters, e.g. in the history
         end       
         function initGui(obj)
             %is called after the GUI, defined in guidef, is made. Here you
