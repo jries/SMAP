@@ -10,6 +10,7 @@ classdef deepSMLM<interfaces.WorkflowModule
         buffersize
         preview
         scaling
+        previewfigure
     end
     methods
         function obj=deepSMLM(varargin)
@@ -29,7 +30,7 @@ classdef deepSMLM<interfaces.WorkflowModule
             deeppath= [gitdir '/ries-private/InferenceSMLM/Inference_SMLM'];
             addpath([deeppath  '/src/matlab'])
             addpath([deeppath  '/build'])
-            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile,p.context_frames,'cpu',10);
+            
             
             obj.imagebuffer=[];
             if obj.getPar('loc_preview')
@@ -46,6 +47,7 @@ classdef deepSMLM<interfaces.WorkflowModule
             param=jsondecode(jsontxt);
             obj.scaling=param.Scaling;
             obj.scaling.channels=param.HyperParameter.channels_in;
+            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile,obj.scaling.channels,'cpu',10); %waht is 10 ? XXXXXXXXXXX
         end
         function dato=run(obj,data,p)
             %
@@ -56,6 +58,8 @@ classdef deepSMLM<interfaces.WorkflowModule
             yfactor=obj.scaling.dx_max*bufferfactor;
             zfactor=obj.scaling.z_max*bufferfactor;
             photfactor=obj.scaling.phot_max*bufferfactor;
+            bgfactor=obj.scaling.bg_max*bufferfactor;
+            
             image=data.data;%get;
             image=single(image); %now we use directly camera frames
             if isempty(image)
@@ -100,7 +104,9 @@ classdef deepSMLM<interfaces.WorkflowModule
             
             [outf, out_size] = obj.deepobj.forward(xf, x_shape);
             deepim = pseudo_row2_col_major(outf, out_size);
-             deepim(:,6,:,:)=imbufferadu;
+             deepim(:,7,:,:)=imbufferadu;
+             
+            
 %             deepim=permute(deepim,[1 2 4 3]);
             if timeblocks ==1 
                 if lastframe
@@ -137,6 +143,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 Zmap=squeeze(deepim(k,5,:,:));
                 dxmap=squeeze(deepim(k,4,:,:))*yfactor;
                 dymap=squeeze(deepim(k,3,:,:))*yfactor;
+                bgmap=squeeze(deepim(k,6,:,:))*bgfactor;
 
                 xfit=Xmap(linind);
                 yfit=Ymap(linind);
@@ -145,6 +152,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 pfit=probmap(linind);
                 dx=dxmap(linind);
                 dy=dymap(linind);
+                bg=bgmap(linind);
 
                 %export for SMAP
                 v1=0*xfit+1;
@@ -166,7 +174,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 locs.ypix=yfit;
                 locs.phot=intensity;
                 locs.znm=zfit;
-                locs.bg=0*xfit;
+                locs.bg=bg;
                 
                 dato=data; 
                 dato.frame=obj.bufferinfo.frame(k);
@@ -181,6 +189,17 @@ classdef deepSMLM<interfaces.WorkflowModule
             end
             if obj.preview
                 obj.setPar('preview_peakfind',locs);
+                if isempty(obj.previewfigure) || ~isvalid(obj.previewfigure)
+                    obj.previewfigure=figure;
+                end
+                deepimplot=permute(deepim,[4 3 2 1]);
+                deepimplot(:,:,2,:)=deepimplot(:,:,2,:)*photfactor;
+                deepimplot(:,:,3,:)=deepimplot(:,:,3,:)*xfactor;
+                deepimplot(:,:,4,:)=deepimplot(:,:,4,:)*yfactor;
+                deepimplot(:,:,5,:)=deepimplot(:,:,5,:)*zfactor;
+                deepimplot(:,:,6,:)=deepimplot(:,:,6,:)*bgfactor;
+                tags={[],[],{'probability','photons','dx','dy','znm','bg','image'},[]};
+                 imx(deepimplot,'Parent',obj.previewfigure,'Tags',tags)
             end
             obj.buffercounter=timeblocks-1; %before timeblocks: did we lose frames? XXXX
         end
