@@ -1,25 +1,51 @@
 function [locsout,indcombined,hroio]=getlocs(locData,fields,varargin)
 %returns subset of localizations. 
-%[locs,handle to roi]=getloc(obj,{fields},'PropertyName','Property')
-%fields: any locData field, in addition: 'ingrouped',
-%'inungrouped','within'
-% inlayeru, inlayerg: cell array with indices for each layer
+% call from the interfaces.LocalizationData object that is attached to all
+% plugins as obj.locData
+% [locsout,indcombined,hroio]=obj.locData.getloc({filed1, field2,...},'Name1','parameter1','Name2',...)
 
-%Properties:
-%'grouping': 'grouped', 'ungrouped' (second default),'layer'(default). If not set and combined with
-%'layer, use individual layer grouping. If any of layers is ungrouped,
-%return ungrouped localizations.
-%'channels': double vector of channels
+%output: 
+%locsout:   structure with fields corresponding ot the input field names
+%           containing all localizations that are requested by the name, parameter
+%           pairs.
+%indcombined    indices of all localizations that are returned
+%hroio      handle to image ROI
+
+
+%fields: any locData field, in addition: 
+% 'ingrouped','inungrouped': return a logical array that is true if the
+%           localization is displayed. For grouped and ungrouped localizations,
+%           respectively.
+% 'within': return true if inside the ROI.
+% inlayeru, inlayerg: return cell array with indices for each layer
+
+%Properties: Name, value pairs
+%'grouping': If to return grouped or ungrouped localizations
+%    'grouped': return grouped
+%    'ungrouped': return ungrouped 
+%    'layer'(default). For each layer determine the grouping from the
+%               setting in the layer
+%'channels': double vector of channels. Then localizations in the channels
+%               are returned
 %'filenumber': double vector of filenumbers
-%'position': 'all' (default),'roi','fov': position filter
-%'position': vector: [centerx, centery, widhtx widthy] or [centerx,
-%centery,radius] for circular ROI
-%   'interfaces.SEsites: localizations in site.
-%'layer': double number or vector of layers.
-
+%'position': If to return localizations in a defined ROI
+%       'all' (default): do not filter by position (xnm, ynm)
+%       'roi': Return localizations in the user-defined image ROI. If no
+%               ROI is defined, use the fov
+%       'fov': return localizations in the FoV (area currently displayed in
+%               the reconstructed image
+%        numerical vector: [centerx, centery, widhtx widthy] for rectangular ROI or 
+%                   [centerx, centery,radius] for circular ROI
+%        a 'interfaces.SEsites object: localizations in site.
+%'layer': localizations from which layer to use
+%           double number or vector: use these layers and filter the
+%           localizations according to the layer. if parameter 'layer' is
+%           not set, use all localizations without filtering
 %'removeFilter': cell array of filter names to remove 
-%'within', indices which localizations to consider.
-%'shiftxy', shifts x, y  and z by specified vector
+%'within': pass on indicies of localizations, those are considered in the
+%           output
+%'shiftxy', shifts x, y  (and z) as specified in a numerical vector with 2
+%           (3) entries
 
  p=roiparser(varargin); 
 if ischar(fields)

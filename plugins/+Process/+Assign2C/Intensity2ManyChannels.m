@@ -158,13 +158,14 @@ end
 [n1,n2]=getintensities(obj);
 % f=figure(944);
 % ax=gca;
-ax=obj.initaxis('n1 vs n2')
+ax=obj.initaxis('n1 vs n2');
 obj.axis=ax;
 drawhistogram(obj,ax,n1,n2,obj.getSingleGuiParameter('logscale'))
 cmap=prism(100);
 
 if channel==-1
     obj.rois={};
+    obj.roihandles={};
     return
 end
 
