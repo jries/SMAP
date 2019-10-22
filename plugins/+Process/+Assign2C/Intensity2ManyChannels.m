@@ -150,7 +150,9 @@ end
 end
 
 function roi_callback(a,b,obj,channel)
-
+if channel==3
+    channel=obj.getSingleGuiParameter('chN');
+end
 %channel==0; only draw
 
 [n1,n2]=getintensities(obj);

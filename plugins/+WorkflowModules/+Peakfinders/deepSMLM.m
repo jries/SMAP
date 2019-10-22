@@ -28,7 +28,8 @@ classdef deepSMLM<interfaces.WorkflowModule
             gitdir=fileparts(pwd);
             deeppath= [gitdir '/ries-private/InferenceSMLM/Inference_SMLM'];
             addpath([deeppath  '/src/matlab'])
-            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile,p.context_frames);
+            addpath([deeppath  '/build'])
+            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile,p.context_frames,'cpu',10);
             
             obj.imagebuffer=[];
             if obj.getPar('loc_preview')
@@ -38,14 +39,17 @@ classdef deepSMLM<interfaces.WorkflowModule
             end
             obj.preview=obj.getPar('loc_preview');
             ind=strfind(p.modelfile,'_');
-            jsonfile=[p.modelfile(1:ind(end-2)) 'param.json'];
-            jsontxt=fileread(jsonfile);
+%             [mpath mfile]=fileparts(p.modelfile);
+            jsonfile=dir([p.modelfile(1:ind(2)) '*.json']);
+%             jsonfile=[p.modelfile(1:ind(end-2)) 'param.json'];
+            jsontxt=fileread([jsonfile.folder filesep jsonfile.name]);
             param=jsondecode(jsontxt);
             obj.scaling=param.Scaling;
+            obj.scaling.channels=param.HyperParameter.channels_in;
         end
         function dato=run(obj,data,p)
             %
-            timeblocks=p.context_frames; %3 frames analyzed together
+            timeblocks=obj.scaling.channels; %3 frames analyzed together
             dato=[];
             bufferfactor=obj.scaling.linearisation_buffer;
             xfactor=obj.scaling.dy_max*bufferfactor;
@@ -169,6 +173,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 dato.ID=dato.frame;
                 dato.data=locs; 
                 obj.output(dato);
+                dato=[]; %not to output it again when returning from the function
             end
             if obj.buffersize>1 && timeblocks>1
             obj.imagebuffer(1:2,:,:)=obj.imagebuffer(obj.buffersize-1:end,:,:);
@@ -219,14 +224,14 @@ pard.buffersize.object=struct('Style','edit','String','100');
 pard.buffersize.position=[4,2];
 pard.buffersize.Width=.35;
 
-pard.context_framest.object=struct('Style','text','String','Channels');
-pard.context_framest.position=[5,1];
-pard.context_framest.Width=1;
-pard.context_frames.object=struct('Style','edit','String','3');
-pard.context_frames.position=[5,2];
-pard.context_frames.Width=.35;
-pard.context_frames.TooltipString='Number of frames ananlyzed simultaneously';
-pard.context_framest.TooltipString=pard.context_frames.TooltipString;
+% pard.context_framest.object=struct('Style','text','String','Channels');
+% pard.context_framest.position=[5,1];
+% pard.context_framest.Width=1;
+% pard.context_frames.object=struct('Style','edit','String','3');
+% pard.context_frames.position=[5,2];
+% pard.context_frames.Width=.35;
+% pard.context_frames.TooltipString='Number of frames ananlyzed simultaneously';
+% pard.context_framest.TooltipString=pard.context_frames.TooltipString;
 
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='';

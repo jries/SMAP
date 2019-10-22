@@ -75,26 +75,26 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             maximainit.x=pos.x;
             maximainit.y=pos.y;  
             if p.estimateStartParameters
-                maxima.z=v0;
+                maxima.znm=v0;
                 maxima.bg=v0;
-                maxima.N=v0;
+                maxima.phot=v0;
                 for k=1:length(maxima.xpix)
                     roiim=image(pos.y(k)-drfit:pos.y(k)+drfit,pos.x(k)-drfit:pos.x(k)+drfit);
 %                     maxima.bg(k)=quantile(roiim(:),0.2);
                     maxima.bg(k)=bgglobal;
 %                     maxima.N(k)=(sum(roiim(:))-maxima.bg(k)*sizepixfit);
-                    maxima.N(k)=(max(roiim(:))-maxima.bg(k)*sigma2*pi);
+                    maxima.phot(k)=(max(roiim(:))-maxima.bg(k)*sigma2*pi);
                 end
 
             else %use this now for deepStorm
-                maxima.z=-maxima.znm; %XXXXX 
+                maxima.znm=-maxima.znm; %XXXXX 
                 maxima.bg=bgglobal; %currently not calculated
             end
             
             if obj.preview
                 previewcollage=zeros(3*(2*drfit+1),2*(2*drfit+1),length(maxima.xpix),'single');
             end
-            coord=[maxima.xpix-pos.x,maxima.ypix-pos.y,maxima.z,maxima.N,maxima.bg]; %BG set to zero
+            coord=[maxima.xpix-pos.x,maxima.ypix-pos.y,maxima.znm,maxima.phot,maxima.bg]; %BG set to zero
             % in iterations, previous bg used for starting value. BG always
             % as offset of single molecule model.
             coord0=coord;
