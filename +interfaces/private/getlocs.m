@@ -166,7 +166,7 @@ for k=1:length(p.layer)
      if ~iscell(p.removeFilter)
          p.removeFilter={p.removeFilter};
      end
-      if isnumeric(p.position)||strcmp(p.position,'all')||strcmp(p.position,'default')
+      if isnumeric(p.position)||strcmp(p.position,'all')||strcmp(p.position,'default') ||strcmp(p.position,'roi')
           p.removeFilter=[p.removeFilter,{'xnm','ynm'}];
       end
       if ~isempty(p.channel)

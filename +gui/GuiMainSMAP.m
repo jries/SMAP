@@ -91,7 +91,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             set(handle,'Position',[vpossmap hpos obj.guiPar.width height]);            
             set(handle,'ButtonDownFcn',{@figure_selected,obj},...
                 'SizeChangedFcn',{@sizechanged_callback,obj},'NumberTitle','off')
-            drawnow
+            drawnow 
 
             tabpos=[2 32 obj.guiPar.width-2 368];
 

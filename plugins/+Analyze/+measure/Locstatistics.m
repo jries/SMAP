@@ -44,10 +44,12 @@ classdef Locstatistics<interfaces.DialogProcessor
                 tcl=[tcl sprintf('\t locprecznm max') ];
             end
             tcl=[tcl 13];
+            filename=obj.locData.files.file.name;
+            newFilename = strrep(filename,'\','-');
             for k=1:length(out.photons.Nloc)
-                th=sprintf([ modetxt{k} '\t' num2str(out.photons.Nloc(k)) '\t' num2str(out.photons.mu(k)) '\t'  num2str(out.locprec.max(k)) '\t'...
+                th=sprintf([newFilename '\t' num2str(out.photons.Nloc(k)) '\t' num2str(out.photons.mu(k)) '\t'  num2str(out.locprec.max(k)) '\t'...
                     num2str(out.locprec.median(k)) '\t' num2str(out.locprec.rising(k)) '\t' num2str(out.lifetime.mu(k)) '\t'...
-                    num2str(out.background.mean(k))]);
+                    num2str(out.background.mean(k)) '\t' num2str(out.background.max(k))]);
                 if isfield(out,'PSFxnm')
                     th=[th 9 num2str(out.PSFxnm.max(k))];
                 end
@@ -56,7 +58,7 @@ classdef Locstatistics<interfaces.DialogProcessor
                 end
                 tcl=[tcl th 13];
             end
-            out.clipboard=tcl;
+            out.clipboard=th;
 
         end
         function pard=guidef(obj)
