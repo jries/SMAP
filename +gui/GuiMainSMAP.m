@@ -152,6 +152,11 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.status.Position(2)=1;
             obj.addSynchronization('status',h.status,{'String'})             
 
+            
+            h.errorindicator=uicontrol(handle,'Style','togglebutton','Units','normalized',...
+                'Position',[0.01,0.002,.03,.03],'String',' ','Callback',{@error_reset,obj});
+            obj.addSynchronization('errorindicator',[],[],{@error_callback,obj,0}) 
+            
             %Plugins
 
             obj.status('init plugins')
@@ -316,6 +321,34 @@ htab.SelectedTab.Parent=hnew;
 
 end
 
+function error_callback(obj,b)
+if strcmp(obj.getPar('errorindicator'),'clear')
+    obj.guihandles.errorindicator.Value=0;
+    resetstyle(obj)
+else
+    obj.guihandles.errorindicator.Value=1;
+    obj.guihandles.errorindicator.BackgroundColor=[1 0 0];
+    obj.guihandles.errorindicator.ForegroundColor=[1 0 0];
+%     object.ForegroundColor=[0 1 1];
+    obj.guihandles.errorindicator.FontWeight='bold';
+    obj.guihandles.errorindicator.String='E';
+end
+
+end
+
+function error_reset(a,b,obj)
+if a.Value==0
+warndlg(obj.getPar('errorindicator'));
+resetstyle(obj)
+end
+end
+
+function resetstyle(obj)
+    obj.guihandles.errorindicator.BackgroundColor=[.94 .94 .94];
+    obj.guihandles.errorindicator.ForegroundColor=[0 0 0];
+    obj.guihandles.errorindicator.FontWeight='normal';
+    obj.guihandles.errorindicator.String=' ';
+end
 % function saveplugin_callback(a,b,obj)
 % 
 % end
