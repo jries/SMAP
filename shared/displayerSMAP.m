@@ -55,6 +55,12 @@ for k=1:length(layers)
               txtN=[txtN 'N'  num2str(k) '=' shortnumber(fi.numberOfLocs) ', '];
          end
          if layersnext
+             if fi.istiff
+                 if ~all(size(imall)==size(fi.image))%s&&~layersnext
+                    simh=size(imall); 
+                    fi.image=imresize(fi.image,simh(1:2));
+                 end
+             end
              s=size(fi.image);
              if s(2)>s(1)*1.3 
                  vertnext=true;
