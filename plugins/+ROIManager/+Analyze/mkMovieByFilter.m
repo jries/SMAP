@@ -1,7 +1,7 @@
-classdef mkMoiveByFilter<interfaces.DialogProcessor&interfaces.SEProcessor
+classdef mkMovieByFilter<interfaces.DialogProcessor&interfaces.SEProcessor
 %     Export ROIs as a  movie (running window averaging)
     methods
-        function obj=mkMoiveByFilter(varargin)        
+        function obj=mkMovieByFilter(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
             obj.inputParameters={'se_viewer'};
             obj.showresults=true;

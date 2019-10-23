@@ -8,7 +8,7 @@ if nargin==0
     imageo={'ch_filelist','sr_pixrec','sr_axes','sr_pos','sr_size','rendermode','render_colormode',...
                 'renderfield','colorfield_min','colorfield_max','groupcheck','lut','shiftxy_min','shiftxy_max'...
                 'mingaussnm','mingausspix','gaussfac','sr_sizeRecPix','shift','displayLocsInd','cam_pixelsize_um','remout',...
-                'rangex','rangey','intensitycoding','sr_layersseparate','sr_layerson'};
+                'rangex','rangey','intensitycoding','sr_layersseparate','sr_layerson','sr_plotcomposite'};
     return          
 end
 
@@ -71,9 +71,14 @@ if nargin>3&&isempty(indin)
 end
 sizefac=1;
 if isfield(p,'sr_layersseparate')&&~isempty(p.sr_layersseparate)&&p.sr_layersseparate
+    if isfield(p,'sr_plotcomposite')&&~isempty(p.sr_plotcomposite)&&p.sr_plotcomposite
+        addc=1;
+    else
+        addc=0;
+    end
     if isfield(p,'sr_size')&&~isempty(p.sr_size)&&isfield(p,'sr_layerson')
-        p.sr_size(1)=p.sr_size(1)/sum(p.sr_layerson);
-        sizefac=1/sum(p.sr_layerson);
+        p.sr_size(1)=p.sr_size(1)/(sum(p.sr_layerson)+addc);
+        sizefac=1/(sum(p.sr_layerson)+addc);
     else   
     end
 end

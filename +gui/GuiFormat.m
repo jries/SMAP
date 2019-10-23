@@ -11,7 +11,7 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
     methods
         function obj=GuiFormat(varargin)
             obj@interfaces.GuiModuleInterface(varargin{:})     
-            obj.outputParameters={'sr_layersseparate','sr_plotlayernames'};
+            obj.outputParameters={'sr_layersseparate','sr_plotlayernames','sr_plotcomposite'};
             obj.propertiesToSave={'roimode','roiposition'};
         end
         function makeGui(obj)
@@ -61,7 +61,7 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.resetview=uicontrol('Style','pushbutton','Parent',h.hformat,'String','Reset','Position',[width/2,0.1*fieldheight,width/2,fieldheight*1.4],'FontSize',fontsize,'Callback',{@resetview_callback,obj});
             h.parformat=uicontrol('Style','pushbutton','Parent',h.hformat,'String','Par','Position',[0,0.1*fieldheight,width/2,fieldheight*1.4],'FontSize',fontsize,'Callback',{@formatpardialog,obj});
             
-            h.hlayers=uipanel('Parent',obj.handle,'Title','layers','Units','pixel','Position',[1 15*fieldheight widtht 3*fieldheight+15]);
+            h.hlayers=uipanel('Parent',obj.handle,'Title','layers','Units','pixel','Position',[1 15*fieldheight widtht 4*fieldheight+15]);
             h.layeron3=uicontrol('Style','checkbox','Parent',h.hlayers,'String','3','Position',[width/3,fieldheight,width/3,fieldheight],'FontSize',fontsize);
             h.layeron6=uicontrol('Style','checkbox','Parent',h.hlayers,'String','6','Position',[width/3*2,0,width/3,fieldheight],'FontSize',fontsize);
             h.layeron2=uicontrol('Style','checkbox','Parent',h.hlayers,'String','2','Position',[0,0,width/3,fieldheight],'FontSize',fontsize);
@@ -69,7 +69,8 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.layeron1=uicontrol('Style','checkbox','Parent',h.hlayers,'String','1','Value',1,'Position',[0,fieldheight,width/3,fieldheight],'FontSize',fontsize);
             h.layeron4=uicontrol('Style','checkbox','Parent',h.hlayers,'String','4','Position',[width/3,0,width/3,fieldheight],'FontSize',fontsize);
             h.sr_layersseparate=uicontrol('Style','checkbox','Parent',h.hlayers,'String','split','Value',0,'Position',[0,2*fieldheight,width*.6,fieldheight],'FontSize',fontsize*.8);
-            h.sr_plotlayernames=uicontrol('Style','checkbox','Parent',h.hlayers,'String','label','Value',0,'Position',[width/2,2*fieldheight,width*.6,fieldheight],'FontSize',fontsize*0.8);
+            h.sr_plotcomposite=uicontrol('Style','checkbox','Parent',h.hlayers,'String','comp','Value',0,'Position',[width/2-5,2*fieldheight,width*.6,fieldheight],'FontSize',fontsize*.8);
+            h.sr_plotlayernames=uicontrol('Style','checkbox','Parent',h.hlayers,'String','label','Value',0,'Position',[0,3*fieldheight,width*.6,fieldheight],'FontSize',fontsize*0.8);
             
             
              h.layeron1.Callback={@obj.layer_update,1};
