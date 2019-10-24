@@ -37,7 +37,9 @@ classdef PeakFinder<interfaces.WorkflowModule
         function dato=run(obj,data,p)
             image=data.data;%get;
             if ~isempty(image)
-                image(~obj.roimask)=-1;
+                if all(size(obj.roimask)== size(image))
+                    image(~obj.roimask)=-1;
+                end
             switch p.peakfindmethod.Value
                 case 1 %maximum
                     maxima=maximumfindcall(image); %find maxima
