@@ -293,8 +293,10 @@ methods
              else
                  dim(2)=obj.guihandles.hmenu{2}.Value;
              end
-             dim(3)=str2double(strrep(strrep(obj.guihandles.hslidert{1}.String,'x','1'),'y','2'));
              s=size(obj.V);
+             if length(s)>3
+             dim(3)=str2double(strrep(strrep(obj.guihandles.hslidert{1}.String,'x','1'),'y','2'));
+             end
              if length(s)>3
              dim(4)=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','1'),'y','2'));
              end
@@ -304,11 +306,13 @@ methods
                 obj.showframes{dim(k)}=1:s(dim(k));
              end
              for k=3:length(dim)
-                 if length(obj.showframes{dim(k)})>1
+                 if dim(k)<=length(obj.showframes) && length(obj.showframes{dim(k)})>1 
                      obj.showframes{dim(k)}=round(mean(obj.showframes{dim(k)}));
                  end
              end
+             if length(s)>2
             obj.showframes{dim(3)}=round(str2double(obj.guihandles.hframe{1}.String));
+             end
             if length(s)>3 %&& strcmp(obj.guihandles.hframe{2}.Visible,'on')
                 obj.showframes{dim(4)}=round(str2double(obj.guihandles.hframe{2}.String));
             end

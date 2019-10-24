@@ -1,4 +1,5 @@
-function [par,cam,state]=getCameraCalibration(imloader,l,silent,file)
+function [par,cam,state,error]=getCameraCalibration(imloader,l,silent,file)
+error='';
 if nargin<3||isempty(silent)
     silent=false;
 end
@@ -8,7 +9,6 @@ if nargin<4||isempty(file)
     file='settings/cameras.mat';
 end
 % replacefields={'cam_pixelsize_um','pixsize'};
-
 replacefields={};
 par=[];
 cam=[];
@@ -47,6 +47,7 @@ if isempty(val)
         cam=find(strcmp(camnames,'Default'));
         state=1;
         disp('Camera not recognized. Use default');
+        error='Camera not recognized. Use default camera. Make sure this is correct, e.g. by checking the parameters in the set Cam Parameters dialog.';
         if isempty(cam)&~silent
             errordlg('create Default camera with Camera Manager')
         end    

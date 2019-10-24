@@ -37,7 +37,7 @@ classdef Loc2pos<interfaces.WorkflowModule
                 intLoc2pos_ind2=ind1;
                 if ~intLoc2pos_locframes(intLoc2pos_ind2)==frame %no localizatiaon in frame
                       datout=data;%.copy;
-                     datout.data.x=[];%.set(maxout);
+                     datout.data.xpix=[];%.set(maxout);
                     return
                 end
                 while intLoc2pos_ind2<=lf&&intLoc2pos_locframes(intLoc2pos_ind2)==frame
@@ -46,7 +46,7 @@ classdef Loc2pos<interfaces.WorkflowModule
                 intLoc2pos_ind2=intLoc2pos_ind2-1;
  
               [~,maxout]=nm2pixLoc(obj.locs.xnm(ind1:intLoc2pos_ind2),obj.locs.ynm(ind1:intLoc2pos_ind2),obj.filestruc.info.cam_pixelsize_um*1000,obj.filestruc.info.roi);
-               maxout.frame=frame+0*maxout.y;
+               maxout.frame=frame+0*maxout.ypix;
                datout=data;%.copy;
                datout.data=maxout;%.set(maxout);
 %                obj.output(datout); 

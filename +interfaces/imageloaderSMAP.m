@@ -170,7 +170,12 @@ classdef imageloaderSMAP<interfaces.GuiParameterInterface
             catch
                 usedef=true;
             end
-            md=getCameraCalibration(obj,[],usedef,findsettingsfile(camfile,obj));
+            [md,~,~,error]=getCameraCalibration(obj,[],usedef,findsettingsfile(camfile,obj));
+            if ~isempty(error)
+                obj.setPar('errorindicator',error)
+            else
+                obj.setPar('errorindicator','clear') %when it works, clear message
+            end
             if isempty(md)
                 metao=[];
                 return

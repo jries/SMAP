@@ -105,7 +105,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                 %plot locs
                 if ~isempty(locs)&&~isempty(locs.xpix)
                     
-                    plot(ax,locs.xpix,locs.ypix,'ko','Parent',ax,'MarkerSize',4)
+                    plot(ax,locs.xpix,locs.ypix,'k.','Parent',ax,'MarkerSize',4)
                     dn=ceil((obj.getPar('loc_ROIsize')-1)/2);
                     if isempty(dn)
                         dn=3;

@@ -10,12 +10,12 @@ tab.hloc.name=Localizations;
 
 LoaderGUI.Vpos=1;
 LoaderGUI.handle=hframe;
-CameraConverter.Vpos=8.5;
-CameraConverter.handle=hframe;
+
 OnlineReconstruction.Vpos=1;
 OnlineReconstruction.Xpos=1;
 OnlineReconstruction.handle=hloc;  
-         
+CameraConverter.Vpos=8.5;
+CameraConverter.handle=hframe;        
 RoiAdder.Vpos=2;
 RoiAdder.Xpos=4;
 RoiAdder.handle=hfilter;   

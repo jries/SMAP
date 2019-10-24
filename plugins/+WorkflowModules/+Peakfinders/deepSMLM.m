@@ -10,6 +10,7 @@ classdef deepSMLM<interfaces.WorkflowModule
         buffersize
         preview
         scaling
+        previewfigure
     end
     methods
         function obj=deepSMLM(varargin)
@@ -28,7 +29,8 @@ classdef deepSMLM<interfaces.WorkflowModule
             gitdir=fileparts(pwd);
             deeppath= [gitdir '/ries-private/InferenceSMLM/Inference_SMLM'];
             addpath([deeppath  '/src/matlab'])
-            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile,p.context_frames);
+            addpath([deeppath  '/build'])
+            
             
             obj.imagebuffer=[];
             if obj.getPar('loc_preview')
@@ -38,20 +40,26 @@ classdef deepSMLM<interfaces.WorkflowModule
             end
             obj.preview=obj.getPar('loc_preview');
             ind=strfind(p.modelfile,'_');
-            jsonfile=[p.modelfile(1:ind(end-2)) 'param.json'];
-            jsontxt=fileread(jsonfile);
+%             [mpath mfile]=fileparts(p.modelfile);
+            jsonfile=dir([p.modelfile(1:ind(2)) '*.json']);
+%             jsonfile=[p.modelfile(1:ind(end-2)) 'param.json'];
+            jsontxt=fileread([jsonfile.folder filesep jsonfile.name]);
             param=jsondecode(jsontxt);
             obj.scaling=param.Scaling;
+            obj.scaling.channels=param.HyperParameter.channels_in;
+            obj.deepobj=mex_interface(str2fun([deeppath '/build/deepsmlm_interface']), p.modelfile,obj.scaling.channels,'cpu',10); %waht is 10 ? XXXXXXXXXXX
         end
         function dato=run(obj,data,p)
             %
-            timeblocks=p.context_frames; %3 frames analyzed together
+            timeblocks=obj.scaling.channels; %3 frames analyzed together
             dato=[];
             bufferfactor=obj.scaling.linearisation_buffer;
             xfactor=obj.scaling.dy_max*bufferfactor;
             yfactor=obj.scaling.dx_max*bufferfactor;
             zfactor=obj.scaling.z_max*bufferfactor;
             photfactor=obj.scaling.phot_max*bufferfactor;
+            bgfactor=obj.scaling.bg_max*bufferfactor;
+            
             image=data.data;%get;
             image=single(image); %now we use directly camera frames
             if isempty(image)
@@ -96,7 +104,9 @@ classdef deepSMLM<interfaces.WorkflowModule
             
             [outf, out_size] = obj.deepobj.forward(xf, x_shape);
             deepim = pseudo_row2_col_major(outf, out_size);
-             deepim(:,6,:,:)=imbufferadu;
+             deepim(:,7,:,:)=imbufferadu;
+             
+            
 %             deepim=permute(deepim,[1 2 4 3]);
             if timeblocks ==1 
                 if lastframe
@@ -133,6 +143,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 Zmap=squeeze(deepim(k,5,:,:));
                 dxmap=squeeze(deepim(k,4,:,:))*yfactor;
                 dymap=squeeze(deepim(k,3,:,:))*yfactor;
+                bgmap=squeeze(deepim(k,6,:,:))*bgfactor;
 
                 xfit=Xmap(linind);
                 yfit=Ymap(linind);
@@ -141,6 +152,7 @@ classdef deepSMLM<interfaces.WorkflowModule
                 pfit=probmap(linind);
                 dx=dxmap(linind);
                 dy=dymap(linind);
+                bg=bgmap(linind);
 
                 %export for SMAP
                 v1=0*xfit+1;
@@ -162,13 +174,14 @@ classdef deepSMLM<interfaces.WorkflowModule
                 locs.ypix=yfit;
                 locs.phot=intensity;
                 locs.znm=zfit;
-                locs.bg=0*xfit;
+                locs.bg=bg;
                 
                 dato=data; 
                 dato.frame=obj.bufferinfo.frame(k);
                 dato.ID=dato.frame;
                 dato.data=locs; 
                 obj.output(dato);
+                dato=[]; %not to output it again when returning from the function
             end
             if obj.buffersize>1 && timeblocks>1
             obj.imagebuffer(1:2,:,:)=obj.imagebuffer(obj.buffersize-1:end,:,:);
@@ -176,6 +189,17 @@ classdef deepSMLM<interfaces.WorkflowModule
             end
             if obj.preview
                 obj.setPar('preview_peakfind',locs);
+                if isempty(obj.previewfigure) || ~isvalid(obj.previewfigure)
+                    obj.previewfigure=figure;
+                end
+                deepimplot=permute(deepim,[4 3 2 1]);
+                deepimplot(:,:,2,:)=deepimplot(:,:,2,:)*photfactor;
+                deepimplot(:,:,3,:)=deepimplot(:,:,3,:)*xfactor;
+                deepimplot(:,:,4,:)=deepimplot(:,:,4,:)*yfactor;
+                deepimplot(:,:,5,:)=deepimplot(:,:,5,:)*zfactor;
+                deepimplot(:,:,6,:)=deepimplot(:,:,6,:)*bgfactor;
+                tags={[],[],{'probability','photons','dx','dy','znm','bg','image'},[]};
+                 imx(deepimplot,'Parent',obj.previewfigure,'Tags',tags)
             end
             obj.buffercounter=timeblocks-1; %before timeblocks: did we lose frames? XXXX
         end
@@ -219,14 +243,14 @@ pard.buffersize.object=struct('Style','edit','String','100');
 pard.buffersize.position=[4,2];
 pard.buffersize.Width=.35;
 
-pard.context_framest.object=struct('Style','text','String','Channels');
-pard.context_framest.position=[5,1];
-pard.context_framest.Width=1;
-pard.context_frames.object=struct('Style','edit','String','3');
-pard.context_frames.position=[5,2];
-pard.context_frames.Width=.35;
-pard.context_frames.TooltipString='Number of frames ananlyzed simultaneously';
-pard.context_framest.TooltipString=pard.context_frames.TooltipString;
+% pard.context_framest.object=struct('Style','text','String','Channels');
+% pard.context_framest.position=[5,1];
+% pard.context_framest.Width=1;
+% pard.context_frames.object=struct('Style','edit','String','3');
+% pard.context_frames.position=[5,2];
+% pard.context_frames.Width=.35;
+% pard.context_frames.TooltipString='Number of frames ananlyzed simultaneously';
+% pard.context_framest.TooltipString=pard.context_frames.TooltipString;
 
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='';

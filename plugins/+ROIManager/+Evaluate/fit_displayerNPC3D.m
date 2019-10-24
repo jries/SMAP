@@ -1,7 +1,7 @@
-classdef fit_displayer<interfaces.SEEvaluationProcessor
+classdef fit_displayerNPC3D<interfaces.SEEvaluationProcessor
 
     methods
-        function obj=fit_displayer(varargin)        
+        function obj=fit_displayerNPC3D(varargin)        
                 obj@interfaces.SEEvaluationProcessor(varargin{:});
         end
         

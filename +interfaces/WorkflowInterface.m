@@ -8,7 +8,7 @@ classdef WorkflowInterface<handle
         UID
         inputchanneldescription={};
     end
-    properties(Access=private) 
+    properties (Access=private) 
         inputData
         syncmode='frame'; %ID or frame. used for synching two inputs.
         runparameters;
@@ -91,6 +91,7 @@ classdef WorkflowInterface<handle
                     inputData=obj.inputData;
                     inputData.add(data,tag,inputchannel);
                     indc=inputData.iscomplete;
+%                     obj
                     for k=1:length(indc) 
                         dat=inputData.get(indc(k));
                         output=obj.run(dat,p); 

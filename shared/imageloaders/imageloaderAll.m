@@ -1,4 +1,4 @@
-function io=imageloaderAll(varargin)
+function [io]=imageloaderAll(varargin)
 % imageloaderAll selects the right image loader based on the presence of
 % metadata.
 %file, metadata, P
@@ -39,7 +39,7 @@ end
            imloader=@imageloaderOME;
    end    
    try
-        io=imloader(varargin{:});
+        [io]=imloader(varargin{:});
    catch err
        err
        disp('simple tiff loader loader')

@@ -134,7 +134,7 @@ dz=obj.spline.SXY(1).cspline.dz;
     if p.fixz0
         z=zeros(sim(3),1)+p.z0;
     else
-        z=loc.z/dz;
+        z=loc.znm/dz;
     end
     cor=horzcat(loc.dx+dn,loc.dy+dn,-z+zmp);
    

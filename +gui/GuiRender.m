@@ -140,26 +140,6 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
              guiformat.roiset(obj.temproi);
             end
              
-%             sep=obj.getPar('sr_layersseparate');
-%             if ~isempty(sep)&&sep
-%                 if isempty(obj.multilayerfig)||~isvalid(obj.multilayerfig)
-%                     obj.multilayerfig=figure;
-%                 else
-%                     figure(obj.multilayerfig)
-%                 end
-%                 onlayer=find(obj.getPar('sr_layerson'));
-%                 numl=length(onlayer);
-%                 for k=1:numl
-%                     subplot(1,numl,k)
-%                     thisim=obj.locData.layer(onlayer(k)).images.finalImages;
-%                     imagesc(thisim.rangex,thisim.rangey,thisim.image);
-%                     axis equal
-%                     
-%                 end
-%             end
-%             if ~rf
-%                 obj.status('display done');
-%             end
         end
         
         function draw(obj)

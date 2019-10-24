@@ -21,6 +21,13 @@ classdef PSFmodel<interfaces.GuiModuleInterface
     methods
         function img=render(obj,locsh,xrange,yrange,varargin)
             p=parseinput(varargin{:});
+            if ~isfield(locsh,'x')
+                locsh.x=locsh.xpix;
+                locsh.y=locsh.ypix;
+            end
+            if ~isfield(locsh,'z')
+                locsh.z=locsh.znm;
+            end
             %or xrange: pixels in x, yrange pixels in y, locs already in
             %name value: pixelsizex pixelsizey lut
             %pixel units

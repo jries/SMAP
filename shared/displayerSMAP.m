@@ -2,18 +2,18 @@ function [imout,sr_imagehandle]=displayerSMAP(layers,p)
 % Combines rendered images from different channels and adds scale and color bars.
 if nargin==0
     %input parameters
-    imout={'sr_layerson','sr_axes','sr_sizeRecPix','roihandle','sr_pixrec','rotationangle','sr_pos','sr_size','sr_layersseparate','layernames','sr_plotlayernames','sr_plotscalebar','sr_colorbarthickness'};
+    imout={'sr_plotcomposite','sr_layerson','sr_axes','sr_sizeRecPix','roihandle','sr_pixrec','rotationangle','sr_pos','sr_size','sr_layersseparate','layernames','sr_plotlayernames','sr_plotscalebar','sr_colorbarthickness'};
     return          
 end
 
 layersnext=isfield(p,'sr_layersseparate')&&~isempty(p.sr_layersseparate)&&p.sr_layersseparate;
-    
-rim=0;
+        plotcomposite=isfield(p,'sr_plotcomposite')&&~isempty(p.sr_plotcomposite)&&p.sr_plotcomposite; % also plot composite
 
-show=0;
 tiffthere=0;
 txtN='';
 allnext=[];
+
+
 
 for k=1:length(layers)
 
@@ -55,6 +55,12 @@ for k=1:length(layers)
               txtN=[txtN 'N'  num2str(k) '=' shortnumber(fi.numberOfLocs) ', '];
          end
          if layersnext
+             if fi.istiff
+                 if ~all(size(imall)==size(fi.image))%s&&~layersnext
+                    simh=size(imall); 
+                    fi.image=imresize(fi.image,simh(1:2));
+                 end
+             end
              s=size(fi.image);
              if s(2)>s(1)*1.3 
                  vertnext=true;
@@ -68,6 +74,8 @@ for k=1:length(layers)
         end
     end
 end
+
+
 %make color bars
 if ~exist('imall','var')&&~tiffthere
     imout=[];
@@ -114,9 +122,18 @@ for k=1:(length(layers))
     end
 end
 
+
 if layersnext
+    if plotcomposite
+         if vertnext
+             allnext=vertcat(imfinal,allnext);
+         else
+             allnext=horzcat(allnext,imfinal);
+         end
+    end
+    
      imfinal=allnext;
-     nlayer=sum(p.sr_layerson)-1;
+     nlayer=sum(p.sr_layerson)-1+plotcomposite;
      if vertnext
          rangeyplot(2)=rangeyplot(2)+nlayer*(rangeyplot(2)-rangeyplot(1));
      else
@@ -174,6 +191,13 @@ end
                      
                      dxy=dxy+1;
                  end
+             end
+             if layersnext && plotcomposite
+                 dx=(layers(k).images.srimage.rangex(2)-layers(k).images.srimage.rangex(1))/1000*dxy;
+                 px=layers(k).images.srimage.rangex(1)/1000+dx+p.sr_pixrec/1000*5;
+                 py=layers(k).images.srimage.rangey(1)/1000;
+                 th=text(p.sr_axes,px,py,'composite','Color','w','FontSize',fontsize,'BackgroundColor','k','Units','data');
+                 th.Position(2)=th.Position(2)+th.Extent(4)*(dy+.6)*1.2;
              end
             
         end

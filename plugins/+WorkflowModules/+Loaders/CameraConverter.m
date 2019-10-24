@@ -116,8 +116,8 @@ classdef CameraConverter<interfaces.WorkflowModule
             imphot=(single(imgp)-obj.offset)*obj.adu2phot;
                datao=data;
                datao.data=imphot;  
-           if obj.preview && ~isempty(imgp)
-               obj.setPar('preview_image',imgp);
+           if obj.preview && ~isempty(imphot)
+               obj.setPar('preview_image',imphot);
            end
         end
        
