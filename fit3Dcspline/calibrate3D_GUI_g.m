@@ -387,6 +387,7 @@ classdef calibrate3D_GUI_g<handle
                 return
             end
             p.smappos=obj.smappos;
+            p.smap=true;
             img=readbeadimages(fl{1},p);
             imgmax=max(img,[],3);
             qm=myquantile(imgmax(:),.999);
@@ -405,22 +406,53 @@ classdef calibrate3D_GUI_g<handle
             end
             h=fun(ax);
             position=wait(h);
-            roimask=createMask(h);
+            roimask1=createMask(h);
+            %get displacement
             splitpos=str2double(obj.guihandles.Tsplitpos.String);
             switch obj.guihandles.roi2c.String{obj.guihandles.roi2c.Value}
                 case 'single'
-                    roimask2=roimask;
+                    i1=[];i2=[];
                 case 'up-down'
-                    roimask2=[roimask(splitpos+1:end,:); roimask(1:splitpos,:)];
+                    i1=imgmax(1:splitpos,:);
+                    i2=imgmax(splitpos+1:end,:);
                 case 'up-down mirror'
-                    roimask2=roimask(end:-1:1,:);
+                    i1=imgmax(1:splitpos,:);
+                    i2=imgmax(end:-1:splitpos+1,:);
                 case 'right-left'
-                    roimask2=[roimask(:,splitpos+1:end) roimask(:,1:splitpos)];
+                    i1=imgmax(:,1:splitpos);
+                    i2=imgmax(:,splitpos+1:end);
                 case 'right-left mirror'
-                    roimask2=roimask(:,end:-1:1);
+                    i1=imgmax(:,1:splitpos);
+                    i2=imgmax(:,end:-1:splitpos+1);
+            end
+            if ~isempty(i1)
+                [dx,dy]=getShiftCorr(i1,i2,0,100,false);
             end
             
-            obj.roimask=roimask | roimask2;
+            if obj.guihandles.roi2c.Value~=4
+                disp('shift of second roi not implemented. Look at calibrate3D_GUI_g.m line 435');
+            end
+            
+            switch obj.guihandles.roi2c.String{obj.guihandles.roi2c.Value}
+                case 'single'
+                    roimask2=roimask1;
+                case 'up-down'
+                    roimask2=[roimask1(splitpos+1+dx:end,:); roimask1(1:splitpos+dx,:)];
+                case 'up-down mirror'
+                    roimask2=roimask1(end:-1:1,:);
+
+                case 'right-left'
+                    roimask2=[roimask1(:,splitpos+1+dy:end) roimask1(:,1:splitpos+dy)];
+                    if dx>=0
+                        roimask2(1:end-dx,splitpos+1:end)=roimask2(dx+1:end,splitpos+1:end);
+                    else
+                        roimask2(-dx+1:end,splitpos+1:end)=roimask2(1:end+dx,splitpos+1:end);
+                    end
+                case 'right-left mirror'
+                    roimask2=roimask1(:,end:-1:1);
+            end
+            
+            obj.roimask=roimask1 | roimask2;
 %             imgmaxp=double(imgmax)+double(max(imgmax(:)))*(1-roimask);
             imgmaxp=imgmax;
             imgmaxp(~obj.roimask)=max(imgmax(:));
