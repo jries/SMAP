@@ -8,9 +8,11 @@ classdef zSALM<interfaces.DialogProcessor
         function obj=zSALM(varargin)   
             obj@interfaces.DialogProcessor(varargin{:}) ;
              obj.showresults=true;
-
+            obj.history=true;
         end
         function out=run(obj,p)
+            obj.setPar('undoModule','zSALM');
+            notify(obj.P,'backup4undo');
             %get calibration
             fsa=p.assignfield1.selection;
             fua=p.assignfield2.selection;
@@ -88,11 +90,11 @@ classdef zSALM<interfaces.DialogProcessor
             
             zglass=fitpsalm.b;
             
-            plot(ax2,zrange,fitp(zrange),'m--')  
-            plot(ax2,zrange,ftsalm(startpsalm(1),zrange),'y:')
+%             plot(ax2,zrange,fitp(zrange),'m--')  
+%             plot(ax2,zrange,ftsalm(startpsalm(1),zrange),'y:')
 %             plot(ax2,zrange,ftsalm(startpsalm(1),startpsalm(2),zrange),'y:')
             plot(ax2,zrange,fitpsalm(zrange),'r') 
-            legend(ax2,'exp','start','salm')
+%             legend(ax2,'exp','start','salm')
             
             title(ax2,['position of glass (nm): ' num2str(zglass,3)]);
             drawnow
@@ -108,8 +110,12 @@ classdef zSALM<interfaces.DialogProcessor
             
             %SALM model
             %invert function by spline interpolation
-            zinterp=(zglass-200:0.5:zrange(end)+500)';
-            rinterp=fitpsalm(zinterp);
+            
+            zinterp=(-100:0.5:2000)';
+            rinterp=ftsalm(0,zinterp);
+            
+%             zinterp=(zglass-200:0.5:zrange(end)+500)';
+%             rinterp=fitpsalm(zinterp);
             interpsalm=fit(rinterp,zinterp,'cubicinterp');
             
             
@@ -118,9 +124,10 @@ classdef zSALM<interfaces.DialogProcessor
             zoutofrange=zr>zmax;
             zr(zoutofrange)=zmax; %avoid too large numbers
 
-            obj.locData.loc.zSALM=zr;
+            obj.locData.loc.znm_SALM=zr;
             obj.locData.loc.locprecnm=obj.locData.loc.locprecnm_a;
             obj.locData.loc.locprecnm(zoutofrange)=1000; %for grouping.
+            obj.locData.loc.znm_a=obj.locData.loc.znm_a-zglass; %correct z astig to put glass to z=0;
             %calculate error of zr
             %use CRLB as error for znm
             % weighted average
@@ -140,11 +147,17 @@ classdef zSALM<interfaces.DialogProcessor
             zerrs(zoutofrange)=inf;
             errza=obj.locData.loc.locprecznm_a;
             
+            znmav=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
+            locprecznmav=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
+                    
             switch p.fieldznm.Value
+                
                 case 1 %weighted average
+                    znmnew=znmav;
+                    locprecznmnew=locprecznmav;
                     %also here change sign of z.
-                    znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
-                    locprecznmnew=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
+%                     znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
+%                     locprecznmnew=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
                 case 2 %salm
                     znmnew=obj.locData.loc.zSALM;
                     locprecznmnew=zerrs;
@@ -154,7 +167,11 @@ classdef zSALM<interfaces.DialogProcessor
             end
             obj.locData.setloc('znm',znmnew);
             obj.locData.setloc('locprecznm',locprecznmnew);
-            obj.locData.setloc('locprecznm_salm',zerrs);
+            obj.locData.setloc('locprecznm_SALM',zerrs);
+            
+            obj.locData.setloc('znm_asSALM',znmav);
+            obj.locData.setloc('locprecznm_asSALM',locprecznmav);
+            
             obj.locData.regroup;
             
             %determine maximum position
