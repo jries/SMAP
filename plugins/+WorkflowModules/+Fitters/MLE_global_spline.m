@@ -14,7 +14,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
             pard=guidef(obj);
         end
         function fitinit(obj)
-            obj.infofields={'x','y','ID','dx','dy'};
+            obj.infofields={'xpix','ypix','ID','dx','dy'};
             obj.fitpar=getfitpar(obj);
             switch obj.fitpar.mode
                 case '4pi'
