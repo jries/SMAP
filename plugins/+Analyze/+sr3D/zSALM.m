@@ -147,7 +147,7 @@ classdef zSALM<interfaces.DialogProcessor
             zerrs(zoutofrange)=inf;
             errza=obj.locData.loc.locprecznm_a;
             
-            znmav=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
+            znmav=(obj.locData.loc.znm_a./errza+obj.locData.loc.znm_SALM./zerrs)./(1./errza+1./zerrs);
             locprecznmav=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
                     
             switch p.fieldznm.Value
