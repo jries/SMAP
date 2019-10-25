@@ -93,6 +93,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                 maxima=obj.getPar('preview_peakfind');
                 if isempty(maxima)||isempty(maxima.xpix)
                      obj.setPar('status','no localizations found')
+                     obj.setPar('errorindicator','no localizations found')
                      error ('no localizations found')
                 end
                 col=[0.3 0.3 0.];

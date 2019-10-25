@@ -88,7 +88,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 
             else %use this now for deepStorm
                 maxima.znm=-maxima.znm; %XXXXX 
-                maxima.bg=bgglobal; %currently not calculated
+%                 maxima.bg=bgglobal; %currently not calculated
             end
             
             if obj.preview
