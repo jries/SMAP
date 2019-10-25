@@ -173,7 +173,7 @@ for k=datrange
     smx=hlocp{k}.n(ind);
     
     %refine
-    dwin=ceil(ind/4);
+    dwin=max(3,ceil(ind/4));
     rn=max(1,ind-dwin+1):min(ind+dwin,length(hlocp{k}.h));
     fpol=fit(hlocp{k}.n(rn)',hlocp{k}.h(rn)','poly3');
     smxf=fzero(@(x) 3*fpol.p1*x.^2+2*fpol.p2*x+fpol.p3,smx);
