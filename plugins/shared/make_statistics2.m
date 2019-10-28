@@ -322,9 +322,9 @@ uicontrol('Parent',ax5.Parent,'style','text','String',sls,'Units','normalized','
 uicontrol('Parent',ax6.Parent,'style','text','String',slf,'Units','normalized','Position',pos,'FontSize',fontsize,'HorizontalAlignment','left')
 end
 end
-
-if zexist
-    v=getFieldAsVector(locs,'locprecznm');
+v=getFieldAsVector(locs,'locprecznm');
+if zexist && ~isempty(v{1})
+    
     hz=plothist(v,.99,[],0,ax7,modetxt);
     slp={'locprecznm'};
     for k=datrange
