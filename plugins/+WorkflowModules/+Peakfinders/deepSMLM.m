@@ -207,7 +207,9 @@ classdef deepSMLM<interfaces.WorkflowModule
 end
 
 
-
+function train_callback(a,b,obj)
+p=makeSMAPplugin(obj,{'Analyze','other','TrainDeepSMLM'});
+end
 
 function loadmodel_callback(a,b,obj)
 file=obj.getSingleGuiParameter('modelfile');
@@ -242,6 +244,10 @@ pard.buffersizet.Width=1;
 pard.buffersize.object=struct('Style','edit','String','100');
 pard.buffersize.position=[4,2];
 pard.buffersize.Width=.35;
+
+pard.trainbutton.object=struct('Style','pushbutton','String','Train CNN','Callback',{{@train_callback,obj}});
+pard.trainbutton.position=[5,1];
+
 
 % pard.context_framest.object=struct('Style','text','String','Channels');
 % pard.context_framest.position=[5,1];

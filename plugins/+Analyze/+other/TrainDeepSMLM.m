@@ -193,6 +193,10 @@ function usecurrent_callback(a,b,obj)
     
     fields={'filenumber','frame','phot','locprecnm','znm','PSFxnm','locprecznm','numberInGroup','bg','bg2'};
     [locs,~,hroi]=obj.locData.getloc(fields,'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','grouped');
+    if isempty(locs.frame)
+        warndlg('please load an SMLM data set and make sure that in the rendered image a sufficient number of localizations are displayed')
+        return
+    end
     locsu=obj.locData.getloc(fields,'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
     stat=make_statistics2({locs});
     
