@@ -103,6 +103,10 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                 varargin(ind:ind+1)=[];
                 field=[prefix field];
             end
+            
+            if isempty(obj.P) %no P attached to object. Just do nothing.
+                return
+            end
             par=obj.P.par;
             if isfield(par,field)
                 if par.(field)(1).isGuiPar
