@@ -9,11 +9,24 @@ classdef seSaver<interfaces.DialogProcessor
             obj.status('save SE file')
             lastSMLFile = obj.getPar('lastSMLFile');
             defaultFn = replace(lastSMLFile, '_sml', '_se');
-            seObj = interfaces.SiteExplorer;
-            seObj.sites = obj.locData.SE.sites;
-            seObj.cells = obj.locData.SE.cells;
-            seObj.files = obj.locData.SE.files;
-            uisave('seObj', defaultFn)
+            fibrilStatistics = getFieldAsVector(obj.locData.SE.sites,'evaluation.fibrilStatistics');
+            fibrilDynamics = getFieldAsVector(obj.locData.SE.sites,'evaluation.fibrilDynamics');
+            fibrilStraightener = getFieldAsVector(obj.locData.SE.sites,'evaluation.fibrilStraightener');
+            fnMeasurement = {'deviation','P','intensity','intensity_rescaled'};
+            for k = 1:length(fibrilStatistics)
+                singleSites{k}.fibrilStatistics = fibrilStatistics{k};
+                singleSites{k}.fibrilStatistics.kymograph = [];
+                singleSites{k}.fibrilStatistics.GuiParameters = [];
+                for l = 1:4
+                    singleSites{k}.fibrilStatistics.measurement.(fnMeasurement{l}).raw = [];
+                    singleSites{k}.fibrilStatistics.measurement.(fnMeasurement{l}).fft = [];
+                end
+                singleSites{k}.fibrilDynamics = fibrilDynamics{k};
+                singleSites{k}.fibrilDynamics.GuiParameters = [];
+                singleSites{k}.fibrilStraightener = fibrilStraightener{k};
+                singleSites{k}.fibrilStraightener.indFibrilLocs = [];
+            end
+            uisave('singleSites', defaultFn)
             obj.status('save done')
             out = [];
         end

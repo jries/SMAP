@@ -24,6 +24,7 @@ classdef metadataSMAP<handle
         assigned
         imagefile
         EMmirror=false; %used by Tiff loader workflow
+        correctionfile='';
     end
     
     methods
