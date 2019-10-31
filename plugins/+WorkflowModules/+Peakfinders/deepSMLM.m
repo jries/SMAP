@@ -208,7 +208,7 @@ end
 
 
 function train_callback(a,b,obj)
-p=makeSMAPplugin(obj,{'Analyze','other','TrainDeepSMLM'});
+p=makeSMAPplugin(obj,{'Analyze','calibrate','TrainDeepSMLM'});
 end
 
 function loadmodel_callback(a,b,obj)

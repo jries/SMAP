@@ -149,7 +149,7 @@ end
 end
 
 function calibrate_callback(a,b,obj)
-cc=plugin('Analyze','other','GainOffsetFFT');
+cc=plugin('Analyze','calibrate','GainOffsetFFT');
 cc.attachPar(obj.P);
 if isempty(obj.autocalhandle)||~isvalid(obj.autocalhandle)
 obj.autocalhandle=figure;
