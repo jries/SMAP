@@ -228,8 +228,8 @@ end
 
 function loadcamcalibrationfile(obj)
 camfname=obj.loc_cameraSettings.correctionfile;
-if strcmp(camfname(end-4:end),'.mat')
-    camfname=camfname(1:end-5);
+if length(camfname)>4 && strcmp(camfname(end-3:end),'.mat')
+    camfname=camfname(1:end-4);
 end
 camfile=['settings' filesep 'cameras' filesep camfname '.mat'];
 if exist(camfile,'file')

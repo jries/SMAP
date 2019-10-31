@@ -20,9 +20,15 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             
             f=obj.figure;
             f.Visible='on';
-            wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
-            wffile='settings/workflows/get2CIntensityImagesWF2';
-            wffile='settings/workflows/get2CIntensityImagesWF3';
+%             wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
+%             wffile='settings/workflows/get2CIntensityImagesWF2';
+            if p.evalref && p.evaltarget && ( isempty(p.tiffileref) || strcmp(p.tiffileref,p.tiffiletarget))  %both channels on one chip
+                wffile='settings/workflows/get2CIntensityImagesWF3_reftarget';
+                samechip=true;
+            else
+                samechip=false;
+                wffile='settings/workflows/get2CIntensityImagesWF3';
+            end
             wf=interfaces.Workflow(f,obj.P);
             wf.attachLocData(obj.locData);
             wf.makeGui;
@@ -45,33 +51,45 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
 
             rsfit=wf.module('EvaluateIntensity_s').children.panel_3.getSingleGuiParameter('roisize_fit');
             p.loc_ROIsize=rsfit+2;
-%             p.loc.fitgrouped=true;
-%             wf.module('RoiCutterWF_groupExt').setGuiParameters(p);
             wf.module('RoiCutterWF').setGuiParameters(p);
-            
             wf.module('Roi_bg').setGuiParameters(p);
-            % now first to ref, then do target. Later: if files are same:
-            % do at the same time to save time...
-            if p.evaltarget
-                obj.setPar('intensity_channel','t')
-                wf.module('TifLoader').addFile(p.tiffiletarget,true);   
+            
+            if samechip
+                wf.module('EvaluateIntensity_s').extension='r';
+                wf.module('EvaluateIntensity_s1').extension='t';
+                wf.module('EvaluateIntensity_s1').setGuiParameters(pe,true);
+                wf.module('RoiCutterWF1').setGuiParameters(p);
+                wf.module('Roi_bg1').setGuiParameters(p);
+                obj.setPar('intensity_channel',[])
+                
+                wf.module('TifLoader').addFile(p.tiffiletarget,true);  
                 wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
-                overwritedefaultcamera(obj)
                 wf.run;
-            end
-            if p.evalref
-                obj.setPar('intensity_channel','r')
-                if isempty(p.tiffileref) %when same, dont select again
-                    p.tiffileref=p.tiffiletarget;
-                    p.mirroremref=p.mirroremtarget;
+            else
+                % now first to ref, then do target. Later: if files are same:
+                % do at the same time to save time...
+                if p.evaltarget
+                    obj.setPar('intensity_channel','t')
+                    wf.module('TifLoader').addFile(p.tiffiletarget,true);   
+                    wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
+                    wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
+                    overwritedefaultcamera(obj)
+                    wf.run;
                 end
-                wf.module('TifLoader').addFile(p.tiffileref,true);   
-                wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
-%                 wf.module('EvaluateIntensity_s').extension='r';
-                overwritedefaultcamera(obj)
-                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
-                wf.run;
+                if p.evalref
+                    obj.setPar('intensity_channel','r')
+                    if isempty(p.tiffileref) %when same, dont select again
+                        p.tiffileref=p.tiffiletarget;
+                        p.mirroremref=p.mirroremtarget;
+                    end
+                    wf.module('TifLoader').addFile(p.tiffileref,true);   
+                    wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
+    %                 wf.module('EvaluateIntensity_s').extension='r';
+                    overwritedefaultcamera(obj)
+                    wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
+                    wf.run;
+                end
             end
             delete(f);
             fo=strrep(obj.locData.files.file(1).name,'_sml.mat','_dc_sml.mat');

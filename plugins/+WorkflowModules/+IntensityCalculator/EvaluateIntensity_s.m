@@ -9,6 +9,8 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
         extension
         makeevaluators=true(3,1);
         peval
+        EvaluateIntensity_intensity
+        timershow
     end
     methods
         function obj=EvaluateIntensity_s(varargin)
@@ -67,8 +69,11 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             obj.setInputChannels(1,'frame');  
         end
         function prerun(obj,data1,data2,data3)
-            global EvaluateIntensity_intensity timershow
-            obj.extension=obj.getPar('intensity_channel');
+%             global EvaluateIntensity_intensity timershow
+            extension=obj.getPar('intensity_channel');
+            if ~isempty(extension)
+                obj.extension=extension;
+            end
             p=obj.getAllParameters;
             for k=1:size(p.evalmodules.Data,1)
                 if isempty(p.evalmodules.Data{k,1})
@@ -93,12 +98,13 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             end
                obj.fields={obj.fields{:} 'int_xpix', 'int_ypix', 'int_frame' ,'phot','bg'};
             obj.intensities=single(0);
-            EvaluateIntensity_intensity=single(0);
-            timershow=tic;
+            obj.EvaluateIntensity_intensity=single(0);
+            obj.timershow=tic;
         end
         function dato=run(obj,data,p) %
-            global EvaluateIntensity_intensity timershow
+%             global EvaluateIntensity_intensity timershow
             so=2;
+            EvaluateIntensity_intensity=obj.EvaluateIntensity_intensity;
             if ~isempty(data.data)
                 img=data.data.img;
                 loc=data.data.info;
@@ -135,12 +141,12 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                 obj.useevaluators=useevaluators;
                 obj.evaluators=evaluators;
                 obj.loccounter=loccounter;
-                if toc(timershow)>1
+                if toc(obj.timershow)>1
                     obj.setPar('fittedLocs',loccounter);
-                    timershow=tic;
+                    obj.timershow=tic;
                 end
                 dato=[];
-                
+                obj.EvaluateIntensity_intensity=EvaluateIntensity_intensity;
             else
                 dato=data;
                 if data.eof
