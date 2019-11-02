@@ -133,7 +133,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                    obj.output(datout,1); 
 
                    %%xxxx
-    %                maxoutA=maxout; %for testing
+                   maxoutA=maxout; %for testing
                    %output second channel
                    maxout.xpix=round(xrelB);
                    maxout.ypix=round(yrelB);

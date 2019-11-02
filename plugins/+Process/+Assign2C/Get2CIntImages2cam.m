@@ -170,7 +170,7 @@ pard.loadbuttontiftarget.object=struct('Style','pushbutton','String','load tif',
 pard.loadbuttontiftarget.position=[1,3.3];
 pard.loadbuttontiftarget.Width=0.5;
 
-pard.evalref.object=struct('Style','checkbox','String','reference');
+pard.evalref.object=struct('Style','checkbox','String','reference','Value',1);
 pard.evalref.position=[2,1];
 pard.evalref.Width=0.7;
 
