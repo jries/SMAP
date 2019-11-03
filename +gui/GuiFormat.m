@@ -69,7 +69,9 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.layeron1=uicontrol('Style','checkbox','Parent',h.hlayers,'String','1','Value',1,'Position',[0,fieldheight,width/3,fieldheight],'FontSize',fontsize);
             h.layeron4=uicontrol('Style','checkbox','Parent',h.hlayers,'String','4','Position',[width/3,0,width/3,fieldheight],'FontSize',fontsize);
             h.sr_layersseparate=uicontrol('Style','checkbox','Parent',h.hlayers,'String','split','Value',0,'Position',[0,2*fieldheight,width*.6,fieldheight],'FontSize',fontsize*.8);
+                h.sr_layersseparate.Tooltip='Plot layers next to each other';
             h.sr_plotcomposite=uicontrol('Style','checkbox','Parent',h.hlayers,'String','comp','Value',0,'Position',[width/2-5,2*fieldheight,width*.6,fieldheight],'FontSize',fontsize*.8);
+                h.sr_plotcomposite.Tooltip='Also plot composite';
             h.sr_plotlayernames=uicontrol('Style','checkbox','Parent',h.hlayers,'String','label','Value',0,'Position',[0,3*fieldheight,width*.6,fieldheight],'FontSize',fontsize*0.8);
             
             

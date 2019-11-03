@@ -183,6 +183,7 @@ if ~isfield(results,'error')||isempty(results.error)
     obj.status([class(obj) ' finished'])
 else
     obj.status(['ERROR in ' class(obj) '. ' results.error])
+    obj.setPar('errorindicator', ['ERROR in ' class(obj) '. ' results.error]);
 end
 end
 
