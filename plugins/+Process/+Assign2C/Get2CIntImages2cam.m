@@ -18,6 +18,11 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
                 obj.figure=figure;
             end
             
+            %if no image is loaded: use information on image location from locdata
+            if isempty(p.tiffiletarget)
+                p.tiffiletarget=obj.locData.files.file(1).info.imagefile;
+            end
+            
             f=obj.figure;
             f.Visible='on';
 %             wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
