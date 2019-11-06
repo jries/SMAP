@@ -170,6 +170,7 @@ pard.mirroremref.Width=0.6;
 pard.tiffiletarget.object=struct('Style','edit','String','');
 pard.tiffiletarget.position=[1,2.1];
 pard.tiffiletarget.Width=1.2;
+pard.tiffiletarget.object.Tooltip='leave empty to retrieve position of camera image files from the file.info.imagefile in the localization data object';
 
 pard.loadbuttontiftarget.object=struct('Style','pushbutton','String','load tif','Callback',{{@obj.loadbutton_tif,'tiffiletarget'}});
 pard.loadbuttontiftarget.position=[1,3.3];
