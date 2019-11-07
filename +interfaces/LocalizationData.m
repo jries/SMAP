@@ -446,7 +446,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                 saveloc=copyfields(saveloc,additionalsave);
             end
             if ~isempty(obj.SE)
-                if nargin>6 && ~isempty(filenumber)%filenumber
+                if nargin>6 && ~isempty(filenumber) && ~isempty(obj.SE.sites)%filenumber
                     SEtemp = obj.SE.copy;
                     siteFilenumber = getFieldAsVector(SEtemp.sites,'info.filenumber');
                     lsiteFilenumber = siteFilenumber == filenumber;

@@ -21,6 +21,7 @@ for k=1:length(loc.history)
     end
 end
 
+if isfield(loc, 'siteexplorer') && ~isempty(loc.siteexplorer)
 for k=1:length(loc.siteexplorer.files)
     try
         loc.siteexplorer.files(k).info.allmetadata.files=char(loc.siteexplorer.files(k).info.allmetadata.files');
@@ -28,7 +29,7 @@ for k=1:length(loc.siteexplorer.files)
          disp('se')
     end
 end
-
+end
 %siteexplorer
 end
 
