@@ -49,7 +49,7 @@ classdef RegisterLocs2<interfaces.DialogProcessor
             end
 %             end
             fv=p.dataselect.Value;
-            obj.locData.files.file(fv).transform=obj.transformation;
+            obj.locData.files.file(fv).transformation=obj.transformation;
             if obj.processorgui==false %run from WF
                 f=obj.locData.files.file(fv).name;
                 fn=strrep(f,'_sml.mat','_T.mat');
@@ -88,6 +88,11 @@ classdef RegisterLocs2<interfaces.DialogProcessor
                     save([path f],'transformation');
                     obj.setPar('transformationfile',[path f]);
                 end 
+                if obj.getSingleGuiParameter('updatesmlfile')
+                    filenumber=obj.getSingleGuiParameter('dataselect').Value;
+                    obj.locData.files.file(filenumber).transformation=obj.transformation;
+                    obj.locData.savelocs(obj.locData.files.file(filenumber).name,[],[],[],[],filenumber);
+                end
             end
         end
         function browse_callback(obj,a,b)
@@ -248,6 +253,11 @@ pard.save.object=struct('Style','pushbutton','String','save T');
 pard.save.position=[6.5,4];
 pard.save.object.TooltipString='';
 pard.save.Height=1.5;
+
+pard.updatesmlfile.object=struct('Style','checkbox','String','write T to .sml','Value',1);
+pard.updatesmlfile.position=[6,3];
+pard.updatesmlfile.object.TooltipString='If checked, the transformation file is appended to the .sml file and saved there as well when you click save T';
+
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.inputParameters={'currentfileinfo'};
