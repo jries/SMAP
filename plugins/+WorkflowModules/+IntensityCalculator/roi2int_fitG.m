@@ -31,8 +31,10 @@ function outp=roi2int_fit_e(p,roi,info)
 %weights not implemented? Do htat!
 if ~isempty(info.bgim)
     bg=info.bgim;
-else 
-    bg=info.bg;
+elseif p.fitonbg
+    error('you need to calcualte the background first if you want to subtract it before fitting')
+    
+%     bg=info.bg;
 end
 dx=info.dx;
 dy=info.dy;
@@ -135,7 +137,7 @@ pard.psfsize_fit.object=struct('Style','edit','String','1');
 pard.psfsize_fit.position=[2,4];
 pard.psfsize_fit.TooltipString=pard.fixpsf.TooltipString;
 
-pard.fitonbg.object=struct('Style','checkbox','String','fit on BG','Value',1);
+pard.fitonbg.object=struct('Style','checkbox','String','subtract BG before fitting','Value',0);
 pard.fitonbg.position=[3,1];
 pard.fitonbg.Width=4;
 pard.fitonbg.TooltipString='If selected, the background is subtracted and the fit is performed with an offset=0. Otherwise the background is a fit parameter.';

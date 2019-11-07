@@ -25,6 +25,10 @@ classdef driftcorrectionXYZ<interfaces.DialogProcessor
             if ~p.correctxy && ~p.correctz
                 return
             end
+            if isempty(obj.locData.loc)
+                out.error='no localizations loaded';
+                return
+            end
 
             %batch: many sml files loaded:
                 %do it per file, save only file.
@@ -123,7 +127,7 @@ classdef driftcorrectionXYZ<interfaces.DialogProcessor
                 obj.locData.regroup;
         end
         function pard=guidef(obj)
-            pard=guidef;
+            pard=guidef(obj);
         end
     end
 end
@@ -192,9 +196,13 @@ end
 % locsnew=applydriftcorrection(drift,locsall);
 end
 
-function pard=guidef
+function pard=guidef(obj)
 
-pard.correctxy.object=struct('String','Correct xy-drift','Style','checkbox','Value',1);
+
+p(1).value=0; p(1).on={}; p(1).off={'texta','drift_timepoints','text1','drift_pixrec','text2','drift_window','text3','drift_maxdrift','drift_maxpixelst','drift_maxpixels'};
+p(2).value=1; p(2).on=p(1).off; p(2).off={};
+            
+pard.correctxy.object=struct('String','Correct xy-drift','Style','checkbox','Value',1,'Callback',{{@obj.switchvisible,p}});
 pard.correctxy.position=[1,1];
 
 pard.texta.object=struct('String','timepoints','Style','text');
@@ -252,39 +260,40 @@ pard.drift_maxpixels.object.TooltipString=sprintf('Maximum size of the reconstru
 pard.drift_maxpixels.Optional=true;
 pard.drift_maxpixels.Width=0.9;
 
-
-pard.correctz.object=struct('String','Correct z-drift','Style','checkbox','Value',0);
+p(1).value=0; p(1).on={}; p(1).off={'textaz','drift_timepointsz','drift_pixreczt','drift_pixrecz','drift_windowzt','drift_windowz','zranget','zrange','slicewidtht','slicewidth'};
+p(2).value=1; p(2).on=p(1).off; p(2).off={};
+pard.correctz.object=struct('String','Correct z-drift','Style','checkbox','Value',0,'Callback',{{@obj.switchvisible,p}});
 pard.correctz.position=[1,3];
 
-pard.textaz.object=struct('String','timepoints z','Style','text');
+pard.textaz.object=struct('String','timepoints z','Style','text','Visible','off');
 pard.textaz.position=[2,3];
 pard.textaz.Optional=true;
 pard.textaz.Width=.75;
 
-pard.drift_timepointsz.object=struct('String','10','Style','edit');
+pard.drift_timepointsz.object=struct('String','10','Style','edit','Visible','off');
 pard.drift_timepointsz.object.TooltipString=sprintf('whole data is divided into timepoints individual \n blocks. Range: 10-40');
 pard.drift_timepointsz.position=[2,3.65];
 pard.drift_timepointsz.Optional=true;
 pard.drift_timepointsz.Width=.25;
 
-pard.drift_pixreczt.object=struct('String','z binwidth nm','Style','text');
+pard.drift_pixreczt.object=struct('String','z binwidth nm','Style','text','Visible','off');
 pard.drift_pixreczt.position=[2,4];
 pard.drift_pixreczt.Optional=true;
 pard.drift_pixreczt.Width=.75;
 
-pard.drift_pixrecz.object=struct('String','5','Style','edit');
+pard.drift_pixrecz.object=struct('String','5','Style','edit','Visible','off');
 pard.drift_pixrecz.position=[2,4.65];
 pard.drift_pixrecz.isnumeric=1;
 pard.drift_pixrecz.object.TooltipString=sprintf('pixel size (nm) for reconstruction. \n Smaller for well defined peak. But slower \n Range: 10-25');
 pard.drift_pixrecz.Optional=true;
 pard.drift_pixrecz.Width=.25;
 
-pard.drift_windowzt.object=struct('String','z fit window pix','Style','text');
+pard.drift_windowzt.object=struct('String','z fit window pix','Style','text','Visible','off');
 pard.drift_windowzt.position=[3,3];
 pard.drift_windowzt.Optional=true;
 pard.drift_windowzt.Width=.75;
 
-pard.drift_windowz.object=struct('String','9','Style','edit');
+pard.drift_windowz.object=struct('String','9','Style','edit','Visible','off');
 pard.drift_windowz.position=[3,3.65];
 pard.drift_windowz.isnumeric=1;
 pard.drift_windowz.object.TooltipString=sprintf('size of region for peakfinding (ellipt. Gaussian). \n should be small, but cover clear maximum. \n Range: 7-15');
@@ -292,20 +301,20 @@ pard.drift_windowz.Optional=true;
 pard.drift_windowz.Width=.25;
 
 
-pard.zranget.object=struct('String','zrange nm','Style','text');
+pard.zranget.object=struct('String','zrange nm','Style','text','Visible','off');
 pard.zranget.position=[4,3];
 pard.zranget.Optional=true;
 
-pard.zrange.object=struct('String','-400 400','Style','edit');
+pard.zrange.object=struct('String','-400 400','Style','edit','Visible','off');
 pard.zrange.position=[4,4];
 pard.zrange.Optional=true;
 pard.zrange.Width=0.9;
 
-pard.slicewidtht.object=struct('String','slice width nm','Style','text');
+pard.slicewidtht.object=struct('String','slice width nm','Style','text','Visible','off');
 pard.slicewidtht.position=[5,3];
 pard.slicewidtht.Optional=true;
 
-pard.slicewidth.object=struct('String','200','Style','edit');
+pard.slicewidth.object=struct('String','200','Style','edit','Visible','off');
 pard.slicewidth.position=[5,4];
 pard.slicewidth.Optional=true;
 pard.slicewidth.Width=0.90;
