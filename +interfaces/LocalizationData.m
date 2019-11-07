@@ -489,8 +489,8 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                     filename=[path filesep file '_sml.mat'];
                 end
 
-                if obj.getGlobalSetting('saveas73') %now I use this to save with the old saver: large files are saved as v7.3, not as small parts.
-                    v=saverightversion(filename,out,'-v7');
+                if 1 %obj.getGlobalSetting('saveas73') %now I use this to save with the old saver: large files are saved as v7.3, not as small parts.
+                    v=saverightversion(filename,out,'-v7.3');
                     disp(['saved as version ' v])
                 else
                     savematparts(filename,out,{'saveloc','loc'});
