@@ -57,7 +57,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             makemenuindicator(h.layertab,posmen,shiftmen);
         end
         
-        function setGuiParameters(obj,p,setchildren)
+        function setGuiParameters(obj,p,setchildren,setmenulist)
 %             add layers if needed
             fn=fieldnames(p.children);
             layertabnames={obj.guihandles.layertab.Children(:).Title};
@@ -69,7 +69,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                     end
                 end
             end
-            setGuiParameters@interfaces.GuiModuleInterface(obj,p,setchildren);            
+            setGuiParameters@interfaces.GuiModuleInterface(obj,p,setchildren,setmenulist);            
         end
         
         function hpanel=addlayer(obj,handle,k)
@@ -272,7 +272,11 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
 end
 
 function selectLayer_callback(tabgroup,eventdata,obj)
-layer=(eventdata.NewValue.Tag);
+if isprop(eventdata.NewValue,'Tag')
+    layer=(eventdata.NewValue.Tag);
+else
+    layer=[];
+end
 layertitle=(eventdata.NewValue.Title);
 if strcmp(layertitle,'+')
     newlayernumber=obj.numberOfLayers+1;

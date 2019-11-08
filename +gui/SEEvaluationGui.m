@@ -47,8 +47,8 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             obj.SE.processors.preview.redrawall(true);
         end
         
-        function setGuiParameters(obj,p,setchildren)
-            setGuiParameters@interfaces.SEProcessor(obj,p,setchildren);
+        function setGuiParameters(obj,p,setchildren,setmenulist)
+            setGuiParameters@interfaces.SEProcessor(obj,p,setchildren,setmenulist);
             obj.guihandles.modules.Data={};
             
             if isfield(p,'children')
