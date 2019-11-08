@@ -49,8 +49,8 @@ classdef GuiFilterTable< interfaces.LayerInterface
            end
         end
         
-        function setGuiParameters(obj,p,setchildren)
-            setGuiParameters@interfaces.GuiModuleInterface(obj,p,setchildren);  
+        function setGuiParameters(obj,p,setchildren,menulist)
+            setGuiParameters@interfaces.GuiModuleInterface(obj,p,setchildren,menulist);  
             obj.guihandles.table.Data=p.table.Data;
             obj.setPar('filtertable',p.table.Data,'layer',obj.layer);
             refilter(obj);
