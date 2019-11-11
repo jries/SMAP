@@ -86,33 +86,33 @@ classdef FrameDependentTransformation<interfaces.DialogProcessor
                 end
             end
         end
-        function browse_callback(obj,a,b)
-            fn=obj.guihandles.Tfile.String;
-            [f,path]=uigetfile(fn,'Open transformation file _T.mat');
-            if f
-                Tload=load([path f]);
-                if ~isfield(Tload,'transformation')
-                    msgbox('could not find transformation in file. Load other file?')
-                end
-                obj.guihandles.Tfile.String=[path f];
-                obj.guihandles.useT.Value=1;
-                obj.setPar('transformationfile',[path f]);
-            end
-        end
+%         function browse_callback(obj,a,b)
+%             fn=obj.guihandles.Tfile.String;
+%             [f,path]=uigetfile(fn,'Open transformation file _T.mat');
+%             if f
+%                 Tload=load([path f]);
+%                 if ~isfield(Tload,'transformation')
+%                     msgbox('could not find transformation in file. Load other file?')
+%                 end
+%                 obj.guihandles.Tfile.String=[path f];
+%                 obj.guihandles.useT.Value=1;
+%                 obj.setPar('transformationfile',[path f]);
+%             end
+%         end
     end
 end
 
 
 
 function pard=guidef(obj)
-pard.Tfile.object=struct('Style','edit','String','');
-pard.Tfile.position=[8,1];
-pard.Tfile.Width=3;
-pard.Tfile.object.TooltipString='default file for transformation matrix. You can select new file after transformation has been calculated.';
-
-pard.browse.object=struct('Style','pushbutton','String','load T','Callback',@obj.browse_callback);
-pard.browse.position=[8,4];
-pard.browse.object.TooltipString='Save the newly calculated transformation matrix.';
+% pard.Tfile.object=struct('Style','edit','String','');
+% pard.Tfile.position=[8,1];
+% pard.Tfile.Width=3;
+% pard.Tfile.object.TooltipString='default file for transformation matrix. You can select new file after transformation has been calculated.';
+% 
+% pard.browse.object=struct('Style','pushbutton','String','load T','Callback',@obj.browse_callback);
+% pard.browse.position=[8,4];
+% pard.browse.object.TooltipString='Save the newly calculated transformation matrix.';
 
 
 pard.texttt.object=struct('String','Transformation:','Style','text');
