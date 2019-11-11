@@ -8,9 +8,8 @@ classdef LocTransformN0<handle
         transformZ2Reference
         transformZ2Target
         unit='nm'; %or pixel
-%         cam_pixnm={[100 100],[100 100]};  %In future: allow pixel size for every channel? e.g. for multi-camera setup
         channels=2;
-%         mirror
+        frameshift
     end
     
     methods
