@@ -12,50 +12,130 @@ classdef FrameDependentTransformation<interfaces.DialogProcessor
             obj.history=true;
         end
         
-        function out=run(obj,p)
-            if p.useT
-                transformation=loadtransformation(obj,p.Tfile,p.dataselect.Value);
-                if isempty(transformation)
-                    out.error='selected transformation file does not have a valid transformation. Uncheck use inital T';
-                    return 
-                end
-            end
-            p.isz=obj.isz;
-            p.register_parameters=obj.register_parameters;
-            fn=fieldnames(p.register_parameters);
-            nmax=1;
-            for k=1:length(fn)
-                nmax=max(nmax,length(p.register_parameters.(fn{k})));
-            end
+        function out=run(obj,p)          
+            %implement: if not globally fitted: match locs
+            % target coordinates.        
+            % get coordinates: coordref, coordtarget in units of pixeles
             
-%             rp=p.register_parameters;
-            for n=1:nmax
-                for k=1:length(fn)
-                    ind=min(n,length(p.register_parameters.(fn{k})));
-                    rp(n).(fn{k})=p.register_parameters.(fn{k})(ind);
-                end
-            end
+            % global fit
+            if isfield(obj.locData.loc,'xpix1')
+                locs=obj.locData.getloc({'xpix1','xpix2','ypix1','ypix2','xpix1err','xpix2err','ypix1err','ypix2err','frame','filenumber'},'layer',find(obj.getPar('sr_layerson')),'Position','all');
+                filenumber=locs.filenumber(1);
+                Tinitial=obj.locData.files.file(filenumber).savefit.fitparameters.loc_globaltransform;
+                roi=obj.locData.files.file(1).info.roi;
+                indbad=isnan(locs.xpix1)|isnan(locs.xpix2)|isnan(locs.ypix1)|isnan(locs.ypix2);
+                coordref=horzcat(locs.xpix1(~indbad)+roi(1),locs.ypix1(~indbad)+roi(2));
+                coordt2ref=horzcat(locs.xpix2(~indbad)+roi(1),locs.ypix2(~indbad)+roi(2));
+                coordtarget=Tinitial.transformToTarget(2,coordt2ref,'pixel');
+                frames=locs.frame(~indbad);
+            else %single fit
+                 
             
-%             if p.saveoldformat
-%                 obj.transformation=transform_locs(obj.locData,p);
-%             else
-            for n=1:nmax
-                p.register_parameters=rp(n);
-                 p.repetition=num2str(n);
-                obj.transformation=transform_locsN(obj.locData,p);
-                p.Tfile=obj.transformation;
-                p.useT=true;
+            %use initial transformation to put back coordinates 2 to
+            %original position in chip
+            if isfield(obj.locData.files.file(1),'transformationfit')
+                Tinitial=obj.locData.files.file(1).transformationfit; %needed to transform global fitted data to target, this uses explicitely the transformation
+            else
+                Tinitial=obj.locData.files.file(1).transformation;
             end
-%             end
-            fv=p.dataselect.Value;
-            obj.locData.files.file(fv).transformation=obj.transformation;
-            if obj.processorgui==false %run from WF
-                f=obj.locData.files.file(fv).name;
-                fn=strrep(f,'_sml.mat','_T.mat');
-                   obj.guihandles.Tfile.String=fn;
-                   transformation=obj.transformation; 
-                   save(fn,'transformation');
-                   obj.setPar('transformationfile',fn);
+            end
+
+            %weights for fitting from localization precision. w~1/sigma^2            
+            wx=1./(locs.xpix1err(~indbad).^2+locs.xpix2err(~indbad).^2);  %weights: It is variance! see Wikipedia
+            wy=1./(locs.ypix1err(~indbad).^2+locs.ypix2err(~indbad).^2);
+            ff=min(frames):max(frames);
+            % initial shift
+            coordt2refi=Tinitial.transformToReference(2,coordtarget,'pixel'); %put back to reference part
+            dxdyi=coordt2refi-coordref; %differnece between reference and target localizations
+            fitxi=getsmoothcurve(frames,dxdyi(:,1),wx); %get smoothed approximation of this difference
+            fityi=getsmoothcurve(frames,dxdyi(:,2),wy); 
+            axi=obj.initaxis('initial T');
+            plot(axi,ff,fitxi(ff),ff,fityi(ff))
+            
+            
+            %recalculate transformation based on localizations (might be
+            %different from bead calibration)
+            Trefine=Tinitial.copy;
+            Trefine.findTransform(2,coordref,coordtarget,p.transform.selection,p.transformparam);
+            
+            coordt2ref2=Trefine.transformToReference(2,coordtarget,'pixel'); %put back to reference part
+
+            dxdy=coordt2ref2-coordref; %differnece between reference and target localizations
+            fitx=getsmoothcurve(frames,dxdy(:,1),wx); %get smoothed approximation of this difference
+            fity=getsmoothcurve(frames,dxdy(:,2),wy);
+            % plot shift vs frame:
+            ax=obj.initaxis('shift');
+            plot(ax,ff,fitx(ff),ff,fity(ff))
+            
+            % write shifts into transformation for testing
+            Trefine.frameshift.fitx=fitx; %Trefine2 is calculated with these shifts.
+            Trefine.frameshift.fity=fity;
+            
+            %  test
+            coordrefcorr=Trefine.transformToReferenceFramecorrection(2,coordtarget,frames);
+            dxdytest=coordrefcorr-coordref; %differnece between reference and target localizations
+            fitx2=getsmoothcurve(frames,dxdytest(:,1),wx); %get smoothed approximation of this difference
+            fity2=getsmoothcurve(frames,dxdytest(:,2),wy);
+            ax2=obj.initaxis('test shift');
+            plot(ax2,ff,fitx2(ff),ff,fity2(ff))            
+            
+            % SECOND ITERATION
+            %manually correct shift to re-calculate Transformation based on
+            %shifted coordinates
+            mirrorfac=1-2*Tinitial.mirrorchannel(2);   %mirror of target. Assumption: reference is not mirrored.
+            coordtargetcorr=coordtarget-horzcat(mirrorfac(1)*fitx(frames),mirrorfac(2)*fity(frames)); %subtract shift from target coordinates
+            
+            %filter out bad coordinates
+            % Gaussian weighting
+            sdist=((mean(locs.xpix1err(~indbad))+mean(locs.ypix1err(~indbad))+mean(locs.xpix2err(~indbad))+mean(locs.ypix2err(~indbad))))/4; %average 1D loc prec
+            %keep localizations that are closer together than 2*sigma_av
+            %and have localization precision < 2*sigma_av
+            indgood=sum(dxdytest.^2,2)<(sdist*2)^2 & ((locs.xpix1err(~indbad))+(locs.ypix1err(~indbad))+(locs.xpix2err(~indbad))+(locs.ypix2err(~indbad)))< sdist*2 ;
+            %re-calculate transformation
+            Trefine2=Trefine.copy; %redo transformation based on origingal shift
+            Trefine2.findTransform(2,coordref(indgood,:),coordtargetcorr(indgood,:),p.transform.selection,p.transformparam);
+            
+            %test forward and backward transform with correction
+            coordrefcorr=Trefine2.transformToReferenceFramecorrection(2,coordtarget,frames);
+            dxdytest=coordrefcorr-coordref; %differnece between reference and target localizations
+            fitxr=getsmoothcurve(frames,dxdytest(:,1),wx); %get smoothed approximation of this difference
+            fityr=getsmoothcurve(frames,dxdytest(:,2),wy);
+            axr=obj.initaxis('2nd iteration to reference');
+            plot(axr,ff,fitxr(ff),ff,fityr(ff))  
+            
+            coordref2tcorr=Trefine2.transformToTargetFramecorrection(2,coordref,frames);
+            dxdytest4=coordref2tcorr-coordtarget; %differnece between reference and target localizations
+            fitx4=getsmoothcurve(frames,dxdytest4(:,1),wx); %get smoothed approximation of this difference
+            fity4=getsmoothcurve(frames,dxdytest4(:,2),wy);
+            ax4=obj.initaxis('2nd iteration to target');
+            plot(ax4,ff,fitx4(ff),ff,fity4(ff))
+            
+            % save and update
+            transformation=Trefine2;
+            fout=strrep(obj.locData.files.file(1).name,'_sml.mat','_T.mat');
+            save(fout,'transformation');
+            obj.setPar('transformationfile',fout);
+            if ~isfield(obj.locData.files.file(1),'transformationfit')
+                obj.locData.files.file(1).transformationfit=obj.locData.files.file(1).transformation;
+            end
+            obj.locData.files.file(1).transformation=transformation;
+            if p.updatesmlfile  
+                obj.locData.savelocs(obj.locData.files.file(1).name);
+            end
+
+            %for testing: write dx, dy for all localizations to
+            %localization data
+            if p.writetoloc
+                coordallr=horzcat(obj.locData.loc.xpix1+roi(1),obj.locData.loc.ypix1+roi(2));
+
+                coordalltar=horzcat(obj.locData.loc.xpix2+roi(1),obj.locData.loc.ypix2+roi(2));
+                coordallt=Tinitial.transformToTarget(2,coordalltar,'pixel');
+                coordalltc=coordallt-horzcat(mirrorfac(1)*fitx(obj.locData.loc.frame),mirrorfac(2)*fity(obj.locData.loc.frame));
+                coordallt2ref=Trefine2.transformToReference(2,coordalltc,'pixel');
+                dxdyall=coordallt2ref-coordallr;
+                obj.locData.loc.dxfcorr=dxdyall(:,1);
+                obj.locData.loc.dyfcorr=dxdyall(:,2);
+                obj.locData.regroup;
             end
             out=[];
         end
@@ -63,46 +143,21 @@ classdef FrameDependentTransformation<interfaces.DialogProcessor
             pard=guidef(obj);
         end
         function initGui(obj)
-%             obj.addSynchronization('transformationfile',obj.guihandles.Tfile,'String');
         end
-        function save_callback(obj,a,b)
-            if isempty(obj.transformation)
-                errordlg('first calculate a transformation')
-            else
-                 f=obj.locData.files.file(1).name;
-                fn=strrep(f,'_sml.mat','_T.mat');
-%                 fn=obj.guihandles.Tfile.String;
-                [f,path]=uiputfile(fn,'Save last transformation as transformation file _T.mat');
-                if f
-                    obj.guihandles.Tfile.String=[path f];
-                    transformation=obj.transformation; 
-                    save([path f],'transformation');
-                    obj.setPar('transformationfile',[path f]);
-                end 
-                if obj.getSingleGuiParameter('updatesmlfile')
-                    filenumber=obj.getSingleGuiParameter('dataselect').Value;
-                    obj.locData.files.file(filenumber).transformation=obj.transformation;
-                    obj.locData.savelocs(obj.locData.files.file(filenumber).name,[],[],[],[],filenumber);
-                end
-            end
-        end
-%         function browse_callback(obj,a,b)
-%             fn=obj.guihandles.Tfile.String;
-%             [f,path]=uigetfile(fn,'Open transformation file _T.mat');
-%             if f
-%                 Tload=load([path f]);
-%                 if ~isfield(Tload,'transformation')
-%                     msgbox('could not find transformation in file. Load other file?')
-%                 end
-%                 obj.guihandles.Tfile.String=[path f];
-%                 obj.guihandles.useT.Value=1;
-%                 obj.setPar('transformationfile',[path f]);
-%             end
-%         end
     end
 end
 
-
+function fitx=getsmoothcurve(frames,dx,wx)           
+dframe=100;
+ff=(min(frames): dframe:max(frames))';
+if nargin<3
+    wx=[];
+end
+[dxb,sb]=bindatamean(frames,dx,ff,wx);
+[fitx,gof,p]=fit(ff,dxb,'smoothingspline','Weights',sb,'SmoothingParam',1e-11*dframe);
+end
+            
+            
 
 function pard=guidef(obj)
 % pard.Tfile.object=struct('Style','edit','String','');
@@ -116,20 +171,24 @@ function pard=guidef(obj)
 
 
 pard.texttt.object=struct('String','Transformation:','Style','text');
-pard.texttt.position=[2,3];
+pard.texttt.position=[1,1];
 pard.transform.object=struct('Style','popupmenu','String','projective|affine|similarity|polynomial|lwm|pwl');
-pard.transform.position=[3,3];
+pard.transform.position=[1,2];
 pard.transform.object.TooltipString='select one of Matlabs transformations. Not all might work.';
 
 pard.transformparam.object=struct('Style','edit','String','3');
-pard.transformparam.position=[4,3];
+pard.transformparam.position=[1,3];
 pard.transformparam.object.TooltipString='Parameter for lwm and polynomial';
+pard.transformparam.Width=0.5;
 
-
-pard.updatesmlfile.object=struct('Style','checkbox','String','write T to .sml','Value',1);
-pard.updatesmlfile.position=[6,3];
+pard.updatesmlfile.object=struct('Style','checkbox','String','write T to .sml','Value',0);
+pard.updatesmlfile.position=[2,1];
 pard.updatesmlfile.object.TooltipString='If checked, the transformation file is appended to the .sml file and saved there as well when you click save T';
 
+pard.writetoloc.object=struct('Style','checkbox','String','write dx,dy to locData.loc','Value',0);
+pard.writetoloc.position=[3,1];
+pard.writetoloc.object.TooltipString='If checked, the transformation file is appended to the .sml file and saved there as well when you click save T';
+pard.writetoloc.Width=3;
 
 pard.inputParameters={'currentfileinfo'};
 pard.plugininfo.description='calculates transformation (global or local) based on localizations (e.g. multi-color beads or fluorophores in ratiometric imaging)';

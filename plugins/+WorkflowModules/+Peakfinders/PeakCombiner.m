@@ -20,8 +20,12 @@ classdef PeakCombiner<interfaces.WorkflowModule
             l=load(p.Tfile);
             if isfield(l,'transformation')
                 obj.transform=l.transformation;  
-            else
+            elseif isfield(l,'SXY')
                 obj.transform=l.SXY(1).cspline.global.transformation;
+            elseif isfield(l,'saveloc')
+                obj.transform=l.saveloc.file.transformation;
+            else
+                errordlg(['no transformation found in' p.Tfile])
             end
             obj.setPar('loc_globaltransform',obj.transform);
         end
@@ -123,7 +127,12 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 for k=2:transform.channels
                     indch=transform.getPart(k,cpix);
                     Nt=Nall(indch);
-                    ctarget=transform.transformToReference(k,cpix(indch,:));
+                    if p.framecorrection
+                        ctarget=transform.transformToReferenceFramecorrection(k,cpix(indch,:),data.frame);
+                    else
+                        ctarget=transform.transformToReference(k,cpix(indch,:));
+                    end
+                    
                     [iA,iB,uiA,uiB]=matchlocs(ccombined(:,1),ccombined(:,2),ctarget(:,1),ctarget(:,2),[0 0],6);
                     if isempty(iA)
                         cnew=[];
@@ -138,8 +147,11 @@ classdef PeakCombiner<interfaces.WorkflowModule
 %                 cr=round(ccombined);
                 %offset between true and rounded position in channel 1
               
-
-                ct=transform.transformToTargetAll(ccombined); %transfrom not rounded
+                if p.framecorrection
+                    ct=transform.transformToTargetAllFramecorrection(ccombined,data.frame);
+                else
+                    ct=transform.transformToTargetAll(ccombined); %transfrom not rounded
+                end
                 ct(:,1,:)=ct(:,1,:)-roi(1); %bring back to ROI on camera
                 ct(:,2,:)=ct(:,2,:)-roi(2);
                 %test dc XXXXX
@@ -215,6 +227,11 @@ pard.Tfile.Width=3;
 
 pard.loadbutton.object=struct('Style','pushbutton','String','load T','Callback',@obj.loadbutton);
 pard.loadbutton.position=[1,4];
+
+pard.framecorrection.object=struct('Style','checkbox','String','frame dependent transformation');
+pard.framecorrection.position=[2,3];
+pard.framecorrection.Width=2;
+
 
 pard.syncParameters={{'transformationfile','Tfile',{'String'}}};
 
