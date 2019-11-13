@@ -369,6 +369,8 @@ switch fitpar.fitmode
             end
             if numel(cal.SXY)>1
                 obj.spatial3Dcal=true;
+                transformation=cal.transformation;
+                obj.setPar('loc_globaltransform3dcal',transformation);
             else
                 obj.spatial3Dcal=false;
             end
