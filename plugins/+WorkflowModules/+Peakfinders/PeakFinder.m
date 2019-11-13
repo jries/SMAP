@@ -12,7 +12,7 @@ classdef PeakFinder<interfaces.WorkflowModule
         dynamicfactor=1.7;
         absolutecutoff=1;
         roimask
-%         preview
+        preview
     end
     methods
         function obj=PeakFinder(varargin)
@@ -32,7 +32,7 @@ classdef PeakFinder<interfaces.WorkflowModule
         function prerun(obj,p)
             cutoffvalue_callback(0,0,obj)
             obj.roimask=obj.getPar('loc_roimask');
-%             obj.preview=obj.getPar('loc_preview');
+             obj.preview=obj.getPar('loc_preview');
         end
         function dato=run(obj,data,p)
             image=data.data;%get;
@@ -49,26 +49,28 @@ classdef PeakFinder<interfaces.WorkflowModule
 %                 maxima=NMS2DBlockCcall(image,p.NMS_kernel_size); %find maxima
 %                 dynamicf=3/p.NMS_kernel_size;
 %             end
-            switch p.cutoffmode.Value
-                case 1
-                    cutoff=getdynamiccutoff(maxima,obj.dynamicfactor*dynamicf);
-                case {2,3} 
-                    cutoff=obj.absolutecutoff;
-            end
-%             cutoff
-            maxind= (maxima(:,3)>cutoff);
-            
-            if p.use_mindistance
-                maxima=maxima(maxind,:);
-                maxind=~tooclose(maxima(:,1),maxima(:,2),p.mindistance); % p.mindistance) & ~tooclose(,p.mindistance);
-            end
-            maxout.ypix=maxima(maxind,1);
-            maxout.xpix=maxima(maxind,2);
-            maxout.phot=maxima(maxind,3);
-            maxout.frame=0*maxout.xpix+data.frame;
-            dato=data;         
-            dato.data=(maxout); 
-            obj.setPar('preview_peakfind',maxout);
+                switch p.cutoffmode.Value
+                    case 1
+                        cutoff=getdynamiccutoff(maxima,obj.dynamicfactor*dynamicf);
+                    case {2,3} 
+                        cutoff=obj.absolutecutoff;
+                end
+    %             cutoff
+                maxind= (maxima(:,3)>cutoff);
+
+                if p.use_mindistance
+                    maxima=maxima(maxind,:);
+                    maxind=~tooclose(maxima(:,1),maxima(:,2),p.mindistance); % p.mindistance) & ~tooclose(,p.mindistance);
+                end
+                maxout.ypix=maxima(maxind,1);
+                maxout.xpix=maxima(maxind,2);
+                maxout.phot=maxima(maxind,3);
+                maxout.frame=0*maxout.xpix+data.frame;
+                dato=data;         
+                dato.data=(maxout); 
+                if obj.preview
+                    obj.setPar('preview_peakfind',maxout);
+                end
             else
 
                 dato=data;
