@@ -22,27 +22,64 @@ classdef FrameDependentTransformation<interfaces.DialogProcessor
                 locs=obj.locData.getloc({'xpix1','xpix2','ypix1','ypix2','xpix1err','xpix2err','ypix1err','ypix2err','frame','filenumber'},'layer',find(obj.getPar('sr_layerson')),'Position','all');
                 filenumber=locs.filenumber(1);
                 Tinitial=obj.locData.files.file(filenumber).savefit.fitparameters.loc_globaltransform;
-                roi=obj.locData.files.file(1).info.roi;
+                roi=obj.locData.files.file(filenumber).info.roi;
                 indbad=isnan(locs.xpix1)|isnan(locs.xpix2)|isnan(locs.ypix1)|isnan(locs.ypix2);
                 coordref=horzcat(locs.xpix1(~indbad)+roi(1),locs.ypix1(~indbad)+roi(2));
                 coordt2ref=horzcat(locs.xpix2(~indbad)+roi(1),locs.ypix2(~indbad)+roi(2));
                 coordtarget=Tinitial.transformToTarget(2,coordt2ref,'pixel');
                 frames=locs.frame(~indbad);
+                
+                %weights for fitting from localization precision. w~1/sigma^2            
+                wx=1./(locs.xpix1err(~indbad).^2+locs.xpix2err(~indbad).^2);  %weights: It is variance! see Wikipedia
+                wy=1./(locs.ypix1err(~indbad).^2+locs.ypix2err(~indbad).^2);
+                allerror=((locs.xpix1err(~indbad)+(locs.ypix1err(~indbad))+(locs.xpix2err(~indbad))+(locs.ypix2err(~indbad)))); %average 1D loc prec
             else %single fit
                  
             
             %use initial transformation to put back coordinates 2 to
             %original position in chip
-            if isfield(obj.locData.files.file(1),'transformationfit')
-                Tinitial=obj.locData.files.file(1).transformationfit; %needed to transform global fitted data to target, this uses explicitely the transformation
-            else
-                Tinitial=obj.locData.files.file(1).transformation;
-            end
+                locs=obj.locData.getloc({'xpix','ypix','xpixerr','ypixerr','frame','filenumber'},'layer',find(obj.getPar('sr_layerson')),'Position','all');
+                filenumber=locs.filenumber(1);
+                roi=obj.locData.files.file(filenumber).info.roi;
+                %get Tinitial
+                if isfield(obj.locData.files.file(filenumber),'transformationfit')
+                    Tinitial=obj.locData.files.file(filenumber).transformationfit; %needed to transform global fitted data to target, this uses explicitely the transformation
+                elseif isfield(obj.locData.files.file(filenumber),'transformation')
+                    Tinitial=obj.locData.files.file(filenumber).transformation;
+                else
+                    errordlg('attach transformation')
+    %                 Tinitial=obj.locData.files.file(1).savefit.fitparameters.
+                end
+                cpix=horzcat(locs.xpix+roi(1),locs.ypix+roi(2));
+                indref=Tinitial.getPart(1,cpix); %get ref
+                cref=cpix(indref,:);
+                locsr.x=cref(:,1);locsr.y=cref(:,2);locsr.frame=locs.frame(indref);
+                indtarget=Tinitial.getPart(2,cpix);%get target
+                ctar=cpix(indtarget,:);
+                ct2r=Tinitial.transformToReference(2,ctar);% transform target to ref
+                locst.x=ct2r(:,1);locst.y=ct2r(:,2);locst.frame=locs.frame(indtarget);
+                 %match
+                [iAa,iBa,nA,nB,nseen]=matchlocsall(locsr,locst,0,0,1,inf);
+                coordref=cref(iAa,:);
+                coordtarget=ctar(iBa,:);
+                
+                %weights
+                indrefi=find(indref);indtari=find(indtarget);
+                wx=1./(locs.xpixerr(indrefi(iAa)).^2+locs.xpixerr(indtari(iBa)).^2);  %weights: It is variance! see Wikipedia
+                wy=1./(locs.ypixerr(indrefi(iAa)).^2+locs.ypixerr(indtari(iBa)).^2);
+                frames=locs.frame(indrefi(iAa));            
+                allerror=(locs.xpixerr(indrefi(iAa))+locs.xpixerr(indtari(iBa))+locs.ypixerr(indrefi(iAa))+locs.ypixerr(indtari(iBa))); %average 1D loc prec
+                
+                %test
+%                 fff=locs.frame(indrefi(iAa))-locs.frame(indtari(iBa)); is
+%                 zero
+%                 coordt2ref=ct2r(iBa,:);                
+%                 r=1:100;
+%                 figure(88);plot(coordref(r,1),coordref(r,2),'.',coordt2ref(r,1),coordt2ref(r,2),'.')
+%                 %ref, target from match
             end
 
-            %weights for fitting from localization precision. w~1/sigma^2            
-            wx=1./(locs.xpix1err(~indbad).^2+locs.xpix2err(~indbad).^2);  %weights: It is variance! see Wikipedia
-            wy=1./(locs.ypix1err(~indbad).^2+locs.ypix2err(~indbad).^2);
+
             ff=min(frames):max(frames);
             % initial shift
             coordt2refi=Tinitial.transformToReference(2,coordtarget,'pixel'); %put back to reference part
@@ -87,10 +124,13 @@ classdef FrameDependentTransformation<interfaces.DialogProcessor
             
             %filter out bad coordinates
             % Gaussian weighting
-            sdist=((mean(locs.xpix1err(~indbad))+mean(locs.ypix1err(~indbad))+mean(locs.xpix2err(~indbad))+mean(locs.ypix2err(~indbad))))/4; %average 1D loc prec
+            sdist=mean(allerror)/4;
+%             sdist=((mean(locs.xpix1err(~indbad))+mean(locs.ypix1err(~indbad))+mean(locs.xpix2err(~indbad))+mean(locs.ypix2err(~indbad))))/4; %average 1D loc prec
             %keep localizations that are closer together than 2*sigma_av
             %and have localization precision < 2*sigma_av
-            indgood=sum(dxdytest.^2,2)<(sdist*2)^2 & ((locs.xpix1err(~indbad))+(locs.ypix1err(~indbad))+(locs.xpix2err(~indbad))+(locs.ypix2err(~indbad)))< sdist*2 ;
+            indgood=sum(dxdytest.^2,2)<(sdist*2)^2 & allerror < sdist*2 ;
+
+%             indgood=sum(dxdytest.^2,2)<(sdist*2)^2 & ((locs.xpix1err(~indbad))+(locs.ypix1err(~indbad))+(locs.xpix2err(~indbad))+(locs.ypix2err(~indbad)))< sdist*2 ;
             %re-calculate transformation
             Trefine2=Trefine.copy; %redo transformation based on origingal shift
             Trefine2.findTransform(2,coordref(indgood,:),coordtargetcorr(indgood,:),p.transform.selection,p.transformparam);
