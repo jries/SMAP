@@ -2,6 +2,12 @@ function stat=make_statistics2(locs,p,ploton)
 if nargin<3
     ploton=true;
 end
+if nargin<2
+    ploton=false;
+    p.filter=false;
+    p.photrange=quantile(locs{1}.phot,[.02 0.98]);
+    p.lifetimerange=[1,quantile(locs{1}.numberInGroup,.95)];
+end
 
 if p.filter
     modetxt=p.layernames(logical(p.sr_layerson));
@@ -316,9 +322,9 @@ uicontrol('Parent',ax5.Parent,'style','text','String',sls,'Units','normalized','
 uicontrol('Parent',ax6.Parent,'style','text','String',slf,'Units','normalized','Position',pos,'FontSize',fontsize,'HorizontalAlignment','left')
 end
 end
-
-if zexist
-    v=getFieldAsVector(locs,'locprecznm');
+v=getFieldAsVector(locs,'locprecznm');
+if zexist && ~isempty(v{1})
+    
     hz=plothist(v,.99,[],0,ax7,modetxt);
     slp={'locprecznm'};
     for k=datrange

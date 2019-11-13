@@ -169,7 +169,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 dax=newanglex-oldanglex;
                 day=newangley-oldangley;
 %                 theta=obj.getSingleGuiParameter('theta');
-                thetan=theta+day;
+                thetan=theta+day/pi*180;
                 obj.setGuiParameters(struct('theta',thetan));
                 posn=rotpos(pos,dax);
                 if isvalid(roih)
@@ -233,7 +233,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             step=0.1;
             stepl=0.3;
             dphi=pi/16;
-            dtheta=pi/16;
+            dtheta=pi/16/pi*180;
             if any(strcmp(data.Modifier,'shift'))
                 stepfac=0.2;
             else
@@ -249,22 +249,22 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                     case 1
                        %tilt up down
                        theta=theta+dtheta*stepfac;
-                       if theta>pi
-                           theta=theta-2*pi;
+                       if theta>180%pi
+                           theta=theta-360;%2*pi;
                        end
-                       if theta<-pi
-                           theta=theta+2*pi;
+                       if theta<-180%pi
+                           theta=theta+360%2*pi;
                        end
                        phi=0;
                     case 2
                         phi=0;
                        theta=theta-dtheta*stepfac;
-                       if theta>pi
-                           theta=theta-2*pi;
+                       if theta>180 %pi
+                           theta=theta-360;%2*pi;
                        end
                        
-                       if theta<-pi
-                           theta=theta+2*pi;
+                       if theta<-180%pi
+                           theta=theta+360;%2*pi;
                        end
                     case 3
                        phi=dphi*stepfac;
@@ -558,7 +558,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                     'position','roi','layer',layer,'shiftxy',[pl.shiftxy_min,pl.shiftxy_max,pl.shiftxy_z]);   
                 loc.znm=loc.znm+pl.shiftxy_z;
                 if strcmp(p.animatemode.selection,'Translate')&&strcmp(p.raxis.selection,'vertical')
-                    thetaoffset=pi/2;
+                    thetaoffset=90;%pi/2;
 %                     induf=find(indu);
                     indz=(loc.znm>p.zpos-p.zdist/2 & loc.znm<=p.zpos+p.zdist/2);
                     indu(indu)=indz;
@@ -567,7 +567,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 else
                     thetaoffset=0;
                 end
-                [yrot,depth]=rotcoord(loc.znm-zmean,loc.ynmline,p.theta+thetaoffset);
+                [yrot,depth]=rotcoorddeg(loc.znm-zmean,loc.ynmline,p.theta+thetaoffset);
                 [sortdepth,sortind]=sort(-depth);
                 sortdepth=depth(sortind);
 %                 sortdepth=sortdepth-max(sortdepth); %reference point on plane
@@ -691,8 +691,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                                     roih.setPosition(posr);           
                             case 'horizontal'
                                     theta=obj.getSingleGuiParameter('theta');
-                                    theta=theta-obj.getSingleGuiParameter('dangle')*pi/180;
-                                    theta=mod(theta,2*pi);                       
+                                    theta=theta-obj.getSingleGuiParameter('dangle');%*pi/180;
+                                    theta=mod(theta,360);%2*pi);                       
                                     obj.setGuiParameters(struct('theta',theta));
                                     obj.redraw;   
                         end
@@ -707,7 +707,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                                 if znew>zrange(2)
                                     znew=zrange(1);
                                 end
-                                if znew<zrange(1);
+                                if znew<zrange(1)
                                     znew=zrange(2);
                                 end
                                 obj.setGuiParameters(struct('zpos',znew));
@@ -797,7 +797,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                         switch p.raxis.selection
                             case 'vertical'          
                             case 'horizontal'
-                                theta=p.anglerange(1)*pi/180;                      
+                                theta=p.anglerange(1);%*pi/180;                      
                                 obj.setGuiParameters(struct('theta',theta));  
                         end
                     case 'Translate'

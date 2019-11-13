@@ -26,10 +26,10 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
         function pard=guidef(obj)
             pard.text.object=struct('Style','text','String','preview mode: ');
             pard.text.position=[1,1];
-            pard.text.Width=1.5;
+            pard.text.Width=1.2;
             pard.loc_previewmode.object=struct('Style','popupmenu','String','image|filtered|image-bg|bg','Value',2);
-            pard.loc_previewmode.position=[2,1];
-            pard.loc_previewmode.Width=1.5;
+            pard.loc_previewmode.position=[1,2];
+            pard.loc_previewmode.Width=1.;
             pard.loc_previewmode.TooltipString=sprintf('Determine which image to display in Preview mode. Peak finding is performed on norm(image)');
 
             pard.plugininfo.type='WorkflowModule'; 
@@ -93,6 +93,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                 maxima=obj.getPar('preview_peakfind');
                 if isempty(maxima)||isempty(maxima.xpix)
                      obj.setPar('status','no localizations found')
+                     obj.setPar('errorindicator','no localizations found')
                      error ('no localizations found')
                 end
                 col=[0.3 0.3 0.];

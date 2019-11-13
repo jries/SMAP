@@ -171,7 +171,7 @@ end
 
 for k=1:length(obj.rois)
     if ~isempty(obj.rois{k}) 
-        hroi=images.roi.Polygon(ax,'Position',obj.rois{k}.Position,'Color',cmap(k+1,:));
+        hroi=images.roi.Polygon(ax,'Position',obj.rois{k}.Position,'Color',cmap(k+1,:),'Label',num2str(k));
 %         hroi.Tag=num2str(k);
         addlistener(hroi,'MovingROI',@(src,evt) updatePosition(src,evt,obj,k));
         obj.roihandles{k}=hroi;
@@ -179,7 +179,7 @@ for k=1:length(obj.rois)
 end
 if channel>0
 if length(obj.rois)<channel || isempty(obj.rois{channel})
-    hroi=images.roi.Polygon(ax,'Color',cmap(channel+1,:));
+    hroi=images.roi.Polygon(ax,'Color',cmap(channel+1,:),'Label',num2str(channel));
     addlistener(hroi,'MovingROI',@(src,evt) updatePosition(src,evt,obj,channel));
 %     hroi.Tag=num2str(channel);
     draw(hroi);

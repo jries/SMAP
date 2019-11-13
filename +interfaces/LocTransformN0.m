@@ -8,9 +8,8 @@ classdef LocTransformN0<handle
         transformZ2Reference
         transformZ2Target
         unit='nm'; %or pixel
-%         cam_pixnm={[100 100],[100 100]};  %In future: allow pixel size for every channel? e.g. for multi-camera setup
         channels=2;
-%         mirror
+        frameshift
     end
     
     methods
@@ -139,6 +138,7 @@ classdef LocTransformN0<handle
            if nargin<5
                channel=1;
            end
+           co=ci;
            if ~strcmp(unitref,unittar)
                 switch unittar
                     case {'pixels','pixel'}
@@ -149,7 +149,7 @@ classdef LocTransformN0<handle
                 end
     %             co(1,:)=ci(1,:)*cf(1);
     %             co(2,:)=ci(2,:)*cf(end);
-                co=ci;
+                
                 co(:,1)=ci(:,1)*cf(1);
                 co(:,2)=ci(:,2)*cf(end);
             end
@@ -168,6 +168,33 @@ classdef LocTransformN0<handle
              if nargin>3,co=obj.convertcoordinates(co,obj.unit,unit,1);end  %now in Reference channel (1), use this pixel size
              co=co*1000; %back to nm   
         end
+        function co=transformToReferenceFramecorrection(obj,channel,ci,frame,unit)
+              if nargin<5
+                  unit='pixel';
+              end
+%             subtract from target (with right mirror). Then normal
+%             transformation. 
+%               Shift is always in pixels, so convert:
+            mir=obj.mirrorchannel(channel);
+            mirrorfac=(1-2*mir);
+            dxdy=horzcat(mirrorfac(1)*obj.frameshift.fitx(frame),mirrorfac(2)*obj.frameshift.fity(frame));
+            cip=obj.convertcoordinates(ci,'pixel',unit,channel);
+            cipc=cip-dxdy;
+            co=obj.transformToReference(channel,cipc,'pixel');
+            
+        end
+        function co=transformToTargetFramecorrection(obj,channel,ci,frame,unit)
+           if nargin<5
+               unit='pixel';
+           end
+%             transform to target and add drift
+            coT=obj.transformToTarget(channel,ci,unit);
+            mir=obj.mirrorchannel(channel);
+            mirrorfac=(1-2*mir);
+            dxdy=horzcat(mirrorfac(1)*obj.frameshift.fitx(frame),mirrorfac(2)*obj.frameshift.fity(frame));
+            cop=obj.convertcoordinates(coT,'pixel',unit,channel);
+            co=cop+dxdy;
+        end
         function co=transformToTarget(obj,channel,ci,unit)
             if nargin>3 %unit specified
                 ci=obj.convertcoordinates(ci,unit,obj.unit,1); %start with reference coordinates ch 1
@@ -181,6 +208,16 @@ classdef LocTransformN0<handle
             if nargin>3,co=obj.convertcoordinates(co,obj.unit,unit,channel);end %now at target channel
              co=co*1000; %back to nm   
         end  
+        function co=transformToTargetAllFramecorrection(obj,varargin)
+            ci=varargin{1};
+            numch=length(obj.transform2Target);
+      
+            si=size(ci);si(3)=numch;
+            co=zeros(si);
+            for ch=1:numch
+                co(:,:,ch)=obj.transformToTargetFramecorrection(ch,varargin{:});
+            end
+        end
         function co=transformToTargetAll(obj,varargin)
             ci=varargin{1};
             numch=length(obj.transform2Target);
@@ -191,7 +228,6 @@ classdef LocTransformN0<handle
                 co(:,:,ch)=obj.transformToTarget(ch,varargin{:});
             end
         end
-
         function imout=transformImageToTarget(obj,channel,image,cam_pixnm,roi)
             imout=transformImage(obj.transform2Target{channel},image,cam_pixnm,roi);
         end
