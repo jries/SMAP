@@ -92,16 +92,23 @@ classdef LocFilter<interfaces.WorkflowModule
                 
                 if p.check_converged && isfield(locs,'iterations')&&~isempty(p.loc_iterations)
                     indinh=locs.iterations<p.loc_iterations;
-                    indin=indin&indinh;
+                    indin=indin & indinh;
                 end
                 
                 if p.check_convergedxy && isfield(locs,'peakfindx') 
 %                  maxfitdist=min(3.5,(p.loc_ROIsize-1)/2);
                     maxfitdist=p.val_convxy;
-                    indin=abs(locs.xpix-locs.peakfindx)<maxfitdist & abs(locs.ypix-locs.peakfindy)<maxfitdist;
+                    indin=indin & abs(locs.xpix-locs.peakfindx)<maxfitdist & abs(locs.ypix-locs.peakfindy)<maxfitdist;
                 end
                 
+                %remove all locs that contain NaN
                 fn=fieldnames(locs);
+                for k=1:length(fn)
+                    indin(isnan(locs.(fn{k})))=false;
+%                     sum(isnan(locs.(fn{k})))
+                end    
+                
+%                 fn=fieldnames(locs);
                 for k=1:length(fn)
                     locsout.(fn{k})=locs.(fn{k})(indin);
                 end                

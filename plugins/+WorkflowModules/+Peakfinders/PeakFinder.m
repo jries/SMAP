@@ -40,15 +40,15 @@ classdef PeakFinder<interfaces.WorkflowModule
                 if all(size(obj.roimask)== size(image))
                     image(~obj.roimask)=-1;
                 end
-            switch p.peakfindmethod.Value
-                case 1 %maximum
+%             switch p.peakfindmethod.Value
+%                 case 1 %maximum
                     maxima=maximumfindcall(image); %find maxima
                     maxima(:,[1 2])=maxima(:,[2 1]);
                     dynamicf=1;
-                case 2 %NMS
-                maxima=NMS2DBlockCcall(image,p.NMS_kernel_size); %find maxima
-                dynamicf=3/p.NMS_kernel_size;
-            end
+%                 case 2 %NMS
+%                 maxima=NMS2DBlockCcall(image,p.NMS_kernel_size); %find maxima
+%                 dynamicf=3/p.NMS_kernel_size;
+%             end
             switch p.cutoffmode.Value
                 case 1
                     cutoff=getdynamiccutoff(maxima,obj.dynamicfactor*dynamicf);
@@ -57,6 +57,11 @@ classdef PeakFinder<interfaces.WorkflowModule
             end
 %             cutoff
             maxind= (maxima(:,3)>cutoff);
+            
+            if p.use_mindistance
+                maxima=maxima(maxind,:);
+                maxind=~tooclose(maxima(:,1),maxima(:,2),p.mindistance); % p.mindistance) & ~tooclose(,p.mindistance);
+            end
             maxout.ypix=maxima(maxind,1);
             maxout.xpix=maxima(maxind,2);
             maxout.phot=maxima(maxind,3);
@@ -93,13 +98,13 @@ if isempty(p)
 end
 end
 
-function peakfindmethod_callback(a,b,obj)
-if obj.guihandles.peakfindmethod.Value==1
-    obj.guihandles.NMS_kernel_size.Visible='off';
-else
-    obj.guihandles.NMS_kernel_size.Visible='on';
-end
-end
+% function peakfindmethod_callback(a,b,obj)
+% if obj.guihandles.peakfindmethod.Value==1
+%     obj.guihandles.NMS_kernel_size.Visible='off';
+% else
+%     obj.guihandles.NMS_kernel_size.Visible='on';
+% end
+% end
 
 function cutoffmode_callback(a,b,obj)
 p=obj.getAllParameters;
@@ -166,15 +171,21 @@ pard.cutoffvalue.position=[1,2.5];
 pard.cutoffvalue.Width=.5;
 pard.cutoffvalue.TooltipString=sprintf('Dynamic: relative factor. \n Probability: directly probability p. \n absolute: cutoff in photons');
 
-pard.peakfindmethod.object=struct('Style','popupmenu','String',{{'maximum','NMS: kernel size (pix)'}});
-pard.peakfindmethod.position=[2,1];
-pard.peakfindmethod.Width=1.5;
-pard.peakfindmethod.TooltipString=sprintf('Maximum: all local maxima. \n NMS: non-maxiumum suprression. Finds only maxima spaced at least NMS size.');
-pard.peakfindmethod.Optional=true;
-pard.NMS_kernel_size.object=struct('Style','edit','String','5','Visible','off');
-pard.NMS_kernel_size.position=[2,2.5];
-pard.NMS_kernel_size.Width=.5;
-pard.NMS_kernel_size.Optional=true;
+pard.use_mindistance.object=struct('Style','checkbox','String','minimum distance (pix)');
+pard.use_mindistance.position=[2,1];
+pard.use_mindistance.Width=1.5;
+pard.mindistance.object=struct('Style','edit','String','7','Visible','on');
+pard.mindistance.position=[2,2.5];
+pard.mindistance.Width=.5;
+% pard.peakfindmethod.object=struct('Style','popupmenu','String',{{'maximum','NMS: kernel size (pix)'}});
+% pard.peakfindmethod.position=[2,1];
+% pard.peakfindmethod.Width=1.5;
+% pard.peakfindmethod.TooltipString=sprintf('Maximum: all local maxima. \n NMS: non-maxiumum suprression. Finds only maxima spaced at least NMS size.');
+% pard.peakfindmethod.Optional=true;
+% pard.NMS_kernel_size.object=struct('Style','edit','String','5','Visible','off');
+% pard.NMS_kernel_size.position=[2,2.5];
+% pard.NMS_kernel_size.Width=.5;
+% pard.NMS_kernel_size.Optional=true;
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='Performs peak-finding according either to local maximum finding  or to non-maximum suppression. Cutoff based on absolute numbers, probabilities, or dynamically calculated difference from background. (A. Neubeck and L. Van Gool, ?Efficient non-maximum suppression,? presented at the 18th International Conference on Pattern Recognition, Vol 3, Proceedings, 10662 LOS VAQUEROS CIRCLE, PO BOX 3014, LOS ALAMITOS, CA 90720-1264 USA, 2006, pp. 850?855.).';
 end
