@@ -649,9 +649,9 @@ if f
     end
     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
      obj.setPar('cal_3Dfile',[p f]);
-    if isfield(l,'transformation')
-        obj.setPar('transformationfile',[p f]);
-    end
+%     if isfield(l,'transformation')
+%         obj.setPar('transformationfile',[p f]);
+%     end
        
 end
 end
