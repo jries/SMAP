@@ -95,6 +95,9 @@ classdef zSALM<interfaces.DialogProcessor
 %             plot(ax2,zrange,ftsalm(startpsalm(1),startpsalm(2),zrange),'y:')
             plot(ax2,zrange,fitpsalm(zrange),'r') 
 %             legend(ax2,'exp','start','salm')
+
+            plot(ax2,[zrange(1), zrange(end)],intensitySALM(0,p)*[1,1],'k') 
+            plot(ax2,[zglass zglass],intensitySALM(0,p)*[0, 1],'k') 
             
             title(ax2,['position of glass (nm): ' num2str(zglass,3)]);
             drawnow
