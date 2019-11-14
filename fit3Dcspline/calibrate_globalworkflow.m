@@ -239,6 +239,10 @@ if contains(pp.split,'rl')
     pt.mirror= 1;
 elseif contains(pp.split,'ud')
     pt.mirror= 2;
+elseif contains(ph.Tmode,'r-l')
+    pt.mirror= 1;
+elseif contains(ph.Tmode,'u-d')
+    pt.mirror= 2;    
 else
     pt.mirror=0;
 end
