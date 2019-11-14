@@ -194,17 +194,17 @@ classdef calibrate3D_GUI_g<handle
             obj.guihandles.settingsfile4pi=uicontrol('style','edit','String','','Position',[xpos1+2*xw,top-22*vsep,xw*2,fieldheight],'FontSize',fontsize);
             
          
-            obj.guihandles.run=uicontrol('style','pushbutton','String','Calculate bead calibration','Position',[xpos1,1.5*vsep,xw*4,fieldheight],'FontSize',fontsize,'Callback',@obj.run_callback);
+            obj.guihandles.run=uicontrol('style','pushbutton','String','Calculate bead calibration','Position',[xpos1,1.5*vsep,xw*4,fieldheight],'FontSize',fontsize,'Callback',@obj.run_callback,'FontWeight','bold');
             %obj.guihandles.help=uicontrol('style','pushbutton','String','Help','Position',[xpos1+xw,top-23*vsep,xw*2,vsep],'FontSize',fontsize,'Callback',@obj.help_callback);
                       
             obj.guihandles.status=uicontrol('style','text','String','Status','Position',[xpos1,.5*vsep,xw*4,fieldheight],'FontSize',fontsize,'HorizontalAlignment','left');
             
-            if extended  %called from our propriety fitting software SMAP: extended funtionality. Hidden if called directly          
-%                 obj.guihandles.posfromsmap=uicontrol('style','checkbox','String','SMAP positions','Position',[xpos1,top-3*vsep,xw*1.5,fieldheight],'FontSize',fontsize,'Value',false);
-%                 obj.guihandles.posfromsmap.TooltipString='Use positions determined by SMAP. This allows for filtering and manual deletion of beads, as well as the use of ROIs.';
-            else
-                set(h, 'HandleVisibility', 'off'); %not affected by close all command
-            end      
+%             if extended  %called from our propriety fitting software SMAP: extended funtionality. Hidden if called directly          
+% %                 obj.guihandles.posfromsmap=uicontrol('style','checkbox','String','SMAP positions','Position',[xpos1,top-3*vsep,xw*1.5,fieldheight],'FontSize',fontsize,'Value',false);
+% %                 obj.guihandles.posfromsmap.TooltipString='Use positions determined by SMAP. This allows for filtering and manual deletion of beads, as well as the use of ROIs.';
+%             else
+%                 set(h, 'HandleVisibility', 'off'); %not affected by close all command
+%             end      
             
                 obj.guihandles.spatialcalt=uicontrol('style','text','String','Spatially resolved calibration: ','Position',[xpos1,top-23*vsep,xw*4,fieldheight],'FontSize',fontsize,'HorizontalAlignment',hatitle,'FontWeight','bold');
                 obj.guihandles.spatialmode=uicontrol('style','popupmenu','String',{'none','horizontal split','vertical split','M x N tiles','coordinates','circular ROI', 'interactive ROI'},'Position',[xpos1,top-24*vsep,xw*2,vsep],'FontSize',fontsize,'HorizontalAlignment',ha,'Callback',{@spatialselect_callback,obj});
@@ -224,7 +224,8 @@ classdef calibrate3D_GUI_g<handle
                 obj.guihandles.zernikefit=uicontrol('style','checkbox','String','Fit Zernike coefficients','Position',[xpos1,top-26*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',hatitle,'FontWeight','bold','Callback',@obj.zernike_callback,'Value',0);    
                 obj.guihandles.zernikepar=uicontrol('style','pushbutton','String','Parameters','Position',[xpos1+2*xw,top-26*vsep,xw*1,fieldheight],'FontSize',fontsize,'Callback',@obj.zernikepar_callback);    
                 
-                obj.guihandles.emgain=uicontrol('style','checkbox','String','EM gain used (mirrored)','Position',[xpos1,top-27*vsep,2*xw,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha); 
+%                 obj.guihandles.emgain=uicontrol('style','checkbox','String','EM gain used (mirrored)','Position',[xpos1,top-27*vsep,2*xw,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha); 
+                obj.guihandles.emgain=uicontrol('style','popupmenu','String',{'EM gain and mirror from metadata','no mirror','EM gain used (mirrored)'},'Position',[xpos1,top-27*vsep,3*xw,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha); 
                 
 
             modality_callback(obj,0,0)
@@ -260,12 +261,10 @@ classdef calibrate3D_GUI_g<handle
                 try
                     r=imageloaderAll(fileh,[],obj.smappos.P);
                     mirror=r.metadata.EMon;
-                    obj.guihandles.emgain.Value=mirror;
+%                     obj.guihandles.emgain.Value=mirror;
                 catch err
                     disp('EM mirror could not be defined automatically, set manually')
                 end
-                    
-%             end
         end
         function selectoutputfile_callback(obj,a,b)
             of=obj.guihandles.outputfile.String;
@@ -547,9 +546,9 @@ classdef calibrate3D_GUI_g<handle
                         
                 end
                 
-                p.emgain=obj.guihandles.emgain.Value;
+                p.emmirror=obj.guihandles.emgain.Value;
             else
-                p.emgain=false;
+                p.emmirror=2;
             end
             if obj.guihandles.setframes.Value
                 p.framerange=str2num(obj.guihandles.framerange.String);
@@ -587,13 +586,13 @@ classdef calibrate3D_GUI_g<handle
         end
         function changeTmode_callback(obj,a,b)
             if contains(a.String{a.Value},'2 cam')
-                obj.guihandles.Tsplitpost.String='Initial scaling factor';
+                obj.guihandles.Tsplitpost.String='M,°';
                 if strcmp(obj.guihandles.Tsplitpos.String,'255')
-                    obj.guihandles.Tsplitpos.String='1';
+                    obj.guihandles.Tsplitpos.String='1,0';
                 end
             else
                 obj.guihandles.Tsplitpost.String='Split (pix)';
-                if strcmp(obj.guihandles.Tsplitpos.String,'1')
+                if strcmp(obj.guihandles.Tsplitpos.String,'1,0')
                     obj.guihandles.Tsplitpos.String='255';
                 end                
             end

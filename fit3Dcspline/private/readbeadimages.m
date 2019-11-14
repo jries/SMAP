@@ -1,4 +1,4 @@
-function [imstack, roi, pixelsize,settings3D]=readbeadimages(file,p)
+function [imstack, roi, pixelsize,settings3D,isem]=readbeadimages(file,p)
 [path,f,ext]=fileparts(file);
 indq=strfind(f,'_q');
 settings3D=[];
@@ -13,9 +13,8 @@ if ~isempty(indq)
     multichannel_4pi=true;
 end
 pixelsize=100;
-    
-    if isfield(p,'smap') && p.smap
-        
+imstack=[];    
+    if isfield(p,'smap') && p.smap     
         try
              r=imageloaderAll(file,[],p.smappos.P);
 
@@ -30,28 +29,29 @@ pixelsize=100;
              disp('SMAP image loader used');
         catch err
             err
-            imstack=readfile_tif(file);
-            roi=[0 0 size(imstack,1) size(imstack,2)]; %check x,y
-            disp('simple image loder used because SMAP loader did not wok');
+%             imstack=readfile_tif(file);
+%             roi=[0 0 size(imstack,1) size(imstack,2)]; %check x,y
+%             disp('simple image loder used because SMAP loader did not wok');
         end
-        if isempty(imstack)
-            disp('using simple reader')
-            warndlg('using simple reader, this might create problems if only part of the camera chip is used.','using simple reader','replace');
-            if multichannel_4pi
-                imstack=[];
-                for k=1:length(file)
-                    imstack=horzcat(imstack,readfile_tif(file{k}));
-                end
-            else
-                 imstack=readfile_tif(file);
-            end
-            roi=[0 0 size(imstack,1) size(imstack,2)];
-        end
-          
-    else
-        imstack=readfile_tif(file);
-        roi=[0 0 size(imstack,1) size(imstack,2)]; %check x,y
+        
     end
+    if isempty(imstack)
+        disp('using simple reader')
+        warndlg('using simple reader, this might create problems if only part of the camera chip is used.','using simple reader','replace');
+        if multichannel_4pi
+            imstack=[];
+            for k=1:length(file)
+                imstack=horzcat(imstack,readfile_tif(file{k}));
+            end
+        else
+             imstack=readfile_tif(file);
+        end
+        roi=[0 0 size(imstack,1) size(imstack,2)];
+    end         
+%     else
+%         imstack=readfile_tif(file);
+%         roi=[0 0 size(imstack,1) size(imstack,2)]; %check x,y
+%     end
     if multichannel_4pi
         wx=size(imstack,2)/4;wy=size(imstack,1);
         settings3D=struct('y4pi',[0 0 0 0],'x4pi',[0 wx 2*wx 3*wx], 'width4pi',wx,'height4pi',wy,'mirror4pi',[0 0 0 0],'pixelsize_nm',100,'offset',100,'conversion',0.5);
@@ -65,8 +65,19 @@ pixelsize=100;
            
         imstack=imstack(:,:,fr);
     end
-    if isfield(p,'emgain') && p.emgain
-        imstack=imstack(:,end:-1:1,:);
+    isem=false;
+    if isfield(p,'emmirror') %do something with the ROI? Or already in image loader?
+        switch p.emmirror
+            case {0,2} %do nothing
+            case 1 %from metadata
+                 if r.metadata.EMon
+                     isem=true;
+                     imstack=imstack(:,end:-1:1,:);
+                 end
+            case 3 %mirror
+                isem=true;
+                imstack=imstack(:,end:-1:1,:);
+        end
         %XXXX for Andor take out?
 %          if any(roi(1:2)>0) %if roi(1:2)=[0 0] it is likely that roi was not read out and set to default.
 %              roi(1)=512-roi(1)-roi(3);

@@ -36,11 +36,12 @@ for k=1:length(filelist)
         ind=strfind(filelist{k},';');
         filelisth=filelist{k}(1:ind-1);
         filelisth2=filelist{k}(ind+1:end);
-        [imstack2, p.roi2{k}, p.pixelsize2{k},settings3D2]=readbeadimages(filelisth2,p);
-        [imstack, p.roi{k}, p.pixelsize{k},settings3D]=readbeadimages(filelisth,p);
+        [imstack2, p.roi2{k}, p.pixelsize2{k},settings3D2,isem1]=readbeadimages(filelisth2,p);
+        [imstack, p.roi{k}, p.pixelsize{k},settings3D,isem2]=readbeadimages(filelisth,p);
+        p.emgain=[isem1,isem2];
     else
         filelisth=filelist{k};
-        [imstack, p.roi{k}, p.pixelsize{k},settings3D]=readbeadimages(filelisth,p);
+        [imstack, p.roi{k}, p.pixelsize{k},settings3D,p.emgain]=readbeadimages(filelisth,p);
         p.roi2=p.roi;
         imstack2=imstack;
     end

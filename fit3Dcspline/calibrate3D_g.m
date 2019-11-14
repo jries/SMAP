@@ -59,8 +59,8 @@ end
 if ~isfield(p,'xrange')
     p.xrange=[-inf inf]; p.yrange=[-inf inf]; 
 end
-if ~isfield(p,'emgain')
-    p.emgain=0;
+if ~isfield(p,'emmirror')
+    p.emmirror=0;
 end
 
 if ~isfield(p,'smoothxy')
