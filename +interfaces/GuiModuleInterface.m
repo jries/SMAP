@@ -338,14 +338,14 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 fn=fieldnames(p.children);
                 for k=1:length(fn)
                     if isfield(obj.children,fn{k})
-                    child=obj.children.(fn{k});
-                    pchild=p.children.(fn{k});
-%                     try
-                    child.setGuiParameters(pchild,true,setmenulist);
-%                     catch err
-%                         child
-%                         err
-%                     end
+                        child=obj.children.(fn{k});
+                        pchild=p.children.(fn{k});
+                        try
+                            child.setGuiParameters(pchild,true,setmenulist);
+                        catch err
+                            child
+                            err
+                        end
                     
                     end
                 end
