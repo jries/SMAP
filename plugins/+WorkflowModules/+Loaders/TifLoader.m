@@ -103,18 +103,18 @@ classdef TifLoader<interfaces.WorkflowModule
             tall=0;
             tfitall=0;
             
-            % parallel
-            if p.parallelload
-                parp=gcp;
-            end
+%             % parallel
+%             if p.parallelload
+%                 parp=gcp;
+%             end
             allimages=0;
             imcounter=0;
             while ~isempty(image)&&imloader.currentImageNumber<=obj.framestop&&~SMAP_stopnow                
                 datout=interfaces.WorkflowData;
 
-                if obj.mirrorem
-                    image=image(:,end:-1:1);
-                end
+%                 if obj.mirrorem %rather put to camera converter!
+%                     image=image(:,end:-1:1);
+%                 end
                 allimages=double(image)+allimages;
                 imcounter=imcounter+1;
                 datout.data=image;
@@ -190,17 +190,17 @@ classdef TifLoader<interfaces.WorkflowModule
 
             p=obj.getGuiParameters;
             fileinf=obj.imloader.metadata;
-            if fileinf.EMon && p.mirrorem  %if em gain on and mirrorem on: switch roi
-                %It seems that on the Andor the roi is independent on the
-                %mode, 
-%                 if any(fileinf.roi(1:2)>0) %if roi(1:2)=[0 0] it is likely that roi was not read out and set to default.
-%                     fileinf.roi(1)=512-fileinf.roi(1)-fileinf.roi(3);
-%                 end
-                fileinf.EMmirror=true;
-            else 
-                fileinf.EMmirror=false;
-            end
-            obj.mirrorem=fileinf.EMmirror;
+%             if fileinf.EMon && p.mirrorem  %if em gain on and mirrorem on: switch roi
+%                 %It seems that on the Andor the roi is independent on the
+%                 %mode, 
+% %                 if any(fileinf.roi(1:2)>0) %if roi(1:2)=[0 0] it is likely that roi was not read out and set to default.
+% %                     fileinf.roi(1)=512-fileinf.roi(1)-fileinf.roi(3);
+% %                 end
+%                 fileinf.EMmirror=true;
+%             else 
+%                 fileinf.EMmirror=false;
+%             end
+%             obj.mirrorem=fileinf.EMmirror;
 
             obj.setPar('loc_fileinfo',fileinf);
             obj.setPar('loc_filename',file);
@@ -308,86 +308,86 @@ catch err
 end  
 end
 
-function mirrorem_callback(a,b,obj)
-if ~isempty(obj.imloader)
-     fileinf=obj.imloader.metadata;
-            if fileinf.EMon && obj.getSingleGuiParameter('mirrorem')  %if em gain on and mirrorem on: switch roi
-                fileinf.EMmirror=true;
-            else 
-                fileinf.EMmirror=false;
-            end
-            obj.mirrorem=fileinf.EMmirror;
-            if obj.getSingleGuiParameter('padedges') 
-                dr=obj.getSingleGuiParameter('padedgesdr');
-                fileinf.roi(1:2)=fileinf.roi(1:2)-dr;
-                fileinf.roi(3:4)=fileinf.roi(3:4)+2*dr;
-                obj.edgesize=dr;
-            end
-            obj.setPar('loc_fileinfo',fileinf);
-end
-end
+% function mirrorem_callback(a,b,obj)
+% if ~isempty(obj.imloader)
+%      fileinf=obj.imloader.metadata;
+%             if fileinf.EMon && obj.getSingleGuiParameter('mirrorem')  %if em gain on and mirrorem on: switch roi
+%                 fileinf.EMmirror=true;
+%             else 
+%                 fileinf.EMmirror=false;
+%             end
+%             obj.mirrorem=fileinf.EMmirror;
+%             if obj.getSingleGuiParameter('padedges') 
+%                 dr=obj.getSingleGuiParameter('padedgesdr');
+%                 fileinf.roi(1:2)=fileinf.roi(1:2)-dr;
+%                 fileinf.roi(3:4)=fileinf.roi(3:4)+2*dr;
+%                 obj.edgesize=dr;
+%             end
+%             obj.setPar('loc_fileinfo',fileinf);
+% end
+% end
 
 function pard=guidef(obj)
-pard.text.object=struct('Style','text','String','Image source file:');
-pard.text.position=[1,1];
-pard.text.Width=1.5;
-pard.text.Optional=true;
+% pard.text.object=struct('Style','text','String','Image source file:');
+% pard.text.position=[1,1];
+% pard.text.Width=1.5;
+% pard.text.Optional=true;
 
 pard.tiffile.object=struct('Style','edit','String',' ','HorizontalAlignment','right','Max',100);
 pard.tiffile.position=[2,1];
 pard.tiffile.Width=4;
 
 pard.loadtifbutton.object=struct('Style','pushbutton','String','load images','Visible','on');
-pard.loadtifbutton.position=[3,1];
+pard.loadtifbutton.position=[1,1];
 pard.loadtifbutton.TooltipString=sprintf('Open raw camera image tif files. \n Either single images in directory. \n Or multi-image Tiff stacks');
 
 pard.loaderclass.object=struct('Style','popupmenu','String','auto','Callback',{{@changeloader,obj}});
-pard.loaderclass.position=[3,4];
+pard.loaderclass.position=[1,4];
 pard.loaderclass.Width=1;
 pard.loaderclass.Optional=true;
 
 pard.ismultifile.object=struct('Style','checkbox','String','channels in different files','Value',0);
-pard.ismultifile.position=[3,2];
+pard.ismultifile.position=[1,2];
 pard.ismultifile.Width=2;
 pard.ismultifile.Optional=true;
 
 
 pard.onlineanalysis.object=struct('Style','checkbox','String','Online analysis. Waittime (s):','Value',0);
-pard.onlineanalysis.position=[4,2];
+pard.onlineanalysis.position=[3,2];
 pard.onlineanalysis.Width=1.75;
 pard.onlineanalysis.TooltipString='Fit during acquisition. If checked, max frames is ignored. Waits until no more images are written to file.';
 pard.onlineanalysis.Optional=true;
 pard.onlineanalysiswaittime.object=struct('Style','edit','String','5');
-pard.onlineanalysiswaittime.position=[4,3.75];
+pard.onlineanalysiswaittime.position=[3,3.75];
 pard.onlineanalysiswaittime.Width=0.5;
 pard.onlineanalysiswaittime.TooltipString='Waiting time for online analysis.';
 pard.onlineanalysiswaittime.Optional=true;
 
-pard.parallelload.object=struct('Style','checkbox','String','parallel','Value',0);
-pard.parallelload.position=[4,4.25];
-pard.parallelload.Width=0.75;
-pard.parallelload.TooltipString='Parallel load and process. Makes sense only for very slow loading process.';
-pard.parallelload.Optional=true;
+% pard.parallelload.object=struct('Style','checkbox','String','parallel','Value',0);
+% pard.parallelload.position=[4,4.25];
+% pard.parallelload.Width=0.75;
+% pard.parallelload.TooltipString='Parallel load and process. Makes sense only for very slow loading process.';
+% pard.parallelload.Optional=true;
 
 
 pard.textf.object=struct('Style','text','String','Frame range');
-pard.textf.position=[5.2,1.25];
+pard.textf.position=[4,1.25];
 pard.textf.Width=0.75;
 pard.textf.Optional=true;
 pard.framestart.object=struct('Style','edit','String','1');
-pard.framestart.position=[5.2,2];
+pard.framestart.position=[4,2];
 pard.framestart.Width=0.5;
 pard.framestart.Optional=true;
 pard.framestop.object=struct('Style','edit','String','1000000');
-pard.framestop.position=[5.2,2.5];
+pard.framestop.position=[4,2.5];
 pard.framestop.Width=0.5;
 pard.framestop.Optional=true;
 
-pard.mirrorem.object=struct('Style','checkbox','String','EM mirror','Value',1,'Callback',{{@mirrorem_callback,obj}});
-pard.mirrorem.position=[5.2,4.2];
-pard.mirrorem.TooltipString=sprintf('calibrate gain and offset from images');
-pard.mirrorem.Optional=true;
-pard.mirrorem.Width=0.8;
+% pard.mirrorem.object=struct('Style','checkbox','String','EM mirror','Value',1,'Callback',{{@mirrorem_callback,obj}});
+% pard.mirrorem.position=[4,4.2];
+% pard.mirrorem.TooltipString=sprintf('calibrate gain and offset from images');
+% pard.mirrorem.Optional=true;
+% pard.mirrorem.Width=0.8;
 
 pard.plugininfo.type='WorkflowModule'; 
 t1='Loads raw camera images (single file or direcotry with single images). These can be tiff, files, but also any OME compatible image files. This plugin can load and process images during acquisition for online fitting. With the help of the CameraManager metadata is parsed and passed on to the CameraConverter.';

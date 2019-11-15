@@ -29,7 +29,7 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.propertiesToSave={'loc_cameraSettings'};
         end
         function pard=guidef(obj)
-            pard=guidef;
+            pard=guidef(obj);
         end
         function initGui(obj)
            initGui@interfaces.WorkflowModule(obj);
@@ -113,18 +113,35 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.adu2phot=(pc.conversion/pc.emgain);
             obj.preview=obj.getPar('loc_preview');
             loadcamcalibrationfile(obj);
+            
+            
+            %             if fileinf.EMon && p.mirrorem  %if em gain on and mirrorem on: switch roi
+%                 %It seems that on the Andor the roi is independent on the
+%                 %mode, 
+% %                 if any(fileinf.roi(1:2)>0) %if roi(1:2)=[0 0] it is likely that roi was not read out and set to default.
+% %                     fileinf.roi(1)=512-fileinf.roi(1)-fileinf.roi(3);
+% %                 end
+%                 fileinf.EMmirror=true;
+%             else 
+%                 fileinf.EMmirror=false;
+%             end
+%             obj.mirrorem=fileinf.EMmirror;
         end
         function datao=run(obj,data,p)
            if isempty(data.data) %no image
                datao=data;
                return
            end
+           
            imgp=makepositive(data.data);
+           if p.emmirror && obj.loc_cameraSettings.EMon  %rather put to camera converter!
+                    imgp=imgp(:,end:-1:1);
+           end
+                
            if p.correctcamera %apply offset and brightfield correction
                roi=p.loc_cameraSettings.roi;
                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
                    .*obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
-               
            else
                imphot=(single(imgp)-obj.offset)*obj.adu2phot;
            end
@@ -233,9 +250,9 @@ if length(camfname)>4 && strcmp(camfname(end-3:end),'.mat')
 end
 camfile=['settings' filesep 'cameras' filesep camfname '.mat'];
 if exist(camfile,'file')
-    l=load(camfile);
+%     l=load(camfile);
     
-    [gainmap,offsetmap,varmap]=makegainoffsetCMOS(l,obj.loc_cameraSettings.exposure);
+    [gainmap,offsetmap,varmap]=makegainoffsetCMOS(camfile,obj.loc_cameraSettings.exposure);
     
     obj.setPar('cam_varmap',single(varmap));
     
@@ -250,14 +267,15 @@ else
 end
 end
 
-function [gainmap,offsetmap,varmap]=makegainoffsetCMOS(l,exposuretime_data)
+function [gainmap,offsetmap,varmap]=makegainoffsetCMOS(camfile,exposuretime_data)
     % if the camera has been characterized exposure time dependent,
     % find behavior for exposure time used here
+    l=load(camfile);
     if isfield(l, 'read_noise_variance') ...
             & isfield(l, 'thermal_noise_variance_per_s') ...
             & isfield(l, 'pixel_baseline') ...
             & isfield(l, 'thermal_counts_per_s')
-        [offsetmap, varmap] = makeExpDependMap(l, exposuretime_data)
+        [offsetmap, varmap] = makeExpDependMap(l, exposuretime_data);
     else
         offsetmap=l.offsetmap;
         varmap=l.varmap;
@@ -292,37 +310,60 @@ end % function
 % hold off
 % end
 
-function pard=guidef
+function mirrorem_callback(a,b,obj)
+% if ~isempty(obj.imloader)
+%      fileinf=obj.imloader.metadata;
+            if obj.loc_cameraSettings.EMon && obj.getSingleGuiParameter('mirrorem')  %if em gain on and mirrorem on: switch roi
+                obj.loc_cameraSettings.EMmirror=true;
+            else 
+                obj.loc_cameraSettings.EMmirror=false;
+            end
+%             obj.mirrorem=fileinf.EMmirror;
+%             if obj.getSingleGuiParameter('padedges') 
+%                 dr=obj.getSingleGuiParameter('padedgesdr');
+%                 fileinf.roi(1:2)=fileinf.roi(1:2)-dr;
+%                 fileinf.roi(3:4)=fileinf.roi(3:4)+2*dr;
+%                 obj.edgesize=dr;
+%             end
+%             obj.setPar('loc_fileinfo',fileinf);
+% end
+end
 
+function pard=guidef(obj)
 pard.text.object=struct('Style','text','String','Metadata:');
 pard.text.position=[1,1];
 pard.text.Width=.7;
 pard.text.Optional=true;
  
 pard.loadmetadata.object=struct('Style','pushbutton','String','Load');
-pard.loadmetadata.position=[1,1.6];
+pard.loadmetadata.position=[1,4.];
 pard.loadmetadata.TooltipString=sprintf('Load camera settings metadata from image or _sml.mat file.');
 pard.loadmetadata.Optional=true;
 pard.loadmetadata.Width=0.4;
-pard.calibrate.object=struct('Style','pushbutton','String','cal');
-pard.calibrate.position=[1,2];
+pard.calibrate.object=struct('Style','pushbutton','String','calibrate');
+pard.calibrate.position=[1,4.4];
 pard.calibrate.TooltipString=sprintf('calibrate gain and offset from images');
 pard.calibrate.Optional=true;
-pard.calibrate.Width=0.35;
+pard.calibrate.Width=0.6;
 
 pard.camparbutton.object=struct('Style','pushbutton','String','set Cam Parameters');
-pard.camparbutton.position=[1,3.2];
+pard.camparbutton.position=[1,1.7];
 pard.camparbutton.Width=1.3;
 pard.camparbutton.TooltipString=sprintf('Edit camera acquisition parameters.');
 pard.lockcampar.object=struct('Style','checkbox','String','Lock','Value',0);
-pard.lockcampar.position=[1,4.5];
+pard.lockcampar.position=[1,3];
 pard.lockcampar.Width=0.5;
 pard.lockcampar.TooltipString=sprintf('Do not overwrite camera parameters automatically, but keep those set manually.');
 
-pard.correctcamera.object=struct('Style','checkbox','String','Correct','Value',0);
-pard.correctcamera.position=[1,2.6];
-pard.correctcamera.Width=0.6;
+pard.correctcamera.object=struct('Style','checkbox','String','Correct flatfield/offset','Value',0);
+pard.correctcamera.position=[2,1];
+pard.correctcamera.Width=2;
 pard.correctcamera.TooltipString=sprintf('Apply darkfield and brightfield correction.');
+
+pard.emmirror.object=struct('Style','checkbox','String','Mirror if EM mode','Value',1,'Callback',{{@mirrorem_callback,obj}});
+pard.emmirror.position=[2,3];
+pard.emmirror.Width=2;
+pard.emmirror.TooltipString=sprintf('Mirror the image if acquired with EM gain.');
 
 
 pard.plugininfo.type='WorkflowModule'; 
