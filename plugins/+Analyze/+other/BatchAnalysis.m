@@ -37,7 +37,7 @@ classdef BatchAnalysis<interfaces.DialogProcessor
             gFormat=gsmap.children.guiRender.children.guiFormat;
             
             [outp,outf]=fileparts(p.outdir);
-            
+            results=[];
             
             
             for a=1:length(aplugins)
@@ -55,14 +55,14 @@ classdef BatchAnalysis<interfaces.DialogProcessor
                 %here set FoV, or reset. Maybe set ROI
                 for a=1:length(aplugins)
                    ahere=gabatch.children.(aplugins{a});
-                   try
+%                    try
                        results.(aplugins{a})(f)=ahere.processgo;
                        outfig=ahere.resultstabgroup.Parent;
                        savefig(outfig,[outp filesep outf filesep aplugins{a} filesep file '.fig']);
-                   catch err
-                       disp('output could not be saved')
-                       err
-                   end
+%                    catch err
+%                        disp('output could not be saved')
+%                        err
+%                    end
                 end
             end
             save(p.outdir,'results','filelist')
