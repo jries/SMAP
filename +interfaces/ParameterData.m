@@ -50,14 +50,14 @@ classdef ParameterData<handle
     
 end
 
-function v=setget(what,v)
-persistent SMAPp
-switch what
-    case 1 %set
-        SMAPp=copyfields(SMAPp,v);
-    case 2 %get
-        v=SMAPp;
-    case 3 %clear
-        SMAPp=[];
-end
-end
+% function v=setget(what,v)
+% persistent SMAPp
+% switch what
+%     case 1 %set
+%         SMAPp=copyfields(SMAPp,v);
+%     case 2 %get
+%         v=SMAPp;
+%     case 3 %clear
+%         SMAPp=[];
+% end
+% end
