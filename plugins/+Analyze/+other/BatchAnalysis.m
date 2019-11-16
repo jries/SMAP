@@ -56,7 +56,9 @@ classdef BatchAnalysis<interfaces.DialogProcessor
                 for a=1:length(aplugins)
                    ahere=gabatch.children.(aplugins{a});
 %                    try
-                       results.(aplugins{a})(f)=ahere.processgo;
+                       re=ahere.processgo;
+                       re
+                       results.(aplugins{a}){f}=re;
                        outfig=ahere.resultstabgroup.Parent;
                        savefig(outfig,[outp filesep outf filesep aplugins{a} filesep file '.fig']);
 %                    catch err
