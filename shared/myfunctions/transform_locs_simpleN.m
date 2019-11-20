@@ -24,8 +24,10 @@ else %all initial estimation:
         ref1b=2*p.separator;
         ref2b=2*p.separator;
     end
-    inforef=takeoutinf(inforef, p.ref1,ref1b);
-    infotarget=takeoutinf(infotarget,p.ref2, ref2b);
+    if isfield(p,'ref1')
+        inforef=takeoutinf(inforef, p.ref1,ref1b);
+        infotarget=takeoutinf(infotarget,p.ref2, ref2b);
+    end
     
 %     locT(:,1)=loctarget(:,1)-infotarget.xrange(1);locT(:,2)=loctarget(:,2)-infotarget.yrange(1);
 %     locR(:,1)=locref(:,1)-inforef.xrange(1);locR(:,2)=locref(:,2)-inforef.yrange(1);
@@ -35,7 +37,10 @@ else %all initial estimation:
     %mirror if neede
 %     sref=[inforef.xrange(2)-inforef.xrange(1) inforef.yrange(2)-inforef.yrange(1)];
 %     if any(isinf(sref))
-      if contains(p.Tmode,'2 cam')
+      if contains(p.modality,'4Pi')
+          sref(1)=max(max(locT(:,1)),max(locR(:,1)));
+          sref(2)=max(max(locT(:,2)),max(locR(:,2)));
+      elseif contains(p.Tmode,'2 cam')
           sref(1)=max(max(locT(:,1)),max(locR(:,1)));
           sref(2)=max(max(locT(:,2)),max(locR(:,2)));
           locT=locT*p.separator(1);

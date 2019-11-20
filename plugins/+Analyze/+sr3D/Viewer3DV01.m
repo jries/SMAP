@@ -253,7 +253,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                            theta=theta-360;%2*pi;
                        end
                        if theta<-180%pi
-                           theta=theta+360%2*pi;
+                           theta=theta+360;%2*pi;
                        end
                        phi=0;
                     case 2
@@ -629,8 +629,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 end
                 
                 th=p.theta+thetaoffset;
-                sxr=sx*sin(th);
-                syr=sy*cos(th);
+                sxr=sx*sind(th);
+                syr=sy*cosd(th);
                 
                 loc.sx=sx;
                 loc.sy=sqrt(sxr.^2+syr.^2);

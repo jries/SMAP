@@ -78,7 +78,7 @@ f=figure;
         ht2.ColumnName=varnames;
         a=table2array(struct2table(tab));
 %         a=struct2cell(tab);
-        ht2.Data=a(1:100,:);
+        ht2.Data=a(1:min(100,size(a,1)),:);
         
         fn=fieldnames(pfile);
         for k=1:length(fn)
