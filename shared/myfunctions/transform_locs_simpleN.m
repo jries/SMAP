@@ -61,14 +61,14 @@ else %all initial estimation:
 %     end
     for k=1:length(inforef.mirror)
         if inforef.mirror(k)>0
-            locR(:,inforef.mirror(k))=sref(inforef.mirror(k))-locR(:,inforef.mirror(k));
+            locR(:,k)=sref(k)-locR(:,k);
         end
     end
 %     star=[infotarget.xrange(2)-infotarget.xrange(1) infotarget.yrange(2)-infotarget.yrange(1)];
       star=sref;
     for k=1:length(infotarget.mirror)
         if infotarget.mirror(k)>0
-            locT(:,infotarget.mirror(k))=star(infotarget.mirror(k))-locT(:,infotarget.mirror(k));
+            locT(:,k)=star(k)-locT(:,k);
         end
     end
     

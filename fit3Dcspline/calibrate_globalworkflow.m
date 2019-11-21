@@ -169,7 +169,8 @@ switch p.Tmode
         
         pr.split='ud';
         pr.roiind=2;
-        pr.mirrorax=[0 1]*ismirror;
+%         pr.mirrorax=[1 0]*ismirror;
+         pr.mirrorax=[0 1]*ismirror;
     case {'right-left','right-left mirror'}
           splitpos=p.Tsplitpos(end);
          if max(p.xrange)<splitpos %defined only in upper part
@@ -197,6 +198,7 @@ switch p.Tmode
         
         pr.split='rl';
         pr.roiind=1;
+%         pr.mirrorax=[0 1]*ismirror;
         pr.mirrorax=[1 0]*ismirror;
     case {'2 cam','2 cam u-d mirror','2 cam r-l mirror'}
         pr.xrange1=p.xrange;pr.yrange1=p.yrange;
