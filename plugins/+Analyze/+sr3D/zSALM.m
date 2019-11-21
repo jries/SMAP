@@ -162,7 +162,7 @@ classdef zSALM<interfaces.DialogProcessor
 %                     znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
 %                     locprecznmnew=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
                 case 2 %salm
-                    znmnew=obj.locData.loc.zSALM;
+                    znmnew=obj.locData.loc.znm_SALM;
                     locprecznmnew=zerrs;
                 case 3 %astig
                     znmnew=obj.locData.loc.znm_a;
