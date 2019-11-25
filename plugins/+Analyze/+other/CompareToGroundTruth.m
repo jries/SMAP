@@ -12,6 +12,7 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         end
         
         function out=run(obj,p)
+            global allresults  
             out=[];
             fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm','photerr','filenumber'};
             fieldsT=fieldsR;
@@ -91,8 +92,8 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
             end
             figure(obj.figure);
               
-            simulationerror(lRn,lTn,whicherr,p.searchradius)
-            
+            results=simulationerror(lRn,lTn,whicherr,p.searchradius);
+            allresults(end+1)=results;
 %                 lt.frame=lt.frame+1;
 %             [outlayer2D, outlayer3D,mr,mt]=getmatch(lr,lt,p);
 %             outlayer2D.name='layer2D';

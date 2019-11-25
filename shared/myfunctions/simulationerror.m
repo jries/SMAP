@@ -1,4 +1,4 @@
-function simulationerror(locgt,locfit,whicherr,searchradius)
+function results=simulationerror(locgt,locfit,whicherr,searchradius)
 
 f=gcf;
 isz=true;
@@ -220,7 +220,10 @@ plot(locfit.x,locfit.y,'.',locgt.x,locgt.y,'.')
 ff='%2.0f';
 title(['FP: ' num2str(falsepositives/totallocs*100,ff), '%, FN: ' num2str(falsenegatives/totallocs*100,ff) '%'...
     ', P: ' num2str(precision,2) ', R: ' num2str(recall,2)]);
-
+results.precision=precision;
+results.recall=recall;
+results.falsepositives=falsepositives;
+%add all results
 
 end
 

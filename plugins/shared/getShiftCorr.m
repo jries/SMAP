@@ -1,4 +1,4 @@
-function [dx,dy,abg]=getShiftCorr(im1,im2,ploton,maxshift,subpixel)
+function [dx,dy,abg]=getShiftCorr(im1,im2,ploton,maxshift,subpixel,winfit)
 if nargin<3
     ploton=false;
 end
@@ -8,10 +8,13 @@ end
 if nargin<5
     subpixel=true;
 end
+if nargin<6
+    winfit=3;
+end
 
 % facs=1; %global resize factor for smaller pixel sizes
  filtersize=1.5;
- winfit=3;
+%  winfit=3;
  s=size(im1);
 
  nFFT=2^ceil(log2(max(s)));

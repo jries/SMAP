@@ -2,7 +2,7 @@ function zpos=finddisplacementZ(xr,zr,xt,zt,xb,zb,window,plotaxis)
 if nargin<8
     plotaxis=[];
 end
-if nargin<7
+if nargin<7||isempty(window);
     window=[];
 end
 
