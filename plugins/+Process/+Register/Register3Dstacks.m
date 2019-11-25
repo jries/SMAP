@@ -38,9 +38,9 @@ classdef Register3Dstacks<interfaces.DialogProcessor
             end
             for k=1:numfiles-1
                 in2f=obj.locData.loc.filenumber==filesortind(k+1);
-                obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shift(k,1);
+                obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shift(k,1); %XXXXX test if to add or subtract
                 obj.locData.loc.ynm(in2f)=obj.locData.loc.ynm(in2f)+shift(k,2);
-                obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shift(k,3);
+                obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shift(k,3); %XXX here as well, could be differnt to xy
             end
             obj.locData.regroup;
         end
