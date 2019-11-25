@@ -25,14 +25,24 @@ classdef Register3Dstacks<interfaces.DialogProcessor
             end
             [zpossort,filesortind]=sort(zpos);
             for k=1:numfiles-1
-                in1=(locs.filenumber==filesortind(k)) & (locs.znm>p.dz-p.overlap/2);
-                in2=(locs.filenumber==filesortind(k+1)) & (locs.znm<-p.dz+p.overlap/2);
+                in1f=(locs.filenumber==filesortind(k));
+                in2f=(locs.filenumber==filesortind(k+1));
+                inabove=(locs.znm>p.dz/2-p.overlap/2)& locs.znm<p.dz/2+p.overlap/2;
+                inbelow=(locs.znm<-p.dz/2+p.overlap/2) & (locs.znm>-p.dz/2-p.overlap/2);
+                in1=in1f&inabove;
+                in2=in2f&inbelow;
                 
-                coordref=[locs.xnm(in1),locs.ynm(in1),locs.znm(in1)-zpossort(k)*p.dz];
-                coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)-zpossort(k+1)*p.dz];
-                shift=findshift(coordref,coordtar,p);
+                coordref=[locs.xnm(in1),locs.ynm(in1),locs.znm(in1)+zpossort(k)*p.dz];
+                coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+zpossort(k+1)*p.dz];
+                shift(k,:)=findshift(coordref,coordtar,p);
             end
-            
+            for k=1:numfiles-1
+                in2f=obj.locData.loc.filenumber==filesortind(k+1);
+                obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shift(k,1);
+                obj.locData.loc.ynm(in2f)=obj.locData.loc.ynm(in2f)+shift(k,2);
+                obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shift(k,3);
+            end
+            obj.locData.regroup;
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -52,18 +62,18 @@ cmax=max(max(coordref,[],1),max(coordtar,[],1));
 rangex=cmin(1):pixrec:cmax(1);
 rangey=cmin(2):pixrec:cmax(2);
 slicex=cmin(1):slicewidth:cmax(1);
-zbin=cmin(3):pixrec:cmax(3);
+zbin=cmin(3):pixrec/2:cmax(3);
 
 hr=histcounts2(coordref(:,1),coordref(:,2),rangex,rangey);
 ht=histcounts2(coordtar(:,1),coordtar(:,2),rangex,rangey);
 
 f=figure(99);
-[dx,dy,abg]=getShiftCorr(hr,ht,ploton,maxshift,true,wind)
+[dx,dy,abg]=getShiftCorr(hr,ht,ploton,maxshift,true,wind);
 figure(98);plotaxis=gca;
 
-zpos=finddisplacementZ(coordref(:,1),coordref(:,3),coordtar(:,1)-dx*pixrec,coordtar(:,3),slicex,zbin,[],plotaxis)
+zpos=finddisplacementZ(coordref(:,1),coordref(:,3),coordtar(:,1)+dx*pixrec,coordtar(:,3),slicex,zbin,5,plotaxis);
 
-
+shift=[dx,dy,zpos];
 end
 
 function pard=guidef(obj)
