@@ -36,11 +36,13 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                 coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+zpossort(k+1)*p.dz];
                 shift(k,:)=findshift(coordref,coordtar,p);
             end
+            in2f=obj.locData.loc.filenumber==filesortind(1);
+            obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(1)*p.dz;
             for k=1:numfiles-1
                 in2f=obj.locData.loc.filenumber==filesortind(k+1);
-                obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shift(k,1); %XXXXX test if to add or subtract
+                obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shift(k,1);
                 obj.locData.loc.ynm(in2f)=obj.locData.loc.ynm(in2f)+shift(k,2);
-                obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shift(k,3); %XXX here as well, could be differnt to xy
+                obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shift(k,3);
             end
             obj.locData.regroup;
         end
@@ -55,14 +57,14 @@ pixrec=10;
 wind=6;
 ploton=true;
 maxshift=3*wind;
-slicewidth=200 ; %nm
+slicewidth=25 ; %nm
 
 cmin=min(min(coordref,[],1,'omitnan'),min(coordtar,[],1,'omitnan'));
 cmax=max(max(coordref,[],1,'omitnan'),max(coordtar,[],1,'omitnan'));
 rangex=cmin(1):pixrec:cmax(1);
 rangey=cmin(2):pixrec:cmax(2);
 slicex=cmin(1):slicewidth:cmax(1);
-zbin=cmin(3):pixrec/2:cmax(3);
+zbin=cmin(3):pixrec/10:cmax(3);
 
 hr=histcounts2(coordref(:,1),coordref(:,2),rangex,rangey);
 ht=histcounts2(coordtar(:,1),coordtar(:,2),rangex,rangey);
@@ -73,7 +75,7 @@ figure(98);plotaxis=gca;
 
 zpos=finddisplacementZ(coordref(:,1),coordref(:,3),coordtar(:,1)+dx*pixrec,coordtar(:,3),slicex,zbin,5,plotaxis);
 
-shift=[dx,dy,zpos];
+shift=[dx.*pixrec,dy.*pixrec,zpos];
 end
 
 function pard=guidef(obj)
