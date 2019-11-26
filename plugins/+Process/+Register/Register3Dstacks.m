@@ -12,15 +12,18 @@ classdef Register3Dstacks<interfaces.DialogProcessor
         end
         
         function out=run(obj,p)
+            obj.setPar('undoModule','Register3Dstacks');
+            notify(obj.P,'backup4undo');
             out=[];
             locs=obj.locData.getloc({'xnm','ynm','znm','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','roi','removeFilter',{'filenumber'});
             numfiles=max(locs.filenumber);
 %             zslice=0*locs.znm;
             for k=1:numfiles
                 [~,filename]=fileparts(obj.locData.files.file(k).name);
+                filename=strrep(filename,'.','_');
                 ind=strfind(filename,'_Pos');
-                ind2=strfind(filename(ind:end),'_');
-                zpos(k)=str2double(filename(ind+4:ind+3+ind2(1)));
+                ind2=strfind(filename(ind+4:end),'_');
+                zpos(k)=str2double(filename(ind+4:ind+2+ind2(1)));
 %                 zslice(=locs.znm+zpos(k)*p.dz;
             end
             [zpossort,filesortind]=sort(zpos);
@@ -34,15 +37,16 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                 
                 coordref=[locs.xnm(in1),locs.ynm(in1),locs.znm(in1)+zpossort(k)*p.dz];
                 coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+zpossort(k+1)*p.dz];
-                shift(k,:)=findshift(coordref,coordtar,p);
+                shift(k,:)=findshift(coordref,coordtar,p); %shift between two consecutive frames
             end
+            shiftc=cumsum(shift,1);
             in2f=obj.locData.loc.filenumber==filesortind(1);
             obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(1)*p.dz;
             for k=1:numfiles-1
                 in2f=obj.locData.loc.filenumber==filesortind(k+1);
-                obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shift(k,1);
-                obj.locData.loc.ynm(in2f)=obj.locData.loc.ynm(in2f)+shift(k,2);
-                obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shift(k,3);
+                obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shiftc(k,1); %instead we need to use cumulative shifts here!
+                obj.locData.loc.ynm(in2f)=obj.locData.loc.ynm(in2f)+shiftc(k,2);
+                obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shiftc(k,3);
             end
             obj.locData.regroup;
         end
@@ -57,14 +61,16 @@ pixrec=10;
 wind=6;
 ploton=true;
 maxshift=3*wind;
-slicewidth=25 ; %nm
-
+slicewidth=150 ; %nm
+pixrecz=3;
 cmin=min(min(coordref,[],1,'omitnan'),min(coordtar,[],1,'omitnan'));
 cmax=max(max(coordref,[],1,'omitnan'),max(coordtar,[],1,'omitnan'));
 rangex=cmin(1):pixrec:cmax(1);
 rangey=cmin(2):pixrec:cmax(2);
 slicex=cmin(1):slicewidth:cmax(1);
-zbin=cmin(3):pixrec/10:cmax(3);
+slicey=cmin(2):slicewidth:cmax(2);
+
+zbin=cmin(3):pixrecz:cmax(3);
 
 hr=histcounts2(coordref(:,1),coordref(:,2),rangex,rangey);
 ht=histcounts2(coordtar(:,1),coordtar(:,2),rangex,rangey);
@@ -72,8 +78,8 @@ ht=histcounts2(coordtar(:,1),coordtar(:,2),rangex,rangey);
 f=figure(99);
 [dx,dy,abg]=getShiftCorr(hr,ht,ploton,maxshift,true,wind);
 figure(98);plotaxis=gca;
-
-zpos=finddisplacementZ(coordref(:,1),coordref(:,3),coordtar(:,1)+dx*pixrec,coordtar(:,3),slicex,zbin,5,plotaxis);
+coordtarc=coordtar+[dx dy 0]*pixrec;
+zpos=finddisplacementZ2(coordref,coordtarc,slicex,slicey,zbin,5,plotaxis);
 
 shift=[dx.*pixrec,dy.*pixrec,zpos];
 end
