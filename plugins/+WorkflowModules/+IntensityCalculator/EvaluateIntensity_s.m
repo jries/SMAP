@@ -114,7 +114,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                 end
                     
                 numl=s(3);
-                memincrease=1e4;  
+                memincrease=1e7;  
                 useevaluators=obj.useevaluators;
                 evaluators=obj.evaluators;
                 loccounter=obj.loccounter;
