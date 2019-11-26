@@ -19,8 +19,8 @@ classdef Register3Dstacks<interfaces.DialogProcessor
             for k=1:numfiles
                 [~,filename]=fileparts(obj.locData.files.file(k).name);
                 ind=strfind(filename,'_Pos');
-                ind2=strfind(filename(ind:end),'.ome_sml');
-                zpos(k)=str2double(filename(ind+4:ind+ind2-2));
+                ind2=strfind(filename(ind:end),'_');
+                zpos(k)=str2double(filename(ind+4:ind+3+ind2(1)));
 %                 zslice(=locs.znm+zpos(k)*p.dz;
             end
             [zpossort,filesortind]=sort(zpos);
@@ -57,8 +57,8 @@ ploton=true;
 maxshift=3*wind;
 slicewidth=200 ; %nm
 
-cmin=min(min(coordref,[],1),min(coordtar,[],1));
-cmax=max(max(coordref,[],1),max(coordtar,[],1));
+cmin=min(min(coordref,[],1,'omitnan'),min(coordtar,[],1,'omitnan'));
+cmax=max(max(coordref,[],1,'omitnan'),max(coordtar,[],1,'omitnan'));
 rangex=cmin(1):pixrec:cmax(1);
 rangey=cmin(2):pixrec:cmax(2);
 slicex=cmin(1):slicewidth:cmax(1);
