@@ -195,8 +195,8 @@ pard.addmodule.Width=.9;
 
 pard.removemodule.object=struct('Style','pushbutton','String','remove');
 pard.removemodule.position=[1,1.9];
-pard.removemodule.Width=.6;
-
+pard.removemodule.Width=0.6;
+% 
 pard.preview.object=struct('Style','pushbutton','String','preview');
 pard.preview.position=[11,1];
 
