@@ -409,6 +409,9 @@ if isfield(fitpar,'mirrorud') && fitpar.mirrorud
     dT(1,2,:)=-dT(1,2,:);
 elseif isfield(fitpar,'mirror')  %now only mirror channel two!
     mirr=fitpar.mirror{2};
+    if length(mirr)>1
+        mirr=mirr(1)+2*mirr(2);
+    end
     switch mirr
         case 0 %no mirror
             imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
