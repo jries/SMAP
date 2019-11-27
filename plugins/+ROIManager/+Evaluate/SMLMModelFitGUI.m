@@ -1,11 +1,26 @@
 classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
-
+    properties
+        fitter
+        numMod
+        parsArgFieldnames
+        lFnParsArgEdit
+        fnParsArgColWidth
+        layerFieldnames
+        lFnLayerEdit
+        currentLoadedModel
+    end
     methods
         function obj=SMLMModelFitGUI(varargin)
             obj@interfaces.SEEvaluationProcessor(varargin{:});
+            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel'};         
         end
         
+%         function setGuiParameters(obj,p)
+%             setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);     
+%         end
+        
         function out=run(obj, inp, varargin)
+            % varargin is used only when called by the run_addguitotab.mlx
             p = inputParser;
             addParameter(p,'onlySetUp',false, @islogical);
             addParameter(p,'forceDisplay',false, @islogical);
@@ -16,20 +31,20 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         
         function makeGui(obj,varargin)
             %% init settings
-            obj.setPar('currentLoadedModel',[]);
+            obj.currentLoadedModel = [];
             % field names in the parsArg table
             fnParsArg={'name','value','fix','lb','ub','type','min','max','label'};
             lFnParsArgEdit = logical([0 1 1 1 1 0 1 1 1]);
             fnParsArgColWidth = {50,35,20,30,30,30,30,30,30};
-            obj.setPar(['parsArgFieldnames_' obj.name], fnParsArg);
-            obj.setPar(['lFnParsArgEdit_' obj.name], lFnParsArgEdit);
-            obj.setPar(['fnParsArgColWidth_' obj.name], fnParsArgColWidth);
+            obj.parsArgFieldnames = fnParsArg;
+            obj.lFnParsArgEdit = lFnParsArgEdit;
+            obj.fnParsArgColWidth = fnParsArgColWidth;
             % field names in the layer table
             fnLayer ={'layer','value','fix','lb','ub','min','max'};
             fnLayerColWidth = {30,35,20,30,30,30,30};
             lFnLayerEdit = logical([0 1 1 1 1 1 1]);
-            obj.setPar(['layerFieldnames_' obj.name], fnLayer);
-            obj.setPar(['lFnLayerEdit_' obj.name], lFnLayerEdit);
+            obj.layerFieldnames = fnLayer;
+            obj.lFnLayerEdit = lFnLayerEdit;
             
             if nargin >2 && varargin{2}==true %gui of tabs
                  makeGui@interfaces.GuiModuleInterface(obj,varargin{1});
@@ -66,7 +81,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 obj.guihandles.tabgroup=obj.guihandles.tab1.Parent;
                 obj.addguitotab(1);
                 obj.guihandles.addtab=uitab(obj.guihandles.tabgroup,'Title','+');
-                obj.setPar('numMod',1);                 % init of the model counts
+                obj.numMod = 1;                 % init of the model counts
                 obj.guihandles.tabgroup.SelectionChangedFcn={@selectLayer_callback,obj};
                 
                 %% Convert               
@@ -101,8 +116,9 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                     dataDim = 2;
                 end
                 fitter = SMLMModelFit('DataDim',dataDim);
-                obj.setPar(['fitter_' obj.name], fitter);
+                obj.fitter = fitter;
             end
+            obj.setPar('initiated',true)
         end
         function pard=guidef(obj)
             pard=SMLMModelFitGUIdef(obj);
@@ -125,7 +141,7 @@ function selectLayer_callback(tabgroup,eventdata,obj)
     if strcmp(layertitle,'+')
         numtabs=length(tabgroup.Children);
         obj.addguitotab(numtabs-2)
-        obj.setPar('numMod',numtabs-2)   % save the number of model
+        obj.numMod = numtabs-2;   % save the number of model
         s=1:length(tabgroup.Children);
         % shift the order of table
         s(end-2)=s(end);
@@ -147,14 +163,14 @@ function convertTable_callback(a,b,obj)
 end
 
 function layerSetting_callback(a,b,obj) 
-    fitter = obj.getPar(['fitter_' obj.name]);
-    fn=obj.getPar(['layerFieldnames_' obj.name]);
+    fitter = obj.fitter;
+    fn=obj.layerFieldnames;
     indices = b.Indices;
     layer = a.Data{indices(1),1};
     layer = strrep(layer,'layer','9');
     [~,idx] = fitter.wherePar(['pars.m' layer '.offset.weight']);
     fitter.allParsArg.(fn{indices(2)})(idx) = b.NewData;
-    obj.setPar(['fitter_' obj.name], fitter);
+    obj.fitter = fitter;
 end
 
 function convertTableSelection_callback(a,b,obj) 
