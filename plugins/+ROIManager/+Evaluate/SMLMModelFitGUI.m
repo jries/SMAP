@@ -15,10 +15,33 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel'};         
         end
         
-%         function setGuiParameters(obj,p)
-%             setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);     
-%         end
+        function setGuiParameters(obj,p)
+            initTabWhenLoading(obj);
+            setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);
+        end
         
+        function initTabWhenLoading(obj)
+            fitter = obj.fitter;
+            numOfModel = fitter.numOfModel;
+            inp = obj.getAllParameters;
+            obj.setPar('loading',true);
+            for m = 1:numOfModel
+                modelnumberStr = num2str(m);
+                if ~isfield(inp,['modelname_' modelnumberStr])
+                    % hack the action of pressing '+' tab
+                    eventData.EventName = 'SelectionChanged';
+                    eventData.OldValue = [];
+                    eventData.NewValue = [];
+                    eventData.NewValue.Title = '+';
+                    obj.guihandles.tabgroup.SelectionChangedFcn{1}(obj.guihandles.tabgroup,eventData,obj)
+                end
+                % load info to the GUI
+                obj.currentLoadedModel = modelnumberStr;
+                notify(obj.guihandles.(['modelload_' modelnumberStr]),'Action')
+            end
+            obj.setPar('loading',false);
+        end
+
         function out=run(obj, inp, varargin)
             % varargin is used only when called by the run_addguitotab.mlx
             p = inputParser;
