@@ -604,6 +604,10 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                             parenth=obj.handle;
                         end
                         hg=uicontrol(parenth,h);
+                        %bug: sometimes string does not get passed on
+                        if isfield(h,'String')
+                            hg.String=h.String;
+                        end
                         
                         obj.guihandles.(allFields{k})=hg;
                         thisField=myrmfield(thisField,{'Width','Height','position','object','load'});

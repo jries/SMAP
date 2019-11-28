@@ -127,15 +127,22 @@ if isfield(pos,'N') && isempty(pos.N)
 end
 end
 lutall=mymakelut(p.lut.selection);
+if isfield(p,'lutinv')&&p.lutinv
+    lutall=lutall(end:-1:1,:);
+%     lutall=lutinvert(lutall);
+end
 switch p.render_colormode.selection
     case 'normal'
         lut=0;
+        lutapplied=0;
     case 'z'
         lut=lutall;
         pos.c=locsh.znm(indin);
+        lutapplied=1;
     case 'field'
         lut=lutall;
         pos.c=locsh.(p.renderfield.selection)(indin);
+        lutapplied=1;
 end
 
 if p.remout==0&&isfield(pos,'c')&&isfield(p,'colorfield_max')&&isfield(p,'colorfield_min')
@@ -282,6 +289,7 @@ end
 
 imageo.image=srimage;
 imageo.lut=lutall;
+imageo.lutapplied=lutapplied;
 imageo.rangex=rangex;
 imageo.rangey=rangey;
 imageo.numberOfLocs=nlocs;
