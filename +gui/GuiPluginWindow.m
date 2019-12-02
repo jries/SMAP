@@ -59,7 +59,7 @@ classdef GuiPluginWindow< interfaces.GuiModuleInterface & interfaces.LocDataInte
             f=getParentFigure(obj.handle);
             c=uicontextmenu(f);
             h.(obj.maindir).UIContextMenu=c;
-            m1 = uimenu(c,'Label','remove','Callback',{@menu_callback,obj});
+            m1 = uimenu(c,'Label','remove ','Callback',{@menu_callback,obj});
             m2 = uimenu(c,'Label','add','Callback',{@menu_callback,obj});
             m3 = uimenu(c,'Label','add workflow','Callback',{@menu_callback,obj});
             m4 = uimenu(c,'Label','move left','Callback',{@menu_callback,obj});
@@ -118,7 +118,7 @@ switch callobj.Label
         obj.addplugingroup(name);
         guimodules.(obj.maindir).(name)=[];
 
-    case 'remove'
+    case 'remove '
         selected=obj.guihandles.(obj.maindir).SelectedTab;
         fieldr=selected.Title;
         if isfield(guimodules.(obj.maindir),fieldr) %only delete plugin groups

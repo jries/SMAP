@@ -85,7 +85,7 @@ tcam.ColumnEditable=[ true false true];
 
 hc=uicontextmenu(obj.handle);
 hui=uimenu('Parent',hc,'Label','add','Callback',{@menu_callback,obj});
-hui=uimenu('Parent',hc,'Label','remove','Callback',{@menu_callback,obj});
+hui=uimenu('Parent',hc,'Label','remove ','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','move up','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','move down','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','rename','Callback',{@menu_callback,obj});
@@ -460,7 +460,7 @@ if nargin<4
     label=object.Label;
 end
 switch label
-    case 'remove'
+    case 'remove '
         if isempty(obj.lastcamtableselected)
             return
         end

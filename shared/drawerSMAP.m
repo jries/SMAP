@@ -24,6 +24,9 @@ if p.gamma ~=1
     imgn=imgn.^p.gamma;
 end
 
+if ~isfield(him,'lutapplied')
+    him.lutapplied=false;
+end
 [iml,lut]=applyLut(imgn,p.lut.selection,p.colorfield_min,p.colorfield_max,p.lutinv&~him.lutapplied);
 imout.image=iml;
 if him.istiff==0

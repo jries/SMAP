@@ -127,7 +127,7 @@ pard.resultslist.Width=4;
 pard.add.object=struct('String','Add','Style','pushbutton','Callback',{{@obj.load_callback,'add'}});
 pard.add.position=[6,1];
 
-pard.remove.object=struct('String','Remove','Style','pushbutton','Callback',{{@obj.load_callback,'remove'}});
+pard.remove.object=struct('String','Remove ','Style','pushbutton','Callback',{{@obj.load_callback,'remove'}});
 pard.remove.position=[6,2];
 
 pard.savebutton.object=struct('String','Save','Style','pushbutton','Callback',{{@obj.save_callback}});

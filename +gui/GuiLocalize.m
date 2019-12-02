@@ -140,7 +140,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             f=getParentFigure(obj.handle);
             c=uicontextmenu(f);
             h.loctab.UIContextMenu=c;
-            m1 = uimenu(c,'Label','remove','Callback',{@menu_callback,obj});
+            m1 = uimenu(c,'Label','remove ','Callback',{@menu_callback,obj});
             m3 = uimenu(c,'Label','add workflow','Callback',{@menu_callback,obj});
             
             previewframe_callback(0,0,obj)
@@ -264,7 +264,7 @@ function loadwf(obj,settingsfilen)
 end
 function menu_callback(callobj,~,obj)
 switch callobj.Label
-    case 'remove'
+    case 'remove '
         selected=obj.guihandles.loctab.SelectedTab;
         title=selected.Title;
         if strcmp(title(1:2),'WF')

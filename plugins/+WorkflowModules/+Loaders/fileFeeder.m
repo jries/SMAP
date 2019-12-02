@@ -89,7 +89,7 @@ pard.add.object=struct('Style','pushbutton','String','add','Callback',{{@add_cal
 pard.add.position=[6,1];
 pard.add.Width=0.5;
 
-pard.remove.object=struct('Style','pushbutton','String','remove','Callback',{{@remove_callback,obj}});
+pard.remove.object=struct('Style','pushbutton','String','remove ','Callback',{{@remove_callback,obj}});
 pard.remove.position=[6,2];
 pard.remove.Width=0.5;
 

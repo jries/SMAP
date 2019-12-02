@@ -78,7 +78,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             obj.guihandles.filelist_long.UIContextMenu=c;
             obj.guihandles.filelist_long.String=[obj.getGlobalSetting('DataDirectory') filesep ];
             m1 = uimenu(c,'Label','info','Callback',{@menu_callback,obj});
-            m1 = uimenu(c,'Label','remove','Callback',{@menu_callback,obj});
+            m1 = uimenu(c,'Label','remove ','Callback',{@menu_callback,obj});
             m1 = uimenu(c,'Label','clear','Callback',{@menu_callback,obj});
             groupmode_callback(0,0,obj);
             
@@ -347,7 +347,7 @@ switch menuobj.Label
         end
             
             listdlg('ListString',texta,'ListSize',[800,800]);
-    case 'remove'
+    case 'remove '
         obj.remove_callback;
     case 'clear'
         obj.locData.clear;
@@ -418,7 +418,7 @@ pard.loadmodule.position=[4.5,1];
 % pard.updateGuiPar.TooltipString='Restore Gui parameters saved with localization data';
 
 % 
-% pard.remove.object=struct('Style','pushbutton','String','remove','Callback',{{@obj.remove_callback,1}});
+% pard.remove.object=struct('Style','pushbutton','String','remove ','Callback',{{@obj.remove_callback,1}});
 % pard.remove.position=[4,4.5];
 % pard.remove.Width=0.5;
 % pard.add.Height=1.5;

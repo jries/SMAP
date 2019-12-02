@@ -40,7 +40,7 @@ classdef Workflow<interfaces.DialogProcessor
             m4 = uimenu(c,'Label','add starter','Callback',{@listmenu_callback,obj});
             m02 = uimenu(c,'Label','move up','Callback',{@listmenu_callback,obj});
             m03 = uimenu(c,'Label','move down','Callback',{@listmenu_callback,obj});
-            m1 = uimenu(c,'Label','remove','Callback',{@listmenu_callback,obj});
+            m1 = uimenu(c,'Label','remove ','Callback',{@listmenu_callback,obj});
             m2 = uimenu(c,'Label','rename','Callback',{@listmenu_callback,obj});
             m3 = uimenu(c,'Label','replace','Callback',{@listmenu_callback,obj});
             m4 = uimenu(c,'Label','clear workflow','Callback',{@listmenu_callback,obj});
@@ -657,7 +657,7 @@ end
 
 function listmenu_callback(object,b,obj)
 switch object.Label
-    case 'remove'
+    case 'remove '
         idx=obj.guihandles.modulelist.Value;
         delete(obj.modules{idx}.inputpanel);
         delete(obj.modules{idx}.module.handle);

@@ -6,7 +6,9 @@ sfile=finfo.basefile;
 
 %single image files
 
-
+if isempty(sfile)
+    sfile=filestruct.name;
+end
 
 
 if isempty(strfind(sfile,'_sml.mat'))

@@ -63,10 +63,11 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             
             cutoutimages=zeros(kernelSize,kernelSize,length(maxima.xpix),'single');
             ind=0;
-            goodind=~(maxima.ypix<=dn|maxima.ypix>sim(1)-dn|maxima.xpix<=dn|maxima.xpix>sim(2)-dn);
-            outside=(maxima.ypix<=1|maxima.ypix>sim(1)-1|maxima.xpix<=1|maxima.xpix>sim(2)-1);
             maxima.xpix=round(maxima.xpix);
             maxima.ypix=round(maxima.ypix);
+            goodind=~(maxima.ypix<=dn|maxima.ypix>sim(1)-dn|maxima.xpix<=dn|maxima.xpix>sim(2)-dn);
+            outside=(maxima.ypix<=1|maxima.ypix>sim(1)-1|maxima.xpix<=1|maxima.xpix>sim(2)-1);
+
 
             for k=1:length(maxima.xpix)
                  ind=ind+1;

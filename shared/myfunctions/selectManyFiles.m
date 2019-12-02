@@ -22,7 +22,7 @@ classdef selectManyFiles<handle
             obj.guihandles.filelist=uicontrol('Style','listbox','Parent',obj.handle,'Position',[10 10 680,300]);
             uicontrol('Style','pushbutton','String','add','Callback',@obj.addb_callback,'Parent',obj.handle,'Position',[700 270 100 30])
             uicontrol('Style','pushbutton','String','add dir','Callback',@obj.adddirb_callback,'Parent',obj.handle,'Position',[800 270 100 30])
-            uicontrol('Style','pushbutton','String','remove','Callback',@obj.removeb_callback,'Parent',obj.handle,'Position',[750 230 100 30])
+            uicontrol('Style','pushbutton','String','remove ','Callback',@obj.removeb_callback,'Parent',obj.handle,'Position',[750 230 100 30])
             obj.guihandles.ch2check=uicontrol('Style','checkbox','String','Ch2 in 2nd file','Callback',@obj.ch2check_callback,'Parent',obj.handle,'Position',[700 185 200 30]);
             obj.guihandles.selectch2=uicontrol('Style','pushbutton','String','select Ch2','Callback',@obj.selectch2_callback,'Parent',obj.handle,'Position',[700 160 100 30],'Visible','off');
             obj.guihandles.findall=uicontrol('Style','pushbutton','String','find all','Callback',@obj.findall_callback,'Parent',obj.handle,'Position',[800 160 100 30],'Visible','off')       ;      
@@ -401,7 +401,7 @@ pard.omitsml.position=[8,4];
 pard.omitsml.Width=1;
 
 
-pard.remove_button.object=struct('Style','pushbutton','String','remove','Callback',@obj.removeb_callback);
+pard.remove_button.object=struct('Style','pushbutton','String','remove ','Callback',@obj.removeb_callback);
 pard.remove_button.position=[9,4];
 pard.remove_button.Width=1;
 

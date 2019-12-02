@@ -391,7 +391,7 @@ pard.omitsml.position=[8,4];
 pard.omitsml.Width=1;
 
 
-pard.remove_button.object=struct('Style','pushbutton','String','remove','Callback',@obj.removeb_callback);
+pard.remove_button.object=struct('Style','pushbutton','String','remove ','Callback',@obj.removeb_callback);
 pard.remove_button.position=[9,4];
 pard.remove_button.Width=1;
 
