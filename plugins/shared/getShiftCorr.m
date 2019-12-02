@@ -52,6 +52,8 @@ try
 Fcccut=Fccsmall(x-winfit:x+winfit,y-winfit:y+winfit);
 
 catch err
+    figure(555)
+    imagesc(Fccsmall)
     disp('Maximum on edge:increase Max shift (correlation)')
 end
 if subpixel
@@ -68,16 +70,28 @@ else
     fitp=[0 0];
     abg=maxcc;
 end
-if ploton
+doplot=true;
+axplot=ploton;
+if (islogical(ploton)||isnumeric(ploton)) 
+    if ploton
+        axplot=gca;
+    else
+        doplot=false;
+    end 
+end
+if doplot
 % 
 % % figure(1)
-subplot(1,2,1)
+ap=axplot.Parent;
+ax2=axes(ap);
+% figure(f);
+subplot(1,2,1,axplot)
 imagesc(abs(Fccfilt));
 hold on
 plot(y,x,'ks')
 hold off
 axis equal
-subplot(1,2,2)
+subplot(1,2,2,ax2)
 imagesc(abs(Fcccut));
 hold on
 plot(fitp(:,2),fitp(:,1),'ks')

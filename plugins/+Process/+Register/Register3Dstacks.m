@@ -17,37 +17,106 @@ classdef Register3Dstacks<interfaces.DialogProcessor
             out=[];
             locs=obj.locData.getloc({'xnm','ynm','znm','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','roi','removeFilter',{'filenumber'});
             numfiles=max(locs.filenumber);
+            p.axxy=obj.initaxis('shift xy');
+            p.axz=obj.initaxis('shift z');
+            
 %             zslice=0*locs.znm;
             for k=1:numfiles
                 [~,filename]=fileparts(obj.locData.files.file(k).name);
                 filename=strrep(filename,'.','_');
-                ind=strfind(filename,'_Pos');
-                ind2=strfind(filename(ind+4:end),'_');
-                zpos(k)=str2double(filename(ind+4:ind+2+ind2(1)));
+                ind1=strfind(filename,'L');
+                ind2=strfind(filename,'S');
+                ind3=strfind(filename,'_');
+                L(k)=str2double(filename(ind1(1)+1:ind2(1)-1));
+                S(k)=str2double(filename(ind2(1)+1:ind3(1)-1));
+%                 ind=strfind(filename,'_Pos');
+%                 ind2=strfind(filename(ind+4:end),'_');
+%                 zpos(k)=str2double(filename(ind+4:ind+2+ind2(1)));
 %                 zslice(=locs.znm+zpos(k)*p.dz;
             end
-            [zpossort,filesortind]=sort(zpos);
-            for k=1:numfiles-1
-                in1f=(locs.filenumber==filesortind(k));
-                in2f=(locs.filenumber==filesortind(k+1));
-                inabove=(locs.znm>p.dz/2-p.overlap/2)& locs.znm<p.dz/2+p.overlap/2;
-                inbelow=(locs.znm<-p.dz/2+p.overlap/2) & (locs.znm>-p.dz/2-p.overlap/2);
-                in1=in1f&inabove;
-                in2=in2f&inbelow;
+            filenumbers=1:numfiles;
+            slices=min(S):max(S);
+            
+            if ~p.onlynominal
+                for ks=1:length(slices)
+                    sh=slices(ks);
+                    indslice=find(S==sh);
+
+                    coordall=[locs.xnm,locs.ynm,locs.znm];
+                    in1=locs.filenumber==filenumbers(indslice(1));
+                    numlocsall(ks,1)=sum(in1);
+    %                 figure(100);hold off
+    %                 plot(coordall(in1,1),coordall(in1,2),'.'); hold on
+                    for kl=2:length(indslice)                
+                        in2=locs.filenumber==filenumbers(indslice(kl));
+                        numlocsall(ks,kl)=sum(in2);
+                        coordref=coordall(in1,:);
+                        coordtar=coordall(in2,:);
+                        shift(kl,:,ks)=findshift(coordref,coordtar,p); %shift between two consecutive frames
+                        coordall(in2,:)=coordall(in2,:)+shift(kl,:,ks);
+    %                     figure(100); plot(coordall(in2,1),coordall(in2,2),'.'); hold on
+                        in1=in1|in2; %correlate with all previous aligned localizations;
+                    end
+                    inslice{ks}=in1;
+                end
                 
-                coordref=[locs.xnm(in1),locs.ynm(in1),locs.znm(in1)+zpossort(k)*p.dz];
-                coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+zpossort(k+1)*p.dz];
-                shift(k,:)=findshift(coordref,coordtar,p); %shift between two consecutive frames
+                axn=obj.initaxis('localizations');plot(axn,numlocsall);
+    %             [zpossort,filesortind]=sort(zpos);
+                for k=1:length(slices)-1
+
+                    in1f=inslice{k};
+                    in2f=inslice{k+1};
+                    inabove=(locs.znm>p.dz/2-p.overlap/2)& locs.znm<p.dz/2+p.overlap/2;
+                    inbelow=(locs.znm<-p.dz/2+p.overlap/2) & (locs.znm>-p.dz/2-p.overlap/2);
+                    in1=in1f&inabove;
+                    in2=in2f&inbelow;
+                    coordref=coordall(in1,:);coordref(:,3)=coordref(:,3)+k*p.dz;
+                    coordtar=coordall(in2,:);coordtar(:,3)=coordtar(:,3)+(k+1)*p.dz;
+    %                 coordref=[locs.xnm(in1),locs.ynm(in1),locs.znm(in1)+k*p.dz];
+    %                 coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+(k+1)*p.dz];
+                    shiftsl(k,:)=findshift(coordref,coordtar,p); %shift between two consecutive frames
+                end  
+                shiftslc=cumsum(shiftsl,1);
             end
-            shiftc=cumsum(shift,1);
-            in2f=obj.locData.loc.filenumber==filesortind(1);
-            obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(1)*p.dz;
-            for k=1:numfiles-1
-                in2f=obj.locData.loc.filenumber==filesortind(k+1);
-                obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shiftc(k,1); %instead we need to use cumulative shifts here!
-                obj.locData.loc.ynm(in2f)=obj.locData.loc.ynm(in2f)+shiftc(k,2);
-                obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shiftc(k,3);
+            for ks=1:length(slices)
+                sh=slices(ks);
+                indslice=find(S==sh);
+                for kl=1:length(indslice) 
+                    if p.onlynominal
+                        shifth=[0 0 0];
+                    else
+                        shifth=squeeze(shift(kl,:,ks))+squeeze(shiftslc(ks));
+                    end
+                    in2f=obj.locData.loc.filenumber==filenumbers(indslice(kl));
+                    obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shifth(1); %instead we need to use cumulative shifts here!
+                    obj.locData.loc.ynm(in2f)=obj.locData.loc.ynm(in2f)+shifth(2);
+                    obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+shifth(3)+slices(ks)*p.dz;
+                end
             end
+            
+            
+%             [zpossort,filesortind]=sort(zpos);
+%             for k=1:numfiles-1
+%                 in1f=(locs.filenumber==filesortind(k));
+%                 in2f=(locs.filenumber==filesortind(k+1));
+%                 inabove=(locs.znm>p.dz/2-p.overlap/2)& locs.znm<p.dz/2+p.overlap/2;
+%                 inbelow=(locs.znm<-p.dz/2+p.overlap/2) & (locs.znm>-p.dz/2-p.overlap/2);
+%                 in1=in1f&inabove;
+%                 in2=in2f&inbelow;
+%                 
+%                 coordref=[locs.xnm(in1),locs.ynm(in1),locs.znm(in1)+zpossort(k)*p.dz];
+%                 coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+zpossort(k+1)*p.dz];
+%                 shift(k,:)=findshift(coordref,coordtar,p); %shift between two consecutive frames
+%             end
+%             shiftc=cumsum(shift,1);
+%             in2f=obj.locData.loc.filenumber==filesortind(1);
+%             obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(1)*p.dz;
+%             for k=1:numfiles-1
+%                 in2f=obj.locData.loc.filenumber==filesortind(k+1);
+%                 obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shiftc(k,1); %instead we need to use cumulative shifts here!
+%                 obj.locData.loc.ynm(in2f)=obj.locData.loc.ynm(in2f)+shiftc(k,2);
+%                 obj.locData.loc.znm(in2f)=obj.locData.loc.znm(in2f)+zpossort(k+1)*p.dz+shiftc(k,3);
+%             end
             obj.locData.regroup;
         end
         function pard=guidef(obj)
@@ -60,7 +129,7 @@ function shift=findshift(coordref,coordtar,p)
 pixrec=10;
 wind=6;
 ploton=true;
-maxshift=3*wind;
+maxshift=10*wind;
 slicewidth=150 ; %nm
 pixrecz=3;
 cmin=min(min(coordref,[],1,'omitnan'),min(coordtar,[],1,'omitnan'));
@@ -75,11 +144,14 @@ zbin=cmin(3):pixrecz:cmax(3);
 hr=histcounts2(coordref(:,1),coordref(:,2),rangex,rangey);
 ht=histcounts2(coordtar(:,1),coordtar(:,2),rangex,rangey);
 
-f=figure(99);
+if isfield(p,'axxy')
+    ploton=p.axxy;
+end
+% f=figure(99);
 [dx,dy,abg]=getShiftCorr(hr,ht,ploton,maxshift,true,wind);
-figure(98);plotaxis=gca;
+% figure(98);plotaxis=gca;
 coordtarc=coordtar+[dx dy 0]*pixrec;
-zpos=finddisplacementZ2(coordref,coordtarc,slicex,slicey,zbin,5,plotaxis);
+zpos=finddisplacementZ2(coordref,coordtarc,slicex,slicey,zbin,5,p.axz);
 
 shift=[dx.*pixrec,dy.*pixrec,zpos];
 end
@@ -110,10 +182,10 @@ pard.overlap.position=[2,2];
 pard.overlap.Width=0.5;
 
 
-% pard.text1.object=struct('String','pixrec nm','Style','text');
-% pard.text1.position=[2,2];
-% pard.text1.Optional=true;
-% pard.text1.Width=0.75;
+pard.onlynominal.object=struct('String','Only shift by nominal distance','Style','checkbox');
+pard.onlynominal.position=[1,3];
+pard.onlynominal.Optional=true;
+pard.onlynominal.Width=2;
 % 
 % pard.drift_pixrec.object=struct('String','10','Style','edit');
 % pard.drift_pixrec.position=[2,2.65];
