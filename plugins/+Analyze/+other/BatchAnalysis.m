@@ -61,6 +61,7 @@ classdef BatchAnalysis<interfaces.DialogProcessor
                        results.(aplugins{a}){f}=re;
                        outfig=ahere.resultstabgroup.Parent;
                        savefig(outfig,[outp filesep outf filesep aplugins{a} filesep file '.fig']);
+                       saveas(outfig,[outp filesep outf filesep aplugins{a} filesep file '.png']);
 %                    catch err
 %                        disp('output could not be saved')
 %                        err

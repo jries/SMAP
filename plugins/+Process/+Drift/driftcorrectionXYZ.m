@@ -70,10 +70,10 @@ classdef driftcorrectionXYZ<interfaces.DialogProcessor
 %                      locs=lochere.getloc({'frame','xnm','ynm','znm'},'position','all','grouping',groupcheck,'layer',1,'removeFilter',{'filenumber'});
                     locs=lochere.getloc({'frame','xnm','ynm','znm'},'position',region,'layer',layers,'removeFilter',rmfilter);
                     if length(locs.xnm)/p.drift_timepoints<500
-                        answ=questdlg(['Only ' num2str(length(locs.xnm)/p.drift_timepoints) ' localizations per time window. Abort drift correction?']); %htis is modal: no way to see output.
-                        if ~contains(answ,'No') %not use this
+%                         answ=questdlg(['Only ' num2str(length(locs.xnm)/p.drift_timepoints) ' localizations per time window. Abort drift correction?']); %htis is modal: no way to see output.
+%                         if ~contains(answ,'No') %not use this
                             return
-                        end
+%                         end
                     end
                         
                     p.maxframeall=max(lochere.loc.frame);
