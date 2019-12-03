@@ -1,0 +1,158 @@
+{
+    "InOut": {
+        "root": "/Users/lucasmueller/Repositories/DeepSMLM/",
+        "data_set": "online",
+        "model_out": "/g/kreshuk/lucas/GPU7_Cluster_deployment/deepsmlm/network/2019-10-17/model_singleunet_branch.pt",
+        "model_init": null,
+        "calibration_file": "/g/kreshuk/lucas/GPU7_Cluster_deployment/deepsmlm/data/Calibration/2019-08-08 M2/TetraBeads_50ms_5i640_1_MMStack_Pos0.ome_3dcal.mat"
+    },
+    "Hardware": {
+        "device": "cuda",
+        "cuda_ix": "0",
+        "num_worker_sim": 52,
+        "torch_threads": 12,
+        "unix_niceness": 20
+    },
+    "Logging": {
+        "log_comment": "_singleunet_branched",
+        "cometml_tags": []
+    },
+    "HyperParameter": {
+        "architecture": "OffSetUNetBGBranch",
+        "batch_size": 64,
+        "pseudo_ds_size": 65536,
+        "test_size": 512,
+        "lr": 0.0001,
+        "epochs": 1000,
+        "prob_fg_weight": 1.0,
+        "ch_weight": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ],
+        "weight_sqrt_phot": true,
+        "fgbg_factor": null,
+        "bg_signal_penalty": null,
+        "alter_bg": null,
+        "target_roi_size": 3,
+        "photon_threshold": null,
+        "channels_in": 3,
+        "channels_out": 6,
+        "ds_lifetime": 2,
+        "predict_bg": true,
+        "suppress_post_processing": false
+    },
+    "LearningRateScheduler": {
+        "mode": "min",
+        "factor": 0.1,
+        "patience": 20,
+        "threshold": 0.0001,
+        "cooldown": 10,
+        "verbose": true
+    },
+    "SimulationScheduler": {
+        "disabled": true,
+        "factor": null,
+        "patience": null,
+        "threshold": null,
+        "cooldown": null,
+        "verbose": null,
+        "max_value": null
+    },
+    "Simulation": {
+        "emitter_extent": [
+            [
+                -0.5,
+                63.5
+            ],
+            [
+                -0.5,
+                63.5
+            ],
+            [
+                -750,
+                750
+            ]
+        ],
+        "psf_extent": [
+            [
+                -0.5,
+                63.5
+            ],
+            [
+                -0.5,
+                63.5
+            ],
+            null
+        ],
+        "img_size": [
+            64,
+            64
+        ],
+        "density": 0,
+        "emitter_av": 40,
+        "photon_range": null,
+        "bg_uniform": [
+            80.0,
+            120.0
+        ],
+        "bg_nonuni_intensity": null,
+        "bg_nonuni_dynamic": null,
+        "bg_oof_range": null,
+        "bg_num_oof_range": null,
+        "bg_perlin_scale": [
+            [
+                1,
+                1
+            ],
+            [
+                2,
+                2
+            ]
+        ],
+        "bg_perlin_amplitude": [
+            40,
+            20
+        ],
+        "intensity_mu_sig": [
+            20000.0,
+            500.0
+        ],
+        "lifetime_avg": 2.0
+    },
+    "Camera": {
+        "qe": 1.0,
+        "em_gain": 300.0,
+        "e_per_adu": 45.0,
+        "baseline": 100.0,
+        "read_sigma": 74.4,
+        "spur_noise": 0.002,
+        "px_size": [
+            100.0,
+            100.0
+        ]
+    },
+    "Scaling": {
+        "dx_max": 2.5,
+        "dy_max": 2.5,
+        "z_max": 750.0,
+        "phot_max": 40000.0,
+        "bg_max": 300.0,
+        "linearisation_buffer": 1.2
+    },
+    "PostProcessing": {
+        "single_val_th": 0.2,
+        "total_th": 0.6,
+        "lat_th": 0.3,
+        "ax_th": 200.0,
+        "match_dims": 3
+    },
+    "Evaluation": {
+        "dist_lat": 150.0,
+        "dist_ax": 300.0,
+        "match_dims": 2
+    }
+}
