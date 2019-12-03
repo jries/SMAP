@@ -590,6 +590,9 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
 end
 
 function displayimage(img,hax)
+if isempty(img)
+    return
+end
  imagesc(img.rangex,img.rangey,img.image,'Parent',hax,'Pickable','none','HitTest','off')
 
 set(hax,'Xlim',double(img.rangex))
