@@ -16,15 +16,7 @@ classdef export_3Dvolumes<interfaces.DialogProcessor&interfaces.SEProcessor
               
                 selectedsites=1:length(sites);
             end
-            mainfile=obj.getPar('mainfile');
-            path=fileparts(mainfile);
-            prefix='img_.em';
-            [fileout,path]=uiputfile([path filesep prefix]);
-            
-            if ~fileout
-                return
-            end
-            [~,f]=fileparts(fileout);
+          
              layers=find(obj.getPar('sr_layerson'));
              pixelsize=p.pixrec;
              if length(pixelsize)<2
@@ -45,7 +37,30 @@ classdef export_3Dvolumes<interfaces.DialogProcessor&interfaces.SEProcessor
              yrange=[-1 1]/2*sizerec(2)*pixelsize(2);
              zrange=[-1 1]/2*sizerec(3)*pixelsize(3);
              
+            mainfile=obj.getPar('mainfile');
+            [path,mainf]=fileparts(mainfile);
              positions=zeros(length(selectedsites),5);
+             if contains(p.format.selection,'.mat')
+                 savemat=true;
+                 imouth=renderhist3D(0,0,0,xrange,yrange,zrange,pixelsize);
+                 s=size(imouth);
+                 allmat=zeros(s(1),s(2),s(3),length(layers),length(selectedsites));
+                 idx=1;
+                 prefix=[mainf(1:end-4) '_vol.mat'];
+             else
+                 savemat=false;
+                 prefix='img_.em';
+             end
+             
+
+            
+            [fileout,path]=uiputfile([path filesep prefix]);
+            
+            if ~fileout
+                return
+            end
+            [~,f]=fileparts(fileout);
+            
             for k=selectedsites
                 site=sites(k);
                 for l=1:length(layers)
@@ -59,13 +74,16 @@ classdef export_3Dvolumes<interfaces.DialogProcessor&interfaces.SEProcessor
                     end
                     filen=[f strrep(site.name,'.','_') '_' int2str(l)];
                     switch p.format.selection
-                    case '.em'
+                        case '.em'
 
-                        fhere= [filen '.em'];
-                        tom_emwrite([path filesep fhere],imouth); 
-                    otherwise
-                        disp('format not implemented');
+                            fhere= [filen '.em'];
+                            tom_emwrite([path filesep fhere],imouth); 
+                        case '.mat'
+                            allmat(:,:,:,l,idx)=imouth;
+                        otherwise
+                            disp('format not implemented');
                     end
+                    idx=idx+1;
                 end
                         
                
@@ -74,8 +92,12 @@ classdef export_3Dvolumes<interfaces.DialogProcessor&interfaces.SEProcessor
                positions(k,4)=sites(k).ID;
                positions(k,5)=k;
             end
-            csvwrite([path filesep 'positions.txt'],positions);
-            
+            if savemat
+               save([path filesep f],'allmat','positions');  
+            else
+                csvwrite([path filesep 'positions.txt'],positions);
+            end
+                
             out=0;
         end
         function pard=guidef(obj)
@@ -114,7 +136,7 @@ pard.export_selected.object=struct('String','export only selected sites','Style'
 pard.export_selected.position=[1,1];
 pard.export_selected.Width=2;
 
-pard.format.object=struct('String',{{'.em','.tif'}},'Style','popupmenu');
+pard.format.object=struct('String',{{'.em','.tif','.mat'}},'Style','popupmenu');
 pard.format.position=[2,1];
 pard.format.Width=2;
 
