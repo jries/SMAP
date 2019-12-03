@@ -2,7 +2,7 @@ classdef TrainDeepSMLM<interfaces.DialogProcessor
 %     Saves a training file for deepSMLM
     properties
         jsonstruct
-        jsondefault='settings/temp/model_deepSMLMdefault.json';
+        jsondefault='settings/cameras/model_deepSMLMdefault.json';
         jsonfile
         jsontypes
     end

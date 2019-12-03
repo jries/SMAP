@@ -24,6 +24,8 @@ aC(1)=15.9;
 aN(2)=15;
 aC(2)=7.8;
 
+
+
 r=rC;
 a=aC;
 %to deg, angle from ref:
@@ -32,6 +34,10 @@ a=a/2/180*pi;
 r(3)=r(1);r(4)=r(2);
 a(3)=-a(1);a(4)=-a(2);
 z(1)=0;z(2)=50;z(3)=50;z(4)=0;
+
+%Nup 107
+r=[1 1 1 1]*50;
+a([2 3])=a([2 3])-7.5/180*pi;
 
 rall=zeros(length(r),corners);
 angall=zeros(length(r),corners);
