@@ -215,6 +215,10 @@ pard.blinks.position=[4,3];
 pard.blinks.TooltipString=sprintf('Number of re-activations. Zero means: only one actvation per fluorophore');
 pard.t2.TooltipString=pard.blinks.TooltipString;
 
+pard.EMon.object=struct('String','EM on','Style','checkbox');
+pard.EMon.position=[4,4];
+pard.EMon.Width=1;
+
 pard.t3.object=struct('String','lifetime (fr)','Style','text');
 pard.t3.position=[5,3.75];
 pard.t3.Width=0.75;

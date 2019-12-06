@@ -38,7 +38,12 @@ classdef export_3Dvolumes<interfaces.DialogProcessor&interfaces.SEProcessor
              zrange=[-1 1]/2*sizerec(3)*pixelsize(3);
              
             mainfile=obj.getPar('mainfile');
-            [path,mainf]=fileparts(mainfile);
+            if isempty(mainfile)
+                mainfile=obj.getPar('filelist_long').String{1};
+%                 mainfile=mainfile{1};
+     
+            end
+            [path mainf]=fileparts(mainfile);
              positions=zeros(length(selectedsites),5);
              if contains(p.format.selection,'.mat')
                  savemat=true;

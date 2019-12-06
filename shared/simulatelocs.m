@@ -19,6 +19,9 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
            if ~isfield(p,'background')
                p.background=0;
            end
+           if ~isfield(p,'EMon')
+               p.EMon=false;
+           end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
            
 %            p.lifetime=2;
@@ -382,6 +385,7 @@ end
 function locs=locsfromposi(locsi,p)
 %     numlocs=length(locsi.x);
 %     phot=exprnd(p.photons,numlocs,1);
+    noisexcessfactor=(p.EMon+1);
     phot=locsi.phot;
     
     a=100;
@@ -396,6 +400,7 @@ function locs=locsfromposi(locsi,p)
     locpthompson=sqrt((PSF^2+a^2/12)./(phot)+8*pi*(PSF^2).^2.* p.background./(phot).^2/a^2);
     locprecnm=sqrt((PSF^2+a^2/12)./phot.*(16/9+8*pi*(PSF^2+a^2/12)*p.background./phot/a^2));
     
+    locprecnm=locprecnm*sqrt(noisexcessfactor);
     
     locs.phot=single(phot(indin));
     locs.bg=single(locprecnm(indin)*0+p.background);

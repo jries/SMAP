@@ -38,11 +38,10 @@ classdef Register3Dstacks<interfaces.DialogProcessor
             slices=min(S):max(S);
             
             if ~p.onlynominal
+                coordall=[locs.xnm,locs.ynm,locs.znm];
                 for ks=1:length(slices)
                     sh=slices(ks);
                     indslice=find(S==sh);
-
-                    coordall=[locs.xnm,locs.ynm,locs.znm];
                     in1=locs.filenumber==filenumbers(indslice(1));
                     numlocsall(ks,1)=sum(in1);
     %                 figure(100);hold off
@@ -56,8 +55,8 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                         coordall(in2,:)=coordall(in2,:)+shift(kl,:,ks); %%XXXXXXXXX
     %                     figure(100); plot(coordall(in2,1),coordall(in2,2),'.'); hold on
                         in1=in1|in2; %correlate with all previous aligned localizations;
-                        endgit 
-                    inslice{ks}=in1;
+                    end
+                    inslice{ks}=in1 & true;
                 end
                 shift
                 
@@ -71,8 +70,8 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                     inbelow=(locs.znm<-p.dz/2+p.overlap/2) & (locs.znm>-p.dz/2-p.overlap/2);
                     in1=in1f&inabove;
                     in2=in2f&inbelow;
-                    coordref=coordall(in1,:);coordref(:,3)=coordref(:,3)+k*p.dz;
-                    coordtar=coordall(in2,:);coordtar(:,3)=coordtar(:,3)+(k+1)*p.dz;
+                    coordref=coordall(in1,:);coordref(:,3)=coordref(:,3)+slices(k)*p.dz;
+                    coordtar=coordall(in2,:);coordtar(:,3)=coordtar(:,3)+slices(k+1)*p.dz;
     %                 coordref=[locs.xnm(in1),locs.ynm(in1),locs.znm(in1)+k*p.dz];
     %                 coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+(k+1)*p.dz];
                     shiftsl(k,:)=findshift(coordref,coordtar,p); %shift between two consecutive frames
