@@ -96,10 +96,30 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
                 if ~isempty(obj.loadfile)
                     load_callback(0,0,obj,obj.loadfile)
                 end
+                setdefaultfields(0,0,obj)
             end
         end
 
     end
+end
+
+function setdefaultfields(a,b,obj)
+f1='phot1';
+f2='phot2';
+fs1=obj.getSingleGuiParameter('assignfield1');
+fs2=obj.getSingleGuiParameter('assignfield2');
+
+ind1=find(strcmp(fs1.String,f1),1,'first');
+if ~isempty(ind1)
+    fs1.Value=ind1;
+    fs1.selection=f1;
+end
+ind2=find(strcmp(fs2.String,f2),1,'first');
+if ~isempty(ind2)
+    fs2.Value=ind2;
+    fs2.selection=f2;
+end
+obj.setGuiParameters(struct('assignfield1',fs1,'assignfield2',fs2));
 end
 
 function save_callback(a,b,obj)
@@ -266,7 +286,9 @@ pard.assignfield1.object=struct('Style','popupmenu','String','n1|n2');
 pard.assignfield1.position=[2,1];
 pard.assignfield2.object=struct('Style','popupmenu','String','n1|n2');
 pard.assignfield2.position=[3,1];
-
+pard.setdefault.object=struct('String','default','Style','pushbutton','Callback',{{@setdefaultfields,obj}});
+pard.setdefault.position=[2,2];
+pard.setdefault.Width=0.6;
 pard.logscale.object=struct('Style','checkbox','String','log scale','Value',1);
 pard.logscale.position=[4,1];
 
