@@ -53,12 +53,13 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                         coordref=coordall(in1,:);
                         coordtar=coordall(in2,:);
                         shift(kl,:,ks)=findshift(coordref,coordtar,p); %shift between two consecutive frames
-                        coordall(in2,:)=coordall(in2,:)+shift(kl,:,ks);
+                        coordall(in2,:)=coordall(in2,:)+shift(kl,:,ks); %%XXXXXXXXX
     %                     figure(100); plot(coordall(in2,1),coordall(in2,2),'.'); hold on
                         in1=in1|in2; %correlate with all previous aligned localizations;
-                    end
+                        endgit 
                     inslice{ks}=in1;
                 end
+                shift
                 
                 axn=obj.initaxis('localizations');plot(axn,numlocsall);
     %             [zpossort,filesortind]=sort(zpos);
@@ -76,6 +77,7 @@ classdef Register3Dstacks<interfaces.DialogProcessor
     %                 coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+(k+1)*p.dz];
                     shiftsl(k,:)=findshift(coordref,coordtar,p); %shift between two consecutive frames
                 end  
+                shiftsl
                 shiftslc=cumsum(shiftsl,1);
             end
             for ks=1:length(slices)
@@ -145,6 +147,7 @@ hr=histcounts2(coordref(:,1),coordref(:,2),rangex,rangey);
 ht=histcounts2(coordtar(:,1),coordtar(:,2),rangex,rangey);
 
 if isfield(p,'axxy')
+    drawnow
     ploton=p.axxy;
 end
 % f=figure(99);
