@@ -7,11 +7,12 @@ sizegauss2=sizegauss1;
 % dp=2*dp
 np=0:dp:pi/4;
 npdegh=np(1:end-1)*180/pi;
-numparticles=1000;
+% 
 maxiter=10;
 plabel=0.5;
 %% make NPCs
 if 0
+    numparticles=1000;
     phierr=pi/32;
     for k=numparticles:-1:1
         phis{k}=simulateNPC(phierr,plabel);
