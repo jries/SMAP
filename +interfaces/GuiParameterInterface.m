@@ -104,7 +104,7 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                 field=[prefix field];
             end
             
-            if isempty(obj.P) %no P attached to object. Just do nothing.
+            if ~isvalid(obj) || isempty(obj.P) %no P attached to object. Just do nothing.
                 return
             end
             par=obj.P.par;

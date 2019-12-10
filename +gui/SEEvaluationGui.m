@@ -48,27 +48,30 @@ classdef SEEvaluationGui< interfaces.SEProcessor
         end
         
         function setGuiParameters(obj,p,setchildren,setmenulist)
-            setGuiParameters@interfaces.SEProcessor(obj,p,setchildren,setmenulist);
-            obj.guihandles.modules.Data={};
-            
-            if isfield(p,'children')
-                modules=fieldnames(p.children);
-                for k=1:length(modules);
-                    mh=modules{k};
-                    while mh(end)>'0'&&mh(end)<'9'
-                        mh=mh(1:end-1);
-                    end
-                    par=p.children.(modules{k});
-                    addmodule(obj,mh,par);
-                end
 
-                %set on / off
-                for k=1:length(modules)
-                    if isfield(p,'modules')&&~isempty(find(strcmpi(p.modules.Data(:,2),modules{k}),1))
-                        val=p.modules.Data{k,1};
-                        obj.guihandles.modules.Data{k,1}=val; 
+            rgp=obj.getPar('ROI_restorparamters');
+            if isempty(rgp)|| rgp
+                setGuiParameters@interfaces.SEProcessor(obj,p,setchildren,setmenulist);
+                obj.guihandles.modules.Data={};
+                if isfield(p,'children')
+                    modules=fieldnames(p.children);
+                    for k=1:length(modules);
+                        mh=modules{k};
+                        while mh(end)>'0'&&mh(end)<'9'
+                            mh=mh(1:end-1);
+                        end
+                        par=p.children.(modules{k});
+                        addmodule(obj,mh,par);
                     end
-                end   
+
+                    %set on / off
+                    for k=1:length(modules)
+                        if isfield(p,'modules')&&~isempty(find(strcmpi(p.modules.Data(:,2),modules{k}),1))
+                            val=p.modules.Data{k,1};
+                            obj.guihandles.modules.Data{k,1}=val; 
+                        end
+                    end   
+                end
             end
             
         end

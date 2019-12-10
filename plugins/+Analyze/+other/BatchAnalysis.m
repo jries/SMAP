@@ -8,11 +8,14 @@ classdef BatchAnalysis<interfaces.DialogProcessor
             obj.showresults=false;
         end
         
-        function out=run(obj,p)         
+        function out=run(obj,p)  
+            global SMAP_stopnow
             out=[];
             gsmap=obj.getPar('mainGui');
             allpars=gsmap.getGuiParameters(true);
             
+            
+           
             switch p.loadwhat.Value
                 case 1 %txt file with file list
                     infile=p.filelistfile;
@@ -33,6 +36,11 @@ classdef BatchAnalysis<interfaces.DialogProcessor
             end
             gabatch=gsmap.children.guiAnalysis.children.Batchanalysis;
             aplugins=fieldnames(gabatch.children);
+            
+            %switch off restoration of evaluation plugins
+            roi_restore=obj.getPar('ROI_restorparamters');
+            obj.setPar('ROI_restorparamters',false);
+            
             gFile=gsmap.children.guiFile;
             gFormat=gsmap.children.guiRender.children.guiFormat;
             
@@ -49,9 +57,9 @@ classdef BatchAnalysis<interfaces.DialogProcessor
                 gsmap.setGuiParameters(allpars,true);
                 gFormat.resetview;
                 %re-evaluate if needed
-                if p.evalutesites
-                    gsmap.children.guiSites.children.eval.redrawall;
-                end
+%                 if p.evalutesites
+%                     gsmap.children.guiSites.children.eval.redrawall;
+%                 end
                 %here set FoV, or reset. Maybe set ROI
                 for a=1:length(aplugins)
                    ahere=gabatch.children.(aplugins{a});
@@ -59,17 +67,26 @@ classdef BatchAnalysis<interfaces.DialogProcessor
                        re=ahere.processgo;
                        re
                        results.(aplugins{a}){f}=re;
+                       
                        outfig=ahere.resultstabgroup.Parent;
-                       savefig(outfig,[outp filesep outf filesep aplugins{a} filesep file '.fig']);
-                       saveas(outfig,[outp filesep outf filesep aplugins{a} filesep file '.png']);
+                       if contains(p.savefigures.selection,'png')
+                            saveas(outfig,[outp filesep outf filesep aplugins{a} filesep file '.png']);
+                       end
+                       if contains(p.savefigures.selection,'fig')
+                            savefig(outfig,[outp filesep outf filesep aplugins{a} filesep file '.fig']);
+                       end
+                      
 %                    catch err
 %                        disp('output could not be saved')
 %                        err
 %                    end
                 end
+                if SMAP_stopnow
+                    break
+                end
             end
             save(p.outdir,'results','filelist')
-
+            obj.setPar('ROI_restorparamters',roi_restore);
 % - Text file with all SML files
 % if this is directory (maybe with switch): recursive search
 % - Make new tab (batch) in analyse, add all analysis plugins, configure
@@ -93,6 +110,7 @@ classdef BatchAnalysis<interfaces.DialogProcessor
 end
 
 function load_filelist(a,b,obj)
+%doesnt go to the right directory yet.
 loadwhat=obj.getSingleGuiParameter('loadwhat');
 f=obj.getSingleGuiParameter('filelistfile');
 
@@ -165,9 +183,16 @@ pard.setoutfile.object=struct('Style','pushbutton','String','set','Callback',{{@
 pard.setoutfile.position=[3,4.5];
 pard.setoutfile.Width=0.5;
 
-pard.evalutesites.object=struct('Style','checkbox','String','evaluate ROIs');
-pard.evalutesites.position=[4,1];
-pard.evalutesites.Width=1;
+pard.savefigurest.object=struct('Style','text','String','Save figures:');
+pard.savefigurest.position=[4,1];
+pard.savefigurest.Width=1;
+
+pard.savefigures.object=struct('Style','popupmenu','String',{{'none','png','fig','png+fig'}});
+pard.savefigures.position=[4,2];
+pard.savefigures.Width=1;
+% pard.evalutesites.object=struct('Style','checkbox','String','evaluate ROIs');
+% pard.evalutesites.position=[4,1];
+% pard.evalutesites.Width=1;
 
 pard.plugininfo.type='ProcessorPlugin';
 

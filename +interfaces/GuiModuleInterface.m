@@ -107,9 +107,11 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 if isstruct(obj.children)
                     guichildren=fieldnames(obj.children);
                     for k=1:length(guichildren)
-                        ph=obj.children.(guichildren{k}).getGuiParameters(true,onlyedit);
+                        if isvalid(obj.children.(guichildren{k}))
+                            ph=obj.children.(guichildren{k}).getGuiParameters(true,onlyedit);
                         if ~isempty(ph)
                             pout.children.(guichildren{k})=ph;
+                        end
                         end
                     end
                 end
