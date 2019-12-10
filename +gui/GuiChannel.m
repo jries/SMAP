@@ -22,6 +22,7 @@ classdef GuiChannel< interfaces.LayerInterface
                 'znm_min','znm_max','frame_min','frame_max','scalex','scaley'};
             obj.guiselector.show=true;
             obj.propertiesToSave={'rec_addparval'};
+            
         end
         
         function pard=guidef(obj)
@@ -164,7 +165,11 @@ classdef GuiChannel< interfaces.LayerInterface
                     obj.updatefields_callback(0,0,'locprecznm',[],false)
                 end                   
                 obj.updatefields_callback(0,0,'locprecnm',true,true)
-                obj.updatefields_callback(0,0,'frame',false,false)
+                
+                resetframe=obj.getGlobalSetting('resetframefilter');
+                if ~isempty(resetframe) && resetframe
+                    obj.updatefields_callback(0,0,'frame',false,false)
+                end
             obj.updateLayerField;
              setvisibility(0,0,obj)
              obj.setfiltergray;
