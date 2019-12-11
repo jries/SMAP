@@ -143,6 +143,7 @@ for k=datrange
 %     N2(k)=sum(phot{k}>phot2);
     inrange=phot{k}>p.photrange(1)&phot{k}<p.photrange(2);
     meanphotrange(k)=mean(phot{k}(inrange));
+    medianphotrange(k)=median(phot{k}(inrange));
     
     sphot{end+1}=['N'  ' = ' num2str(Nloc(k)/1000,'%5.0f') 'k'];
     sphot{end+1}=['<P_all'  '> = ' num2str(meanphot(k),'%5.0f')];
@@ -156,7 +157,9 @@ for k=datrange
 end
 stat.photons.Nloc=Nloc;
 stat.photons.meanphot=meanphot;
+stat.photons.meanphotrange=meanphotrange;
 stat.photons.mu=[dat(:).mu];
+stat.photons.medianphotrange=medianphotrange;
 
 %locprec
 locp=getFieldAsVector(locs,'locprecnm');
