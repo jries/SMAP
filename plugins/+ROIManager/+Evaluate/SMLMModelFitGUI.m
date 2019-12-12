@@ -1,21 +1,29 @@
 classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
     properties
-        fitter
-        numMod
-        parsArgFieldnames
-        lFnParsArgEdit
-        fnParsArgColWidth
-        layerFieldnames
-        lFnLayerEdit
-        currentLoadedModel
+        fitter              % An SMLMModelFit object.
+        numMod              % Number of component models.
+        parsArgFieldnames   % 
+        lFnParsArgEdit      %
+        fnParsArgColWidth   %
+        layerFieldnames     %
+        lFnLayerEdit        %
+        currentLoadedModel  %
     end
     methods
         function obj=SMLMModelFitGUI(varargin)
             obj@interfaces.SEEvaluationProcessor(varargin{:});
+            flagDirExist = exist('../SMLMModelFit','dir');
+            if flagDirExist==0
+                addpath(genpath('../ries-private'))
+            else
+                addpath(genpath('../SMLMModelFit'))
+            end
             obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel'};         
+            addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
         end
         
         function setGuiParameters(obj,p)
+            obj.fitter = p.fitter;
             initTabWhenLoading(obj);
             setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);
         end
@@ -37,7 +45,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 end
                 % load info to the GUI
                 obj.currentLoadedModel = modelnumberStr;
-                notify(obj.guihandles.(['modelload_' modelnumberStr]),'Action')
+                notify(obj.guihandles.(['modelload_' modelnumberStr]),'Action');
             end
             obj.setPar('loading',false);
         end
@@ -54,7 +62,19 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         
         function makeGui(obj,varargin)
             %% init settings
+            % create the SMLMModelFit obj
+                % check the dim of the data and update the corresponding
+                % seeting in the fitter
+                if isfield(obj.locData.loc,'znm')
+                    dataDim = 3;
+                else
+                    dataDim = 2;
+                end
+            obj.fitter = SMLMModelFit('DataDim',dataDim);
+            obj.fitter.linkedGUI = obj;
+                
             obj.currentLoadedModel = [];
+            
             % field names in the parsArg table
             fnParsArg={'name','value','fix','lb','ub','type','min','max','label'};
             lFnParsArgEdit = logical([0 1 1 1 1 0 1 1 1]);
@@ -74,8 +94,10 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             else %real make GUI of main gui
                 makeGui@interfaces.GuiModuleInterface(obj); %make the main GUI from the guidef definitions
                 %Settings               
-                optimizernames={'fminsearchbnd','particleswarm'};%if possible, get from fitter object
+                optimizernames=obj.fitter.supportedSolver;
                 obj.guihandles.optimizer.String=optimizernames;
+                % Use fminsearchbnd by default.
+                obj.guihandles.optimizer.Value = find(strcmp(optimizernames, 'fminsearchbnd'));
                 Data={};
                 oldh=obj.guihandles.optimizerpar;
                 pos=oldh.Position;
@@ -87,8 +109,9 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 htable.RowName = [];
                 delete(oldh);
                 obj.guihandles.optimizerpar=htable;
+                notify(obj.guihandles.optimizer, 'Action');
                 
-                %% layer settings
+                %% Layer settings
                 oldh = obj.guihandles.layerSetting;
                 pos=oldh.Position;
                 hLayer=uitable(oldh.Parent,'Data',{},'Position',pos);
@@ -107,7 +130,10 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 obj.numMod = 1;                 % init of the model counts
                 obj.guihandles.tabgroup.SelectionChangedFcn={@selectLayer_callback,obj};
                 
-                %% Convert               
+                % Select the M1 tab by default since a user usually starts from loadin a model.
+                obj.guihandles.tabgroup.SelectedTab = obj.guihandles.tab1;
+                
+                %% Converter tab 
                 addconverttotab(obj);
                 oldh=obj.guihandles.anchorConvert;
                 pos=oldh.Position;
@@ -116,8 +142,12 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 htable.ColumnName = colNames;
                 htable.CellEditCallback = {@convertTable_callback,obj};
                 % check the loaded modules and hook the all the SMLMModelFitGUI
-                loadedModuls = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
-                lSMLMModelFitGUI = contains(loadedModuls, 'SMLMModelFitGUI');
+                if length(obj.locData.SE.processors.eval.guihandles.modules.Data)>1
+                    loadedModuls = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+                    lSMLMModelFitGUI = contains(loadedModuls, 'SMLMModelFitGUI');
+                else
+                    lSMLMModelFitGUI = 0;
+                end
                 if sum(lSMLMModelFitGUI)>0
                     loadedSMLMModelFitGUI = loadedModuls{lSMLMModelFitGUI};
                 else
@@ -130,16 +160,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 delete(oldh);
                 obj.guihandles.anchorConvert=htable;
                 
-                %% create the SMLMModelFit
-                % check the dim of the data and update the corresponding
-                % seeting in the fitter
-                if isfield(obj.locData.loc,'znm')
-                    dataDim = 3;
-                else
-                    dataDim = 2;
-                end
-                fitter = SMLMModelFit('DataDim',dataDim);
-                obj.fitter = fitter;
+                
             end
             obj.setPar('initiated',true)
         end
@@ -154,8 +175,58 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         function addconverttotab(obj)
             run_addconverttotab(obj);
         end
-    end
+               
+        function parId = loadParTable(obj, htable, fitter, modelnumber)
+            modelnumberStr = num2str(modelnumber);
+            subParsArg = fitter.subParsArg(modelnumber);
+            fn = obj.parsArgFieldnames;
+            for k = 1:length(fn)
+                if iscell(subParsArg.(fn{k}))
+                    subParsArgTemp.(fn{k}) = char(subParsArg.(fn{k}));
+                else
+                    subParsArgTemp.(fn{k}) = subParsArg.(fn{k});
+                end
+            end
 
+            for l = length(subParsArg.model):-1:1
+                parId{l} = ['m' modelnumberStr '.' subParsArg.type{l} '.' subParsArg.name{l}];
+            end
+            htable.Data = struct2Data(subParsArgTemp);
+            htable.CellEditCallback = {@parSetting_callback,obj, modelnumber};
+            htable.ColumnEditable = obj.lFnParsArgEdit;
+            htable.ColumnWidth = obj.fnParsArgColWidth;
+        end
+        
+        %%
+        function mParsArgModified_callback(obj,b)
+            modelbnumberStr = num2str(b.modelID);
+            htable = obj.guihandles.(['partable_' modelbnumberStr ]);
+            parId = obj.loadParTable(htable, obj.fitter, b.modelID);
+            hConvert = obj.guihandles.anchorConvert;
+            optionTarget = unique([hConvert.ColumnFormat{3} parId]);
+            hConvert.ColumnFormat{3} = optionTarget;
+            obj.guihandles.anchorConvert=hConvert;
+        end
+    end
+    events
+        mParsArgModified
+    end
+end
+
+%% Callbacks
+function parSetting_callback(a,b,obj, modelnumber)
+% Callback for editing parsArg of the model
+fitter = obj.fitter;
+fitter.resetInit;
+fn = obj.parsArgFieldnames;
+indices = b.Indices;
+data = a.Data;
+name = strtrim(data{indices(1),strcmp(fn,'name')});
+type = strtrim(data{indices(1),strcmp(fn,'type')});
+[~,idx] = fitter.wherePar(['pars.m' num2str(modelnumber) '.' type '.' name]);
+fitter.allParsArg.(fn{indices(2)})(idx) = b.NewData;
+fitter.saveInit;
+obj.fitter = fitter;
 end
 
 function selectLayer_callback(tabgroup,eventdata,obj) 
