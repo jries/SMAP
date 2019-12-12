@@ -668,7 +668,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 if length(s)==2
                     s(3)=1;
                 end
-                outim=zeros(s(1),s(2),s(3),savemovie.frames);
+                outim=zeros(s(1),s(2),s(3),savemovie.frames,'single');
                  obj.redraw;
             end
                 
