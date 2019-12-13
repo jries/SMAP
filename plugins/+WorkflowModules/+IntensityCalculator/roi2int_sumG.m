@@ -1,6 +1,9 @@
 classdef roi2int_sumG<interfaces.GuiModuleInterface 
     %determines intensity and background in a ROI around localizations by
     %summing up the ROI and a larger ROI;
+    properties
+        extension
+    end
     methods
         function obj=roi2int_sumG(varargin)
             obj@interfaces.GuiModuleInterface(varargin{:});

@@ -88,6 +88,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             for k=1:length(obj.evaluators)
                 obj.peval{k}=obj.evaluators{k}.getAllParameters;
                 if obj.useevaluators(k)
+                    obj.evaluators{k}.extension=obj.extension;
                     obj.evaluators{k}.prerun(obj.peval{k});
                     fields=obj.evaluators{k}.info.fields;
                     for l=1:length(fields)

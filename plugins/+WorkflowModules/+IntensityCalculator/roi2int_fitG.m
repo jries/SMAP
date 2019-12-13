@@ -2,6 +2,9 @@ classdef roi2int_fitG<interfaces.GuiModuleInterface
     %determines intensity around a localization by a regression of a
     %Gaussian model with fixed positions and sigma. Either amplitude and
     %background or only the amplitude are fitting parameters
+    properties
+        extension
+    end
     methods
         function obj=roi2int_fitG(varargin)
             obj@interfaces.GuiModuleInterface(varargin{:});

@@ -5,6 +5,7 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
     properties
         splinecoeff
         spline
+        extension
 %         transform
 %         p
         mirror
@@ -40,7 +41,8 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
 %             sppos=min(obj.guihandles.splinefields.Value,length(obj.spline.SXY));
             ic=obj.getPar('intensity_channel');
             if isempty(ic)
-                return;
+                ic=obj.extension;
+%                 return;
             end
             switch ic
                 case {'t' ,'s'}
