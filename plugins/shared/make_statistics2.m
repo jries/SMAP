@@ -254,6 +254,12 @@ for k=datrange
     slb{end+1}=[num2str(k) '.' modetxt{k} ];
     mbg=mean(bg{k});
     slb{end+1}=['mean: ' num2str(mbg,'%5.0f')];
+    if isempty(hbg)
+            stat.background.mean(k)=0;
+            stat.background.max(k)=0;
+             slb{end+1}='not determined';
+        continue
+    end
     [~,mind]=max(hbg{k}.h);
     
     maxbg=hbg{k}.n(mind);
