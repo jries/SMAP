@@ -46,6 +46,7 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                     numlocsall(ks,1)=sum(in1);
     %                 figure(100);hold off
     %                 plot(coordall(in1,1),coordall(in1,2),'.'); hold on
+                    shift = zeros(length(indslice),3,length(slices)); % intialize shift with zeros
                     for kl=2:length(indslice)                
                         in2=locs.filenumber==filenumbers(indslice(kl));
                         numlocsall(ks,kl)=sum(in2);
@@ -58,7 +59,7 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                     end
                     inslice{ks}=in1 & true;
                 end
-                shift
+                %shift
                 
                 axn=obj.initaxis('localizations');plot(axn,numlocsall);
     %             [zpossort,filesortind]=sort(zpos);
@@ -130,7 +131,7 @@ function shift=findshift(coordref,coordtar,p)
 pixrec=10;
 wind=6;
 ploton=true;
-maxshift=10*wind;
+maxshift=6*wind;
 slicewidth=150 ; %nm
 pixrecz=3;
 cmin=min(min(coordref,[],1,'omitnan'),min(coordtar,[],1,'omitnan'));
@@ -150,10 +151,16 @@ if isfield(p,'axxy')
     ploton=p.axxy;
 end
 % f=figure(99);
-[dx,dy,abg]=getShiftCorr(hr,ht,ploton,maxshift,true,wind);
-% figure(98);plotaxis=gca;
+try
+    [dx,dy,abg]=getShiftCorr(hr,ht,ploton,maxshift,true,wind);
+catch
+    dx = 0; 
+    dy = 0;
+end
+
+    % figure(98);plotaxis=gca;
 coordtarc=coordtar+[dx dy 0]*pixrec;
-zpos=finddisplacementZ2(coordref,coordtarc,slicex,slicey,zbin,5,p.axz);
+zpos=finddisplacementZ2(coordref,coordtarc,slicex,slicey,zbin,9,p.axz);
 
 shift=[dx.*pixrec,dy.*pixrec,zpos];
 end
