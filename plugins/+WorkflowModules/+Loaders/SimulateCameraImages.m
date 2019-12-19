@@ -79,7 +79,9 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
                   pathh=fileparts(obj.getPar('loc_fileinfo').basefile);
                   [f,path]=uiputfile([pathh filesep 'simulation.tif']);
                   if f
-                  saveastiff(saveim,[path f])
+                    saveastiff(saveim,[path f])
+                    finfo=strrep(f,'.tif','_gt.mat');
+                    save([path finfo], locgt);
                   end
               end
               
