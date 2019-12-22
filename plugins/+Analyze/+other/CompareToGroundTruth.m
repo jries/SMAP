@@ -63,7 +63,12 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
                 case 'use 3D cal'
                     %see if EMon
                     fn=lT.filenumber(1);
-                    EMon=obj.locData.files.file(fn).info.EMon;
+                    if isfield(obj.locData.files.file(fn).info, 'EMon')
+                        EMon=obj.locData.files.file(fn).info.EMon;
+                    else
+                        fprintf('Could not find EMon field. Asssuming EMon = true.\n');
+                        EMon = true;
+                    end
                     crlbfac=sqrt(EMon+1);
                     disp(['EM ' num2str(EMon)]);
                     pixelsize=obj.getPar('cam_pixelsize_nm');
