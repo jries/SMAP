@@ -41,6 +41,7 @@ truepositives=length(iAa);
 precision=truepositives/(truepositives+falsepositives);
 recall=truepositives/(truepositives+falsenegatives);
 jaccard = truepositives / (truepositives + falsepositives + falsenegatives);
+f1score = 2 * recall * precision / (recall + precision);
 
 matched=length(iAa);
 if isz
@@ -172,7 +173,7 @@ end
 
 subplot(3,4,10,'Parent',f)
 hold off
-if ~all(isnan(locfit.bg(iBa)))
+if ~all(isnan(locfit.bg(iBa))) && ~numel(unique(locfit.bg(iBa)))
     q=quantile(vertcat(unique(locfit.bg(iBa)),unique(locgt.bg(iAa))),[0.02 0.98]);
     edges=floor(q(1)):1:ceil(q(2));
     [h1,edges1]=histcounts(locfit.bg(iBa),edges);
@@ -244,6 +245,7 @@ sigma_crvol = sqrt(sigma_crx ^ 2 + sigma_cry ^ 2 + sigma_crz ^ 2) / sqrt(3);  % 
 results.precision = precision;
 results.recall = recall;
 results.jaccard = jaccard;
+results.f1score = f1score;
 
 results.truepositives = truepositives;
 results.falsepositives = falsepositives;
