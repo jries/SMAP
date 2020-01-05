@@ -12,7 +12,9 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         end
         
         function out=run(obj,p)
-            global allresults  
+            
+            initallresults();
+            global allresults
             out=[];
             fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm','photerr','filenumber'};
             fieldsT=fieldsR;
@@ -158,6 +160,43 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         function newfigure(obj,a,b)
             obj.figure=figure;
         end
+    end
+end
+
+function initallresults()
+% Inits global allresults structure if it's not there yet.
+
+    global allresults
+    if isempty(allresults)
+        allresults = struct();
+
+        allresults.precision = [];
+        allresults.recall = [];
+        allresults.jaccard = [];
+        allresults.f1score = [];
+
+        allresults.truepositives = [];
+        allresults.falsepositives = [];
+        allresults.falsenegatives = [];
+
+        allresults.rmse_lat = [];
+        allresults.rmse_ax = [];
+        allresults.rmse_vol = [];
+
+        allresults.effcy_lat = [];
+        allresults.effcy_ax = [];
+        allresults.effcy_vol = [];
+
+        allresults.dx_cr = [];
+        allresults.dy_cr = [];
+        allresults.dz_cr = [];
+
+        allresults.lat_cr = [];
+        allresults.ax_cr = [];
+        allresults.vol_cr = [];
+
+        % make the struct 1x0, so it fields are initialised but no rows.
+        allresults(1) = [];
     end
 end
 
