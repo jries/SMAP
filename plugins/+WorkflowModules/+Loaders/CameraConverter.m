@@ -274,7 +274,7 @@ end
 function mirrorem_callback(a,b,obj)
 % if ~isempty(obj.imloader)
 %      fileinf=obj.imloader.metadata;
-            if obj.loc_cameraSettings.EMon && obj.getSingleGuiParameter('mirrorem')  %if em gain on and mirrorem on: switch roi
+            if obj.loc_cameraSettings.EMon && obj.getSingleGuiParameter('emmirror')  %if em gain on and mirrorem on: switch roi
                 obj.loc_cameraSettings.EMmirror=true;
             else 
                 obj.loc_cameraSettings.EMmirror=false;
