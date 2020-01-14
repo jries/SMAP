@@ -28,6 +28,9 @@ classdef PSFmodel<interfaces.GuiModuleInterface
             if ~isfield(locsh,'z')
                 locsh.z=locsh.znm;
             end
+            if ~isfield(locsh,'N')
+                locsh.N=locsh.phot;
+            end            
             %or xrange: pixels in x, yrange pixels in y, locs already in
             %name value: pixelsizex pixelsizey lut
             %pixel units
