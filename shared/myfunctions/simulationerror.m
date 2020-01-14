@@ -300,10 +300,14 @@ ss=fitp.c1/sqrt(2);
 % try fitting with second gauss
 mp=find(nf>fitp.b1,1,'first');
 dn2=min(mp-1,ceil(2*ss/dn));
-n2=(mp-dn2:mp+dn2)';
+n2=(max(1,mp-dn2):min(mp+dn2,length(hn)))';
 
 % fitp2=fit(nf(n2)',hn(n2)','gauss2','StartPoint',[fitp.a1,fitp.b1,fitp.c1,fitp.a1/10,fitp.b1,fitp.c1*10]);
-fitp2=fit(double(nf(n2)'),double(hn(n2)'),'gauss1','StartPoint',[fitp.a1,fitp.b1,fitp.c1]);
+if numel(n2) > 3
+    fitp2=fit(double(nf(n2)'),double(hn(n2)'),'gauss1','StartPoint',[fitp.a1,fitp.b1,fitp.c1]);
+else
+    fitp2 = [];
+end
 
 hold on
 plot(nf,fitp(nf),'g')
