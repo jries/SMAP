@@ -94,13 +94,16 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             if obj.preview
                 previewcollage=zeros(3*(2*drfit+1),2*(2*drfit+1),length(maxima.xpix),'single');
             end
+           
             coord=[maxima.xpix-pos.x,maxima.ypix-pos.y,maxima.znm,maxima.phot,maxima.bg]; %BG set to zero
             % in iterations, previous bg used for starting value. BG always
             % as offset of single molecule model.
             coord0=coord;
-            M=single(obj.splinePSF.render(maxima,[0 size(image,2)],[0 size(image,1)])); %start image without background. 
+            maximabg0=maxima;maximabg0.bg=maximabg0.bg*0;
+            M=single(obj.splinePSF.render(maximabg0,[0 size(image,2)],[0 size(image,1)])); %start image without background. 
 %             Mstart=M;
-            Mi=single(obj.splinePSF.PSF(coord));      
+            coordbg0=coord;coordbg0(:,5)=0;
+            Mi=single(obj.splinePSF.PSF(coordbg0));      
             [~,inds]=sort(maxima.phot,'descend');
             LL=ones(length(inds),1,'single');iterations=ones(length(inds),1,'single');crlb=ones(length(inds),1,5,'single');chi2=ones(length(inds),1,'single');
             for iter=1:p.iterations
