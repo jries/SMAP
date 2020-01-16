@@ -162,6 +162,10 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                  figure(87);
                  subplot(2,2,2)
                  imagesc(M-image); colorbar
+                 title('M-image')
+                 subplot(2,2,3)
+                 imagesc(M); colorbar
+                 title('M')
                  subplot(2,2,1)
 %                  figure(90)
                  hold off
@@ -171,6 +175,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                  plot(coord0(:,1)+pos.x,coord0(:,2)+pos.y,'mo', 'DisplayName','init');
                  plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+', 'DisplayName','fit');%,maxima.xpix,maxima.ypix,'md')
                  legend()
+                 title('image')
 %                  plot(pos.x,pos.y,'ks');
                 gt=obj.getPar('loc_gt_preview');
                 if ~isempty(gt)
