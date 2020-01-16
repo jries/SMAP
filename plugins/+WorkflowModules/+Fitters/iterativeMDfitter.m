@@ -168,8 +168,9 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                  imagesc(image);colorbar
                  hold on
                  
-                 plot(coord0(:,1)+pos.x,coord0(:,2)+pos.y,'mo');
-                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+');%,maxima.xpix,maxima.ypix,'md')
+                 plot(coord0(:,1)+pos.x,coord0(:,2)+pos.y,'mo', 'DisplayName','init');
+                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+', 'DisplayName','fit');%,maxima.xpix,maxima.ypix,'md')
+                 legend()
 %                  plot(pos.x,pos.y,'ks');
                 gt=obj.getPar('loc_gt_preview');
                 if ~isempty(gt)
