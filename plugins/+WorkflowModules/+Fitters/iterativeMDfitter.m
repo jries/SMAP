@@ -66,8 +66,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %             bgestimate=min(image(:));
             sizepixfit=(2*drfit+1)^2;
             
-            v0=0*maxima.xpix;
-            bgglobal=quantile(image(:),0.5);
+
             sigma2=1.5^2; %estimated sigma of PSF squared
             pos.x=max(drfit+1,min(size(image,2)-drfit,round(maxima.xpix)));
             pos.y=max(drfit+1,min(size(image,1)-drfit,round(maxima.ypix)));
@@ -75,6 +74,8 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             maximainit.x=pos.x;
             maximainit.y=pos.y;  
             if p.estimateStartParameters
+                v0=0*maxima.xpix;
+                bgglobal=quantile(image(:),0.5);
                 maxima.znm=v0;
                 maxima.bg=v0;
                 maxima.phot=v0;
