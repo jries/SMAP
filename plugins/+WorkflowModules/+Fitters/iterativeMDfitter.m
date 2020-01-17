@@ -83,7 +83,8 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %                     maxima.bg(k)=quantile(roiim(:),0.2);
                     maxima.bg(k)=bgglobal;
 %                     maxima.N(k)=(sum(roiim(:))-maxima.bg(k)*sizepixfit);
-                    maxima.phot(k)=(max(roiim(:))-maxima.bg(k)*sigma2*pi);
+%                     maxima.phot(k)=(max(roiim(:))-maxima.bg(k)*sigma2*pi);
+                     maxima.phot(k)=(max(roiim(:))-maxima.bg(k))*sigma2*pi;
                 end
 
             else %use this now for deepStorm
