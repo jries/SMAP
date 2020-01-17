@@ -162,8 +162,9 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %                 figure(89);imagesc(vertcat(horzcat(roiim-Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih),roiM+bgh),horzcat(roiim,roiM+Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+bgh),horzcat(roiim-roiM,Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+bgh)))
                  figure(87);
                  subplot(2,2,2)
-                 imagesc(M-image); colorbar
-                 title('M-image')
+                 medbg=median(coord(:,5));
+                 imagesc(M-image+medbg); colorbar
+                 title('M-image+median(bg)')
                  subplot(2,2,3)
                  imagesc(M); colorbar
                  title('M')
