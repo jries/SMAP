@@ -42,7 +42,7 @@ P=[];CRLB=[];LogL=[]; %in case the function exits early
 narginh=nargin;
 %determine of it runs on GPU, otherwise use CPU as default
 persistent fitter
-fitter = 2;
+% fitter = 2;
 allfitters={@GPUmleFit_LM_NoRestrict,@CPUmleFit_LM};
 allfittersnames={'GPUmleFit_LM_NoRestrict','CPUmleFit_LM'};
 if isempty(fitter)
