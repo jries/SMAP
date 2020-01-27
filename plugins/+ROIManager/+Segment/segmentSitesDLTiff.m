@@ -226,11 +226,11 @@ for kc=rangec
         [fitp,outim]=my2Dgaussfit(smallim,winfit/3,3);
         outimall(:,:,ks)=outim;
 %         fitpall(ks,:)=fitp;
-        
+        posnew=pos-(fitp(1:2)-winfit)*p.se_cellpixelsize;
             ckeepx(ind)=pos(1);ckeepy(ind)=pos(2);ind=ind+1;
         
             currentsite=interfaces.SEsites;
-            currentsite.pos=pos;
+            currentsite.pos=posnew;
             currentsite.ID=0;
 
         %     currentcell.sePar=obj.SE.sePar;
