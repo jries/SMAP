@@ -179,7 +179,9 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                                 hhere=par.(field)(k);
                                 break
                             end
-                            content=par.(field)(k).content;
+                            if ~isempty(par.(field)(k).content)
+                                content=par.(field)(k).content;
+                            end
                         end
                         if ~isempty(hhere)
                             value=obj.handle2value(hhere.handle);
