@@ -130,6 +130,10 @@ classdef Register3Dstacks<interfaces.DialogProcessor
 end
 
 function shift=findshift(coordref,coordtar,p)
+if isempty(coordref)||isempty(coordtar)
+    shift=[0 0 0];
+    return
+end
 pixrec=10;
 wind=p.zwindow;
 ploton=true;
