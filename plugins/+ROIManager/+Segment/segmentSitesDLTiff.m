@@ -57,6 +57,12 @@ pard.t5.position=[3,3];
 pard.winfit.object=struct('String','1000','Style','edit');
 pard.winfit.position=[3,4];
 
+
+
+pard.arearanget.object=struct('String','area um2 min (max)','Style','text');
+pard.arearanget.position=[4,3];
+pard.arearange.object=struct('String','1 10','Style','edit');
+pard.arearange.position=[4,4];
 % pard.t5.object=struct('String','max pos corr (nm)','Style','text');
 % pard.t5.position=[3,3];
 % pard.maxjump.object=struct('String','75','Style','edit');
@@ -81,6 +87,7 @@ pard.t10t.Width=0.75;
 pard.layert.object=struct('String','2','Style','edit');
 pard.layert.position=[6,2.75];
 pard.layert.Width=0.25;
+
 
 pard.preview.object=struct('String','preview','Style','checkbox','Value',1);
 pard.preview.position=[6,4];
@@ -138,6 +145,7 @@ for kc=rangec
     rangex=[cell.pos(1)-p.se_cellfov/2 , cell.pos(1)+p.se_cellfov/2 ];
     rangey=[cell.pos(2)-p.se_cellfov/2 , cell.pos(2)+p.se_cellfov/2 ];
     imh=histcounts2(locs.xnm,locs.ynm,rangex(1):pr:rangex(end),rangey(1):pr:rangey(end))';
+    sim=size(imh);
 %     imh=(myhist2(locs.xnm,locs.ynm,pr,pr, rangex,rangey))'; %make image from localizations
     imfs=imfilter(sqrt(imh),hgauss); %filter sqrt image (image is histogram: this normalizes the variance)
 %     imf=imfilter(imh,hgauss3); %normal fitler
@@ -166,6 +174,12 @@ for kc=rangec
 %     inm=sum(indin(:))/length(indin);
     %rim relative 
     areach=sum(ch(:));
+     areachum=areach*pr*pr/1e6;
+    arearange=p.arearange; 
+    if length(arearange)==1 
+        arearange(2)=inf;
+    end
+
     radiusch=sqrt(areach/pi);
     rim=radiusch*rimrel;
     struce3= strel('disk',round(rim));
@@ -199,12 +213,18 @@ for kc=rangec
     hold off
     imagesc(rangex,rangey,implot,'Parent',hf)
       hold on
-    plot(cx,cy,'ko','Parent',hf)
-    title(hf,kc);
+%     plot(cx,cy,'ko','Parent',hf)
+    title(hf,[num2str(kc) ' a:' num2str(areachum)]);
     
     ind=1;
     ckeepx=[];ckeepy=[];
+        ckeepxn=[];ckeepyn=[];
     outimall=[];
+    inroi=false(length(cx),1);
+    if areachum<arearange(1)||areachum>arearange(2)
+         title(hf,[num2str(kc) ' a filtered out:' num2str(areachum)]);
+        continue
+    end
     for ks=1:length(cx)
         %calculate average position
         pos=[cx(ks),cy(ks)];
@@ -222,13 +242,20 @@ for kc=rangec
         
         %fit with Gauss:
         winfit=p.winfit/2/p.se_cellpixelsize;
+        if cypix(ks)-winfit<1 ||cypix(ks)+winfit>sim(2) ||cxpix(ks)-winfit<1 ||cxpix(ks)+winfit>sim(1) 
+            continue
+        end
         smallim=imtiff(cypix(ks)-winfit:cypix(ks)+winfit,cxpix(ks)-winfit:cxpix(ks)+winfit);
         [fitp,outim]=my2Dgaussfit(smallim,winfit/3,3);
-        outimall(:,:,ks)=outim;
+        outimall(:,:,ks)=outim';
 %         fitpall(ks,:)=fitp;
-        posnew=pos-(fitp(1:2)-winfit)*p.se_cellpixelsize;
-            ckeepx(ind)=pos(1);ckeepy(ind)=pos(2);ind=ind+1;
-        
+        fitxpix=cxpix(ks)+fitp(2)-winfit;fitypix=cypix(ks)+fitp(1)-winfit;
+        inroi(ind)=che(min(max(1,round(fitypix)),sim(1)),min(max(1,round(fitxpix)),sim(1)));
+
+        posnew=pos+(fitp([2 1])-winfit)*p.se_cellpixelsize;
+            ckeepx(ind)=pos(1);ckeepy(ind)=pos(2);
+            ckeepxn(ind)=posnew(1);ckeepyn(ind)=posnew(2);
+            ind=ind+1;
             currentsite=interfaces.SEsites;
             currentsite.pos=posnew;
             currentsite.ID=0;
@@ -236,22 +263,30 @@ for kc=rangec
         %     currentcell.sePar=obj.SE.sePar;
             currentsite.info.cell=cell.ID;
             currentsite.info.filenumber=cell.info.filenumber;
-            currentsite.evaluation.segmentSitesDLTiff.sx=fitp(5);
-            currentsite.evaluation.segmentSitesDLTiff.sy=fitp(6);
+            currentsite.evaluation.segmentSitesDLTiff.sx=fitp(5)*pr;
+            currentsite.evaluation.segmentSitesDLTiff.sy=fitp(6)*pr;
             currentsite.evaluation.segmentSitesDLTiff.correl=fitp(7);
-            if ~p.preview
+            currentsite.evaluation.segmentSitesDLTiff.a=fitp(3);
+            currentsite.evaluation.segmentSitesDLTiff.sav=sqrt(fitp(6)^2+fitp(5)^2)*pr;
+            currentsite.evaluation.segmentSitesDLTiff.correlabs=abs(fitp(7));
+            currentsite.evaluation.segmentSitesDLTiff.areacell=areachum;
+            if ~p.preview && inroi(ind-1)
                 obj.SE.addSite(currentsite);
             end
 %         end
     end
     
-        plot(ckeepx,ckeepy,'kx','Parent',hf)
+        plot(ckeepx,ckeepy,'bs',ckeepxn(inroi),ckeepyn(inroi),'bo',ckeepxn,ckeepyn,'bx','Parent',hf)
         drawnow
     if p.preview
             h2=initaxis(p.resultstabgroup,'fit');
              imx(outimall,'Parent',h2);
              h3=initaxis(p.resultstabgroup,'smooth');
              imagesc(h3,imincell);
+             colorbar(h3)
+             hold(h3,'on')
+             plot(h3,cxpix,cypix,'x')
+             hold(h3,'off')
     end
     
 end
