@@ -20,7 +20,8 @@ classdef GaussPSF<interfaces.PSFmodel
             
         end
         function img=PSF(obj,locs)
-            img=[];
+            img=gaussrender_ellipt(locs,xrange+0*pixelsizex/2,yrange+0*pixelsizey/2,pixelsizex,pixelsizey);
+%             img=[];
 %             x=locs.x;y=locs.y;z=locs.z;
 %            Npixels = 13;  
 %            %convert to pixel unit, center = 0

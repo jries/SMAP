@@ -24,9 +24,13 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
         function out=run(obj,data,p)  
                 p=obj.par;   
                 preview=obj.getPar('loc_preview');
+                 if ~isfield(obj.locs,'bg')
+                        obj.locs.bg=zeros(size(obj.locs.x));
+                 end
                  if preview
                     allframes=max(1,obj.getPar('loc_previewframe'));  
                     indh=obj.locs.frame==allframes;
+
                     locgth=copystructReduce(obj.locs,indh,{'x','y','znm','bg','phot'});
                     locgt.x=(locgth.x-p.xrange(1))/p.pixelsize;
                     locgt.y=(locgth.y-p.yrange(1))/p.pixelsize;
@@ -121,7 +125,9 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
            %get PSF
            switch p.psfmodel.selection
                case {'Symm Gauss','Astig Gauss' }
-                   psf=GaussPSF
+                   obj.PSF=GaussPSF;
+                   warndlg('not implemented')
+                   
                case {'Spline'}
                    f=p.cal_3Dfile;
                    if isempty(f)
@@ -131,6 +137,10 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
                    psf=splinePSF;
                    psf.loadmodel(f);
                    obj.PSF=psf;
+                   roisize=obj.getPar('loc_ROIsize');
+                   scoeff=size(psf.modelpar.coeff);
+                   obj.PSF.roisize=min(scoeff(1)-1,roisize+4);
+                   
            end
            [~,par]=simulatecamera(obj.locs,obj.par,1,obj.PSF);
            obj.par=par;
@@ -145,8 +155,8 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
                          p.xrange=[0 1]; p.yrange=[0 1];
                      else
                       rim=1000;
-                      p.xrange=[min(obj.locs.xnm)-rim max(obj.locs.xnm)+rim]; 
-                      p.yrange=[min(obj.locs.ynm)-rim max(obj.locs.ynm)+rim]; 
+                      p.xrange=[min(obj.locs.x)-rim max(obj.locs.x)+rim]; 
+                      p.yrange=[min(obj.locs.y)-rim max(obj.locs.y)+rim]; 
                      end
             end
             obj.par=copyfields(p,cs);
@@ -197,6 +207,8 @@ function [locs,p]=storelocs(obj,p)
       case 3
             locs=obj.simulator.locData.loc;
             obj.simulator.locData.clear;
+      case 4
+          locs=randomlocs(p);
   end
   
   if isfield(locs,'xnm_gt') && ~isempty(locs.xnm_gt)
@@ -227,6 +239,78 @@ function [locs,p]=storelocs(obj,p)
       else
               p.EMon=true;
       end
+
+end
+
+function locs=randomlocs(p)
+[settings, button] = settingsdlg(...
+    'Description', 'Define simulation parameters',...
+    {'Density µm^-2';'density'}, 0.02,...
+    {'Photons';'photons'}, 5000,...
+    {'Frames';'frames'}, 5000,...
+    {'Lifetime (frames)';'lifetime'}, 1,...
+    {'Zrnage (nm))';'zrange'}, 1000,...
+    {'Z offset (nm))';'zoffset'}, 0);
+if ~strcmpi(button,'ok')
+    locs=[];
+    return
+end
+if p.autorange
+    p.xrange=[0 10000]; p.yrange=[0 10000];
+end
+
+area=(p.xrange(2)-p.xrange(1))*(p.yrange(2)-p.yrange(1))/1e6; %in um2
+locsperframe=area*settings.density;
+totallocs=locsperframe*settings.frames;
+startf=rand(totallocs,1)*settings.frames;
+lifet=exprnd(settings.lifetime,totallocs,1);
+peakint=settings.photons/settings.lifetime;
+
+ind=1;
+if settings.lifetime==0
+    lttot=1;
+else
+    lttot=settings.lifetime*1.5;
+end
+frames=zeros(totallocs*lttot,1);
+photons=zeros(totallocs*lttot,1);
+coord=zeros(totallocs*lttot,3);
+for k=1:totallocs
+    onf=ceil(startf(k));
+    offf=ceil(startf(k)+lifet(k));
+    ind0=ind;
+    frames(ind)=onf;
+    if settings.lifetime==0
+        photons(ind)=settings.photons;
+    else
+        photons(ind)=(onf-startf(k))*peakint;
+    end
+    ind=ind+1;
+    while offf-onf>1
+        onf=onf+1;
+        frames(ind)=onf;
+        photons(ind)=peakint;
+        ind=ind+1;
+    end
+    if offf-onf>0 %last frame    
+        frames(ind)=onf+1;
+        photons(ind)=(startf(k)+lifet(k)-offf+1)*peakint;
+        ind=ind+1;
+    end 
+    coord(1,ind0:ind-1)=rand(ind-ind0,1)*(p.xrange(2)-p.xrange(1))+p.xrange(1);
+    coord(2,ind0:ind-1)=rand(ind-ind0,1)*(p.yrange(2)-p.yrange(1))+p.yrange(1);
+    coord(3,ind0:ind-1)=rand(ind-ind0,1)*settings.zrange(1)-settings.zrange(1)/2+settings.zoffset;
+    
+end
+frames(ind:end)=[];
+photons(ind:end)=[];
+coord(:,ind:end)=[];
+[~,indsort]=sort(frames);
+locs.xnm_gt=coord(1,indsort)';
+locs.ynm_gt=coord(2,indsort)';
+locs.znm_gt=coord(3,indsort)';
+locs.frame=frames(indsort);
+locs.phot=photons(indsort);
 
 end
 
@@ -288,7 +372,7 @@ end
 function pard=guidef(obj)
 
 % 
-pard.simulationsource.object=struct('String',{{'Use current localizations','Load localizations','Make with simulation plugin'}},'Style','popupmenu',...
+pard.simulationsource.object=struct('String',{{'Use current localizations','Load localizations','Make with simulation plugin','Random'}},'Style','popupmenu',...
     'Callback',{{@simulation_callback,obj}});
 pard.simulationsource.position=[1,1];
 pard.simulationsource.Width=2;
