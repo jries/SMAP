@@ -74,9 +74,11 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
                     crlbfac=sqrt(EMon+1);
                     disp(['EM ' num2str(EMon)]);
                     pixelsize=obj.getPar('cam_pixelsize_nm');
-                    psfmodel=splinePSF;
+                    psfmodel=splinePSF;   
                     psfmodel.loadmodel(p.cal_3Dfile);
-                    crlb=psfmodel.crlb(lRn.phot,lRn.bg,-lRn.z);
+                    psfmodel.roisize=min(p.roisize, size(psfmodel.modelpar.coeff,1)-3);
+                 
+                    crlb=psfmodel.crlb(lRn.phot,lRn.bg,lRn.z);
 %                     crlb=psfmodel.crlb(lTn.phot,lTn.bg,-lTn.z);
                     lRn.xerr=sqrt(crlb(:,2))*pixelsize(1)*crlbfac;
                     lRn.yerr=sqrt(crlb(:,1))*pixelsize(end)*crlbfac;
@@ -392,7 +394,12 @@ pard.cal_3Dfile.object=struct('Style','edit','String','');
 pard.cal_3Dfile.position=[8,2];
 pard.cal_3Dfile.Width=2.5;
 
-
+pard.roisizet.object=struct('Style','text','String','Roi size (pixel)');
+pard.roisizet.position=[9,1];
+pard.roisizet.Width=1;
+pard.roisize.object=struct('Style','edit','String','13');
+pard.roisize.position=[9,2];
+pard.roisize.Width=0.5;
 
 
 

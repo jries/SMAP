@@ -73,9 +73,23 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
                   locgt=obj.locs;
               end
               locgt.bg=locgt.bg+p.background;
+              %calculate CRLB, add to gt
+              
+              settings=obj.getPar('loc_cameraSettings');
+              crlbfac=sqrt(settings.EMon+1);
+              pixelsize=settings.cam_pixelsize_um*1000;
+              psfmodel=obj.PSF;
+              psfmodel.roisize=obj.getPar('loc_ROIsize');
+              crlb=psfmodel.crlb(locgt.phot,locgt.bg,locgt.znm);  %why minus?
+%                     crlb=psfmodel.crlb(lTn.phot,lTn.bg,-lTn.z);
+                    locgt.xerr=sqrt(crlb(:,2))*pixelsize(1)*crlbfac;
+                    locgt.yerr=sqrt(crlb(:,1))*pixelsize(end)*crlbfac;
+                    locgt.zerr=sqrt(crlb(:,5))*crlbfac;
+                    locgt.Nerr=sqrt(crlb(:,3))*crlbfac;
+                    
               if ~obj.getPar('loc_preview')
                   figure
-                simulationerror(locgt,locfit,2)
+                simulationerror(locgt,locfit,1)
               end
               
               if p.savetiffs && ~obj.getPar('loc_preview')
