@@ -256,6 +256,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             obj.status('all initialized')
             drawnow  
             set(handle, 'HandleVisibility', 'off');
+            obj.setnormalizedpositionunits;
         end
         function psaved=saveParameters(obj)
             psaved=obj.getGuiParameters(true);
