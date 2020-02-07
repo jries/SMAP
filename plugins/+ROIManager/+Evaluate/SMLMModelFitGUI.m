@@ -216,6 +216,12 @@ end
 %% Callbacks
 function parSetting_callback(a,b,obj, modelnumber)
 % Callback for editing parsArg of the model
+% First get the fitter obj, and then reset the initial guess based on what
+% are saved. This is to prevent any interference between different sites.
+% Next detect the position of the modified value, check its counterpart in
+% fitter.allParsArg, and overwrite it. Finally the initial guess is saved
+% and the fitter of the obj replaced.
+
 fitter = obj.fitter;
 fitter.resetInit;
 fn = obj.parsArgFieldnames;

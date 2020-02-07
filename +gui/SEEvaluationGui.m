@@ -60,6 +60,9 @@ classdef SEEvaluationGui< interfaces.SEProcessor
                         while mh(end)>'0'&&mh(end)<'9'
                             mh=mh(1:end-1);
                         end
+                        if strcmp(mh(end),'_')
+                            mh=mh(1:end-1);
+                        end
                         par=p.children.(modules{k});
                         addmodule(obj,mh,par);
                     end
@@ -107,7 +110,7 @@ pos=table.Position;
 modulename2=modulename;
 ind=2;
 while sum(sum(strcmpi(d,modulename2)))
-    modulename2=[modulename num2str(ind)];
+    modulename2=[modulename '_' num2str(ind)];
     ind=ind+1;
 end
     

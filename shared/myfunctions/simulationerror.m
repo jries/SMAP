@@ -124,19 +124,23 @@ if ~isfield(locerr,'Nerr')
 end
 
 
+xbin=min(2,ceil(quantile(locerr.xerr,0.1)*20)/100);
+ybin=min(2,ceil(quantile(locerr.yerr,0.1)*20)/100);
+zbin=min(5,ceil(quantile(locerr.zerr,0.1)*20)/100);
+
 subplot(3,4,1,'Parent',f)
-[~, fitx] = fithistr(dx,2);
+[~, fitx] = fithistr(dx,xbin,[' ' num2str(mean(locerr.xerr),3)]);
 xlabel('dx')
 subplot(3,4,2,'Parent',f)
-[~, fity] = fithistr(dy,2);
+[~, fity] = fithistr(dy,ybin,[' ' num2str(mean(locerr.yerr),3)]);
 xlabel('dy')
 if isz
     subplot(3,4,3,'Parent',f)
-    fitz=fithistr(dz,5);
+    fitz=fithistr(dz,zbin,[' ' num2str(mean(locerr.zerr),3)]);
     xlabel('dz')
 end
 subplot(3,4,4,'Parent',f)
-[~, fitphot] = fithistr(dphot,.01);
+[~, fitphot] = fithistr(dphot,.005);
 xlabel('dphot')
 % shifted dx
 dxshift=(dx-fitx.b1);
@@ -149,15 +153,15 @@ dyr=(dy-fity.b1)./locerr.yerr(inderr(indinz));
 
 dphotr=(locgt.N(iAa(indinz))/fitphot.b1-locfit.N(iBa(indinz)))./locerr.Nerr(inderr(indinz));
 subplot(3,4,5,'Parent',f)
-[fitxr, ~] = fithistr(dxr,0.25);
+[fitxr, ~] = fithistr(dxr,0.1);
 xlabel('dx/sqrt(CRLBx)')
 subplot(3,4,6,'Parent',f)
-[fityr, ~] = fithistr(dyr,0.25);
+[fityr, ~] = fithistr(dyr,0.1);
 xlabel('dy/sqrt(CRLBy)')
 
 
 subplot(3,4,8,'Parent',f)
-fithistr(dphotr,.5);
+fithistr(dphotr,.25);
 xlabel('phot/sqrt(CRLBphot)')
 
 if isz
@@ -166,7 +170,7 @@ if isz
     RMSEvol=sqrt(mean(dxshift.^2+dyshift.^2+dzshift.^2));
     dzr=(dz-fitz.b1)./locerr.zerr(inderr(indinz));
     subplot(3,4,7,'Parent',f)
-[fitzr, ~] = fithistr(dzr,0.25);
+[fitzr, ~] = fithistr(dzr,0.1);
 xlabel('dz/sqrt(CRLBz)')
 end
 
@@ -208,7 +212,7 @@ ylabel('z fit')
 title(['RMSElat = ' num2str(RMSElat,3) ' nm, RMSEvol = ' num2str(RMSEvol,3) ' nm'])
 
 subplot(3,4,12,'Parent',f);
-
+if length(unique(locgt.phot(iAa)))>1
 hold off
 dscatter(locgt.phot(iAa),locfit.phot(iBa))
 hold on
@@ -216,6 +220,9 @@ plot([min(locgt.phot(iAa)),max(locgt.phot(iAa))],[min(locgt.phot(iAa)),max(locgt
 xlabel('phot gt')
 ylabel('phpt fit')
 ylim([0 1.7*max(locgt.phot(iAa))])
+else
+    histogram(locfit.phot(iBa))
+end
 
 %matchlocs in defined region
 % false pos, false neg
@@ -281,7 +288,10 @@ function e = efficiency(jac, rmse, alpha)
     return
 end
 
-function [fitp, fitp2] = fithistr(de,dn)
+function [fitp, fitp2] = fithistr(de,dn,addtxt)
+if nargin<3
+    addtxt='';
+end
 ff='%1.1f';
 ff2='%1.2f';
 qq=quantile(de,[0.002 0.998]);
@@ -311,13 +321,15 @@ end
 
 hold on
 plot(nf,fitp(nf),'g')
+if ~isempty(fitp2)
 plot(nf(n2),fitp2(nf(n2)),'r')
+end
 
 fituse=fitp;
 ss2=fituse.c1/sqrt(2);
 ingauss=fituse.a1*sqrt(pi)*fituse.c1/length(de)/dn;
 % de=de(abs(de)<3);
-title([num2str(mean(de),2) '±' num2str(std(de),ff) ', fit: ' num2str(fituse.b1,ff) '±' num2str(ss2,ff2) ', in Gauss ' num2str(ingauss*100,'%2.0f') '%'])
+title([num2str(mean(de),2) '±' num2str(std(de),ff) ', fit: ' num2str(fituse.b1,ff) '±' num2str(ss2,ff2) ', in Gauss ' num2str(ingauss*100,'%2.0f') '%' addtxt])
 xlim([fituse.b1-5*ss fituse.b1+5*ss])
 axh=gca;
 

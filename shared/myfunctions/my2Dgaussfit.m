@@ -59,14 +59,19 @@ weighted=0;
   
   
   rho=rsxsy/sxm/sym;
-   
-  if nargin>1 && ~isempty(startp)
-      sxm=startp;sym=startp;rho=0;xm=s(1)/2;ym=s(2)/2;
-  end
-  
-  
+     
     bg=min(image(:));
     a=max(image(:))-bg;
+  if nargin>1 && ~isempty(startp)
+      if length(startp)==1
+      sxm=startp;sym=startp;rho=0;xm=s(1)/2;ym=s(2)/2;
+      else
+         xm=startp(1);ym=startp(2);a=startp(3);bg=startp(4);sxm=startp(5);sym=startp(6);rho=startp(7); 
+      end
+          
+  end
+  
+
 %     rho=0;
     
     %startparameter

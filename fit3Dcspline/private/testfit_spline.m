@@ -49,6 +49,9 @@ t=tic;
             zind=3;
             photind=4;
         else
+            if max(fitstack(:))<10
+                fitstack=fitstack*1000+1;
+            end
             [P,CRLB, LL] =mleFit_LM(fitstack,fitmode,iterations,coeffh,0,1,zst);
             zind=5;
             photind=3;

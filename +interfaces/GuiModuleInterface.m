@@ -412,7 +412,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             % resizes all GUI and children GUIs
             % usually called from figure.SizeChangeCallback (or similar)
             
-            if isfield(obj,'guihandles') && ~isempty(obj.guihandles)
+            if myisfield(obj,'guihandles') && ~isempty(obj.guihandles)
             fn=fieldnames(obj.guihandles);
             for k=1:length(fn)
                 try
@@ -725,6 +725,22 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             end
             obj.plugininfo=info;
        end
+       
+       function setnormalizedpositionunits(obj)
+          fn=fieldnames(obj.guihandles);
+          for k=1:length(fn)
+              if isprop(obj.guihandles.(fn{k}),'Units')
+                  obj.guihandles.(fn{k}).Units='normalized';
+              end
+          end
+          if isempty(obj.children)
+              return
+          end
+          fn=fieldnames(obj.children);
+          for k=1:length(fn)
+              obj.children.(fn{k}).setnormalizedpositionunits;
+          end
+       end
 
     end
     
@@ -816,6 +832,8 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
            obj.setPar(field,p)
            end
       end
+      
+
 %        function executecallback(obj,callback)
 %            if ~isstruct(obj.guihandles)
 %                return
