@@ -350,6 +350,7 @@ else
     currentsite.pos=pos;     
     currentsite.info.cell=obj.SE.currentcell.ID;
     currentsite.info.filenumber=obj.SE.currentfile.ID;
+    currentsite.info.connectedsites=[];
 %     currentsite.sePar=obj.SE.sePar;
 %     currentsite.annotation.rotationangle=0;
 %     currentsite.annotation.rotationpos=zeros(2);
