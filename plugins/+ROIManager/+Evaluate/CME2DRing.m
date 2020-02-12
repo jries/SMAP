@@ -1,4 +1,5 @@
 classdef CME2DRing<interfaces.SEEvaluationProcessor
+%     calculates radial density distributions
     properties
         savedevals
     end
@@ -55,6 +56,7 @@ pard.fit_sigma.Width=2;
 
 pard.plugininfo.type='ROI_Evaluate';
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer1_','layer2_','se_sitepixelsize'};
+pard.plugininfo.description='calculates radial density distributions';
 end
 
 
