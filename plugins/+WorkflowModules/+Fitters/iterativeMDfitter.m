@@ -66,8 +66,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %             bgestimate=min(image(:));
             sizepixfit=(2*drfit+1)^2;
             
-            v0=0*maxima.xpix;
-            bgglobal=quantile(image(:),0.5);
+
             sigma2=1.5^2; %estimated sigma of PSF squared
             pos.x=max(drfit+1,min(size(image,2)-drfit,round(maxima.xpix)));
             pos.y=max(drfit+1,min(size(image,1)-drfit,round(maxima.ypix)));
@@ -75,6 +74,8 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             maximainit.x=pos.x;
             maximainit.y=pos.y;  
             if p.estimateStartParameters
+                v0=0*maxima.xpix;
+                bgglobal=quantile(image(:),0.5);
                 maxima.znm=v0;
                 maxima.bg=v0;
                 maxima.phot=v0;
@@ -83,7 +84,8 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %                     maxima.bg(k)=quantile(roiim(:),0.2);
                     maxima.bg(k)=bgglobal;
 %                     maxima.N(k)=(sum(roiim(:))-maxima.bg(k)*sizepixfit);
-                    maxima.phot(k)=(max(roiim(:))-maxima.bg(k)*sigma2*pi);
+%                     maxima.phot(k)=(max(roiim(:))-maxima.bg(k)*sigma2*pi);
+                     maxima.phot(k)=(max(roiim(:))-maxima.bg(k))*sigma2*pi;
                 end
 
             else %use this now for deepStorm
@@ -94,13 +96,16 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
             if obj.preview
                 previewcollage=zeros(3*(2*drfit+1),2*(2*drfit+1),length(maxima.xpix),'single');
             end
+           
             coord=[maxima.xpix-pos.x,maxima.ypix-pos.y,maxima.znm,maxima.phot,maxima.bg]; %BG set to zero
             % in iterations, previous bg used for starting value. BG always
             % as offset of single molecule model.
             coord0=coord;
-            M=single(obj.splinePSF.render(maxima,[0 size(image,2)],[0 size(image,1)])); %start image without background. 
+            maximabg0=maxima;maximabg0.bg=maximabg0.bg*0;
+            M=single(obj.splinePSF.render(maximabg0,[0 size(image,2)],[0 size(image,1)])); %start image without background. 
 %             Mstart=M;
-            Mi=single(obj.splinePSF.PSF(coord));      
+            coordbg0=coord;coordbg0(:,5)=0;
+            Mi=single(obj.splinePSF.PSF(coordbg0));      
             [~,inds]=sort(maxima.phot,'descend');
             LL=ones(length(inds),1,'single');iterations=ones(length(inds),1,'single');crlb=ones(length(inds),1,5,'single');chi2=ones(length(inds),1,'single');
             for iter=1:p.iterations
@@ -158,15 +163,22 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
 %                 figure(89);imagesc(vertcat(horzcat(roiim-Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih),roiM+bgh),horzcat(roiim,roiM+Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+bgh),horzcat(roiim-roiM,Mi(1+ddrh:end-ddrh,1+ddrh:end-ddrh,ih)+bgh)))
                  figure(87);
                  subplot(2,2,2)
-                 imagesc(M-image); colorbar
+                 medbg=median(coord(:,5));
+                 imagesc(M-image+medbg); colorbar
+                 title('M-image+median(bg)')
+                 subplot(2,2,3)
+                 imagesc(M); colorbar
+                 title('M')
                  subplot(2,2,1)
 %                  figure(90)
                  hold off
                  imagesc(image);colorbar
                  hold on
                  
-                 plot(coord0(:,1)+pos.x,coord0(:,2)+pos.y,'mo');
-                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+');%,maxima.xpix,maxima.ypix,'md')
+                 plot(coord0(:,1)+pos.x,coord0(:,2)+pos.y,'mo', 'DisplayName','init');
+                 plot(coord(:,1)+pos.x,coord(:,2)+pos.y,'k+', 'DisplayName','fit');%,maxima.xpix,maxima.ypix,'md')
+                 legend()
+                 title('image')
 %                  plot(pos.x,pos.y,'ks');
                 gt=obj.getPar('loc_gt_preview');
                 if ~isempty(gt)

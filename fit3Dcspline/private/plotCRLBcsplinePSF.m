@@ -1,6 +1,7 @@
 function plotCRLBcsplinePSF(cspline,ax)
+dz=0.1;
 rois=size(cspline.coeff{1},1)-3;
-N=5000;bg=50;x=rois/2;y=rois/2;z=(1:size(cspline.coeff{1},3))';
+N=5000;bg=50;x=rois/2;y=rois/2;z=(1:dz:size(cspline.coeff{1},3))';
 v1=ones(length(z),1);
 coords=[v1*x , v1*y , v1* N, v1*bg, z];
 crlb=CalSplineCRLB(cspline.coeff{1}, rois, coords);

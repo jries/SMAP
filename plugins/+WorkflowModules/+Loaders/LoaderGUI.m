@@ -59,7 +59,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
                 loader.attachPar(obj.P);
                 loader.attachLocData(obj.locData);
                 hp=uipanel(obj.handle,'Units','pixels','Position',panelpos,'Visible','off');
-                hp.Units='normalized';
+                
                 loader.handle=hp;
                 loader.setGuiAppearence(p);
                 loader.simplegui=obj.simplegui;
@@ -67,6 +67,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
                 ip=horzcat(ip,loader.inputParameters);
                 obj.children.(loadernames{k})=loader;
                 obj.loaders{k}=loader;
+%                 hp.Units='normalized';
                 obj.guihandles.([loadernames{k} '_panel'])=hp;
                 t1=[t1 13 '   ' 96+k '. ' loader.info.name loader.info.description];
             end

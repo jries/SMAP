@@ -1,4 +1,4 @@
-function zpos=finddisplacementZ2(cr,ct,xb,yb,zb,window,plotaxis)
+function [zpos,dz]=finddisplacementZ2(cr,ct,xb,yb,zb,window,plotaxis)
 if nargin<7
     plotaxis=[];
 end
@@ -55,16 +55,16 @@ inrange=ind-dh:ind+dh;
 inrange(zc(inrange)==0)=[];
 
 zred=zc(inrange);
-[zpos,fp]=mypeakfit(zc(inrange),ccc(inrange));
+[zpos,fp,dz]=mypeakfit(zc(inrange),ccc(inrange));
 
-indplot=ind-3*dh:ind+3*dh;
+indplot=max(1,ind-3*dh):min(ind+3*dh,length(zc));
 
-if ~isempty(plotaxis) && indplot(1)>0 &&indplot(end)<=length(zc)
+if ~isempty(plotaxis) 
   plot(plotaxis,zc(indplot),ccc(indplot),'x')
     plotaxis.NextPlot='add';
-    plot(plotaxis,zred,fp(1)*zred.^2+zred*fp(2)+fp(3),'r');
+    plot(plotaxis,zred,fp(zred),'r');
     plotaxis.NextPlot='replace';
-    title(plotaxis,['dz (mean): ' num2str(mean(cr(:,3))-mean(ct(:,3))) ', cc: ' num2str(zpos)])
+    title(plotaxis,['dz (mean): ' num2str(mean(cr(:,3))-mean(ct(:,3)),2) ', cc: ' num2str(zpos,2) ' \pm ' num2str(dz,2)])
 
 end
 

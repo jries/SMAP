@@ -40,6 +40,8 @@ falsenegatives=length(nA);
 truepositives=length(iAa);
 precision=truepositives/(truepositives+falsepositives);
 recall=truepositives/(truepositives+falsenegatives);
+jaccard = truepositives / (truepositives + falsepositives + falsenegatives);
+f1score = 2 * recall * precision / (recall + precision);
 
 matched=length(iAa);
 if isz
@@ -122,64 +124,73 @@ if ~isfield(locerr,'Nerr')
 end
 
 
+xbin=min(2,ceil(quantile(locerr.xerr,0.1)*20)/100);
+ybin=min(2,ceil(quantile(locerr.yerr,0.1)*20)/100);
+zbin=min(5,ceil(quantile(locerr.zerr,0.1)*20)/100);
+
 subplot(3,4,1,'Parent',f)
-fitx=fithistr(dx,2);
+[~, fitx] = fithistr(dx,xbin,[' ' num2str(mean(locerr.xerr),3)]);
 xlabel('dx')
 subplot(3,4,2,'Parent',f)
-fity=fithistr(dy,2);
+[~, fity] = fithistr(dy,ybin,[' ' num2str(mean(locerr.yerr),3)]);
 xlabel('dy')
 if isz
     subplot(3,4,3,'Parent',f)
-    fitz=fithistr(dz,5);
+    fitz=fithistr(dz,zbin,[' ' num2str(mean(locerr.zerr),3)]);
     xlabel('dz')
 end
 subplot(3,4,4,'Parent',f)
-fitphot=fithistr(dphot,.01);
+[~, fitphot] = fithistr(dphot,.005);
 xlabel('dphot')
 % shifted dx
 dxshift=(dx-fitx.b1);
 dyshift=(dy-fity.b1);
-
 RMSElat=sqrt(mean(dxshift.^2+dyshift.^2));
+
 %renormalized
 dxr=(dx-fitx.b1)./locerr.xerr(inderr(indinz));
 dyr=(dy-fity.b1)./locerr.yerr(inderr(indinz));
 
 dphotr=(locgt.N(iAa(indinz))/fitphot.b1-locfit.N(iBa(indinz)))./locerr.Nerr(inderr(indinz));
 subplot(3,4,5,'Parent',f)
-fithistr(dxr,0.25);
+[fitxr, ~] = fithistr(dxr,0.1);
 xlabel('dx/sqrt(CRLBx)')
 subplot(3,4,6,'Parent',f)
-fithistr(dyr,0.25);
+[fityr, ~] = fithistr(dyr,0.1);
 xlabel('dy/sqrt(CRLBy)')
 
 
 subplot(3,4,8,'Parent',f)
-fithistr(dphotr,.5);
+fithistr(dphotr,.25);
 xlabel('phot/sqrt(CRLBphot)')
 
 if isz
     dzshift=(dz-fitz.b1);
+    RMSEax=sqrt(mean(dzshift.^2));
     RMSEvol=sqrt(mean(dxshift.^2+dyshift.^2+dzshift.^2));
     dzr=(dz-fitz.b1)./locerr.zerr(inderr(indinz));
     subplot(3,4,7,'Parent',f)
-fithistr(dzr,0.25);
+[fitzr, ~] = fithistr(dzr,0.1);
 xlabel('dz/sqrt(CRLBz)')
 end
 
-q=quantile(vertcat(unique(locfit.bg(iBa)),unique(locgt.bg(iAa))),[0.02 0.98]);
-edges=floor(q(1)):1:ceil(q(2));
-[h1,edges1]=histcounts(locfit.bg(iBa),edges);
-[h2,edges2]=histcounts(locgt.bg(iAa),edges);
-h1(end+1)=0;
-h2(end+1)=0;
+
 subplot(3,4,10,'Parent',f)
 hold off
-bar(edges,h2/max(h2))
+if ~all(isnan(locfit.bg(iBa))) && ~numel(unique(locfit.bg(iBa)))
+    q=quantile(vertcat(unique(locfit.bg(iBa)),unique(locgt.bg(iAa))),[0.02 0.98]);
+    edges=floor(q(1)):1:ceil(q(2));
+    [h1,edges1]=histcounts(locfit.bg(iBa),edges);
+    [h2,edges2]=histcounts(locgt.bg(iAa),edges);
+    h1(end+1)=0;
+    h2(end+1)=0;
+    
+    bar(edges,h2/max(h2))
 
-hold on
-bb=bar(edges,h1/max(h1));
-bb.FaceAlpha=0.5;
+    hold on
+    bb=bar(edges,h1/max(h1));
+    bb.FaceAlpha=0.5;
+end
 xlabel('bg')
 % hold off
 % dscatter(locgt.bg(iAa),locfit.bg(iBa))
@@ -201,7 +212,7 @@ ylabel('z fit')
 title(['RMSElat = ' num2str(RMSElat,3) ' nm, RMSEvol = ' num2str(RMSEvol,3) ' nm'])
 
 subplot(3,4,12,'Parent',f);
-
+if length(unique(locgt.phot(iAa)))>1
 hold off
 dscatter(locgt.phot(iAa),locfit.phot(iBa))
 hold on
@@ -209,6 +220,9 @@ plot([min(locgt.phot(iAa)),max(locgt.phot(iAa))],[min(locgt.phot(iAa)),max(locgt
 xlabel('phot gt')
 ylabel('phpt fit')
 ylim([0 1.7*max(locgt.phot(iAa))])
+else
+    histogram(locfit.phot(iBa))
+end
 
 %matchlocs in defined region
 % false pos, false neg
@@ -220,14 +234,64 @@ plot(locfit.x,locfit.y,'.',locgt.x,locgt.y,'.')
 ff='%2.0f';
 title(['FP: ' num2str(falsepositives/totallocs*100,ff), '%, FN: ' num2str(falsenegatives/totallocs*100,ff) '%'...
     ', P: ' num2str(precision,2) ', R: ' num2str(recall,2)]);
-results.precision=precision;
-results.recall=recall;
-results.falsepositives=falsepositives;
+
+% some higher level metrics
+effcy_lat = efficiency(jaccard, RMSElat, 1.0);
+effcy_ax = efficiency(jaccard, RMSEax, 0.5);
+effcy_vol = (effcy_lat + effcy_ax) / 2;
+
+sigma_crx = fitxr.c1 / sqrt(2);
+sigma_cry = fityr.c1 / sqrt(2);
+sigma_crz = fitzr.c1 / sqrt(2);
+
+sigma_crlat = sqrt(sigma_crx ^ 2 + sigma_cry ^ 2) / sqrt(2);
+sigma_crax = sigma_crz;
+sigma_crvol = sqrt(sigma_crx ^ 2 + sigma_cry ^ 2 + sigma_crz ^ 2) / sqrt(3);  % is this correct?
+
 %add all results
+results.precision = precision;
+results.recall = recall;
+results.jaccard = jaccard;
+results.f1score = f1score;
+
+results.truepositives = truepositives;
+results.falsepositives = falsepositives;
+results.falsenegatives = falsenegatives;
+
+results.rmse_lat = RMSElat;
+results.rmse_ax = RMSEax;
+results.rmse_vol = RMSEvol;
+
+results.effcy_lat = effcy_lat;
+results.effcy_ax = effcy_ax;
+results.effcy_vol = effcy_vol;
+
+% add the err / crlb stuff here
+results.dx_cr = sigma_crx;
+results.dy_cr = sigma_cry;
+results.dz_cr = sigma_crz;
+
+results.lat_cr = sigma_crlat;
+results.ax_cr = sigma_crax;
+results.vol_cr = sigma_crvol;
 
 end
 
-function fitp2=fithistr(de,dn)
+function e = efficiency(jac, rmse, alpha)
+    %%%
+    % Calculate efficiency following Sage et al. 2019, superres fight club.
+    % Alpha_lat = 1, Alpha_ax = 0.5nm
+    % jac should be in 0...1 not percent.
+    % :return efficiency in 0...1 range.
+    %%%
+    e = (100 - ((100 * (1 - jac)) ^ 2 + alpha ^ 2 * rmse ^ 2) ^ 0.5) / 100;
+    return
+end
+
+function [fitp, fitp2] = fithistr(de,dn,addtxt)
+if nargin<3
+    addtxt='';
+end
 ff='%1.1f';
 ff2='%1.2f';
 qq=quantile(de,[0.002 0.998]);
@@ -246,20 +310,26 @@ ss=fitp.c1/sqrt(2);
 % try fitting with second gauss
 mp=find(nf>fitp.b1,1,'first');
 dn2=min(mp-1,ceil(2*ss/dn));
-n2=(mp-dn2:mp+dn2)';
+n2=(max(1,mp-dn2):min(mp+dn2,length(hn)))';
 
 % fitp2=fit(nf(n2)',hn(n2)','gauss2','StartPoint',[fitp.a1,fitp.b1,fitp.c1,fitp.a1/10,fitp.b1,fitp.c1*10]);
-fitp2=fit(double(nf(n2)'),double(hn(n2)'),'gauss1','StartPoint',[fitp.a1,fitp.b1,fitp.c1]);
+if numel(n2) > 3
+    fitp2=fit(double(nf(n2)'),double(hn(n2)'),'gauss1','StartPoint',[fitp.a1,fitp.b1,fitp.c1]);
+else
+    fitp2 = [];
+end
 
 hold on
 plot(nf,fitp(nf),'g')
+if ~isempty(fitp2)
 plot(nf(n2),fitp2(nf(n2)),'r')
+end
 
 fituse=fitp;
 ss2=fituse.c1/sqrt(2);
 ingauss=fituse.a1*sqrt(pi)*fituse.c1/length(de)/dn;
 % de=de(abs(de)<3);
-title([num2str(mean(de),2) '±' num2str(std(de),ff) ', fit: ' num2str(fituse.b1,ff) '±' num2str(ss2,ff2) ', in Gauss ' num2str(ingauss*100,'%2.0f') '%'])
+title([num2str(mean(de),2) '±' num2str(std(de),ff) ', fit: ' num2str(fituse.b1,ff) '±' num2str(ss2,ff2) ', in Gauss ' num2str(ingauss*100,'%2.0f') '%' addtxt])
 xlim([fituse.b1-5*ss fituse.b1+5*ss])
 axh=gca;
 

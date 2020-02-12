@@ -336,8 +336,8 @@ obj.locData.addLocData(locData);
 
 filestruc=locData.files.file;
 filestruc.name=file;
-mx=ceil(max(locData.loc.xnm)/pixnm);
-my=ceil(max(locData.loc.ynm)/pixnm);
+mx=ceil(max(locData.loc.xnm)/pixnm(1));
+my=ceil(max(locData.loc.ynm)/pixnm(end));
 
 filestruc.info=struct('Width',mx,'Height',my,'roi',[0 0 mx my],'cam_pixelsize_um',pixnm/1000);
 if obj.locData.files.filenumberEnd==0

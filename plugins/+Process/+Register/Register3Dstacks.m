@@ -48,6 +48,7 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                     numlocsall(ks,1)=sum(in1);
     %                 figure(100);hold off
     %                 plot(coordall(in1,1),coordall(in1,2),'.'); hold on
+                    shift = zeros(length(indslice),3,length(slices)); % intialize shift with zeros
                     for kl=2:length(indslice)                
                         in2=locs.filenumber==filenumbers(indslice(kl));
                         numlocsall(ks,kl)=sum(in2);
@@ -60,7 +61,7 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                     end
                     inslice{ks}=in1 & true;
                 end
-                shift
+                %shift
                 
                 axn=obj.initaxis('localizations');plot(axn,numlocsall);
     %             [zpossort,filesortind]=sort(zpos);
@@ -76,8 +77,10 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                     coordtar=coordall(in2,:);coordtar(:,3)=coordtar(:,3)+slices(k+1)*p.dz;
     %                 coordref=[locs.xnm(in1),locs.ynm(in1),locs.znm(in1)+k*p.dz];
     %                 coordtar=[locs.xnm(in2),locs.ynm(in2),locs.znm(in2)+(k+1)*p.dz];
-                    shiftsl(k,:)=findshift(coordref,coordtar,p); %shift between two consecutive frames
-                end  
+                    shiftsl(k+1,:)=findshift(coordref,coordtar,p); %shift between two consecutive frames
+                    %XXXXXX beore it was (k,:). But first frame should not
+                    %be shifted! TEST!
+                end
                 shiftsl
                 shiftslc=cumsum(shiftsl,1);
             end
@@ -88,7 +91,7 @@ classdef Register3Dstacks<interfaces.DialogProcessor
                     if p.onlynominal
                         shifth=[0 0 0];
                     else
-                        shifth=squeeze(shift(kl,:,ks))+squeeze(shiftslc(ks));
+                        shifth=squeeze(shift(kl,:,ks))+squeeze(shiftslc(ks,:));
                     end
                     in2f=obj.locData.loc.filenumber==filenumbers(indslice(kl));
                     obj.locData.loc.xnm(in2f)=obj.locData.loc.xnm(in2f)+shifth(1); %instead we need to use cumulative shifts here!
@@ -129,10 +132,14 @@ classdef Register3Dstacks<interfaces.DialogProcessor
 end
 
 function shift=findshift(coordref,coordtar,p)
+if isempty(coordref)||isempty(coordtar)
+    shift=[0 0 0];
+    return
+end
 pixrec=10;
-wind=6;
+wind=p.zwindow;
 ploton=true;
-maxshift=10*wind;
+maxshift=12*wind;
 slicewidth=150 ; %nm
 pixrecz=3;
 cmin=min(min(coordref,[],1,'omitnan'),min(coordtar,[],1,'omitnan'));
@@ -152,10 +159,23 @@ if isfield(p,'axxy')
     ploton=p.axxy;
 end
 % f=figure(99);
-[dx,dy,abg]=getShiftCorr(hr,ht,ploton,maxshift,true,wind);
-% figure(98);plotaxis=gca;
+try
+    [dx,dy,abg]=getShiftCorr(hr,ht,ploton,maxshift,true,wind);
+catch
+    dx = 0; 
+    dy = 0;
+end
+if abs(dx*pixrec)>p.maxshiftxy || abs(dy*pixrec)>p.maxshiftxy 
+    dx = 0; 
+    dy = 0;
+end
+    % figure(98);plotaxis=gca;
 coordtarc=coordtar+[dx dy 0]*pixrec;
-zpos=finddisplacementZ2(coordref,coordtarc,slicex,slicey,zbin,5,p.axz);
+[zpos,dz]=finddisplacementZ2(coordref,coordtarc,slicex,slicey,zbin,9,p.axz);
+
+if abs(zpos)>p.maxshiftz
+    zpos = 0;
+end
 
 shift=[dx.*pixrec,dy.*pixrec,zpos];
 end
@@ -190,6 +210,24 @@ pard.onlynominal.object=struct('String','Only shift by nominal distance','Style'
 pard.onlynominal.position=[1,3];
 pard.onlynominal.Optional=true;
 pard.onlynominal.Width=2;
+
+pard.maxshiftt.object=struct('String','max shift in xy, z (nm)','Style','text');
+pard.maxshiftt.position=[3,1];
+pard.maxshiftt.Width=1.4;
+pard.maxshiftxy.object=struct('String','100','Style','edit');
+pard.maxshiftxy.position=[3,2.4];
+pard.maxshiftxy.Width=0.3;
+
+pard.maxshiftz.object=struct('String','100','Style','edit');
+pard.maxshiftz.position=[3,2.7];
+pard.maxshiftz.Width=0.3;
+
+pard.zwindowt.object=struct('String','peak fit window z','Style','text');
+pard.zwindowt.position=[3,3];
+pard.zwindowt.Width=1.4;
+pard.zwindow.object=struct('String','5','Style','edit');
+pard.zwindow.position=[3,4.5];
+pard.zwindow.Width=0.5;
 % 
 % pard.drift_pixrec.object=struct('String','10','Style','edit');
 % pard.drift_pixrec.position=[2,2.65];

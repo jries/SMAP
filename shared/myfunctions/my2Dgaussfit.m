@@ -1,5 +1,5 @@
 function [fitpos,outim,outimnorm,ci]=my2Dgaussfit(image,startp,cas)
-
+%startp: sx
 %fit par=(x,y,a,bg,sx,sy,r)
 if nargin<3
     cas=2;
@@ -56,10 +56,22 @@ weighted=0;
 [Xi,Yi]=meshgrid(xi,yi);
     imagerho=image-min(image(:));
   rsxsy= sum( sum((Xi-xm).*(Yi-ym).*imagerho))/sum(imagerho(:));
+  
+  
   rho=rsxsy/sxm/sym;
-    
+     
     bg=min(image(:));
     a=max(image(:))-bg;
+  if nargin>1 && ~isempty(startp)
+      if length(startp)==1
+      sxm=startp;sym=startp;rho=0;xm=s(1)/2;ym=s(2)/2;
+      else
+         xm=startp(1);ym=startp(2);a=startp(3);bg=startp(4);sxm=startp(5);sym=startp(6);rho=startp(7); 
+      end
+          
+  end
+  
+
 %     rho=0;
     
     %startparameter

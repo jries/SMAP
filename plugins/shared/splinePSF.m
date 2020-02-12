@@ -98,15 +98,37 @@ classdef splinePSF<interfaces.PSFmodel
             obj.modelpar.z0=l.SXY(1).cspline.z0;
             obj.modelpar.x0=l.SXY(1).cspline.x0;
         end
-        function crlb=crlb(obj,N,bg,z,rois)
+        function crlb=crlb(obj,N,bg,coord,rois)
             if nargin<5
                 rois=obj.roisize;
             end
             coeff=obj.modelpar.coeff; 
-            x=rois/2;y=rois/2;
-            v1=ones(length(z),1);
+            if size(coord,2)==1
+                z=coord;
+                v1=ones(length(z),1);
+                x=rois/2*v1;y=rois/2*v1;
+            else
+                x=coord(:,1)+rois/2;y=coord(:,2)+rois/2;z=coord(:,3);
+            end
+            
+            if length(N) ~= length(z)
+                if length(N)==1
+                    N=N+0*z;
+                elseif length(z)==1
+                    z=z+0*N;
+                end
+            end
+            if length(bg) ~= length(z)
+                if length(bg)==1
+                    bg=bg+0*z;
+                elseif length(z)==1
+                    z=z+0*bg;
+                end
+            end           
+            
+            
             zh=-(z/obj.modelpar.dz)+obj.modelpar.z0;
-            coords=[v1*x , v1*y , N, bg, zh];
+            coords=[x , y , N, bg, zh];
             crlb=CalSplineCRLB(coeff, rois, coords);
             crlb(:,5)=crlb(:,5)*obj.modelpar.dz.^2;
         end
