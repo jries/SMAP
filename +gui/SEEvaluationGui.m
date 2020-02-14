@@ -105,8 +105,10 @@ table=obj.guihandles.modules;
 obj.guiPar.Vrim=0;
 sizeparent=get( obj.handle,'Position');
 d=table.Data;
+tunits=table.Units;
+table.Units='pixels';
 pos=table.Position;
-
+table.Units=tunits;
 modulename2=modulename;
 ind=2;
 while sum(sum(strcmpi(d,modulename2)))
