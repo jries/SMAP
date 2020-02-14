@@ -1,5 +1,6 @@
 classdef SetTiffLocation<interfaces.DialogProcessor
-
+% Sets location of associated raw data tiff files. Useful for batch
+% processing.
     properties 
     end
     methods
@@ -35,7 +36,7 @@ pard.savesmlfile.Width=4;
 
 
 pard.plugininfo.type='ProcessorPlugin';
-pard.plugininfo.description='';
+pard.plugininfo.description='Sets location of associated raw data tiff files. Useful for batch processing.';
 end
 
 

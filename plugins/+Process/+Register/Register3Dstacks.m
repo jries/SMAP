@@ -1,4 +1,6 @@
 classdef Register3Dstacks<interfaces.DialogProcessor
+%     Calculates x,y and z shift for individual z stacks to combine them
+%     into a whole-cell 3D data set
     properties
 
     end
@@ -372,5 +374,5 @@ pard.zwindow.Width=0.5;
 % pard.save_dc.Optional=true;
 
 pard.plugininfo.type='ProcessorPlugin';
-pard.plugininfo.description={''};
+pard.plugininfo.description={'    Calculates x,y and z shift for individual z stacks to combine them into a whole-cell 3D data set'};
 end
