@@ -340,8 +340,8 @@ if p.copy2page
 end
 filen=se.files(filefile).name;
 %filename   LE  LEerrbs     numberofnpcs    locspernpcmean  locspernpcfit
-%   clipboard('copy',[filen sprintf(['\t' num2str(pf) '\t' num2str(berr_assigned) '\t' num2str(sum(indgood)) '\t' num2str(mean(numlocs)) '\t' num2str(fp.b1) ])])
-%   display(sprintf('filename  \t LE \t LEerrbs \t  numberofnpcs \t locspernpcmean \t locspernpcfit'))
+   clipboard('copy',[filen sprintf(['\t' num2str(pf) '\t' num2str(berr_assigned) '\t' num2str(sum(indgood)) '\t' num2str(mean(numlocs)) '\t' num2str(fp.b1) ])])
+   display(sprintf('filename  \t LE \t LEerrbs \t  numberofnpcs \t locspernpcmean \t locspernpcfit'))
    out.filename=filen;
    out.ELE = pf;
    out.ELE_err = berr_assigned;
