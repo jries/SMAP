@@ -1,5 +1,5 @@
 classdef AttachTransformation<interfaces.DialogProcessor
-
+% Attaches a transformation to the data set. Useful for batch analysis.
     properties 
     end
     methods
@@ -40,7 +40,7 @@ pard.savesmlfile.Width=4;
 
 
 pard.plugininfo.type='ProcessorPlugin';
-pard.plugininfo.description='';
+pard.plugininfo.description='Attaches a transformation to the data set. Useful for batch analysis.';
 end
 
 

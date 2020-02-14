@@ -1,5 +1,5 @@
 classdef FilterField<interfaces.DialogProcessor&interfaces.SEProcessor
-%     Evaluates all sites. This is mainly used for the BatchAnalysis
+%    Filters a localization attribute. This is mainly used for the BatchAnalysis
 %     plugin.
     methods
         function obj=FilterField(varargin)        
@@ -73,6 +73,5 @@ pard.fieldfilter.Width=1;
 pard.syncParameters={{'locFields','fieldselect',{'String'}}}; %,{@fieldchange_callback,obj}
 
 pard.plugininfo.type='ROI_Analyze';
-pard.plugininfo.description='Evaluates all sites. This is mainly used for the BatchAnalysis plugin.';
-
+pard.plugininfo.description=' Filters a localization attribute. This is mainly used for the BatchAnalysis plugin.';
 end
