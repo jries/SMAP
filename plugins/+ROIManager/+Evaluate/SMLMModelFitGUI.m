@@ -134,14 +134,16 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 obj.guihandles.tabgroup.SelectedTab = obj.guihandles.tab1;
                 
                 %% Converter tab 
-                addconverttotab(obj);
+                addconverttotab(obj);           % create the converter 
                 oldh=obj.guihandles.anchorConvert;
                 pos=oldh.Position;
+                
+                % create the converter input table
                 htable=uitable(oldh.Parent,'Data',{},'Position',[pos(1:2)+[5 10] 300 200]);
                 colNames={'Source', 'Rule', 'Target_fit', 'Target_usr'};
                 htable.ColumnName = colNames;
                 htable.CellEditCallback = {@convertTable_callback,obj};
-                % check the loaded modules and hook the all the SMLMModelFitGUI
+                % check the loaded modules and hook all the SMLMModelFitGUI
                 if length(obj.locData.SE.processors.eval.guihandles.modules.Data)>1
                     loadedModuls = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
                     lSMLMModelFitGUI = contains(loadedModuls, 'SMLMModelFitGUI');
@@ -202,6 +204,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             modelbnumberStr = num2str(b.modelID);
             htable = obj.guihandles.(['partable_' modelbnumberStr ]);
             parId = obj.loadParTable(htable, obj.fitter, b.modelID);
+            % here the target options in the converter table are defined.
             hConvert = obj.guihandles.anchorConvert;
             optionTarget = unique([hConvert.ColumnFormat{3} parId]);
             hConvert.ColumnFormat{3} = optionTarget;
