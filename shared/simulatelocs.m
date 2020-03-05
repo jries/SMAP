@@ -109,9 +109,14 @@ switch colour
         p.coordinatefile = paths{2};
     otherwise
 end
-        
-[~,~,ext]=fileparts(p.coordinatefile);% Get extension of the specified file
+
+if startsWith(p.coordinatefile, '--')
+    ext = 'SMLMModelFit';
+else
+    [~,~,ext]=fileparts(p.coordinatefile);% Get extension of the specified file
+end
 image=[];
+fitter = [];
 locsall=[];
 locfun=[];
 switch ext
@@ -145,6 +150,9 @@ switch ext
         image=imread(p.coordinatefile);
         img=sum(image,3)/size(image,3); %binarize
         image=double(img)/255;
+	case 'SMLMModelFit'
+        % Added by Yu-Le:
+        fitter = p.obj.getPar('fitter');
     otherwise
         display('file not identified selected')
         return
@@ -191,8 +199,12 @@ for k=numberofsites:-1:1
     phere=psave;
     if ~isempty(image)
         locsh=locsfromimage(image,p);
-        
+    elseif ~isempty(fitter)
+        % added by Yu-Le for SMLMModelFit:    
+        locsh=locsfromContFun(image,p);
     elseif ~isempty(locfun)
+       
+        
         [locsd,ph]=getcoordm(p);
         locsh=labelremove(locsd,p.labeling_efficiency);
         phere.model=ph;
@@ -285,6 +297,34 @@ locs.y=(y(keep)-0.5)*p.tif_imagesize;
 % pixf=size(image,1)/(p.tif_imagesize/1000);
 % densitypixel=density/pixf^2;
 
+end
+
+function locs=locsfromContFun(image,p)
+% added by Yu-Le for SMLMModelFit:    
+if p.tif_numbermode.Value==1
+    density=p.tif_density;
+else
+    %calcualte density from number of locs
+%     pdensity=mean(image(:))/(p.tif_imagesize/1000)^2;
+    density=p.tif_density/mean(image(:))/(p.tif_imagesize/1000)^2;
+end
+numOfLabel_Expect = p.tif_density;
+numOfLabel_Start = numOfLabel_Expect*60;
+fitter = p.obj.getPar('fitter');
+fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
+label.xnm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
+label.ynm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
+label.znm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
+label.layer = ones([numOfLabel_Start 1]);
+label.p = fitter.intensityCal([], label)';
+expect_original = sum(label.p);
+expect_factor = p.tif_density/expect_original;
+label.p = label.p.*expect_factor;
+lKept = label.p > rand(size(label.p));
+locs.x = label.xnm(lKept);
+locs.y = label.ynm(lKept);
+locs.z = label.znm(lKept);
+locs.channel = label.layer(lKept);
 end
 
 function locs=labelremove(locin,p)

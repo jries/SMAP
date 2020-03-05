@@ -16,6 +16,18 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         function initGui(obj)
             setvisibility(obj);
+            % added by Yu-Le
+            % check through the name of loaded eval plugins and find SMLMModelFit 
+            lFitterFound = strfind(obj.locData.SE.processors.eval.guihandles.modules.Data(:,2), 'SMLMModelFitGUI');
+            lFitterFound = [lFitterFound{:}];
+            lFitterFound = any(lFitterFound);
+            if lFitterFound 
+                fitterFound = 'on';
+            else
+                fitterFound = 'off';
+            end
+            obj.guihandles.useFitter_button.Visible=fitterFound;
+            obj.guihandles.setModPars_button.Visible='off';
         end
         function out=run(obj,p)  
             [locst,possites,parameters]=simulatelocs(p, 1);
@@ -112,9 +124,83 @@ end
 obj.setGuiParameters(struct('coordinatefile',[p f]));
 setvisibility(obj)
 end
+
+function useFitter_callback(a,b,obj)
+    fig = figure(512);
+    clf(fig);
+    selectionTable = uitable(fig);
+    nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+    lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    lFitterFound = [lFitterFound{:}];
+    nameSMLMModelFitGUI = nameEvalPlugins(logical(lFitterFound));
+    selectionTable.Data = [num2cell(false(size(nameSMLMModelFitGUI))) nameSMLMModelFitGUI];
+    selectionTable.ColumnEditable = [true false];
+    selectionTable.CellEditCallback = {@selectionTable_CECallback};
+    selectionTable.Position = [20 50 300 300];
+    apply_button = uicontrol(fig, 'Style', 'pushbutton', 'String', 'Apply');
+    apply_button.Position = [20 20 60 30];
+    apply_button.Callback = {@applySelecedFitter_callback, obj, selectionTable,fig};
+end
+
+function selectionTable_CECallback(a,b)
+    a.Data(:,1) = num2cell(false);
+    a.Data{b.Indices(1),b.Indices(2)} = true;
+end
+
+function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
+    % Added by Yu-Le
+    % set the selected SMLMModelFit as a parameter of SimulateSites.
+    selected = selectionTable.Data(:,1);
+    idxSelected = find([selected{:}]);
+    nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+    lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    idxFitterFound = find([lFitterFound{:}]);
+    idxSelected_final = idxFitterFound(idxSelected);
+    fitter = copy(obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter);
+    obj.setPar('fitter',fitter)
+    close(fig);
+    obj.guihandles.setModPars_button.Visible='on';
+    obj.guihandles.coordinatefile.String='-- Internal SMLMModelFit';
+end
+
+function setModPars_callback(a,b,obj)
+    fig = figure(513);
+    clf(fig);
+    parArgTable = uitable(fig);
+    typeOption = uicontrol('Style','popupmenu','String',{'Point','Image'},'Value',1);
+    typeOption.Position = [20 20 60 30];
+    typeOption.Callback = {@typeOption_callback,obj};
+    fitter = obj.getPar('fitter');
+    parName = fitter.allParsArg.name;
+    parType = fitter.allParsArg.type;
+    parModel = fitter.allParsArg.model;
+    parVal = fitter.allParsArg.value; 
+    parArgTable.Position = [20 50 300 300];
+    parArgTable.Data = [parName parType num2cell(parModel) num2cell(parVal)];
+    parArgTable.ColumnName = {'Name','Type','Model','Value'};
+    parArgTable.ColumnEditable = [false false false true];
+    parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
+end
+
+function typeOption_callback(a,b,obj)
+    obj.setPar('modelType',a.String{a.Value});
+    setvisibility(obj)
+end
+
+function parArgTable_CellEditCallback(a,b,obj)
+    % Assign the change to the parArgTable
+    indEdited = b.Indices;
+    obj.allParsArg.value(indEdited) = b.NewData;
+end
+
 function setvisibility(obj)
 f=obj.getSingleGuiParameter('coordinatefile');
-[p,fh,ext]=fileparts(f);
+% added by Yu-Le
+if startsWith(f,'--')
+    ext = 'SMLMModelFit';
+else
+    [p,fh,ext]=fileparts(f);
+end
 switch ext
     case {'.txt','.csv'}
         txt='on';
@@ -135,17 +221,29 @@ switch ext
         if isdeployed
             return
         end
+                
         cf=pwd;
         cd(p)
         [~,fh]=fileparts(f);
         l=eval(fh);
         cd(cf);
+        
         if isfield(l,'image')
             txt='off';
             tif='on';
         else
             txt='on';
             tif='off';            
+        end
+    case 'SMLMModelFit'
+        modelType = obj.getPar('modelType');
+        switch modelType
+            case 'Image'
+                txt='off';
+                tif='on';
+            case 'Point'
+                txt='on';
+                tif='off';            
         end
 end
 obj.guihandles.labeling_efficiency.Visible=txt;
@@ -168,6 +266,14 @@ pard.coordinatefile.TooltipString=sprintf('.txt or .csv file with coordinates, .
 pard.load_button.object=struct('String','Load','Style','pushbutton','Callback',{{@load_callback,obj}});
 pard.load_button.position=[1,4];
 pard.load_button.TooltipString=pard.coordinatefile.TooltipString;
+
+% Added by Yu-Le
+pard.useFitter_button.object = struct('Style','pushbutton','String', 'Use fitter', 'Callback', {{@useFitter_callback,obj}});
+pard.useFitter_button.position = [2 4];
+
+pard.setModPars_button.object = struct('Style','pushbutton','String', 'Set model pars', 'Callback', {{@setModPars_callback,obj}});
+pard.setModPars_button.position = [3 4];
+
 
 pard.tif_numbermode.object=struct('String',{{'Density (labels/um^2)','Number of labels'}},'Style','popupmenu');
 pard.tif_numbermode.Width=1.5;
