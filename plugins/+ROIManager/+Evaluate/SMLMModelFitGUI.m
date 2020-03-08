@@ -55,9 +55,10 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             p = inputParser;
             addParameter(p,'onlySetUp',false, @islogical);
             addParameter(p,'forceDisplay',false, @islogical);
+            addParameter(p,'keepParsVal',false, @islogical);
             parse(p,varargin{:});
             results = p.Results;
-            out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay);
+            out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay, results.keepParsVal);
         end
         
         function makeGui(obj,varargin)

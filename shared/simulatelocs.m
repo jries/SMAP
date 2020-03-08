@@ -197,11 +197,19 @@ for k=numberofsites:-1:1
     yh=ceil(k/numberofrows);
     
     phere=psave;
+    
     if ~isempty(image)
         locsh=locsfromimage(image,p);
     elseif ~isempty(fitter)
-        % added by Yu-Le for SMLMModelFit:    
-        locsh=locsfromContFun(image,p);
+        % added by Yu-Le for SMLMModelFit:
+        switch p.obj.getPar('modelType')
+            case 'Image'
+                locsh=locsfromContFun(p);
+            case 'Point'
+                [locsd,ph]=locsfromDiscFun(p);
+                locsh=labelremove(locsd,p.labeling_efficiency);
+                phere.model=ph;
+        end
     elseif ~isempty(locfun)
        
         
@@ -299,32 +307,57 @@ locs.y=(y(keep)-0.5)*p.tif_imagesize;
 
 end
 
-function locs=locsfromContFun(image,p)
+function locs=locsfromContFun(p)
 % added by Yu-Le for SMLMModelFit:    
 if p.tif_numbermode.Value==1
-    density=p.tif_density;
 else
-    %calcualte density from number of locs
-%     pdensity=mean(image(:))/(p.tif_imagesize/1000)^2;
-    density=p.tif_density/mean(image(:))/(p.tif_imagesize/1000)^2;
 end
+% This is the expecte value of the labels
 numOfLabel_Expect = p.tif_density;
-numOfLabel_Start = numOfLabel_Expect*60;
+% Times it with a factor of 60
+numOfLabel_Start = (p.tif_imagesize/2).^3;
 fitter = p.obj.getPar('fitter');
 fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
+
+for k=1:fitter.numOfModel
+    fitter.model{k}.fixSigma = 1;
+end
+
+% Simulate labels
 label.xnm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
 label.ynm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
-label.znm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
+if fitter.model{1}.dimension == 3
+    label.znm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
+end
 label.layer = ones([numOfLabel_Start 1]);
+
+% Get intensity (probability) for each labels
 label.p = fitter.intensityCal([], label)';
+
+% Normalized the expect
 expect_original = sum(label.p);
 expect_factor = p.tif_density/expect_original;
 label.p = label.p.*expect_factor;
+
+% Remove labels based on the probability
 lKept = label.p > rand(size(label.p));
+
+% Export
 locs.x = label.xnm(lKept);
 locs.y = label.ynm(lKept);
 locs.z = label.znm(lKept);
 locs.channel = label.layer(lKept);
+end
+
+function [locs,parameters]=locsfromDiscFun(p)
+fitter = p.obj.getPar('fitter');
+[~,modCoord] = fitter.plot([],'plotType','point','modelSamplingFactor',0.3, 'doNotPlot', true); % get point type visualization
+parameters = fitter.allParsArg;
+% Export
+locs.x = modCoord{1}.x;
+locs.y = modCoord{1}.y;
+locs.z = modCoord{1}.z;
+locs.channel = ones(size(modCoord{1}.x));
 end
 
 function locs=labelremove(locin,p)
