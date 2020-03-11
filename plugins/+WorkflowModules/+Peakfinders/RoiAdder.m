@@ -138,12 +138,17 @@ switch roistyle
 end
 hpos=wait(hroi);
 him=findobj(ax.Children,'Type','Image');
-k=1;
-while isempty(him(k).CData)
-    k=k+1;
+sihim=0;
+ilarge=1;
+for k=1:length(him)
+    simtest=prod(size(him(k).CData));
+    if simtest>sihim
+        ilarge=k;
+        sihim=simtest;
+    end
 end
-
-mask=createMask(hroi,him(k));
+   
+mask=createMask(hroi,him(ilarge));
 end
 
 function pard=guidef
