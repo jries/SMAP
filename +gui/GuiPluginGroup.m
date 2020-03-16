@@ -201,7 +201,7 @@ guimodules=obj.getPar('guimodules');
 switch callobj.Label
     case 'add plugin'
         plugins=obj.getPar('menu_plugins');
-        types={'ProcessorPlugin','ROI_Analyze'};
+        types={'ProcessorPlugin','ROI_Analyze','SaverPlugin'};
         pg=browsefields(plugins,{},2,0,true,types);
         
         if isempty(pg)
