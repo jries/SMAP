@@ -13,7 +13,11 @@ classdef export_coordinates<interfaces.DialogProcessor
                 
         end
         
-        function out=save(obj,p)
+        function out=save(obj,p,defaultfilename)
+            if nargin < 3
+                defaultfilename=false;
+            end
+            
             obj.status('export localizations')
             par=p;
             
@@ -44,11 +48,17 @@ classdef export_coordinates<interfaces.DialogProcessor
             [path,file,ext]=fileparts(fn);
             of=[path filesep file  '.' par.format.selection];
             
-            [f,path]=uiputfile(of);
-            if f
-                writetable(taball,[path f]);
-                obj.status('save done')
+            if ~defaultfilename
+                [f,path]=uiputfile(of);
+                if ~f
+                    out=0;
+                    return
+                end
+                of=[path f];
             end
+            out=of;
+            writetable(taball,of);
+            obj.status('save done')
         end
         function initGui(obj)
             obj.guihandles.outputfields.String=sprintf('%s, ',obj.exportfields{:});
@@ -56,8 +66,8 @@ classdef export_coordinates<interfaces.DialogProcessor
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-        function run(obj,p)
-            obj.save(p)
+        function out=run(obj,p)
+            out=obj.save(p,true);
         end
     end
 end
@@ -134,6 +144,10 @@ pard.outputfields.Width=3;
 pard.selectoutputfields.object=struct('Style','pushbutton','Visible','on','String','select','Callback',{{@selectfields,obj}});
 pard.selectoutputfields.position=[2,4];
 pard.selectoutputfields.Width=1;
+
+% pard.defaultfilename.object=struct('Style','checkbox','Visible','on','String','default filename','Value',0);
+% pard.defaultfilename.position=[3,1];
+% pard.defaultfilename.Width=2;
 
 pard.plugininfo.type='SaverPlugin';
 pard.plugininfo.description='exports localization data in .txt, .csv, .xls format. The user can choose which localization attributes to export and if to export all localizations or filtered localizations.';
