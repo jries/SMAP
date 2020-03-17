@@ -42,7 +42,10 @@ classdef GuiChannel< interfaces.LayerInterface
         function makeGui(obj)
             makeGui@interfaces.DialogProcessor(obj);
             hmain=obj.getPar('filterpanel');
+            units=hmain.Units;
+            hmain.Units='pixels';
             pp=hmain.Position;
+            hmain.Units=units;
             
             %filtertable gui
             hfigf=uipanel('Parent',hmain,'Units','pixel','Position',[0 200 pp(3) 130]);
