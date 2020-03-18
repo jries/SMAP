@@ -44,7 +44,8 @@ classdef export_coordinates<interfaces.DialogProcessor
             end
             
             
-            fn=p.filelist_long.selection;
+%             fn=p.filelist_long.selection;
+            fn=obj.getPar('lastSMLFile');
             [path,file,ext]=fileparts(fn);
             of=[path filesep file  '.' par.format.selection];
             
