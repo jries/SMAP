@@ -93,9 +93,20 @@ function removemodule_callback(a,b,obj)
 if ~isempty(obj.moduleselection)
 removeind=obj.moduleselection(1);
 removename=obj.processors{removeind}.name;
+rproc=obj.processors{removeind};
+rhandle=(rproc.handle);
+% rename guihandles. This is a hack.
+for k=removeind:length(obj.processors)-1
+    obj.guihandles.(['processor' num2str(k)])=obj.guihandles.(['processor' num2str(k+1)]);
+end
+obj.guihandles=myrmfield(obj.guihandles,['processor' num2str(k+1)]);
+
 obj.processors(removeind)=[];
 obj.children=myrmfield(obj.children,removename);
+
+
 obj.guihandles.modules.Data(removeind,:)=[];
+delete(rhandle);
 end
 end
 
