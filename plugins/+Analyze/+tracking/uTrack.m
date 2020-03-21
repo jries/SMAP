@@ -1,5 +1,12 @@
 classdef uTrack<interfaces.DialogProcessor
-    %
+    % calls the uTrack single particle tracking software from the Danuser
+    % Lab
+    %Please install from: https://github.com/DanuserLab/u-track
+    %add directory here in the plugin.
+%     Published in: 1.Jaqaman, K., Loerke, D., Mettlen, M., Kuwata, H., Grinstein, S.,
+%     Schmid, S. L. & Danuser, G. Robust single-particle tracking in
+%     live-cell time-lapse sequences. Nat Methods 5, 695–702 (2008).
+
     methods
         function obj=uTrack(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -18,6 +25,7 @@ end
 function out=uTracki(obj,p)
 if ~isdeployed
 addpath(genpath('External/u-track/software'))
+addpath(genpath('/Users/jonasries/Documents/MATLAB/u-track/software'))
 end
 
 %prepare input parameters
