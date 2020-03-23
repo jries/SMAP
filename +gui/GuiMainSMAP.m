@@ -17,25 +17,40 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             SMAP_stopnow=false;
             
             obj.setPar('maindirectory',pwd);
+            disp(['main directory: ' pwd]);
              %settings directory 
-             settingsdir='settings';
-             if ~exist(settingsdir,'dir')
-                 settingsdir=[pwd filesep 'MATLAB' filesep 'settings'];
-                 if ~exist(settingsdir,'dir')
-                     settingsdir=[pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'];
-                     if ~exist(settingsdir,'dir')
-                 
-                         hwd=warndlg('please select the directory /settings/ with the SMAP settings','select settings','modal');
-                         waitfor(hwd);
-                         d=uigetdir(pwd,'select settings directory');
-                         if d
-                             settingsdir=d;
-
-                         end
-                     end
+             possibledirs={'settings',...
+                 [pwd filesep 'MATLAB' filesep 'settings'],...
+                 [pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
+                 [pwd filesep 'Documents' filesep 'settings'],...
+                 [pwd filesep 'Documents' filesep 'MATLAB' filesep 'settings'],...
+                 [pwd filesep 'Documents' filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
+                 [pwd filesep 'Documents' filesep 'SMAP' filesep 'settings'] };
+             settingsdir='';
+             for k=1:length(possibledirs)
+                 if exist(possibledirs{k},'dir')
+                     settingsdir=possibledirs{k};
+                     break
                  end
-                 obj.setPar('maindirectory',fileparts(settingsdir));
              end
+%              settingsdir='settings';
+%              if ~exist(settingsdir,'dir')
+%                  settingsdir=[pwd filesep 'MATLAB' filesep 'settings'];
+%                  if ~exist(settingsdir,'dir')
+%                      settingsdir=[pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'];
+             if isempty(settingsdir)
+                 hwd=warndlg(['please select the directory /settings/ with the SMAP settings or copy the settings directory in any of the default directories and restart: ' possibledirs],'select settings','modal');
+                 waitfor(hwd);
+                 d=uigetdir(pwd,'select settings directory');
+                 if d
+                     settingsdir=d;
+                 end
+             end
+%                  end
+             if k>1 %not default
+                obj.setPar('maindirectory',fileparts(settingsdir));
+             end
+%              end
 %              obj.setPar('maindirectory',pwd);
             obj.setPar('SettingsDirectory',makerelativetopwr(settingsdir));
             initglobalsettings(obj);
