@@ -218,7 +218,7 @@ obj.status('load workflow *.txt file');
 drawnow
 settingsfile=obj.getGlobalSetting('mainLocalizeWFFile');
 if ~exist(settingsfile,'file') || ~contains(settingsfile,'.txt')
-    settingsfile='/settings/workflows/*.txt';
+    settingsfile=[obj.getPar('SettingsDirectory') filesep 'workflows' filesep '*.txt'];
 end
 
 [f,p]=uigetfile(settingsfile,'Select workflow *.txt file');
