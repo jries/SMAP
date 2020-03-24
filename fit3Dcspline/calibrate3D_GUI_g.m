@@ -70,17 +70,17 @@ classdef calibrate3D_GUI_g<handle
 %                 figureheight=670;
 %             end
             extended = true;
-            figureheight=720;
+            figureheight=760;
             
             h=figure('Name','3D calibration','MenuBar','none','ToolBar','none');
             initPosition = h.Position;
-            h.Position=[initPosition(1), initPosition(2)- figureheight+initPosition(4),450, figureheight];
+            h.Position=[initPosition(1), initPosition(2)- figureheight+initPosition(4),420, figureheight];
             top=h.Position(4)-10;
-            vsep=24;
+            vsep=25;
             
             if ispc
-                fontsize=12;
-                fieldheight=vsep-2;
+                fontsize=10;
+                fieldheight=vsep;
             else 
                 fontsize=14;
                 fieldheight=vsep;
@@ -89,7 +89,7 @@ classdef calibrate3D_GUI_g<handle
             xw=100;
             hatitle='left';
             obj.guihandles.handle=h;
-            obj.guihandles.title=uicontrol('style','text','String','Calibrate PSF model for MLE fit from bead stacks. (c) 2017 Ries lab','Position',[xpos1,top-vsep+10,xw*4.5,fieldheight],'FontSize',10,'HorizontalAlignment',hatitle,'FontWeight','bold');
+            obj.guihandles.title=uicontrol('style','text','String','Calibrate PSF model for MLE fit from bead stacks. (c) 2017 Ries lab','Position',[xpos1,top-vsep+10,xw*4.5,fieldheight],'FontSize',fontsize-2,'HorizontalAlignment',hatitle,'FontWeight','bold');
             
             obj.guihandles.selectfiles=uicontrol('style','pushbutton','String','Select camera files','Position',[xpos1,top-2*vsep,xw*1.5,vsep],'FontSize',fontsize,'Callback',@obj.selectfiles_callback);
             obj.guihandles.selectfiles.TooltipString='Select image files with bead stacks. You can select several files from different locations with the file select dialog box opend';
