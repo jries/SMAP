@@ -635,12 +635,14 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 loc.sx=sx;
                 loc.sy=sqrt(sxr.^2+syr.^2);
 %                 loc.y=yrot(sortind)+zmean;
-                loc.znm=loc.znm(sortind);
-                loc.numberInGroup=loc.numberInGroup(sortind);
-                loc.phot=loc.phot(sortind);
-                for kc=1:length(renderfield)
-                    if ~isempty(loc.(renderfield{kc}))
-                        loc.(renderfield{kc})=loc.(renderfield{kc})(sortind);
+%                 loc.znm=loc.znm(sortind);
+%                 loc.numberInGroup=loc.numberInGroup(sortind);
+%                 loc.phot=loc.phot(sortind);
+                fieldsort=renderfield;
+                fieldsort=unique([fieldsort {'znm','numberInGroup','phot'}]);
+                for kc=1:length(fieldsort)
+                    if ~isempty(loc.(fieldsort{kc}))
+                        loc.(fieldsort{kc})=loc.(fieldsort{kc})(sortind);
                     end
                 end
         end
