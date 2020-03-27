@@ -104,8 +104,8 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
 end
 
 function setdefaultfields(a,b,obj)
-f1={'phot1','photr'};
-f2={'phot2','phott'};
+f1={'phot1','psf_nr'};
+f2={'phot2','psf_nt'};
 fs1=obj.getSingleGuiParameter('assignfield1');
 fs2=obj.getSingleGuiParameter('assignfield2');
 
