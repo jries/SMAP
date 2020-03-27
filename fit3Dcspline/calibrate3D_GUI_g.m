@@ -109,11 +109,11 @@ classdef calibrate3D_GUI_g<handle
             obj.guihandles.dzt.TooltipString=obj.guihandles.dz.TooltipString;
             
             obj.guihandles.modalityt=uicontrol('style','text','String','3D modality ','Position',[xpos1,top-8*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha);
-            obj.guihandles.modality=uicontrol('style','popupmenu','String',{'arbitrary','global 2 channel','4Pi'},'Value',1,'Position',[xpos1+2*xw,top-8*vsep,xw*1.5,fieldheight],'FontSize',fontsize,'Callback',@obj.modality_callback);
+            obj.guihandles.modality=uicontrol('style','popupmenu','String',{'arbitrary','global 2 channel','4Pi'},'Value',1,'Position',[xpos1+2*xw,top-8*vsep,xw*1.3,fieldheight],'FontSize',fontsize,'Callback',@obj.modality_callback);
             obj.guihandles.modality.TooltipString='Select the kind of PSF. Astigmatic, arbitrary (e.g. saddle-point, double-helix), or unmodified 2D';
             obj.guihandles.modalityt.TooltipString=obj.guihandles.modality.TooltipString;
             
-            obj.guihandles.PSF2D=uicontrol('style','checkbox','String','2D','Value',0,'Position',[xpos1+3.5*xw,top-8*vsep,xw*.5,fieldheight],'FontSize',fontsize);
+            obj.guihandles.PSF2D=uicontrol('style','checkbox','String','bi dir','Value',0,'Position',[xpos1+3.3*xw,top-8*vsep,xw*.7,fieldheight],'FontSize',fontsize);
             obj.guihandles.PSF2D.TooltipString='Unmodified 2D PSF';
           
             

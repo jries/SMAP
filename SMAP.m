@@ -1,3 +1,9 @@
+%  DESCRIPTION:   SMAP: Superresolution Microscopy Analysis Platform
+%  COPYRIGHT:     Jonas Ries, 2020
+%  LICENSE:       GPLv3
+%  AUTHOR:        Jonas Ries, EMBL Heidelberg, ries@embl.de 27.03.2020
+%                 www.rieslab.de, www.github.com/jries/SMAP
+
 %This is a script to start SMAP.
 
 dirlist=genpath('shared');
@@ -7,12 +13,7 @@ if exist('g','var')
     delete(g)
 end
 
-% try
     g=gui.GuiMainSMAP;g.makeGui;       
-% catch err
-%     disp('ESMAPrror making the GUI. Try deleting plugins/plugin.m and the settings/temp directory.')
-%     err.rethrow
-% end
 
 % display git status
 if ~isdeployed

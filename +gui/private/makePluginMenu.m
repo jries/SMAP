@@ -142,7 +142,10 @@ end
 end
 
 function info_callback(a,b)
-msgbox('Superresolution microscopy analysis platform (SMAP). Jonas Ries, EMBL, Heidelberg')
+msgbox({'Superresolution microscopy analysis platform (SMAP).',...
+    'Jonas Ries, EMBL, Heidelberg, www.rieslab.de',...
+    'Licence: GPLv3, Copyright Jonas Ries, 2019',...
+    'Source code and manuals: www.github.com/jries/SMAP'});
 end
 
 function globalsettings_callback(a,b,obj)

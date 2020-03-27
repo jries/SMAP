@@ -865,7 +865,7 @@ pard.tiftxt.Width=w1;
 
 pard.colortxt.object=struct('Style','text','String','Colormode:');
 pard.colortxt.position=[4,p1];
-pard.colortxt.Width=w1;  
+pard.colortxt.Width=w1*1.1;  
 
 
 pard.render_colormode.object=struct('Style','popupmenu','String',{obj.guiPar.srmodes}); 

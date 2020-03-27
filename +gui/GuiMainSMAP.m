@@ -1,4 +1,10 @@
 classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
+%  DESCRIPTION:   SMAP: Main GUI
+%  COPYRIGHT:     Jonas Ries, 2020
+%  LICENSE:       GPLv3
+%  AUTHOR:        Jonas Ries, EMBL Heidelberg, ries@embl.de 27.03.2020
+%                 www.rieslab.de, www.github.com/jries/SMAP
+
     methods
         function obj=GuiMainSMAP(varargin)
             obj.attachPar(interfaces.ParameterData);
