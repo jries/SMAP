@@ -264,7 +264,7 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
         
         function pixrec_callback(obj,par)
             obj.updateFormatParameters;
-            notify(obj.P,'sr_render')
+%             notify(obj.P,'sr_render')
         end
         
         function pout=roiset(obj,p)
