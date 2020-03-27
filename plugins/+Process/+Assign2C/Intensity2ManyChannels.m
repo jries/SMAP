@@ -104,20 +104,26 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
 end
 
 function setdefaultfields(a,b,obj)
-f1='phot1';
-f2='phot2';
+f1={'phot1','photr'};
+f2={'phot2','phott'};
 fs1=obj.getSingleGuiParameter('assignfield1');
 fs2=obj.getSingleGuiParameter('assignfield2');
 
-ind1=find(strcmp(fs1.String,f1),1,'first');
+for k=1:length(f1)
+ind1=find(strcmp(fs1.String,f1{k}),1,'first');
 if ~isempty(ind1)
     fs1.Value=ind1;
-    fs1.selection=f1;
+    fs1.selection=f1{k};
 end
-ind2=find(strcmp(fs2.String,f2),1,'first');
+ind2=find(strcmp(fs2.String,f2{k}),1,'first');
 if ~isempty(ind2)
     fs2.Value=ind2;
-    fs2.selection=f2;
+    fs2.selection=f2{k};
+end
+
+if ~isempty(ind1) && ~isempty(ind2)
+    break
+end
 end
 obj.setGuiParameters(struct('assignfield1',fs1,'assignfield2',fs2));
 end
