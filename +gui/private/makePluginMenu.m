@@ -73,6 +73,7 @@ help=uimenu(handle,'Label','Help');
 h.helpsmap=uimenu(help,'Label','User Guide','Callback',{@helpsmap_callback,obj,1});
 h.helpuser=uimenu(help,'Label','Programming Guide','Callback',{@helpsmap_callback,obj,2});
 h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpsmap_callback,obj,3});
+h.help2C=uimenu(help,'Label','Step-by-step 3D dual color example','Callback',{@helpsmap_callback,obj,4});
 end
 
 % function changeglobalGuiState(state)
@@ -241,7 +242,7 @@ else
     direc = 'Documentation';
 end
 
-filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf'};
+filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_ SMAP_Step_by_step.pdf'};
 myopenpdf([direc filesep filenames{whichone}]);
 % url='https://oc.embl.de/index.php/s/fCoSkGcK0FbpQ3z/download';
 % urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
