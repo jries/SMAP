@@ -160,11 +160,11 @@ pard.evaltarget.Width=0.7;
 
 pard.mirroremtarget.object=struct('Style','checkbox','String','EM','Value',1);
 pard.mirroremtarget.position=[1,1.7];
-pard.mirroremtarget.Optional=true;
+% pard.mirroremtarget.Optional=true;
 pard.mirroremtarget.Width=0.6;
 pard.mirroremref.object=struct('Style','checkbox','String','EM','Value',1);
 pard.mirroremref.position=[2,1.7];
-pard.mirroremref.Optional=true;
+% pard.mirroremref.Optional=true;
 pard.mirroremref.Width=0.6;
 
 pard.tiffiletarget.object=struct('Style','edit','String','');

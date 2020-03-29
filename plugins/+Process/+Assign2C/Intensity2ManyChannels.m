@@ -153,6 +153,9 @@ else
     return;
 end
 end
+if ~exist(fout,'file')
+    return
+end
 l=load(fout);
 % obj.loaded=l;
 obj.rois=l.rois;
