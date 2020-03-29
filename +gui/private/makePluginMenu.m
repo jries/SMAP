@@ -233,13 +233,23 @@ openstackinfiji(obj,imout,title)
 end
 
 function helpsmap_callback(a,b,obj)
-txt=fileread('Documentation/Manual/SMAPStep-by-StepGuide.md');
-f=figure;
-h=MarkdownPanel('Parent',f);
-h.Content=txt;
-pause(1)
-h.refresh;
-
+if  isdeployed
+    direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
+else
+    direc = 'Documentation';
+end
+myopenpdf([direc filesep 'SMAP_UserGuide.pdf']);
+% url='https://oc.embl.de/index.php/s/fCoSkGcK0FbpQ3z/download';
+% urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
+% settingsdir=obj.getPar('SettingsDirectory');
+% if ~exist([settingsdir filesep 'temp'],'dir')
+%     mkdir(settingsdir,'temp');
+% end
+% if ~exist([settingsdir filesep 'temp' filesep 'Manual'],'dir')
+%     mkdir([settingsdir filesep 'temp'],'Manual');
+% end
+% fout=[settingsdir filesep 'temp' filesep 'Manual' filesep 'Manual_SMAP.pdf'];
+% displayonlinepdf(fout,urlzip,1)
 end
 
 function helpnpc_callback(a,b,obj)

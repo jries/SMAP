@@ -43,6 +43,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                      break
                  end
              end
+             
 %              settingsdir='settings';
 %              if ~exist(settingsdir,'dir')
 %                  settingsdir=[pwd filesep 'MATLAB' filesep 'settings'];
@@ -75,6 +76,17 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 disp(pwd)
             end
         
+            %update documentation from external files
+             urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
+             outdirdoc=[settingsdir filesep 'temp' filesep 'Documentation.tar'];
+             savewebfile(outdirdoc,urlzip);
+             if isdeployed
+                 outdir=[settingsdir filesep 'temp'];
+             else
+                 outdir=pwd;
+             end
+             unzip(outdirdoc,outdir);
+             delete(outdirdoc);
             
             makeplugincallfile('plugins');
             
