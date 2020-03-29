@@ -70,8 +70,9 @@ p=readstruct(gfile,{},true);
 end 
 
 help=uimenu(handle,'Label','Help');
-h.helpsmap=uimenu(help,'Label','Manual SMAP','Callback',{@helpsmap_callback,obj});
-h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpnpc_callback,obj});
+h.helpsmap=uimenu(help,'Label','User Guide','Callback',{@helpsmap_callback,obj,1});
+h.helpuser=uimenu(help,'Label','Programming Guide','Callback',{@helpsmap_callback,obj,2});
+h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpsmap_callback,obj,3});
 end
 
 % function changeglobalGuiState(state)
@@ -145,7 +146,8 @@ function info_callback(a,b)
 msgbox({'Superresolution microscopy analysis platform (SMAP).',...
     'Jonas Ries, EMBL, Heidelberg, www.rieslab.de',...
     'Licence: GPLv3, Copyright Jonas Ries, 2019',...
-    'Source code and manuals: www.github.com/jries/SMAP'});
+    'Source code: www.github.com/jries/SMAP', ...
+    'Documentation and compiled version: www.rieslab.de'});
 end
 
 function globalsettings_callback(a,b,obj)
@@ -232,13 +234,15 @@ openstackinfiji(obj,imout,title)
 
 end
 
-function helpsmap_callback(a,b,obj)
+function helpsmap_callback(a,b,obj,whichone)
 if  isdeployed
     direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
 else
     direc = 'Documentation';
 end
-myopenpdf([direc filesep 'SMAP_UserGuide.pdf']);
+
+filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf'};
+myopenpdf([direc filesep filenames{whichone}]);
 % url='https://oc.embl.de/index.php/s/fCoSkGcK0FbpQ3z/download';
 % urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
 % settingsdir=obj.getPar('SettingsDirectory');
@@ -252,7 +256,7 @@ myopenpdf([direc filesep 'SMAP_UserGuide.pdf']);
 % displayonlinepdf(fout,urlzip,1)
 end
 
-function helpnpc_callback(a,b,obj)
-myopenpdf('Documentation/Manual/SMAP_manual_NPC.pdf');
-
-end
+% function helpnpc_callback(a,b,obj)
+% myopenpdf('Documentation/Manual/SMAP_manual_NPC.pdf');
+% 
+% end
