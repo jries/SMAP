@@ -242,7 +242,7 @@ else
     direc = 'Documentation';
 end
 
-filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_ SMAP_Step_by_step.pdf'};
+filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf'};
 myopenpdf([direc filesep filenames{whichone}]);
 % url='https://oc.embl.de/index.php/s/fCoSkGcK0FbpQ3z/download';
 % urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
