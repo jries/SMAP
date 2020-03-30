@@ -27,7 +27,18 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
              %settings directory 
              if isdeployed
                  if ispc
-                    possibledirs={[ctfroot filesep 'settings'],[pwd filesep 'settings']};
+                    programroot=ctfroot;
+                    ind=strfind(programroot,filesep);
+                    homedir=programroot(1:ind(3)-1);
+                    possibledirs={[ctfroot filesep 'settings'],...
+                        [homedir filesep 'Documents' filesep 'settings'],...
+                        [homedir filesep 'Documents' filesep 'MATLAB' filesep 'settings'],...
+                        [homedir filesep 'Documents' filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
+                        [homedir filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
+                        'C:\Program Files\SMAP\application\settings',...
+                        [homedir(1) ':\Program Files\SMAP\application\settings']};
+                    
+                   s
                  else
                      programroot=ctfroot;
                      ind=strfind(programroot,'application/SMAP.app/');
