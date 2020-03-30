@@ -27,6 +27,9 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
              %settings directory 
              if isdeployed
                  if ispc
+                    [status, result] = system('set PATH');
+                    executableFolder = char(regexpi(result, 'Path=(.*?);', 'tokens', 'once'));
+                    
                     programroot=ctfroot;
                     ind=strfind(programroot,filesep);
                     homedir=programroot(1:ind(3)-1);
@@ -37,8 +40,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                         [homedir filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
                         'C:\Program Files\SMAP\application\settings',...
                         [homedir(1) ':\Program Files\SMAP\application\settings']};
-                    
-                   s
+                    warndlg(executableFolder)
+
                  else
                      programroot=ctfroot;
                      ind=strfind(programroot,'application/SMAP.app/');
