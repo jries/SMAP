@@ -14,6 +14,7 @@ fwrite(fid,docbin);
 fclose(fid);
 catch err
     err
+    fid
     disp(['could not write file ' fout ' locally.']);
 end
 
