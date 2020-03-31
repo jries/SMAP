@@ -5,14 +5,14 @@ tifs=struct('image',[],'info',[]);
 if nargin<1||isempty(filename)
     filename='smapgenerated';
 end
-if isempty(strfind(filename,'_sml'))
+if ~contains(filename,'_sml')
     filename=[filename '_sml.mat'];  
 end
 infost=struct('camId','SMAP generated file','port','none','exposure',0,'emgain',1,...
     'conversion',1,'offset',0,'cam_pixelsize_um',[.1 .1],'roi',[0  0 512 512], 'comment','',...
     'filename',filename,'numberOfFrames',0,'Width',512,'Height',512,'format','none');
 
-
+if ~isdeployed
 %git version
 [gitstatus,head]=system('git rev-parse HEAD');
 if gitstatus == 0
@@ -27,6 +27,7 @@ le=find(branch(ind+1:end)==10,1,'first')+ind;
 infost.git.branch=branch(ind+10:le-1);
 else
 infost.git.branch='not found';
+end
 end
 
 filestruct=struct('info',infost,'average',[],'name',filename,...
