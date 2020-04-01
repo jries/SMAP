@@ -308,7 +308,7 @@ classdef GuiChannel< interfaces.LayerInterface
         end
         
         function default_callback(obj,callobj,b)
-            deffile=[ pwd '/settings/temp/Channel_default.mat'];
+            deffile=[obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Channel_default.mat'];
             fh=getParentFigure(obj.handle);
             modifiers = get(fh,'currentModifier');
             if ismember('shift',modifiers)||strcmpi(callobj.String,'save');

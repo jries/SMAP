@@ -22,17 +22,17 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             if isempty(p.tiffiletarget)
                 p.tiffiletarget=obj.locData.files.file(1).info.imagefile;
             end
-            
+            settingsdir=obj.getPar('SettingsDirectory');
             f=obj.figure;
             f.Visible='on';
 %             wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
 %             wffile='settings/workflows/get2CIntensityImagesWF2';
             if p.evalref && p.evaltarget && ( isempty(p.tiffileref) || strcmp(p.tiffileref,p.tiffiletarget))  %both channels on one chip
-                wffile='settings/workflows/get2CIntensityImagesWF3_reftarget';
+                wffile=[settingsdir filesep 'workflows' filesep 'get2CIntensityImagesWF3_reftarget'];
                 samechip=true;
             else
                 samechip=false;
-                wffile='settings/workflows/get2CIntensityImagesWF3';
+                wffile=[settingsdir filesep 'workflows' filesep 'get2CIntensityImagesWF3'];
             end
             wf=interfaces.Workflow(f,obj.P);
             wf.attachLocData(obj.locData);
