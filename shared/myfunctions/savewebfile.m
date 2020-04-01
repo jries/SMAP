@@ -12,13 +12,14 @@ try
 fid=fopen(fout,'w');
 fwrite(fid,docbin);
 fclose(fid);
+worked=true;
 catch err
     err
     fid
     disp(['could not write file ' fout ' locally.']);
 end
 
-worked=true;
+
 end
 
 

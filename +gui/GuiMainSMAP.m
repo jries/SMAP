@@ -132,7 +132,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %              delete(outdirdoc);
         %from tier1
             worked=false;
-            try 
+%            try 
                 mainaddress='https://www.embl.de/download/ries/Documentation/';
                 docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf'};
                 if isdeployed
@@ -147,11 +147,12 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 for k=1:length(docfiles)
                     worked=worked|savewebfile([outdir docfiles{k}] ,[mainaddress docfiles{k}]);
                 end
-            catch err
-                err
-                
-            end
+%             catch err
+%                 err
+%                 
+%             end
             if ~worked
+                disp(['could not download and save documentation pdfs. Help might not work. Run SMAP as administrator. Or move the settings directory to ' possibledirs]);
                 warndlg(['could not download and save documentation pdfs. Help might not work. Run SMAP as administrator. Or move the settings directory to ' possibledirs])
             end
             
