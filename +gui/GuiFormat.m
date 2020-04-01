@@ -748,9 +748,12 @@ if strcmp(handle.Tag,'detached')
     close(fold);
 else
 f=figure('MenuBar','none','Toolbar','none');
-handle.Parent=f;
+
+handle.Units='pixel';
 handle.Position(1)=0;
 handle.Position(2)=0;
+handle.Parent=f;
+f.Units=handle.Units;
 f.Position(3:4)=handle.Position(3:4);
 handle.Tag='detached';
 handle.Units='normalized';

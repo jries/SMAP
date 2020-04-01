@@ -46,10 +46,10 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 h=uipanel('Parent',obj.commandfig,'Units','normalized','Position',pos,'Title',title);
                 h.Units='normalized';
                 uicontrol('Parent',h,'Units','normalized','Position',[1 1 1 1]/3,'String','0','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','0','Character','0')})
-                uicontrol('Parent',h,'Units','normalized','Position',[0 1 1 1]/3,'String','<-','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','leftarrow','Character','')})
-                uicontrol('Parent',h,'Units','normalized','Position',[2 1 1 1]/3,'String','->','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','rightarrow','Character','')})
-                uicontrol('Parent',h,'Units','normalized','Position',[1 2 1 1]/3,'String','^','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','uparrow','Character','')})
-                uicontrol('Parent',h,'Units','normalized','Position',[1 0 1 1]/3,'String','v','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','downarrow','Character','')})   
+                uicontrol('Parent',h,'Units','normalized','Position',[0 1 1 1]/3,'String','<-','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','leftarrow','Character','4')})
+                uicontrol('Parent',h,'Units','normalized','Position',[2 1 1 1]/3,'String','->','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','rightarrow','Character','6')})
+                uicontrol('Parent',h,'Units','normalized','Position',[1 2 1 1]/3,'String','^','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','uparrow','Character','8')})
+                uicontrol('Parent',h,'Units','normalized','Position',[1 0 1 1]/3,'String','v','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','downarrow','Character','2')})   
                 uicontrol('Parent',h,'Units','normalized','Position',[0 2 1 1]/3,'String','x (,)','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','comma','Character',',')})
                 uicontrol('Parent',h,'Units','normalized','Position',[2 2 1 1]/3,'String','(.)','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','period','Character','.')})                  
             end
@@ -204,7 +204,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                     dir=5;
                 case {'.','e','E','9'}
                     dir=6;
-                case {'0'}
+                case {'0','5'}
                     dir=0;   
                 case 32 %space bar: rotate
                      obj.guihandles.rotateb.Value=~ obj.guihandles.rotateb.Value;

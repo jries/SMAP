@@ -239,7 +239,7 @@ function helpsmap_callback(a,b,obj,whichone)
 if  isdeployed
     direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
 else
-    direc = 'Documentation';
+    direc = ['Documentation' filesep 'pdf'];
 end
 
 filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf'};

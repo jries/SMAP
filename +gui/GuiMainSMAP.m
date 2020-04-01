@@ -118,16 +118,38 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             end
         
             %update documentation from external files
-             urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
-             outdirdoc=[settingsdir filesep 'temp' filesep 'Documentation.tar'];
-             savewebfile(outdirdoc,urlzip);
-             if isdeployed
-                 outdir=[settingsdir filesep 'temp'];
-             else
-                 outdir=pwd;
-             end
-             unzip(outdirdoc,outdir);
-             delete(outdirdoc);
+            
+            %from OC
+%              urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
+%              outdirdoc=[settingsdir filesep 'temp' filesep 'Documentation.tar'];
+%              savewebfile(outdirdoc,urlzip);
+%              if isdeployed
+%                  outdir=[settingsdir filesep 'temp'];
+%              else
+%                  outdir=pwd;
+%              end
+%              unzip(outdirdoc,outdir);
+%              delete(outdirdoc);
+        %from tier1
+            try 
+                mainaddress='https://www.embl.de/download/ries/Documentation/';
+                docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf'};
+                if isdeployed
+                     outdir=[settingsdir filesep 'temp' filesep 'Documentation' filesep];
+                else
+                     outdir=[pwd filesep 'Documentation' filesep 'pdf' filesep];
+                end
+                if ~exist(outdir,'dir')
+                     mkdir(outdir)
+                end
+
+                for k=1:length(docfiles)
+                    savewebfile([outdir docfiles{k}] ,[mainaddress docfiles{k}]);
+                end
+            catch err
+                err
+                warndlg('could not download and save documentation pdfs. Help might not work')
+            end
             
             makeplugincallfile('plugins');
             

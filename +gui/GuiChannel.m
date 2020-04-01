@@ -1098,9 +1098,12 @@ end
 
 function detach_callback(a,b,obj,handle)
 f=figure('MenuBar','none','Toolbar','none');
-handle.Parent=f;
+f.Units='pixel';
+handle.Units='pixel';
+
 handle.Position(1)=0;
 handle.Position(2)=0;
+handle.Parent=f;
 f.Position(3:4)=handle.Position(3:4);
 handle.Tag='detached';
 % if strcmp(handle.Tag,'OV')
