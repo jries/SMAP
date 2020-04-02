@@ -316,7 +316,7 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
              plotcirc(hax,site.pos,obj.locData.getPar('se_siteroi'));
              line(site.pos(1)/1000+[-.001 .001],site.pos(2)/1000+[0 0],'Color',[1 1 1],'Parent',hax,'LineWidth',3)
              delete(obj.temp.siteincell);
-             obj.temp.siteincell=plotbox(hbox,site.pos,obj.locData.getPar('se_sitefov'));
+             obj.temp.siteincell=plotbox(hbox,site.pos,obj.locData.getPar('se_sitefov'),[],site.ID,'site',obj);
             end
            
 
@@ -368,10 +368,10 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
                  use=getFieldAsVector(obj.sites(ind),'annotation','use');
 %                  use(isnan(use))=false;
                     if iscell(use)
-                         plotmanyboxes(hax,obj.sites(ind),[],obj.locData.getPar('se_sitefov'),[1 0 1]);
+                         plotmanyboxes(hax,obj.sites(ind),[],obj.locData.getPar('se_sitefov'),[1 0 1],'site',obj);
                     else
-                         plotmanyboxes(hax,obj.sites(ind), ~use,obj.locData.getPar('se_sitefov'),[1 0 0]);
-                          plotmanyboxes(hax,obj.sites(ind),use,obj.locData.getPar('se_sitefov'),[1 0 1]);
+                         plotmanyboxes(hax,obj.sites(ind), ~use,obj.locData.getPar('se_sitefov'),[1 0 0],'site',obj);
+                          plotmanyboxes(hax,obj.sites(ind),use,obj.locData.getPar('se_sitefov'),[1 0 1],'site',obj);
                     end
          
                  end
@@ -420,7 +420,7 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
              if obj.locData.getPar('se_drawboxes')&&~isempty(obj.cells)&&~isempty(obj.cells(1).info)
                  allcells=[obj.cells(:).info];
                  ind=[allcells.filenumber]==fileID;
-                 plotmanyboxes(hax,obj.cells,ind,obj.locData.getPar('se_cellfov'));
+                 plotmanyboxes(hax,obj.cells,ind,obj.locData.getPar('se_cellfov'),[],'cell',obj);
              end
             
         end
@@ -602,10 +602,23 @@ hax.HitTest='on';
 hax.PickableParts='all';
 end
 
-function hg=plotbox(h,pos,roi,color)
-if nargin<4
+function hg=plotbox(h,pos,roi,color,number,what,obj)
+if nargin<4|| isempty(color)
     color=[1 1 1];
 end
+
+if nargin<5|| isempty(number)
+    number=0;
+end
+if nargin<6 || isempty(what)
+    what='undefined';
+end
+
+if nargin<7 || isempty(obj)
+    obj=[];
+end
+
+
 linewidth=1;
 
 pos=pos/1000;
@@ -615,10 +628,16 @@ x2=pos(1)+roi/2;
 y1=pos(2)-roi/2;
 y2=pos(2)+roi/2;
 hg=hggroup('Parent',h);
-line([x1 x1],[y1 y2],'Parent',hg,'Color',color,'LineWidth',linewidth);
-line([x1 x2],[y2 y2],'Parent',hg,'Color',color,'LineWidth',linewidth);
-line([x2 x2],[y2 y1],'Parent',hg,'Color',color,'LineWidth',linewidth);
-line([x2 x1],[y1 y1],'Parent',hg,'Color',color,'LineWidth',linewidth);
+line([x1 x1],[y1 y2],'Parent',hg,'Color',color,'LineWidth',linewidth,'ButtonDownFcn',{@selectbox,number,what,obj});
+line([x1 x2],[y2 y2],'Parent',hg,'Color',color,'LineWidth',linewidth,'ButtonDownFcn',{@selectbox,number,what,obj});
+line([x2 x2],[y2 y1],'Parent',hg,'Color',color,'LineWidth',linewidth,'ButtonDownFcn',{@selectbox,number,what,obj});
+line([x2 x1],[y1 y1],'Parent',hg,'Color',color,'LineWidth',linewidth,'ButtonDownFcn',{@selectbox,number,what,obj});
+
+end
+function selectbox(object, data,number,what,obj)
+if ~isempty(obj) 
+obj.processors.preview.plotobject(what,number)
+end
 end
 
 function hg=plotcirc(h,pos,roi,color)
@@ -636,14 +655,22 @@ y2=pos(2)+roi/2;
 hg=rectangle('Parent',h,'Position',[x1,y1,roi,roi],'Curvature',[1,1],'EdgeColor',color,'LineStyle','--');
 end
 
-function hg=plotmanyboxes(hax,list,ind,roi,color)
+function hg=plotmanyboxes(hax,list,ind,roi,color,what,obj)
 hg=hggroup('Parent',hax);
-if nargin<5
+if nargin<5||isempty(color)
 color=[1 0 1];
 end
+if nargin<6||isempty(what)
+what='undefined';
+end
+if nargin<7||isempty(obj)
+obj=[];
+end
+
+
 for k=1:length(list)
     if isempty(ind) || ind(k)
-        plotbox(hg,list(k).pos,roi,color);
+        plotbox(hg,list(k).pos,roi,color,list(k).ID,what,obj);
     end
 end
 end
