@@ -47,7 +47,6 @@ csx=0;
 csy=0;
 
 roisize=30; %2*roisize +1
-timepoints=10;
 clear stackcut rsum rsumbin
 for k=length(sites):-1:1
     x=round(sites(k).pos(1)/1000/pixelsize(1)+csx);
@@ -70,7 +69,7 @@ imx(meanstack,'Parent',fm)
 
 %%
 norm =true;
-
+timepoints=10;
 df=floor(size(stackcut,3)/timepoints);
 figure(188)
 col=jet(timepoints+2);col(1:2,:)=[];
