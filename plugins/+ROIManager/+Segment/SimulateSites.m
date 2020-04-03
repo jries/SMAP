@@ -326,12 +326,12 @@ pard.EMon.position=[4,4];
 pard.EMon.Width=1;
 
 pard.t3.object=struct('String','lifetime (fr)','Style','text');
-pard.t3.position=[5,3.75];
-pard.t3.Width=0.75;
+pard.t3.position=[5,4];
+pard.t3.Width=0.65;
 
 pard.lifetime.object=struct('String','1','Style','edit');
-pard.lifetime.Width=.5;
-pard.lifetime.position=[5,4.5];
+pard.lifetime.Width=.35;
+pard.lifetime.position=[5,4.65];
 pard.lifetime.TooltipString=sprintf('average on-time (in frames) of an activated fluorophore');
 pard.t3.TooltipString=pard.lifetime.TooltipString;
 
@@ -345,13 +345,20 @@ pard.photons.position=[5,1.75];
 pard.photons.TooltipString=sprintf('mean number of photons emitted by an activated fluorophore before off-switching \n (this number is distributed among the frames the fluorophore is on).');
 pard.t4.TooltipString=pard.photons.TooltipString;
 
+pard.photonsigmat.object=struct('String','+/-','Style','text');
+pard.photonsigmat.position=[5,2.25];
+pard.photonsigmat.Width=.25;
+pard.photonsigma.object=struct('String','0','Style','edit');
+pard.photonsigma.position=[5,2.45];
+pard.photonsigma.Width=.35;
+
 pard.t5.object=struct('String','BG/pixel','Style','text');
-pard.t5.position=[5,2.5];
-pard.t5.Width=0.75;
+pard.t5.position=[5,3];
+pard.t5.Width=0.5;
 
 pard.background.object=struct('String','20','Style','edit');
-pard.background.Width=.5;
-pard.background.position=[5,3.];
+pard.background.Width=.35;
+pard.background.position=[5,3.5];
 pard.background.TooltipString=sprintf('Background in photons/pixel/frame');
 pard.t5.TooltipString=pard.background.TooltipString;
 

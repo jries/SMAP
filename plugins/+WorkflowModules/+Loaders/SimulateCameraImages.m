@@ -140,7 +140,12 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
            switch p.psfmodel.selection
                case {'Symm Gauss','Astig Gauss' }
                    obj.PSF=GaussPSF;
-                   warndlg('not implemented')
+                   
+                   if strcmp(p.psfmodel.selection,'Symm Gauss')
+                       p.gausspar(3)=0;
+                   end
+                   obj.PSF.gausspar=p.gausspar;
+%                    warndlg('not implemented')
                    
                case {'Spline'}
                    f=p.cal_3Dfile;
@@ -159,7 +164,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
            [~,par]=simulatecamera(obj.locs,obj.par,1,obj.PSF);
            obj.par=par;
         end
-        function setcampar(obj)
+        function setcampar(obj,a,b)
             cs=obj.getPar('loc_cameraSettings');
            
             p=obj.getAllParameters;
@@ -183,15 +188,18 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
            
             if p.usecam
                info.offset=par.offset;
-               info.emgain=par.emgain;
-               info.conversion=par.conversion;
-               info.EMon=par.emgain>0;
+               if (par.cameramodel.Value==3)
+                   info.emgain=par.emgain;
+               else
+                   info.emgain=1;
+               end
+               info.conversion=par.conversion;     
             else
-                info.offset=0;
+               info.offset=0;
                info.emgain=1;
                info.conversion=1;
-               info.EMon=false;
-           end
+            end
+           info.EMon=(par.emgain>0)&(par.cameramodel.Value==3);
            info.basefile=obj.file;
            if ~isempty(obj.locs)
            info.numberOfFrames=max(obj.locs.frame);
@@ -340,18 +348,19 @@ end
 
 function simulation_callback(a,b,obj)
 if a.Value==3 %make with simulation plugin
-    if isempty(obj.simulator) 
+    if isempty(obj.simulator) || isempty(obj.simulator.handle)||~isvalid(obj.simulator.handle)
         obj.simulator=ROIManager.Segment.SimulateSites;
 %         obj.simulator.attchLocData(obj.locData);
         obj.simulator.attachPar(obj.P);
         obj.simulator.locData.attachPar(obj.P);
-    end
+
+%     end
     obj.simulator.locData.clear;
-    if isempty(obj.simulator.handle)||~isvalid(obj.simulator.handle)
-        obj.simulator.handle=figure('MenuBar','none','Toolbar','none','Name','simulate locs');
+%     if isempty(obj.simulator.handle)||~isvalid(obj.simulator.handle)
         p.Xrim=10;
         p.Vrim=100;
         obj.simulator.setGuiAppearence(p)
+        obj.simulator.handle=figure('MenuBar','none','Toolbar','none','Name','simulate locs');
         obj.simulator.makeGui;
         disp('press get localizations after running the simulator')
     end
@@ -389,21 +398,25 @@ function pard=guidef(obj)
 pard.simulationsource.object=struct('String',{{'Use current localizations','Load localizations','Make with simulation plugin','Random'}},'Style','popupmenu',...
     'Callback',{{@simulation_callback,obj}});
 pard.simulationsource.position=[1,1];
-pard.simulationsource.Width=2;
+pard.simulationsource.Width=1.8;
 
-pard.getlocalizations.object=struct('String','get Localizations','Style','pushbutton','Callback',{{@getlocs_callback,obj}});
-pard.getlocalizations.position=[1,3];
-pard.getlocalizations.Width=2;
-p(1).on={'gausspar'};p(1).value=1;p(1).off={'cal_3Dfile','loadcal'};
+pard.getlocalizations.object=struct('String','get Localizations','Style','pushbutton','Callback',{{@getlocs_callback,obj}},'FontWeight','bold');
+pard.getlocalizations.position=[1,2.8];
+pard.getlocalizations.Width=1.2;
+p(1).on={'gausspar','gausspart'};p(1).value=1;p(1).off={'cal_3Dfile','loadcal'};
 p(2)=p(1);p(2).value=2;
-p(3).value=3;p(3).on={'cal_3Dfile','loadcal'};p(3).off={'gausspar'};
+p(3).value=3;p(3).on={'cal_3Dfile','loadcal'};p(3).off={'gausspar','gausspart'};
 pard.psfmodel.object=struct('String',{{'Symm Gauss','Astig Gauss','Spline'}},'Style','popupmenu','Callback',{{@obj.switchvisible,p}},'Value',3);
 pard.psfmodel.position=[2,1];
 pard.psfmodel.Width=1.5;
 
-pard.gausspar.object=struct('String','100 100 100','Style','edit');
+pard.gausspar.object=struct('String','1 500 200','Style','edit','Visible','off');
 pard.gausspar.position=[2,2.5];
-pard.gausspar.Width=1.5;
+pard.gausspar.Width=1.;
+
+pard.gausspart.object=struct('String','sig (pix), zR (nm), d(nm)','Style','text','Visible','off');
+pard.gausspart.position=[2,3.5];
+pard.gausspart.Width=1.5;
 
 pard.cal_3Dfile.object=struct('Style','edit','String','');
 pard.cal_3Dfile.position=[2,2.5];
@@ -421,13 +434,27 @@ pard.loadcal.Width=0.5;
 lp=3;
 
 pard.savetiffs.object=struct('String','Save Tiff files','Style','checkbox','Value',0);
-pard.savetiffs.position=[lp,1];
-pard.savetiffs.Width=1.5;
+pard.savetiffs.position=[1,4];
+pard.savetiffs.Width=1;
 
+%camera model
+p(1).on={};p(1).value=1;p(1).off={'scmosnoiset','scmosnoise'};
+p(2).value=2;p(2).on={'scmosnoiset','scmosnoise'};p(2).off={};
+p(3)=p(2);p(3).value=3;
+pard.cameramodel.object=struct('String',{{'perfect cam','sCMOS','EMCCD'}},'Style','popupmenu','Callback',{{@obj.switchvisible,p}},'Value',1);
+pard.cameramodel.position=[lp,1];
+pard.cameramodel.Width=1.15;
+
+pard.scmosnoiset.object=struct('String','noise e-','Style','text','Visible','off');
+pard.scmosnoiset.position=[lp,2.15];
+pard.scmosnoiset.Width=0.5;
+pard.scmosnoise.object=struct('String','1.5','Style','edit','Visible','off');
+pard.scmosnoise.position=[lp,2.65];
+pard.scmosnoise.Width=0.25;
 
 pard.t1.object=struct('String','Pixelsize (nm)','Style','text');
-pard.t1.position=[lp,3];
-pard.t1.Width=0.7;
+pard.t1.position=[lp,2.9];
+pard.t1.Width=1;
 
 pard.pixelsize.object=struct('String','100','Style','edit');
 pard.pixelsize.position=[lp,3.7];
@@ -481,8 +508,8 @@ pard.usecam.object=struct('String','Use camera units','Style','checkbox','Value'
 pard.usecam.position=[lu,1];
 pard.usecam.Width=1.3;
 
-pard.t5.object=struct('String','EMgain 0=off','Style','text');
-pard.t5.position=[lu,2.2];
+pard.t5.object=struct('String','EMgain','Style','text');
+pard.t5.position=[lu,2.5];
 pard.t5.Width=.8;
 pard.emgain.object=struct('String','100','Style','edit','Callback',@obj.setcampar);
 pard.emgain.Width=.3;
