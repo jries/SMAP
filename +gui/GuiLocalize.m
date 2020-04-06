@@ -87,6 +87,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             tabsizeh(4)=tabsizeh(4)-dh;            
            
             settingsfile=obj.getGlobalSetting('mainLocalizeWFFile');
+            settingsfile=changesettingsdir(settingsfile,obj.getPar('SettingsDirectory'));
             par=readstruct(settingsfile);
             if ~isfield(par,'tab')
                 par.tab=struct('hframe',struct('name','Input Image'),'hfilter',struct('name','Peak Finder'),'hfit',struct('name','Fitter'),'hloc',struct('name','Localizations'));
