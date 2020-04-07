@@ -152,8 +152,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %                 
 %             end
             if ~worked
-                disp(['could not download and save documentation pdfs. Help might not work. Run SMAP as administrator. Or move the settings directory to ' possibledirs]);
-                warndlg(['could not download and save documentation pdfs. Help might not work. Run SMAP as administrator. Or move the settings directory to ' possibledirs])
+                disp(['could not download and save documentation pdfs. Help might not work. Make sure you have write access to settings. Move the settings directory to ' possibledirs]);
+                warndlg(['could not download and save documentation pdfs. Help might not work.  Make sure you have write access to settings. Move the settings directory to ' possibledirs])
             end
             
             makeplugincallfile('plugins');
