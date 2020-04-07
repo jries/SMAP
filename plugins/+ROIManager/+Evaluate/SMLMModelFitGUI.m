@@ -8,6 +8,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         layerFieldnames     %
         lFnLayerEdit        %
         currentLoadedModel  %
+        alignSettings       % Converter for alignment.
     end
     methods
         function obj=SMLMModelFitGUI(varargin)
@@ -137,30 +138,9 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 %% Converter tab 
                 addconverttotab(obj);           % create the converter 
                 oldh=obj.guihandles.anchorConvert;
-                pos=oldh.Position;
                 
                 % create the converter input table
-                htable=uitable(oldh.Parent,'Data',{},'Position',[pos(1:2)+[5 10] 300 200]);
-                colNames={'Source', 'Rule', 'Target_fit', 'Target_usr'};
-                htable.ColumnName = colNames;
-                htable.CellEditCallback = {@convertTable_callback,obj};
-                % check the loaded modules and hook all the SMLMModelFitGUI
-                if length(obj.locData.SE.processors.eval.guihandles.modules.Data)>1
-                    loadedModuls = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
-                    lSMLMModelFitGUI = contains(loadedModuls, 'SMLMModelFitGUI');
-                else
-                    lSMLMModelFitGUI = 0;
-                end
-                if sum(lSMLMModelFitGUI)>0
-                    loadedSMLMModelFitGUI = loadedModuls{lSMLMModelFitGUI};
-                else
-                    loadedSMLMModelFitGUI = [];
-                end
-                htable.ColumnFormat = {[{'this step'}; loadedSMLMModelFitGUI]',[],{'none'},[]};
-                htable.ColumnEditable = true;
-                htable.CellSelectionCallback = {@convertTableSelection_callback,obj};
-                htable.RowName = [];
-                delete(oldh);
+                htable = createConvertTable(oldh, obj);
                 obj.guihandles.anchorConvert=htable;
                 
                 
@@ -180,20 +160,8 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         end
                
         function parId = loadParTable(obj, htable, fitter, modelnumber)
-            modelnumberStr = num2str(modelnumber);
-            subParsArg = fitter.subParsArg(modelnumber);
-            fn = obj.parsArgFieldnames;
-            for k = 1:length(fn)
-                if iscell(subParsArg.(fn{k}))
-                    subParsArgTemp.(fn{k}) = char(subParsArg.(fn{k}));
-                else
-                    subParsArgTemp.(fn{k}) = subParsArg.(fn{k});
-                end
-            end
-
-            for l = length(subParsArg.model):-1:1
-                parId{l} = ['m' modelnumberStr '.' subParsArg.type{l} '.' subParsArg.name{l}];
-            end
+            % get parId and update the GUIParTable
+            [parId,subParsArgTemp] = fitter.getAllParId(modelnumber);
             htable.Data = struct2Data(subParsArgTemp);
             htable.CellEditCallback = {@parSetting_callback,obj, modelnumber};
             htable.ColumnEditable = obj.lFnParsArgEdit;
@@ -257,15 +225,6 @@ function selectLayer_callback(tabgroup,eventdata,obj)
     end
 end
 
-function convertTable_callback(a,b,obj) 
-    if b.Indices(2) == 4
-        htable = obj.guihandles.anchorConvert;
-        optionTarget = unique([htable.ColumnFormat{3} {['usr_' b.NewData]}]);
-        htable.ColumnFormat{3} = optionTarget;
-        obj.guihandles.anchorConvert=htable;
-    end
-end
-
 function layerSetting_callback(a,b,obj) 
     fitter = obj.fitter;
     fn=obj.layerFieldnames;
@@ -275,11 +234,6 @@ function layerSetting_callback(a,b,obj)
     [~,idx] = fitter.wherePar(['pars.m' layer '.offset.weight']);
     fitter.allParsArg.(fn{indices(2)})(idx) = b.NewData;
     obj.fitter = fitter;
-end
-
-function convertTableSelection_callback(a,b,obj) 
-    selectedRow = b.Indices(1);
-    obj.setPar(['selectedRowConvert_' obj.name], selectedRow)
 end
 
 function optimizerSetting_selectionCallback(a,b,obj)

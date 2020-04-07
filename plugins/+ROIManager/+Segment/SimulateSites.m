@@ -130,8 +130,13 @@ function useFitter_callback(a,b,obj)
     clf(fig);
     selectionTable = uitable(fig);
     nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+    
     lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    for k = 1:length(lFitterFound)
+        lFitterFound{k} = ~isempty(lFitterFound{k});
+    end
     lFitterFound = [lFitterFound{:}];
+    
     nameSMLMModelFitGUI = nameEvalPlugins(logical(lFitterFound));
     selectionTable.Data = [num2cell(false(size(nameSMLMModelFitGUI))) nameSMLMModelFitGUI];
     selectionTable.ColumnEditable = [true false];
@@ -153,10 +158,16 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     selected = selectionTable.Data(:,1);
     idxSelected = find([selected{:}]);
     nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+    
     lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    for k = 1:length(lFitterFound)
+        lFitterFound{k} = ~isempty(lFitterFound{k});
+    end
     idxFitterFound = find([lFitterFound{:}]);
+    
     idxSelected_final = idxFitterFound(idxSelected);
     fitter = copy(obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter);
+    fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
     obj.setPar('fitter',fitter)
     close(fig);
     obj.guihandles.setModPars_button.Visible='on';
@@ -164,19 +175,38 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
 end
 
 function setModPars_callback(a,b,obj)
+    % Added by Yu-Le
+    % Use the function of allParsArg to set the range for simulation.
+    
+    % GUI
     fig = figure(513);
     clf(fig);
     parArgTable = uitable(fig);
     typeOption = uicontrol('Style','popupmenu','String',{'Point','Image'},'Value',1);
     typeOption.Position = [20 20 60 30];
     typeOption.Callback = {@typeOption_callback,obj};
+    
+    % Data
+    % Acquire the SMLMModelFit obj, and then display parameters based on the allParsArg
     fitter = obj.getPar('fitter');
     parName = fitter.allParsArg.name;
     parType = fitter.allParsArg.type;
     parModel = fitter.allParsArg.model;
-    parVal = fitter.allParsArg.value; 
+    
+    % If 'fix' is ticked, the corresponding parameters will be single
+    % values. Otherwise arange.
+    parUb = fitter.allParsArg.ub;
+    parLb = fitter.allParsArg.lb;
+    parFix = fitter.allParsArg.fix;
+    parVal = cellstr(num2str(fitter.allParsArg.value));
+    parRange = cellstr([num2str(parLb) '' num2str(parUb)]);
+    parRange = regexprep(parRange,'\s+',' ');
+    parVal(~parFix)=parRange(~parFix);
+    parVal = regexprep(parVal,'^\s+','');
+    
+    % Table properties.
     parArgTable.Position = [20 50 300 300];
-    parArgTable.Data = [parName parType num2cell(parModel) num2cell(parVal)];
+    parArgTable.Data = [parName parType num2cell(parModel) parVal];
     parArgTable.ColumnName = {'Name','Type','Model','Value'};
     parArgTable.ColumnEditable = [false false false true];
     parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
@@ -189,8 +219,20 @@ end
 
 function parArgTable_CellEditCallback(a,b,obj)
     % Assign the change to the parArgTable
-    indEdited = b.Indices;
-    obj.allParsArg.value(indEdited) = b.NewData;
+    indEdited = b.Indices(1);
+    elements = strsplit(b.NewData,' ');
+    if length(elements) == 2
+        elements = str2double(elements);
+        obj.allParsArg.fix(indEdited) = false;
+        obj.allParsArg.value(indEdited) = 0;
+        obj.allParsArg.lb(indEdited) = elements(1);
+        obj.allParsArg.ub(indEdited) = elements(2);
+    elseif length(elements) == 1
+        obj.allParsArg.fix(indEdited) = true;
+        obj.allParsArg.value(indEdited) = str2double(b.NewData);
+    else
+        warning('The input length is not acceptable. Please assign only 1 (fixed) to 2 (a range) elements.')
+    end
 end
 
 function setvisibility(obj)
