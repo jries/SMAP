@@ -48,7 +48,11 @@ classdef locsfromSE<interfaces.DialogProcessor
                 ind=1;
                 for k=induse
                     if ~p.c_listofcellsc|| any(sites(k).info.cell==p.c_listofcells)
-                        info=sites(k).evaluation.countingStatistics;
+                        if isfield(sites(k).evaluation, 'countingStatistics_kinetochore')
+                            info=sites(k).evaluation.countingStatistics_kinetochore;
+                        else
+                            info=sites(k).evaluation.countingStatistics;
+                        end
                         locprecnm(ind)=info.locprecnm;
                         psf(ind)=info.PSF;
                         localizations(ind)=info.(gfield);  
