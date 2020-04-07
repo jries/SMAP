@@ -329,7 +329,7 @@ numOfLabel_Expect = p.tif_density;
 % Times it with a factor of 60
 numOfLabel_Start = (p.tif_imagesize/2).^3;
 fitter = p.obj.getPar('fitter');
-fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
+% fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
 
 for k=1:fitter.numOfModel
     fitter.model{k}.fixSigma = 1;
@@ -344,7 +344,7 @@ end
 label.layer = ones([numOfLabel_Start 1]);
 
 % Get intensity (probability) for each labels
-label.p = fitter.intensityCal([], label)';
+label.p = fitter.getSimIntensity(label);
 
 % Normalized the expect
 expect_original = sum(label.p);
@@ -362,8 +362,9 @@ locs.channel = label.layer(lKept);
 end
 
 function [locs,parameters]=locsfromDiscFun(p)
+% added by Yu-Le for SMLMModelFit:   
 fitter = p.obj.getPar('fitter');
-[~,modCoord] = fitter.plot([],'plotType','point','modelSamplingFactor',0.3, 'doNotPlot', true); % get point type visualization
+modCoord = fitter.getSimRef; % get point type visualization
 parameters = fitter.allParsArg;
 % Export
 locs.x = modCoord{1}.x;
