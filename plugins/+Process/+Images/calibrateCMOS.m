@@ -10,6 +10,9 @@ classdef calibrateCMOS<interfaces.DialogProcessor
             out=[];
            
           [file,pfad]=uigetfile('*.tif');
+          if ~file
+              return
+          end
           il=imageloaderAll([pfad  file],[],obj.P);
 
           mean=double(il.getimage(1));
@@ -39,8 +42,9 @@ classdef calibrateCMOS<interfaces.DialogProcessor
 end
 
 function pard=guidef(obj)
-% pard.dataselect.object=struct('Style','popupmenu','String','File','Callback',{{@obj.dataselect_callback}});
-% pard.dataselect.position=[1,1];
+pard.text.object=struct('Style','text','String','Select tiff stacks containing dark field images of the sCMOS camera.');
+pard.text.position=[1,1];
+pard.dataselect.Width=4;
 % pard.dataselect.object.TooltipString='sCMOS file localizations';
 % pard.dataselect.Width=2;
 % pard.tiffselect.object=struct('Style','popupmenu','String','empty');

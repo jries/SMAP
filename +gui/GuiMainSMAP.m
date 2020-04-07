@@ -1,4 +1,10 @@
 classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
+%  DESCRIPTION:   SMAP: Main GUI
+%  COPYRIGHT:     Jonas Ries, 2020
+%  LICENSE:       GPLv3
+%  AUTHOR:        Jonas Ries, EMBL Heidelberg, ries@embl.de 27.03.2020
+%                 www.rieslab.de, www.github.com/jries/SMAP
+
     methods
         function obj=GuiMainSMAP(varargin)
             obj.attachPar(interfaces.ParameterData);
@@ -17,25 +23,86 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             SMAP_stopnow=false;
             
             obj.setPar('maindirectory',pwd);
+            disp(['main directory: ' pwd]);
              %settings directory 
-             settingsdir='settings';
-             if ~exist(settingsdir,'dir')
-                 settingsdir=[pwd filesep 'MATLAB' filesep 'settings'];
-                 if ~exist(settingsdir,'dir')
-                     settingsdir=[pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'];
-                     if ~exist(settingsdir,'dir')
-                 
-                         hwd=warndlg('please select the directory /settings/ with the SMAP settings','select settings','modal');
-                         waitfor(hwd);
-                         d=uigetdir(pwd,'select settings directory');
-                         if d
-                             settingsdir=d;
-
-                         end
-                     end
+             if isdeployed
+                 if ispc
+                    [status, result] = system('set PATH');
+                    executableFolder = char(regexpi(result, 'Path=(.*?);', 'tokens', 'once'));
+                    
+                    programroot=ctfroot;
+                    ind=strfind(programroot,filesep);
+                    homedir=programroot(1:ind(3)-1);
+                    possibledirs={[executableFolder filesep 'settings'],...
+                        [ctfroot filesep 'settings'],...
+                        [homedir filesep 'Documents' filesep 'settings'],...
+                        [homedir filesep 'Documents' filesep 'MATLAB' filesep 'settings'],...
+                        [homedir filesep 'Documents' filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
+                        [homedir filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
+                        'C:\Program Files\SMAP\application\settings',...
+                        [homedir(1) ':\Program Files\SMAP\application\settings']};
+             
+                 else
+                     programroot=ctfroot;
+                     ind=strfind(programroot,'application/SMAP.app/');
+                     possibledirs={[programroot(1:ind-1) 'settings'],[programroot(1:ind-1) 'application' filesep 'settings']};
                  end
-                 obj.setPar('maindirectory',fileparts(settingsdir));
+             else
+                 if ispc
+                      possibledirs={'settings',...
+                     [fileparts(pwd) filesep  'settings'],...
+                     [fileparts(fileparts(pwd)) filesep  'settings'],...
+                     };
+                 else
+                     possibledirs={'settings',...
+                     [pwd filesep 'MATLAB' filesep 'settings'],...
+                     [pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
+                     [pwd filesep 'Documents' filesep 'settings'],...
+                     [pwd filesep 'Documents' filesep 'MATLAB' filesep 'settings'],...
+                     [pwd filesep 'Documents' filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
+                     [pwd filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
+                     [pwd filesep  'settings'],...
+                 };
+                 end
              end
+%              possibledirs={'settings',...
+%                  [pwd filesep 'MATLAB' filesep 'settings'],...
+%                  [pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
+%                  [pwd filesep 'Documents' filesep 'settings'],...
+%                  [pwd filesep 'Documents' filesep 'MATLAB' filesep 'settings'],...
+%                  [pwd filesep 'Documents' filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
+%                  [pwd filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
+%                  [pwd filesep  'settings'],...
+%                  [fileparts(pwd) filesep  'settings'],...
+%                  [fileparts(fileparts(pwd)) filesep  'settings'],...
+%                  };
+             settingsdir='';
+             for k=1:length(possibledirs)
+                 if exist(possibledirs{k},'dir')
+                     settingsdir=possibledirs{k};
+                     break
+                 end
+             end
+             
+%              settingsdir='settings';
+%              if ~exist(settingsdir,'dir')
+%                  settingsdir=[pwd filesep 'MATLAB' filesep 'settings'];
+%                  if ~exist(settingsdir,'dir')
+%                      settingsdir=[pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'];
+             if isempty(settingsdir)
+                 hwd=warndlg(['please select the directory /settings/ with the SMAP settings or copy the settings directory in any of the default directories and restart: ' possibledirs],'select settings','modal');
+                 waitfor(hwd);
+                 d=uigetdir(pwd,'select settings directory');
+                 if d
+                     settingsdir=d;
+                 end
+             end
+%                  end
+             if k>1 %not default
+                obj.setPar('maindirectory',fileparts(settingsdir));
+             end
+             disp(settingsdir);
+%              end
 %              obj.setPar('maindirectory',pwd);
             obj.setPar('SettingsDirectory',makerelativetopwr(settingsdir));
             initglobalsettings(obj);
@@ -50,6 +117,44 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 disp(pwd)
             end
         
+            %update documentation from external files
+            
+            %from OC
+%              urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
+%              outdirdoc=[settingsdir filesep 'temp' filesep 'Documentation.tar'];
+%              savewebfile(outdirdoc,urlzip);
+%              if isdeployed
+%                  outdir=[settingsdir filesep 'temp'];
+%              else
+%                  outdir=pwd;
+%              end
+%              unzip(outdirdoc,outdir);
+%              delete(outdirdoc);
+        %from tier1
+            worked=false;
+%            try 
+                mainaddress='https://www.embl.de/download/ries/Documentation/';
+                docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf'};
+                if isdeployed
+                     outdir=[settingsdir filesep 'temp' filesep 'Documentation' filesep];
+                else
+                     outdir=[pwd filesep 'Documentation' filesep 'pdf' filesep];
+                end
+                if ~exist(outdir,'dir')
+                     mkdir(outdir)
+                end
+                
+                for k=1:length(docfiles)
+                    worked=worked|savewebfile([outdir docfiles{k}] ,[mainaddress docfiles{k}]);
+                end
+%             catch err
+%                 err
+%                 
+%             end
+            if ~worked
+                disp(['could not download and save documentation pdfs. Help might not work. Run SMAP as administrator. Or move the settings directory to ' possibledirs]);
+                warndlg(['could not download and save documentation pdfs. Help might not work. Run SMAP as administrator. Or move the settings directory to ' possibledirs])
+            end
             
             makeplugincallfile('plugins');
             

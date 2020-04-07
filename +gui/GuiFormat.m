@@ -264,7 +264,7 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
         
         function pixrec_callback(obj,par)
             obj.updateFormatParameters;
-            notify(obj.P,'sr_render')
+%             notify(obj.P,'sr_render')
         end
         
         function pout=roiset(obj,p)
@@ -724,6 +724,7 @@ function resetview_callback(oject,data,obj)
   pixrec=round(max((maxx-minx)/si(1),(maxy-miny)/si(2)));
   obj.setPar('sr_pixrec',pixrec);
   obj.pixrec_callback(obj)
+  notify(obj.P,'sr_render')
 end
 
 function lw_callback(oject,data,obj)
@@ -747,9 +748,12 @@ if strcmp(handle.Tag,'detached')
     close(fold);
 else
 f=figure('MenuBar','none','Toolbar','none');
-handle.Parent=f;
+
+handle.Units='pixel';
 handle.Position(1)=0;
 handle.Position(2)=0;
+handle.Parent=f;
+f.Units=handle.Units;
 f.Position(3:4)=handle.Position(3:4);
 handle.Tag='detached';
 handle.Units='normalized';

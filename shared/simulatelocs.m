@@ -22,20 +22,29 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
            if ~isfield(p,'EMon')
                p.EMon=false;
            end
+           if ~isfield(p,'photonsigma')
+               p.photonsigma=0;
+           end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
            
 %            p.lifetime=2;
-           photonsperframe=p.photons/p.lifetime;
-           posphot=getphotons(posreappear,photonsperframe,p.lifetime);
+%            photonsperframe=p.photons/p.lifetime;
+           posphot=getphotons(posreappear,p.photons,p.lifetime,p.photonsigma);
            
            locs=locsfrompos(posphot,p);
            locsout=singlelocs(locs);
 end
 
-function posphot=getphotons(locs,photonsperframe,lifetime)
+function posphot=getphotons(locs,photons,lifetime,photonsigma)
 for k=length(locs):-1:1
+    photonsperframe=getphotonsperframe(photons,lifetime,photonsigma,length(locs(k).x));
     posphot(k)=getphotonsi(locs(k),photonsperframe,lifetime);
 end
+end
+
+function photonsperframe=getphotonsperframe(photons,lifetime,photonsigma,len)
+photonsperframe=normrnd(photons,photonsigma,len,1)/lifetime;
+photonsperframe=max(photonsperframe,0);
 end
 
 function locso=getphotonsi(locs,photonsperframe,lifetime)
@@ -50,12 +59,13 @@ lenframe=ceil(lifetime-lenfirst);
 indextra=zeros(sum(lenframe),1);
 frame=zeros(sum(lenframe),1);
 timeon=zeros(sum(lenframe),1);
-
+photonintensity=zeros(sum(lenframe),1);
 
 idx=1;
 
 for k=1:length(lenframe)
     indextra(idx:idx+lenframe(k)-1)=k;
+    photonintensity(idx:idx+lenframe(k)-1)=photonsperframe(k);
 %     frame(idx:idx+lenframe(k)-1)=locs.frame(k)+(1:lenframe(k));
     T=lifetime(k)-lenfirst(k);
 %     while (T>1)
@@ -82,8 +92,10 @@ for k=1:length(fn)
     locso.(fn{k})=locs.(fn{k})(indout);
 end
 timeonall=[min(lenfirst,lifetime); timeon];
-photons=timeonall*photonsperframe;
-photonsr=poissrnd(photons);
+
+photonsinframe=timeonall.*[photonsperframe; photonintensity];
+% photonsinframe=timeonall.*photonintensity;
+photonsr=poissrnd(photonsinframe);
 locso.phot=photonsr;
 locso.frame=[locs.frame; frame];
 %remove double locs in one frame coming from same fluorophore

@@ -70,8 +70,10 @@ p=readstruct(gfile,{},true);
 end 
 
 help=uimenu(handle,'Label','Help');
-h.helpsmap=uimenu(help,'Label','Manual SMAP','Callback',{@helpsmap_callback,obj});
-h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpnpc_callback,obj});
+h.helpsmap=uimenu(help,'Label','User Guide','Callback',{@helpsmap_callback,obj,1});
+h.helpuser=uimenu(help,'Label','Programming Guide','Callback',{@helpsmap_callback,obj,2});
+h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpsmap_callback,obj,3});
+h.help2C=uimenu(help,'Label','Step-by-step 3D dual color example','Callback',{@helpsmap_callback,obj,4});
 end
 
 % function changeglobalGuiState(state)
@@ -142,7 +144,11 @@ end
 end
 
 function info_callback(a,b)
-msgbox('Superresolution microscopy analysis platform (SMAP). Jonas Ries, EMBL, Heidelberg')
+msgbox({'Superresolution microscopy analysis platform (SMAP).',...
+    'Jonas Ries, EMBL, Heidelberg, www.rieslab.de',...
+    'Licence: GPLv3, Copyright Jonas Ries, 2019',...
+    'Source code: www.github.com/jries/SMAP', ...
+    'Documentation and compiled version: www.rieslab.de'});
 end
 
 function globalsettings_callback(a,b,obj)
@@ -229,17 +235,29 @@ openstackinfiji(obj,imout,title)
 
 end
 
-function helpsmap_callback(a,b,obj)
-txt=fileread('Documentation/Manual/SMAPStep-by-StepGuide.md');
-f=figure;
-h=MarkdownPanel('Parent',f);
-h.Content=txt;
-pause(1)
-h.refresh;
-
+function helpsmap_callback(a,b,obj,whichone)
+if  isdeployed
+    direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
+else
+    direc = ['Documentation' filesep 'pdf'];
 end
 
-function helpnpc_callback(a,b,obj)
-myopenpdf('Documentation/Manual/SMAP_manual_NPC.pdf');
-
+filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf'};
+myopenpdf([direc filesep filenames{whichone}]);
+% url='https://oc.embl.de/index.php/s/fCoSkGcK0FbpQ3z/download';
+% urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
+% settingsdir=obj.getPar('SettingsDirectory');
+% if ~exist([settingsdir filesep 'temp'],'dir')
+%     mkdir(settingsdir,'temp');
+% end
+% if ~exist([settingsdir filesep 'temp' filesep 'Manual'],'dir')
+%     mkdir([settingsdir filesep 'temp'],'Manual');
+% end
+% fout=[settingsdir filesep 'temp' filesep 'Manual' filesep 'Manual_SMAP.pdf'];
+% displayonlinepdf(fout,urlzip,1)
 end
+
+% function helpnpc_callback(a,b,obj)
+% myopenpdf('Documentation/Manual/SMAP_manual_NPC.pdf');
+% 
+% end

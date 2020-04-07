@@ -37,6 +37,7 @@ function pard=guidef
 
 pard.textb.object=struct('String','keeps only the filtered localizations','Style','text');
 pard.textb.position=[1,1];
+pard.textb.Width=4;
 pard.plugininfo.type='ProcessorPlugin';
 pard.plugininfo.description='Keeps only filtered localizations. Can be used to reduce file size.';
 end

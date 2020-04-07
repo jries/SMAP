@@ -308,7 +308,7 @@ classdef GuiChannel< interfaces.LayerInterface
         end
         
         function default_callback(obj,callobj,b)
-            deffile=[ pwd '/settings/temp/Channel_default.mat'];
+            deffile=[obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Channel_default.mat'];
             fh=getParentFigure(obj.handle);
             modifiers = get(fh,'currentModifier');
             if ismember('shift',modifiers)||strcmpi(callobj.String,'save');
@@ -865,7 +865,7 @@ pard.tiftxt.Width=w1;
 
 pard.colortxt.object=struct('Style','text','String','Colormode:');
 pard.colortxt.position=[4,p1];
-pard.colortxt.Width=w1;  
+pard.colortxt.Width=w1*1.1;  
 
 
 pard.render_colormode.object=struct('Style','popupmenu','String',{obj.guiPar.srmodes}); 
@@ -1098,9 +1098,12 @@ end
 
 function detach_callback(a,b,obj,handle)
 f=figure('MenuBar','none','Toolbar','none');
-handle.Parent=f;
+f.Units='pixel';
+handle.Units='pixel';
+
 handle.Position(1)=0;
 handle.Position(2)=0;
+handle.Parent=f;
 f.Position(3:4)=handle.Position(3:4);
 handle.Tag='detached';
 % if strcmp(handle.Tag,'OV')

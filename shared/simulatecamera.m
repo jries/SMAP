@@ -52,8 +52,9 @@ for k=1:length(frames)
         imh=im0;
     end
     imh2=addbg(imh,p.background);
-    imh3=int2phot(imh2,p.EMon);   
-    imh4=phot2adu(imh3,p);
+    imh3=int2phot(imh2,p.EMon);
+    imh3n=addnoise(imh3,p);
+    imh4=phot2adu(imh3n,p);
     img(:,:,k)=imh4;
     
     if isfield(p,'plotaxis') &&isvalid(p.plotaxis)
@@ -68,6 +69,16 @@ for k=1:length(frames)
 end
 % close(hwb)
 simulpar=p;
+end
+
+function imo=addnoise(imin,p)
+if p.cameramodel.Value ==1 || p.scmosnoise ==0
+    imo=imin;
+else
+    sim=size(imin);
+    noise=normrnd(0,p.scmosnoise,sim(1),sim(2));
+    imo=imin+noise;
+end
 end
 
 function imo=phot2adu(imin,p)

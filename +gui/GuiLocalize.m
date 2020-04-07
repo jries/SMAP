@@ -87,6 +87,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             tabsizeh(4)=tabsizeh(4)-dh;            
            
             settingsfile=obj.getGlobalSetting('mainLocalizeWFFile');
+            settingsfile=changesettingsdir(settingsfile,obj.getPar('SettingsDirectory'));
             par=readstruct(settingsfile);
             if ~isfield(par,'tab')
                 par.tab=struct('hframe',struct('name','Input Image'),'hfilter',struct('name','Peak Finder'),'hfit',struct('name','Fitter'),'hloc',struct('name','Localizations'));
@@ -205,7 +206,11 @@ end
 
 if (isprop(a,'Text') && contains(a.Text,'Change')) || (isprop(a,'String') && contains(a.String,'Change'))
     restorepar=true;
-    oldsettings=obj.mainworkflow.getGuiParameters(true);
+    if isempty(obj.mainworkflow)
+        restorepar=false;
+    else
+        oldsettings=obj.mainworkflow.getGuiParameters(true);
+    end
 else
     restorepar=false;
 end
@@ -213,6 +218,10 @@ end
 obj.status('load workflow *.txt file');
 drawnow
 settingsfile=obj.getGlobalSetting('mainLocalizeWFFile');
+if ~exist(settingsfile,'file') || ~contains(settingsfile,'.txt')
+    settingsfile=[obj.getPar('SettingsDirectory') filesep 'workflows' filesep '*.txt'];
+end
+
 [f,p]=uigetfile(settingsfile,'Select workflow *.txt file');
 if f
     settingsfilen=[p f];
@@ -258,7 +267,9 @@ end
 
 function loadwf(obj,settingsfilen)
     obj.setGlobalSetting('mainLocalizeWFFile',makerelativetopwr(settingsfilen));
-    obj.mainworkflow.clear;
+    if ~isempty(obj.mainworkflow)
+        obj.mainworkflow.clear;
+    end
     delete(obj.handle.Children)
     obj.makeGui;
 end

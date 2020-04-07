@@ -27,6 +27,7 @@ classdef MathParser<interfaces.DialogProcessor
                 tt=struct('resultfield',{{''}},'equation',{{''}});
                 obj.equationhistory=struct2table(tt);
             end
+            obj.historyfile=[obj.getPar('SettingsDirectory') filesep 'temp' filesep 'MathParser.txt'];
         end
         
         function out=run(obj,p)

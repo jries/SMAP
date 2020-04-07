@@ -42,6 +42,9 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
             ic=obj.getPar('intensity_channel');
             if isempty(ic)
                 ic=obj.extension;
+                if isempty(ic)
+                    ic='t';
+                end
 %                 return;
             end
             switch ic

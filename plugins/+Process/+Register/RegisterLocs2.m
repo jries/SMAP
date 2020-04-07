@@ -254,10 +254,10 @@ pard.save.position=[6.5,4];
 pard.save.object.TooltipString='';
 pard.save.Height=1.5;
 
-pard.updatesmlfile.object=struct('Style','checkbox','String','write T to .sml','Value',1);
-pard.updatesmlfile.position=[6,3];
+pard.updatesmlfile.object=struct('Style','checkbox','String','add T to current .sml','Value',1);
+pard.updatesmlfile.position=[6,2.5];
 pard.updatesmlfile.object.TooltipString='If checked, the transformation file is appended to the .sml file and saved there as well when you click save T';
-
+pard.updatesmlfile.Height=1.5;
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.inputParameters={'currentfileinfo'};

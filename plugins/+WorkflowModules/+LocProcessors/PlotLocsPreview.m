@@ -37,8 +37,17 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
         end
         function output=run(obj,data,p)
             output=[];
-            if obj.getPar('loc_preview') && ~obj.previewdone
+            if obj.getPar('loc_preview') %&& ~obj.previewdone
                 locs=data.data;
+                previewlocs=obj.getPar('preview_locs');
+                if isempty(locs)
+                    locs=previewlocs;
+                elseif ~isempty(previewlocs) 
+                    fn=fieldnames(previewlocs);
+                    for k=1:length(fn)
+                        locs.(fn{k})(end+1:end+length(previewlocs.(fn{k})))=previewlocs.(fn{k});
+                    end
+                end
                 obj.setPar('preview_locs',locs);
                 
                 %make figure

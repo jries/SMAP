@@ -92,6 +92,7 @@ methods
             updateall;
         end
         function updateall(obj,a,b)
+             warning('off','MATLAB:callback:error');
             %update all gui parameters
             s=size(obj.V);
 %             for k=1:length(s)
@@ -142,9 +143,10 @@ methods
                 obj.guihandles.hslidert{2}.Visible='off';
             end
             obj.plotimage
-
+%              warning('on','MATLAB:callback:error');
         end
         function plotimage(obj,a,b,c)
+            warning('off','MATLAB:callback:error');
 %              s=size(obj.V);
             xlimold=obj.guihandles.axis.XLim;
             ylimold=obj.guihandles.axis.YLim;
@@ -256,6 +258,7 @@ methods
             if ~p.rgb
                 colorbar(obj.guihandles.axis)
             end
+%              warning('on','MATLAB:callback:error');
 
         end
         function keypress(obj,a,b)
@@ -316,6 +319,9 @@ methods
             if length(s)>3 %&& strcmp(obj.guihandles.hframe{2}.Visible,'on')
                 obj.showframes{dim(4)}=round(str2double(obj.guihandles.hframe{2}.String));
             end
+        end
+        function delete(obj)
+             warning('on','MATLAB:callback:error');
         end
 end
 end

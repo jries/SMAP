@@ -81,7 +81,7 @@ classdef SEAnnotation< interfaces.SEProcessor
             if length(selected)<=1
             
             site=obj.SE.currentsite;
-            site.annotation.use=obj.object.Value;
+            site.annotation.use=object.Value;
             else
                 for k=1:length(selected)
                    site=obj.SE.sites(selected(k));

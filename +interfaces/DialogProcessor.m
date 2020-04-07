@@ -68,7 +68,7 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
         function setvisibility(obj,name)
             %shows and hides the GUI. called from module selector
             %setvisibility(visible) visible='on'/'off'
-            if isvalid(obj.handle)&&~isa(obj.handle.Parent,'matlab.ui.Figure')
+            if isvalid(obj) && isvalid(obj.handle)&&isvalid(obj.handle.Parent)&&~isa(obj.handle.Parent,'matlab.ui.Figure')
             set(obj.handle,'Visible',name);
             end
         end
