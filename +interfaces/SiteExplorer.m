@@ -89,8 +89,16 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             end
             
             for k=1:length(SEin.cells)
-                SEin.cells(k).info.filenumber=conversion(SEin.cells(k).info.filenumber);
-                SEin.cells(k).ID=SEin.cells(k).ID+obj.maxcell;
+                if isempty(SEin.cells(k).info)
+                    SEin.cells(k).info.filenumber=0;
+                else
+                    SEin.cells(k).info.filenumber=conversion(SEin.cells(k).info.filenumber);
+                end
+                if isempty(SEin.cells(k).ID)
+                   SEin.cells(k).ID= max([SEin.cells(:).ID])+length(SEin.cells);
+                else
+                    SEin.cells(k).ID=SEin.cells(k).ID+obj.maxcell;
+                end
             end
             for k=1:length(SEin.sites)
                 SEin.sites(k).info.filenumber=conversion(SEin.sites(k).info.filenumber);
