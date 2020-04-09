@@ -39,6 +39,14 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             obj.guihandles.preview.Callback={@preview_callback,obj};
             addmodule(obj,'generalStatistics');
             
+            % Yu-Le added
+            flagDirExist = exist('../SMLMModelFit','dir');
+            if flagDirExist==0
+                addpath(genpath('../ries-private'))
+            else
+                addpath(genpath('../SMLMModelFit'))
+            end
+            
         end 
         function evaluate(obj,site)
             evaluatesite(obj,site);
