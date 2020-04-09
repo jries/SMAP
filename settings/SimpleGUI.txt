@@ -142,4 +142,4 @@ WorkflowModules.Peakfinders.PeakFinder.module=WorkflowModules,Peakfinders,PeakFi
 WorkflowModules.Peakfinders.PeakFinderNMSWF.module=WorkflowModules,Peakfinders,PeakFinderNMSWF
 WorkflowModules.Peakfinders.RoiAdder.module=WorkflowModules,Peakfinders,RoiAdder
 WorkflowModules.Peakfinders.RoiCutterWF.module=WorkflowModules,Peakfinders,RoiCutterWF
-globalGuiState=s
+globalGuiState=a
