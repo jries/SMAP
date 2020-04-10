@@ -25,7 +25,7 @@ classdef BackgroundEstimation<interfaces.DialogProcessor
         function pard=guidef(obj)
             pard.text.object=struct('String','calculate background', 'Style','text');
             pard.text.position=[1,1];
-    
+            pard.plugininfo.type='ProcessorPlugin';
             pard.plugininfo.description='Calculates average background per pixel. For the SlowStorm paper';
          
         end
