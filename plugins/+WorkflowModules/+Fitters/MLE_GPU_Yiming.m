@@ -375,6 +375,8 @@ switch fitpar.fitmode
                 obj.spatial3Dcal=false;
             end
             ssxy=size(cal.SXY);
+            obj.spatialXrange={};
+            obj.spatialYrange={};
             for xx=1:ssxy(1)
                 for yy=1:ssxy(2)
                     obj.spatialXrange{xx,yy}=cal.SXY(xx,yy).Xrange;
