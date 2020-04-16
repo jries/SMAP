@@ -1,4 +1,4 @@
-function [dudt,model] =  kernel_DerivativeSpline_v2(xc,yc,zc,xsize,ysize,zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,theta)
+function [dudt,model] =  kernel_DerivativeSpline_SMAP(xc,yc,zc,xsize,ysize,zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,theta)
 dudt = zeros(5,1);
 xc = max(xc,0);
 xc = min(xc,xsize-1);

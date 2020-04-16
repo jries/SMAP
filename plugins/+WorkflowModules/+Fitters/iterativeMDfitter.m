@@ -89,7 +89,7 @@ classdef iterativeMDfitter<interfaces.WorkflowModule
                 end
 
             else %use this now for deepStorm
-                maxima.znm=-maxima.znm; %XXXXX 
+                maxima.znm=maxima.znm; %XXXXX 
 %                 maxima.bg=bgglobal; %currently not calculated
             end
             
@@ -208,7 +208,7 @@ end
 function locout=coord2loc(coord,crlb,LL,iterations,pos,frame,chi2)
 locout.xpix=single(coord(:,1)+pos.x);
 locout.ypix=single(coord(:,2)+pos.y);
-locout.znm=-single(coord(:,3)); %XXXXX
+locout.znm=single(coord(:,3)); %XXXXX
 locout.phot=single(coord(:,4));
 locout.bg=single(coord(:,5));
 locout.xpixerr=single(sqrt(crlb(:,1)));

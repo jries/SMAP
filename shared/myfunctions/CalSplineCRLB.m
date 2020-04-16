@@ -38,7 +38,7 @@ for tx = 1:Nfits
 
             newTheta = Theta(tx,:);
             
-            [newDudt, model] =  kernel_DerivativeSpline_v2(ii+xstart+off,jj+ystart+off,zstart,spline_xsize,spline_ysize,spline_zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,newTheta);
+            [newDudt, model] =  kernel_DerivativeSpline_SMAP(ii+xstart+off,jj+ystart+off,zstart,spline_xsize,spline_ysize,spline_zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,newTheta);
             
             for l = 0:NV-1
                 for m =l:NV-1

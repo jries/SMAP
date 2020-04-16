@@ -183,7 +183,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
             xrp=(par.xrange/par.pixelsize);
             yrp=(par.yrange/par.pixelsize);        
             info=interfaces.metadataSMAP;
-            info.roi=[xrp(1) yrp(1) xrp(2)-xrp(1)+1 yrp(2)-yrp(1)+1];
+            info.roi=round([xrp(1) yrp(1) xrp(2)-xrp(1) yrp(2)-yrp(1)]);
             info.cam_pixelsize_um=p.pixelsize/1000;
            
             if p.usecam
