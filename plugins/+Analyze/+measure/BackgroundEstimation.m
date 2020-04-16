@@ -16,7 +16,8 @@ classdef BackgroundEstimation<interfaces.DialogProcessor
             for k=1:length(layers)
                 locsu=obj.locData.getloc({'bg','numberInGroup'},'position','roi','layer',layers(k),'grouping','ungrouped');
                 locsg=obj.locData.getloc({'bg','numberInGroup','phot'},'position','roi','layer',layers(k),'grouping','grouped');
-                locsgall=obj.locData.getloc({'phot'},'layer',layers(k),'position','roi','grouping','grouped','removeFilter',{'locprecnm','locprecznm','phot'});
+                locsgall=obj.locData.getloc({'phot'},'position','roi','grouping','grouped');
+                locsgallf=obj.locData.getloc({'phot'},'layer',layers(k),'position','roi','grouping','grouped','removeFilter',{'locprecnm','locprecznm','phot'});
                 out.bg_ungrouped(k)=mean(locsu.bg);
                 out.bg_grouped_tot(k)=mean(locsg.bg);
                 out.bg_grouped_frame(k)=mean(locsg.bg./locsg.numberInGroup);
@@ -24,10 +25,12 @@ classdef BackgroundEstimation<interfaces.DialogProcessor
                 photrange=0:dphot:maxphot;
                 hc=histcounts(locsg.phot,photrange);
                 hcall=histcounts(locsgall.phot,photrange);
+                hcallf=histcounts(locsgallf.phot,photrange);
                 photrange(end)=[]; photrange=photrange+dphot/2;
                 out.photonrange=photrange;
                 out.phothistfiltered=hc;
                 out.phothistall=hcall;
+                out.phothistnolocprecfilter=hcallf;
             end
 
         end
