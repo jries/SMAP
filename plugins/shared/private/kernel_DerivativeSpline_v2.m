@@ -1,4 +1,5 @@
 function [dudt,model] =  kernel_DerivativeSpline_v2(xc,yc,zc,xsize,ysize,zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,theta)
+disp('plugins/shared/private/kernel_derivativeSpline_v2.m is obsolete. Delete, replace by kernel_DerivativeSpline_SMAP')
 dudt = zeros(5,1);
 xc = max(xc,0);
 xc = min(xc,xsize-1);
