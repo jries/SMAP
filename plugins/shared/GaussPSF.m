@@ -138,11 +138,19 @@ classdef GaussPSF<interfaces.PSFmodel
                 elseif length(z)==1
                     z=z+0*bg;
                 end
-            end           
-            sx=analytical(1).*sqrt(1+((cor(:,3)+analytical(3))/analytical(2)).^2);
-            sy=analytical(1).*sqrt(1+((cor(:,3)-analytical(3))/analytical(2)).^2);
+            end          
 
-            disp('CRLB not implemented')
+            sx=analytical(1).*sqrt(1+((z+analytical(3))/analytical(2)).^2);
+            sy=analytical(1).*sqrt(1+((z-analytical(3))/analytical(2)).^2);
+       
+            xerr=MortensenCRLB(N,bg,sx, 1,0); 
+            yerr=MortensenCRLB(N,bg,sy, 1,0);
+%             x , y , N, bg, zh
+            crlb=zeros(length(N),5);
+            crlb(:,1)=xerr.^2;
+            crlb(:,2)=yerr.^2;
+            disp('CRLB not properly implemented')
+            
 
         end
         

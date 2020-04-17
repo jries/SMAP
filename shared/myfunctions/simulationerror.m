@@ -172,12 +172,12 @@ if isz
     subplot(3,4,7,'Parent',f)
 [fitzr, ~] = fithistr(dzr,0.1);
 xlabel('dz/sqrt(CRLBz)')
-end
 
 
-subplot(3,4,10,'Parent',f)
-hold off
-if ~all(isnan(locfit.bg(iBa))) && ~numel(unique(locfit.bg(iBa)))
+
+    subplot(3,4,10,'Parent',f)
+    hold off
+
     q=quantile(vertcat(unique(locfit.bg(iBa)),unique(locgt.bg(iAa))),[0.02 0.98]);
     edges=floor(q(1)):1:ceil(q(2));
     [h1,edges1]=histcounts(locfit.bg(iBa),edges);
@@ -190,6 +190,9 @@ if ~all(isnan(locfit.bg(iBa))) && ~numel(unique(locfit.bg(iBa)))
     hold on
     bb=bar(edges,h1/max(h1));
     bb.FaceAlpha=0.5;
+else
+    RMSEax=0;
+    RMSEvol=0;
 end
 xlabel('bg')
 % hold off
@@ -200,6 +203,7 @@ xlabel('bg')
 % xlabel('bg gt')
 % ylabel('bg fit')
 
+if ~all(locfit.z==0)
 subplot(3,4,11,'Parent',f)
 hold off
 dscatter(locgt.z(iAa),locfit.z(iBa))
@@ -210,6 +214,7 @@ xlabel('z gt')
 ylabel('z fit')
 
 title(['RMSElat = ' num2str(RMSElat,3) ' nm, RMSEvol = ' num2str(RMSEvol,3) ' nm'])
+end
 
 subplot(3,4,12,'Parent',f);
 if length(unique(locgt.phot(iAa)))>1
@@ -242,11 +247,17 @@ effcy_vol = (effcy_lat + effcy_ax) / 2;
 
 sigma_crx = fitxr.c1 / sqrt(2);
 sigma_cry = fityr.c1 / sqrt(2);
-sigma_crz = fitzr.c1 / sqrt(2);
+if isz
+    sigma_crz = fitzr.c1 / sqrt(2);
+    sigma_crvol = sqrt(sigma_crx ^ 2 + sigma_cry ^ 2 + sigma_crz ^ 2) / sqrt(3);  % is this correct?
+else
+    sigma_crz=0;
+    sigma_crvol=0;
+end
 
 sigma_crlat = sqrt(sigma_crx ^ 2 + sigma_cry ^ 2) / sqrt(2);
 sigma_crax = sigma_crz;
-sigma_crvol = sqrt(sigma_crx ^ 2 + sigma_cry ^ 2 + sigma_crz ^ 2) / sqrt(3);  % is this correct?
+
 
 %add all results
 results.precision = precision;
@@ -295,7 +306,7 @@ end
 ff='%1.1f';
 ff2='%1.2f';
 qq=quantile(de,[0.002 0.998]);
-if qq(1)==qq(2)
+if qq(1)==qq(2) || any(isinf(abs(qq)))
     fitp2=zeros(5);
     return
 end
