@@ -87,7 +87,7 @@ if ~isfield(locerr,'xerr')
     elseif isfield(locerr,'locprecnm')&&~isempty(locerr.locprecnm)
         locerr.xerr=locerr.locprecnm;
     else
-        locerr.xerr=Mortensen(locgt.phot,locgt.bg,150,100,0);
+        locerr.xerr=MortensenCRLB(locgt.phot,locgt.bg,150,100,0);
         disp('error in x estimated using Mortensen');
     end
 end
@@ -97,7 +97,7 @@ if ~isfield(locerr,'yerr')
     elseif isfield(locerr,'locprecnm')&&~isempty(locerr.locprecnm)
         locerr.yerr=locerr.locprecnm;
     else
-        locerr.yerr=Mortensen(locgt.phot,locgt.bg,150,100,0);
+        locerr.yerr=MortensenCRLB(locgt.phot,locgt.bg,150,100,0);
         disp('error in y estimated using Mortensen');
     end
 end
@@ -107,7 +107,7 @@ if ~isfield(locerr,'zerr') && isz
     elseif isfield(locerr,'locprecznm')&&~isempty(locerr.locprecznm)
         locerr.zerr=locerr.locprecznm;
     else
-        locerr.zerr=Mortensen(locgt.phot,locgt.bg,150,100,0)*3;
+        locerr.zerr=MortensenCRLB(locgt.phot,locgt.bg,150,100,0)*3;
         disp('error in z estimated using Mortensen');
     end
 end
@@ -117,7 +117,7 @@ if ~isfield(locerr,'Nerr')
     if isfield(locerr,'photerr')&&~isempty(locerr.photerr)
         locerr.Nerr=locerr.photerr;
     else
-        [~,locerr.Nerr]=Mortensen(locgt.phot,locgt.bg,150,100,0);
+        [~,locerr.Nerr]=MortensenCRLB(locgt.phot,locgt.bg,150,100,0);
         
         disp('error in phtons estimated using Rieger');
     end
@@ -350,16 +350,16 @@ t2=text(wx+dx/4,max(hn)*0.8,[num2str(ingauss*100,'%2.0f') '%'],'FontSize',16);
 end
 
 
-function [lp,errphot]=Mortensen(N,Bg,PSF, pixel,cmosn)
-b=sqrt(Bg+cmosn^2);
-
-PSFa=sqrt(PSF^2+pixel^2/12);
-v=PSFa^2./N.*(16/9+8*pi*PSFa^2*b.^2./N/pixel^2);
-lp=sqrt(v);
-
-
-s_a=PSF/pixel; %sigmapsf/pixelsize
-tau=2*pi*(Bg)*(s_a^2+1/12)./N;
-errphot2=N.*(1+4*tau+sqrt(tau./(14*(1+2*tau)))); %This is Rieger...
-errphot=sqrt(errphot2);
-end
+% function [lp,errphot]=Mortensen(N,Bg,PSF, pixel,cmosn)
+% b=sqrt(Bg+cmosn^2);
+% 
+% PSFa=sqrt(PSF^2+pixel^2/12);
+% v=PSFa^2./N.*(16/9+8*pi*PSFa^2*b.^2./N/pixel^2);
+% lp=sqrt(v);
+% 
+% 
+% s_a=PSF/pixel; %sigmapsf/pixelsize
+% tau=2*pi*(Bg)*(s_a^2+1/12)./N;
+% errphot2=N.*(1+4*tau+sqrt(tau./(14*(1+2*tau)))); %This is Rieger...
+% errphot=sqrt(errphot2);
+% end

@@ -27,12 +27,15 @@ numlocs=length(locs.x);
 %2D in focus
 locs.s=zeros(numlocs,1)+100;
 img=zeros(p.sizey,p.sizex,length(frames),'single');
-ind1=1;
+ind1=find(locs.frame<frames(1),1,'last');
+if isempty(ind1)
+    ind1=length(locs.frame);
+end
 
 % hwb=waitbar(0,'calcualting camera images');
 for k=1:length(frames)
 %     waitbar(k/length(frames),hwb);
-    while ind1<=numlocs&&locs.frame(ind1)<frames(k)
+    while ind1<numlocs&&locs.frame(ind1)<frames(k)
         ind1=ind1+1;
     end
     if locs.frame(ind1)>frames(k)
@@ -95,8 +98,8 @@ imo=imin*emgain/p.conversion+p.offset;
 end
 
 function img=psfimage(locs,range,p,psf)
-locsh.x=locs.x(range);
-locsh.y=locs.y(range);
+locsh.x=locs.x(range)-0.5*p.pixelsize; %I had to add this to result in same coordinates as GT
+locsh.y=locs.y(range)-0.5*p.pixelsize;
 locsh.s=locs.s(range);
 locsh.N=locs.phot(range);
 locsh.z=locs.znm(range);

@@ -363,6 +363,7 @@ if a.Value==3 %make with simulation plugin
         obj.simulator.handle=figure('MenuBar','none','Toolbar','none','Name','simulate locs');
         obj.simulator.makeGui;
         disp('press get localizations after running the simulator')
+        obj.children.simulator=obj.simulator;
     end
     figure(obj.simulator.handle)
     

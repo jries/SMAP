@@ -109,9 +109,12 @@ classdef GaussPSF<interfaces.PSFmodel
 %                 end
 %                 img=output;
         end
-        function [crlb,parameters]=crlb(obj,N,bg,coord,rois)
-            if nargin<5
+        function [crlb,parameters]=crlb(obj,N,bg,coord,rois,camnoise)
+            if nargin<5||isempty(roisize)
                 rois=obj.roisize;
+            end
+            if nargin<6||isempty(camnoise)
+                camnoise=0;
             end
             analytical=obj.gausspar;
             if length(analytical)==2 
@@ -143,12 +146,14 @@ classdef GaussPSF<interfaces.PSFmodel
             sx=analytical(1).*sqrt(1+((z+analytical(3))/analytical(2)).^2);
             sy=analytical(1).*sqrt(1+((z-analytical(3))/analytical(2)).^2);
        
-            xerr=MortensenCRLB(N,bg,sx, 1,0); 
-            yerr=MortensenCRLB(N,bg,sy, 1,0);
+            xerr=MortensenCRLB(N,bg,sx, 1,camnoise); 
+            yerr=MortensenCRLB(N,bg,sy, 1,camnoise);
+            [~,photerr]=MortensenCRLB(N,bg,sqrt(sx.*sy), 1,camnoise);
 %             x , y , N, bg, zh
             crlb=zeros(length(N),5);
             crlb(:,1)=xerr.^2;
             crlb(:,2)=yerr.^2;
+            crlb(:,3)=photerr.^2;
             disp('CRLB not properly implemented')
             
 

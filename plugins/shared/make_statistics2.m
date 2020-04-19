@@ -426,7 +426,7 @@ end
 if nargin<4||isempty(hmin)
     hmin=qmin;
 end
-nphot=hmin:dphot:qmax;
+nphot=hmin:dphot:qmax+dphot*2;
 slegend={};
 if ~isempty(ax)
     axes(ax)
