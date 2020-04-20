@@ -17,7 +17,7 @@ classdef GuiChannel< interfaces.LayerInterface
             obj.guiPar.mincall=[];
             obj.guiPar.maxcall=[];
             obj.guiPar.srmodes={'normal','z','field'};
-            obj.outputParameters={'ch_filelist','channels','layercheck','rendermode','render_colormode','renderfield',...
+            obj.outputParameters={'ch_filelist','filelistfilter','channels','layercheck','rendermode','render_colormode','renderfield',...
                 'groupcheck','imaxtoggle','imax','lut','remout','shift','shiftxy_min','shiftxy_max','layer','colorrange',...
                 'znm_min','znm_max','frame_min','frame_max','scalex','scaley'};
             obj.guiselector.show=true;
@@ -116,7 +116,9 @@ classdef GuiChannel< interfaces.LayerInterface
              callobj=obj;
             obj.addSynchronization('filelist_short',obj.guihandles.ch_filelist,'String',{@callobj.filelist_callback,1})
             obj.addSynchronization('filenumber',[],[],{@callobj.filenumber_callback})
-           
+            
+            h.filelistfilter.Callback=@obj.filelistfilter_callback;
+            obj.addSynchronization([obj.layerprefix 'filelistfilter'],h.filelistfilter,'Value',{@callobj.filelistfilter_callback})
            
            
             obj.addSynchronization([obj.layerprefix 'selectedField'],[],[],{@callobj.selectedField_callback})
@@ -143,13 +145,16 @@ classdef GuiChannel< interfaces.LayerInterface
             updatelayercheck(h.layercheck,0,obj);
             obj.setfiltergray;
         end
-        
+        function filelistfilter_callback(obj,a,b)
+            sf={'filenumber',[],[],obj.getSingleGuiParameter('filelistfilter')};
+            obj.setPar('selectedField',sf,'layer',obj.layer);
+        end
         function updateframes_callback(obj,a,b)
             p.frame_min=obj.getPar('frame_min');
             p.frame_max=obj.getPar('frame_max');
             obj.setGuiParameters(p);
         end
-        function filenumber_callback(obj,a,b,c)
+        function filenumber_callback(obj,a,b,c)            
             fn=obj.getPar('filenumber');
             obj.guihandles.ch_filelist.Value=fn;
             obj.filelist_callback;
@@ -173,7 +178,10 @@ classdef GuiChannel< interfaces.LayerInterface
                 if ~isempty(resetframe) && resetframe
                     obj.updatefields_callback(0,0,'frame',false,false)
                 end
-            obj.updateLayerField;
+%              sf={'filenumber',[],[],true};
+%              obj.setPar('selectedField',sf,'layer',obj.layer);
+             obj.setGuiParameters(struct('filelistfilter',true));
+             obj.updateLayerField;
              setvisibility(0,0,obj)
              obj.setfiltergray;
         end
@@ -199,7 +207,7 @@ classdef GuiChannel< interfaces.LayerInterface
                 layerp=copyfields(layerp,p,fieldnames(layerp));
                 obj.setPar(obj.layerprefix,layerp);
                 fn=obj.guihandles.ch_filelist.Value;
-                sf={'filenumber',fn,fn,true};
+                sf={'filenumber',fn,fn,p.filelistfilter};
                 obj.setPar('selectedField',sf,'layer',obj.layer);
             else             
                 if nargin<3
@@ -260,7 +268,15 @@ classdef GuiChannel< interfaces.LayerInterface
                     obj.guihandles.([field '_max']).BackgroundColor=color;
                 end
             end
-
+            if strcmp(field,'filenumber')
+                if ~isempty(sfield{4})
+                    obj.setGuiParameters(struct('filelistfilter',sfield{4}(1)))
+%                     if sfield{4} %do filtering
+%                         filenumber=min(max(1,round(sfield{2})),length(obj.guihandles.ch_filelist.String));
+%                         obj.guihandles.ch_filelist.Value=filenumber;
+%                     end
+                end
+            end
         end
         function setfiltergray(obj)
             cf={'locprecnm','znm','PSFxnm','locprecznm','frame'};
@@ -795,8 +811,14 @@ pard.layercheck.TooltipString='switch layer on and off';
             
 pard.ch_filelist.object=struct('Style','popupmenu','String',{'File'});
 pard.ch_filelist.position=[1,1.2];
-pard.ch_filelist.Width=2.2;
+pard.ch_filelist.Width=1.9;
 pard.ch_filelist.TooltipString='which file (loc or image) to display';
+
+pard.filelistfilter.object=struct('Style','checkbox','String','','Value',1);
+pard.filelistfilter.position=[1,3.1];
+pard.filelistfilter.Width=0.2;
+pard.filelistfilter.TooltipString='Filter files';
+pard.filelistfilter.Optional=true;
 
 pard.text1.object=struct('Style','text','String','Ch');
 pard.text1.position=[1,3.4];

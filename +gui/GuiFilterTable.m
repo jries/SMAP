@@ -89,9 +89,13 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 else
                     
                 end
-            
-                s{indf,2}=fmin;
-                s{indf,6}=fmax;
+                
+                if ~isempty(fmin)
+                    s{indf,2}=fmin;
+                end
+                if ~isempty(fmax)
+                    s{indf,6}=fmax;
+                end
                 
                 
                 if ~isempty(fauto)
