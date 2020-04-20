@@ -350,6 +350,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
         
         
         function redraw(obj)
+            global locplot3Dview
                 if isempty(obj.axis)||isstruct(obj.axis)||~isvalid(obj.axis)
                     return
                 end
@@ -439,6 +440,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                     end
                      pr=copyfields(copyfields(copyfields(p,pl),ph),rp);
                      loc=getlocrot(k,pl); 
+                     locplot3Dview=loc;
                      if stereo
                          pr=getstereosettings(pr,1);
                          layer1(k).images=renderplotlayer(pr,1);
@@ -895,7 +897,11 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             obj.setGuiParameters(struct('theta',0));
             obj.redraw;
         end
-        
+        function thetaplus(obj, a,b)
+            th=obj.getSingleGuiParameter('theta');
+            obj.setGuiParameters(struct('theta',mod(th+90+89,180)-89));
+            obj.redraw;
+        end       
         function savesideview_callback(obj,a,b)
             f=obj.getPar('lastSMLFile');
             fn=strrep(f,'sml.mat','3dxz.tif');
@@ -1001,9 +1007,9 @@ pard.transparencymode.Width=1.5;
 pard.transparencymode.TooltipString=sprintf('maximum intensity, \n partial transparency (parameter is related to transparency), \n render as ball (parameter is ball diamter in reconstructed pixels');
 pard.transparencymode.Optional=true;
 
-pard.thetat.object=struct('String','Polar angle theta ','Style','pushbutton','Callback',@obj.resetazimuth);
+pard.thetat.object=struct('String','Polar angle','Style','pushbutton','Callback',@obj.resetazimuth);
 pard.thetat.position=[3,1];
-pard.thetat.Width=1.1;
+pard.thetat.Width=0.7;
 pard.thetat.TooltipString='Push to set polar angle to zero';
 pard.thetat.Optional=false;
 
@@ -1018,9 +1024,16 @@ pard.zmax.Width=0.5;
 pard.zmax.Optional=false;
 
 pard.theta.object=struct('Style','edit','String','0'); 
-pard.theta.position=[3,2.1];
+pard.theta.position=[3,1.7];
 pard.theta.Width=0.5;
 pard.theta.Optional=false;
+
+pard.thetplus.object=struct('String','+90°','Style','pushbutton','Callback',@obj.thetaplus);
+pard.thetplus.position=[3,2.2];
+pard.thetplus.Width=0.4;
+pard.thetplus.TooltipString='Push to set polar angle to zero';
+pard.thetplus.Optional=false;
+
 
 pard.transparencypar.object=struct('Style','edit','String','1'); 
 pard.transparencypar.position=[6,2.5];

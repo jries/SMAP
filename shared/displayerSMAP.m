@@ -248,7 +248,7 @@ switch layer
 %         imout(end-3:end,rim/2+1:end-rim/2,:)=lutim;
         imout(1:ll,rim/2+1:end-rim/2,:)=lutim;
     case 1
-        imout(rim/2+1:end-rim/2,end-ll+1:end,:)=permute(lutim,[2 1 3]);
+        imout(rim/2+1:end-rim/2,end-ll+1:end,:)=permute(lutim(:,end:-1:1,:),[2 1 3]);
     case 4
 %         imout(1:6,rim/2+1:end-rim/2,:)=lutim;
         imout(end-ll+1:end,rim/2+1:end-rim/2,:)=lutim;
