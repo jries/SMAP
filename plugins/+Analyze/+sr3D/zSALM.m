@@ -20,6 +20,9 @@ classdef zSALM<interfaces.DialogProcessor
             fsubg=p.bgfield2.selection;
             locs=obj.locData.getloc({fsa,fua,'znm','phot','LLrel','znm_a'},...
                 'layer', find(obj.getPar('sr_layerson')),'position','roi');
+            if ~isfield(obj.locData.loc,'znm_original')
+                obj.locData.setloc('znm_original',obj.locData.loc.znm);
+            end
             if ~isfield(obj.locData.loc,'locprecnm_a')
                  obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
             end
@@ -136,6 +139,7 @@ classdef zSALM<interfaces.DialogProcessor
             % weighted average
             bgs=obj.locData.loc.(fsabg);
             bgu=obj.locData.loc.(fsubg);
+            zoriginal=obj.locData.loc.znm_original;
 %             zerrsexp=zerrSALM(fitp,isall,iuall,bgs,bgu); %now based on exponential fit. Later based on real model?
             
             %calculate dz/dr
@@ -146,7 +150,7 @@ classdef zSALM<interfaces.DialogProcessor
             dz_dr=fit(r(1:end-1)+rdiff/2,dzr/rdiff,'cubicinterp');
             
             %late: take into account the factor in zerr
-            zerrs=zerrSALMspline(dz_dr,isall,iuall,bgs,bgu);
+            zerrs=zerrSALMspline(obj,dz_dr,isall,iuall,bgs,bgu,zoriginal);
             zerrs(zoutofrange)=inf;
             errza=obj.locData.loc.locprecznm_a;
             
@@ -226,6 +230,28 @@ rr=(r+zs)/sqrt(2);
             fitpsalm=fit(zr,rr,ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
 end
 
+function loadcall_callback(a,b,obj)
+p=obj.getAllParameters;
+if isempty(p.cal_3Dfile)
+    path=obj.getGlobalSetting('DataDirectory');
+    fh=obj.getPar('loc_fileinfo');
+    if ~isempty(fh) && ~isempty(fh.imagefile)
+        path=fileparts(fh.imagefile);
+    end  
+    p.cal_3Dfile=[path filesep '*3dcal.mat'];
+end
+[f,p]=uigetfile(p.cal_3Dfile);
+if f
+    l=load([p f]);
+    if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
+        msgbox('no 3D data recognized. Select other file.');
+    end
+    obj.setGuiParameters(struct('cal_3Dfile',[p f]));
+    obj.setPar('cal_3Dfile',[p f]);
+    
+end
+end
+
 function pard=guidef(obj)
 
 
@@ -295,7 +321,7 @@ pard.zrange.Width=0.8;
 pard.rfactort.object=struct('Style','text','String','SA/UA ratio on coverslip');
 pard.rfactort.position=[5,1];
 pard.rfactort.Width=1.3;
-pard.rfactor.object=struct('Style','edit','String','1.');
+pard.rfactor.object=struct('Style','edit','String','2.16');
 pard.rfactor.position=[5,2.3];
 pard.rfactor.Width=0.4;
 
@@ -305,8 +331,18 @@ pard.tss.position=[5,3];
 pard.fieldznm.object=struct('Style','popupmenu','String',{{'weighted average','SALM','astigmatism'}});
 pard.fieldznm.position=[5,3.5];
 pard.fieldznm.Width=1.5;
+% 
+% pard.loadcal.object=struct('Style','pushbutton','String','Load 3D cal','Callback',{{@loadcall_callback,obj}});
+% pard.loadcal.position=[6,1];
+% pard.loadcal.Width=.75;
+% pard.cal_3Dfile.object=struct('Style','edit','String','');
+% pard.cal_3Dfile.position=[6,1.75];
+% pard.cal_3Dfile.Width=3.25;
+% pard.cal_3Dfile.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');
+
+
  pard.syncParameters={{'locFields','assignfield1',{'String'}},{'locFields','assignfield2',{'String'}},...
-     {'locFields','bgfield1',{'String'}},{'locFields','bgfield2',{'String'}}};
+     {'locFields','bgfield1',{'String'}},{'locFields','bgfield2',{'String'}}};%,{'cal_3Dfile','cal_3Dfile',{'String'}}};
             
 %             obj.addSynchronization('locFields',[],[],@obj.updateLocFields)
 %             obj.addSynchronization('filelist_short',obj.guihandles.dataselect,'String')
@@ -331,7 +367,17 @@ dz2(indb)=inf;
 % dz2=dR2/b^2./r.^2;
 err=sqrt(dz2);
 end
-function err=zerrSALMspline(dz_dr,Ns,Nu,bgs,bgu)
+function err=zerrSALMspline(obj,dz_dr,Ns,Nu,bgs,bgu,zas)
+% XXX replace by CRLB from splinePSF
+% psf_sa=splinePSF;
+% psf_sa.loadmodel(cal_3Dfile,2);
+% 
+% psf_ua=splinePSF;
+% psf_ua.loadmodel(cal_3Dfile,1);
+
+% roi_ua=obj.locData.files.file.savefit.fitparameters.RoiCutterWF.loc_ROIsize;
+% errNu2=(psf_ua.crlb(Nu,bgu,zas,roi_ua));
+
 indb=Ns<1 | Nu<10;
 
 % c=max(fitp.c,0);

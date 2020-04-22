@@ -16,7 +16,8 @@ classdef Grouper< interfaces.LocDataInterface
 %                 obj.attachPar(varargin{2});
 %             end
 %             obj.inputParameters={'group_dx','group_dt'};
-          
+          %define: meanx, meany, meanz to go with xerr, yerr, zerr when
+          %weighting, same for locprecx, locprecy,locprecz.
             obj.combinemodes.xnm='mean';
             obj.combinemodes.ynm='mean';
             obj.combinemodes.znm='mean';
@@ -186,6 +187,9 @@ classdef Grouper< interfaces.LocDataInterface
                    return
                 end
 %                 fnall=intersect(fn,fn2);
+                %XXXXX weights should be 1/s2. Wikipedia. not really
+                % also:if xerr, yerr, zerr: use proper ones for weighing.
+                %intuitive...
                 weights=1./(obj.locData.getloc('locprecnm').locprecnm);
                 if isempty(weights)
                     weights=ones(size(obj.locData.loc.(fn2{1})));  

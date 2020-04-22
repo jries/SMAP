@@ -91,12 +91,15 @@ classdef splinePSF<interfaces.PSFmodel
             pard.load.object=struct('String','load','Style','pushbutton','Callback',{{@load_callback,obj}});
             pard.load.position=[1,4];
         end
-        function loadmodel(obj,file)
+        function loadmodel(obj,file,whichmodel)
+            if nargin <3 
+                whichmodel=1;
+            end
             l=load(file);
-            obj.modelpar.coeff=single(l.SXY(1).cspline.coeff{1});
-            obj.modelpar.dz=l.SXY(1).cspline.dz;
-            obj.modelpar.z0=l.SXY(1).cspline.z0;
-            obj.modelpar.x0=l.SXY(1).cspline.x0;
+            obj.modelpar.coeff=single(l.SXY(whichmodel).cspline.coeff{1});
+            obj.modelpar.dz=l.SXY(whichmodel).cspline.dz;
+            obj.modelpar.z0=l.SXY(whichmodel).cspline.z0;
+            obj.modelpar.x0=l.SXY(whichmodel).cspline.x0;
         end
         function crlb=crlb(obj,N,bg,coord,rois)
             if nargin<5
@@ -129,7 +132,8 @@ classdef splinePSF<interfaces.PSFmodel
             
             zh=-(z/obj.modelpar.dz)+obj.modelpar.z0;
             coords=[x , y , N, bg, zh];
-            crlb=CalSplineCRLB(coeff, rois, coords);
+            crlb=CalSplineCRLB_vec(coeff, rois, coords);
+%             crlb_old=CalSplineCRLB(coeff, rois, coords);
             crlb(:,5)=crlb(:,5)*obj.modelpar.dz.^2;
         end
     end
