@@ -18,21 +18,20 @@ classdef zSALM<interfaces.DialogProcessor
             fua=p.assignfield2.selection;
             fsabg=p.bgfield1.selection;
             fsubg=p.bgfield2.selection;
-            locs=obj.locData.getloc({fsa,fua,'znm','phot','LLrel','znm_a'},...
+            locs=obj.locData.getloc({fsa,fua,[fsa 'err'],[fua 'err'],'znm','phot','LLrel','znm_a'},...
                 'layer', find(obj.getPar('sr_layerson')),'position','roi');
             if ~isfield(obj.locData.loc,'znm_original')
                 obj.locData.setloc('znm_original',obj.locData.loc.znm);
             end
-            if ~isfield(obj.locData.loc,'locprecnm_a')
-                 obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
-            end
+%             if ~isfield(obj.locData.loc,'locprecnm_a')
+%                  obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
+%             end
             if ~isempty(locs.znm_a)
-                locs.znm=locs.znm_a;
-                
+                locs.znm=locs.znm_a;  
             else
                 obj.locData.setloc('znm_a',obj.locData.loc.znm);
                 obj.locData.setloc('locprecznm_a',obj.locData.loc.locprecznm);
-                obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
+%                 obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
             end
             nfit=5e4;
             goodLL=locs.LLrel>-1.3;
@@ -40,13 +39,13 @@ classdef zSALM<interfaces.DialogProcessor
             [~,ind]=sort(photll);
             indref=max(1,length(ind)-nfit);
             photref=photll(ind(indref));
-%             photref=0;
             indbright=(locs.phot>photref) & goodLL & (locs.(fsa)~=0); %take out r=0
+            
+            rfactortot=intensitySALM(0)/p.rfactor;
             
             is=locs.(fsa)(indbright);
             iu=locs.(fua)(indbright);
-            rsu=double(is./(iu))/p.rfactor*intensitySALM(0);
-%             rsu=real(log(rsu));
+            rsu=double(is./(iu))* rfactortot; %/p.rfactor*intensitySALM(0);
             znm=double(locs.znm(indbright));
             
             dz=10;
@@ -61,7 +60,6 @@ classdef zSALM<interfaces.DialogProcessor
             rrange=-0.2:0.01:2.3;
             indf=znm>max(quantile(znm,0.005),zrange(1)) & znm<min(quantile(znm,0.995),zrange(end))...
                 & rsu>max(quantile(rsu,0.005),rrange(1)) & rsu<min(quantile(rsu,0.995),rrange(end));
-    
             
             hz=histcounts2(rsu(indf),znm(indf),rrange,zrange);
             
@@ -81,49 +79,40 @@ classdef zSALM<interfaces.DialogProcessor
            
             ftsalm=fittype(@(b,x) intensitySALM(x-b,p),'independent','x','coefficients',{'b'});
             startpsalm=quantile(znm(indf),0.1);
-%             ftsalm=fittype(@(b,c,x) intensitySALM(x-b,p)*c,'independent','x','coefficients',{'b','c'});
-%             startpsalm=[quantile(znm(indf),0.1) 1];
-            
-%              fitSALMmodel(znm(indf),rsu(indf),p)
             fitpsalm1=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
             %only fit data above coverglass
             zabove = znm>fitpsalm1.b;
             indf=indf&zabove;
-            fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',fitpsalm1.b,'Robust','Bisquare');
-            
+            fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',fitpsalm1.b,'Robust','Bisquare');          
             zglass=fitpsalm.b;
-            
-%             plot(ax2,zrange,fitp(zrange),'m--')  
-%             plot(ax2,zrange,ftsalm(startpsalm(1),zrange),'y:')
-%             plot(ax2,zrange,ftsalm(startpsalm(1),startpsalm(2),zrange),'y:')
             plot(ax2,zrange,fitpsalm(zrange),'r') 
-%             legend(ax2,'exp','start','salm')
-
             plot(ax2,[zrange(1), zrange(end)],intensitySALM(0,p)*[1,1],'k') 
-            plot(ax2,[zglass zglass],intensitySALM(0,p)*[0, 1],'k') 
-            
+            plot(ax2,[zglass zglass],intensitySALM(0,p)*[0, 1],'k')
             title(ax2,['position of glass (nm): ' num2str(zglass,3)]);
             drawnow
-
            
             isall=obj.locData.loc.(fsa);
             iuall=obj.locData.loc.(fua);
-            rall=isall./iuall/p.rfactor*intensitySALM(0);
+            bgs=obj.locData.loc.(fsabg);
+            bgu=obj.locData.loc.(fsubg);
             
-             %exponential model
-%             zr=-log((rall-fitp.c)/fitp.a)/fitp.b;
-           
+            if isfield(obj.locData.loc,[fsa 'err'])
+                isallerr=obj.locData.loc.([fsa 'err']);
+                iuallerr=obj.locData.loc.([fua 'err']);
+            else
+                isallerr=sqrt(errN2(isall,bgs));
+                iuallerr=sqrt(errN2(iuall,bgu));
+            end
+            
+            
+            rall=isall./iuall*rfactortot;%/p.rfactor*intensitySALM(0);
             
             %SALM model
-            %invert function by spline interpolation
-            
+            %invert function by spline interpolation    
+            %get z coordinates
             zinterp=(-100:0.5:2000)';
             rinterp=ftsalm(0,zinterp);
-            
-%             zinterp=(zglass-200:0.5:zrange(end)+500)';
-%             rinterp=fitpsalm(zinterp);
             interpsalm=fit(rinterp,zinterp,'cubicinterp');
-            
             
             zr=interpsalm(rall);
             zmax=zrange(end)+1500;
@@ -131,17 +120,11 @@ classdef zSALM<interfaces.DialogProcessor
             zr(zoutofrange)=zmax; %avoid too large numbers
 
             obj.locData.loc.znm_SALM=zr;
-            obj.locData.loc.locprecnm=obj.locData.loc.locprecnm_a;
+%             obj.locData.loc.locprecnm=obj.locData.loc.locprecnm_a;
             obj.locData.loc.locprecnm(zoutofrange)=1000; %for grouping.
             obj.locData.loc.znm_a=obj.locData.loc.znm_a-zglass; %correct z astig to put glass to z=0;
-            %calculate error of zr
-            %use CRLB as error for znm
-            % weighted average
-            bgs=obj.locData.loc.(fsabg);
-            bgu=obj.locData.loc.(fsubg);
-            zoriginal=obj.locData.loc.znm_original;
-%             zerrsexp=zerrSALM(fitp,isall,iuall,bgs,bgu); %now based on exponential fit. Later based on real model?
             
+            %get errors in z
             %calculate dz/dr
             rdiff=0.01;
             r=(-0.02:rdiff:3)';
@@ -149,22 +132,23 @@ classdef zSALM<interfaces.DialogProcessor
             dzr=diff(zr);
             dz_dr=fit(r(1:end-1)+rdiff/2,dzr/rdiff,'cubicinterp');
             
-            %late: take into account the factor in zerr
-            zerrs=zerrSALMspline(obj,dz_dr,isall,iuall,bgs,bgu,zoriginal);
-            zerrs(zoutofrange)=inf;
+            %calculate error in z SALM
+            dru=-isall./iuall.^2*rfactortot;
+            drs=1./isall*rfactortot;
+            dR2=drs.^2.*isallerr.^2+dru.^2.*iuallerr.^2;
+            dz2=dz_dr(rall).^2.*dR2;
+            indb=isall<1 | iuall<10;
+            dz2(zoutofrange|indb)=inf;
+            zerrs=sqrt(dz2);
             errza=obj.locData.loc.locprecznm_a;
             
-            znmav=(obj.locData.loc.znm_a./errza+obj.locData.loc.znm_SALM./zerrs)./(1./errza+1./zerrs);
-            locprecznmav=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
+            znmav=(obj.locData.loc.znm_a./errza.^2+obj.locData.loc.znm_SALM./zerrs.^2)./(1./errza.^2+1./zerrs.^2);
+            locprecznmav=1./sqrt(1./errza.^2+1./zerrs.^2);  %divided by two, no idea why, this is not clear
                     
             switch p.fieldznm.Value
-                
                 case 1 %weighted average
                     znmnew=znmav;
                     locprecznmnew=locprecznmav;
-                    %also here change sign of z.
-%                     znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
-%                     locprecznmnew=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
                 case 2 %salm
                     znmnew=obj.locData.loc.znm_SALM;
                     locprecznmnew=zerrs;
@@ -175,7 +159,6 @@ classdef zSALM<interfaces.DialogProcessor
             obj.locData.setloc('znm',znmnew);
             obj.locData.setloc('locprecznm',locprecznmnew);
             obj.locData.setloc('locprecznm_SALM',zerrs);
-            
             obj.locData.setloc('znm_asSALM',znmav);
             obj.locData.setloc('locprecznm_asSALM',locprecznmav);
             

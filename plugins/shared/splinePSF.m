@@ -132,7 +132,7 @@ classdef splinePSF<interfaces.PSFmodel
             
             zh=-(z/obj.modelpar.dz)+obj.modelpar.z0;
             coords=[x , y , N, bg, zh];
-            crlb=CalSplineCRLB_vec(coeff, rois, coords);
+            crlb=CalSplineCRLB_vec(coeff, rois, coords,true);
 %             crlb_old=CalSplineCRLB(coeff, rois, coords);
             crlb(:,5)=crlb(:,5)*obj.modelpar.dz.^2;
         end

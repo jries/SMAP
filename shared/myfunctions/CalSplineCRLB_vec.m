@@ -1,10 +1,14 @@
-function [CRLB] =  CalSplineCRLB_vec(coeff, sz, Theta)
+function [CRLB] =  CalSplineCRLB_vec(coeff, sz, Theta,progress)
 %input:
 %coeff: spline coeffcients for PSF model
 %sz: fit windowsize
 %Theta: Nfit*5 array, collumn value [xpos,ypos,photon,bg,zpos]
 %output:
 %CRLB for the input Theta
+%progress: show progress
+if nargin<4
+    progress=false;
+end
 
 spline_xsize = size(coeff, 1);
 spline_ysize = size(coeff, 2);
@@ -16,6 +20,8 @@ off = floor(((spline_xsize+1)-sz)/2);
 
 Nfits = size(Theta,1);
 CRLB=zeros(Nfits,NV);
+t=tic;
+t0=t;
 for tx = 1:Nfits
     xc=-1 * (Theta(tx,1) - sz / 2 + 0.5);
     yc = -1 * (Theta(tx,2) - sz / 2 + 0.5);
@@ -69,8 +75,12 @@ for tx = 1:Nfits
     for kk = 1:NV
         CRLB(tx,kk)=Minv(kk,kk);
     end
-%     CRLBx(tx,:)=diag(Minv); %slower
-
+    
+    if toc(t)>10
+        t=tic;
+        tleft=toc(t0)/tx*Nfits-toc(t0);
+        disp([num2str(tx) ' of ' num2str(Nfits) ', ' num2str(tx/Nfits*100,2) '%, ' num2str(tleft,3) 's left'])
+    end
 end
 
 % CRLB = reshape(CRLB,Nfits,NV);
