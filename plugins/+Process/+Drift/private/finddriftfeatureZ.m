@@ -152,9 +152,11 @@ plot(ddzplot)
 hold on
 plot(dz,'k','LineWidth',1.5);
 plot(sdz,'k:')
-sz=(max(dz)-min(dz));
-ylim([min(dz)-sz/2 max(dz)+sz/2])
-axis tight
+lims=quantile(ddzplot(:), [0.01,0.99]);
+ylim([max(lims(1),-5000) min(lims(2),5000)])
+% sz=(max(dz)-min(dz));
+% ylim([min(dz)-sz/2 max(dz)+sz/2])
+% axis tight
 
 
 if par.drift_reference

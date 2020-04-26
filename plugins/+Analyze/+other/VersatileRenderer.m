@@ -80,6 +80,8 @@ end
 function assignfield_callback(object,a,obj,axis)
     field=object.String{object.Value};
     v=obj.locData.getloc(field,'layer',find(obj.getPar('sr_layerson')),'position','roi').(field);
+    
+    v=v(~isnan(v) & ~isinf(v));
     q=myquantilefast(v,[0.001,0.5,0.999]);
 
     dx=(q(3)-q(1))/100;

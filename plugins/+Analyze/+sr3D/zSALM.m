@@ -22,6 +22,7 @@ classdef zSALM<interfaces.DialogProcessor
                 'layer', find(obj.getPar('sr_layerson')),'position','roi');
             if ~isfield(obj.locData.loc,'znm_original')
                 obj.locData.setloc('znm_original',obj.locData.loc.znm);
+                obj.locData.setloc('locprecznm_original',obj.locData.loc.locprecznm);
             end
 %             if ~isfield(obj.locData.loc,'locprecnm_a')
 %                  obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
@@ -41,7 +42,8 @@ classdef zSALM<interfaces.DialogProcessor
             photref=photll(ind(indref));
             indbright=(locs.phot>photref) & goodLL & (locs.(fsa)~=0); %take out r=0
             
-            rfactortot=intensitySALM(0)/p.rfactor;
+%             rfactortot=intensitySALM(0)/p.rfactor;
+            rfactortot=p.rfactor;
             
             is=locs.(fsa)(indbright);
             iu=locs.(fua)(indbright);
@@ -68,13 +70,13 @@ classdef zSALM<interfaces.DialogProcessor
             h=imagesc(ax2,zrange,rrange,hz);
             axis(ax2, 'xy')
             hold(ax2,'on')
-            ft = fittype('a*exp(-b*x)+c');
+%             ft = fittype('a*exp(-b*x)+c');
 
-            startp=[1,0.007,0];
-            startp(1)=0.5*exp(startp(2)*median(znm));
-            
-            fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare','Lower',[0 -inf 0]);
-            
+%             startp=[1,0.007,0];
+%             startp(1)=0.5*exp(startp(2)*median(znm));
+%             
+%             fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare','Lower',[0 -inf 0]);
+%             
             p.limit=true;
            
             ftsalm=fittype(@(b,x) intensitySALM(x-b,p),'independent','x','coefficients',{'b'});
@@ -106,11 +108,14 @@ classdef zSALM<interfaces.DialogProcessor
             
             
             rall=isall./iuall*rfactortot;%/p.rfactor*intensitySALM(0);
+            %checked, this rfactortot should be taken into account
+            %correctly during error calculation
             
             %SALM model
             %invert function by spline interpolation    
             %get z coordinates
-            zinterp=(-100:0.5:2000)';
+            dzinterp=0.5;
+            zinterp=(-100:dzinterp:2000)';
             rinterp=ftsalm(0,zinterp);
             interpsalm=fit(rinterp,zinterp,'cubicinterp');
             
@@ -125,21 +130,29 @@ classdef zSALM<interfaces.DialogProcessor
             obj.locData.loc.znm_a=obj.locData.loc.znm_a-zglass; %correct z astig to put glass to z=0;
             
             %get errors in z
-            %calculate dz/dr
+            %calculate dz/dr: use this for r>0.3, here r is a good measure
+            %for z
             rdiff=0.01;
             r=(-0.02:rdiff:3)';
-            zr=interpsalm(r);
-            dzr=diff(zr);
+            zofr=interpsalm(r);
+            dzr=diff(zofr);
             dz_dr=fit(r(1:end-1)+rdiff/2,dzr/rdiff,'cubicinterp');
+            rlarge=rall>0.3;
+            dzdrv(rlarge,1)=dz_dr(rall(rlarge));
+            
+            drz=diff(rinterp)/dzinterp;
+            dr_dz=fit(zinterp(1:end-1)+dzinterp/2,drz,'cubicinterp');
+            dzdrv(~rlarge,1)=1./dr_dz(zr(~rlarge));
             
             %calculate error in z SALM
-            dru=-isall./iuall.^2*rfactortot;
-            drs=1./isall*rfactortot;
+            dru=-isall./iuall.^2;
+            drs=1./iuall;
             dR2=drs.^2.*isallerr.^2+dru.^2.*iuallerr.^2;
-            dz2=dz_dr(rall).^2.*dR2;
+            dz2=dzdrv.^2.*dR2;
+%             dz2=dz_dr(rall).^2.*dR2;
             indb=isall<1 | iuall<10;
             dz2(zoutofrange|indb)=inf;
-            zerrs=sqrt(dz2);
+            zerrs=sqrt(dz2)*rfactortot;
             errza=obj.locData.loc.locprecznm_a;
             
             znmav=(obj.locData.loc.znm_a./errza.^2+obj.locData.loc.znm_SALM./zerrs.^2)./(1./errza.^2+1./zerrs.^2);

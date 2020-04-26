@@ -175,9 +175,11 @@ plot(ddxplot)
 hold on
 plot(dx,'k','LineWidth',1.5);
 plot(sdx,'k:')
-sx=(max(dx)-min(dx));
-ylim([min(dx)-sx/2 max(dx)+sx/2])
-axis tight
+% sx=(max(dx)-min(dx));
+% ylim([min(dx)-sx max(dx)+sx])
+lims=quantile(ddxplot(:), [0.01,0.99]);
+ylim([max(lims(1),-100) min(lims(2),100)])
+% axis tight
 
 subplot(1,2,2)
 hold off
@@ -185,9 +187,12 @@ plot(ddyplot)
 hold on
 plot(dy,'k','LineWidth',1.5);
 plot(sdy,'k:')
-sy=(max(dx)-min(dx));
-ylim([min(dy)-sy/2 max(dy)+sy/2])
-axis tight
+
+lims=quantile(ddyplot(:), [0.01,0.99]);
+ylim([max(lims(1),-100) min(lims(2),100)])
+% sy=(max(dx)-min(dx));
+% ylim([min(dy)-sy/2 max(dy)+sy/2])
+% axis tight
 
 if par.drift_reference
     dxtt=dxtt-dx(end-1);

@@ -11,17 +11,32 @@ classdef SALM_getCRLB<interfaces.DialogProcessor
         function out=run(obj,p)
             out=[];
             % get fields
-            fsa=p.assignfield1.selection;
+            fsaselect=p.assignfield1.selection;
             fua=p.assignfield2.selection;
             fsabg=p.bgfield1.selection;
             fsubg=p.bgfield2.selection;
             
-            if isfield(obj.locData.loc,'znm_original')
-                zfield='znm_original';
-            elseif isfield(obj.locData.loc,'znm_a')
-                zfield='znm_a';
-            else 
-                zfield='znm';
+            if ~isfield(obj.locData.loc,'znm_original')
+                if isfield(obj.locData.loc,'znm_a')
+                    obj.locData.setloc('znm_original',obj.locData.loc.znm_a);
+                else
+                    obj.locData.setloc('znm_original',obj.locData.loc.znm);
+                end
+            end
+            if ~isfield(obj.locData.loc,'locprecznm_original')
+                if isfield(obj.locData.loc,'locprecznm_a')
+                    obj.locData.setloc('locprecznm_original',obj.locData.loc.locprecznm_a);
+                else
+                    obj.locData.setloc('locprecznm_original',obj.locData.loc.locprecznm);
+                end                
+            end
+            
+            zfield='znm_original';
+            zerrfield='locprecznm_original';
+            
+            fsa=[fsaselect '_original'];
+            if ~isfield(obj.locData.loc,fsa)
+                obj.locData.setloc(fsa,obj.locData.loc.(fsaselect));
             end
             
             Ns=obj.locData.loc.(fsa);
@@ -31,8 +46,8 @@ classdef SALM_getCRLB<interfaces.DialogProcessor
             zas=obj.locData.loc.(zfield);
             % rescale back to original units without refractive index
             % factor to get right CRLB
-            if obj.locData.files.file.savefit.fitparameters.MLE_GPU_Yiming.userefractive_index_mismatch;
-                rif=obj.locData.files.file.savefit.fitparameters.MLE_GPU_Yiming.refractive_index_mismatch;
+            if obj.locData.files.file(1).savefit.fitparameters.MLE_GPU_Yiming.userefractive_index_mismatch
+                rif=obj.locData.files.file(1).savefit.fitparameters.MLE_GPU_Yiming.refractive_index_mismatch;
             else 
                 rif=1;
             end
@@ -40,19 +55,28 @@ classdef SALM_getCRLB<interfaces.DialogProcessor
         
             psf_sa=splinePSF;
             psf_sa.loadmodel(p.cal_3Dfile,2);
+            psf_sa.normalization
             
             psf_ua=splinePSF;
             psf_ua.loadmodel(p.cal_3Dfile,1);          
+            psf_ua.normalization
             
-            roi_ua=obj.locData.files.file.savefit.fitparameters.RoiCutterWF.loc_ROIsize;
-            crlbu=(psf_ua.crlb(Nu,bgu,zas,roi_ua));
-            crlbs=(psf_sa.crlb(Ns,bgs,zas,roi_ua));
-            Nserr=sqrt(crlbs(:,3));
+            hist=obj.locData.history;
+            for k=1:length(hist)
+                if strcmp(hist{k}.name,'Process.Assign2C.GetIntensitiesSALM')
+                    break
+                end
+            end
+            roi_intensity=obj.locData.history{k}.parameters.children.EvaluateIntensity_s.children.panel_3.roisize_fit;
+            crlbu=(psf_ua.crlb(Nu,bgu,zas,roi_intensity));
+            [crlbs,Ncorr,crlbNBgs]=(psf_sa.crlb(Ns,bgs,0*zas,roi_intensity));
+            Nserr=sqrt(crlbNBgs(:,1)); %only N and BG fit
             Nuerr=sqrt(crlbu(:,3));
-            obj.locData.setloc([fsa 'err'], single(Nserr));
+            obj.locData.setloc([fsaselect 'err'], single(Nserr));
             obj.locData.setloc([fua 'err'], single(Nuerr));
             obj.locData.setloc('znm_a', single(zas*p.RIFHighNA));
-            obj.locData.setloc('locprecznm_a',obj.locData.loc.locprecznm*p.RIFHighNA/rif);
+            obj.locData.setloc('locprecznm_a',obj.locData.loc.(zerrfield)*p.RIFHighNA/rif);
+            obj.locData.setloc(fsaselect, single(Ncorr));   
             obj.locData.regroup;       
         end
         

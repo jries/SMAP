@@ -50,7 +50,7 @@ classdef Histograms<interfaces.DialogProcessor
                 fitr=2; range=(max(1,indmax-fitr):min(length(h.Values),indmax+fitr))';
                 nrange=n(range)+BinWidth/2;hrange=h.Values(range)';
                 fitp=fit(nrange,hrange,'poly2');
-                maxval=-fitp.p2/fitp.p1;    
+                maxval=-fitp.p2/fitp.p1/2;    
                 plot(axis1,nrange,fitp(nrange))
                 legends{2*k}=['fit ' num2str(maxval,2)];
                 out(:,k)=[median(val(inval)),mean(val(inval)),std(val(inval)),maxval];

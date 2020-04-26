@@ -7,8 +7,12 @@ classdef splinePSF<interfaces.PSFmodel
     end
     
     methods
-        function img=PSF(obj,locs)
-            roisize=min(obj.roisize,size(obj.modelpar.coeff,1))+2;
+        function img=PSF(obj,locs,roisizein)
+            if nargin<3
+                roisizein=obj.roisize;
+            end
+
+            roisize=min(roisizein,size(obj.modelpar.coeff,1))+2;
             dn=round((roisize-1)/2);
             if isstruct(locs)
                 if ~isfield(locs,'N')
@@ -82,6 +86,14 @@ classdef splinePSF<interfaces.PSFmodel
 %                 img=output;
                 
         end
+        function no=normalization(obj)
+            dz=obj.modelpar.dz;
+            zrange=size(obj.modelpar.coeff,3)/2*0.5*dz; %not whole range
+            z=(-zrange:dz/2:zrange)';
+            img=obj.PSF([0*z 0*z z],100); %maximal roisize
+            profile=squeeze(sum(sum(img,1),2));
+            no=max(profile);
+        end
         
         function pard=guidef(obj)
             
@@ -101,7 +113,7 @@ classdef splinePSF<interfaces.PSFmodel
             obj.modelpar.z0=l.SXY(whichmodel).cspline.z0;
             obj.modelpar.x0=l.SXY(whichmodel).cspline.x0;
         end
-        function crlb=crlb(obj,N,bg,coord,rois)
+        function [crlb,Ncorr,crlbNBg]=crlb(obj,N,bg,coord,rois)
             if nargin<5
                 rois=obj.roisize;
             end
@@ -129,12 +141,21 @@ classdef splinePSF<interfaces.PSFmodel
                 end
             end           
             
-            
+            normf=obj.normalization;
+            Ncorr=N*normf;
             zh=-(z/obj.modelpar.dz)+obj.modelpar.z0;
-            coords=[x , y , N, bg, zh];
-            crlb=CalSplineCRLB_vec(coeff, rois, coords,true);
-%             crlb_old=CalSplineCRLB(coeff, rois, coords);
+            coords=[x , y , Ncorr, bg, zh];
+            [crlb,crlbNBg]=CalSplineCRLB_vec(coeff, rois, coords,true);
+%             %normalize PSF
+% in the matrix M is proportional to the model, i.e. number of photons
+% sum(sum(newDudt(:,:,l+1).*newDudt(:,:,m+1)./model,1),2);
+% to normalize the model we have to re-scale it by 1/sum(img).
+%Minv~1/M, i.e. crlb have to be rescaled by the inverse.
+         
+            crlb=crlb*normf;crlbNBg=crlbNBg*normf;
+%             crlb=CalSplineCRLB(coeff, rois, coords);
             crlb(:,5)=crlb(:,5)*obj.modelpar.dz.^2;
+            
         end
     end
     
