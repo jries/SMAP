@@ -119,6 +119,12 @@ elseif isfield(p,'intensitycoding')
             pos.N=locsh.phot;
         case 'blinks'
             pos.N=locsh.numberInGroup;
+        case '√blinks'
+            bh=locsh.numberInGroup; bh(bh<0)=0;
+            pos.N=sqrt(bh);            
+        case '√photons'
+            ph=locsh.phot; ph(ph<0)=0;
+            pos.N=sqrt(ph);
     end
 
 if isfield(pos,'N') && isempty(pos.N)

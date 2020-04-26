@@ -868,7 +868,7 @@ pard.intensitytxt.Width=w1;
 pard.intensitytxt.TooltipString='How to normalize every localization: normal: Integral=1, photons: total photons, blinks: number of connected localizations';
 pard.intensitytxt.Optional=true;
 
-pard.intensitycoding.object=struct('Style','popupmenu','String',{{'normal','photons','blinks'}});
+pard.intensitycoding.object=struct('Style','popupmenu','String',{{'normal','photons','blinks','√photons','√blinks'}});
 pard.intensitycoding.position=[3,p2];
 pard.intensitycoding.Width=w2;
 pard.intensitycoding.TooltipString=pard.intensitytxt.TooltipString;
