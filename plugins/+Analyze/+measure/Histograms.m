@@ -27,7 +27,10 @@ classdef Histograms<interfaces.DialogProcessor
                     case 2
                         q=quantile(val,[p.quantile(1), 1-p.quantile(end)]);
                     case 3     
-                        q=p.quantile;
+                        q=p.quantile; 
+                        if length(q)==1
+                            q=[0 q];
+                        end
                 end
                 
                 if p.setbinwidth
@@ -59,11 +62,12 @@ classdef Histograms<interfaces.DialogProcessor
                 
 
            legend(axis1,legends);
+           xlim([n(2) n(end)]);
            
            h=uitable(ax2.Parent, 'Data',out,'ColumnName',legends,'RowName',{'median','mean','std','modal'},'Units','normalized','Position',[0 0 1 1]);
+           tab=ax2.Parent;
            delete(ax2)
-            
-    
+           tab.Parent.Parent.Renderer='painters';
             
             out=[]; %no output
             out.clipboard={'results1',3,'text1'}; % out.clipboard is copied to clipboard, separated by tabs.
