@@ -1,4 +1,4 @@
-function [fitpos,outim,outimnorm,ci]=my2Dgaussfit(image,startp,cas)
+function [fitpos,outim,outimnorm,ci]=my2Dgaussfit(image,startp,cas,lb,ub)
 %startp: sx
 %fit par=(x,y,a,bg,sx,sy,r)
 if nargin<3
@@ -8,6 +8,12 @@ end
 
 if nargout>1
     show=true;
+end
+if nargout<4
+    lb=[];
+end
+if nargout<5
+    ub=[];
 end
 % if ishandle(show)
 %     hfig=show;
@@ -118,7 +124,7 @@ end
       if weighted
            image=sqrt(image);
        end
-       [fitout,resnorm,residual,exitflag,output,lambda,jacobian] =lsqnonlin(fitferr,startph,[],[], options,fitp,image);
+       [fitout,resnorm,residual,exitflag,output,lambda,jacobian] =lsqnonlin(fitferr,startph,lb,ub, options,fitp,image);
           fitpos=fitout2fitpos(fitout,0,0,fitinit.nfitp,fitinit.startp);
            
 
