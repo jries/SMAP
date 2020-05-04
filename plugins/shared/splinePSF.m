@@ -88,11 +88,15 @@ classdef splinePSF<interfaces.PSFmodel
         end
         function no=normalization(obj)
             dz=obj.modelpar.dz;
-            zrange=size(obj.modelpar.coeff,3)/2*0.5*dz; %not whole range
+            zrange=size(obj.modelpar.coeff,3)/2*0.8*dz; %not whole range
+%             zrange=size(obj.modelpar.coeff,3)/2+[-dz/2 dz/2];
             z=(-zrange:dz/2:zrange)';
             img=obj.PSF([0*z 0*z z],100); %maximal roisize
             profile=squeeze(sum(sum(img,1),2));
             no=max(profile);
+            
+            %use central position only:
+%             no=sum(sum(obj.PSF([0 0 0],100)));
         end
         
         function pard=guidef(obj)
@@ -113,7 +117,11 @@ classdef splinePSF<interfaces.PSFmodel
             obj.modelpar.z0=l.SXY(whichmodel).cspline.z0;
             obj.modelpar.x0=l.SXY(whichmodel).cspline.x0;
         end
-        function [crlb,Ncorr,crlbNBg]=crlb(obj,N,bg,coord,rois)
+        function Ncorr=correctNnormalization(obj,N)
+            normf=obj.normalization;
+            Ncorr=N*normf;
+        end
+        function [crlb,crlbNBg]=crlb(obj,N,bg,coord,rois)
             if nargin<5
                 rois=obj.roisize;
             end
@@ -142,9 +150,10 @@ classdef splinePSF<interfaces.PSFmodel
             end           
             
             normf=obj.normalization;
-            Ncorr=N*normf;
+%             normf=1;
+%             Ncorr=N*normf;
             zh=-(z/obj.modelpar.dz)+obj.modelpar.z0;
-            coords=[x , y , Ncorr, bg, zh];
+            coords=[x , y , N, bg, zh];
             [crlb,crlbNBg]=CalSplineCRLB_vec(coeff, rois, coords,true);
 %             %normalize PSF
 % in the matrix M is proportional to the model, i.e. number of photons

@@ -69,7 +69,8 @@ classdef SALM_getCRLB<interfaces.DialogProcessor
             end
             roi_intensity=obj.locData.history{k}.parameters.children.EvaluateIntensity_s.children.panel_3.roisize_fit;
             crlbu=(psf_ua.crlb(Nu,bgu,zas,roi_intensity));
-            [crlbs,Ncorr,crlbNBgs]=(psf_sa.crlb(Ns,bgs,0*zas,roi_intensity));
+            Nscorr=psf_sa.correctNnormalization(Ns);
+            [crlbs,crlbNBgs]=(psf_sa.crlb(Nscorr,bgs,0*zas,roi_intensity));
             Nserr=sqrt(crlbNBgs(:,1)); %only N and BG fit
             Nuerr=sqrt(crlbu(:,3));
             obj.locData.setloc([fsaselect 'err'], single(Nserr));

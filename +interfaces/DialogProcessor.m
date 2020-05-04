@@ -77,6 +77,7 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
             %creates a window with results tabs
             obj.resultshandle=figure;
             obj.resultshandle.Visible='off';
+            obj.resultshandle.Renderer='painters';
             htab=uitabgroup(obj.resultshandle);
             obj.guihandles.resultstabgroup=htab;
             obj.resultstabgroup=obj.guihandles.resultstabgroup;

@@ -49,6 +49,9 @@ classdef export_picasso_hdf5<interfaces.DialogProcessor
             locsout.y=locs.ynm/(p.cam_pixelsize_um(2)*1000);
             locsout.lpx=locs.locprecnm/(p.cam_pixelsize_um(1)*1000);
             locsout.lpy=locs.locprecnm/(p.cam_pixelsize_um(2)*1000);
+            locsout.z=locsout.znm;
+            locsout.lpz=locsout.locprecznm;
+            
             
             if f
                 savepicasso(path,f,locsout);

@@ -141,11 +141,12 @@ openstackinfiji(obj,obj.imagestack,title)
 end
 
 function volumeviewer_callback(a,b,obj)
-imV=squeeze(sum(obj.imagestack,3));
+% imV=squeeze(sum(obj.imagestack,3));
+imV=obj.imagestack;
 p=obj.getGuiParameters;
 imV=imV-min(imV(:));
 
-if p.filter3dc
+if 0%p.filter3dc
     
   sx=p.filter3dv(1)/obj.imageinfo.pixelsizex;
   ssx=round(5*sx);
