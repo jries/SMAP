@@ -29,6 +29,12 @@ classdef export_coordinates<interfaces.DialogProcessor
                         gr='ungrouped';
                     end
                     locs=obj.locData.getloc(obj.exportfields,'grouping',gr,'position','all');
+                    fn=fieldnames(locs);
+                    for k=1:length(fn)
+                        if isempty(locs.(fn{k}))
+                            locs=rmfield(locs,fn{k});
+                        end
+                    end
                     taball=struct2table(locs);
                 otherwise
                     taball=[];
