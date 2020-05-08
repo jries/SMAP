@@ -228,7 +228,7 @@ for k=1:length(sites)
 end
 
 for s=1:4
-    if strcmpi(par.(['direction' num2str(s)]).selection,'descend')
+    if strcmpi(par.(['direction' num2str(s)]).selection,'descend') || strcmpi(par.(['direction' num2str(s)]).selection,'decend')
         sortmatrix(:,s)=-sortmatrix(:,s);
     end
 end
