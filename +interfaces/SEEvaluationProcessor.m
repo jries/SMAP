@@ -73,7 +73,7 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
         end
         
         function [locsout,indloc]=getloc(obj,varargin) 
-            [locsout,indloc]=obj.getLocs(varargin);
+            [locsout,indloc]=obj.getLocs(varargin{:});
         end
         function [locsout,indloc]=getLocs(obj,varargin) 
             %uses locData.getloc
