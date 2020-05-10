@@ -1,14 +1,14 @@
 sites=g.locData.SE.sites;
-imout=0*sites(1).evaluation.shiftCrossCorrelation_4.xcorr;
+imout=0*sites(1).evaluation.shiftCrossCorrelation.xcorr;
 dx=zeros(length(sites),1);
 dy=zeros(length(sites),1);
 for k=1:length(sites)
-    imout=sites(k).evaluation.shiftCrossCorrelation_4.xcorr+imout;
-    dx(k)=sites(k).evaluation.shiftCrossCorrelation_4.dxline;
-    dy(k)=sites(k).evaluation.shiftCrossCorrelation_4.dyline;
+    imout=sites(k).evaluation.shiftCrossCorrelation.xcorr+imout;
+    dx(k)=sites(k).evaluation.shiftCrossCorrelation.dxline;
+    dy(k)=sites(k).evaluation.shiftCrossCorrelation.dyline;
 end
 maxprecision=0.1;
-pixrec=sites(1).evaluation.shiftCrossCorrelation_4.GuiParameters.pixrec;
+pixrec=sites(1).evaluation.shiftCrossCorrelation.GuiParameters.pixrec;
  imouthr=imresize(imout,pixrec/maxprecision,'cubic');
  [~,linind]=max(imouthr(:));
  [xm,ym]=ind2sub(size(imouthr),linind);
