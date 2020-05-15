@@ -317,7 +317,7 @@ pard.zrange.Width=0.8;
 pard.rfactort.object=struct('Style','text','String','SA/UA ratio on coverslip');
 pard.rfactort.position=[5,1];
 pard.rfactort.Width=1.3;
-pard.rfactor.object=struct('Style','edit','String','2.16');
+pard.rfactor.object=struct('Style','edit','String','1');
 pard.rfactor.position=[5,2.3];
 pard.rfactor.Width=0.4;
 
