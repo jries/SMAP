@@ -20,12 +20,23 @@ classdef countingStatistics_kinetochore<interfaces.SEEvaluationProcessor
                     % need to work on this more
                     structureType = obj.site.annotation.list4.string{obj.site.annotation.list4.value};
                     copynumber = obj.site.annotation.list3.string{obj.site.annotation.list3.value};
+                    
+                    if isempty(obj.site.annotation.line3)
+                        areaMask = roisize^2;
+                    else
+                        xMask = obj.site.annotation.line3.pos(:,1);
+                        yMask = obj.site.annotation.line3.pos(:,2);
+                        areaMask = polyarea(xMask, yMask)*1e6;
+                    end
+                    
                     if strcmp(structureType, 'kinetochore')&&strcmp(copynumber, '32 copies')
                         out.Nlocs=sum(inc)/2;
                         out.Nlocsg=sum(incg)/2;
+                        out.areaMask=areaMask/2;
                     else
                         out.Nlocs=sum(inc);
                         out.Nlocsg=sum(incg);
+                        out.areaMask=areaMask;
                     end
                     
                     
