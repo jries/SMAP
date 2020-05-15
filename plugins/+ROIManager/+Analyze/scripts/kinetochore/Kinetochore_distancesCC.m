@@ -27,7 +27,8 @@ hold on
 plot(dyline,dxline,'+')
 title([dxline, dyline])
 subplot(2,2,2);
-plot(dx,dy,'o')
+ID = getFieldAsVector(g.locData.SE.sites,'ID');
+plotSElink(dx,dy,ID,g.locData.SE,'o')
 title([mean(dx) mean(dy)])
 % 
 % h=fspecial('gaussian',10,1);
