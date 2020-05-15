@@ -30,9 +30,9 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
                 obj.guiPar.FieldHeight=obj.guiPar.FieldHeight-2;
             end
      
-            makeGui@interfaces.GuiModuleInterface(obj,guidef);
+            anyoptional=makeGui@interfaces.GuiModuleInterface(obj,guidef);
             
-            if obj.guiselector.show
+            if obj.guiselector.show || anyoptional
                 posh=obj.handle.Position;
                 if isempty(obj.guiselector.position)
                     pos(1:2)=0*posh(1:2)+posh(3:4)-[23,22];

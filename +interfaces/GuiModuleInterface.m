@@ -476,7 +476,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             end        
         end 
 
-       function makeGui(obj,guidef)
+       function anyoptional=makeGui(obj,guidef)
            % renders the GUI according to guidef, then calls obj.initGui.
            % if guidef not passed on: calls obj.guidef (that is the usual
            % way of defining a GUI)
