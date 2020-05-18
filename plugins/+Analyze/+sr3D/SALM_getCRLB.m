@@ -77,7 +77,7 @@ classdef SALM_getCRLB<interfaces.DialogProcessor
             obj.locData.setloc([fua 'err'], single(Nuerr));
             obj.locData.setloc('znm_a', single(zas*p.RIFHighNA));
             obj.locData.setloc('locprecznm_a',obj.locData.loc.(zerrfield)*p.RIFHighNA/rif);
-            obj.locData.setloc(fsaselect, single(Ncorr));   
+            obj.locData.setloc(fsaselect, single(Nscorr));   
             obj.locData.regroup;       
         end
         
