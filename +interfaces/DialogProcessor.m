@@ -213,8 +213,12 @@ hp=ax.Parent;
  htxt=uicontrol(hp,'Style','edit','Units','normalized','Position',[0,0,.9,1],...
      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100);
  td=obj.info.description;
+ if ~iscell(td)
   td=strrep(td,9,' ');
 txt=strrep(td,10,13);
+ else
+     txt=td;
+ end
  htxt.String=txt;
   htxt.Position=[0 0 1 1];
   warning(warnstruct);

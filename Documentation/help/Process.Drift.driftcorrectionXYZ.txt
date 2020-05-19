@@ -1,0 +1,62 @@
+Drift correction based on cross-correlation.
+
+Algorithm: the data set is divided into [timepoints] blocks, 
+for which superresolution images are calculated. The displacement between 
+all images is calcualted with a FFT-based cross-correlation algorithm. 
+The position of the maxima of the cross-correlation curve are fitted with sub-pixel accuracy with a free elliptical Gaussian.
+
+
+A robust estimator is used to calculate the drift vs frame from all pairwise displacements.
+
+All localiaztions visible in the superresolution image are used to infer the drift. Use [Render] [Layer] to control this.
+
+If two files are loaded, their drift is calculated together and they are saved as one file with their filenumbers copied to the channel field.
+
+(c) Jonas Ries, EMBL, 2015
+
+gui:Parameters:
+
+gui:drift_timepoints
+whole data is divided into timepoints individual blocks. Range: 7-20.
+
+gui:drift_timepointst=drift_timepoints
+
+gui:drift_pixrec pixel size (nm) for reconstruction. Smaller for well defined peak. 
+But slower. Range: 10-25
+
+gui:drift_window
+Size of region for peakfinding (ellipt. Gaussian). 
+
+Should be small, but cover clear maximum. 
+
+Range: 7-15.
+
+gui:drift_maxdrift
+Maximum drift expected. 
+
+Smaller if data is sparse and wrong peak found. 
+
+larger if no clear peak found. 
+
+Range 250-2000.
+
+gui:drift_maxpixels
+Maximum size of the reconstructed images. Smaller for speed and lower memory consumption, larger for noisy signal. 128-4096.
+
+gui:drift_timepointsz
+The whole data is divided into timepoints individual blocks. Range: 10-40.
+
+gui:drift_pixrecz 
+Pixel size (nm) for reconstruction. Smaller for well defined peak. But slower. Range: 10-25.
+
+gui:drift_windowz 
+Size of region for peakfinding (ellipt. Gaussian). should be small, but cover clear maximum.  Range: 7-15.
+
+
+gui:smoothpar:
+Parameter for cubic splien interpolation. \n leave empty for automatic determination. \n 0.01 for little smoothing, 10 for strong smoothing.
+gui:drift_reference: If checked, drift at end of data set is set to zero. \n Useful for sequential acquisition, use this for first data set.
+gui:drift_mirror2c: Vertical split: next to each other, horizontal split: below each other.
+
+
+

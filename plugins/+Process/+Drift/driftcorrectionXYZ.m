@@ -205,9 +205,9 @@ p(2).value=1; p(2).on=p(1).off; p(2).off={};
 pard.correctxy.object=struct('String','Correct xy-drift','Style','checkbox','Value',1,'Callback',{{@obj.switchvisible,p}});
 pard.correctxy.position=[1,1];
 
-pard.texta.object=struct('String','timepoints','Style','text');
-pard.texta.position=[2,1];
-pard.texta.Width=0.75;
+pard.drift_timepointst.object=struct('String','timepoints','Style','text');
+pard.drift_timepointst.position=[2,1];
+pard.drift_timepointst.Width=0.75;
 
 pard.drift_timepoints.object=struct('String','10','Style','edit');
 pard.drift_timepoints.object.TooltipString=sprintf('whole data is divided into timepoints individual \n blocks. Range: 7-20');

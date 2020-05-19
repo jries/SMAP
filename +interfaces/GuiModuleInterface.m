@@ -535,6 +535,15 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 allFields=fieldnames(guidef);
                 anyoptional=false;
                 synchronizeguistate=obj.getPar('synchronizeguistate');
+                
+                %help file
+                pp=obj.pluginpath;
+                if iscell(pp) && length(pp)==3
+                    helpfile=[pp{1} '.' pp{2} '.' pp{3} '.txt'];
+                else
+                    helpfile='';
+                end
+                
                 for k=1:length(allFields) 
                     thisField=guidef.(allFields{k});
                     if strcmp(allFields{k},'syncParameters')
@@ -547,6 +556,8 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         obj.plugininfo=thisField;
                     elseif strcmp(allFields{k},'locselector')
                         %do nothing here
+                    elseif strcmp(allFields{k},'helpfile')
+                        helpfile=thisField;
                     elseif isstruct(thisField) && ~isempty(obj.handle) %results name
                         if ~isfield(thisField,'object') || ~isfield(thisField.object,'Style')
                             allFields{k}
@@ -637,8 +648,25 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                     end
                        
                 end 
-            
+                % read help file and write tool tips 
+                settingsdir=obj.getPar('SettingsDirectory');
+                helpfilep=[fileparts(settingsdir) filesep 'Documentation' filesep 'help' filesep helpfile];
+                if strcmp(helpfilep(1),filesep)
+                    helpfilep(1)=[];
+                end
+                              
+                if ~isempty(helpfile) && exist(helpfilep,'file')
+                    [description,tooltips]=parsehelpfile(helpfilep);
+                    obj.plugininfo.description=sprintf(description);
+                    fnt=fieldnames(tooltips);
+                    for tt=1:length(fnt)
+                        if isfield(obj.guihandles,fnt{tt})
+                            obj.guihandles.(fnt{tt}).Tooltip=sprintf(tooltips.(fnt{tt}));
+                        end
+                    end
+                end          
             end
+              
             obj.initGui; %exchanged 
             obj.setSyncParameters;
             obj.initializeGuiParameters;
