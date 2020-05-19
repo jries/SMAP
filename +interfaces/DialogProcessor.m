@@ -202,7 +202,7 @@ end
 set(obj.resultshandle,'Visible',state)
 end
 
-function info_callback(~,~,obj)
+function info_callback(a,b,obj)
 warnid='MATLAB:strrep:InvalidInputType';
 warnstruct=warning('off',warnid);
 
@@ -210,18 +210,43 @@ obj.guihandles.showresults.Value=1;
 showresults_callback(obj.guihandles.showresults,0,obj)
 ax=obj.initaxis('Info');
 hp=ax.Parent;
- htxt=uicontrol(hp,'Style','edit','Units','normalized','Position',[0,0,.9,1],...
-     'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100);
- td=obj.info.description;
+hp.BackgroundColor='w'
+delete(ax);
+
+ htxt=annotation(hp,'textbox',[0.03,0.03,.9,.93],...
+     'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','BackgroundColor','w','FitBoxToText','off','EdgeColor','w');
+%  htxt=uicontrol(hp,'Style','text','Units','normalized','Position',[0,0,.9,1],...
+%      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100); 
+td=obj.info.description;
  if ~iscell(td)
-  td=strrep(td,9,' ');
-txt=strrep(td,10,13);
+  txt=strrep(td,9,' ');
+% txt=strrep(td,10,13);
  else
      txt=td;
  end
  htxt.String=txt;
-  htxt.Position=[0 0 1 1];
+%   htxt.Position=[0 0 1 1];
   warning(warnstruct);
+  h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.95,0.95,.05,.05],'String','Edit','Callback',{@edit_callback,obj});
 end
 
+function edit_callback(a,b,obj)
+basedir=fileparts(obj.getPar('SettingsDirectory'));
+outdir=[basedir filesep 'Documentation' filesep 'help' filesep];
+if isempty(basedir)
+    outdir(1)=[];
+end
+ pp=obj.pluginpath;
+if iscell(pp) && length(pp)==3
+    helpfile=[pp{1} '.' pp{2} '.' pp{3} '.txt'];
+else
+    disp('this is not a plugin')
+    return
+end
 
+if ~exist([outdir helpfile],'file')
+    writehelpfile([outdir helpfile],obj.guidef);
+end
+open([outdir helpfile])
+
+end

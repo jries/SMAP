@@ -664,6 +664,8 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                             obj.guihandles.(fnt{tt}).Tooltip=sprintf(tooltips.(fnt{tt}));
                         end
                     end
+                else
+%                     writehelpfile(helpfile,guidef)
                 end          
             end
               
