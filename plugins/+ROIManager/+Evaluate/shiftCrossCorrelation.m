@@ -11,11 +11,11 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
         function out=run(obj,p)
 %             obj.line=p.lineselect.selection;
            
-            if isempty(obj.site.image.layers)
-                warndlg('check "keep temp images" in the Evaluation GUI');
-                out=[];
-                return
-            end
+%             if isempty(obj.site.image.layers)
+%                 warndlg('check "keep temp images" in the Evaluation GUI');
+%                 out=[];
+%                 return
+%             end
             
             maxprecision=0.1;% nm
        
@@ -27,11 +27,19 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
             
             lineangle=obj.site.annotation.(p.lineselect.selection).angle;
             
-            [xr1,yr1]=rotcoorddeg(locs1.xnm-obj.site.pos(1),locs1.ynm-obj.site.pos(2),-lineangle);
-            [xr2,yr2]=rotcoorddeg(locs2.xnm-obj.site.pos(1),locs2.ynm-obj.site.pos(2),-lineangle);
+            [xr1,yr1]=rotcoorddeg(locs1.xnm-obj.site.pos(1),locs1.ynm-obj.site.pos(2),lineangle);
+            [xr2,yr2]=rotcoorddeg(locs2.xnm-obj.site.pos(1),locs2.ynm-obj.site.pos(2),lineangle);
             n=-p.se_siteroi/2:p.pixrec:p.se_siteroi/2;
             img1=histcounts2(xr1,yr1,n,n);
             img2=histcounts2(xr2,yr2,n,n);
+            satpix=10;
+            qp=1-satpix/size(img1,1)/size(img1,2);
+            qp=max(qp,0.99);
+            q1=max(2,ceil(quantile(img1(:),qp)));
+            img1(img1>q1)=q1;
+            q2=max(2,ceil(quantile(img2(:),qp)));
+            img2(img2>q2)=q2;           
+            %saturate to reduce impact of bright spots
             
 %             img1=img1-mean(img1(:));
 %             img2=img2-mean(img2(:));
@@ -39,19 +47,21 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
             ax1=obj.setoutput('images');
             imagesc(ax1,horzcat(img1,img2));
             %make mask
-        
+            sigma=p.fitsig/p.pixrec;
+            
+            h=fspecial('gaussian',ceil(3*sigma),sigma);
             x1=xcorr2fft(img1,img1);
             x2=xcorr2fft(img2,img2);
             x12=xcorr2fft(img1,img2);
-
-             maxshiftwin=ceil(p.maxshift/2/p.pixrec)+ceil((p.fitwin-1)/2);
+            x12f=filter2(h,x12);
+             maxshiftwin=ceil(p.maxshift/p.pixrec)+ceil((3*sigma-1)/2);
              midp=floor(size(x12)/2+1);
              sx1=x1(midp(1)-maxshiftwin:midp(1)+maxshiftwin,midp(2)-maxshiftwin:midp(2)+maxshiftwin);
              sx2=x2(midp(1)-maxshiftwin:midp(1)+maxshiftwin,midp(2)-maxshiftwin:midp(2)+maxshiftwin);
              sx12=x12(midp(1)-maxshiftwin:midp(1)+maxshiftwin,midp(2)-maxshiftwin:midp(2)+maxshiftwin);
+             sx12f=x12f(midp(1)-maxshiftwin:midp(1)+maxshiftwin,midp(2)-maxshiftwin:midp(2)+maxshiftwin);
              
-             h=fspecial('gaussian',p.fitwin,p.fitwin/3);
-             sx12f=filter2(h,sx12);
+             
              sx12hr=imresize(sx12f,p.pixrec/maxprecision,'cubic');
              [~,linind]=max(sx12hr(:));
              [xm,ym]=ind2sub(size(sx12hr),linind);
@@ -88,17 +98,17 @@ pard.maxshiftt.object=struct('Style','text','String','max shift nm');
 pard.maxshiftt.position=[2,1];
 pard.maxshiftt.Width=1;
 
-pard.maxshift.object=struct('Style','edit','String','100');
+pard.maxshift.object=struct('Style','edit','String','50');
 pard.maxshift.position=[2,2];
 pard.maxshift.Width=.5;
 
-pard.fitwint.object=struct('Style','text','String','window (pixels)');
+pard.fitwint.object=struct('Style','text','String','filter nm');
 pard.fitwint.position=[2,3];
 pard.fitwint.Width=1;
 
-pard.fitwin.object=struct('Style','edit','String','11');
-pard.fitwin.position=[2,4];
-pard.fitwin.Width=.5;
+pard.fitsig.object=struct('Style','edit','String','5');
+pard.fitsig.position=[2,4];
+pard.fitsig.Width=.5;
 
 pard.pixrect.object=struct('Style','text','String','pixel size (nm)');
 pard.pixrect.position=[3,1];
