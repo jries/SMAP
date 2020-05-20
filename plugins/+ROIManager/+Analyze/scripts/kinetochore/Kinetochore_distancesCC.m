@@ -49,8 +49,9 @@ subplot(2,2,2);
 
 ID = getFieldAsVector(g.locData.SE.sites,'ID');
 plotSElink(dx,dy,ID,g.locData.SE,'o')
-
-title({mean2str([dx1;dx2],pr); mean2str([dy1;dy2],pr)})
+[stxtx, smx, ssx]=mean2str([dx1;dx2],pr);
+[stxty, smy, ssy]=mean2str([dy1;dy2],pr);
+title({stxtx; stxty})
 
 subplot(2,2,3)
 hold off
@@ -61,13 +62,24 @@ hold on
 plot((dx1+dx2)/2,(dy1+dy2)/2,'ko')
 
 plot(0,0,'k*')
-title({mean2str((dx1+dx2)/2,pr); mean2str((dy1+dy2)/2,pr)})
+[ctxtx, cmx, csx]=mean2str((dx1+dx2)/2,pr);
+[ctxty, cmy, csy]=mean2str((dy1+dy2)/2,pr);
 
+title({ctxtx; ctxty})
+
+heading=sprintf('file \t N \t CC av dx \t  dy \t cluster dx \t std \t dy \t std \t cell x \t std \t cell y \t std');
+disp(heading)
+tab=sprintf('\t');
+outstr=[g.getPar('lastSMLFile') tab num2str(length(sites)) tab num2str(dxline) tab ...
+    num2str(dyline) tab smx tab ssx tab smy tab ssy...
+    tab cmx tab csx tab cmy tab csy];
+clipboard('copy',outstr);
 % 
 % h=fspecial('gaussian',10,1);
 %  imout=filter2(h,imout);
 
-function out=mean2str(x,pr)
+function [out,ms,ss]=mean2str(x,pr)
 [m,s]=robustMean(x);
 out=[num2str(m,pr) '\pm' num2str(s,pr)];
+ms=num2str(m);ss=num2str(s);
 end
