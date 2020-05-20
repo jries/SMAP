@@ -15,18 +15,30 @@ indt=strfind(txttt,'gui:');
 indbad=uint8(txttt(indt+4))<65 |uint8(txttt(indt+4))>122;
 indt(indbad)=[];
 indt(end+1)=length(txttt);
-
+copyf=[];
 for k=1:length(indt)-1
     txth=txttt(indt(k)+4:indt(k+1)-1);
     nameend=find(txth<'0' | (txth>'9' & txth<'A'),1,'first'); %allow for a-z, A-Z,0_9,'_'
     hname=txth(1:nameend-1);
     tooltiptxt=reformatline(txth(nameend+1:end));
-    if ~strcmp(hname,'Parameters')
+    if txth(nameend)=='=' %copy
+        nameendc=find(tooltiptxt<'0' | (tooltiptxt>'9' & tooltiptxt<'A'),1,'first'); 
+        if isempty(nameendc)
+            copyf.(hname)=tooltiptxt;
+        else
+            copyf.(hname)=tooltiptxt(1:nameendc-1);
+        end
+    elseif ~strcmp(hname,'Parameters')
         tooltips.(hname)=tooltiptxt;
     end
 end
 
-
+if ~isempty(copyf)
+    fn=fieldnames(copyf);
+    for k=1:length(fn)
+        tooltips.(fn{k})=tooltips.(copyf.(fn{k}));
+    end
+end
 %ADD: gui:h1=h2
 end
 

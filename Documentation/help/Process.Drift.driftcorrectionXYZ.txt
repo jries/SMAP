@@ -25,19 +25,12 @@ gui:drift_pixrec pixel size (nm) for reconstruction. Smaller for well defined pe
 But slower. Range: 10-25
 
 gui:drift_window
-Size of region for peakfinding (ellipt. Gaussian). 
-
-Should be small, but cover clear maximum. 
-
+Size of region for peakfinding (ellipt. Gaussian). \n
+Should be small, but cover clear maximum. \n
 Range: 7-15.
 
 gui:drift_maxdrift
-Maximum drift expected. 
-
-Smaller if data is sparse and wrong peak found. 
-
-larger if no clear peak found. 
-
+Maximum drift expected. \n Smaller if data is sparse and wrong peak found. \n larger if no clear peak found. \n
 Range 250-2000.
 
 gui:drift_maxpixels
@@ -53,9 +46,10 @@ gui:drift_windowz
 Size of region for peakfinding (ellipt. Gaussian). should be small, but cover clear maximum.  Range: 7-15.
 
 
-gui:smoothpar:
-Parameter for cubic splien interpolation. \n leave empty for automatic determination. \n 0.01 for little smoothing, 10 for strong smoothing.
+gui:smoothpar Parameter for cubic splien interpolation. \n leave empty for automatic determination. \n 0.01 for little smoothing, 10 for strong smoothing.
+
 gui:drift_reference: If checked, drift at end of data set is set to zero. \n Useful for sequential acquisition, use this for first data set.
+
 gui:drift_mirror2c: Vertical split: next to each other, horizontal split: below each other.
 
 

@@ -654,14 +654,16 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 if strcmp(helpfilep(1),filesep)
                     helpfilep(1)=[];
                 end
-                              
+                maxwidth=60;             
                 if ~isempty(helpfile) && exist(helpfilep,'file')
                     [description,tooltips]=parsehelpfile(helpfilep);
                     obj.plugininfo.description=sprintf(description);
                     fnt=fieldnames(tooltips);
                     for tt=1:length(fnt)
                         if isfield(obj.guihandles,fnt{tt})
-                            obj.guihandles.(fnt{tt}).Tooltip=sprintf(tooltips.(fnt{tt}));
+                            strtt=tooltips.(fnt{tt});
+                            strWrapped=mytextwrap(strtt,maxwidth,10);
+                            obj.guihandles.(fnt{tt}).Tooltip=sprintf(strWrapped);
                         end
                     end
                 else
@@ -771,6 +773,35 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
               obj.children.(fn{k}).setnormalizedpositionunits;
           end
        end
+       
+       function showinfo(obj)
+%         warnid='MATLAB:strrep:InvalidInputType';
+%         warnstruct=warning('off',warnid);
+%         obj.guihandles.showresults.Value=1;
+%         showresults_callback(obj.guihandles.showresults,0,obj)
+%         ax=obj.initaxis('Info');
+        hp=uifigure;
+%         hp=ax.Parent;
+        hp.Color='w';
+%         delete(ax);
+
+         htxt=annotation(hp,'textbox',[0.03,0.03,.9,.93],...
+             'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','BackgroundColor','w','FitBoxToText','off','EdgeColor','w');
+        %  htxt=uicontrol(hp,'Style','text','Units','normalized','Position',[0,0,.9,1],...
+        %      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100); 
+        td=obj.info.description;
+         if ~iscell(td)
+          txt=strrep(td,9,' ');
+        % txt=strrep(td,10,13);
+         else
+             txt=td;
+         end
+         htxt.String=txt;
+        %   htxt.Position=[0 0 1 1];
+%           warning(warnstruct);
+%           h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.95,0.95,.05,.05],'String','Edit','Callback',{@edit_callback,obj});
+          h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
+        end
 
     end
     
@@ -883,6 +914,26 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
    end
 end
 
+function edit_callback(a,b,obj)
+basedir=fileparts(obj.getPar('SettingsDirectory'));
+outdir=[basedir filesep 'Documentation' filesep 'help' filesep];
+if isempty(basedir)
+    outdir(1)=[];
+end
+ pp=obj.pluginpath;
+if iscell(pp) && length(pp)==3
+    helpfile=[pp{1} '.' pp{2} '.' pp{3} '.txt'];
+else
+    disp('this is not a plugin')
+    return
+end
+
+if ~exist([outdir helpfile],'file')
+    writehelpfile([outdir helpfile],obj.guidef);
+end
+open([outdir helpfile])
+
+end
 
 function pres=fieldvisibiltyparser(args)
 % fields{end+1}='all';
