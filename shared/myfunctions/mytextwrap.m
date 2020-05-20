@@ -31,5 +31,7 @@ else
     end
 end
 end
+if length(textout)>2
 textout(end-1:end)=[];
+end
 

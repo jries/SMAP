@@ -780,7 +780,8 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %         obj.guihandles.showresults.Value=1;
 %         showresults_callback(obj.guihandles.showresults,0,obj)
 %         ax=obj.initaxis('Info');
-        hp=uifigure;
+%         hp=uifigure;
+          hp=figure('MenuBar','none');
 %         hp=ax.Parent;
         hp.Color='w';
 %         delete(ax);
@@ -799,8 +800,8 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
          htxt.String=txt;
         %   htxt.Position=[0 0 1 1];
 %           warning(warnstruct);
-%           h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.95,0.95,.05,.05],'String','Edit','Callback',{@edit_callback,obj});
-          h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
+          h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.95,0.95,.05,.05],'String','Edit','Callback',{@edit_callback,obj});
+%           h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
         end
 
     end
