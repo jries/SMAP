@@ -70,6 +70,7 @@ p=readstruct(gfile,{},true);
 end 
 
 help=uimenu(handle,'Label','Help');
+h.helpplutgin=uimenu(help,'Label','Search plugin','Callback',{@helpsmap_callback,obj,5});
 h.helpsmap=uimenu(help,'Label','User Guide','Callback',{@helpsmap_callback,obj,1});
 h.helpuser=uimenu(help,'Label','Programming Guide','Callback',{@helpsmap_callback,obj,2});
 h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpsmap_callback,obj,3});
@@ -236,14 +237,21 @@ openstackinfiji(obj,imout,title)
 end
 
 function helpsmap_callback(a,b,obj,whichone)
-if  isdeployed
-    direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
-else
-    direc = ['Documentation' filesep 'pdf'];
-end
+switch whichone
+    case {1,2,3,4}
+        if  isdeployed
+            direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
+        else
+            direc = ['Documentation' filesep 'pdf'];
+        end
 
-filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf'};
-myopenpdf([direc filesep filenames{whichone}]);
+        filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf'};
+        myopenpdf([direc filesep filenames{whichone}]);
+    case 5
+    sh=gui.SearchHelp;  
+    sh.attachPar(obj.P);
+    sh.makeGui;
+end
 % url='https://oc.embl.de/index.php/s/fCoSkGcK0FbpQ3z/download';
 % urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
 % settingsdir=obj.getPar('SettingsDirectory');

@@ -656,8 +656,9 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 end
                 maxwidth=60;             
                 if ~isempty(helpfile) && exist(helpfilep,'file')
-                    [description,tooltips]=parsehelpfile(helpfilep);
+                    [description,tooltips,interpreter]=parsehelpfile(helpfilep);
                     obj.plugininfo.description=sprintf(description);
+                    obj.plugininfo.descriptioninterpreter=interpreter;
                     fnt=fieldnames(tooltips);
                     for tt=1:length(fnt)
                         if isfield(obj.guihandles,fnt{tt})
@@ -807,7 +808,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
           htxt=annotation(hp,'textbox',pos,...
              'FontSize',fs,'HorizontalAlignment','left',...
              'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
-             'String',txt,'Interpreter','tex');
+             'String',txt,'Interpreter',obj.plugininfo.descriptioninterpreter);
           htxt.Position=pos;
 %          htxt.String=txt;
         %   htxt.Position=[0 0 1 1];

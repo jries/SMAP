@@ -1,5 +1,18 @@
-function [description,tooltips]=parsehelpfile(filename)
-txt=fileread(filename);
+function [description,tooltips,interpreter]=parsehelpfile(filename)
+if exist(filename,'file')
+    txt=fileread(filename);
+else
+    txt=filename;
+end
+%get interpreter and remove line
+indinterpret=strfind(txt,'gui:Interpreter');
+if isempty(indinterpret)
+    interpreter='tex';
+else
+   inde=find(txt(indinterpret+16:indinterpret+25)< 'A',1,'first');
+   interpreter=txt(indinterpret+16:indinterpret+16+inde-2);
+   txt(indinterpret:indinterpret+16+inde-2)=[];
+end
 
 indParameters=strfind(txt,'gui:Parameters');
 if isempty(indParameters)
