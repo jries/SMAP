@@ -805,10 +805,17 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
          else
              txt=td;
          end
+         
+         if isfield(obj.plugininfo,'descriptioninterpreter')
+             interpreter=obj.plugininfo.descriptioninterpreter; 
+         else
+             interpreter='none';
+         end
+         
           htxt=annotation(hp,'textbox',pos,...
              'FontSize',fs,'HorizontalAlignment','left',...
              'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
-             'String',txt,'Interpreter',obj.plugininfo.descriptioninterpreter);
+             'String',txt,'Interpreter',interpreter);
           htxt.Position=pos;
 %          htxt.String=txt;
         %   htxt.Position=[0 0 1 1];
