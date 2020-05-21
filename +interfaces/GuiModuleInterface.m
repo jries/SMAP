@@ -774,21 +774,28 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
           end
        end
        
-       function showinfo(obj)
+       function showinfo(obj, hp)
 %         warnid='MATLAB:strrep:InvalidInputType';
 %         warnstruct=warning('off',warnid);
 %         obj.guihandles.showresults.Value=1;
 %         showresults_callback(obj.guihandles.showresults,0,obj)
 %         ax=obj.initaxis('Info');
 %         hp=uifigure;
-          hp=figure('MenuBar','none');
+          if nargin<2
+            hp=figure('MenuBar','none');
+            hp.Color='w';
+            pos=[0.03,0.03,.9,.95];
+            fs=obj.guiPar.fontsize;
+          else
+              pos=[0 0 .7 1];
+              fs=12;
+
+          end
 %         hp=ax.Parent;
-        hp.Color='w';
+        
 %         delete(ax);
 
-         htxt=annotation(hp,'textbox',[0.03,0.03,.9,.93],...
-             'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','BackgroundColor','w','FitBoxToText','off','EdgeColor','w');
-        %  htxt=uicontrol(hp,'Style','text','Units','normalized','Position',[0,0,.9,1],...
+             %  htxt=uicontrol(hp,'Style','text','Units','normalized','Position',[0,0,.9,1],...
         %      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100); 
         td=obj.info.description;
          if ~iscell(td)
@@ -797,10 +804,15 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
          else
              txt=td;
          end
-         htxt.String=txt;
+          htxt=annotation(hp,'textbox',pos,...
+             'FontSize',fs,'HorizontalAlignment','left',...
+             'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
+             'String',txt,'Interpreter','tex');
+          htxt.Position=pos;
+%          htxt.String=txt;
         %   htxt.Position=[0 0 1 1];
 %           warning(warnstruct);
-          h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.95,0.95,.05,.05],'String','Edit','Callback',{@edit_callback,obj});
+          h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.9,0.0,.1,.05],'String','Edit','Callback',{@edit_callback,obj});
 %           h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
         end
 

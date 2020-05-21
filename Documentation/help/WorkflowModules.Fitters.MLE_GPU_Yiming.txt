@@ -1,0 +1,37 @@
+GPU and CPU-based fitter for 2D and 3D data sets. Uses MLE. Implements Gaussian and spline interpolated PSF models. According to: Li, Yiming, Markus Mund, Philipp Hoess, Joran Deschamps, Ulf Matti, Bianca Nijmeijer, Vilma Jimenez Sabinina, Jan Ellenberg, Ingmar Schoen, and Jonas Ries. “Real-Time 3D Single-Molecule Localization Using Experimental Point Spread Functions.�? Nature Methods 15, no. 5 (April 9, 2018): 367–69. https://doi.org/10.1038/nmeth.4661.
+
+gui:Parameters:
+gui:PSFx0 start value for PSF, or size of PSF when PSF fixed (in camera pixels)
+gui:addgaussfit 
+gui:addgaussfit_mode 
+gui:addgaussfit_t 
+gui:addgaussfit_xyfrom 
+gui:asymmetry 
+gui:cal_3Dfile 3D calibration file for astigmtic 3D. 
+ Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig
+gui:dzZ 
+gui:dzZt 
+gui:fitmode Fit mode. Fit with constant PSF, free PSF, 3D with astigmatism, asymmetric PSF (for calibrating astigmatic 3D)
+gui:isscmos 
+gui:iterations number of iterations for the GPU fitter (typical 50, use 100-250 for ellipt: PSFx PSFy or 3Dz).
+gui:loadcal 
+gui:overwritePixelsize 
+gui:pixelsizex 
+gui:pixelsizey 
+gui:refractive_index_mismatch Correction factor to take into account the different refracrive indices of immersion oil and buffer. 
+ This leads to smaller distances inside the sample compared to bead calibration. 
+ Bead calibration: in piezo positions (nm). 
+ This factor transforms z positions to real-space z positions. 
+ For high-NA oil objectives: typical 0.72 (range 0.7-1).
+gui:roisperfit Number of 10 x 10 pixel ROIs passed to GPU for fitting. For other ROI sizes, the number is adjusted accordingly.
+gui:roisperfitt Number of 10 x 10 pixel ROIs passed to GPU for fitting. For other ROI sizes, the number is adjusted accordingly.
+gui:syncParameters 
+gui:tPSFx0 
+gui:text 
+gui:userefractive_index_mismatch 
+gui:zmaxZ 
+gui:zmaxZt 
+gui:zobjective 
+gui:zobjectivet 
+gui:zstart z start parameter. Use vector with several values for 2D PSF
+gui:zstartt z start parameter. Use vector with several values for 2D PSF
