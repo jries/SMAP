@@ -179,6 +179,9 @@ plot(sdx,'k:')
 % ylim([min(dx)-sx max(dx)+sx])
 lims=quantile(ddxplot(:), [0.01,0.99]);
 ylim([max(lims(1),-100) min(lims(2),100)])
+ylabel('displacement (nm)')
+xlabel('time block')
+title('redundant displacements x')
 % axis tight
 
 subplot(1,2,2)
@@ -187,6 +190,9 @@ plot(ddyplot)
 hold on
 plot(dy,'k','LineWidth',1.5);
 plot(sdy,'k:')
+ylabel('displacement (nm)')
+xlabel('time block')
+title('redundant displacements y')
 
 lims=quantile(ddyplot(:), [0.01,0.99]);
 ylim([max(lims(1),-100) min(lims(2),100)])
@@ -284,10 +290,13 @@ for k=1:dnumframesh-1
     
     if isfield(par,'showresults') && par.showresults && toc(timerh)>0.5
         timerh=tic;
+        soim=size(outim);
         fhold=imagesc(outim,'Parent',results_ax1);
+        plotlabels(results_ax1,soim)
         imagesc(outimnorm,'Parent',results_ax3)
-        results_ax3.Title.String=num2str(k/dnumframesh+(l-k)/dnumframesh^2);
-        results_ax1.Title.String=num2str(k/dnumframesh+(l-k)/dnumframesh^2);
+        plotlabels(results_ax3,soim)
+        results_ax3.Title.String=['Fraction processed: ' num2str(k/dnumframesh+(l-k)/dnumframesh^2)];
+        results_ax1.Title.String=['Fraction processed: ' num2str(k/dnumframesh+(l-k)/dnumframesh^2)];
         drawnow
         if SMAP_stopnow
             error('execution stopped by user');
@@ -369,4 +378,11 @@ toc
 tic
 fft2(imager,nfftexp,nfftexp);
 toc
+end
+
+function  plotlabels(h,soim)
+    text(h,1,1,'cross-correlation','Color','w')
+    text(h,1,soim(1),'fit','Color','w')
+    text(h,soim(1)*.8,1,'start','Color','w')
+    text(h,soim(1)*.8,soim(1),'residuals','Color','w')
 end

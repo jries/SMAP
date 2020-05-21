@@ -657,7 +657,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 maxwidth=60;             
                 if ~isempty(helpfile) && exist(helpfilep,'file')
                     [description,tooltips,interpreter]=parsehelpfile(helpfilep);
-                    obj.plugininfo.description=sprintf(description);
+                    obj.plugininfo.description=(description);
                     obj.plugininfo.descriptioninterpreter=interpreter;
                     fnt=fieldnames(tooltips);
                     for tt=1:length(fnt)
@@ -801,7 +801,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
         td=obj.info.description;
          if ~iscell(td)
           txt=strrep(td,9,' ');
-        % txt=strrep(td,10,13);
+          txt=strrep(txt,'\n',newline);
          else
              txt=td;
          end

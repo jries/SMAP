@@ -55,7 +55,8 @@ if ~isempty(plotaxis) && indplot(1)>0 &&indplot(end)<=length(zc)
     plot(plotaxis,zred,fp(zred),'r');
     plotaxis.NextPlot='replace';
     title(plotaxis,['dz (mean): ' num2str(mean(zr)-mean(zt)) ', cc: ' num2str(zpos)])
-
+    xlabel('z (nm)')
+    ylabel('cross-correlation')
 end
 
 

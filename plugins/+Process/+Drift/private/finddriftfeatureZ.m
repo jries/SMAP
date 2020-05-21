@@ -154,6 +154,9 @@ plot(dz,'k','LineWidth',1.5);
 plot(sdz,'k:')
 lims=quantile(ddzplot(:), [0.01,0.99]);
 ylim([max(lims(1),-5000) min(lims(2),5000)])
+title('redundant displacements')
+xlabel('time block')
+ylabel('dz (nm)')
 % sz=(max(dz)-min(dz));
 % ylim([min(dz)-sz/2 max(dz)+sz/2])
 % axis tight

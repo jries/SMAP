@@ -215,10 +215,10 @@ pard.drift_timepoints.position=[2,1.65];
 pard.drift_timepoints.isnumeric=1;
 pard.drift_timepoints.Width=0.25;
 
-pard.text1.object=struct('String','pixrec nm','Style','text');
-pard.text1.position=[2,2];
-pard.text1.Optional=true;
-pard.text1.Width=0.75;
+pard.drift_pixrect.object=struct('String','pixrec nm','Style','text');
+pard.drift_pixrect.position=[2,2];
+pard.drift_pixrect.Optional=true;
+pard.drift_pixrect.Width=0.75;
 
 pard.drift_pixrec.object=struct('String','10','Style','edit');
 pard.drift_pixrec.position=[2,2.65];
@@ -227,10 +227,10 @@ pard.drift_pixrec.object.TooltipString=sprintf('pixel size (nm) for reconstructi
 pard.drift_pixrec.Optional=true;
 pard.drift_pixrec.Width=0.25;
 
-pard.text2.object=struct('String','window pix','Style','text');
-pard.text2.position=[3,1];
-pard.text2.Optional=true;
-pard.text2.Width=0.75;
+pard.drift_windowt.object=struct('String','window pix','Style','text');
+pard.drift_windowt.position=[3,1];
+pard.drift_windowt.Optional=true;
+pard.drift_windowt.Width=0.75;
 
 pard.drift_window.object=struct('String','7','Style','edit');
 pard.drift_window.position=[3,1.65];
@@ -239,9 +239,9 @@ pard.drift_window.object.TooltipString=sprintf('size of region for peakfinding (
 pard.drift_window.Optional=true;
 pard.drift_window.Width=0.25;
 
-pard.text3.object=struct('String','maxdrift nm','Style','text');
-pard.text3.position=[4,1];
-pard.text3.Optional=true;
+pard.drift_maxdriftt.object=struct('String','maxdrift nm','Style','text');
+pard.drift_maxdriftt.position=[4,1];
+pard.drift_maxdriftt.Optional=true;
 
 pard.drift_maxdrift.object=struct('String','1000','Style','edit');
 pard.drift_maxdrift.position=[4,2];

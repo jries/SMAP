@@ -1,59 +1,115 @@
-Drift correction based on cross-correlation.
+Drift correction based on redundant cross-correlation.
 
-Algorithm: the data set is divided into [timepoints] blocks, 
-for which superresolution images are calculated. The displacement between 
+Algorithm: the data set is divided into \it timepoints \rm blocks, 
+for which superresolution images are calculated. The x,y displacements among 
 all images is calcualted with a FFT-based cross-correlation algorithm. 
 The position of the maxima of the cross-correlation curve are fitted with 
 sub-pixel accuracy with a free elliptical Gaussian.
 
-A robust estimator is used to calculate the drift vs frame from all pairwise displacements.
+A robust estimator is used to calculate the drift vs frame from all pairwise displacements. 
+This displacement is used for drift correction using a linear or smoothing spline interpolation.
+
+For z-driftcorrection, z-profiles are calculated for thin slices of the data and 
+used for cross-correlation, among time points, cross-correlation curves for all z-profiles belonging
+to one timepoint pair are added up. She z-shift is extracted from the cross-correlation curve by
+fitting with a polynomial. The displacement vs frame from the redundant pairwise shifts
+is estimated as for the x,y case.
 
 All localiaztions visible in the superresolution image are used to infer the drift. 
-Use [Render] [Layer] to control this.
+Use \bf Render Layer \rm to control this.
 
 If two files are loaded, their drift is calculated together and they are saved 
-as one file with their filenumbers copied to the channel field.
+as one file with their filenumbers copied to the channel field. This is useful 
+for multi-color SMLM.
+
+A similar approach is described in: Wang et al, Localization Events-Based Sample Drift Correction for 
+Localization Microscopy with Redundant Cross-Correlation Algorithm. 
+Optics Express 22. https://doi.org/10.1364/OE.22.015982.
 
 (c) Jonas Ries, EMBL, 2015
+
 
 gui:Interpreter:tex
 gui:Parameters:
 
 gui:drift_timepoints
-whole data is divided into timepoints individual blocks. Range: 7-20.
+The whole data is divided into timepoints individual blocks. Range: 7-20.
 
 gui:drift_timepointst=drift_timepoints
 
-gui:drift_pixrec pixel size (nm) for reconstruction. Smaller for well defined peak. 
-But slower. Range: 10-25
+gui:drift_pixrec 
+Pixel size (nm) for reconstruction. Use smaller values
+for higher localization precisions, however this leads to slower processing. 
+The cross-correlation peak should be well 
+defined and fit in the window. 
+Range: 10-25
+
+gui:drift_pixrect=drift_pixrec
 
 gui:drift_window
 Size of region for peakfinding (ellipt. Gaussian). \n
-Should be small, but cover clear maximum. \n
+Should be small, but cover the clear maximum. \n
 Range: 7-15.
 
+gui:drift_windowt=drift_window
+
 gui:drift_maxdrift
-Maximum drift expected. \n Smaller if data is sparse and wrong peak found. \n larger if no clear peak found. \n
+Maximum drift expected. \n Smaller if data is sparse and wrong peak found. 
+\n Larger if no clear peak found. \n
 Range 250-2000.
 
+gui:drift_maxdriftt=drift_maxdrift
+
 gui:drift_maxpixels
-Maximum size of the reconstructed images. Smaller for speed and lower memory consumption, larger for noisy signal. 128-4096.
+Maximum size of the reconstructed images. Smaller for speed and 
+lower memory consumption, larger for noisy signal. 128-4096.
+gui:drift_maxpixelst=drift_maxpixels
 
 gui:drift_timepointsz
 The whole data is divided into timepoints individual blocks. Range: 10-40.
+gui:textaz=drift_timepointsz;
 
 gui:drift_pixrecz 
 Pixel size (nm) for reconstruction. Smaller for well defined peak. But slower. Range: 10-25.
+gui:drift_pixreczt=drift_pixrecz
 
 gui:drift_windowz 
-Size of region for peakfinding (ellipt. Gaussian). should be small, but cover clear maximum.  Range: 7-15.
+Size of region for peakfinding (polynomial fit). Should be small, 
+but cover clear maximum.  Range: 7-15.
+gui:drift_windowzt=drift_windowz
 
+gui:zrange
+Only localizations in the range defined here are used for drift correction. 
+Values denote minimum and maximum.
+Typical value: -400 400.
+gui:zranget=zrange
 
-gui:smoothpar Parameter for cubic splien interpolation. \n leave empty for automatic determination. \n 0.01 for little smoothing, 10 for strong smoothing.
+gui:slicewidth
+Width of the slices that are used to calculate z-profiles. Smaller can be
+more accurate but is slower. Typical 200 nm.
+gui:slicewidtht=slicewidth
 
-gui:drift_reference: If checked, drift at end of data set is set to zero. \n Useful for sequential acquisition, use this for first data set.
+gui:smoothmode
+Defines how the displacement vs frame is interpolated between the blocks. 
 
-gui:drift_mirror2c: Vertical split: next to each other, horizontal split: below each other.
+gui:smoothpar Parameter for cubic spline interpolation. \n 
+leave empty for automatic determination. \n 0.01 for little smoothing, 
+10 for strong smoothing.
 
+gui:drift_reference: If checked, drift at end of data set is 
+set to zero. \n Useful for sequential acquisition, use this for first data set.
 
+gui:drift_whatfiles: If all files is selected, all files that are loaded are drift-corrected
+indiviudally. If only visible is selected, only the file displayed in layer 1 is drift-corrected.
+
+gui:drift_ask: Ask iwth a dialog box if to apply drift correction. This allows 
+inspection of the results before applying correction.
+
+gui:drift_mirror2c: For dual-channel data on the same camera
+chip each channel is drift-corrected individually. Define here the splitting.
+Vertical split: next to each other, 
+horizontal split: below each other.
+
+gui:save_dc
+Automatically save the drift-corrected SMLM data with the ending _driftc_sml.m
 
