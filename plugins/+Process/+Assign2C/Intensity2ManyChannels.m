@@ -104,8 +104,8 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
 end
 
 function setdefaultfields(a,b,obj)
-f1={'phot1','psf_nr'};
-f2={'phot2','psf_nt'};
+f1={'psf_nr','fit_nr','phot1'};
+f2={'psf_nt','fit_nt','phot2'};
 fs1=obj.getSingleGuiParameter('assignfield1');
 fs2=obj.getSingleGuiParameter('assignfield2');
 
@@ -247,6 +247,9 @@ end
 
 imagesc(ax,range,range,him)
 
+xlabel(ax,'Intensity in target channel (2), logarithmic scale')
+ylabel(ax,'Intensity in reference channel (1), logarithmic scale')
+
 end
 function [n1,n2]=getintensities(obj)
 field1=obj.getSingleGuiParameter('assignfield1').selection;
@@ -263,17 +266,17 @@ end
 
 function pard=guidef(obj)
 
-pard.ch1t.object=struct('String','Channel 1','Style','text');
+pard.ch1t.object=struct('String','Color 1','Style','text');
 pard.ch1t.position=[1,3];
 pard.ch1roi.object=struct('String','ROI 1','Style','pushbutton','Callback',{{@roi_callback,obj,1}});
 pard.ch1roi.position=[1,4];
 
-pard.ch2t.object=struct('String','Channel 2','Style','text');
+pard.ch2t.object=struct('String','Color 2','Style','text');
 pard.ch2t.position=[2,3];
 pard.ch2roi.object=struct('String','ROI 2','Style','pushbutton','Callback',{{@roi_callback,obj,2}});
 pard.ch2roi.position=[2,4];
 
-pard.chNt.object=struct('String','Channel','Style','text');
+pard.chNt.object=struct('String','Color','Style','text');
 pard.chNt.position=[3,3];
 pard.chNt.Width=0.55;
 pard.chN.object=struct('String','3','Style','edit');
@@ -313,6 +316,9 @@ pard.savebutton.position=[5,2];
 pard.assignfield1.object.TooltipString='choose which field to use for splitting';
 pard.assignfield2.object.TooltipString=pard.assignfield1.object.TooltipString;
 
+pard.instructionst.object=struct('String','First, select ROIs corresponding to individual colors. Then assign colors with Run.','Style','text');
+pard.instructionst.position=[6,1];
+pard.instructionst.Width=4;
 
 pard.plugininfo.type='ProcessorPlugin';
 pard.plugininfo.description='Assigns identity (color) to localizations based on intensities in both camerachannels';

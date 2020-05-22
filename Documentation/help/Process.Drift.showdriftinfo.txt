@@ -1,0 +1,6 @@
+Displays the results of the drift correction for a drift
+ corrected data set.
+
+gui:Parameters:
+gui:dataselect 
+If several files are loaded, select the file that is loaded here.

@@ -1,0 +1,7 @@
+Loades localzation data from a variety of files 
+including text (.csv, .txt), hdf5 or MATLAB files. 
+Localization data properties can be converted to 
+those used in SMAP, and conversions can be saved for repeated use.
+
+gui:Parameters:
+gui:importdef Select definition file for import

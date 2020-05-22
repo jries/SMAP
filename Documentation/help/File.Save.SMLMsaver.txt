@@ -1,0 +1,8 @@
+Saves localizations (including settings in SMAP) in the SMAP proprietary 
+\_sml.mat MATLAB format.
+
+gui:Parameters:
+gui:dataselect Save only selected file
+gui:savefile Save only selected file
+gui:savevisible Save only those filtered localizations that have been used to render the image. 
+gui:selectfields Select which fields to save.

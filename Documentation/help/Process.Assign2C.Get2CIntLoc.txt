@@ -1,0 +1,19 @@
+Get2CIntLoc gets intensities corresponding localizations in two channels.
+
+Algorithm: The transformation is used to transform the localizations
+in the target channel back to the reference channel. In each frame, reference and 
+target localizations are paired based on their proximity (closer together than 100 nm).
+Each localization is then assigned an additional property with the intensity of 
+the linked localization in the other channel. 
+
+Unpaired localizations have an intensity of zero assigned for their partner.
+
+After this, use Intensity2ManyChannels to assign a color from the intensity 
+values.
+
+
+gui:Parameters:
+gui:Tfile File containing the transformation, make e.g. with the Register Localizations plugin.
+gui:dataselect Select which file to perform the plugin on
+gui:loadbutton Load a transformation file
+gui:texta=dataselect 

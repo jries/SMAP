@@ -156,7 +156,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
         function switchvisible(obj,control,data,p,callbackfnc)
             val=control.Value;
             for k=1:length(p)
-                if p(k).value==val
+                if any(p(k).value==val)
                     off=p(k).off;
                     for l=1:length(off)
                          if isfield(obj.guihandles,off{l})
@@ -775,6 +775,32 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
           end
        end
        
+       function makeinfobutton(obj,position)
+           if nargin<2
+               position='sw';
+           end
+           h=obj.handle;
+           units=h.Units;
+           h.Units='pixels';
+           if isnumeric(position)
+               pos(1:2)=position(1:2);
+               pos(3:4)=[20 20];
+           else
+               switch position
+                   case 'sw' %right lower
+                       pos=[h.Position(3)-17,1,15,20];
+                   case 'nw' %right upper
+                       pos=[h.Position(3)-17,h.Position(4)-21,15,20];
+               end
+           end
+           obj.guihandles.infobutton=uicontrol(h,'Style','pushbutton','String','i',...
+               'Position',pos,'Callback',@obj.showinfo_callback);
+           h.Units=units;
+           obj.guihandles.infobutton.Tooltip='Show information for this plugin';
+       end
+       function showinfo_callback(obj,a,b)
+           obj.showinfo;
+       end
        function showinfo(obj, hp)
 %         warnid='MATLAB:strrep:InvalidInputType';
 %         warnstruct=warning('off',warnid);
@@ -783,7 +809,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %         ax=obj.initaxis('Info');
 %         hp=uifigure;
           if nargin<2
-            hp=figure('MenuBar','none');
+            hp=figure('MenuBar','none','Toolbar','figure');
             hp.Color='w';
             pos=[0.03,0.03,.9,.95];
             fs=obj.guiPar.fontsize;
@@ -800,7 +826,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
         %      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100); 
         td=obj.info.description;
          if ~iscell(td)
-          txt=strrep(td,9,' ');
+          txt=strrep(td,char(9),' ');
           txt=strrep(txt,'\n',newline);
          else
              txt=td;
@@ -941,12 +967,17 @@ outdir=[basedir filesep 'Documentation' filesep 'help' filesep];
 if isempty(basedir)
     outdir(1)=[];
 end
- pp=obj.pluginpath;
-if iscell(pp) && length(pp)==3
-    helpfile=[pp{1} '.' pp{2} '.' pp{3} '.txt'];
+g=obj.guidef;
+if isfield(g,'helpfile')
+    helpfile=g.helpfile;
 else
-    disp('this is not a plugin')
-    return
+    pp=obj.pluginpath;
+    if iscell(pp) && length(pp)==3
+        helpfile=[pp{1} '.' pp{2} '.' pp{3} '.txt'];
+    else
+        disp('this is not a plugin')
+        return
+    end
 end
 
 if ~exist([outdir helpfile],'file')

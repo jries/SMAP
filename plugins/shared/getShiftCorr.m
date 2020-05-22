@@ -91,11 +91,19 @@ hold on
 plot(y,x,'ks')
 hold off
 axis equal
+xlabel('x srpix')
+ylabel('y srpix')
+title('cross-correlation to find maximum')
+
+
 subplot(1,2,2,ax2)
 imagesc(abs(Fcccut));
 hold on
 plot(fitp(:,2),fitp(:,1),'ks')
 hold off
 axis equal
+xlabel('x srpix')
+ylabel('y srpix')
+title('zoom in cross-correlation to fit maximum')
 end
 abg=abg/sqrt(s1*s2);

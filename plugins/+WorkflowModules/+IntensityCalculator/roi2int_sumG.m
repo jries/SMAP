@@ -11,6 +11,9 @@ classdef roi2int_sumG<interfaces.GuiModuleInterface
         function pard=guidef(obj)
             pard=guidef(obj);
         end
+        function initGui(obj)
+            obj.makeinfobutton;
+        end
         function out=evaluate(obj,p,img,info)
             if ~isempty(info.bgim)
                 bg=info.bgim;

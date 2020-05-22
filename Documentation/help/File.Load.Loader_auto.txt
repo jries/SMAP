@@ -1,0 +1,9 @@
+Selects the correct loader based on filename and content. This is the standard
+loader for SMAP "*\_sml.mat" files.
+
+You can also use this loader to load tiff files, that are then attached to
+the localization data. To attach tiff stackes, use the loader plugin "tif loader".
+
+gui:Parameters:
+gui:restoreROI Restore ROI if saved with data.
+gui:updateGuiPar Restore Gui parameters saved with localization data

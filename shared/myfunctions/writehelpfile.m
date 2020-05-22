@@ -21,14 +21,22 @@ fprintf(fid,'\n');
 fn=fieldnames(guidef);
 fn=setdiff(fn,'plugininfo');
 for k=1:length(fn)
+    if ~isfield(guidef.(fn{k}),'object')
+        continue     
+    end
     fprintf(fid,'gui:');
     fprintf(fid,fn{k});
     fprintf(fid,' ');
-    fh=guidef.(fn{k});
+    
+    fh=guidef.(fn{k}).object;
     if isfield(fh,'Tooltip')
         fprintf(fid,fh.Tooltip);
     elseif isfield(fh,'TooltipString')
         fprintf(fid,fh.TooltipString);
+    elseif isfield(guidef.(fn{k}),'Tooltip')
+        fprintf(fid,guidef.(fn{k}).Tooltip);
+    elseif isfield(guidef.(fn{k}),'TooltipString')
+        fprintf(fid,guidef.(fn{k}).TooltipString);
     end
     fprintf(fid,'\n');
 end

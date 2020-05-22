@@ -136,6 +136,10 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.roi3.TooltipString='free roi';
             h.roishow.TooltipString='redraw roi after updating image. Untick if Roi is in the way.';
             h.roidelete.TooltipString='Delete current ROI';
+            h.sr_plotlayernames.Tooltip='Show the name of the respective layer';
+            ltt='Select which layers to show';
+            h.layeron1.Tooltip=ltt; h.layeron2.Tooltip=ltt; h.layeron3.Tooltip=ltt;
+             h.layeron4.Tooltip=ltt; h.layeron5.Tooltip=ltt; h.layeron6.Tooltip=ltt;
             makeGui@interfaces.GuiModuleInterface(obj);
             obj.initGui;
         end

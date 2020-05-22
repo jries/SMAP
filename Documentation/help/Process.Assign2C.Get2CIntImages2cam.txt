@@ -1,0 +1,58 @@
+This plugin gets intensities from camera images at positions of 
+localizations and at transformed positions. 
+It uses a transformation to find for every 
+localization the position in the other channel and then determines 
+the intensity in both channels. This can be achieved with different 
+evaluation modules.
+
+
+1.	Load a transformation. Load the camera images for the reference channel
+and the target channel. In case reference and target are on the same camera chip
+and thus saved in the same file, leave the reference file field empty.
+
+2.	To determine the background, this plugin does quantile filtering (optional).
+
+3.	Select one or several plugins which determine the intensity:
+
+	 a.	Roi2int sum: uses a ROI (set size) to determine intensity, 
+and a larger ROI for the background.
+
+	 b.	Roi2int fit: Uses a Gaussian fit to determine 
+intensity and background. The position is fixed to the fitted position. 
+You can use the fitted PSF size or fix it. If fit on BG is checked, 
+the background is subtracted prior to fitting and 
+the fit is performed with background set to zero. 
+Otherwise the background is a fitting parameter.
+	 
+    c.  Roi2int expPSF: Uses an experimental PSF 
+model for fitting, or for a weighted intensity average.
+
+4.	Press Run and when asked select the original raw 
+camera images. The results are automatically saved with the ending "dc" 
+in the file name.
+
+
+gui:Parameters:
+gui:Tfile File containing the transformation. Make previously with Process.Register.Register Localizations
+or with the PSF calibrator.
+gui:bgfunction Which function to use for background calculation. Currently only 
+quantile is implemented.
+gui:bgfunctionpar Parameter for the bg function. For quantile, the quantile value. Median corresponds 
+to a quantile value of 0.5; 
+gui:calculatebg Check this only if you need the background for determining intensities.
+gui:evalref Get intensities for the reference channel.
+gui:evaltarget Get intensities for the target channel.
+gui:loadbuttonT Load the transformation file.
+gui:loadbuttontifref Load the camera images for the reference channel.
+gui:loadbuttontiftarget Load the camera images for the target channel.
+gui:mirroremref Check if the reference channel was acquired with EM gain on an EMCCD
+camera and thus is mirrored.
+gui:mirroremtarget Check if the target channel was acquired with EM gain on an EMCCD
+camera and thus is mirrored.
+gui:numframes_bg Number of frames for background filtering.
+gui:t1=numframes_bg
+gui:tiffileref  File containing camera images for reference channel. In case reference and target are on the same camera chip
+and thus saved in the same file, leave this field empty.
+gui:tiffiletarget leave empty to retrieve position of camera image files 
+from the file.info.imagefile in the localization data object.
+Useful for batch processing.

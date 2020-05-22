@@ -132,13 +132,15 @@ end
 
 function pard=guidef(obj)
 % pard.plugininfo={'csv saver'};
-pard.savevisible.object=struct('Style','popupmenu','Visible','on','String',{{'all','visible ROI'}},'Value',1);
+p(1).value=1; p(1).on={'grouped'}; p(1).off={};
+p(2).value=2; p(2).on={}; p(2).off={'grouped'};
+pard.savevisible.object=struct('Style','popupmenu','Visible','on','String',{{'all','visible ROI'}},'Value',1,'Callback',{{@obj.switchvisible,p}});
 pard.savevisible.position=[1,1];
-pard.savevisible.Width=1;
+pard.savevisible.Width=1.5;
 
-pard.grouped.object=struct('Style','checkbox','Visible','on','String','grouped (if all)','Value',0);
-pard.grouped.position=[1,2];
-pard.grouped.Width=2;
+pard.grouped.object=struct('Style','checkbox','Visible','on','String','grouped','Value',0);
+pard.grouped.position=[1,2.5];
+pard.grouped.Width=1.5;
 
 pard.format.object=struct('Style','popupmenu','Visible','on','String',{{'csv','txt','dat','xls'}});
 pard.format.position=[1,4];

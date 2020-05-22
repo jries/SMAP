@@ -228,6 +228,8 @@ imt=sqrt(imt);
 
 axim=initaxis(p.resultstabgroup,['img' p.repetition]);
 imagesc(axim,horzcat(imr,imt))
+title('images used for cross-correlation')
+axis(axim, 'off')
 % implot=zeros(size(imr,1),size(imr,2),3);
 % implot(:,:,1)=imr;implot(:,:,2)=imt;
 % ax1=initaxis(p.resultstabgroup,'images');
@@ -336,6 +338,7 @@ ltr=transform.transformToReference(2,lt);
        dzb=loctarget.znm(iBa)-locref.znm(iAa);
        initaxis(p.resultstabgroup,['z' p.repetition])
        histogram(dz);hold on ; histogram(dzb);hold off
+       xlabel('z_{ref}-z_{target} (nm)')
    end
    
 %    dx=loctarget.x(iBa)-locref.x(iAa);
@@ -343,20 +346,26 @@ ltr=transform.transformToReference(2,lt);
 %    figure(88)
 initaxis(p.resultstabgroup,['dxy' p.repetition])
    dscatter(dx,dy)
-   title({['number of anchor points: ' num2str(length(iBa)) ' of ' num2str(nseen)],['dx= ' num2str(std(dx),3) ' pix, dy= ' num2str(std(dy),3) ' pix']});
- ax3=initaxis(p.resultstabgroup,['hist' p.repetition]);
- hist(dx,50)
+   xlabel('x_{ref}-x_{target} (camera pixels)')
+   ylabel('y_{ref}-y_{target} (camera pixels)')
 
- rr=rand(1000,1);
+   title({['number of anchor points: ' num2str(length(iBa)) ' of ' num2str(nseen) '=' num2str(length(iBa)/nseen*100,'%2.1f') '%']...
+       ,['dx= ' num2str(std(dx),3) ' pix, dy= ' num2str(std(dy),3) ' pix']});
+%  ax3=initaxis(p.resultstabgroup,['hist' p.repetition]);
+%  hist(dx,50)
+%  xlabel('x_{ref}-x_{target} (camera pixels)')
+ rr=rand(2000,1);
  ra=ceil(rr*length(iBa));
   rb=ceil(rr*length(nb));
   if isempty(nb)
       rb=[];
   end
  ax4=initaxis(p.resultstabgroup,['pos' p.repetition]);
- plot(loctarget.x(iBa(ra)),loctarget.y(iBa(ra)),'+',loctarget.x(nb(rb)),loctarget.y(nb(rb)),'ro')
- legend('paired','unpaired');
- 
+ plot(loctarget.x(nb(rb)),loctarget.y(nb(rb)),'r+',loctarget.x(iBa(ra)),loctarget.y(iBa(ra)),'bx')
+ legend('unpaired','paired');
+ title({'random subset of localizations.';'Paired ones should span entire field'})
+    xlabel('x (camera pixels)')
+   ylabel('y (camera pixels)')
 % transform.tinfo.targetpos=p.targetpos.selection;
 % transform.tinfo.separator=separator;
 % transform.tinfo.mirror=mirrorinfo;

@@ -1,0 +1,27 @@
+Calculates shift between rendered images in 
+two layers. The resulting shift is written into the shift field 
+in the layer tab of the target layer.
+Adjust the pixel size and FoV so that the shift can be calculated 
+from the reconstructed image.
+The transformation can also be saved for later use with Apply Transform.
+
+Algorithm: The images are cross-correlated and the maximum of the cross-correlatio
+is dertermined with sub-pixel accuracy
+
+gui:Parameters:
+gui:Tfile File to save the transformation in
+gui:correctcoordinates If this is selected, the shift is not written into the Layer tab field, 
+but instead the xnm and ynm coordinates of the localizations are 
+shifted by this value.
+gui:dataselect Choose localization file data set to perform registration on
+gui:pixelsize Size of a pixel in the reconstructed image 
+gui:refselect Layer that contains reference localizations
+gui:savebutton Save the transformation
+gui:setpixelsize If selected, the pixel size given here is used for reconstruction
+before cross-correlation.
+gui:targetchannels When correct coordinates is selected, only localizations in this channel
+are shifted. Pass on a several values to correct localizations with different channel values.
+gui:targetchannelst=targetchannels
+gui:targetselect Layer that contains target localizations
+gui:texta 
+gui:textb 

@@ -14,6 +14,9 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
         function obj=roi2int_expPSF(varargin)
             obj@interfaces.GuiModuleInterface(varargin{:});
         end
+        function initGui(obj)
+            obj.makeinfobutton;
+        end
         function pard=guidef(obj)
             pard=guidef(obj);
         end
@@ -264,9 +267,8 @@ pard.z0.position=[4,2.6];
 pard.z0.Width=0.4;
 % pard.z0.TooltipString=pard.fixpsf.TooltipString;
 
-p(1).value=0; p(1).on={}; p(1).off={'bgsetvalue'};
-p(2)=p(1);p(2).value=2;p(3)=p(1);p(3).value=3;
-p(4).value=4; p(4).on={'bgsetvalue'}; p(4).off={};
+p(1).value=1:3; p(1).on={}; p(1).off={'bgsetvalue'};
+p(2).value=4; p(2).on={'bgsetvalue'}; p(2).off={};
             
 pard.fitbg.object=struct('Style','popupmenu','String',{{'BG free fit','BG from localizations','BG calculated above','BG fixed to:'}},'Value',1,...
     'Callback',{{@obj.switchvisible,p}});
@@ -274,10 +276,8 @@ pard.fitbg.position=[1,2];
 pard.fitbg.Width=2;
 
 pard.fitmode.object=struct('Style','popupmenu','String',{{'fit','multiply'}},'Value',1);
-pard.fitmode.position=[1,4];
+pard.fitmode.position=[3,4];
 pard.fitmode.Width=1;
-
-
 
 pard.bgsetvalue.object=struct('Style','edit','String','0','Visible','off');
 pard.bgsetvalue.position=[1,4.5];

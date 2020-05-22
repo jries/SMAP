@@ -27,6 +27,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                        
                 loaderp.attachLocData(obj.locData);
                 loaderp.makeGui;
+                loaderp.makeinfobutton('sw');
                 info=loaderp.info;     
                 if ~strcmp(info.type,'LoaderPlugin')
                     delete(loaderhandle)
@@ -53,6 +54,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %                 saver.pluginpath={'File','Save',allsavers{k}};
                 saver.attachLocData(obj.locData);
                 saver.makeGui;
+                saver.makeinfobutton('sw');
                 info=saver.info;
                 
                 if ~strcmp(info.type,'SaverPlugin')
@@ -81,7 +83,9 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             m1 = uimenu(c,'Label','remove ','Callback',{@menu_callback,obj});
             m1 = uimenu(c,'Label','clear','Callback',{@menu_callback,obj});
             groupmode_callback(0,0,obj);
-            
+            pos=obj.guihandles.group_b.Position;
+            pos(1)=pos(1)+108;pos(2)=pos(2)+pos(4);
+           obj.makeinfobutton(pos); 
         end
      
         function loadbutton_callback(obj, handle,actiondata,isadd,pfad,f)
@@ -204,6 +208,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             obj.status('grouping done');
 %             group_callback(0, 0,obj);
         end
+        
         function pard=guidef(obj)
             pard=guidef(obj);
         end
@@ -463,6 +468,10 @@ pard.group_b.object=struct('Style','pushbutton','String','Group','Callback',{{@o
 pard.group_b.position=[5,4];
 pard.group_b.Width=1;
 
+% pard.group_i.object=struct('Style','pushbutton','String','i','Callback',{{@obj.group_info}});
+% pard.group_i.position=[5,4.8];
+% pard.group_i.Width=2;
+
 pard.group_tdx.object=struct('Style','text','String','dX');
 pard.group_tdx.position=[7,4];
 pard.group_tdx.Width=0.3;
@@ -511,4 +520,7 @@ pard.group_dt.object.TooltipString=sprintf('number of frames locs can be missing
 pard.group_mode.object.TooltipString=sprintf('Maximum allowed distance: 1. fix: set to fix value (below). \n 2. locprec: from localizaton precision. dx^2< 2.5(lp1^2+lp2^2) \n dx>min, dx<max');
 
 pard.autosavecheck.object.TooltipString=sprintf('save localizations every XX minutes as settings/temp/autosave_sml.mat');
+
+pard.plugininfo.name='GuiFile';
+pard.helpfile='SMAP.Gui.GuiFile.txt';
 end

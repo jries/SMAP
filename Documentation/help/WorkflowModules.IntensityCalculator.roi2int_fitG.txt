@@ -1,0 +1,11 @@
+Determines intensity around a localization by a regression 
+of a Gaussian model with fixed positions and sigma. 
+Either amplitude and background or only the amplitude are fitting parameters.
+
+gui:Parameters:
+gui:fitonbg If checked, the background is subtracted before fitting. You need to check calculate BG above.
+gui:fixpsf If checkedc, the PSF size is fixed to this value, otherwise the fitted
+PSF size (PSFxpix, PSFypix) is used.
+gui:psfsize_fit Size of the PSF
+gui:roisize_fit Size of the ROI used for fitting
+gui:t1=roisize_fit

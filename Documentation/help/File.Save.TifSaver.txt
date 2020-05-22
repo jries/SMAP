@@ -1,0 +1,5 @@
+Saves reconstructed images in tiff or png format. Only the tiff file
+is saved with some meta data detailing the reconstruction.
+
+gui:Parameters:
+gui:img_ext specify if to save as tif or png file.

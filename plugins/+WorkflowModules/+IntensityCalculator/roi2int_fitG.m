@@ -12,6 +12,9 @@ classdef roi2int_fitG<interfaces.GuiModuleInterface
         function pard=guidef(obj)
             pard=guidef(obj);
         end
+        function initGui(obj)
+            obj.makeinfobutton;
+        end
         function out=evaluate(obj,p,img,info) %evaluate(obj,roi,bg,dx,dy,PSFxpix,PSFypix)
             out=roi2int_fit_e(p,img,info);
         end

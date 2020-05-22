@@ -1,0 +1,24 @@
+Determines intensity around a localization by 
+a) regression of an experimental PSF model 
+(amplitude and background or only the amplitude free fitting), 
+or b) by multipliation with an experimental PSF model.
+
+gui:Parameters:
+gui:bgsetvalue Background value for fixed background (select "Background fixed to" above).
+gui:cal_3Dfile File containing a 3D bead calibration.
+gui:fitbg Select how to treat the background. \n
+"BG free fit" treats the background as a free fit parameter. \n
+"BG from localizations" uses the bg from the localization field, determined previously
+by single-molecule fitting. \n
+"Background calculated above" uses quantile-filtered background. Make sure to check "calculate BG" above.\n
+"BG fixed to" fixes the background. Specify the value.
+gui:fitmode "fit": fit the experimental PSF to the image using a linear regression with
+the intensity (and optional the background) as a free fit parameter. "multiply" multiply 
+experimental PSF with the image and sum over all values.
+gui:fixz0 Fix the z-position to specific value. 
+gui:loadcal_3Dfile Load the 3D calibration file
+gui:normalizeimage Normalize the image prior to fitting to shot noise. Essentially using 
+the square root of the photon intensity values.
+gui:roisize_fit Roi size for fitting
+gui:t1 
+gui:z0 Fixed z-position used for fitting.
