@@ -1,0 +1,18 @@
+Opens an instance of Fiji in which you can open any image stack (if large, use virtual stack). 
+This image stack can then be selected in the GUI and used for fitting.
+You need to install Fiji, add the ImageJ-MATLAB plugin as described here:
+https://imagej.net/MATLAB_Scripting#Running_ImageJ_within_MATLAB
+and set the path to fiji in SMAP/Preferences.
+
+Currently, an incompatibility between Fiji and Matlab might prevent function. I am working on getting this to run again. Any help highly appreciated.
+
+gui:Parameters:
+gui:fijibutton Opens a Fiji instance. In that, you can open the image stack as a virtual stack.
+gui:filelist Lists the open Fiji windows. 
+gui:fitall Fit data in all open Fiji windows
+gui:framestart First frame to fit
+gui:framestop Last frame to fit
+gui:locdata_empty Empty localization data before fitting. Important if post-processing (eg drift correction) is perfromed as part of workflow
+gui:refreshfiles Refresh the file list after opening files in Fiji
+gui:text 
+gui:textf Range of frames to fit

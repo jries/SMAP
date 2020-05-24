@@ -1,0 +1,22 @@
+Loads raw camera images (single file or direcotry with single images). 
+These can be tiff files, but also any OME compatible image files. 
+This plugin can load and process images during acquisition for online fitting. 
+With the help of the CameraManager the metadata is parsed and passed on to the CameraConverter.
+
+gui:Parameters:
+gui:framestart First frame to analyze. Typically 1, unless the first frames are too dense to be localized.
+gui:framestop Last frame to analyze. Is set from the metadata upon loading of the file, but can be overwritten if you want to 
+fit only a subset of the data.
+gui:ismultifile For global fitting of data that are acquired with two different cameras.
+gui:loaderclass Which loader to use for image loading: \n
+auto: Tries to find the correct loader based on the extension and availability of meta data. \n
+MMStack: Micro-manager stack file, this uses a micro-manager java class for loading and extraction of meta data. \n
+MMSingle: Data saved by Micro-manager as single image files. Parses meta data. \n
+OME: The MATLAB OME image loader. For this to work, the bioformats package needs to be installed and the path defined in the SMAP/Preferences.\n
+simpleTif: A simple loader for tiff stacks. Does not extract camera meta data. Used when none of the above work.
+gui:loadtifbutton Load raw camera image tif files. Either single images in directory. Or multi-image Tiff stacks. For data 
+saved in several files (big micro-manager tiff stacks or data saved as single tiff files) you can select any part file of the data.
+gui:onlineanalysis Fit during acquisition. If checked, max frames is ignored. Waits until no more images are written to the file / directory.
+gui:onlineanalysiswaittime Waiting time for online analysis. Typically a few secods.
+gui:textf Range of frames used for fitting.
+gui:tiffile Path to raw camarea data.

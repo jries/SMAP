@@ -1,0 +1,92 @@
+GUI to control render options.
+
+You can define several layers, each layer is rendered separately and a composite image of all layers is shown. You can add additional
+layers by clicking the \bf + \rm tab.
+
+In this GUI you can select the mode how to render, the color and contrasting options and you have quick access to the
+most commonly used filters on the localizations (e.g. localization precision, z range, PSF size, number of frames.
+
+Parameters that control the overall render appearence independent of the layer 
+(e.g. pixel size of the rendered image) can be changed in the format panel on the top right 
+of the SMAP GUI.
+
+Many Plugins read out the settings here (includinding filters) and perform their 
+analysis only on the localizations that are rendered in the different layers.
+
+gui:Parameters:
+gui:PSFxnm_max Filter on the size of the PSF (e.g. after using a free Gauss fit). This allows 
+rejecting localizations that are far away from the foucs
+and results in sectioning. 
+gui:PSFxnm_min=PSFxnm_max
+gui:PSFxnmb=PSFxnm_max 
+gui:ch_filelist which file to display. When displaying images (e.g. tiff files that 
+were attached to a file) select the corresponding localization file here.
+gui:channels Channels (e.g. colors) to display. Use a b c or a:c notation to display more than one channel.
+gui:colorauto Automatically set color range when a field for color coding is selected. Uncheck to keep this constant.
+gui:colorfield_max Range of values to fill the lookup table (LUT). Usually 0 and 1. You can select a smaller range,
+then values outside are fixed at the extreme or removed if restrict is checked. Or use a larger range to only
+map parts of the LUT to the data.
+ If fields (or z) are used for color coding: range of these values mapped to LUT.
+gui:colorfield_min=colorfield_max 
+gui:colorfieldb=colorfield_max
+gui:colortxt Color coding of the image. normal: intensity coded, z: z color coded, 
+ param: select field which to color code
+gui:copyalllayers_button Copy these parameters to all layers
+gui:default_button Reset to default parameters. 
+gui:defaultsave_button Save default parameters. 
+gui:externalrender External renderer. 
+gui:filelistfilter If checked, only localizations in the file in the field to the left is displayed. 
+Otherwise, all files are displayed in this layer.
+gui:filtertxt Quick access to filter on the most important localization attributes. Specify minimum and maximum of the values.
+gui:frame_max Filter on the frames. Allows to reject parts of th data with too dense localizations (beginning) or to filter out parts with large drifts. 
+gui:frame_min=frame_max
+gui:frameb=frame_max
+gui:groupcheck If checked use grouped (merged) localizations. If unchecked, use ungrouped localizations.
+gui:imax_max 
+gui:imax_min absolut intensity or 
+ quantile of the pixels that are not saturated (0<q<1, typically 0.999) or  
+ v for q=1-10^(v), v<0, typically -3.5
+gui:imaxb Contrast
+gui:imaxtoggle toggle absolute intensity maximum (Imax) or quantile
+gui:intensitycoding How to normalize every localization: \n normal: Integral=1,\n 
+photons: total photons,\n 
+blinks: number of localizations that were grouped/merged together, only use when display grouped localizstions.\n
+√photons: square root of photones. Due to Poisson statistics on photons, this normalizes to the noise.\n
+√blinks: square root grouped/merged localizatiosn. This normalizes to the noise.
+
+gui:intensitytxt How to normalize every localization: normal: Integral=1, photons: total photons, blinks: number of connected localizations
+gui:layercheck switch layer on and off
+gui:locprecnm_max Filter on the  x,y localization precision 
+gui:locprecnm_min=locprecnm_max 
+gui:locprecnmb=locprecnm_max
+gui:locprecznm_max Filter on the z localization precision 
+gui:locprecznm_min=locprecznm_max
+gui:locprecznmb=locprecznm_max 
+gui:lut Select the color lookup table
+gui:lutinv if checked: invert the colormap. If a field value is used for color-coding: invert the direction of mapping the LUT.
+gui:luttxt=lut 
+gui:parbutton Additional render paramters such as the proportionality constant for Gaussian rendering or parameters for external Renderers.
+gui:remout if checked: remove loclizations outside LUT. 
+ If unchecked: set them to maximum color.
+gui:render_colormode Use how to apply color coding. \n normal: intensity coded, \n z: z color coded, 
+ \n field: select a localization field (attribute) to use for color coding.
+gui:renderfield field to color code
+gui:rendermode How to render the image. \n Hist: as a histogram counting the number of localizations that fall in a pixel \n
+Gauss: Render each localization as a Gaussian with a size  proportional to the localization precision \n
+constGauss: render as Gaussian with a fixed size, specify the size here. \n
+DL: Render as a diffraction limited image, using the camera pixel size and the fitted PSF size as a size for the Gaussian kernel.\n
+tiff: Render attached tiff file. Select the tiff file below.\n
+raw: Render raw camera files that were saved with the localization data file.
+Other: use an external renderer (to the right).
+
+gui:renderparameter numeric parameter for renderer. constGauss: size of Gauss (nm). Leave empty for automatic size determination
+gui:rendertxt=rendermode
+gui:shiftxy_max Shift reconstructed image by this value (nm). Useful to correct for chromatic aberrations.
+gui:shiftxy_min Shift=shiftxy_max 
+gui:shiftxy_z Shift=shiftxy_max  
+gui:shiftxyb=shiftxy_max  
+gui:text1=channels 
+gui:tiftxt Select which image to display
+gui:znm_max z range to display 
+gui:znm_min=znm_max 
+gui:znmb=znm_max 

@@ -145,6 +145,8 @@ classdef GuiFilterTable< interfaces.LayerInterface
                        s{k,3}=min(val);
                        s{k,4}=mean(val);
                        s{k,5}=max(val);
+                   else
+                       s(k,3:5)=sss(k,3:5);
                    end
                    s{k,7}=logical(obj.filter.(fn{k}).auto);
                    s{k,8}=obj.filter.(fn{k}).invert;

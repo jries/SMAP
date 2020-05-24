@@ -116,7 +116,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             hfig=obj.getPar('sr_figurehandle');
             if ~isvalid(hfig)
-                hfig=figure;
+                hfig=figure('Name','Reconstructed superresolution image');
                 obj.setPar('sr_figurenumber',hfig.Number);
             end
 %             displayer=Displayer(obj.locData);
@@ -162,7 +162,8 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             hfig=obj.getPar('sr_figurehandle');
             if ~isvalid(hfig)
                 f=obj.getPar('sr_figurenumber');
-                figure(f);
+                fh=figure(f);
+                fh.Name='Reconstructed superresolution image';
                 obj.setPar('sr_figurenumber',f);
             end
             hfig=obj.getPar('sr_figurehandle');

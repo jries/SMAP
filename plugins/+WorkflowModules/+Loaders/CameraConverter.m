@@ -315,17 +315,19 @@ pard.lockcampar.object=struct('Style','checkbox','String','Lock','Value',0);
 pard.lockcampar.position=[1,3];
 pard.lockcampar.Width=0.5;
 pard.lockcampar.TooltipString=sprintf('Do not overwrite camera parameters automatically, but keep those set manually.');
+pard.lockcampar.Optional=true;
 
 pard.correctcamera.object=struct('Style','checkbox','String','Correct flatfield/offset','Value',0);
 pard.correctcamera.position=[2,1];
 pard.correctcamera.Width=2;
 pard.correctcamera.TooltipString=sprintf('Apply darkfield and brightfield correction.');
+pard.correctcamera.Optional=true;
 
 pard.emmirror.object=struct('Style','checkbox','String','Mirror if EM mode','Value',1,'Callback',{{@mirrorem_callback,obj}});
 pard.emmirror.position=[2,3];
 pard.emmirror.Width=2;
 pard.emmirror.TooltipString=sprintf('Mirror the image if acquired with EM gain.');
-
+pard.emmirror.Optional=true;
 
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='Interprets metadata and converts camera ADUs into photons- Metadata can be overwritten manually or loaded from a SMAP _sml.mat data file.';

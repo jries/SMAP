@@ -1,6 +1,6 @@
 Drift correction based on redundant cross-correlation.
 
-Algorithm: the data set is divided into \it timepoints \rm blocks, 
+\bf Algorithm: \rm the data set is divided into \it timepoints \rm blocks, 
 for which superresolution images are calculated. The x,y displacements among 
 all images is calcualted with a FFT-based cross-correlation algorithm. 
 The position of the maxima of the cross-correlation curve are fitted with 

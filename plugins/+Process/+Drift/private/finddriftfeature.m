@@ -177,7 +177,7 @@ plot(dx,'k','LineWidth',1.5);
 plot(sdx,'k:')
 % sx=(max(dx)-min(dx));
 % ylim([min(dx)-sx max(dx)+sx])
-lims=quantile(ddxplot(:), [0.01,0.99]);
+lims=quantile(ddxplot(:), [0.05,0.95]);
 ylim([max(lims(1),-100) min(lims(2),100)])
 ylabel('displacement (nm)')
 xlabel('time block')
@@ -219,11 +219,12 @@ driftinfo.binframes=cfit1;
 initaxis(par.resultstabgroup,['dxy/frame final' rn]);
 
 hold off
-plot(cfit1,dx,'x',framesall,dxtt,'k')
+plot(cfit1,dx,'bx',framesall,dxtt,'k')
 hold on
-plot(cfit1,dy,'o',framesall,dytt,'r')
+plot(cfit1,dy,'ro',framesall,dytt,'r')
 xlabel('frame')
 ylabel('dx, dy (nm)')
+legend('dx: smooth','dx','dy smooth','dy')
 drawnow
 
 initaxis(par.resultstabgroup,['dx vs dy' rn]);
@@ -293,10 +294,12 @@ for k=1:dnumframesh-1
         soim=size(outim);
         fhold=imagesc(outim,'Parent',results_ax1);
         plotlabels(results_ax1,soim)
+        axis(results_ax1,'off')
         imagesc(outimnorm,'Parent',results_ax3)
         plotlabels(results_ax3,soim)
-        results_ax3.Title.String=['Fraction processed: ' num2str(k/dnumframesh+(l-k)/dnumframesh^2)];
-        results_ax1.Title.String=['Fraction processed: ' num2str(k/dnumframesh+(l-k)/dnumframesh^2)];
+        axis(results_ax3,'off')
+        results_ax3.Title.String=['Progress: ' num2str((k/dnumframesh+(l-k)/dnumframesh^2)*100,'%2.1f') '%'];
+        results_ax1.Title.String=['Progress: ' num2str((k/dnumframesh+(l-k)/dnumframesh^2)*100,'%2.1f') '%'];
         drawnow
         if SMAP_stopnow
             error('execution stopped by user');
@@ -383,6 +386,6 @@ end
 function  plotlabels(h,soim)
     text(h,1,1,'cross-correlation','Color','w')
     text(h,1,soim(1),'fit','Color','w')
-    text(h,soim(1)*.8,1,'start','Color','w')
-    text(h,soim(1)*.8,soim(1),'residuals','Color','w')
+    text(h,soim(1)*.85,1,'start','Color','w')
+    text(h,soim(1)*.85,soim(1),'residuals','Color','w')
 end

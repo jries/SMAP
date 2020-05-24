@@ -22,7 +22,8 @@ classdef GrabFijiStacks<interfaces.WorkflowModule
         end
         function initGui(obj)
             initGui@interfaces.WorkflowModule(obj);
-             obj.inputParameters={'loc_subtractbg','loc_blocksize_frames'};            
+             obj.inputParameters={'loc_subtractbg','loc_blocksize_frames'};    
+             obj.makeinfobutton;
         end
         function prerun(obj,p)
             p=obj.getAllParameters;

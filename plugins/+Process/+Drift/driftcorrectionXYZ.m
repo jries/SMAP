@@ -267,13 +267,13 @@ pard.correctz.position=[1,3];
 
 pard.textaz.object=struct('String','timepoints z','Style','text','Visible','off');
 pard.textaz.position=[2,3];
-pard.textaz.Optional=true;
+% pard.textaz.Optional=true;
 pard.textaz.Width=.75;
 
 pard.drift_timepointsz.object=struct('String','10','Style','edit','Visible','off');
 pard.drift_timepointsz.object.TooltipString=sprintf('whole data is divided into timepoints individual \n blocks. Range: 10-40');
 pard.drift_timepointsz.position=[2,3.65];
-pard.drift_timepointsz.Optional=true;
+% pard.drift_timepointsz.Optional=true;
 pard.drift_timepointsz.Width=.25;
 
 pard.drift_pixreczt.object=struct('String','z binwidth nm','Style','text','Visible','off');

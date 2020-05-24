@@ -24,7 +24,9 @@ end
 
 function makeGui(obj)
 if isempty(obj.figure) || ~isvalid(obj.figure)
-    obj.figure=figure('MenuBar','none','Name','Search in Help','Units','normalized');
+    obj.figure=figure('MenuBar','none','Name','Search in Help','Units','pixels');
+    obj.figure.Position(3:4)=[700 800];
+    obj.figure.Units='normalized';
     obj.handle=obj.figure;
 end
 hf=obj.figure;
@@ -43,10 +45,16 @@ alltxt=obj.getPar('allhelpfiles');
 if isempty(alltxt)
     alltxt=makehelptxt(obj);
     obj.setPar('allhelpfiles',alltxt);
-    obj.alltxt=alltxt;
 end
+obj.alltxt=alltxt;
 searchstring=obj.guihandles.searchstring.String;
-ind=find(contains(alltxt.text,searchstring));
+ind=find(contains(alltxt.text,searchstring,'IgnoreCase',true));
+if isempty(ind)
+    obj.guihandles.resultslist.String={'no results'};
+    delete(obj.annotation)
+    obj.guihandles.resultstt.String='';
+    return
+end
 obj.searchind=ind;
 obj.guihandles.resultslist.String=onlynames(alltxt.filenames(ind));
 % obj.functionlist=alltxt.filenames(ind);
@@ -73,8 +81,10 @@ for k=1:length(fn)
 %     indf=strfind(fn{k},ss);
     fnh=fn{k};
 %     indt=strfind(tooltips.(fn{k}) ,ss);
-    tth=tooltips.(fn{k});
-    txttt=[txttt fnh ': ' tth newline];
+    tth=strrep(tooltips.(fn{k}), newline,' ');
+    tth=regexprep(tth,' +',' ');
+    txttt{k}=[fnh ': ' tth];
+%     txttt=[txttt fnh ': ' tth newline];
 end
 
 
@@ -89,6 +99,7 @@ obj.annotation=annotation(obj.guihandles.resultspanel,'textbox',pos,...
 end
 
 function out=onlynames(in)
+out={};
 for k=length(in):-1:1
     ind=find(in{k}=='.');
     out{k}=in{k}(ind(end-1)+1:ind(end)-1);
@@ -119,8 +130,10 @@ if isempty(ind)
 end
 switch interpreter
     case 'tex'
-        openbf='\bf';
-        closingbf='\rm';
+        openbf='\color{red}';
+        closingbf='\color{black}';
+%         openbf='\bf';
+%         closingbf='\rm';
     case 'latex'
         openbf='\textbf{';
         closingbf='}';

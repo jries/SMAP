@@ -32,6 +32,7 @@ classdef TifLoader<interfaces.WorkflowModule
             obj.guihandles.loadtifbutton.Callback={@loadtif_callback,obj};
             obj.addSynchronization('filelist_localize',obj.guihandles.tiffile,'String',{@loadtif_ext,obj});
             obj.guihandles.loaderclass.String=obj.loaders(:,1);
+            obj.makeinfobutton;
         end
         function prerun(obj,p)
             tf=p.tiffile;

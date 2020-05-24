@@ -448,12 +448,17 @@ pard.filelist_long.uimenu=psmen;
 pard.autosavecheck.object=struct('Style','checkbox','String','Auto save','Value',0);
 pard.autosavecheck.position=[9,4];
 pard.autosavecheck.Width=1;
+pard.autosavecheck.Optional=true;
+
 pard.as_tdx.object=struct('Style','text','String','Interval min');
 pard.as_tdx.position=[10,4];
 pard.as_tdx.Width=0.65;
+pard.as_tdx.Optional=true;
+
 pard.autosavetime.object=struct('Style','edit','String','30','Callback',{{@autosavetime_callback,obj}});
 pard.autosavetime.position=[10,4.65];
 pard.autosavetime.Width=0.35;
+pard.autosavetime.Optional=true;
 
 pard.savemodule.object=struct('Style','popupmenu','String',{{'_sml','final image','raw images','_fitpos','settings'}},...
     'Callback',{{@savemode_callback,obj}});
@@ -475,34 +480,41 @@ pard.group_b.Width=1;
 pard.group_tdx.object=struct('Style','text','String','dX');
 pard.group_tdx.position=[7,4];
 pard.group_tdx.Width=0.3;
-
+pard.group_tdx.Optional=true;
 
 pard.group_mode.object=struct('Style','popupmenu','String',{{'fix','locprec'}},'Callback',{{@groupmode_callback,obj}});
 pard.group_mode.position=[7,4.2];
 pard.group_mode.Width=0.8;
+pard.group_mode.Optional=true;
 
 pard.group_dx.object=struct('Style','edit','String','35');
 pard.group_dx.position=[8,4.3];
 pard.group_dx.Width=0.35;
+pard.group_dx.Optional=true;
+
 pard.group_dxt.object=struct('Style','text','String','nm');
 pard.group_dxt.position=[8,4.65];
 pard.group_dxt.Width=0.35;
+pard.group_dxt.Optional=true;
 
 pard.group_dxminmaxt.object=struct('Style','text','String','min max','Visible','off');
 pard.group_dxminmaxt.position=[8,4];
 pard.group_dxminmaxt.Width=0.5;
-
+pard.group_dxminmaxt.Optional=true;
 pard.group_dxminmax.object=struct('Style','edit','String','10 100','Visible','off');
 pard.group_dxminmax.position=[8,4.5];
 pard.group_dxminmax.Width=0.5;
+pard.group_dxminmax.Optional=true;
 
 pard.group_tdt.object=struct('Style','text','String','dT (frames)');
 pard.group_tdt.position=[6,4];
 pard.group_tdt.Width=0.65;
+pard.group_tdt.Optional=true;
+
 pard.group_dt.object=struct('Style','edit','String','1');
 pard.group_dt.position=[6,4.65];
 pard.group_dt.Width=0.35;
-
+pard.group_dt.Optional=true;
 
 pard.syncParameters={{'filelist_long','filelist_long',{'String'}}};
 pard.outputParameters= {'group_dx','group_dt','group_dxminmax'};

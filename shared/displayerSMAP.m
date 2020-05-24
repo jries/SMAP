@@ -158,6 +158,8 @@ end
         set(p.sr_axes,'Ylim',rangeyplot/1000)
         set(p.sr_axes,'YDir','reverse')
         axis(p.sr_axes,'equal')
+        xlabel(p.sr_axes,'x (µm)')
+        ylabel(p.sr_axes,'y (µm)')
         p.sr_axes.HitTest='on';
         p.sr_axes.PickableParts='all';
 %         axes(p.sr_axes) %bring to forground

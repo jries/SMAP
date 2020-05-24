@@ -14,11 +14,11 @@ texth=textin(ind1:ind2);
 indf1=strfind(texth,newline);
 indf2=strfind(texth,'\n');
 if ~isempty(indf1)
-    textout=[textout textin(ind1:ind1+indf1-2) newlinechar];
-    ind1=ind1+indf1;
+    textout=[textout textin(ind1:ind1+indf1(1)-2) newlinechar];
+    ind1=ind1+indf1(1);
 elseif ~isempty(indf2)
-    textout=[textout textin(ind1:ind1+indf2-2) newlinechar];
-    ind1=ind1+indf2+1;
+    textout=[textout textin(ind1:ind1+indf2(1)-2) newlinechar];
+    ind1=ind1+indf2(1)+1;
 else
     indsp=strfind(texth,' ');
     if ~isempty(indsp) && width-indsp(end)<=margin

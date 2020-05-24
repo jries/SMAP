@@ -83,7 +83,7 @@ pard.dataselect.object.TooltipString='save only selected file';
 pard.selectfields.object=struct('Style','pushbutton','String','Fields to save','Callback',{{@outputfields_callback,obj}});
 pard.selectfields.object.TooltipString='Select which fields to save. Use preview before.';
 pard.selectfields.position=[1,3];
-pard.selectfields.Width=2;
+pard.selectfields.Width=1.8;
 pard.selectfields.Optional=true;
             
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};

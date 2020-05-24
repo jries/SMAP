@@ -132,7 +132,7 @@ classdef GuiChannel< interfaces.LayerInterface
 %             obj.addSynchronization([obj.layerprefix 'scalex'],h.scalex,'String')
 %             obj.addSynchronization([obj.layerprefix 'scaley'],h.scaley,'String')
             obj.guihandles=h;
-
+            obj.makeinfobutton('guiselector')
             recpar=renderpardialog(obj.rec_addparval,1);
             p=obj.getAllParameters;
             layerp=copyfields(p,recpar);
@@ -1035,17 +1035,17 @@ pard.locprecznm_max.Optional=true;
 pard.frameb.object=struct('Style','pushbutton','String','frame');
 pard.frameb.position=[6,3.4];
 pard.frameb.Width=.6;
-pard.frameb.Optional=true;
+% pard.frameb.Optional=true;
 
 pard.frame_min.object=struct('Style','edit','String','0','BackgroundColor',[1 1 1]*.7);
 pard.frame_min.position=[6,4];
 pard.frame_min.Width=.5;
-pard.frame_min.Optional=true;
+% pard.frame_min.Optional=true;
 
 pard.frame_max.object=struct('Style','edit','String','inf');  
 pard.frame_max.position=[6,4.5];
 pard.frame_max.Width=.5;
-pard.frame_max.Optional=true;
+% pard.frame_max.Optional=true;
 
 pard.shiftxyb.object=struct('Style','pushbutton','String','shift xyz');
 pard.shiftxyb.position=[7,3.4];
@@ -1111,6 +1111,8 @@ pard.defaultsave_button.position=[9,4.6];
 pard.defaultsave_button.Width=.4;
 pard.defaultsave_button.TooltipString='Save default. ';
 pard.defaultsave_button.Optional=true;
+pard.plugininfo.name='GuiChannel';
+pard.helpfile='SMAP.Gui.GuiChannel.txt';
 %%%put in again
 % pard.layercolorz.object=struct('Style','checkbox','String','layers same c/z');
 % pard.layercolorz.position=[7,3.8];

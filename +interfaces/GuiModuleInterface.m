@@ -791,6 +791,8 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                        pos=[h.Position(3)-17,1,15,20];
                    case 'nw' %right upper
                        pos=[h.Position(3)-17,h.Position(4)-21,15,20];
+                   case 'guiselector'
+                       pos=[h.Position(3)-32,h.Position(4)-21,15,20];
                end
            end
            obj.guihandles.infobutton=uicontrol(h,'Style','pushbutton','String','i',...

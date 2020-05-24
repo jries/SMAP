@@ -52,7 +52,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                 
                 %make figure
                 if isempty(obj.outputfig)|| ~isvalid(obj.outputfig)
-                    obj.outputfig=figure;
+                    obj.outputfig=figure('Name','Preview for fitting');
                 end
                 fig=figure(obj.outputfig);
                 obj.setPar('loc_outputfig',fig);
@@ -90,6 +90,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
 %                 colormap(ax,'jet');
                 hold(ax,'on')
                 axis(ax,'equal')
+                axis(ax,'off')
                 %mask
                maskim=obj.getPar('loc_roimask');
                if ~isempty(maskim)
@@ -103,7 +104,8 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                 if isempty(maxima)||isempty(maxima.xpix)
                      obj.setPar('status','no localizations found')
                      obj.setPar('errorindicator','no localizations found')
-                     error ('no localizations found')
+                     disp ('No localizations found. Use a different frame fore Preview, or reduce the cutoff parameter');
+                     warndlg('No localizations found. Use a different frame fore Preview, or reduce the cutoff parameter');
                 end
                 col=[0.3 0.3 0.];
                 dn=floor(obj.getPar('loc_ROIsize')/2);

@@ -1,0 +1,48 @@
+Plugin to simulate camera raw frames using a realistic fluorophore blinking model, 
+PSF model  and camera noise model. Useful to test fitting workflows.
+
+Detailed description coming soon.
+
+gui:Parameters:
+gui:autorange Select the size of the simulated images based on the coordinates of the localizations.
+gui:background Background value in photons/pixel/frame.
+gui:cal_3Dfile 3D calibration file experimental PSF.
+ Generate from bead stacks with plugin: Analyze/sr3D/Calibrate3DsplinePSF
+gui:cameramodel Camera model: \n
+perfect cam: no read-out noise \n
+sCMOS: Gaussian noise \n EMCCD: EM excess noise and Gaussian noise.
+
+gui:conversion Conversion in e- per ADU.
+gui:emgain EM Gain
+gui:frames Which frames to simulate, specify as min,max
+gui:gausspar Parameters that describe divergence for a Gauss PSF. Specify as sigma of the Gauss (pixels),
+Rayleigh-range zR (in nm) to describe divergence and d as distance between foci (in nm)
+for an astigmatic Gaussian PSF.
+gui:gausspart=gausspar 
+gui:getlocalizations After selecting to the left what plugin is used to create the 
+localizations that are simulated as camera frames, here you transfer the localizations to this plugin.
+gui:loadcal load 3D PSF calibration file 
+gui:offset Offset in ADU
+gui:pixelsize Pixel size of the simulated camera
+gui:psfmodel PSF model for simulations: Symmetric Gauss (with z-dependent size change), Asymmetric Gauss (for astigmatic 3D simulation), or 
+experimentally derived PSF model.
+gui:savetiffs Save simulated tiff files for later re-fitting.
+gui:scmosnoise read noise in e-
+gui:scmosnoiset=scmosnoise 
+gui:simulationsource Source for the positions of localizations used for the simulation: \n
+Use current localizations: use those loaded in SMAP.\n
+Load localizations: load an *_sml.mat file that contains localizations.\n
+Make with simulation plugin: opens the plugin simulate locs that can be used to simulate any structure
+in SMLM.\n
+random: random positions of localizations.
+gui:t1=pixelsize 
+gui:t2=xrange 
+gui:t3=yrange 
+gui:t4=background 
+gui:t5=emgain 
+gui:t6=conversion 
+gui:t7=offset 
+gui:tf=frames 
+gui:usecam If checked, images are simulated as camera ADUs, otherwise, the simulations uses photons as intensity units. 
+gui:xrange Which x-range to simulate, specify as min,max in nm
+gui:yrange Which y-range to simulate, specify as min,max in nm
