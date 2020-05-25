@@ -4,19 +4,18 @@ global jervistemp;
 jervistemp=[];
 ax1=initaxis(p.resultstabgroup,'scatter');
 hold off
-[ax2,tab2]=initaxis(p.resultstabgroup,'xprofile');
+[ax2,tab2]=initaxis(p.resultstabgroup,'x profile');
 ax2.Position(3)=0.55;ax2.Position(1)=0.05;
 hold off
-[ax3,tab3]=initaxis(p.resultstabgroup,'yprofile');
+[ax3,tab3]=initaxis(p.resultstabgroup,'y profile');
 ax3.Position(3)=0.55;ax3.Position(1)=0.05;
 hold off
 
 if isfield(locD.loc,'znm')
-ax4=initaxis(p.resultstabgroup,'zprofile');
+ax4=initaxis(p.resultstabgroup,'z profile');
 ax4.Position(3)=0.55;ax4.Position(1)=0.05;
 hold off
 ax5=initaxis(p.resultstabgroup,'scatter xz');
-
 hold off
 end
 
@@ -73,9 +72,12 @@ for layer=1:length(p.sr_layerson)
     end
     
     axes(ax1)
-    plot(x,y,'.')
-    axis equal tight
-    hold on
+    plot(ax1,x,y,'.')
+    axis(ax1,'equal')
+     axis(ax1,'tight')
+    xlabel(ax1,'Position along line ROI (nm)')
+    ylabel(ax1,'Position perpendicular to line ROI (nm)')
+    hold(ax1,'on')
     
 %     t1{end+1}=['Layer ' 9 int2str(layer)];
 %     t2{end+1}=['Layer ' 9 int2str(layer)];
@@ -89,14 +91,18 @@ for layer=1:length(p.sr_layerson)
     jervistemp.ny=n;
     jervistemp.profy=profy;
     axes(ax2)
-    plot(n,profy);
-    hold on
+    plot(ax2,n,profy);
+    hold(ax2,'on')
+    
+    xlabel(ax2,'Position perpendicular to line ROI (nm)')
+    ylabel(ax2,'counts')
+    
     fwhm=getFWHM(profy,n);
     t1{end+1}=['FWHM: ' 9 num2str(fwhm,3)];
     
     sigma=median(locprecnm);
     [fitp,fitprof,fittxt]=fitgeneral(profy,n,p,sigma);
-    plot(n,fitprof,'k--')
+    plot(ax2,n,fitprof,'k--')
     t1(end+1:end+length(fittxt))=fittxt;
     
 
@@ -106,13 +112,16 @@ for layer=1:length(p.sr_layerson)
     jervistemp.profx=profx;
     jervistemp.nx=n;
     axes(ax3)
-    plot(n,profx);
-    hold on
+    plot(ax3,n,profx);
+    hold(ax3,'on')
+    xlabel(ax3,'Position along line ROI (nm)')
+    ylabel(ax3,'counts')
+    
     
     fwhm=getFWHM(profx,n);
     t2{end+1}=['FWHM: ' 9 num2str(fwhm)];
      [fitp,fitprof,fittxt]=fitgeneral(profx,n,p,sigma);
-    plot(n,fitprof,'k--')
+    plot(ax3,n,fitprof,'k--')
     t2(end+1:end+length(fittxt))=fittxt;
     
     if ~isempty(locs.znm)
@@ -121,12 +130,14 @@ for layer=1:length(p.sr_layerson)
     n=minzh-3*binwidth:binwidth:maxzh+3*binwidth;
     profz=hist(z,n);profz([1 end])=[];n([1 end])=[];
     axes(ax4)
-    plot(n,profz);
-    hold on
+    plot(ax4,n,profz);
+    hold(ax4,'on')
+    xlabel(ax4,'z (nm)')
+    ylabel(ax4,'counts')
     fwhm=getFWHM(profz,n);
     t3{end+1}=['FWHM: ' 9  num2str(fwhm)];
     [fitp,fitprof,fittxt]=fitgeneral(profz,n,p,fwhm/2.6);
-    plot(n,fitprof,'k--')
+    plot(ax4,n,fitprof,'k--')
     t3(end+1:end+length(fittxt))=fittxt;
     
     jervistemp.profz=profz;jervistemp.nz=n;
@@ -134,6 +145,8 @@ for layer=1:length(p.sr_layerson)
     
     axes(ax5)
     plot(x,z,'.')
+    xlabel(ax5,'Position along line ROI (nm)')
+    ylabel(ax5,'z (nm)')
     axis equal tight
     hold on
     end

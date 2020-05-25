@@ -87,7 +87,7 @@ pard.tphot.Width=1.5;
 pard.photrange.object=struct('String','800 100000','Style','edit');
 pard.photrange.position=[3,2.5];
 
-pard.tlt.object=struct('String','lifetime range (frames):','Style','text');
+pard.tlt.object=struct('String','On-time range (frames):','Style','text');
 pard.tlt.position=[4,1];
 pard.tlt.Width=1.5;
 

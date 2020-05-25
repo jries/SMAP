@@ -20,7 +20,7 @@ if isfield(locs{1},'znm')&&~isempty(locs{1}.znm)
     txt='znm';
    zexist=true;
 else
-    txt='PSFxnm';
+    txt='PSFsize';
         zexist=false;
 end
 
@@ -42,15 +42,15 @@ if p.overview
 else
     ax1=initaxis(p.resultstabgroup,'Photons');
     ax1.Position(3)=0.55;
-    ax2=initaxis(p.resultstabgroup,'locprec');
+    ax2=initaxis(p.resultstabgroup,'Locprec');
     ax2.Position(3)=0.55;
-    ax3=initaxis(p.resultstabgroup,'lifetime');
+    ax3=initaxis(p.resultstabgroup,'On-time');
     ax3.Position(3)=0.55;
-    ax4=initaxis(p.resultstabgroup,'BG');
+    ax4=initaxis(p.resultstabgroup,'Background');
     ax4.Position(3)=0.55;
     ax5=initaxis(p.resultstabgroup,txt);
     ax5.Position(3)=0.55;
-    ax6=initaxis(p.resultstabgroup,'frames');
+    ax6=initaxis(p.resultstabgroup,'Frames');
     ax6.Position(3)=0.55;
     if zexist
         ax7=initaxis(p.resultstabgroup,['err ' txt]);
@@ -67,10 +67,9 @@ end
 datrange=1:length(locs);
 
 slegend={};
-% look at frames
+% frames
 for k=datrange
     slegend{k}=[modetxt{k} num2str(datrange(k))];
-%     slegend{end+1}='';
     frames=locs{k}.frame;
     if isempty(frames)
         continue
@@ -79,8 +78,7 @@ for k=datrange
     [hfr,n]=hist(frames,10);
     hfrc=hfr;
     hfrc(1:2)=[]; %ignore beginning
-%     [~,ind]=max(diff(1./(hfr+.1*mean(hfr))));
-%     ind=find(hfrc<(max(hfrc)-min(hfrc))/3+min(hfrc),1,'first');
+
     ind=find(hfrc<(max(hfrc))/3,1,'first');
     if isempty(ind)
         ind=length(n);
@@ -98,6 +96,7 @@ for k=datrange
     falloffframe=n2(indco2);
     stat.frames.falloff(k)=falloffframe;
     [stat.frames.histogram(k).h,stat.frames.histogram(k).n]=hist(frames,100);
+    stat.frames.histogram(k).h=stat.frames.histogram(k).h/(stat.frames.histogram(k).n(2)-stat.frames.histogram(k).n(1));
 end
 
 if ploton
@@ -112,6 +111,8 @@ if ploton
     legend(plothf,slegend);
 end
 slf={'Frames'};
+xlabel(axf,'frames')
+ylabel(axf,'localizations per frame')
 
 %photon stats
 phot=getFieldAsVector(locs,'phot');
@@ -130,7 +131,9 @@ end
 % else
     pr=0.99;
 % end
-[hphot,mmax]=plothist(phot,pr,[],0,ax1,modetxt,40);
+[hphot,mmax,slegend]=plothist(phot,pr,[],0,ax1,modetxt,40);
+xlabel(ax1,'photons');
+
 sphot={'Photons'};
 % phot1=1000;
 % phot2=3000;
@@ -152,9 +155,10 @@ for k=datrange
 %     dat(k)=fitexpphot(hphot{k},[],ploton);
 %     dat(k)=meanexphere(phot{k}(inrange),hphot{k},p.photrange,ax1,mmax{k});
     dat(k)=meanexphere(phot{k},hphot{k},p.photrange,ax1,mmax{k});
-    
+    slegend{end+1}='multi exp fit';
     sphot{end+1}=(['Pexp'  ' = ' num2str(dat(k).mu,'%5.0f')]);   
 end
+legend(ax1,slegend)
 stat.photons.Nloc=Nloc;
 stat.photons.meanphot=meanphot;
 stat.photons.meanphotrange=meanphotrange;
@@ -163,7 +167,7 @@ stat.photons.medianphotrange=medianphotrange;
 
 %locprec
 locp=getFieldAsVector(locs,'locprecnm');
-hlocp=plothist(locp,0.99,.25,0,ax2,modetxt);
+[hlocp,~,slegend2]=plothist(locp,0.99,.1,0,ax2,modetxt);
 slp={'locprec_x'};
 for k=datrange
     slp{end+1}='';
@@ -174,27 +178,7 @@ for k=datrange
     px = mylognfit(loch);
     [~,ind]=max(hlocp{k}.h);
     smx=hlocp{k}.n(ind);
-    
-    %refine
-    dwin=max(3,ceil(ind/4));
-    rn=max(1,ind-dwin+1):min(ind+dwin,length(hlocp{k}.h));
-    fpol=fit(hlocp{k}.n(rn)',hlocp{k}.h(rn)','poly3');
-    smxf=fzero(@(x) 3*fpol.p1*x.^2+2*fpol.p2*x+fpol.p3,smx);
-    if ~isempty(ax2)
-        plot(hlocp{k}.n(rn),fpol(hlocp{k}.n(rn)),'g')
-    end
-    
-    stat.locprec.max(k)=smxf;
-    slp{end+1}=['max: ' num2str(smxf,3)];
-%     hf=mylognpdf(hlocp{k}.n,px(1),px(2))*sum(hlocp{k}.h)*(hlocp{k}.n(2)-hlocp{k}.n(1));
-%     if ploton
-%     plot(hlocp{k}.n,hf/max(hlocp{k}.h),'k:')
-%     end
-    slp{end+1}=['median: ' num2str(median(locp{k}),3)];
-    stat.locprec.median(k)=median(locp{k});
-    %risng edge
-    
-    
+ 
     [~,indrise1]=find(hlocp{k}.h>0.2,1,'first');
     indrise1=min(4*indrise1,length(hlocp{k}.h));
     imaxx=max(hlocp{k}.h(1:indrise1));
@@ -203,31 +187,37 @@ for k=datrange
     stat.locprec.rising(k)=risingedge;
     slp{end+1}=['rising: ' num2str(risingedge,3)];
     
+    
+    %refine
+    dwin=max(3,ceil(ind/3));
+    rn=indrise:min(ind+dwin,length(hlocp{k}.h));
+    fpol=fit(hlocp{k}.n(rn)',hlocp{k}.h(rn)','poly3');
+    smxf=fzero(@(x) 3*fpol.p1*x.^2+2*fpol.p2*x+fpol.p3,smx);
+    if ~isempty(ax2)
+        nf=hlocp{k}.n(rn(1)):0.05:hlocp{k}.n(rn(end));
+        plot(nf,fpol(nf),'k:')
+    end
+    
+    stat.locprec.max(k)=smxf;
+    slp{end+1}=['max: ' num2str(smxf,3)];
+    slp{end+1}=['median: ' num2str(median(locp{k}),3)];
+    stat.locprec.median(k)=median(locp{k});
+    %risng edge
     geom=geomean(loch);
     slp{end+1}=['geomean: ' num2str(geom,3)];
+    slegend2{end+1}='quadratic fit';
 end
+xlabel(ax2,'localization precison x (nm)');
+legend(ax2,slegend2)
 
 %lifetime
 lifetime=getFieldAsVector(locs,'numberInGroup');
-% lifetimeall=lifetime;
-% if isfield(p,'checklifetime')&&p.checklifetime
-%     for k=datrange
-%         lifetime{k}(lifetime{k}<p.lifetimerange(1))=[];
-%         if length(p.lifetimerange)>1
-%              lifetime{k}(lifetime{k}>p.lifetimerange(2))=[];
-%         end
-%     end
-%     plr=p.lifetimerange;
-% else
     plr=0.995;
-% end
-
-
-[hlifet,mmax]=plothist(lifetime,plr,1,0,ax3,modetxt);
+[hlifet,mmax,slegend3]=plothist(lifetime,plr,1,0,ax3,modetxt);
 if ~isempty(ax3)
  ax3.NextPlot='add';
 end
-slt={'lifetime'};
+slt={'on-time'};
 for k=datrange
     inrange=lifetime{k}>p.lifetimerange(1)&lifetime{k}<p.lifetimerange(2);
     slt{end+1}='';
@@ -237,8 +227,11 @@ for k=datrange
     slt{end+1}=(['texp'  ' = ' num2str(dat(k).mu,3)]);
     slt{end+1}=(['meanrange'  ' = ' num2str(mean(lifetime{k}(inrange)),3)]);
     slt{end+1}=(['meanall'  ' = ' num2str(mean(lifetime{k}),3)]);
+    slegend3{end+1}='multi exp fit';
     stat.lifetime.mu(k)=dat(k).mu;
 end
+xlabel(ax3,'on-time (frames)')
+legend(ax3,slegend3)
 
 %background
 bg=getFieldAsVector(locs,'bg');
@@ -272,6 +265,7 @@ for k=datrange
     stat.background.mean(k)=mbg;
     stat.background.max(k)=maxbg;
 end
+xlabel(ax4,'background (photons/pixel/localization)');
 
 %z/sigma
 if zexist
@@ -279,7 +273,7 @@ if zexist
 else
     v=getFieldAsVector(locs,'PSFxnm');
 end
-hz=plothist(v,.99,[],[],ax5,modetxt);
+[hz,~,slegend5]=plothist(v,.99,[],[],ax5,modetxt);
 sls={txt};
 for k=1:length(datrange)
     sls{end+1}='';
@@ -289,25 +283,24 @@ for k=1:length(datrange)
     end
     [~,ind]=max(hz{datrange(k)}.h);
     mx=hz{datrange(k)}.n(ind);   
-
-
-
-    
-    %refine
-%     dwin=ceil(ind/4);
-    dwin=8;
+    dwin=7;
     rn=max(1,ind-dwin+1):min(ind+dwin,length(hz{datrange(k)}.h));
     fpol=fit(hz{datrange(k)}.n(rn)',hz{datrange(k)}.h(rn)','poly3');
     smxf=fzero(@(x) 3*fpol.p1*x.^2+2*fpol.p2*x+fpol.p3,mx);
     if ~isempty(ax2)
-        plot(hz{datrange(k)}.n(rn),fpol(hz{datrange(k)}.n(rn)),'g')
+        plot(hz{datrange(k)}.n(rn),fpol(hz{datrange(k)}.n(rn)),'k:')
     end
     
-    
+    slegend5{end+1}='quadratic fit';
     sls{end+1}=['max: ' num2str(smxf,4)];
     stat.(txt).max(k)=smxf;
 end
-
+legend(ax5,slegend5)
+if zexist
+    xlabel(ax5,'z (nm)')
+else
+    xlabel(ax5,'PSF size (nm)')
+end
 
 if ploton
 fontsize=14;
@@ -344,6 +337,7 @@ if zexist && ~isempty(v{1})
         slp{end+1}=['max: ' num2str(mx,3)];
         stat.locprecznm.max(k)=mx;
     end    
+    xlabel(ax7,'localization precision z (nm)');
     znm=getFieldAsVector(locs,'znm');
     rz=[-800 800];
     rsz=[0 100];
@@ -352,7 +346,7 @@ if zexist && ~isempty(v{1})
         axes(ax8)
         imagesc(rz,rsz,him')
         axis xy
-        xlabel('znm');ylabel('locprec z');
+        xlabel('z (nm)');ylabel('locprec z (nm)');
     end
     if ploton
         if p.overview
@@ -395,7 +389,7 @@ else %use all values, plot for unconnected and connected
     datrange=1:2;
 end
 
-function [his,mmo]=plothist(v,quantile,dphot,hmin,ax,modetxt,qfac)
+function [his,mmo,slegend]=plothist(v,quantile,dphot,hmin,ax,modetxt,qfac)
 if nargin<7
     qfac=5;
 end
@@ -450,6 +444,7 @@ for k=1:length(v)
 end
 if ~isempty(ax)
 legend(slegend,'Location','northeast')
+ylabel(ax,'counts normalized to maximum')
 end
 
 function dat=fitexpphot(hin,fitstart,ploton)

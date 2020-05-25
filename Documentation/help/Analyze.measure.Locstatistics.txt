@@ -1,0 +1,30 @@
+Locstatistics calculates all kind of statistics for localization data.
+
+photons: N: number of localizations. <P_all>: mean over all filtered localizations.  <P_range>: 
+mean of localizations only in the photon range defined in the GUI. This makes the statistics more
+robust against specific filtering parameters or candidate finding during fitting. mu: mean value of a multi-exponential fit. 
+
+locprec: max, median, geomean (geometric mean) and position of rising edge where the maximum-normalized counts first become >0.5. 
+
+On-time: how many frames a fluorophore lives (from grouping, number of frames that make up a localization). texp: mean value of a multi-exponential fit. 
+meanrange: mean over the range of on-times as defined in the GUI. Meanall: mean over all localizations. On-times should be calculated on gruped localizations.
+
+background: Mean value and value of the maximum. After grouping, also the background is added. Thus, for grouped data, the position of the first maximum is 
+a good measure for the background per pixel per frame.
+ 
+PSF size: size of the PSF in namometers. Max: Position of the maximum in nanometers (only for 2D data with a Gaussian fit).
+
+znm: z positions.
+
+locprecznm: localization precsion in z.
+
+frames: number of localizations per frame vs. frame. To see when localizations drop off.
+
+gui:Parameters:
+gui:filter If checked, filtered localizations are used. Otherwise all localizations are analyzed.
+gui:lifetimerange Range of on-time for fitting and for calculating averages. This makes the analysis more robust with respect to extreme outliers.
+gui:overview Plot all results into a single figure (better for saving).
+gui:photrange Range of photons for fitting and for calculating averages. This makes the analysis more robust with respect to extreme outliers.
+gui:tlt=lifetimerange 
+gui:tphot=photrange 
+gui:useroi Use localizations in the defined ROI or rendered field of view if no ROI is defined. Otherwise localizations are not filterd as to their position.
