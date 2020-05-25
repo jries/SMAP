@@ -1,0 +1,65 @@
+This plugin calculates a transformation between two channels based on localizations.
+The channels can
+either be two parts on the same camera chip or belong to two cameras. The input
+are localized SMLM data files, either belonging to beads or just blinking fluorophores
+from actual experiments. Useful e.g. for multi-color ratiometric SMLM.
+
+The algorithm:
+
+1. The plugin determins an approximate transformation that is only based on shifts.
+For this, localizations are used to reconstruct a superresolution image for each channel
+and the shift between the two images is determined using image cross-correlation.
+
+2. Based on this approximate transformation, localizations in both channels are linked, 
+and that happens frame by frame. For each localization in the reference channel we search 
+the region around the corresponding position in the target channel. If more than one localization
+is found, then we choose the closest localization.
+
+3. The linked localizations are used as anchor points to calculate the transformation.
+We can use any of MATLABs transformations. For instance affine (transformation matrix), 
+polynomial (also a global transformation that can accomodate additional
+deformations, specify the degree) or local transformations (these work not very robustly).
+For further information see Transformation Types on the MATLAB help page: 
+
+https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html
+
+4. We can repeat the linking based on the new transformation to increase the accuracy.
+
+In the output, check if the plot of pairwise distances shows a clear maximum, that a substantial fraction
+of the localizations have been linked, and that 
+the size of the maximum is on the order of the localization precision. Also check, if 
+localizations in the entire field of view have been linked, otherwise adjust 
+the optional parameters.
+
+gui:Parameters:
+gui:Tfile default file for transformation matrix. This is used when "use initial T" is
+selected.
+gui:allfiles If selected, all loaded files are used to calculate tranformation, otherwise only that defined above.
+gui:browse Load a transforamtion file for "use initial T".
+gui:dataselect file for target localizations
+gui:parameters 
+Additional parameters: \n
+For inital guess of shift by cross-correlation: 
+pixelsize: for the image reconstruction (nm)
+maxshift: maximum shift (nm)\n
+Initial magnification, initial shift in x,y\n
+For matching:
+maximum localizations: maximally match this number of localizations.
+maxshift for matching (nm). \n
+Define more than one value, then registration is performed iteratively using
+the different values.
+
+gui:reflayer Layer in which reference is rendered
+gui:save Save transformation to a file
+gui:targetlayer Layer in which target is rendered
+gui:targetmirror mirror target part
+gui:targetpos center position of target
+gui:texta 
+gui:texttl 
+gui:texttr 
+gui:texttt=transform
+gui:transform Select one of Matlabs transformations. 
+gui:transformparam Parameter for lwm and polynomial transformation
+gui:updatesmlfile If checked, the transformation file is appended to the .sml file and saved there as well when you click save T
+gui:useT: if selected, the transformation in the file denoted below is used as an initial transformation.
+gui:uselayers if checked, use only localizations in ROI and selected layer, make sure to select both halves

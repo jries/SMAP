@@ -1,4 +1,4 @@
-function [dx,dy,abg]=getShiftCorr(im1,im2,ploton,maxshift,subpixel)
+function [dx,dy,abg]=getShiftCorr(im1,im2,ploton,maxshift,subpixel,winfit)
 if nargin<3
     ploton=false;
 end
@@ -8,10 +8,13 @@ end
 if nargin<5
     subpixel=true;
 end
+if nargin<6
+    winfit=3;
+end
 
 % facs=1; %global resize factor for smaller pixel sizes
  filtersize=1.5;
- winfit=3;
+%  winfit=3;
  s=size(im1);
 
  nFFT=2^ceil(log2(max(s)));
@@ -49,6 +52,8 @@ try
 Fcccut=Fccsmall(x-winfit:x+winfit,y-winfit:y+winfit);
 
 catch err
+    figure(555)
+    imagesc(Fccsmall)
     disp('Maximum on edge:increase Max shift (correlation)')
 end
 if subpixel
@@ -65,20 +70,40 @@ else
     fitp=[0 0];
     abg=maxcc;
 end
-if ploton
+doplot=true;
+axplot=ploton;
+if (islogical(ploton)||isnumeric(ploton)) 
+    if ploton
+        axplot=gca;
+    else
+        doplot=false;
+    end 
+end
+if doplot
 % 
 % % figure(1)
-subplot(1,2,1)
+ap=axplot.Parent;
+ax2=axes(ap);
+% figure(f);
+subplot(1,2,1,axplot)
 imagesc(abs(Fccfilt));
 hold on
 plot(y,x,'ks')
 hold off
 axis equal
-subplot(1,2,2)
+xlabel('x srpix')
+ylabel('y srpix')
+title('cross-correlation to find maximum')
+
+
+subplot(1,2,2,ax2)
 imagesc(abs(Fcccut));
 hold on
 plot(fitp(:,2),fitp(:,1),'ks')
 hold off
 axis equal
+xlabel('x srpix')
+ylabel('y srpix')
+title('zoom in cross-correlation to fit maximum')
 end
 abg=abg/sqrt(s1*s2);

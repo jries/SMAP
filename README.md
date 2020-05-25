@@ -1,6 +1,11 @@
 # SMAP
 Superresolution microscopy analysis platform
 
+COPYRIGHT:     Jonas Ries, 2020
+LICENSE:       GPLv3
+AUTHOR:        Jonas Ries, EMBL Heidelberg, ries@embl.de 27.03.2020
+               www.rieslab.de, www.github.com/jries/SMAP
+
 Documentation and installation instructions at: 
     /Documents/Manual/SMAPStep-by-StepGuide.md
 Instructions for using SMAP to analyze nuclear pore complex standard samples: 

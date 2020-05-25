@@ -73,7 +73,7 @@ classdef GuiPluginGroup< interfaces.GuiModuleInterface & interfaces.LocDataInter
              m1 = uimenu(c,'Label','add plugin','Callback',{@menu_callback,obj});
             m2 = uimenu(c,'Label','add workflow','Callback',{@menu_callback,obj});
             m6 = uimenu(c,'Label','rename','Callback',{@menu_callback,obj});
-             m3 = uimenu(c,'Label','remove','Callback',{@menu_callback,obj});
+             m3 = uimenu(c,'Label','remove ','Callback',{@menu_callback,obj});
 %              m4 = uimenu(c,'Label','reset: use all plugins','Callback',{@menu_callback,obj});
 %              m8 = uimenu(c,'Label', 'load plugin structure','Callback',{@menu_callback,obj});
 %              m9 = uimenu(c,'Label','save plugin structure','Callback',{@menu_callback,obj});
@@ -201,7 +201,7 @@ guimodules=obj.getPar('guimodules');
 switch callobj.Label
     case 'add plugin'
         plugins=obj.getPar('menu_plugins');
-        types={'ProcessorPlugin','ROI_Analyze'};
+        types={'ProcessorPlugin','ROI_Analyze','SaverPlugin'};
         pg=browsefields(plugins,{},2,0,true,types);
         
         if isempty(pg)
@@ -236,7 +236,7 @@ switch callobj.Label
         guimodules.(obj.maindir{1}).(obj.maindir{2}).(name).module=pluginname;
         guimodules.(obj.maindir{1}).(obj.maindir{2}).(name).position=length(obj.plugins.pluginnames);
         
-    case 'remove'
+    case 'remove '
         selection=obj.guihandles.processorselect.Value;
         name=obj.plugins.allclassnames{selection};
         delete(obj.processors.(name).handle);
@@ -248,6 +248,7 @@ switch callobj.Label
         obj.guiplugins=rmfield(obj.guiplugins,name);
         obj.setprocessorlist;
         guimodules.(obj.maindir{1}).(obj.maindir{2})=rmfield(guimodules.(obj.maindir{1}).(obj.maindir{2}),name);
+        obj.children=rmfield(obj.children,'name');
         
     case {'move up','move down'}
         allnames=obj.plugins.allclassnames;

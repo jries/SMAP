@@ -1,0 +1,15 @@
+FRC resolution. Uses ROI or FoV (if rendered image is ticked). 
+Implementation based on the matlab code provided with: 
+
+[1]	R. P. J. Nieuwenhuizen, K. A. Lidke, M. Bates, D. L. Puig, D. Grunwald, S. Stallinga, and B. Rieger, Measuring image resolution in optical nanoscopy., Nat Methods, vol. 10, no. 6, pp. 557-562, Jun. 2013.
+
+gui:Parameters:
+gui:blockassignment 
+gui:frc_blocks 
+gui:pixrec_frc 
+gui:t0 
+gui:t1 
+gui:t2 
+gui:t3 
+gui:t4 
+gui:takeimage 

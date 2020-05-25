@@ -81,7 +81,7 @@ classdef SEAnnotation< interfaces.SEProcessor
             if length(selected)<=1
             
             site=obj.SE.currentsite;
-            site.annotation.use=obj.object.Value;
+            site.annotation.use=object.Value;
             else
                 for k=1:length(selected)
                    site=obj.SE.sites(selected(k));
@@ -207,7 +207,13 @@ function line_callback(a,b,obj,linenumber)
  obj.SE.processors.preview.lineannotation(linenumber,obj.guihandles.(['line' num2str(linenumber)]));
 end
 
-
+function reverseline(a,b,obj,linenumber)
+    site=obj.SE.currentsite;
+    pos=site.annotation.(['line' num2str(linenumber)]).pos;
+    site.annotation.(['line' num2str(linenumber)]).pos=pos([2 1],:);
+    site.annotation.(['line' num2str(linenumber)]).angle=mod(site.annotation.(['line' num2str(linenumber)]).angle+180+180,360)-180;
+    obj.SE.processors.preview.lineannotation(linenumber,obj.guihandles.(['line' num2str(linenumber)]));
+end
 
 function pard=guidef(obj)
 pard.list1.object=struct('Style','listbox','String','1|2|3|4|5|6|7|8');
@@ -246,10 +252,23 @@ pard.loadlist.Width=0.5;
 pard.line1.object=struct('Style','pushbutton','String','line 1');
 pard.line1.position=[4,3];
 pard.line1.Height=1.5;
+pard.line1.Width=0.8;
+
+pard.line1switch.object=struct('Style','pushbutton','String','<>','Callback',{{@reverseline,obj,1}});
+pard.line1switch.position=[4,3.8];
+pard.line1switch.Height=1.5;
+pard.line1switch.Width=0.2;
+
 
 pard.line2.object=struct('Style','pushbutton','String','line 2');
 pard.line2.position=[4,4];
 pard.line2.Height=1.5;
+pard.line2.Width=0.8;
+
+pard.line2switch.object=struct('Style','pushbutton','String','<>','Callback',{{@reverseline,obj,2}});
+pard.line2switch.position=[4,4.8];
+pard.line2switch.Height=1.5;
+pard.line2switch.Width=0.2;
 
 pard.roiselect.object=struct('Style','popupmenu','String',{{'rectangle','ellipse','polygon','polyline','free'}});
 pard.roiselect.position=[6,3];

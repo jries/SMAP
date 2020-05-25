@@ -24,12 +24,12 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
             obj.previewdone=false;
         end
         function pard=guidef(obj)
-            pard.text.object=struct('Style','text','String','preview mode: ');
+            pard.text.object=struct('Style','text','String','preview mode');
             pard.text.position=[1,1];
-            pard.text.Width=1.5;
+            pard.text.Width=1.0;
             pard.loc_previewmode.object=struct('Style','popupmenu','String','image|filtered|image-bg|bg','Value',2);
-            pard.loc_previewmode.position=[2,1];
-            pard.loc_previewmode.Width=1.5;
+            pard.loc_previewmode.position=[1,1.7];
+            pard.loc_previewmode.Width=.8;
             pard.loc_previewmode.TooltipString=sprintf('Determine which image to display in Preview mode. Peak finding is performed on norm(image)');
 
             pard.plugininfo.type='WorkflowModule'; 
@@ -37,13 +37,22 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
         end
         function output=run(obj,data,p)
             output=[];
-            if obj.getPar('loc_preview') && ~obj.previewdone
+            if obj.getPar('loc_preview') %&& ~obj.previewdone
                 locs=data.data;
+                previewlocs=obj.getPar('preview_locs');
+                if isempty(locs)
+                    locs=previewlocs;
+                elseif ~isempty(previewlocs) 
+                    fn=fieldnames(previewlocs);
+                    for k=1:length(fn)
+                        locs.(fn{k})(end+1:end+length(previewlocs.(fn{k})))=previewlocs.(fn{k});
+                    end
+                end
                 obj.setPar('preview_locs',locs);
                 
                 %make figure
                 if isempty(obj.outputfig)|| ~isvalid(obj.outputfig)
-                    obj.outputfig=figure;
+                    obj.outputfig=figure('Name','Preview for fitting');
                 end
                 fig=figure(obj.outputfig);
                 obj.setPar('loc_outputfig',fig);
@@ -81,6 +90,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
 %                 colormap(ax,'jet');
                 hold(ax,'on')
                 axis(ax,'equal')
+                axis(ax,'off')
                 %mask
                maskim=obj.getPar('loc_roimask');
                if ~isempty(maskim)
@@ -93,7 +103,9 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                 maxima=obj.getPar('preview_peakfind');
                 if isempty(maxima)||isempty(maxima.xpix)
                      obj.setPar('status','no localizations found')
-                     error ('no localizations found')
+                     obj.setPar('errorindicator','no localizations found')
+                     disp ('No localizations found. Use a different frame fore Preview, or reduce the cutoff parameter');
+                     warndlg('No localizations found. Use a different frame fore Preview, or reduce the cutoff parameter');
                 end
                 col=[0.3 0.3 0.];
                 dn=floor(obj.getPar('loc_ROIsize')/2);

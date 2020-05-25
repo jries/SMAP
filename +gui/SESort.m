@@ -184,7 +184,7 @@ for k=1:length(sites)
 end
 
 for s=1:4
-    if strcmpi(par.(['direction' num2str(s)]).selection,'decend')
+    if strcmpi(par.(['direction' num2str(s)]).selection,'descend') || strcmpi(par.(['direction' num2str(s)]).selection,'decend')
         sortmatrix(:,s)=-sortmatrix(:,s);
     end
 end
@@ -213,7 +213,7 @@ pard.sortbutton1.position=[1,4];
 pard.sortedit1.object=struct('String','','Style','edit');
 pard.sortedit1.position=[2,2];
 pard.sortedit1.Width=3;
-pard.direction1.object=struct('String','ascend|decend','Style','popupmenu');
+pard.direction1.object=struct('String','ascend|descend','Style','popupmenu');
 pard.direction1.position=[2,1.05];
 pard.direction1.Width=.95;
 
@@ -232,7 +232,7 @@ pard.sortbutton2.position=[3,4];
 pard.sortedit2.object=struct('String','','Style','edit');
 pard.sortedit2.position=[4,2];
 pard.sortedit2.Width=3;
-pard.direction2.object=struct('String','ascend|decend','Style','popupmenu');
+pard.direction2.object=struct('String','ascend|descend','Style','popupmenu');
 pard.direction2.position=[4,1.05];
 pard.direction2.Width=.95;
 
@@ -252,7 +252,7 @@ pard.sortedit3.object=struct('String','','Style','edit');
 pard.sortedit3.position=[6,2];
 pard.sortedit3.Width=3;
 
-pard.direction3.object=struct('String','ascend|decend','Style','popupmenu');
+pard.direction3.object=struct('String','ascend|descend','Style','popupmenu');
 pard.direction3.position=[6,1.05];
 pard.direction3.Width=.95;
 
@@ -272,7 +272,7 @@ pard.sortedit4.object=struct('String','','Style','edit');
 pard.sortedit4.position=[8,2];
 pard.sortedit4.Width=3;
 
-pard.direction4.object=struct('String','ascend|decend','Style','popupmenu');
+pard.direction4.object=struct('String','ascend|descend','Style','popupmenu');
 pard.direction4.position=[8,1.05];
 pard.direction4.Width=.95;
 

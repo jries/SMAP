@@ -22,6 +22,7 @@ classdef TifLoaderParallel<interfaces.WorkflowModule
             obj.inputParameters={'loc_subtractbg','loc_blocksize_frames'};            
             obj.guihandles.loadtifbutton.Callback={@loadtif_callback,obj};
             obj.addSynchronization('filelist_localize',obj.guihandles.tiffile,'String',{@loadtif_ext,obj});
+            obj.makeinfobutton;
         end
         function prerun(obj,p)
             if ~exist(p.tiffile,'file')

@@ -16,6 +16,16 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             obj.outputParameters={'name','modulename'};
             
         end
+        function makeGui(obj)
+            makeGui@interfaces.GuiModuleInterface(obj);
+            pos=obj.handle.Position;
+            h=uicontrol(obj.handle,'Style','pushbutton','String','i', 'Position',...
+                [pos(3)-20,pos(4)-obj.guiPar.FieldHeight,15,obj.guiPar.FieldHeight],'Callback',@obj.showinfo_callback);
+            h.Tooltip='Show info';
+        end
+        function showinfo_callback(obj,a,b)
+            obj.showinfo;
+        end
         function redraw(obj)
             obj.site.image=[];
             obj.locData.SE.plotsite(obj.site)
@@ -73,7 +83,7 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
         end
         
         function [locsout,indloc]=getloc(obj,varargin) 
-            [locsout,indloc]=obj.getLocs(varargin);
+            [locsout,indloc]=obj.getLocs(varargin{:});
         end
         function [locsout,indloc]=getLocs(obj,varargin) 
             %uses locData.getloc

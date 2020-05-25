@@ -12,6 +12,9 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         end
         
         function out=run(obj,p)
+            
+            initallresults();
+            global allresults
             out=[];
             fieldsR={'xnm','ynm','znm','phot','bg','frame','xnmerr','ynmerr','locprecnm','locprecznm','photerr','filenumber'};
             fieldsT=fieldsR;
@@ -62,13 +65,20 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
                 case 'use 3D cal'
                     %see if EMon
                     fn=lT.filenumber(1);
-                    EMon=obj.locData.files.file(fn).info.EMon;
+                    if isfield(obj.locData.files.file(fn).info, 'EMon')
+                        EMon=obj.locData.files.file(fn).info.EMon;
+                    else
+                        fprintf('Could not find EMon field. Asssuming EMon = true.\n');
+                        EMon = true;
+                    end
                     crlbfac=sqrt(EMon+1);
                     disp(['EM ' num2str(EMon)]);
                     pixelsize=obj.getPar('cam_pixelsize_nm');
-                    psfmodel=splinePSF;
+                    psfmodel=splinePSF;   
                     psfmodel.loadmodel(p.cal_3Dfile);
-                    crlb=psfmodel.crlb(lRn.phot,lRn.bg,-lRn.z);
+                    psfmodel.roisize=min(p.roisize, size(psfmodel.modelpar.coeff,1)-3);
+                 
+                    crlb=psfmodel.crlb(lRn.phot,lRn.bg,lRn.z);
 %                     crlb=psfmodel.crlb(lTn.phot,lTn.bg,-lTn.z);
                     lRn.xerr=sqrt(crlb(:,2))*pixelsize(1)*crlbfac;
                     lRn.yerr=sqrt(crlb(:,1))*pixelsize(end)*crlbfac;
@@ -91,8 +101,8 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
             end
             figure(obj.figure);
               
-            simulationerror(lRn,lTn,whicherr,p.searchradius)
-            
+            results=simulationerror(lRn,lTn,whicherr,p.searchradius);
+            allresults(end+1)=results;
 %                 lt.frame=lt.frame+1;
 %             [outlayer2D, outlayer3D,mr,mt]=getmatch(lr,lt,p);
 %             outlayer2D.name='layer2D';
@@ -152,6 +162,43 @@ classdef CompareToGroundTruth<interfaces.DialogProcessor
         function newfigure(obj,a,b)
             obj.figure=figure;
         end
+    end
+end
+
+function initallresults()
+% Inits global allresults structure if it's not there yet.
+
+    global allresults
+    if isempty(allresults)
+        allresults = struct();
+
+        allresults.precision = [];
+        allresults.recall = [];
+        allresults.jaccard = [];
+        allresults.f1score = [];
+
+        allresults.truepositives = [];
+        allresults.falsepositives = [];
+        allresults.falsenegatives = [];
+
+        allresults.rmse_lat = [];
+        allresults.rmse_ax = [];
+        allresults.rmse_vol = [];
+
+        allresults.effcy_lat = [];
+        allresults.effcy_ax = [];
+        allresults.effcy_vol = [];
+
+        allresults.dx_cr = [];
+        allresults.dy_cr = [];
+        allresults.dz_cr = [];
+
+        allresults.lat_cr = [];
+        allresults.ax_cr = [];
+        allresults.vol_cr = [];
+
+        % make the struct 1x0, so it fields are initialised but no rows.
+        allresults(1) = [];
     end
 end
 
@@ -347,7 +394,12 @@ pard.cal_3Dfile.object=struct('Style','edit','String','');
 pard.cal_3Dfile.position=[8,2];
 pard.cal_3Dfile.Width=2.5;
 
-
+pard.roisizet.object=struct('Style','text','String','Roi size (pixel)');
+pard.roisizet.position=[9,1];
+pard.roisizet.Width=1;
+pard.roisize.object=struct('Style','edit','String','13');
+pard.roisize.position=[9,2];
+pard.roisize.Width=0.5;
 
 
 

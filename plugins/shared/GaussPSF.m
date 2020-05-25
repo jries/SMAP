@@ -4,23 +4,72 @@ classdef GaussPSF<interfaces.PSFmodel
     
     properties
         locfields={'x','y','z','N'}
+        gausspar
+        Xpix
+        Ypix
     end
     
     methods
-        function img=render(obj,locs,xrange,yrange,pixelsizex,pixelsizey)
-%             locsh.x=locs.xnm;
-            p=obj.guipar;
-            if length(p.analytical)==2 
-                p.analytical(3)=0;
-            end
-            locs.sx=p.analytical(1).*sqrt(1+((locs.z+p.analytical(3))/p.analytical(2)).^2);
-            locs.sy=p.analytical(1).*sqrt(1+((locs.z-p.analytical(3))/p.analytical(2)).^2);
-            
-            img=gaussrender_ellipt(locs,xrange+0*pixelsizex/2,yrange+0*pixelsizey/2,pixelsizex,pixelsizey);
-            
-        end
+%         function img=render(obj,locs,xrange,yrange,pixelsizex,pixelsizey)
+% %             locsh.x=locs.xnm;
+%             p=obj.guipar;
+%             if length(p.analytical)==2 
+%                 p.analytical(3)=0;
+%             end
+%             locs.sx=p.analytical(1).*sqrt(1+((locs.z+p.analytical(3))/p.analytical(2)).^2);
+%             locs.sy=p.analytical(1).*sqrt(1+((locs.z-p.analytical(3))/p.analytical(2)).^2);
+%             
+%             img=gaussrender_ellipt(locs,xrange+0*pixelsizex/2,yrange+0*pixelsizey/2,pixelsizex,pixelsizey);
+%             
+%         end
         function img=PSF(obj,locs)
-            img=[];
+            roisize=obj.roisize;
+            if isempty(obj.Xpix) || roisize ~= size(obj.Xpix,1)
+                dn=round((roisize-1)/2);
+                [obj.Xpix,obj.Ypix]=meshgrid(-dn:dn,-dn:dn);   
+            end
+            
+            if isstruct(locs)
+                if ~isfield(locs,'N')
+                     N=ones(size(locs.x));
+                else
+                    N=locs.N;
+                end
+                if ~isfield(locs,'bg')
+                     bg=zeros(size(locs.x));
+                else
+                    bg=locs.bg;
+                end
+                cor=[locs.x,locs.y,locs.z];
+            else
+                cor=zeros(size(locs),'single');
+                cor(:,1:2)=locs(:,1:2);
+                cor(:,3)=locs(:,3);
+                if size(locs,2)>3
+                    N=locs(:,4);
+                else
+                    N=1;
+                end
+                if size(locs,2)>4
+                    bg=locs(:,5);
+                else
+                    bg=0;
+                end
+            end
+            
+            analytical=obj.gausspar;
+            if length(analytical)==2 
+                analytical(3)=0;
+            end
+            sx2=analytical(1)^2.*(1+((cor(:,3)+analytical(3))/analytical(2)).^2)*2;
+            sy2=analytical(1)^2.*(1+((cor(:,3)-analytical(3))/analytical(2)).^2)*2;
+           % sx not w0, properly convert zR XXXCXXC
+            norm=sqrt(sx2).*sqrt(sy2)*pi;
+            img= N./norm.*exp(-(obj.Xpix-cor(:,1)).^2./sx2-(obj.Ypix-cor(:,2)).^2./sy2)+bg;
+            
+            
+            
+%             img=[];
 %             x=locs.x;y=locs.y;z=locs.z;
 %            Npixels = 13;  
 %            %convert to pixel unit, center = 0
@@ -59,6 +108,55 @@ classdef GaussPSF<interfaces.PSFmodel
 %                     output=output*locs.N;
 %                 end
 %                 img=output;
+        end
+        function [crlb,parameters]=crlb(obj,N,bg,coord,rois,camnoise)
+            if nargin<5||isempty(roisize)
+                rois=obj.roisize;
+            end
+            if nargin<6||isempty(camnoise)
+                camnoise=0;
+            end
+            analytical=obj.gausspar;
+            if length(analytical)==2 
+                analytical(3)=0;
+            end
+            if size(coord,2)==1
+                z=coord;
+                v1=ones(length(z),1);
+                x=rois/2*v1;y=rois/2*v1;
+            else
+                x=coord(:,1)+rois/2;y=coord(:,2)+rois/2;z=coord(:,3);
+            end
+            
+            if length(N) ~= length(z)
+                if length(N)==1
+                    N=N+0*z;
+                elseif length(z)==1
+                    z=z+0*N;
+                end
+            end
+            if length(bg) ~= length(z)
+                if length(bg)==1
+                    bg=bg+0*z;
+                elseif length(z)==1
+                    z=z+0*bg;
+                end
+            end          
+
+            sx=analytical(1).*sqrt(1+((z+analytical(3))/analytical(2)).^2);
+            sy=analytical(1).*sqrt(1+((z-analytical(3))/analytical(2)).^2);
+       
+            xerr=MortensenCRLB(N,bg,sx, 1,camnoise); 
+            yerr=MortensenCRLB(N,bg,sy, 1,camnoise);
+            [~,photerr]=MortensenCRLB(N,bg,sqrt(sx.*sy), 1,camnoise);
+%             x , y , N, bg, zh
+            crlb=zeros(length(N),5);
+            crlb(:,1)=xerr.^2;
+            crlb(:,2)=yerr.^2;
+            crlb(:,3)=photerr.^2;
+            disp('CRLB not properly implemented')
+            
+
         end
         
         function pard=guidef(obj)

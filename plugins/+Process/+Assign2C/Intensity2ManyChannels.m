@@ -96,10 +96,36 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
                 if ~isempty(obj.loadfile)
                     load_callback(0,0,obj,obj.loadfile)
                 end
+                setdefaultfields(0,0,obj)
             end
         end
 
     end
+end
+
+function setdefaultfields(a,b,obj)
+f1={'psf_nr','fit_nr','phot1'};
+f2={'psf_nt','fit_nt','phot2'};
+fs1=obj.getSingleGuiParameter('assignfield1');
+fs2=obj.getSingleGuiParameter('assignfield2');
+
+for k=1:length(f1)
+ind1=find(strcmp(fs1.String,f1{k}),1,'first');
+if ~isempty(ind1)
+    fs1.Value=ind1;
+    fs1.selection=f1{k};
+end
+ind2=find(strcmp(fs2.String,f2{k}),1,'first');
+if ~isempty(ind2)
+    fs2.Value=ind2;
+    fs2.selection=f2{k};
+end
+
+if ~isempty(ind1) && ~isempty(ind2)
+    break
+end
+end
+obj.setGuiParameters(struct('assignfield1',fs1,'assignfield2',fs2));
 end
 
 function save_callback(a,b,obj)
@@ -126,6 +152,9 @@ if f
 else
     return;
 end
+end
+if ~exist(fout,'file')
+    return
 end
 l=load(fout);
 % obj.loaded=l;
@@ -171,7 +200,7 @@ end
 
 for k=1:length(obj.rois)
     if ~isempty(obj.rois{k}) 
-        hroi=images.roi.Polygon(ax,'Position',obj.rois{k}.Position,'Color',cmap(k+1,:));
+        hroi=images.roi.Polygon(ax,'Position',obj.rois{k}.Position,'Color',cmap(k+1,:),'Label',num2str(k));
 %         hroi.Tag=num2str(k);
         addlistener(hroi,'MovingROI',@(src,evt) updatePosition(src,evt,obj,k));
         obj.roihandles{k}=hroi;
@@ -179,7 +208,7 @@ for k=1:length(obj.rois)
 end
 if channel>0
 if length(obj.rois)<channel || isempty(obj.rois{channel})
-    hroi=images.roi.Polygon(ax,'Color',cmap(channel+1,:));
+    hroi=images.roi.Polygon(ax,'Color',cmap(channel+1,:),'Label',num2str(channel));
     addlistener(hroi,'MovingROI',@(src,evt) updatePosition(src,evt,obj,channel));
 %     hroi.Tag=num2str(channel);
     draw(hroi);
@@ -218,6 +247,9 @@ end
 
 imagesc(ax,range,range,him)
 
+xlabel(ax,'Intensity in target channel (2), logarithmic scale')
+ylabel(ax,'Intensity in reference channel (1), logarithmic scale')
+
 end
 function [n1,n2]=getintensities(obj)
 field1=obj.getSingleGuiParameter('assignfield1').selection;
@@ -234,17 +266,17 @@ end
 
 function pard=guidef(obj)
 
-pard.ch1t.object=struct('String','Channel 1','Style','text');
+pard.ch1t.object=struct('String','Color 1','Style','text');
 pard.ch1t.position=[1,3];
 pard.ch1roi.object=struct('String','ROI 1','Style','pushbutton','Callback',{{@roi_callback,obj,1}});
 pard.ch1roi.position=[1,4];
 
-pard.ch2t.object=struct('String','Channel 2','Style','text');
+pard.ch2t.object=struct('String','Color 2','Style','text');
 pard.ch2t.position=[2,3];
 pard.ch2roi.object=struct('String','ROI 2','Style','pushbutton','Callback',{{@roi_callback,obj,2}});
 pard.ch2roi.position=[2,4];
 
-pard.chNt.object=struct('String','Channel','Style','text');
+pard.chNt.object=struct('String','Color','Style','text');
 pard.chNt.position=[3,3];
 pard.chNt.Width=0.55;
 pard.chN.object=struct('String','3','Style','edit');
@@ -266,7 +298,9 @@ pard.assignfield1.object=struct('Style','popupmenu','String','n1|n2');
 pard.assignfield1.position=[2,1];
 pard.assignfield2.object=struct('Style','popupmenu','String','n1|n2');
 pard.assignfield2.position=[3,1];
-
+pard.setdefault.object=struct('String','default','Style','pushbutton','Callback',{{@setdefaultfields,obj}});
+pard.setdefault.position=[2,2];
+pard.setdefault.Width=0.6;
 pard.logscale.object=struct('Style','checkbox','String','log scale','Value',1);
 pard.logscale.position=[4,1];
 
@@ -282,6 +316,9 @@ pard.savebutton.position=[5,2];
 pard.assignfield1.object.TooltipString='choose which field to use for splitting';
 pard.assignfield2.object.TooltipString=pard.assignfield1.object.TooltipString;
 
+pard.instructionst.object=struct('String','First, select ROIs corresponding to individual colors. Then assign colors with Run.','Style','text');
+pard.instructionst.position=[6,1];
+pard.instructionst.Width=4;
 
 pard.plugininfo.type='ProcessorPlugin';
 pard.plugininfo.description='Assigns identity (color) to localizations based on intensities in both camerachannels';

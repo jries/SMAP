@@ -24,7 +24,10 @@ if p.gamma ~=1
     imgn=imgn.^p.gamma;
 end
 
-[iml,lut]=applyLut(imgn,p.lut.selection,p.colorfield_min,p.colorfield_max,p.lutinv);
+if ~isfield(him,'lutapplied')
+    him.lutapplied=false;
+end
+[iml,lut]=applyLut(imgn,p.lut.selection,p.colorfield_min,p.colorfield_max,p.lutinv&~him.lutapplied);
 imout.image=iml;
 if him.istiff==0
     imout.mask=double(makemask(imgn));
@@ -93,13 +96,7 @@ end
 
 end
 
-function luto=lutinvert(lut)
-s=size(lut);
-luto=lut;
-for k=1:s(1)
-    luto(k,:)=sum(lut(k,:))-lut(k,:);
-end
-end
+
 
 function mask3=makemask(image)
 maskfactor=3;

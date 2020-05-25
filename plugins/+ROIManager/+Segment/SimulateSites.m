@@ -16,6 +16,18 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         function initGui(obj)
             setvisibility(obj);
+            % added by Yu-Le
+            % check through the name of loaded eval plugins and find SMLMModelFit 
+            lFitterFound = strfind(obj.locData.SE.processors.eval.guihandles.modules.Data(:,2), 'SMLMModelFitGUI');
+            lFitterFound = [lFitterFound{:}];
+            lFitterFound = any(lFitterFound);
+            if lFitterFound 
+                fitterFound = 'on';
+            else
+                fitterFound = 'off';
+            end
+            obj.guihandles.useFitter_button.Visible=fitterFound;
+            obj.guihandles.setModPars_button.Visible='off';
         end
         function out=run(obj,p)  
             [locst,possites,parameters]=simulatelocs(p, 1);
@@ -112,9 +124,125 @@ end
 obj.setGuiParameters(struct('coordinatefile',[p f]));
 setvisibility(obj)
 end
+
+function useFitter_callback(a,b,obj)
+    fig = figure(512);
+    clf(fig);
+    selectionTable = uitable(fig);
+    nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+    
+    lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    for k = 1:length(lFitterFound)
+        lFitterFound{k} = ~isempty(lFitterFound{k});
+    end
+    lFitterFound = [lFitterFound{:}];
+    
+    nameSMLMModelFitGUI = nameEvalPlugins(logical(lFitterFound));
+    selectionTable.Data = [num2cell(false(size(nameSMLMModelFitGUI))) nameSMLMModelFitGUI];
+    selectionTable.ColumnEditable = [true false];
+    selectionTable.CellEditCallback = {@selectionTable_CECallback};
+    selectionTable.Position = [20 50 300 300];
+    apply_button = uicontrol(fig, 'Style', 'pushbutton', 'String', 'Apply');
+    apply_button.Position = [20 20 60 30];
+    apply_button.Callback = {@applySelecedFitter_callback, obj, selectionTable,fig};
+end
+
+function selectionTable_CECallback(a,b)
+    a.Data(:,1) = num2cell(false);
+    a.Data{b.Indices(1),b.Indices(2)} = true;
+end
+
+function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
+    % Added by Yu-Le
+    % set the selected SMLMModelFit as a parameter of SimulateSites.
+    selected = selectionTable.Data(:,1);
+    idxSelected = find([selected{:}]);
+    nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+    
+    lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    for k = 1:length(lFitterFound)
+        lFitterFound{k} = ~isempty(lFitterFound{k});
+    end
+    idxFitterFound = find([lFitterFound{:}]);
+    
+    idxSelected_final = idxFitterFound(idxSelected);
+    fitter = copy(obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter);
+    fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
+    obj.setPar('fitter',fitter)
+    close(fig);
+    obj.guihandles.setModPars_button.Visible='on';
+    obj.guihandles.coordinatefile.String='-- Internal SMLMModelFit';
+end
+
+function setModPars_callback(a,b,obj)
+    % Added by Yu-Le
+    % Use the function of allParsArg to set the range for simulation.
+    
+    % GUI
+    fig = figure(513);
+    clf(fig);
+    parArgTable = uitable(fig);
+    typeOption = uicontrol('Style','popupmenu','String',{'Point','Image'},'Value',1);
+    typeOption.Position = [20 20 60 30];
+    typeOption.Callback = {@typeOption_callback,obj};
+    
+    % Data
+    % Acquire the SMLMModelFit obj, and then display parameters based on the allParsArg
+    fitter = obj.getPar('fitter');
+    parName = fitter.allParsArg.name;
+    parType = fitter.allParsArg.type;
+    parModel = fitter.allParsArg.model;
+    
+    % If 'fix' is ticked, the corresponding parameters will be single
+    % values. Otherwise arange.
+    parUb = fitter.allParsArg.ub;
+    parLb = fitter.allParsArg.lb;
+    parFix = fitter.allParsArg.fix;
+    parVal = cellstr(num2str(fitter.allParsArg.value));
+    parRange = cellstr([num2str(parLb) '' num2str(parUb)]);
+    parRange = regexprep(parRange,'\s+',' ');
+    parVal(~parFix)=parRange(~parFix);
+    parVal = regexprep(parVal,'^\s+','');
+    
+    % Table properties.
+    parArgTable.Position = [20 50 300 300];
+    parArgTable.Data = [parName parType num2cell(parModel) parVal];
+    parArgTable.ColumnName = {'Name','Type','Model','Value'};
+    parArgTable.ColumnEditable = [false false false true];
+    parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
+end
+
+function typeOption_callback(a,b,obj)
+    obj.setPar('modelType',a.String{a.Value});
+    setvisibility(obj)
+end
+
+function parArgTable_CellEditCallback(a,b,obj)
+    % Assign the change to the parArgTable
+    indEdited = b.Indices(1);
+    elements = strsplit(b.NewData,' ');
+    if length(elements) == 2
+        elements = str2double(elements);
+        obj.allParsArg.fix(indEdited) = false;
+        obj.allParsArg.value(indEdited) = 0;
+        obj.allParsArg.lb(indEdited) = elements(1);
+        obj.allParsArg.ub(indEdited) = elements(2);
+    elseif length(elements) == 1
+        obj.allParsArg.fix(indEdited) = true;
+        obj.allParsArg.value(indEdited) = str2double(b.NewData);
+    else
+        warning('The input length is not acceptable. Please assign only 1 (fixed) to 2 (a range) elements.')
+    end
+end
+
 function setvisibility(obj)
 f=obj.getSingleGuiParameter('coordinatefile');
-[p,fh,ext]=fileparts(f);
+% added by Yu-Le
+if startsWith(f,'--')
+    ext = 'SMLMModelFit';
+else
+    [p,fh,ext]=fileparts(f);
+end
 switch ext
     case {'.txt','.csv'}
         txt='on';
@@ -135,17 +263,29 @@ switch ext
         if isdeployed
             return
         end
+                
         cf=pwd;
         cd(p)
         [~,fh]=fileparts(f);
         l=eval(fh);
         cd(cf);
+        
         if isfield(l,'image')
             txt='off';
             tif='on';
         else
             txt='on';
             tif='off';            
+        end
+    case 'SMLMModelFit'
+        modelType = obj.getPar('modelType');
+        switch modelType
+            case 'Image'
+                txt='off';
+                tif='on';
+            case 'Point'
+                txt='on';
+                tif='off';            
         end
 end
 obj.guihandles.labeling_efficiency.Visible=txt;
@@ -168,6 +308,14 @@ pard.coordinatefile.TooltipString=sprintf('.txt or .csv file with coordinates, .
 pard.load_button.object=struct('String','Load','Style','pushbutton','Callback',{{@load_callback,obj}});
 pard.load_button.position=[1,4];
 pard.load_button.TooltipString=pard.coordinatefile.TooltipString;
+
+% Added by Yu-Le
+pard.useFitter_button.object = struct('Style','pushbutton','String', 'Use fitter', 'Callback', {{@useFitter_callback,obj}});
+pard.useFitter_button.position = [2 4];
+
+pard.setModPars_button.object = struct('Style','pushbutton','String', 'Set model pars', 'Callback', {{@setModPars_callback,obj}});
+pard.setModPars_button.position = [3 4];
+
 
 pard.tif_numbermode.object=struct('String',{{'Density (labels/um^2)','Number of labels'}},'Style','popupmenu');
 pard.tif_numbermode.Width=1.5;
@@ -215,13 +363,17 @@ pard.blinks.position=[4,3];
 pard.blinks.TooltipString=sprintf('Number of re-activations. Zero means: only one actvation per fluorophore');
 pard.t2.TooltipString=pard.blinks.TooltipString;
 
+pard.EMon.object=struct('String','EM on','Style','checkbox');
+pard.EMon.position=[4,4];
+pard.EMon.Width=1;
+
 pard.t3.object=struct('String','lifetime (fr)','Style','text');
-pard.t3.position=[5,3.75];
-pard.t3.Width=0.75;
+pard.t3.position=[5,4];
+pard.t3.Width=0.65;
 
 pard.lifetime.object=struct('String','1','Style','edit');
-pard.lifetime.Width=.5;
-pard.lifetime.position=[5,4.5];
+pard.lifetime.Width=.35;
+pard.lifetime.position=[5,4.65];
 pard.lifetime.TooltipString=sprintf('average on-time (in frames) of an activated fluorophore');
 pard.t3.TooltipString=pard.lifetime.TooltipString;
 
@@ -235,13 +387,20 @@ pard.photons.position=[5,1.75];
 pard.photons.TooltipString=sprintf('mean number of photons emitted by an activated fluorophore before off-switching \n (this number is distributed among the frames the fluorophore is on).');
 pard.t4.TooltipString=pard.photons.TooltipString;
 
+pard.photonsigmat.object=struct('String','+/-','Style','text');
+pard.photonsigmat.position=[5,2.25];
+pard.photonsigmat.Width=.25;
+pard.photonsigma.object=struct('String','0','Style','edit');
+pard.photonsigma.position=[5,2.45];
+pard.photonsigma.Width=.35;
+
 pard.t5.object=struct('String','BG/pixel','Style','text');
-pard.t5.position=[5,2.5];
-pard.t5.Width=0.75;
+pard.t5.position=[5,3];
+pard.t5.Width=0.5;
 
 pard.background.object=struct('String','20','Style','edit');
-pard.background.Width=.5;
-pard.background.position=[5,3.];
+pard.background.Width=.35;
+pard.background.position=[5,3.5];
 pard.background.TooltipString=sprintf('Background in photons/pixel/frame');
 pard.t5.TooltipString=pard.background.TooltipString;
 

@@ -17,8 +17,17 @@ if isfield(p,'Tfile') && exist(p.Tfile,'file')
 else %all initial estimation:
     inforef=transform.info{channelref};
     infotarget=transform.info{channeltarget};
-    inforef=takeoutinf(inforef, p.ref1,2*p.separator);
-    infotarget=takeoutinf(infotarget,p.ref2, 2*p.separator);
+    if contains(p.Tmode,'2 cam')
+        ref1b=p.parameters1.roi{1}(1:2)+p.parameters1.roi{1}(3:4);
+        ref2b=p.parameters2.roi{1}(1:2)+p.parameters2.roi{1}(3:4);
+    else
+        ref1b=2*p.separator;
+        ref2b=2*p.separator;
+    end
+    if isfield(p,'ref1')
+        inforef=takeoutinf(inforef, p.ref1,ref1b);
+        infotarget=takeoutinf(infotarget,p.ref2, ref2b);
+    end
     
 %     locT(:,1)=loctarget(:,1)-infotarget.xrange(1);locT(:,2)=loctarget(:,2)-infotarget.yrange(1);
 %     locR(:,1)=locref(:,1)-inforef.xrange(1);locR(:,2)=locref(:,2)-inforef.yrange(1);
@@ -28,25 +37,38 @@ else %all initial estimation:
     %mirror if neede
 %     sref=[inforef.xrange(2)-inforef.xrange(1) inforef.yrange(2)-inforef.yrange(1)];
 %     if any(isinf(sref))
-      if contains(p.Tmode,'up-down') %
-          splitdir=2;
+      if contains(p.modality,'4Pi')
+          sref(1)=max(max(locT(:,1)),max(locR(:,1)));
+          sref(2)=max(max(locT(:,2)),max(locR(:,2)));
+      elseif contains(p.Tmode,'2 cam')
+          sref(1)=max(max(locT(:,1)),max(locR(:,1)));
+          sref(2)=max(max(locT(:,2)),max(locR(:,2)));
+          locT=locT*p.separator(1);
+          if length(p.separator)>1
+              [xs,ys]=rotcoorddeg(locT(:,1),locT(:,2),p.separator(2));
+              locT=horzcat(xs,ys);
+          end
       else
-          splitdir=1;
+          if contains(p.Tmode,'up-down') %
+              splitdir=2;
+          elseif contains(p.Tmode,'right-left')
+              splitdir=1;
+          end
+          separator=p.separator-p.parameters1.roi{1}(splitdir);
+           sref= [separator separator]*2;
+           sref(splitdir)=sref(splitdir)/2;
       end
-      separator=p.separator-p.parameters1.roi{1}(splitdir);
-       sref= [separator separator]*2;
-       sref(splitdir)=sref(splitdir)/2;
 %     end
     for k=1:length(inforef.mirror)
         if inforef.mirror(k)>0
-            locR(:,inforef.mirror(k))=sref(inforef.mirror(k))-locR(:,inforef.mirror(k));
+            locR(:,k)=sref(k)-locR(:,k);
         end
     end
 %     star=[infotarget.xrange(2)-infotarget.xrange(1) infotarget.yrange(2)-infotarget.yrange(1)];
       star=sref;
     for k=1:length(infotarget.mirror)
         if infotarget.mirror(k)>0
-            locT(:,infotarget.mirror(k))=star(infotarget.mirror(k))-locT(:,infotarget.mirror(k));
+            locT(:,k)=star(k)-locT(:,k);
         end
     end
     
@@ -107,6 +129,7 @@ elseif isfield(p,'ax')&& ~isempty(p.ax) && isa(p.ax,'matlab.ui.container.TabGrou
     axh=axes(uitab(p.ax,'Title','beads'));
     plot(axh,locRh.x,locRh.y,'x',locTh.x,locTh.y,'o')
     plot(axh,locRh.x(iAa),locRh.y(iAa),'ro',locTh.x(iBa)-dx0,locTh.y(iBa)-dy0,'bo')
+    legend(axh,'reference','target');
 
     
     axh=axes(uitab(p.ax,'Title','difference'));

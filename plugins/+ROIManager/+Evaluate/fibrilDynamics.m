@@ -2,23 +2,51 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
     % This plug-in is dependent of the BALM_fibril_growth.
     % Green line is the original boundary
     % White line is the refined boundary
-
+    
     properties
+        poly
+        hpoly
         boundary
     end
     methods
-        function obj=fibrilDynamics(varargin)        
-                obj@interfaces.SEEvaluationProcessor(varargin{:});
+        function obj=fibrilDynamics(varargin)
+            obj@interfaces.SEEvaluationProcessor(varargin{:});
         end
         function out=run(obj, inp)
             out=runFibrilDynamics(obj, inp);
         end
-     
+        
         function pard=guidef(obj)
             pard=guidef(obj);
         end
+        
+        function addline(obj,a,b,h)
+            % if length(obj.poly)<obj.site.ID || isempty(obj.poly{obj.site.ID})
+            obj.hpoly=impoly(h,'Closed',false,'PositionConstraintFcn',@obj.polyconstrain);
+            % else %add vortex to end
+            %     pos=obj.hpoly.getPosition;
+            %     pos(end+1,:)=pos(end,:);
+            %     obj.hpoly.setPosition(vertcat(pos(1,:),pos));
+            
+            %  end
+            setConstrainedPosition(obj.hpoly,obj.hpoly.getPosition);
+            hi=addNewPositionCallback(obj.hpoly,@obj.polycallback);
+            obj.polycallback(obj.hpoly.getPosition);
+        end
+        
+        function outp=polyconstrain(obj,inp)
+            
+            outp=vertcat(inp(1,:),max(inp(2:end,:),inp(1:end-1,:)));
+            
+        end
+        
+        function polycallback(obj,inp)
+%             setConstrainedPosition(obj.hpoly,inp);
+            obj.poly{obj.site.ID}=inp;
+            obj.site.evaluation.(obj.name).poly=inp;
+        end
     end
-
+    
 end
 
 
@@ -31,7 +59,7 @@ pard.t_gridRange.Width=2;
 pard.gridRange.object=struct('Style','edit','String',5);
 pard.gridRange.position=[1,3];
 pard.gridRange.TooltipString = 'If you set it as 5, it means before the density comparison, every grid will be set to cover a 5-by-5 area in the original coordinates';
-            
+
 pard.t_slideStep.object=struct('Style','text','String','Slide step(s)');
 pard.t_slideStep.position=[2,1];
 pard.t_slideStep.Width=2;
@@ -106,6 +134,14 @@ pard.frameCut.object = struct('Style','edit', 'string', 0);
 pard.frameCut.position=[8,2];
 pard.frameCut.Width = 1;
 
+pard.t_frameCut.object = struct('Style','text', 'string', 'Frame cut:');
+pard.t_frameCut.position=[8,1];
+pard.t_frameCut.Width = 1;
+
+pard.isManual.object = struct('Style','checkbox','string', 'Manual', 'Value',1);
+pard.isManual.position=[9,1];
+pard.isManual.Width = 1;
+
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
 pard.plugininfo.type='ROI_Evaluate';
@@ -115,36 +151,36 @@ end
 
 
 function mathod_callBack(a,b,obj)
-    switch obj.getSingleGuiParameter('method').Value
-        case 1
-            obj.guihandles.contourLevel.Visible = 'on';
-            obj.guihandles.std.Visible = 'on';
-            obj.guihandles.t_contourLevel.Visible = 'on';
-            obj.guihandles.t_std.Visible = 'on';
-            obj.guihandles.t_prctile.Visible = 'off';
-            obj.guihandles.prctile.Visible = 'off';
-        case 2
-            obj.guihandles.contourLevel.Visible = 'off';
-            obj.guihandles.std.Visible = 'off';
-            obj.guihandles.t_contourLevel.Visible = 'off';
-            obj.guihandles.t_std.Visible = 'off';
-            obj.guihandles.t_prctile.Visible = 'on';
-            obj.guihandles.prctile.Visible = 'on';
-        case 3
-            obj.guihandles.contourLevel.Visible = 'off';
-            obj.guihandles.std.Visible = 'off';
-            obj.guihandles.t_contourLevel.Visible = 'off';
-            obj.guihandles.t_std.Visible = 'off';
-            obj.guihandles.t_prctile.Visible = 'off';
-            obj.guihandles.prctile.Visible = 'off';
-    end
+switch obj.getSingleGuiParameter('method').Value
+    case 1
+        obj.guihandles.contourLevel.Visible = 'on';
+        obj.guihandles.std.Visible = 'on';
+        obj.guihandles.t_contourLevel.Visible = 'on';
+        obj.guihandles.t_std.Visible = 'on';
+        obj.guihandles.t_prctile.Visible = 'off';
+        obj.guihandles.prctile.Visible = 'off';
+    case 2
+        obj.guihandles.contourLevel.Visible = 'off';
+        obj.guihandles.std.Visible = 'off';
+        obj.guihandles.t_contourLevel.Visible = 'off';
+        obj.guihandles.t_std.Visible = 'off';
+        obj.guihandles.t_prctile.Visible = 'on';
+        obj.guihandles.prctile.Visible = 'on';
+    case 3
+        obj.guihandles.contourLevel.Visible = 'off';
+        obj.guihandles.std.Visible = 'off';
+        obj.guihandles.t_contourLevel.Visible = 'off';
+        obj.guihandles.t_std.Visible = 'off';
+        obj.guihandles.t_prctile.Visible = 'off';
+        obj.guihandles.prctile.Visible = 'off';
+end
 end
 
 function isFlipSave_callback(a,b,obj)
-    if ~obj.guihandles.isFlipSave.Value
-        obj.guihandles.isFlipLock.Value = 0;
-        obj.guihandles.isFlipLock.Enable = 'off';
-    else
-        obj.guihandles.isFlipLock.Enable = 'on';
-    end
+if ~obj.guihandles.isFlipSave.Value
+    obj.guihandles.isFlipLock.Value = 0;
+    obj.guihandles.isFlipLock.Enable = 'off';
+else
+    obj.guihandles.isFlipLock.Enable = 'on';
+end
 end

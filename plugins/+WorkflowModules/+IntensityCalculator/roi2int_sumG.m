@@ -1,12 +1,18 @@
 classdef roi2int_sumG<interfaces.GuiModuleInterface 
     %determines intensity and background in a ROI around localizations by
     %summing up the ROI and a larger ROI;
+    properties
+        extension
+    end
     methods
         function obj=roi2int_sumG(varargin)
             obj@interfaces.GuiModuleInterface(varargin{:});
         end
         function pard=guidef(obj)
             pard=guidef(obj);
+        end
+        function initGui(obj)
+            obj.makeinfobutton;
         end
         function out=evaluate(obj,p,img,info)
             if ~isempty(info.bgim)

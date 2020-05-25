@@ -46,10 +46,10 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 h=uipanel('Parent',obj.commandfig,'Units','normalized','Position',pos,'Title',title);
                 h.Units='normalized';
                 uicontrol('Parent',h,'Units','normalized','Position',[1 1 1 1]/3,'String','0','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','0','Character','0')})
-                uicontrol('Parent',h,'Units','normalized','Position',[0 1 1 1]/3,'String','<-','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','leftarrow','Character','')})
-                uicontrol('Parent',h,'Units','normalized','Position',[2 1 1 1]/3,'String','->','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','rightarrow','Character','')})
-                uicontrol('Parent',h,'Units','normalized','Position',[1 2 1 1]/3,'String','^','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','uparrow','Character','')})
-                uicontrol('Parent',h,'Units','normalized','Position',[1 0 1 1]/3,'String','v','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','downarrow','Character','')})   
+                uicontrol('Parent',h,'Units','normalized','Position',[0 1 1 1]/3,'String','<-','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','leftarrow','Character','4')})
+                uicontrol('Parent',h,'Units','normalized','Position',[2 1 1 1]/3,'String','->','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','rightarrow','Character','6')})
+                uicontrol('Parent',h,'Units','normalized','Position',[1 2 1 1]/3,'String','^','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','uparrow','Character','8')})
+                uicontrol('Parent',h,'Units','normalized','Position',[1 0 1 1]/3,'String','v','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','downarrow','Character','2')})   
                 uicontrol('Parent',h,'Units','normalized','Position',[0 2 1 1]/3,'String','x (,)','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','comma','Character',',')})
                 uicontrol('Parent',h,'Units','normalized','Position',[2 2 1 1]/3,'String','(.)','Callback',{@obj.keypress,struct('Modifier',modifier,'Key','period','Character','.')})                  
             end
@@ -169,7 +169,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 dax=newanglex-oldanglex;
                 day=newangley-oldangley;
 %                 theta=obj.getSingleGuiParameter('theta');
-                thetan=theta+day;
+                thetan=theta+day/pi*180;
                 obj.setGuiParameters(struct('theta',thetan));
                 posn=rotpos(pos,dax);
                 if isvalid(roih)
@@ -204,7 +204,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                     dir=5;
                 case {'.','e','E','9'}
                     dir=6;
-                case {'0'}
+                case {'0','5'}
                     dir=0;   
                 case 32 %space bar: rotate
                      obj.guihandles.rotateb.Value=~ obj.guihandles.rotateb.Value;
@@ -233,7 +233,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             step=0.1;
             stepl=0.3;
             dphi=pi/16;
-            dtheta=pi/16;
+            dtheta=pi/16/pi*180;
             if any(strcmp(data.Modifier,'shift'))
                 stepfac=0.2;
             else
@@ -249,22 +249,22 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                     case 1
                        %tilt up down
                        theta=theta+dtheta*stepfac;
-                       if theta>pi
-                           theta=theta-2*pi;
+                       if theta>180%pi
+                           theta=theta-360;%2*pi;
                        end
-                       if theta<-pi
-                           theta=theta+2*pi;
+                       if theta<-180%pi
+                           theta=theta+360;%2*pi;
                        end
                        phi=0;
                     case 2
                         phi=0;
                        theta=theta-dtheta*stepfac;
-                       if theta>pi
-                           theta=theta-2*pi;
+                       if theta>180 %pi
+                           theta=theta-360;%2*pi;
                        end
                        
-                       if theta<-pi
-                           theta=theta+2*pi;
+                       if theta<-180%pi
+                           theta=theta+360;%2*pi;
                        end
                     case 3
                        phi=dphi*stepfac;
@@ -350,6 +350,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
         
         
         function redraw(obj)
+            global locplot3Dview
                 if isempty(obj.axis)||isstruct(obj.axis)||~isvalid(obj.axis)
                     return
                 end
@@ -439,6 +440,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                     end
                      pr=copyfields(copyfields(copyfields(p,pl),ph),rp);
                      loc=getlocrot(k,pl); 
+                     locplot3Dview=loc;
                      if stereo
                          pr=getstereosettings(pr,1);
                          layer1(k).images=renderplotlayer(pr,1);
@@ -558,7 +560,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                     'position','roi','layer',layer,'shiftxy',[pl.shiftxy_min,pl.shiftxy_max,pl.shiftxy_z]);   
                 loc.znm=loc.znm+pl.shiftxy_z;
                 if strcmp(p.animatemode.selection,'Translate')&&strcmp(p.raxis.selection,'vertical')
-                    thetaoffset=pi/2;
+                    thetaoffset=90;%pi/2;
 %                     induf=find(indu);
                     indz=(loc.znm>p.zpos-p.zdist/2 & loc.znm<=p.zpos+p.zdist/2);
                     indu(indu)=indz;
@@ -567,7 +569,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 else
                     thetaoffset=0;
                 end
-                [yrot,depth]=rotcoord(loc.znm-zmean,loc.ynmline,p.theta+thetaoffset);
+                [yrot,depth]=rotcoorddeg(loc.znm-zmean,loc.ynmline,p.theta+thetaoffset);
                 [sortdepth,sortind]=sort(-depth);
                 sortdepth=depth(sortind);
 %                 sortdepth=sortdepth-max(sortdepth); %reference point on plane
@@ -629,18 +631,20 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 end
                 
                 th=p.theta+thetaoffset;
-                sxr=sx*sin(th);
-                syr=sy*cos(th);
+                sxr=sx*sind(th);
+                syr=sy*cosd(th);
                 
                 loc.sx=sx;
                 loc.sy=sqrt(sxr.^2+syr.^2);
 %                 loc.y=yrot(sortind)+zmean;
-                loc.znm=loc.znm(sortind);
-                loc.numberInGroup=loc.numberInGroup(sortind);
-                loc.phot=loc.phot(sortind);
-                for kc=1:length(renderfield)
-                    if ~isempty(loc.(renderfield{kc}))
-                        loc.(renderfield{kc})=loc.(renderfield{kc})(sortind);
+%                 loc.znm=loc.znm(sortind);
+%                 loc.numberInGroup=loc.numberInGroup(sortind);
+%                 loc.phot=loc.phot(sortind);
+                fieldsort=renderfield;
+                fieldsort=unique([fieldsort {'znm','numberInGroup','phot'}]);
+                for kc=1:length(fieldsort)
+                    if ~isempty(loc.(fieldsort{kc}))
+                        loc.(fieldsort{kc})=loc.(fieldsort{kc})(sortind);
                     end
                 end
         end
@@ -668,7 +672,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 if length(s)==2
                     s(3)=1;
                 end
-                outim=zeros(s(1),s(2),s(3),savemovie.frames);
+                outim=zeros(s(1),s(2),s(3),savemovie.frames,'single');
                  obj.redraw;
             end
                 
@@ -691,8 +695,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                                     roih.setPosition(posr);           
                             case 'horizontal'
                                     theta=obj.getSingleGuiParameter('theta');
-                                    theta=theta-obj.getSingleGuiParameter('dangle')*pi/180;
-                                    theta=mod(theta,2*pi);                       
+                                    theta=theta-obj.getSingleGuiParameter('dangle');%*pi/180;
+                                    theta=mod(theta,360);%2*pi);                       
                                     obj.setGuiParameters(struct('theta',theta));
                                     obj.redraw;   
                         end
@@ -707,7 +711,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                                 if znew>zrange(2)
                                     znew=zrange(1);
                                 end
-                                if znew<zrange(1);
+                                if znew<zrange(1)
                                     znew=zrange(2);
                                 end
                                 obj.setGuiParameters(struct('zpos',znew));
@@ -797,7 +801,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                         switch p.raxis.selection
                             case 'vertical'          
                             case 'horizontal'
-                                theta=p.anglerange(1)*pi/180;                      
+                                theta=p.anglerange(1);%*pi/180;                      
                                 obj.setGuiParameters(struct('theta',theta));  
                         end
                     case 'Translate'
@@ -893,7 +897,11 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             obj.setGuiParameters(struct('theta',0));
             obj.redraw;
         end
-        
+        function thetaplus(obj, a,b)
+            th=obj.getSingleGuiParameter('theta');
+            obj.setGuiParameters(struct('theta',mod(th+90+89,180)-89));
+            obj.redraw;
+        end       
         function savesideview_callback(obj,a,b)
             f=obj.getPar('lastSMLFile');
             fn=strrep(f,'sml.mat','3dxz.tif');
@@ -999,9 +1007,9 @@ pard.transparencymode.Width=1.5;
 pard.transparencymode.TooltipString=sprintf('maximum intensity, \n partial transparency (parameter is related to transparency), \n render as ball (parameter is ball diamter in reconstructed pixels');
 pard.transparencymode.Optional=true;
 
-pard.thetat.object=struct('String','Polar angle theta ','Style','pushbutton','Callback',@obj.resetazimuth);
+pard.thetat.object=struct('String','Polar angle','Style','pushbutton','Callback',@obj.resetazimuth);
 pard.thetat.position=[3,1];
-pard.thetat.Width=1.1;
+pard.thetat.Width=0.7;
 pard.thetat.TooltipString='Push to set polar angle to zero';
 pard.thetat.Optional=false;
 
@@ -1016,9 +1024,16 @@ pard.zmax.Width=0.5;
 pard.zmax.Optional=false;
 
 pard.theta.object=struct('Style','edit','String','0'); 
-pard.theta.position=[3,2.1];
+pard.theta.position=[3,1.7];
 pard.theta.Width=0.5;
 pard.theta.Optional=false;
+
+pard.thetplus.object=struct('String','+90°','Style','pushbutton','Callback',@obj.thetaplus);
+pard.thetplus.position=[3,2.2];
+pard.thetplus.Width=0.4;
+pard.thetplus.TooltipString='Push to set polar angle to zero';
+pard.thetplus.Optional=false;
+
 
 pard.transparencypar.object=struct('Style','edit','String','1'); 
 pard.transparencypar.position=[6,2.5];

@@ -125,10 +125,10 @@ wz=1./sdz.^2;
 % wx(1)=wx(1)*2;
 % wy(1)=wy(1)*2;
 % pset=[];
-
+eps=1e-8;
 switch par.smoothmode.Value
     case 1 % smoothing spline
-        [dzt,pz] = csaps(double(cfit1(indgz)),double(dz(indgz)),double(pset),double(ctrue),wz(indgz)) ;    
+        [dzt,pz] = csaps(double(cfit1(indgz)),double(dz(indgz)),double(pset),double(ctrue),wz(indgz)+eps) ;    
     case 2
         dzt = interp1(double(cfit1(indgz)),double(dz(indgz)),double(ctrue)) ;
 end
@@ -152,9 +152,14 @@ plot(ddzplot)
 hold on
 plot(dz,'k','LineWidth',1.5);
 plot(sdz,'k:')
-sz=(max(dz)-min(dz));
-ylim([min(dz)-sz/2 max(dz)+sz/2])
-axis tight
+lims=quantile(ddzplot(:), [0.01,0.99]);
+ylim([max(lims(1),-5000) min(lims(2),5000)])
+title('redundant displacements')
+xlabel('time block')
+ylabel('dz (nm)')
+% sz=(max(dz)-min(dz));
+% ylim([min(dz)-sz/2 max(dz)+sz/2])
+% axis tight
 
 
 if par.drift_reference

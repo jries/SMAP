@@ -53,7 +53,7 @@ for k=1:length(filelist)
         imstack=cutoutchannels(imstack,p.settings_3D);
         p.roi{k}=[0 0 size(imstack,1) size(imstack,2)]; %check x,y
     end
-    if p.emgain
+    if isfield(p,'emgain') && p.emgain
         imstack=imstack(:,end:-1:1,:);
     end
        

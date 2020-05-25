@@ -13,12 +13,14 @@ classdef clusterAnalysis<interfaces.SEEvaluationProcessor
             % Import the kimograph
 %             site = obj(1).locData
             layers=find(inp.sr_layerson);
-            locs=obj.getLocs({'locprecnm','xnm','ynm','frame','znm','layer'},'layer',layers,'size',inp.se_siteroi);  
+            locs=obj.getLocs({'locprecnm','locprecznm','xnm','ynm','frame','znm','layer'},'layer',layers,'size',inp.se_siteroi/2);  
             X=horzcat(locs.xnm,locs.ynm,locs.znm);
+            Xerr=horzcat(locs.locprecnm,locs.locprecnm,locs.locprecznm);
             C=[];
             switch inp.method.selection
                 case 'dbscan'
                     idx = dbscan(X,inp.eps_dbscan,inp.k_dbscan);
+                    max(idx)
                 case 'k-means'
                     [idx,C] = kmeans(X,inp.N_kmeans,'Replicates',10);
                   
@@ -34,7 +36,7 @@ classdef clusterAnalysis<interfaces.SEEvaluationProcessor
                     idx = clusterdata(X,inp.N_kmeans);
             end
             %evaluate positions
-            Cdat=makeclusterpos(X,idx,inp.posmethod.selection);
+            Cdat=makeclusterpos(X,idx,inp.posmethod.selection,Xerr);
             
             %plot
             ax=obj.setoutput('scatter');
@@ -55,11 +57,11 @@ classdef clusterAnalysis<interfaces.SEEvaluationProcessor
             idxn(idx>0)=idr(idx(idx>0));
             incluster=idxn>0;
             if isempty(locs.znm)
-                scatter(ax,X(incluster,1),X(incluster,2),3,map(idxn(incluster),:))
+                scatter(ax,X(incluster,1),X(incluster,2),5,map(idxn(incluster),:))
                 hold (ax,'on')
                  scatter(ax,X(~incluster,1),X(~incluster,2),3,[0.5 0.5 0.5])
             else
-                scatter3(ax,X(incluster,1),X(incluster,2),X(incluster,3),3,map(idxn(incluster),:))
+                scatter3(ax,X(incluster,1),X(incluster,2),X(incluster,3),5,map(idxn(incluster),:))
                 hold (ax,'on')
                 scatter3(ax,X(~incluster,1),X(~incluster,2),X(~incluster,3),3,[0.5 0.5 0.5])
             end
@@ -73,7 +75,7 @@ classdef clusterAnalysis<interfaces.SEEvaluationProcessor
                 plot3(ax,C(idr(1:2),1),C(idr(1:2),2),C(idr(1:2),3),'b-+')
                 dC.xyz=norm(C(idr(2),:)-C(idr(1),:));
                 dC.xy=norm(C(idr(2),1:2)-C(idr(1),1:2));
-                dC.z=abs(C(idr(2),3)-C(idr(1),2));
+                dC.z=abs(C(idr(2),3)-C(idr(1),3));
             else
                 dC=[];
             end
@@ -97,7 +99,8 @@ classdef clusterAnalysis<interfaces.SEEvaluationProcessor
 end
 
 
-function C=makeclusterpos(X,idx,method)
+function C=makeclusterpos(X,idx,method,Xerr)
+wm=false;
 switch method
     case 'mean'
         fun=@mean;
@@ -105,6 +108,8 @@ switch method
         fun=@robustMean;
     case 'median'
         fun=@median;
+    case 'weighted Mean'
+        wm=true;
 end
 
 
@@ -114,7 +119,11 @@ for k=1:max(idx)
     if isempty(indh)
         continue
     end
-    C(k,:)=fun(X(indh,:));
+    if wm
+        C(k,:)=sum(X(indh,:)./Xerr(indh,:),1)./sum(1./Xerr(indh,:),1);
+    else
+        C(k,:)=fun(X(indh,:));
+    end
 end
 end
 
@@ -153,7 +162,7 @@ pard.N_kmeans.position=[2,4];
 pard.posmethodt.object=struct('String','position estimation','Style','text');
 pard.posmethodt.position=[4,1];
 pard.posmethodt.Width=2;
-pard.posmethod.object=struct('String',{{'mean','robust Mean','median'}},'Style','popupmenu');
+pard.posmethod.object=struct('String',{{'mean','robust Mean','median','weighted Mean'}},'Style','popupmenu');
 pard.posmethod.position=[4,3];
 pard.posmethod.Width=2;
 % pard.dxt.Width=3;

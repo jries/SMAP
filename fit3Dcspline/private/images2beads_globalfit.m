@@ -4,7 +4,7 @@ fs=p.filtersize;
 hfilterim=fspecial('gaussian',2*round(fs*3/2)+1,fs);
 fmax=0;
 roisize=p.ROIxy;
-roisizeh=round(1.5*(p.ROIxy-1)/2); %create extra space if we need to shift;
+roisizeh=min(round(1.5*(p.ROIxy-1)/2),(p.ROIxy-1)/2+3); %create extra space if we need to shift;
 rsr=-roisizeh:roisizeh;
 filelist=p.filelist;
 b=[];
@@ -36,11 +36,12 @@ for k=1:length(filelist)
         ind=strfind(filelist{k},';');
         filelisth=filelist{k}(1:ind-1);
         filelisth2=filelist{k}(ind+1:end);
-        [imstack2, p.roi2{k}, p.pixelsize2{k},settings3D2]=readbeadimages(filelisth2,p);
-        [imstack, p.roi{k}, p.pixelsize{k},settings3D]=readbeadimages(filelisth,p);
+        [imstack2, p.roi2{k}, p.pixelsize2{k},settings3D2,isem1]=readbeadimages(filelisth2,p);
+        [imstack, p.roi{k}, p.pixelsize{k},settings3D,isem2]=readbeadimages(filelisth,p);
+        p.emgain=[isem1,isem2];
     else
         filelisth=filelist{k};
-        [imstack, p.roi{k}, p.pixelsize{k},settings3D]=readbeadimages(filelisth,p);
+        [imstack, p.roi{k}, p.pixelsize{k},settings3D,p.emgain]=readbeadimages(filelisth,p);
         p.roi2=p.roi;
         imstack2=imstack;
     end

@@ -19,20 +19,32 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
            if ~isfield(p,'background')
                p.background=0;
            end
+           if ~isfield(p,'EMon')
+               p.EMon=false;
+           end
+           if ~isfield(p,'photonsigma')
+               p.photonsigma=0;
+           end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
            
 %            p.lifetime=2;
-           photonsperframe=p.photons/p.lifetime;
-           posphot=getphotons(posreappear,photonsperframe,p.lifetime);
+%            photonsperframe=p.photons/p.lifetime;
+           posphot=getphotons(posreappear,p.photons,p.lifetime,p.photonsigma);
            
            locs=locsfrompos(posphot,p);
            locsout=singlelocs(locs);
 end
 
-function posphot=getphotons(locs,photonsperframe,lifetime)
+function posphot=getphotons(locs,photons,lifetime,photonsigma)
 for k=length(locs):-1:1
+    photonsperframe=getphotonsperframe(photons,lifetime,photonsigma,length(locs(k).x));
     posphot(k)=getphotonsi(locs(k),photonsperframe,lifetime);
 end
+end
+
+function photonsperframe=getphotonsperframe(photons,lifetime,photonsigma,len)
+photonsperframe=normrnd(photons,photonsigma,len,1)/lifetime;
+photonsperframe=max(photonsperframe,0);
 end
 
 function locso=getphotonsi(locs,photonsperframe,lifetime)
@@ -47,12 +59,13 @@ lenframe=ceil(lifetime-lenfirst);
 indextra=zeros(sum(lenframe),1);
 frame=zeros(sum(lenframe),1);
 timeon=zeros(sum(lenframe),1);
-
+photonintensity=zeros(sum(lenframe),1);
 
 idx=1;
 
 for k=1:length(lenframe)
     indextra(idx:idx+lenframe(k)-1)=k;
+    photonintensity(idx:idx+lenframe(k)-1)=photonsperframe(k);
 %     frame(idx:idx+lenframe(k)-1)=locs.frame(k)+(1:lenframe(k));
     T=lifetime(k)-lenfirst(k);
 %     while (T>1)
@@ -79,8 +92,10 @@ for k=1:length(fn)
     locso.(fn{k})=locs.(fn{k})(indout);
 end
 timeonall=[min(lenfirst,lifetime); timeon];
-photons=timeonall*photonsperframe;
-photonsr=poissrnd(photons);
+
+photonsinframe=timeonall.*[photonsperframe; photonintensity];
+% photonsinframe=timeonall.*photonintensity;
+photonsr=poissrnd(photonsinframe);
 locso.phot=photonsr;
 locso.frame=[locs.frame; frame];
 %remove double locs in one frame coming from same fluorophore
@@ -106,9 +121,14 @@ switch colour
         p.coordinatefile = paths{2};
     otherwise
 end
-        
-[~,~,ext]=fileparts(p.coordinatefile);% Get extension of the specified file
+
+if startsWith(p.coordinatefile, '--')
+    ext = 'SMLMModelFit';
+else
+    [~,~,ext]=fileparts(p.coordinatefile);% Get extension of the specified file
+end
 image=[];
+fitter = [];
 locsall=[];
 locfun=[];
 switch ext
@@ -142,6 +162,9 @@ switch ext
         image=imread(p.coordinatefile);
         img=sum(image,3)/size(image,3); %binarize
         image=double(img)/255;
+	case 'SMLMModelFit'
+        % Added by Yu-Le:
+        fitter = p.obj.getPar('fitter');
     otherwise
         display('file not identified selected')
         return
@@ -186,10 +209,22 @@ for k=numberofsites:-1:1
     yh=ceil(k/numberofrows);
     
     phere=psave;
+    
     if ~isempty(image)
         locsh=locsfromimage(image,p);
-        
+    elseif ~isempty(fitter)
+        % added by Yu-Le for SMLMModelFit:
+        switch p.obj.getPar('modelType')
+            case 'Image'
+                locsh=locsfromContFun(p);
+            case 'Point'
+                [locsd,ph]=locsfromDiscFun(p);
+                locsh=labelremove(locsd,p.labeling_efficiency);
+                phere.model=ph;
+        end
     elseif ~isempty(locfun)
+       
+        
         [locsd,ph]=getcoordm(p);
         locsh=labelremove(locsd,p.labeling_efficiency);
         phere.model=ph;
@@ -282,6 +317,60 @@ locs.y=(y(keep)-0.5)*p.tif_imagesize;
 % pixf=size(image,1)/(p.tif_imagesize/1000);
 % densitypixel=density/pixf^2;
 
+end
+
+function locs=locsfromContFun(p)
+% added by Yu-Le for SMLMModelFit:    
+if p.tif_numbermode.Value==1
+else
+end
+% This is the expecte value of the labels
+numOfLabel_Expect = p.tif_density;
+% Times it with a factor of 60
+numOfLabel_Start = (p.tif_imagesize/2).^3;
+fitter = p.obj.getPar('fitter');
+% fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
+
+for k=1:fitter.numOfModel
+    fitter.model{k}.fixSigma = 1;
+end
+
+% Simulate labels
+label.xnm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
+label.ynm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
+if fitter.model{1}.dimension == 3
+    label.znm = rand([numOfLabel_Start 1]).*p.tif_imagesize-p.tif_imagesize./2;
+end
+label.layer = ones([numOfLabel_Start 1]);
+
+% Get intensity (probability) for each labels
+label.p = fitter.getSimIntensity(label);
+
+% Normalized the expect
+expect_original = sum(label.p);
+expect_factor = p.tif_density/expect_original;
+label.p = label.p.*expect_factor;
+
+% Remove labels based on the probability
+lKept = label.p > rand(size(label.p));
+
+% Export
+locs.x = label.xnm(lKept);
+locs.y = label.ynm(lKept);
+locs.z = label.znm(lKept);
+locs.channel = label.layer(lKept);
+end
+
+function [locs,parameters]=locsfromDiscFun(p)
+% added by Yu-Le for SMLMModelFit:   
+fitter = p.obj.getPar('fitter');
+modCoord = fitter.getSimRef; % get point type visualization
+parameters = fitter.allParsArg;
+% Export
+locs.x = modCoord{1}.x;
+locs.y = modCoord{1}.y;
+locs.z = modCoord{1}.z;
+locs.channel = ones(size(modCoord{1}.x));
 end
 
 function locs=labelremove(locin,p)
@@ -382,6 +471,7 @@ end
 function locs=locsfromposi(locsi,p)
 %     numlocs=length(locsi.x);
 %     phot=exprnd(p.photons,numlocs,1);
+    noisexcessfactor=(p.EMon+1);
     phot=locsi.phot;
     
     a=100;
@@ -396,6 +486,7 @@ function locs=locsfromposi(locsi,p)
     locpthompson=sqrt((PSF^2+a^2/12)./(phot)+8*pi*(PSF^2).^2.* p.background./(phot).^2/a^2);
     locprecnm=sqrt((PSF^2+a^2/12)./phot.*(16/9+8*pi*(PSF^2+a^2/12)*p.background./phot/a^2));
     
+    locprecnm=locprecnm*sqrt(noisexcessfactor);
     
     locs.phot=single(phot(indin));
     locs.bg=single(locprecnm(indin)*0+p.background);

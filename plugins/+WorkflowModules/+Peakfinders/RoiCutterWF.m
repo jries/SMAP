@@ -63,10 +63,11 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             
             cutoutimages=zeros(kernelSize,kernelSize,length(maxima.xpix),'single');
             ind=0;
-            goodind=~(maxima.ypix<=dn|maxima.ypix>sim(1)-dn|maxima.xpix<=dn|maxima.xpix>sim(2)-dn);
-            outside=(maxima.ypix<=1|maxima.ypix>sim(1)-1|maxima.xpix<=1|maxima.xpix>sim(2)-1);
             maxima.xpix=round(maxima.xpix);
             maxima.ypix=round(maxima.ypix);
+            goodind=~(maxima.ypix<=dn|maxima.ypix>sim(1)-dn|maxima.xpix<=dn|maxima.xpix>sim(2)-dn);
+            outside=(maxima.ypix<=1|maxima.ypix>sim(1)-1|maxima.xpix<=1|maxima.xpix>sim(2)-1);
+
 
             for k=1:length(maxima.xpix)
                  ind=ind+1;
@@ -128,7 +129,7 @@ end
 
 
 function pard=guidef
-pard.text.object=struct('Style','text','String','Size ROI (pix)');
+pard.text.object=struct('Style','text','String','ROI size (pix)');
 pard.text.position=[1,1];
 pard.text.Width=0.8;
 
@@ -141,7 +142,7 @@ pard.loc_filterforfit.object=struct('Style','edit','String','0');
 pard.loc_filterforfit.position=[1,2.2];
 pard.loc_filterforfit.TooltipString=sprintf('Filter before fit. Sigma of Gaussian kernel in pixels (0: no filter).');
 pard.loc_filterforfit.Width=0.3;
-
+pard.loc_filterforfit.Optional=true;
 pard.syncParameters={{'loc_ROIsize','loc_ROIsize',{'String'}},{'loc_filterforfit','loc_filterforfit',{'String'}}};
 
 pard.plugininfo.type='WorkflowModule'; 

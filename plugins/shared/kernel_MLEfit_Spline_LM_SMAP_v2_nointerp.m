@@ -74,7 +74,7 @@ for tx = 1:Nfits
             data = single(d_data(sz*sz*(tx-1)+sz*jj+ii+1));
             
             
-            [newDudt,model] =  kernel_DerivativeSpline_v2(ii+xstart+off,jj+ystart+off,zstart,spline_xsize,spline_ysize,spline_zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,newTheta);
+            [newDudt,model] =  kernel_DerivativeSpline_SMAP(ii+xstart+off,jj+ystart+off,zstart,spline_xsize,spline_ysize,spline_zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,newTheta);
             
             
             

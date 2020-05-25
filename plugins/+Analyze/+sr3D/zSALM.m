@@ -8,26 +8,31 @@ classdef zSALM<interfaces.DialogProcessor
         function obj=zSALM(varargin)   
             obj@interfaces.DialogProcessor(varargin{:}) ;
              obj.showresults=true;
-
+            obj.history=true;
         end
         function out=run(obj,p)
+            obj.setPar('undoModule','zSALM');
+            notify(obj.P,'backup4undo');
             %get calibration
             fsa=p.assignfield1.selection;
             fua=p.assignfield2.selection;
             fsabg=p.bgfield1.selection;
             fsubg=p.bgfield2.selection;
-            locs=obj.locData.getloc({fsa,fua,'znm','phot','LLrel','znm_a'},...
+            locs=obj.locData.getloc({fsa,fua,[fsa 'err'],[fua 'err'],'znm','phot','LLrel','znm_a'},...
                 'layer', find(obj.getPar('sr_layerson')),'position','roi');
-            if ~isfield(obj.locData.loc,'locprecnm_a')
-                 obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
+            if ~isfield(obj.locData.loc,'znm_original')
+                obj.locData.setloc('znm_original',obj.locData.loc.znm);
+                obj.locData.setloc('locprecznm_original',obj.locData.loc.locprecznm);
             end
+%             if ~isfield(obj.locData.loc,'locprecnm_a')
+%                  obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
+%             end
             if ~isempty(locs.znm_a)
-                locs.znm=locs.znm_a;
-                
+                locs.znm=locs.znm_a;  
             else
                 obj.locData.setloc('znm_a',obj.locData.loc.znm);
                 obj.locData.setloc('locprecznm_a',obj.locData.loc.locprecznm);
-                obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
+%                 obj.locData.setloc('locprecnm_a',obj.locData.loc.locprecnm);
             end
             nfit=5e4;
             goodLL=locs.LLrel>-1.3;
@@ -35,13 +40,14 @@ classdef zSALM<interfaces.DialogProcessor
             [~,ind]=sort(photll);
             indref=max(1,length(ind)-nfit);
             photref=photll(ind(indref));
-%             photref=0;
             indbright=(locs.phot>photref) & goodLL & (locs.(fsa)~=0); %take out r=0
+            
+%             rfactortot=intensitySALM(0)/p.rfactor;
+            rfactortot=p.rfactor;
             
             is=locs.(fsa)(indbright);
             iu=locs.(fua)(indbright);
-            rsu=double(is./(iu))/p.rfactor*intensitySALM(0);
-%             rsu=real(log(rsu));
+            rsu=double(is./(iu))* rfactortot; %/p.rfactor*intensitySALM(0);
             znm=double(locs.znm(indbright));
             
             dz=10;
@@ -56,7 +62,6 @@ classdef zSALM<interfaces.DialogProcessor
             rrange=-0.2:0.01:2.3;
             indf=znm>max(quantile(znm,0.005),zrange(1)) & znm<min(quantile(znm,0.995),zrange(end))...
                 & rsu>max(quantile(rsu,0.005),rrange(1)) & rsu<min(quantile(rsu,0.995),rrange(end));
-    
             
             hz=histcounts2(rsu(indf),znm(indf),rrange,zrange);
             
@@ -65,88 +70,100 @@ classdef zSALM<interfaces.DialogProcessor
             h=imagesc(ax2,zrange,rrange,hz);
             axis(ax2, 'xy')
             hold(ax2,'on')
-            ft = fittype('a*exp(-b*x)+c');
+%             ft = fittype('a*exp(-b*x)+c');
 
-            startp=[1,0.007,0];
-            startp(1)=0.5*exp(startp(2)*median(znm));
-            
-            fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare','Lower',[0 -inf 0]);
-            
+%             startp=[1,0.007,0];
+%             startp(1)=0.5*exp(startp(2)*median(znm));
+%             
+%             fitp=fit(znm(indf),rsu(indf),ft,'StartPoint',startp,'Robust','Bisquare','Lower',[0 -inf 0]);
+%             
             p.limit=true;
            
             ftsalm=fittype(@(b,x) intensitySALM(x-b,p),'independent','x','coefficients',{'b'});
             startpsalm=quantile(znm(indf),0.1);
-%             ftsalm=fittype(@(b,c,x) intensitySALM(x-b,p)*c,'independent','x','coefficients',{'b','c'});
-%             startpsalm=[quantile(znm(indf),0.1) 1];
-            
-%              fitSALMmodel(znm(indf),rsu(indf),p)
             fitpsalm1=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
             %only fit data above coverglass
             zabove = znm>fitpsalm1.b;
             indf=indf&zabove;
-            fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',fitpsalm1.b,'Robust','Bisquare');
-            
+            fitpsalm=fit(znm(indf),rsu(indf),ftsalm,'StartPoint',fitpsalm1.b,'Robust','Bisquare');          
             zglass=fitpsalm.b;
-            
-            plot(ax2,zrange,fitp(zrange),'m--')  
-            plot(ax2,zrange,ftsalm(startpsalm(1),zrange),'y:')
-%             plot(ax2,zrange,ftsalm(startpsalm(1),startpsalm(2),zrange),'y:')
             plot(ax2,zrange,fitpsalm(zrange),'r') 
-            legend(ax2,'exp','start','salm')
-            
+            plot(ax2,[zrange(1), zrange(end)],intensitySALM(0,p)*[1,1],'k') 
+            plot(ax2,[zglass zglass],intensitySALM(0,p)*[0, 1],'k')
             title(ax2,['position of glass (nm): ' num2str(zglass,3)]);
             drawnow
-
            
             isall=obj.locData.loc.(fsa);
             iuall=obj.locData.loc.(fua);
-            rall=isall./iuall/p.rfactor*intensitySALM(0);
+            bgs=obj.locData.loc.(fsabg);
+            bgu=obj.locData.loc.(fsubg);
             
-             %exponential model
-%             zr=-log((rall-fitp.c)/fitp.a)/fitp.b;
-           
+            if isfield(obj.locData.loc,[fsa 'err'])
+                isallerr=obj.locData.loc.([fsa 'err']);
+                iuallerr=obj.locData.loc.([fua 'err']);
+            else
+                isallerr=sqrt(errN2(isall,bgs));
+                iuallerr=sqrt(errN2(iuall,bgu));
+            end
+            
+            
+            rall=isall./iuall*rfactortot;%/p.rfactor*intensitySALM(0);
+            %checked, this rfactortot should be taken into account
+            %correctly during error calculation
             
             %SALM model
-            %invert function by spline interpolation
-            zinterp=(zglass-200:0.5:zrange(end)+500)';
-            rinterp=fitpsalm(zinterp);
+            %invert function by spline interpolation    
+            %get z coordinates
+            dzinterp=0.5;
+            zinterp=(-100:dzinterp:2000)';
+            rinterp=ftsalm(0,zinterp);
             interpsalm=fit(rinterp,zinterp,'cubicinterp');
-            
             
             zr=interpsalm(rall);
             zmax=zrange(end)+1500;
             zoutofrange=zr>zmax;
             zr(zoutofrange)=zmax; %avoid too large numbers
 
-            obj.locData.loc.zSALM=zr;
-            obj.locData.loc.locprecnm=obj.locData.loc.locprecnm_a;
+            obj.locData.loc.znm_SALM=zr;
+%             obj.locData.loc.locprecnm=obj.locData.loc.locprecnm_a;
             obj.locData.loc.locprecnm(zoutofrange)=1000; %for grouping.
-            %calculate error of zr
-            %use CRLB as error for znm
-            % weighted average
-            bgs=obj.locData.loc.(fsabg);
-            bgu=obj.locData.loc.(fsubg);
-%             zerrsexp=zerrSALM(fitp,isall,iuall,bgs,bgu); %now based on exponential fit. Later based on real model?
+            obj.locData.loc.znm_a=obj.locData.loc.znm_a-zglass; %correct z astig to put glass to z=0;
             
-            %calculate dz/dr
+            %get errors in z
+            %calculate dz/dr: use this for r>0.3, here r is a good measure
+            %for z
             rdiff=0.01;
             r=(-0.02:rdiff:3)';
-            zr=interpsalm(r);
-            dzr=diff(zr);
+            zofr=interpsalm(r);
+            dzr=diff(zofr);
             dz_dr=fit(r(1:end-1)+rdiff/2,dzr/rdiff,'cubicinterp');
+            rlarge=rall>0.3;
+            dzdrv(rlarge,1)=dz_dr(rall(rlarge));
             
-            %late: take into account the factor in zerr
-            zerrs=zerrSALMspline(dz_dr,isall,iuall,bgs,bgu);
-            zerrs(zoutofrange)=inf;
+            drz=diff(rinterp)/dzinterp;
+            dr_dz=fit(zinterp(1:end-1)+dzinterp/2,drz,'cubicinterp');
+            dzdrv(~rlarge,1)=1./dr_dz(zr(~rlarge));
+            
+            %calculate error in z SALM
+            dru=-isall./iuall.^2;
+            drs=1./iuall;
+            dR2=drs.^2.*isallerr.^2+dru.^2.*iuallerr.^2;
+            dz2=dzdrv.^2.*dR2;
+%             dz2=dz_dr(rall).^2.*dR2;
+            indb=isall<1 | iuall<10;
+            dz2(zoutofrange|indb)=inf;
+            zerrs=sqrt(dz2)*rfactortot;
             errza=obj.locData.loc.locprecznm_a;
             
+            znmav=(obj.locData.loc.znm_a./errza.^2+obj.locData.loc.znm_SALM./zerrs.^2)./(1./errza.^2+1./zerrs.^2);
+            locprecznmav=1./sqrt(1./errza.^2+1./zerrs.^2);  %divided by two, no idea why, this is not clear
+                    
             switch p.fieldznm.Value
                 case 1 %weighted average
-                    %also here change sign of z.
-                    znmnew=(obj.locData.loc.znm_a./errza+obj.locData.loc.zSALM./zerrs)./(1./errza+1./zerrs);
-                    locprecznmnew=1./(1./errza+1./zerrs);  %divided by two, no idea why, this is not clear
+                    znmnew=znmav;
+                    locprecznmnew=locprecznmav;
                 case 2 %salm
-                    znmnew=obj.locData.loc.zSALM;
+                    znmnew=obj.locData.loc.znm_SALM;
                     locprecznmnew=zerrs;
                 case 3 %astig
                     znmnew=obj.locData.loc.znm_a;
@@ -154,7 +171,10 @@ classdef zSALM<interfaces.DialogProcessor
             end
             obj.locData.setloc('znm',znmnew);
             obj.locData.setloc('locprecznm',locprecznmnew);
-            obj.locData.setloc('locprecznm_salm',zerrs);
+            obj.locData.setloc('locprecznm_SALM',zerrs);
+            obj.locData.setloc('znm_asSALM',znmav);
+            obj.locData.setloc('locprecznm_asSALM',locprecznmav);
+            
             obj.locData.regroup;
             
             %determine maximum position
@@ -204,6 +224,28 @@ rr=(r+zs)/sqrt(2);
  ftsalm=fittype(@(b,x) (intensitySALM(x*1000-b,p)+x)/sqrt(2),'independent','x','coefficients',{'b'});
             startpsalm=quantile(z,0.1);
             fitpsalm=fit(zr,rr,ftsalm,'StartPoint',startpsalm,'Robust','Bisquare');
+end
+
+function loadcall_callback(a,b,obj)
+p=obj.getAllParameters;
+if isempty(p.cal_3Dfile)
+    path=obj.getGlobalSetting('DataDirectory');
+    fh=obj.getPar('loc_fileinfo');
+    if ~isempty(fh) && ~isempty(fh.imagefile)
+        path=fileparts(fh.imagefile);
+    end  
+    p.cal_3Dfile=[path filesep '*3dcal.mat'];
+end
+[f,p]=uigetfile(p.cal_3Dfile);
+if f
+    l=load([p f]);
+    if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
+        msgbox('no 3D data recognized. Select other file.');
+    end
+    obj.setGuiParameters(struct('cal_3Dfile',[p f]));
+    obj.setPar('cal_3Dfile',[p f]);
+    
+end
 end
 
 function pard=guidef(obj)
@@ -275,7 +317,7 @@ pard.zrange.Width=0.8;
 pard.rfactort.object=struct('Style','text','String','SA/UA ratio on coverslip');
 pard.rfactort.position=[5,1];
 pard.rfactort.Width=1.3;
-pard.rfactor.object=struct('Style','edit','String','1.');
+pard.rfactor.object=struct('Style','edit','String','1');
 pard.rfactor.position=[5,2.3];
 pard.rfactor.Width=0.4;
 
@@ -285,8 +327,18 @@ pard.tss.position=[5,3];
 pard.fieldznm.object=struct('Style','popupmenu','String',{{'weighted average','SALM','astigmatism'}});
 pard.fieldznm.position=[5,3.5];
 pard.fieldznm.Width=1.5;
+% 
+% pard.loadcal.object=struct('Style','pushbutton','String','Load 3D cal','Callback',{{@loadcall_callback,obj}});
+% pard.loadcal.position=[6,1];
+% pard.loadcal.Width=.75;
+% pard.cal_3Dfile.object=struct('Style','edit','String','');
+% pard.cal_3Dfile.position=[6,1.75];
+% pard.cal_3Dfile.Width=3.25;
+% pard.cal_3Dfile.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');
+
+
  pard.syncParameters={{'locFields','assignfield1',{'String'}},{'locFields','assignfield2',{'String'}},...
-     {'locFields','bgfield1',{'String'}},{'locFields','bgfield2',{'String'}}};
+     {'locFields','bgfield1',{'String'}},{'locFields','bgfield2',{'String'}}};%,{'cal_3Dfile','cal_3Dfile',{'String'}}};
             
 %             obj.addSynchronization('locFields',[],[],@obj.updateLocFields)
 %             obj.addSynchronization('filelist_short',obj.guihandles.dataselect,'String')
@@ -311,7 +363,17 @@ dz2(indb)=inf;
 % dz2=dR2/b^2./r.^2;
 err=sqrt(dz2);
 end
-function err=zerrSALMspline(dz_dr,Ns,Nu,bgs,bgu)
+function err=zerrSALMspline(obj,dz_dr,Ns,Nu,bgs,bgu,zas)
+% XXX replace by CRLB from splinePSF
+% psf_sa=splinePSF;
+% psf_sa.loadmodel(cal_3Dfile,2);
+% 
+% psf_ua=splinePSF;
+% psf_ua.loadmodel(cal_3Dfile,1);
+
+% roi_ua=obj.locData.files.file.savefit.fitparameters.RoiCutterWF.loc_ROIsize;
+% errNu2=(psf_ua.crlb(Nu,bgu,zas,roi_ua));
+
 indb=Ns<1 | Nu<10;
 
 % c=max(fitp.c,0);

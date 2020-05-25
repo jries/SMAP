@@ -1,0 +1,18 @@
+Intermediate GUI to select a loader.
+
+a. TifLoaderLoads raw camera images (single file or direcotry with single images). 
+These can be tiff, files, but also any OME compatible image files. This plugin can load and process images during acquisition 
+for online fitting. With the help of the CameraManager metadata is parsed and passed on to the CameraConverter.
+
+b. TifLoaderParallelLoads tiff files. Can load single tiff files or tiff stacks, also while they are written. 
+It also tries to locate the metadata.txt file from micromanger and passes it on to the camera converter. 
+
+c. GrabFijiStacksOpens an instance of Fiji in which you can open any image stack (if large, use virtual stack). 
+This image stack can then be selected in the GUI and used for fitting.
+
+d. SimulateCameraImagesPlugin to simulate camera raw frames using a realistic fluorophore blinking model, PSF model  
+and camera noise model. Useful to test fitting workflows.'
+
+
+gui:Parameters:
+gui:loaderlist Select here which loader plugin is used.

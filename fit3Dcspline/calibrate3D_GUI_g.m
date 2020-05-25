@@ -70,17 +70,17 @@ classdef calibrate3D_GUI_g<handle
 %                 figureheight=670;
 %             end
             extended = true;
-            figureheight=720;
+            figureheight=760;
             
             h=figure('Name','3D calibration','MenuBar','none','ToolBar','none');
             initPosition = h.Position;
-            h.Position=[initPosition(1), initPosition(2)- figureheight+initPosition(4),450, figureheight];
+            h.Position=[initPosition(1), initPosition(2)- figureheight+initPosition(4),420, figureheight];
             top=h.Position(4)-10;
-            vsep=24;
+            vsep=25;
             
             if ispc
-                fontsize=12;
-                fieldheight=vsep-2;
+                fontsize=10;
+                fieldheight=vsep;
             else 
                 fontsize=14;
                 fieldheight=vsep;
@@ -89,7 +89,7 @@ classdef calibrate3D_GUI_g<handle
             xw=100;
             hatitle='left';
             obj.guihandles.handle=h;
-            obj.guihandles.title=uicontrol('style','text','String','Calibrate PSF model for MLE fit from bead stacks. (c) 2017 Ries lab','Position',[xpos1,top-vsep+10,xw*4.5,fieldheight],'FontSize',10,'HorizontalAlignment',hatitle,'FontWeight','bold');
+            obj.guihandles.title=uicontrol('style','text','String','Calibrate PSF model for MLE fit from bead stacks. (c) 2017 Ries lab','Position',[xpos1,top-vsep+10,xw*4.5,fieldheight],'FontSize',fontsize-2,'HorizontalAlignment',hatitle,'FontWeight','bold');
             
             obj.guihandles.selectfiles=uicontrol('style','pushbutton','String','Select camera files','Position',[xpos1,top-2*vsep,xw*1.5,vsep],'FontSize',fontsize,'Callback',@obj.selectfiles_callback);
             obj.guihandles.selectfiles.TooltipString='Select image files with bead stacks. You can select several files from different locations with the file select dialog box opend';
@@ -109,11 +109,11 @@ classdef calibrate3D_GUI_g<handle
             obj.guihandles.dzt.TooltipString=obj.guihandles.dz.TooltipString;
             
             obj.guihandles.modalityt=uicontrol('style','text','String','3D modality ','Position',[xpos1,top-8*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha);
-            obj.guihandles.modality=uicontrol('style','popupmenu','String',{'arbitrary','global 2 channel','4Pi'},'Value',1,'Position',[xpos1+2*xw,top-8*vsep,xw*1.5,fieldheight],'FontSize',fontsize,'Callback',@obj.modality_callback);
+            obj.guihandles.modality=uicontrol('style','popupmenu','String',{'arbitrary','global 2 channel','4Pi'},'Value',1,'Position',[xpos1+2*xw,top-8*vsep,xw*1.3,fieldheight],'FontSize',fontsize,'Callback',@obj.modality_callback);
             obj.guihandles.modality.TooltipString='Select the kind of PSF. Astigmatic, arbitrary (e.g. saddle-point, double-helix), or unmodified 2D';
             obj.guihandles.modalityt.TooltipString=obj.guihandles.modality.TooltipString;
             
-            obj.guihandles.PSF2D=uicontrol('style','checkbox','String','2D','Value',0,'Position',[xpos1+3.5*xw,top-8*vsep,xw*.5,fieldheight],'FontSize',fontsize);
+            obj.guihandles.PSF2D=uicontrol('style','checkbox','String','bi dir','Value',0,'Position',[xpos1+3.3*xw,top-8*vsep,xw*.7,fieldheight],'FontSize',fontsize);
             obj.guihandles.PSF2D.TooltipString='Unmodified 2D PSF';
           
             
@@ -194,17 +194,17 @@ classdef calibrate3D_GUI_g<handle
             obj.guihandles.settingsfile4pi=uicontrol('style','edit','String','','Position',[xpos1+2*xw,top-22*vsep,xw*2,fieldheight],'FontSize',fontsize);
             
          
-            obj.guihandles.run=uicontrol('style','pushbutton','String','Calculate bead calibration','Position',[xpos1,1.5*vsep,xw*4,fieldheight],'FontSize',fontsize,'Callback',@obj.run_callback);
+            obj.guihandles.run=uicontrol('style','pushbutton','String','Calculate bead calibration','Position',[xpos1,1.5*vsep,xw*4,fieldheight],'FontSize',fontsize,'Callback',@obj.run_callback,'FontWeight','bold');
             %obj.guihandles.help=uicontrol('style','pushbutton','String','Help','Position',[xpos1+xw,top-23*vsep,xw*2,vsep],'FontSize',fontsize,'Callback',@obj.help_callback);
                       
             obj.guihandles.status=uicontrol('style','text','String','Status','Position',[xpos1,.5*vsep,xw*4,fieldheight],'FontSize',fontsize,'HorizontalAlignment','left');
             
-            if extended  %called from our propriety fitting software SMAP: extended funtionality. Hidden if called directly          
-%                 obj.guihandles.posfromsmap=uicontrol('style','checkbox','String','SMAP positions','Position',[xpos1,top-3*vsep,xw*1.5,fieldheight],'FontSize',fontsize,'Value',false);
-%                 obj.guihandles.posfromsmap.TooltipString='Use positions determined by SMAP. This allows for filtering and manual deletion of beads, as well as the use of ROIs.';
-            else
-                set(h, 'HandleVisibility', 'off'); %not affected by close all command
-            end      
+%             if extended  %called from our propriety fitting software SMAP: extended funtionality. Hidden if called directly          
+% %                 obj.guihandles.posfromsmap=uicontrol('style','checkbox','String','SMAP positions','Position',[xpos1,top-3*vsep,xw*1.5,fieldheight],'FontSize',fontsize,'Value',false);
+% %                 obj.guihandles.posfromsmap.TooltipString='Use positions determined by SMAP. This allows for filtering and manual deletion of beads, as well as the use of ROIs.';
+%             else
+%                 set(h, 'HandleVisibility', 'off'); %not affected by close all command
+%             end      
             
                 obj.guihandles.spatialcalt=uicontrol('style','text','String','Spatially resolved calibration: ','Position',[xpos1,top-23*vsep,xw*4,fieldheight],'FontSize',fontsize,'HorizontalAlignment',hatitle,'FontWeight','bold');
                 obj.guihandles.spatialmode=uicontrol('style','popupmenu','String',{'none','horizontal split','vertical split','M x N tiles','coordinates','circular ROI', 'interactive ROI'},'Position',[xpos1,top-24*vsep,xw*2,vsep],'FontSize',fontsize,'HorizontalAlignment',ha,'Callback',{@spatialselect_callback,obj});
@@ -224,7 +224,8 @@ classdef calibrate3D_GUI_g<handle
                 obj.guihandles.zernikefit=uicontrol('style','checkbox','String','Fit Zernike coefficients','Position',[xpos1,top-26*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',hatitle,'FontWeight','bold','Callback',@obj.zernike_callback,'Value',0);    
                 obj.guihandles.zernikepar=uicontrol('style','pushbutton','String','Parameters','Position',[xpos1+2*xw,top-26*vsep,xw*1,fieldheight],'FontSize',fontsize,'Callback',@obj.zernikepar_callback);    
                 
-                obj.guihandles.emgain=uicontrol('style','checkbox','String','EM gain used (mirrored)','Position',[xpos1,top-27*vsep,2*xw,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha); 
+%                 obj.guihandles.emgain=uicontrol('style','checkbox','String','EM gain used (mirrored)','Position',[xpos1,top-27*vsep,2*xw,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha); 
+                obj.guihandles.emgain=uicontrol('style','popupmenu','String',{'EM gain and mirror from metadata','no mirror','EM gain used (mirrored)'},'Position',[xpos1,top-27*vsep,3*xw,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha); 
                 
 
             modality_callback(obj,0,0)
@@ -260,12 +261,10 @@ classdef calibrate3D_GUI_g<handle
                 try
                     r=imageloaderAll(fileh,[],obj.smappos.P);
                     mirror=r.metadata.EMon;
-                    obj.guihandles.emgain.Value=mirror;
+%                     obj.guihandles.emgain.Value=mirror;
                 catch err
                     disp('EM mirror could not be defined automatically, set manually')
                 end
-                    
-%             end
         end
         function selectoutputfile_callback(obj,a,b)
             of=obj.guihandles.outputfile.String;
@@ -387,6 +386,7 @@ classdef calibrate3D_GUI_g<handle
                 return
             end
             p.smappos=obj.smappos;
+            p.smap=true;
             img=readbeadimages(fl{1},p);
             imgmax=max(img,[],3);
             qm=myquantile(imgmax(:),.999);
@@ -405,22 +405,53 @@ classdef calibrate3D_GUI_g<handle
             end
             h=fun(ax);
             position=wait(h);
-            roimask=createMask(h);
+            roimask1=createMask(h);
+            %get displacement
             splitpos=str2double(obj.guihandles.Tsplitpos.String);
             switch obj.guihandles.roi2c.String{obj.guihandles.roi2c.Value}
                 case 'single'
-                    roimask2=roimask;
+                    i1=[];i2=[];
                 case 'up-down'
-                    roimask2=[roimask(splitpos+1:end,:); roimask(1:splitpos,:)];
+                    i1=imgmax(1:splitpos,:);
+                    i2=imgmax(splitpos+1:end,:);
                 case 'up-down mirror'
-                    roimask2=roimask(end:-1:1,:);
+                    i1=imgmax(1:splitpos,:);
+                    i2=imgmax(end:-1:splitpos+1,:);
                 case 'right-left'
-                    roimask2=[roimask(:,splitpos+1:end) roimask(:,1:splitpos)];
+                    i1=imgmax(:,1:splitpos);
+                    i2=imgmax(:,splitpos+1:end);
                 case 'right-left mirror'
-                    roimask2=roimask(:,end:-1:1);
+                    i1=imgmax(:,1:splitpos);
+                    i2=imgmax(:,end:-1:splitpos+1);
+            end
+            if ~isempty(i1)
+                [dx,dy]=getShiftCorr(i1,i2,0,100,false);
             end
             
-            obj.roimask=roimask | roimask2;
+            if obj.guihandles.roi2c.Value~=4
+                disp('shift of second roi not implemented. Look at calibrate3D_GUI_g.m line 435');
+            end
+            
+            switch obj.guihandles.roi2c.String{obj.guihandles.roi2c.Value}
+                case 'single'
+                    roimask2=roimask1;
+                case 'up-down'
+                    roimask2=[roimask1(splitpos+1+dx:end,:); roimask1(1:splitpos+dx,:)];
+                case 'up-down mirror'
+                    roimask2=roimask1(end:-1:1,:);
+
+                case 'right-left'
+                    roimask2=[roimask1(:,splitpos+1+dy:end) roimask1(:,1:splitpos+dy)];
+                    if dx>=0
+                        roimask2(1:end-dx,splitpos+1:end)=roimask2(dx+1:end,splitpos+1:end);
+                    else
+                        roimask2(-dx+1:end,splitpos+1:end)=roimask2(1:end+dx,splitpos+1:end);
+                    end
+                case 'right-left mirror'
+                    roimask2=roimask1(:,end:-1:1);
+            end
+            
+            obj.roimask=roimask1 | roimask2;
 %             imgmaxp=double(imgmax)+double(max(imgmax(:)))*(1-roimask);
             imgmaxp=imgmax;
             imgmaxp(~obj.roimask)=max(imgmax(:));
@@ -515,9 +546,9 @@ classdef calibrate3D_GUI_g<handle
                         
                 end
                 
-                p.emgain=obj.guihandles.emgain.Value;
+                p.emmirror=obj.guihandles.emgain.Value;
             else
-                p.emgain=false;
+                p.emmirror=2;
             end
             if obj.guihandles.setframes.Value
                 p.framerange=str2num(obj.guihandles.framerange.String);
@@ -538,7 +569,7 @@ classdef calibrate3D_GUI_g<handle
             p.switchchannels=contains(obj.guihandles.mainchannel.String{obj.guihandles.mainchannel.Value},'d');
 
             if strcmp(p.modality,'4Pi')
-                calibrate_4pi_v3(p);
+                calibrate_4pi_v2(p);
             else
             
                 calibrate_globalworkflow(p);
@@ -555,13 +586,13 @@ classdef calibrate3D_GUI_g<handle
         end
         function changeTmode_callback(obj,a,b)
             if contains(a.String{a.Value},'2 cam')
-                obj.guihandles.Tsplitpost.String='Initial scaling factor';
+                obj.guihandles.Tsplitpost.String='M,°';
                 if strcmp(obj.guihandles.Tsplitpos.String,'255')
-                    obj.guihandles.Tsplitpos.String='1';
+                    obj.guihandles.Tsplitpos.String='1,0';
                 end
             else
                 obj.guihandles.Tsplitpost.String='Split (pix)';
-                if strcmp(obj.guihandles.Tsplitpos.String,'1')
+                if strcmp(obj.guihandles.Tsplitpos.String,'1,0')
                     obj.guihandles.Tsplitpos.String='255';
                 end                
             end

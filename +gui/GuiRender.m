@@ -57,7 +57,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             makemenuindicator(h.layertab,posmen,shiftmen);
         end
         
-        function setGuiParameters(obj,p,setchildren)
+        function setGuiParameters(obj,p,setchildren,setmenulist)
 %             add layers if needed
             fn=fieldnames(p.children);
             layertabnames={obj.guihandles.layertab.Children(:).Title};
@@ -69,7 +69,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                     end
                 end
             end
-            setGuiParameters@interfaces.GuiModuleInterface(obj,p,setchildren);            
+            setGuiParameters@interfaces.GuiModuleInterface(obj,p,setchildren,setmenulist);            
         end
         
         function hpanel=addlayer(obj,handle,k)
@@ -116,7 +116,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             hfig=obj.getPar('sr_figurehandle');
             if ~isvalid(hfig)
-                hfig=figure;
+                hfig=figure('Name','Reconstructed superresolution image');
                 obj.setPar('sr_figurenumber',hfig.Number);
             end
 %             displayer=Displayer(obj.locData);
@@ -162,7 +162,8 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             hfig=obj.getPar('sr_figurehandle');
             if ~isvalid(hfig)
                 f=obj.getPar('sr_figurenumber');
-                figure(f);
+                fh=figure(f);
+                fh.Name='Reconstructed superresolution image';
                 obj.setPar('sr_figurenumber',f);
             end
             hfig=obj.getPar('sr_figurehandle');
@@ -218,9 +219,9 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                                     fields{end+1}=pk.renderfield.selection;
                             end
                             switch pk.intensitycoding.selection
-                                case 'blinks'
+                                case {'blinks','√blinks'}
                                     fields{end+1}='numberInGroup';
-                                case 'photons'
+                                case {'photons','√hotons'}
                                     fields{end+1}='phot';
                             end
 %                             {'xnm','ynm','znm','locprecnm','PSFxnm','phot',pk.renderfield.selection}
@@ -272,7 +273,11 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
 end
 
 function selectLayer_callback(tabgroup,eventdata,obj)
-layer=(eventdata.NewValue.Tag);
+if isprop(eventdata.NewValue,'Tag')
+    layer=(eventdata.NewValue.Tag);
+else
+    layer=[];
+end
 layertitle=(eventdata.NewValue.Title);
 if strcmp(layertitle,'+')
     newlayernumber=obj.numberOfLayers+1;

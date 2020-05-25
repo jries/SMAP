@@ -287,6 +287,28 @@ classdef SEExploreGui<interfaces.SEProcessor
             obj.guihandles.celllist.Value=vnew;
             plotcell(obj,obj.SE.currentcell)
         end
+        function plotobject(obj,what, ID)
+            switch what
+                case 'site'
+                    number=obj.SE.indexFromID(obj.SE.sites,ID);
+                    if number>0
+                        plotsite(obj,obj.SE.sites(number));
+                        obj.SE.currentsite=obj.SE.sites(number);
+                        %update site list
+                        obj.guihandles.sitelist.Value=number;
+                    end
+                    
+                case 'cell'
+                    number=obj.SE.indexFromID(obj.SE.cells,ID);
+                    if number>0
+                        plotcell(obj,obj.SE.cells(number));
+                        obj.SE.currentcell=obj.SE.cells(number);
+                        %update site list
+                        obj.guihandles.celllist.Value=number;
+                    end                    
+                otherwise
+            end
+        end
     end
 end
 
@@ -350,6 +372,7 @@ else
     currentsite.pos=pos;     
     currentsite.info.cell=obj.SE.currentcell.ID;
     currentsite.info.filenumber=obj.SE.currentfile.ID;
+    currentsite.info.connectedsites=[];
 %     currentsite.sePar=obj.SE.sePar;
 %     currentsite.annotation.rotationangle=0;
 %     currentsite.annotation.rotationpos=zeros(2);

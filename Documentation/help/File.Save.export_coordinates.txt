@@ -1,0 +1,13 @@
+exports localization data in .txt, .csv, .xls format. 
+The user can choose which localization attributes to export 
+and if to export all localizations or filtered localizations.
+
+gui:Parameters:
+gui:format Output format
+gui:grouped If all localizations are exported, you can define here if 
+to export grouped or ungrouped localizations. 
+gui:outputfields Selected output fields that are exported
+gui:savevisible "all": export all localizations. \n 
+"visible in ROI": export only filtered localizations that are currently displayed
+and inside the ROI, or in the Field of view if no ROI is defined. 
+gui:selectoutputfields Define which localization properties (fields) are exported.

@@ -175,9 +175,14 @@ plot(ddxplot)
 hold on
 plot(dx,'k','LineWidth',1.5);
 plot(sdx,'k:')
-sx=(max(dx)-min(dx));
-ylim([min(dx)-sx/2 max(dx)+sx/2])
-axis tight
+% sx=(max(dx)-min(dx));
+% ylim([min(dx)-sx max(dx)+sx])
+lims=quantile(ddxplot(:), [0.05,0.95]);
+ylim([max(lims(1),-100) min(lims(2),100)])
+ylabel('displacement (nm)')
+xlabel('time block')
+title('redundant displacements x')
+% axis tight
 
 subplot(1,2,2)
 hold off
@@ -185,9 +190,15 @@ plot(ddyplot)
 hold on
 plot(dy,'k','LineWidth',1.5);
 plot(sdy,'k:')
-sy=(max(dx)-min(dx));
-ylim([min(dy)-sy/2 max(dy)+sy/2])
-axis tight
+ylabel('displacement (nm)')
+xlabel('time block')
+title('redundant displacements y')
+
+lims=quantile(ddyplot(:), [0.01,0.99]);
+ylim([max(lims(1),-100) min(lims(2),100)])
+% sy=(max(dx)-min(dx));
+% ylim([min(dy)-sy/2 max(dy)+sy/2])
+% axis tight
 
 if par.drift_reference
     dxtt=dxtt-dx(end-1);
@@ -208,11 +219,12 @@ driftinfo.binframes=cfit1;
 initaxis(par.resultstabgroup,['dxy/frame final' rn]);
 
 hold off
-plot(cfit1,dx,'x',framesall,dxtt,'k')
+plot(cfit1,dx,'bx',framesall,dxtt,'k')
 hold on
-plot(cfit1,dy,'o',framesall,dytt,'r')
+plot(cfit1,dy,'ro',framesall,dytt,'r')
 xlabel('frame')
 ylabel('dx, dy (nm)')
+legend('dx: smooth','dx','dy smooth','dy')
 drawnow
 
 initaxis(par.resultstabgroup,['dx vs dy' rn]);
@@ -279,10 +291,15 @@ for k=1:dnumframesh-1
     
     if isfield(par,'showresults') && par.showresults && toc(timerh)>0.5
         timerh=tic;
+        soim=size(outim);
         fhold=imagesc(outim,'Parent',results_ax1);
+        plotlabels(results_ax1,soim)
+        axis(results_ax1,'off')
         imagesc(outimnorm,'Parent',results_ax3)
-        results_ax3.Title.String=num2str(k/dnumframesh+(l-k)/dnumframesh^2);
-        results_ax1.Title.String=num2str(k/dnumframesh+(l-k)/dnumframesh^2);
+        plotlabels(results_ax3,soim)
+        axis(results_ax3,'off')
+        results_ax3.Title.String=['Progress: ' num2str((k/dnumframesh+(l-k)/dnumframesh^2)*100,'%2.1f') '%'];
+        results_ax1.Title.String=['Progress: ' num2str((k/dnumframesh+(l-k)/dnumframesh^2)*100,'%2.1f') '%'];
         drawnow
         if SMAP_stopnow
             error('execution stopped by user');
@@ -304,8 +321,12 @@ imfm=filter2(ones(5)/5^2,imfm); %filter a little for better maximum search
 mxh=mxh+cent(1)-1;
 myh=myh+cent(1)-1;
 %now determine maximum
+% x0,y0,A,b,V11,V12,V22
+lb=[0 0 0 0 .05 -0.7 0.05];
+ub=[2*window 2*window inf inf 20 0.7 20];
+
 smallframe=double(img(mxh-window:mxh+window,myh-window:myh+window));
-[fitout,outim,outimnorm,ci]=my2Dgaussfit(smallframe,[window+1,window+1,inten,min(smallframe(:)),max(2,3/window),max(2,3/window),0],3);
+[fitout,outim,outimnorm,ci]=my2Dgaussfit(smallframe,[window+1,window+1,inten,min(smallframe(:)),max(2,3/window),max(2,3/window),0],3,lb,ub);
 x=mxh-window+fitout(1)-1;y=myh-window+fitout(2)-1;
 dc=ci(:,2)-ci(:,1);
 errx=dc(1);erry=dc(2);
@@ -360,4 +381,11 @@ toc
 tic
 fft2(imager,nfftexp,nfftexp);
 toc
+end
+
+function  plotlabels(h,soim)
+    text(h,1,1,'cross-correlation','Color','w')
+    text(h,1,soim(1),'fit','Color','w')
+    text(h,soim(1)*.85,1,'start','Color','w')
+    text(h,soim(1)*.85,soim(1),'residuals','Color','w')
 end

@@ -12,7 +12,13 @@ classdef MathParser<interfaces.DialogProcessor
         end
         function initGui(obj)
             if exist(obj.historyfile,'file')
-                obj.equationhistory=readtable(obj.historyfile,'Delimiter',',');
+                try
+                    obj.equationhistory=readtable(obj.historyfile,'Delimiter',',');
+                catch
+                    disp('could not read Mathparser history. Delete the file settings/temp/MathParser.txt');
+                    tt=struct('resultfield',{{''}},'equation',{{''}});
+                    obj.equationhistory=struct2table(tt);
+                end
 %                 p=obj.getGuiParameters;
                 obj.guihandles.resultfieldh.String=obj.equationhistory.resultfield;
                 obj.guihandles.equationh.String=obj.equationhistory.equation;
@@ -21,6 +27,7 @@ classdef MathParser<interfaces.DialogProcessor
                 tt=struct('resultfield',{{''}},'equation',{{''}});
                 obj.equationhistory=struct2table(tt);
             end
+            obj.historyfile=[obj.getPar('SettingsDirectory') filesep 'temp' filesep 'MathParser.txt'];
         end
         
         function out=run(obj,p)

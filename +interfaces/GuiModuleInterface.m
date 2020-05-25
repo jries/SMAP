@@ -107,9 +107,11 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 if isstruct(obj.children)
                     guichildren=fieldnames(obj.children);
                     for k=1:length(guichildren)
-                        ph=obj.children.(guichildren{k}).getGuiParameters(true,onlyedit);
+                        if isvalid(obj.children.(guichildren{k}))
+                            ph=obj.children.(guichildren{k}).getGuiParameters(true,onlyedit);
                         if ~isempty(ph)
                             pout.children.(guichildren{k})=ph;
+                        end
                         end
                     end
                 end
@@ -154,7 +156,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
         function switchvisible(obj,control,data,p,callbackfnc)
             val=control.Value;
             for k=1:length(p)
-                if p(k).value==val
+                if any(p(k).value==val)
                     off=p(k).off;
                     for l=1:length(off)
                          if isfield(obj.guihandles,off{l})
@@ -338,14 +340,14 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 fn=fieldnames(p.children);
                 for k=1:length(fn)
                     if isfield(obj.children,fn{k})
-                    child=obj.children.(fn{k});
-                    pchild=p.children.(fn{k});
-                    try
-                    child.setGuiParameters(pchild,true,setmenulist);
-                    catch err
-                        child
-                        err
-                    end
+                        child=obj.children.(fn{k});
+                        pchild=p.children.(fn{k});
+                        try
+                            child.setGuiParameters(pchild,true,setmenulist);
+                        catch err
+                            child
+                            err
+                        end
                     
                     end
                 end
@@ -410,7 +412,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             % resizes all GUI and children GUIs
             % usually called from figure.SizeChangeCallback (or similar)
             
-            if isfield(obj,'guihandles') && ~isempty(obj.guihandles)
+            if myisfield(obj,'guihandles') && ~isempty(obj.guihandles)
             fn=fieldnames(obj.guihandles);
             for k=1:length(fn)
                 try
@@ -474,7 +476,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             end        
         end 
 
-       function makeGui(obj,guidef)
+       function anyoptional=makeGui(obj,guidef)
            % renders the GUI according to guidef, then calls obj.initGui.
            % if guidef not passed on: calls obj.guidef (that is the usual
            % way of defining a GUI)
@@ -533,6 +535,15 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 allFields=fieldnames(guidef);
                 anyoptional=false;
                 synchronizeguistate=obj.getPar('synchronizeguistate');
+                
+                %help file
+                pp=obj.pluginpath;
+                if iscell(pp) && length(pp)==3
+                    helpfile=[pp{1} '.' pp{2} '.' pp{3} '.txt'];
+                else
+                    helpfile='';
+                end
+                
                 for k=1:length(allFields) 
                     thisField=guidef.(allFields{k});
                     if strcmp(allFields{k},'syncParameters')
@@ -545,6 +556,8 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         obj.plugininfo=thisField;
                     elseif strcmp(allFields{k},'locselector')
                         %do nothing here
+                    elseif strcmp(allFields{k},'helpfile')
+                        helpfile=thisField;
                     elseif isstruct(thisField) && ~isempty(obj.handle) %results name
                         if ~isfield(thisField,'object') || ~isfield(thisField.object,'Style')
                             allFields{k}
@@ -604,6 +617,10 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                             parenth=obj.handle;
                         end
                         hg=uicontrol(parenth,h);
+                        %bug: sometimes string does not get passed on
+                        if isfield(h,'String')
+                            hg.String=h.String;
+                        end
                         
                         obj.guihandles.(allFields{k})=hg;
                         thisField=myrmfield(thisField,{'Width','Height','position','object','load'});
@@ -631,8 +648,30 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                     end
                        
                 end 
-            
+                % read help file and write tool tips 
+                settingsdir=obj.getPar('SettingsDirectory');
+                helpfilep=[fileparts(settingsdir) filesep 'Documentation' filesep 'help' filesep helpfile];
+                if strcmp(helpfilep(1),filesep)
+                    helpfilep(1)=[];
+                end
+                maxwidth=60;             
+                if ~isempty(helpfile) && exist(helpfilep,'file')
+                    [description,tooltips,interpreter]=parsehelpfile(helpfilep);
+                    obj.plugininfo.description=(description);
+                    obj.plugininfo.descriptioninterpreter=interpreter;
+                    fnt=fieldnames(tooltips);
+                    for tt=1:length(fnt)
+                        if isfield(obj.guihandles,fnt{tt})
+                            strtt=tooltips.(fnt{tt});
+                            strWrapped=mytextwrap(strtt,maxwidth,10);
+                            obj.guihandles.(fnt{tt}).Tooltip=sprintf(strWrapped);
+                        end
+                    end
+                else
+%                     writehelpfile(helpfile,guidef)
+                end          
             end
+              
             obj.initGui; %exchanged 
             obj.setSyncParameters;
             obj.initializeGuiParameters;
@@ -719,6 +758,99 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             end
             obj.plugininfo=info;
        end
+       
+       function setnormalizedpositionunits(obj)
+          fn=fieldnames(obj.guihandles);
+          for k=1:length(fn)
+              if isprop(obj.guihandles.(fn{k}),'Units')
+                  obj.guihandles.(fn{k}).Units='normalized';
+              end
+          end
+          if isempty(obj.children)
+              return
+          end
+          fn=fieldnames(obj.children);
+          for k=1:length(fn)
+              obj.children.(fn{k}).setnormalizedpositionunits;
+          end
+       end
+       
+       function makeinfobutton(obj,position)
+           if nargin<2
+               position='sw';
+           end
+           h=obj.handle;
+           units=h.Units;
+           h.Units='pixels';
+           if isnumeric(position)
+               pos(1:2)=position(1:2);
+               pos(3:4)=[20 20];
+           else
+               switch position
+                   case 'sw' %right lower
+                       pos=[h.Position(3)-17,1,15,20];
+                   case 'nw' %right upper
+                       pos=[h.Position(3)-17,h.Position(4)-21,15,20];
+                   case 'guiselector'
+                       pos=[h.Position(3)-32,h.Position(4)-21,15,20];
+               end
+           end
+           obj.guihandles.infobutton=uicontrol(h,'Style','pushbutton','String','i',...
+               'Position',pos,'Callback',@obj.showinfo_callback);
+           h.Units=units;
+           obj.guihandles.infobutton.Tooltip='Show information for this plugin';
+       end
+       function showinfo_callback(obj,a,b)
+           obj.showinfo;
+       end
+       function showinfo(obj, hp)
+%         warnid='MATLAB:strrep:InvalidInputType';
+%         warnstruct=warning('off',warnid);
+%         obj.guihandles.showresults.Value=1;
+%         showresults_callback(obj.guihandles.showresults,0,obj)
+%         ax=obj.initaxis('Info');
+%         hp=uifigure;
+          if nargin<2
+            hp=figure('MenuBar','none','Toolbar','figure');
+            hp.Color='w';
+            pos=[0.03,0.03,.9,.95];
+            fs=obj.guiPar.fontsize;
+          else
+              pos=[0 0 .7 1];
+              fs=12;
+
+          end
+%         hp=ax.Parent;
+        
+%         delete(ax);
+
+             %  htxt=uicontrol(hp,'Style','text','Units','normalized','Position',[0,0,.9,1],...
+        %      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100); 
+        td=obj.info.description;
+         if ~iscell(td)
+          txt=strrep(td,char(9),' ');
+          txt=strrep(txt,'\n',newline);
+         else
+             txt=td;
+         end
+         
+         if isfield(obj.plugininfo,'descriptioninterpreter')
+             interpreter=obj.plugininfo.descriptioninterpreter; 
+         else
+             interpreter='none';
+         end
+         
+          htxt=annotation(hp,'textbox',pos,...
+             'FontSize',fs,'HorizontalAlignment','left',...
+             'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
+             'String',txt,'Interpreter',interpreter);
+          htxt.Position=pos;
+%          htxt.String=txt;
+        %   htxt.Position=[0 0 1 1];
+%           warning(warnstruct);
+          h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.9,0.0,.1,.05],'String','Edit','Callback',{@edit_callback,obj});
+%           h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
+        end
 
     end
     
@@ -810,6 +942,8 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
            obj.setPar(field,p)
            end
       end
+      
+
 %        function executecallback(obj,callback)
 %            if ~isstruct(obj.guihandles)
 %                return
@@ -829,6 +963,31 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
    end
 end
 
+function edit_callback(a,b,obj)
+basedir=fileparts(obj.getPar('SettingsDirectory'));
+outdir=[basedir filesep 'Documentation' filesep 'help' filesep];
+if isempty(basedir)
+    outdir(1)=[];
+end
+g=obj.guidef;
+if isfield(g,'helpfile')
+    helpfile=g.helpfile;
+else
+    pp=obj.pluginpath;
+    if iscell(pp) && length(pp)==3
+        helpfile=[pp{1} '.' pp{2} '.' pp{3} '.txt'];
+    else
+        disp('this is not a plugin')
+        return
+    end
+end
+
+if ~exist([outdir helpfile],'file')
+    writehelpfile([outdir helpfile],obj.guidef);
+end
+open([outdir helpfile])
+
+end
 
 function pres=fieldvisibiltyparser(args)
 % fields{end+1}='all';

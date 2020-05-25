@@ -22,7 +22,7 @@ t=tic;
             t=tic;
         end
         if isfield(p,'PSF2D') && p.PSF2D
-            zst=500/p.dz*[-1 1];
+            zst=min(round(size(teststack,3)*0.4),500/p.dz)*[-1 1];
         else
             zst=0;
         end
@@ -49,6 +49,9 @@ t=tic;
             zind=3;
             photind=4;
         else
+            if max(fitstack(:))<10
+                fitstack=fitstack*1000+1;
+            end
             [P,CRLB, LL] =mleFit_LM(fitstack,fitmode,iterations,coeffh,0,1,zst);
             zind=5;
             photind=3;

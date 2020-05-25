@@ -1,12 +1,12 @@
 classdef NPCsegmentCleanup<interfaces.SEEvaluationProcessor
 %     Evaluates properties of the structure (number of localizations, size
-%     of radius of ring, localizations inside or outside of ring,… to
+%     of radius of ring, localizations inside or outside of ring,??? to
 %     determine if an automatically segmented structure resembles a nuclear
 %     pore complex. Used to clean up automatic segmentation. See:
-%     Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński,
+%     Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cie??li??ski,
 %     Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid,
-%     et al. “Nuclear Pores as Versatile Reference Standards for
-%     Quantitative Superresolution Microscopy.” BioRxiv, March 20, 2019,
+%     et al. ???Nuclear Pores as Versatile Reference Standards for
+%     Quantitative Superresolution Microscopy.??? BioRxiv, March 20, 2019,
 %     582668. https://doi.org/10.1101/582668.
     properties
         savedevals
@@ -105,7 +105,7 @@ pard.maxPSF.Width=.5;
 
 pard.plugininfo.type='ROI_Evaluate';
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer1_','layer2_','se_sitepixelsize'};
-pard.plugininfo.description=' Evaluates properties of the structure (number of localizations, size of radius of ring, localizations inside or outside of ring,… to determine if an automatically segmented structure resembles a nuclear pore complex. Used to clean up automatic segmentation. See: Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards for Quantitative Superresolution Microscopy.” BioRxiv, March 20, 2019, 582668. https://doi.org/10.1101/582668. ';
+pard.plugininfo.description=' Evaluates properties of the structure (number of localizations, size of radius of ring, localizations inside or outside of ring,??? to determine if an automatically segmented structure resembles a nuclear pore complex. Used to clean up automatic segmentation. See: Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cie??li??ski, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid, et al. ???Nuclear Pores as Versatile Reference Standards for Quantitative Superresolution Microscopy.??? BioRxiv, March 20, 2019, 582668. https://doi.org/10.1101/582668. ';
 
 end
 
@@ -117,22 +117,27 @@ dR=p.dR;
 
 
 
+locs=obj.getLocs({'xnm','ynm','PSFxnm'},'layer',1,'size',p.se_siteroi(1)/2);
+if isempty(locs.xnm)
+    obj.site.annotation.use=false;
+
+out.R0=0;out.inside=1;out.outside=1;out.inring=0;
+out.sizeav=0;
+out.locs=0;
+    return
+end
 %2D fit
 
 
 if p.center %directly center to do furhter analysis on centered pore
     extraspace=1.2;
-    locs=obj.getLocs({'xnm','ynm'},'layer',1,'size',p.se_siteroi(1)/2*extraspace);
-    [x0,y0,R0,resnorm]=fitposring(locs.xnm,locs.ynm,R);
+    locsc=obj.getLocs({'xnm','ynm'},'layer',1,'size',p.se_siteroi(1)/2*extraspace);
+    [x0,y0,R0,resnorm]=fitposring(locsc.xnm,locsc.ynm,R);
     obj.site.pos(1:2)=[x0, y0];
 
 %     obj.redraw;
 end
 
-locs=obj.getLocs({'xnm','ynm','PSFxnm'},'layer',1,'size',p.se_siteroi(1)/2);
-if isempty(locs.xnm)
-    return
-end
 
     [x0,y0,R0,resnorm]=fitposring(locs.xnm,locs.ynm,R);
 

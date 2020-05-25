@@ -1,0 +1,21 @@
+ApplyTransform applies transformation to localizations or 
+associated Tif images. Transformations need to be calculated previously with 
+the Process.Register.RegisterLocalizations plugin.
+
+gui:Parameters:
+gui:Tfile Transformation file
+gui:addchannel=addchannelc
+gui:addchannelc For the transformed localizations add a number to 
+the channel value. This allows distinguishing untransformed and transformed
+localizations.
+gui:allfiles Apply transformation to all files.
+gui:datapart Define what to transform.
+gui:dataselect Which of several loaded files should be transformed
+gui:loadbutton load transformation file
+gui:setchannel Set channel according to the localizations being reference or target
+gui:texta=dataselect
+gui:textb=datapart
+gui:textc=transformwhat
+gui:transformwhat If to transform only localizations or also associated diffraction
+limited tiff files.
+gui:transformz Also transform z-coordinates?

@@ -11,6 +11,8 @@ switch mode
         fh='geomean';
     case 'std'
         fh=@std;
+    case 'robustmean'
+        fh=@robustMean;
     otherwise
         disp('bindata.m: mode not known. try parameter as function handle.')
         fh=mode;
@@ -28,7 +30,11 @@ xn=(xx(1:end-1)+xx(2:end))/2;
 xn=[-inf xn inf];
 yy=zeros(size(xx));
 for k=1:length(xx)
-    ind=x>xn(k)&x<xn(k+1);
+    ind=x>=xn(k)&x<xn(k+1);
+    try
     yy(k)=fh(y(ind));
+    catch
+        yy(k)=NaN;
+    end
 end
     

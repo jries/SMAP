@@ -1,0 +1,38 @@
+Assigns identity (color) to localizations based on intensities in both 
+camerachannels. For this, for all localizations their intensity in camera channel 1
+is plotted against their intensity in camera channel 2.
+
+In the resulting plot, the user defines polynomial regions for each color.
+
+The color number is then saved in the channel field of the localizations. 
+Localizatons outside the regions have a color number of 0.
+
+ROIs can be saved for later use. ROIs saved in settings/temp/AssignColorRois.mat
+are automatically loaded.
+
+More information can be found in: Hoess et al. 
+“Dual-Color and 3D Super-Resolution Microscopy of Multi-Protein Assemblies.”
+ https://doi.org/10.1007/978-1-4939-7759-8_14.
+
+
+gui:Parameters:
+gui:assignfield1 field that carries information for channel 1 (reference)
+gui:assignfield2 field that carries information for channel 2 (target)
+gui:ch1roi Define ROI for color 1 in the intensity plot
+gui:ch1t=ch1roi
+gui:ch2roi Define ROI for color 2 in the intensity plot
+gui:ch2t=ch2roi
+gui:chN Define ROI for an additional color in the intensity plot. Define 
+the number of the channel here.
+gui:chNroi Number of the additional color number.
+gui:chNt=chN 
+gui:deleterois Delete previously drawn ROIs
+gui:loadbutton Load ROIs that were saved previously
+gui:logscale Display the intensity plot with a logarithmic scale. This helps in
+better visualizing the amount of overlap (cross-talk) among the colors.
+gui:savebutton Save current ROIs to be used later
+gui:setdefault Look for fields in the localizaton attributes that contain
+dual-channel intensity information.
+gui:showrois Show currently selected ROIs.
+gui:t1 
+gui:usegrouped Plot the intensities based on grouped localizations

@@ -49,7 +49,7 @@ classdef RegisterLocs2<interfaces.DialogProcessor
             end
 %             end
             fv=p.dataselect.Value;
-            obj.locData.files.file(fv).transform=obj.transformation;
+            obj.locData.files.file(fv).transformation=obj.transformation;
             if obj.processorgui==false %run from WF
                 f=obj.locData.files.file(fv).name;
                 fn=strrep(f,'_sml.mat','_T.mat');
@@ -61,7 +61,7 @@ classdef RegisterLocs2<interfaces.DialogProcessor
             out=[];
         end
         function pard=guidef(obj)
-            pard=guidef;
+            pard=guidef(obj);
         end
         function makeGui(obj)
             makeGui@interfaces.DialogProcessor(obj);
@@ -88,6 +88,11 @@ classdef RegisterLocs2<interfaces.DialogProcessor
                     save([path f],'transformation');
                     obj.setPar('transformationfile',[path f]);
                 end 
+                if obj.getSingleGuiParameter('updatesmlfile')
+                    filenumber=obj.getSingleGuiParameter('dataselect').Value;
+                    obj.locData.files.file(filenumber).transformation=obj.transformation;
+                    obj.locData.savelocs(obj.locData.files.file(filenumber).name,[],[],[],[],filenumber);
+                end
             end
         end
         function browse_callback(obj,a,b)
@@ -158,7 +163,7 @@ end
 
 
 
-function pard=guidef
+function pard=guidef(obj)
 pard.texta.object=struct('String','target:','Style','text');
 pard.texta.position=[2,2.05];
 % pard.textb.object=struct('String','reference','Style','text');
@@ -166,10 +171,11 @@ pard.texta.position=[2,2.05];
 pard.dataselect.object=struct('Style','popupmenu','String','File');
 pard.dataselect.position=[2,1];
 pard.dataselect.object.TooltipString='file for target localizations';
+pard.dataselect.Optional=true;
 
 pard.allfiles.object=struct('String','use all files','Style','checkbox');
 pard.allfiles.position=[3,1];
-
+pard.allfiles.Optional=true;
 % 
 % pard.refselect.object=struct('Style','popupmenu','String','File');
 % pard.refselect.position=[2,1];
@@ -187,56 +193,70 @@ pard.targetmirror.object=struct('Style','popupmenu','String','no mirror|left-rig
 pard.targetmirror.position=[4,2];
 pard.targetmirror.object.TooltipString='mirror target part';
 
-pard.uselayers.object=struct('Style','checkbox','String','use layers');
+p(1).value=0; p(1).on={}; p(1).off={'texttl','targetlayer','texttr','reflayer'};
+p(2).value=1; p(2).on=p(1).off; p(2).off={};
+pard.uselayers.object=struct('Style','checkbox','String','use layers','Value',1,'Callback',{{@obj.switchvisible,p}});
 pard.uselayers.position=[4,1];
 pard.uselayers.object.TooltipString='if checked, use only localizations in ROI and selected layer, make sure to select both halves';
-
+pard.uselayers.Optional=true;
 
 pard.texttl.object=struct('String','T:','Style','text');
 pard.texttl.position=[5,1];
 pard.texttl.Width=0.15;
+pard.texttl.Optional=true;
 
-pard.targetlayer.object=struct('Style','popupmenu','String','layer1|layer2|layer3|layer4|','Value',2);
+pard.targetlayer.object=struct('Style','popupmenu','String','layer1|layer2|layer3|layer4|','Value',1);
 pard.targetlayer.position=[5,1.15];
 pard.targetlayer.object.TooltipString='layer';
 pard.targetlayer.Width=0.85;
+pard.targetlayer.Optional=true;
 
 pard.texttr.object=struct('String','R:','Style','text');
 pard.texttr.position=[6,1];
 pard.texttr.Width=0.15;
+pard.texttr.Optional=true;
 
 pard.reflayer.object=struct('Style','popupmenu','String','layer1|layer2|layer3|layer4|');
 pard.reflayer.position=[6,1.15];
 pard.reflayer.object.TooltipString='layer';
 pard.reflayer.Width=0.85;
+pard.reflayer.Optional=true;
 
 pard.Tfile.object=struct('Style','edit','String','settings/temp/temp_T.mat');
 pard.Tfile.position=[8,1];
 pard.Tfile.Width=3;
 pard.Tfile.object.TooltipString='default file for transformation matrix. You can select new file after transformation has been calculated.';
+pard.Tfile.Optional=true;
 
 pard.browse.object=struct('Style','pushbutton','String','load T');
 pard.browse.position=[8,4];
 pard.browse.object.TooltipString='Save the newly calculated transformation matrix.';
+pard.browse.Optional=true;
 
 pard.parameters.object=struct('Style','pushbutton','String','Parameters');
 pard.parameters.position=[2.5,4];
 pard.parameters.object.TooltipString='additional parameters';
 pard.parameters.Height=1.5;
+pard.parameters.Optional=true;
 
 pard.texttt.object=struct('String','Transformation:','Style','text');
 pard.texttt.position=[2,3];
-pard.transform.object=struct('Style','popupmenu','String','projective|affine|similarity|polynomial|lwm|pwl');
+
+p(1).value=[1 2 3 6]; p(1).on={}; p(1).off={'transformparam'};
+p(2).value=[4 5]; p(2).on=p(1).off; p(2).off={};
+
+pard.transform.object=struct('Style','popupmenu','String','projective|affine|similarity|polynomial|lwm|pwl','Callback',{{@obj.switchvisible,p}});
 pard.transform.position=[3,3];
 pard.transform.object.TooltipString='select one of Matlabs transformations. Not all might work.';
 
-pard.transformparam.object=struct('Style','edit','String','3');
+pard.transformparam.object=struct('Style','edit','String','3','Visible','off');
 pard.transformparam.position=[4,3];
 pard.transformparam.object.TooltipString='Parameter for lwm and polynomial';
 
 pard.useT.object=struct('Style','checkbox','String','use inital T');
 pard.useT.position=[4,4];
 pard.useT.object.TooltipString='';
+pard.useT.Optional=true;
 pard.Width=2;
 
 % pard.saveoldformat.object=struct('Style','checkbox','String','old  format');
@@ -248,6 +268,12 @@ pard.save.object=struct('Style','pushbutton','String','save T');
 pard.save.position=[6.5,4];
 pard.save.object.TooltipString='';
 pard.save.Height=1.5;
+
+pard.updatesmlfile.object=struct('Style','checkbox','String','add T to current .sml','Value',1);
+pard.updatesmlfile.position=[6,2.5];
+pard.updatesmlfile.object.TooltipString='If checked, the transformation file is appended to the .sml file and saved there as well when you click save T';
+pard.updatesmlfile.Width=1.5;
+pard.updatesmlfile.Optional=true;
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 pard.inputParameters={'currentfileinfo'};

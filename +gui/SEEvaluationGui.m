@@ -39,6 +39,14 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             obj.guihandles.preview.Callback={@preview_callback,obj};
             addmodule(obj,'generalStatistics');
             
+            % Yu-Le added
+            flagDirExist = exist('../SMLMModelFit','dir');
+            if flagDirExist==0
+                addpath(genpath('../ries-private'))
+            else
+                addpath(genpath('../SMLMModelFit'))
+            end
+            
         end 
         function evaluate(obj,site)
             evaluatesite(obj,site);
@@ -47,28 +55,34 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             obj.SE.processors.preview.redrawall(true);
         end
         
-        function setGuiParameters(obj,p,setchildren)
-            setGuiParameters@interfaces.SEProcessor(obj,p,setchildren);
-            obj.guihandles.modules.Data={};
-            
-            if isfield(p,'children')
-                modules=fieldnames(p.children);
-                for k=1:length(modules);
-                    mh=modules{k};
-                    while mh(end)>'0'&&mh(end)<'9'
-                        mh=mh(1:end-1);
-                    end
-                    par=p.children.(modules{k});
-                    addmodule(obj,mh,par);
-                end
+        function setGuiParameters(obj,p,setchildren,setmenulist)
 
-                %set on / off
-                for k=1:length(modules)
-                    if isfield(p,'modules')&&~isempty(find(strcmpi(p.modules.Data(:,2),modules{k}),1))
-                        val=p.modules.Data{k,1};
-                        obj.guihandles.modules.Data{k,1}=val; 
+            rgp=obj.getPar('ROI_restorparamters');
+            if isempty(rgp)|| rgp
+                setGuiParameters@interfaces.SEProcessor(obj,p,setchildren,setmenulist);
+                obj.guihandles.modules.Data={};
+                if isfield(p,'children')
+                    modules=fieldnames(p.children);
+                    for k=1:length(modules);
+                        mh=modules{k};
+                        while mh(end)>'0'&&mh(end)<'9'
+                            mh=mh(1:end-1);
+                        end
+                        if strcmp(mh(end),'_')
+                            mh=mh(1:end-1);
+                        end
+                        par=p.children.(modules{k});
+                        addmodule(obj,mh,par);
                     end
-                end   
+
+                    %set on / off
+                    for k=1:length(modules)
+                        if isfield(p,'modules')&&~isempty(find(strcmpi(p.modules.Data(:,2),modules{k}),1))
+                            val=p.modules.Data{k,1};
+                            obj.guihandles.modules.Data{k,1}=val; 
+                        end
+                    end   
+                end
             end
             
         end
@@ -87,9 +101,20 @@ function removemodule_callback(a,b,obj)
 if ~isempty(obj.moduleselection)
 removeind=obj.moduleselection(1);
 removename=obj.processors{removeind}.name;
+rproc=obj.processors{removeind};
+rhandle=(rproc.handle);
+% rename guihandles. This is a hack.
+for k=removeind:length(obj.processors)-1
+    obj.guihandles.(['processor' num2str(k)])=obj.guihandles.(['processor' num2str(k+1)]);
+end
+obj.guihandles=myrmfield(obj.guihandles,['processor' num2str(k+1)]);
+
 obj.processors(removeind)=[];
 obj.children=myrmfield(obj.children,removename);
+
+
 obj.guihandles.modules.Data(removeind,:)=[];
+delete(rhandle);
 end
 end
 
@@ -99,12 +124,14 @@ table=obj.guihandles.modules;
 obj.guiPar.Vrim=0;
 sizeparent=get( obj.handle,'Position');
 d=table.Data;
+tunits=table.Units;
+table.Units='pixels';
 pos=table.Position;
-
+table.Units=tunits;
 modulename2=modulename;
 ind=2;
 while sum(sum(strcmpi(d,modulename2)))
-    modulename2=[modulename num2str(ind)];
+    modulename2=[modulename '_' num2str(ind)];
     ind=ind+1;
 end
     
@@ -193,10 +220,10 @@ pard.addmodule.object=struct('Style','pushbutton','String','add module');
 pard.addmodule.position=[1,1];
 pard.addmodule.Width=.9;
 
-pard.removemodule.object=struct('Style','pushbutton','String','remove');
+pard.removemodule.object=struct('Style','pushbutton','String','remove ');
 pard.removemodule.position=[1,1.9];
-pard.removemodule.Width=.6;
-
+pard.removemodule.Width=0.6;
+% 
 pard.preview.object=struct('Style','pushbutton','String','preview');
 pard.preview.position=[11,1];
 

@@ -204,6 +204,9 @@ classdef LocSaver<interfaces.WorkflowModule
                 obj.locDatatemp.files.file.raw(1).image=average;
                 obj.locDatatemp.files.file.raw(1).frame=0;
                 transformation=obj.getPar('loc_globaltransform');
+                if isempty(transformation)
+                    transformation=obj.getPar('loc_globaltransform3dcal'); %from spline fitter, only use if none selected in peak finder
+                end
                 if ~isempty(transformation)
                     obj.locDatatemp.files.file.transformation=transformation;
                 end

@@ -85,7 +85,7 @@ tcam.ColumnEditable=[ true false true];
 
 hc=uicontextmenu(obj.handle);
 hui=uimenu('Parent',hc,'Label','add','Callback',{@menu_callback,obj});
-hui=uimenu('Parent',hc,'Label','remove','Callback',{@menu_callback,obj});
+hui=uimenu('Parent',hc,'Label','remove ','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','move up','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','move down','Callback',{@menu_callback,obj});
 hui=uimenu('Parent',hc,'Label','rename','Callback',{@menu_callback,obj});
@@ -231,6 +231,9 @@ pardat=obj.cameras(obj.currentcam).par;
 if size(pardat,1)<13
     pardat(13,:)={'roimode','fix','none','select',[],'',[]};
 end
+if size(pardat,1)<14
+    pardat(14,:)={'correctionfile','fix','none','select',[],'',[]};
+end
 obj.guihandles.partable.Data=pardat;
 
 obj.guihandles.statelist.Value=obj.currentstate;
@@ -264,12 +267,12 @@ showpartable(obj)
 end
 
 function t=intpartable
-t=cell(12,7);
-parnames={'EMon','cam_pixelsize_um','conversion','emgain','offset','roi','exposure','timediff','comment','numberOfFrames','Width','Height','roimode'};
-mode={'fix','fix','fix','fix','fix','fix','fix','fix','fix','metadata','metadata','metadata','fix'};
-default={'1','0.1','1','100','100','','1','1','settings not initialized','0','0','0','none'};
-conversion={'str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2num(X)','str2double(X)','str2double(X)','','str2double(X)','str2double(X)','str2double(X)',''};
-metafield={'select','select','select','select','select','select','select','select','select','select','select','select','select','select'};
+t=cell(14,7);
+parnames={'EMon','cam_pixelsize_um','conversion','emgain','offset','roi','exposure','timediff','comment','numberOfFrames','Width','Height','roimode','correctionfile'};
+mode={'fix','fix','fix','fix','fix','fix','fix','fix','fix','metadata','metadata','metadata','fix','fix'};
+default={'1','0.1','1','100','100','','1','1','settings not initialized','0','0','0','none',''};
+conversion={'str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2num(X)','str2double(X)','str2double(X)','','str2double(X)','str2double(X)','str2double(X)','',''};
+metafield={'select','select','select','select','select','select','select','select','select','select','select','select','select','select','select'};
 
 for k=1:size(t,1)
     t{k,1}=parnames{k};
@@ -457,7 +460,7 @@ if nargin<4
     label=object.Label;
 end
 switch label
-    case 'remove'
+    case 'remove '
         if isempty(obj.lastcamtableselected)
             return
         end

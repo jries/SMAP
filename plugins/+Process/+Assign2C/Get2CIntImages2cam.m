@@ -18,11 +18,22 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
                 obj.figure=figure;
             end
             
+            %if no image is loaded: use information on image location from locdata
+            if isempty(p.tiffiletarget)
+                p.tiffiletarget=obj.locData.files.file(1).info.imagefile;
+            end
+            settingsdir=obj.getPar('SettingsDirectory');
             f=obj.figure;
             f.Visible='on';
-            wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
-            wffile='settings/workflows/get2CIntensityImagesWF2';
-            wffile='settings/workflows/get2CIntensityImagesWF3';
+%             wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
+%             wffile='settings/workflows/get2CIntensityImagesWF2';
+            if p.evalref && p.evaltarget && ( isempty(p.tiffileref) || strcmp(p.tiffileref,p.tiffiletarget))  %both channels on one chip
+                wffile=[settingsdir filesep 'workflows' filesep 'get2CIntensityImagesWF3_reftarget'];
+                samechip=true;
+            else
+                samechip=false;
+                wffile=[settingsdir filesep 'workflows' filesep 'get2CIntensityImagesWF3'];
+            end
             wf=interfaces.Workflow(f,obj.P);
             wf.attachLocData(obj.locData);
             wf.makeGui;
@@ -45,33 +56,45 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
 
             rsfit=wf.module('EvaluateIntensity_s').children.panel_3.getSingleGuiParameter('roisize_fit');
             p.loc_ROIsize=rsfit+2;
-%             p.loc.fitgrouped=true;
-%             wf.module('RoiCutterWF_groupExt').setGuiParameters(p);
             wf.module('RoiCutterWF').setGuiParameters(p);
-            
             wf.module('Roi_bg').setGuiParameters(p);
-            % now first to ref, then do target. Later: if files are same:
-            % do at the same time to save time...
-            if p.evaltarget
-                obj.setPar('intensity_channel','t')
-                wf.module('TifLoader').addFile(p.tiffiletarget,true);   
+            
+            if samechip
+                wf.module('EvaluateIntensity_s').extension='r';
+                wf.module('EvaluateIntensity_s1').extension='t';
+                wf.module('EvaluateIntensity_s1').setGuiParameters(pe,true);
+                wf.module('RoiCutterWF1').setGuiParameters(p);
+                wf.module('Roi_bg1').setGuiParameters(p);
+                obj.setPar('intensity_channel',[])
+                
+                wf.module('TifLoader').addFile(p.tiffiletarget,true);  
                 wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
-                overwritedefaultcamera(obj)
                 wf.run;
-            end
-            if p.evalref
-                obj.setPar('intensity_channel','r')
-                if isempty(p.tiffileref) %when same, dont select again
-                    p.tiffileref=p.tiffiletarget;
-                    p.mirroremref=p.mirroremtarget;
+            else
+                % now first to ref, then do target. Later: if files are same:
+                % do at the same time to save time...
+                if p.evaltarget
+                    obj.setPar('intensity_channel','t')
+                    wf.module('TifLoader').addFile(p.tiffiletarget,true);   
+                    wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
+                    wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
+                    overwritedefaultcamera(obj)
+                    wf.run;
                 end
-                wf.module('TifLoader').addFile(p.tiffileref,true);   
-                wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
-%                 wf.module('EvaluateIntensity_s').extension='r';
-                overwritedefaultcamera(obj)
-                wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
-                wf.run;
+                if p.evalref
+                    obj.setPar('intensity_channel','r')
+                    if isempty(p.tiffileref) %when same, dont select again
+                        p.tiffileref=p.tiffiletarget;
+                        p.mirroremref=p.mirroremtarget;
+                    end
+                    wf.module('TifLoader').addFile(p.tiffileref,true);   
+                    wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
+    %                 wf.module('EvaluateIntensity_s').extension='r';
+                    overwritedefaultcamera(obj)
+                    wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
+                    wf.run;
+                end
             end
             delete(f);
             fo=strrep(obj.locData.files.file(1).name,'_sml.mat','_dc_sml.mat');
@@ -137,22 +160,23 @@ pard.evaltarget.Width=0.7;
 
 pard.mirroremtarget.object=struct('Style','checkbox','String','EM','Value',1);
 pard.mirroremtarget.position=[1,1.7];
-pard.mirroremtarget.Optional=true;
+% pard.mirroremtarget.Optional=true;
 pard.mirroremtarget.Width=0.6;
 pard.mirroremref.object=struct('Style','checkbox','String','EM','Value',1);
 pard.mirroremref.position=[2,1.7];
-pard.mirroremref.Optional=true;
+% pard.mirroremref.Optional=true;
 pard.mirroremref.Width=0.6;
 
 pard.tiffiletarget.object=struct('Style','edit','String','');
 pard.tiffiletarget.position=[1,2.1];
 pard.tiffiletarget.Width=1.2;
+pard.tiffiletarget.object.Tooltip='leave empty to retrieve position of camera image files from the file.info.imagefile in the localization data object';
 
 pard.loadbuttontiftarget.object=struct('Style','pushbutton','String','load tif','Callback',{{@obj.loadbutton_tif,'tiffiletarget'}});
 pard.loadbuttontiftarget.position=[1,3.3];
 pard.loadbuttontiftarget.Width=0.5;
 
-pard.evalref.object=struct('Style','checkbox','String','reference');
+pard.evalref.object=struct('Style','checkbox','String','reference','Value',1);
 pard.evalref.position=[2,1];
 pard.evalref.Width=0.7;
 

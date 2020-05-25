@@ -40,7 +40,7 @@ classdef Workflow<interfaces.DialogProcessor
             m4 = uimenu(c,'Label','add starter','Callback',{@listmenu_callback,obj});
             m02 = uimenu(c,'Label','move up','Callback',{@listmenu_callback,obj});
             m03 = uimenu(c,'Label','move down','Callback',{@listmenu_callback,obj});
-            m1 = uimenu(c,'Label','remove','Callback',{@listmenu_callback,obj});
+            m1 = uimenu(c,'Label','remove ','Callback',{@listmenu_callback,obj});
             m2 = uimenu(c,'Label','rename','Callback',{@listmenu_callback,obj});
             m3 = uimenu(c,'Label','replace','Callback',{@listmenu_callback,obj});
             m4 = uimenu(c,'Label','clear workflow','Callback',{@listmenu_callback,obj});
@@ -439,15 +439,20 @@ classdef Workflow<interfaces.DialogProcessor
         function showinfo(obj,edit)           
             txt=obj.description;
             if isempty(obj.infofigure)||~isvalid(obj.infofigure)
-                obj.infofigure=figure;
+                obj.infofigure=figure('MenuBar','none');
             end
             delete(obj.infofigure.Children);
             f=obj.infofigure;
-            he=uicontrol('Style','edit','units','normalized','Position',[0 0.65 1 .35],'String',txt,'Max',100,'Parent',f,'HorizontalAlignment','left');
-            hplugin=uicontrol('Style','edit','units','normalized','Position',[0 0.1 1 .55],'String',txt,'Max',100,'Parent',f,'HorizontalAlignment','left');
-            b2=uicontrol('Style','pushbutton','units','normalized','Position',[0.75 0 .25 .1],'String','Cancel','Callback',{@buttoncallback},'Parent',f);
+            pluginlist=getFieldAsVector(obj.modules,'tag');
+            he=uicontrol('Style','edit','units','normalized','Position',[0 0.75 1 .25],'String',txt,'Max',100,'Parent',f,'HorizontalAlignment','left');
+           
+%            
+            h.pluginlist=uicontrol('Style','listbox','units','normalized','Position',[0 0. .25 .75],'String',pluginlist,'Parent',f,...
+                'Callback',{@helpplugin,obj});
+%             hplugin=uicontrol('Style','edit','units','normalized','Position',[0 0.1 1 .55],'String',txt,'Max',100,'Parent',f,'HorizontalAlignment','left');
+%             b2=uicontrol('Style','pushbutton','units','normalized','Position',[0.75 0 .25 .1],'String','Cancel','Callback',{@buttoncallback},'Parent',f);
             if edit
-                b1=uicontrol('Style','pushbutton','units','normalized','Position',[0 0 .25 .1],'String','Save changes','Parent',f,'Callback',{@buttoncallback});
+                b1=uicontrol('Style','pushbutton','units','normalized','Position',[0.9 0.75 .1 .05],'String','Save ','Parent',f,'Callback',{@buttoncallback});
             else
 %                 he.Enable='inactive';
             end    
@@ -459,11 +464,11 @@ classdef Workflow<interfaces.DialogProcessor
                 end
                 close(f)
             end  
-            for k=1:length(obj.modules)
-                info=obj.modules{k}.module.info;
-                txtp{k}=[num2str(k) '. ' info.name ': ' info.description];
-            end
-            hplugin.String=txtp;
+%             for k=1:length(obj.modules)
+%                 info=obj.modules{k}.module.info;
+%                 txtp{k}=[num2str(k) '. ' info.name ': ' info.description];
+%             end
+%             hplugin.String=txtp;
         end
         
         function fieldvisibility(obj,varargin)
@@ -657,7 +662,7 @@ end
 
 function listmenu_callback(object,b,obj)
 switch object.Label
-    case 'remove'
+    case 'remove '
         idx=obj.guihandles.modulelist.Value;
         delete(obj.modules{idx}.inputpanel);
         delete(obj.modules{idx}.module.handle);
@@ -752,4 +757,16 @@ switch object.Label
 end
 end
 
+
+function helpplugin(a,b,obj)
+selectedp=a.Value;
+mh=obj.modules{selectedp};
+f=obj.infofigure;
+delete(findobj(f,'tag','panel'))
+panel=uipanel(f,'Position',[0.25 0. .75 .75],'Tag','panel');
+panel.BackgroundColor='w';
+mh.module.showinfo(panel);
+
+
+end
 

@@ -81,7 +81,7 @@ if ~isempty(GUIsettings) %write back parameters
         if isfield(GUIsettings,'par')
             GUIsettings=convertparameters(GUIsettings);
         end
-        p.mainGui.setGuiParameters(GUIsettings,true)
+        p.mainGui.setGuiParameters(GUIsettings,true,false)
     end
     if isfield(p,'restoreROI') && p.restoreROI && isfield(GUIsettings.children.guiRender.children.guiFormat,'roiposition')
         proi.roiposition=GUIsettings.children.guiRender.children.guiFormat.roiposition;

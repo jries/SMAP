@@ -10,7 +10,7 @@ function [l,p]=MakeNPCCoordinates
 % [l.x,l.y]=pol2cart(thetaa,radius);
 % l.channel=ones(size(l.x));
 zwobble=0;
-rwobble=0;
+rwobble=10;
 
 ring_angle=13; %deg %Nup107
 ring_angle=20; 

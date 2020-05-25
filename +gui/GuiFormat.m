@@ -69,7 +69,9 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.layeron1=uicontrol('Style','checkbox','Parent',h.hlayers,'String','1','Value',1,'Position',[0,fieldheight,width/3,fieldheight],'FontSize',fontsize);
             h.layeron4=uicontrol('Style','checkbox','Parent',h.hlayers,'String','4','Position',[width/3,0,width/3,fieldheight],'FontSize',fontsize);
             h.sr_layersseparate=uicontrol('Style','checkbox','Parent',h.hlayers,'String','split','Value',0,'Position',[0,2*fieldheight,width*.6,fieldheight],'FontSize',fontsize*.8);
+                h.sr_layersseparate.Tooltip='Plot layers next to each other';
             h.sr_plotcomposite=uicontrol('Style','checkbox','Parent',h.hlayers,'String','comp','Value',0,'Position',[width/2-5,2*fieldheight,width*.6,fieldheight],'FontSize',fontsize*.8);
+                h.sr_plotcomposite.Tooltip='Also plot composite';
             h.sr_plotlayernames=uicontrol('Style','checkbox','Parent',h.hlayers,'String','label','Value',0,'Position',[0,3*fieldheight,width*.6,fieldheight],'FontSize',fontsize*0.8);
             
             
@@ -134,6 +136,10 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.roi3.TooltipString='free roi';
             h.roishow.TooltipString='redraw roi after updating image. Untick if Roi is in the way.';
             h.roidelete.TooltipString='Delete current ROI';
+            h.sr_plotlayernames.Tooltip='Show the name of the respective layer';
+            ltt='Select which layers to show';
+            h.layeron1.Tooltip=ltt; h.layeron2.Tooltip=ltt; h.layeron3.Tooltip=ltt;
+             h.layeron4.Tooltip=ltt; h.layeron5.Tooltip=ltt; h.layeron6.Tooltip=ltt;
             makeGui@interfaces.GuiModuleInterface(obj);
             obj.initGui;
         end
@@ -262,7 +268,7 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
         
         function pixrec_callback(obj,par)
             obj.updateFormatParameters;
-            notify(obj.P,'sr_render')
+%             notify(obj.P,'sr_render')
         end
         
         function pout=roiset(obj,p)
@@ -710,9 +716,9 @@ end
 function resetview_callback(oject,data,obj)
   si=obj.getPar('sr_sizeRecPix');
   if ~isempty(obj.locData.loc)&&~isempty(obj.locData.loc.xnm)
-    mx=myquantilefast(obj.locData.loc.xnm,[0.9995,0.0005],100000);
+    mx=myquantilefast(obj.locData.loc.xnm(~isnan(obj.locData.loc.xnm)),[0.9995,0.0005],100000);
     maxx=mx(1);minx=mx(2);
-    my=myquantilefast(obj.locData.loc.ynm,[0.9995,0.0005],100000);
+    my=myquantilefast(obj.locData.loc.ynm(~isnan(obj.locData.loc.ynm)),[0.9995,0.0005],100000);
     maxy=my(1);miny=my(2);
   else
       disp('cannot find size of image, no reset')
@@ -722,6 +728,7 @@ function resetview_callback(oject,data,obj)
   pixrec=round(max((maxx-minx)/si(1),(maxy-miny)/si(2)));
   obj.setPar('sr_pixrec',pixrec);
   obj.pixrec_callback(obj)
+  notify(obj.P,'sr_render')
 end
 
 function lw_callback(oject,data,obj)
@@ -745,9 +752,12 @@ if strcmp(handle.Tag,'detached')
     close(fold);
 else
 f=figure('MenuBar','none','Toolbar','none');
-handle.Parent=f;
+
+handle.Units='pixel';
 handle.Position(1)=0;
 handle.Position(2)=0;
+handle.Parent=f;
+f.Units=handle.Units;
 f.Position(3:4)=handle.Position(3:4);
 handle.Tag='detached';
 handle.Units='normalized';

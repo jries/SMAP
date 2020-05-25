@@ -4,7 +4,7 @@ classdef NPCLabelingEfficiency<interfaces.DialogProcessor&interfaces.SEProcessor
 %     See:Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty
 %     Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger,
 %     Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards
-%     for Quantitative Superresolution Microscopy.” BioRxiv, March 20,
+%     for Quantitative Superresolution Microscopy.�? BioRxiv, March 20,
 %     2019, 582668. https://doi.org/10.1101/582668.
     properties
     end
@@ -287,7 +287,7 @@ struct2uitable(ht, results,'flip','%2.1f')
 copytoexcel(results,'flip');
 ht.ColumnWidth={50,40,30,40};
 ht.ColumnName={};
-out=[];
+% out=results;
 
 if p.copy2page
     sm=2;
@@ -342,6 +342,14 @@ filen=se.files(filefile).name;
 %filename   LE  LEerrbs     numberofnpcs    locspernpcmean  locspernpcfit
    clipboard('copy',[filen sprintf(['\t' num2str(pf) '\t' num2str(berr_assigned) '\t' num2str(sum(indgood)) '\t' num2str(mean(numlocs)) '\t' num2str(fp.b1) ])])
    display(sprintf('filename  \t LE \t LEerrbs \t  numberofnpcs \t locspernpcmean \t locspernpcfit'))
+   out.filename=filen;
+   out.ELE = pf;
+   out.ELE_err = berr_assigned;
+   out.numberofnpcs = sum(indgood);
+   out.locspernpcmean = mean(numlocs);
+   out.locspernpcfit = fp.b1;
+   
+   
 end
 
 
@@ -531,6 +539,6 @@ pard.copy2page.position=[6,1];
 pard.copy2page.Width=2;
 
 pard.plugininfo.type='ROI_Analyze';
-pard.plugininfo.description='Calculates the absolute effective labeling efficiency from NPC images using the results of evaluator: NPCLabelingQuantify_s. See:Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards for Quantitative Superresolution Microscopy.” BioRxiv, March 20, 2019, 582668. https://doi.org/10.1101/582668.';
+pard.plugininfo.description='Calculates the absolute effective labeling efficiency from NPC images using the results of evaluator: NPCLabelingQuantify_s. See:Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards for Quantitative Superresolution Microscopy.�? BioRxiv, March 20, 2019, 582668. https://doi.org/10.1101/582668.';
 
 end

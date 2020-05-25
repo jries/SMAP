@@ -140,7 +140,7 @@ if  ~isfield(p,'xrange')
     p.xrange=[-inf inf];
 end
 
-pr.mirror=contains(p.Tmode,'mirror');
+ismirror=contains(p.Tmode,'mirror');
 switch p.Tmode
     case {'up-down','up-down mirror'}
         splitpos=p.Tsplitpos(1);
@@ -169,6 +169,8 @@ switch p.Tmode
         
         pr.split='ud';
         pr.roiind=2;
+%         pr.mirrorax=[1 0]*ismirror;
+         pr.mirrorax=[0 1]*ismirror;
     case {'right-left','right-left mirror'}
           splitpos=p.Tsplitpos(end);
          if max(p.xrange)<splitpos %defined only in upper part
@@ -196,6 +198,8 @@ switch p.Tmode
         
         pr.split='rl';
         pr.roiind=1;
+%         pr.mirrorax=[0 1]*ismirror;
+        pr.mirrorax=[1 0]*ismirror;
     case {'2 cam','2 cam u-d mirror','2 cam r-l mirror'}
         pr.xrange1=p.xrange;pr.yrange1=p.yrange;
         pr.xrange2=p.xrange;pr.yrange2=p.yrange;
@@ -203,15 +207,23 @@ switch p.Tmode
         pr.xrangeall=p.xrange; pr.yrangeall=p.yrange;
         pr.XYpos=[1,1];
         pr.split ='none';
+        switch p.Tmode
+            case '2 cam u-d mirror'
+                pr.mirrorax=[0 1];
+            case '2 cam r-l mirror'
+                pr.mirrorax=[1 0];
+            otherwise
+                pr.mirrorax=0;
+        end
 end
 %test: exchange channels
 if p.switchchannels
-xr1temp=pr.xrange1; 
-pr.xrange1=pr.xrange2;
-pr.xrange2=xr1temp;
-yr1temp=pr.yrange1; 
-pr.yrange1=pr.yrange2;
-pr.yrange2=yr1temp;
+    xr1temp=pr.xrange1; 
+    pr.xrange1=pr.xrange2;
+    pr.xrange2=xr1temp;
+    yr1temp=pr.yrange1; 
+    pr.yrange1=pr.yrange2;
+    pr.yrange2=yr1temp;
 end
 
 end
@@ -232,17 +244,20 @@ pt.yrange=pp.yrange1+camroi1(2);
 pt.unit='pixel';
 pt.type='projective';
 transform.setTransform(1,pt)
-pt.mirror=0;
-
-if pp.mirror
-if contains(pp.split,'rl')
-    pt.mirror= 1;
-elseif contains(pp.split,'ud')
-    pt.mirror= 2;
-else
-    pt.mirror=0;
-end
-end
+pt.mirror=pp.mirrorax;
+% if pp.mirror
+% if contains(pp.split,'rl')
+%     pt.mirror= 1;
+% elseif contains(pp.split,'ud')
+%     pt.mirror= 2;
+% elseif contains(ph.Tmode,'r-l')
+%     pt.mirror= 1;
+% elseif contains(ph.Tmode,'u-d')
+%     pt.mirror= 2;    
+% else
+%     pt.mirror=0;
+% end
+% end
 pt.xrange=pp.xrange2+camroi2(1);
 pt.yrange=pp.yrange2+camroi2(2);
 transform.setTransform(2,pt)

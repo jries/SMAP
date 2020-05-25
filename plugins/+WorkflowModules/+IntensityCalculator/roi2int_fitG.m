@@ -2,12 +2,18 @@ classdef roi2int_fitG<interfaces.GuiModuleInterface
     %determines intensity around a localization by a regression of a
     %Gaussian model with fixed positions and sigma. Either amplitude and
     %background or only the amplitude are fitting parameters
+    properties
+        extension
+    end
     methods
         function obj=roi2int_fitG(varargin)
             obj@interfaces.GuiModuleInterface(varargin{:});
         end
         function pard=guidef(obj)
             pard=guidef(obj);
+        end
+        function initGui(obj)
+            obj.makeinfobutton;
         end
         function out=evaluate(obj,p,img,info) %evaluate(obj,roi,bg,dx,dy,PSFxpix,PSFypix)
             out=roi2int_fit_e(p,img,info);
@@ -31,8 +37,10 @@ function outp=roi2int_fit_e(p,roi,info)
 %weights not implemented? Do htat!
 if ~isempty(info.bgim)
     bg=info.bgim;
-else 
-    bg=info.bg;
+elseif p.fitonbg
+    error('you need to calcualte the background first if you want to subtract it before fitting')
+    
+%     bg=info.bg;
 end
 dx=info.dx;
 dy=info.dy;
@@ -135,7 +143,7 @@ pard.psfsize_fit.object=struct('Style','edit','String','1');
 pard.psfsize_fit.position=[2,4];
 pard.psfsize_fit.TooltipString=pard.fixpsf.TooltipString;
 
-pard.fitonbg.object=struct('Style','checkbox','String','fit on BG','Value',1);
+pard.fitonbg.object=struct('Style','checkbox','String','subtract BG before fitting','Value',0);
 pard.fitonbg.position=[3,1];
 pard.fitonbg.Width=4;
 pard.fitonbg.TooltipString='If selected, the background is subtracted and the fit is performed with an offset=0. Otherwise the background is a fit parameter.';

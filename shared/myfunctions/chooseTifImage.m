@@ -1,4 +1,5 @@
 function out=chooseTifImage(filename,P)
+modeselection=0;
 %il=imageloaderOME(filename,[],P);
 il=imageloaderAll(filename,[],P);
 % il=imageloaderTifSimple(filename);

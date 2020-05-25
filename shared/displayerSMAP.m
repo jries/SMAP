@@ -158,6 +158,8 @@ end
         set(p.sr_axes,'Ylim',rangeyplot/1000)
         set(p.sr_axes,'YDir','reverse')
         axis(p.sr_axes,'equal')
+        xlabel(p.sr_axes,'x (µm)')
+        ylabel(p.sr_axes,'y (µm)')
         p.sr_axes.HitTest='on';
         p.sr_axes.PickableParts='all';
 %         axes(p.sr_axes) %bring to forground
@@ -248,7 +250,7 @@ switch layer
 %         imout(end-3:end,rim/2+1:end-rim/2,:)=lutim;
         imout(1:ll,rim/2+1:end-rim/2,:)=lutim;
     case 1
-        imout(rim/2+1:end-rim/2,end-ll+1:end,:)=permute(lutim,[2 1 3]);
+        imout(rim/2+1:end-rim/2,end-ll+1:end,:)=permute(lutim(:,end:-1:1,:),[2 1 3]);
     case 4
 %         imout(1:6,rim/2+1:end-rim/2,:)=lutim;
         imout(end-ll+1:end,rim/2+1:end-rim/2,:)=lutim;
@@ -265,7 +267,7 @@ end
    lenpix=round(lennm/pixrec);
    thickness=max(2,round(sim(2)/200));
    if lenpix<sim(2)-12&&sim(1)>4
-   imin(end-thickness-2:end-1,end-11-lenpix:end-9,:)=0;
-   imin(end-thickness-1:end-2,end-10-lenpix:end-10,:)=1;
+   imin(end-thickness-2:end-1,end-10-lenpix:end-9,:)=0;
+   imin(end-thickness-1:end-2,end-10-lenpix+1:end-10,:)=1;
    end
 end

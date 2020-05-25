@@ -42,7 +42,7 @@ classdef SpatialPointPattern<interfaces.DialogProcessor
            gr1=fftshift(ifft2(  abs(fft2(img1)).^2));
            
            %mask
-           pm=round(([mean(rx) mean(ry)]-p.sr_pos)/px);
+           pm=round(([mean(rx) mean(ry)]-p.sr_pos(1:2))/px);
            mask=hroi.createMask;
            maskrs=imresize(mask',p.sr_pixrec/px);
            mp=round(size(maskrs)/2);

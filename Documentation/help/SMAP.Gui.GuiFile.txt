@@ -1,0 +1,43 @@
+Gui to load and save files.
+
+Grouping: 
+
+This functionality groups (merges) localizations in consecutive frames 
+corresponding to the same fluorophore activation event into a single localization.
+
+Coordinates are calculated as the weighted mean as e.g. $x_m=\sum_i x_i w_i / \sum w_i$. 
+The weights are given by $w_i=1/\sigma_i^2$. $\sigma_i$ is the localization precision.
+
+Errors (e.g. locaization precisions) are averaged as $\sigma_m=(\sum_i 1/\sigma_i^2)^{-1/2}$
+
+dT specifies how many frames a fluorophore can be in the dark state to be counted 
+for the same localizaton. dX specifies the spatial search radius. It can be fix,
+or calculated from the lcoalization precisions of the localizations to be merged.
+Here, localizations are still merged if $dx^2< 2.5(\sigma_1^2+\sigma_2^2)$, with $dx$ the
+displacement and $\sigma_1$ and $\sigma_2$ the localization precison of both localizations.
+
+gui:Interpreter:latex
+gui:Parameters:
+gui:add add localization data or image
+gui:as_tdx=autosavecheck
+gui:autosavecheck save localizations every XX minutes as settings / temp / autosave_sml.mat
+gui:autosavetime time between auto savings, in minutes.
+gui:filelist_long SMLM localization files that are loaded 
+gui:group_b group localizations in consecutive frames
+gui:group_dt number of frames a localization can be missing 
+ and still be grouped together
+gui:group_dx distance in nm which two locs can be apart 
+ and still grouped together.
+gui:group_dxminmax When using localization precision for grouping, specify minimum 
+and maximum distance for grouping here.
+gui:group_dxminmaxt=group_dxminmax
+gui:group_dxt=group_dx
+gui:group_mode Maximum allowed distance: 1. fix: set to fix value (below). 
+ 2. locprec: from localizaton precision. dx^2< 2.5(lp1^2+lp2^2) 
+ dx>min, dx<max
+gui:group_tdt=group_dt 
+gui:group_tdx=group_dx
+gui:load load localization data or image. Load at least one localization data before adding a Tiff image.
+gui:loadmodule select loader plugin
+gui:save Save localizations or tiff files using the selected saving plugin.
+gui:savemodule select the saving module.

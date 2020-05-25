@@ -1,4 +1,6 @@
 function ijm=openfiji(obj)
+disp('Due to a Fiji update, the ImageJ-MATLAB plugin does not work properly any more. I am working on fixing it.');
+
 ijclass='IJM';
 ijclass='MIJ';
 
@@ -17,6 +19,7 @@ if isempty(ijm) %open fiji
     if ~isdeployed
         addpath(fijipath)
     end
+    try
     ImageJ
     ijm=evalin('base','IJM');
 %     Miji();
@@ -25,6 +28,10 @@ if isempty(ijm) %open fiji
         cd(dir);
     end
     obj.setPar('IJM',ijm);
+    catch err
+        warning('ImageJ script from ImageJ-MATLAB could not be opened')
+        err
+    end
     obj.setPar('IJ',ij.IJ);
 %     obj.setPar('MIJ',mij);
 end

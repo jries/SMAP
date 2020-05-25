@@ -27,18 +27,16 @@ classdef showdriftinfo<interfaces.DialogProcessor
                     hold on
                     plot(dx,'k','LineWidth',1.5);
                     sx=(max(dx)-min(dx));
-                    ylim([min(dx)-sx/2 max(dx)+sx/2])
-                    axis tight
+                    lims=quantile(dxplot(:), [0.01,0.99]);
+                    ylim([max(lims(1),-100) min(lims(2),100)])
 
                     subplot(1,2,2)
                     hold off
                     plot(dyplot)
                     hold on
                     plot(dy,'k','LineWidth',1.5);
-
-                    sy=(max(dx)-min(dx));
-                    ylim([min(dy)-sy/2 max(dy)+sy/2])
-                    axis tight
+                    lims=quantile(dyplot(:), [0.01,0.99]);
+                    ylim([max(lims(1),-100) min(lims(2),100)])
 
                     initaxis(p.resultstabgroup,['d(frame) ' num2str(k)]);
 
@@ -77,8 +75,8 @@ classdef showdriftinfo<interfaces.DialogProcessor
                     hold on
                     plot(dz,'k','LineWidth',1.5);
                     sz=(max(dz)-min(dz));
-                    ylim([min(dz)-sz/2 max(dz)+sz/2])
-                    axis tight
+                    lims=quantile(dzplot(:), [0.01,0.99]);
+                    ylim([max(lims(1),-100) min(lims(2),100)])
 
 %                     subplot(1,2,2)
 %                     hold off

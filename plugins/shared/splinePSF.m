@@ -7,8 +7,12 @@ classdef splinePSF<interfaces.PSFmodel
     end
     
     methods
-        function img=PSF(obj,locs)
-            roisize=min(obj.roisize,size(obj.modelpar.coeff,1))+2;
+        function img=PSF(obj,locs,roisizein)
+            if nargin<3
+                roisizein=obj.roisize;
+            end
+
+            roisize=min(roisizein,size(obj.modelpar.coeff,1))+2;
             dn=round((roisize-1)/2);
             if isstruct(locs)
                 if ~isfield(locs,'N')
@@ -82,6 +86,18 @@ classdef splinePSF<interfaces.PSFmodel
 %                 img=output;
                 
         end
+        function no=normalization(obj)
+            dz=obj.modelpar.dz;
+            zrange=size(obj.modelpar.coeff,3)/2*0.8*dz; %not whole range
+%             zrange=size(obj.modelpar.coeff,3)/2+[-dz/2 dz/2];
+            z=(-zrange:dz/2:zrange)';
+            img=obj.PSF([0*z 0*z z],100); %maximal roisize
+            profile=squeeze(sum(sum(img,1),2));
+            no=max(profile);
+            
+            %use central position only:
+%             no=sum(sum(obj.PSF([0 0 0],100)));
+        end
         
         function pard=guidef(obj)
             
@@ -91,24 +107,64 @@ classdef splinePSF<interfaces.PSFmodel
             pard.load.object=struct('String','load','Style','pushbutton','Callback',{{@load_callback,obj}});
             pard.load.position=[1,4];
         end
-        function loadmodel(obj,file)
+        function loadmodel(obj,file,whichmodel)
+            if nargin <3 
+                whichmodel=1;
+            end
             l=load(file);
-            obj.modelpar.coeff=single(l.SXY(1).cspline.coeff{1});
-            obj.modelpar.dz=l.SXY(1).cspline.dz;
-            obj.modelpar.z0=l.SXY(1).cspline.z0;
-            obj.modelpar.x0=l.SXY(1).cspline.x0;
+            obj.modelpar.coeff=single(l.SXY(whichmodel).cspline.coeff{1});
+            obj.modelpar.dz=l.SXY(whichmodel).cspline.dz;
+            obj.modelpar.z0=l.SXY(whichmodel).cspline.z0;
+            obj.modelpar.x0=l.SXY(whichmodel).cspline.x0;
         end
-        function crlb=crlb(obj,N,bg,z,rois)
+        function Ncorr=correctNnormalization(obj,N)
+            normf=obj.normalization;
+            Ncorr=N*normf;
+        end
+        function [crlb,crlbNBg]=crlb(obj,N,bg,coord,rois)
             if nargin<5
                 rois=obj.roisize;
             end
             coeff=obj.modelpar.coeff; 
-            x=rois/2;y=rois/2;
-            v1=ones(length(z),1);
+            if size(coord,2)==1
+                z=coord;
+                v1=ones(length(z),1);
+                x=rois/2*v1;y=rois/2*v1;
+            else
+                x=coord(:,1)+rois/2;y=coord(:,2)+rois/2;z=coord(:,3);
+            end
+            
+            if length(N) ~= length(z)
+                if length(N)==1
+                    N=N+0*z;
+                elseif length(z)==1
+                    z=z+0*N;
+                end
+            end
+            if length(bg) ~= length(z)
+                if length(bg)==1
+                    bg=bg+0*z;
+                elseif length(z)==1
+                    z=z+0*bg;
+                end
+            end           
+            
+            normf=obj.normalization;
+%             normf=1;
+%             Ncorr=N*normf;
             zh=-(z/obj.modelpar.dz)+obj.modelpar.z0;
-            coords=[v1*x , v1*y , N, bg, zh];
-            crlb=CalSplineCRLB(coeff, rois, coords);
+            coords=[x , y , N, bg, zh];
+            [crlb,crlbNBg]=CalSplineCRLB_vec(coeff, rois, coords,true);
+%             %normalize PSF
+% in the matrix M is proportional to the model, i.e. number of photons
+% sum(sum(newDudt(:,:,l+1).*newDudt(:,:,m+1)./model,1),2);
+% to normalize the model we have to re-scale it by 1/sum(img).
+%Minv~1/M, i.e. crlb have to be rescaled by the inverse.
+         
+            crlb=crlb*normf;crlbNBg=crlbNBg*normf;
+%             crlb=CalSplineCRLB(coeff, rois, coords);
             crlb(:,5)=crlb(:,5)*obj.modelpar.dz.^2;
+            
         end
     end
     

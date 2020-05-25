@@ -2,7 +2,7 @@ function zpos=finddisplacementZ(xr,zr,xt,zt,xb,zb,window,plotaxis)
 if nargin<8
     plotaxis=[];
 end
-if nargin<7
+if nargin<7||isempty(window)
     window=[];
 end
 
@@ -52,10 +52,11 @@ indplot=ind-3*dh:ind+3*dh;
 if ~isempty(plotaxis) && indplot(1)>0 &&indplot(end)<=length(zc)
   plot(plotaxis,zc(indplot),ccc(indplot),'x')
     plotaxis.NextPlot='add';
-    plot(plotaxis,zred,fp(1)*zred.^2+zred*fp(2)+fp(3),'r');
+    plot(plotaxis,zred,fp(zred),'r');
     plotaxis.NextPlot='replace';
     title(plotaxis,['dz (mean): ' num2str(mean(zr)-mean(zt)) ', cc: ' num2str(zpos)])
-
+    xlabel('z (nm)')
+    ylabel('cross-correlation')
 end
 
 

@@ -14,7 +14,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
             pard=guidef(obj);
         end
         function fitinit(obj)
-            obj.infofields={'x','y','ID','dx','dy'};
+            obj.infofields={'xpix','ypix','ID','dx','dy'};
             obj.fitpar=getfitpar(obj);
             switch obj.fitpar.mode
                 case '4pi'
@@ -409,6 +409,9 @@ if isfield(fitpar,'mirrorud') && fitpar.mirrorud
     dT(1,2,:)=-dT(1,2,:);
 elseif isfield(fitpar,'mirror')  %now only mirror channel two!
     mirr=fitpar.mirror{2};
+    if length(mirr)>1
+        mirr=mirr(1)+2*mirr(2);
+    end
     switch mirr
         case 0 %no mirror
             imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
@@ -649,9 +652,9 @@ if f
     end
     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
      obj.setPar('cal_3Dfile',[p f]);
-    if isfield(l,'transformation')
-        obj.setPar('transformationfile',[p f]);
-    end
+%     if isfield(l,'transformation')
+%         obj.setPar('transformationfile',[p f]);
+%     end
        
 end
 end
@@ -769,27 +772,34 @@ if fitpar.fitmode==3||fitpar.fitmode==5
 
     %load sCMOS
     if p.isscmos
-        [~,~,ext]=fileparts(p.scmosfile);
-        switch ext
-            case '.tif'
-                varmaph=imread(p.scmosfile);
-            case '.mat'
-                varmaph=load(p.scmosfile);
-                if isstruct(varmaph)
-                    fn=fieldnames(varmaph);
-                    varmaph=varmaph.(fn{1});
-                end
-            otherwise
-                disp('could not load variance map. No sCMOS noise model used.')
-                p.isscmos=false;
-                fitpar.issCMOS=false;
-                varstack=0;
-                varmaph=[];
-        end
+        varmaph=obj.getPar('cam_varmap');
         if ~isempty(varmaph)
             roi=p.loc_cameraSettings.roi;
-            varmap=varmaph(max(1,roi(1)):roi(3),max(1,roi(2)):roi(4));
+            varmap=varmaph(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
+        else 
+            varmap=[];
         end
+%         [~,~,ext]=fileparts(p.scmosfile);
+%         switch ext
+%             case '.tif'
+%                 varmaph=imread(p.scmosfile);
+%             case '.mat'
+%                 varmaph=load(p.scmosfile);
+%                 if isstruct(varmaph)
+%                     fn=fieldnames(varmaph);
+%                     varmaph=varmaph.(fn{1});
+%                 end
+%             otherwise
+%                 disp('could not load variance map. No sCMOS noise model used.')
+%                 p.isscmos=false;
+%                 fitpar.issCMOS=false;
+%                 varstack=0;
+%                 varmaph=[];
+%         end
+%         if ~isempty(varmaph)
+%             roi=p.loc_cameraSettings.roi;
+%             varmap=varmaph(max(1,roi(1)):roi(3),max(1,roi(2)):roi(4));
+%         end
     else 
         varmap=[];
     end
@@ -1019,21 +1029,21 @@ pard.pixelsizey.position=[4,2.6];
 pard.pixelsizey.Width=0.35;
 pard.pixelsizey.Optional=true;
 
-p(1).value=0; p(1).on={}; p(1).off={'selectscmos','scmosfile'};
-p(2).value=1; p(2).on={'selectscmos','scmosfile'}; p(2).off={};
-pard.isscmos.object=struct('Style','checkbox','String','sCMOS','Callback',{{@obj.switchvisible,p}});   
+% p(1).value=0; p(1).on={}; p(1).off={'selectscmos','scmosfile'};
+% p(2).value=1; p(2).on={'selectscmos','scmosfile'}; p(2).off={};
+pard.isscmos.object=struct('Style','checkbox','String','sCMOS');%,'Callback',{{@obj.switchvisible,p}});   
 pard.isscmos.position=[7,1];
 pard.isscmos.Optional=true;
-pard.selectscmos.object=struct('Style','pushbutton','String','Load var map','Callback',{{@loadscmos_callback,obj}});   
-pard.selectscmos.TooltipString='Select sCMOS variance map (in ADU^2) of same size ROI on chip as image stack';
-pard.selectscmos.position=[7,1.6];
-pard.selectscmos.Optional=true;
-pard.selectscmos.Width=.9;
-pard.scmosfile.object=struct('Style','edit','String','');
-pard.scmosfile.TooltipString='Tiff/.mat image containing sCMOS variance map (same ROI on camera as tiff).';
-pard.scmosfile.position=[7,2.5];
-pard.scmosfile.Optional=true;
-    pard.scmosfile.Width=.5;
+% pard.selectscmos.object=struct('Style','pushbutton','String','Load var map','Callback',{{@loadscmos_callback,obj}});   
+% pard.selectscmos.TooltipString='Select sCMOS variance map (in ADU^2) of same size ROI on chip as image stack';
+% pard.selectscmos.position=[7,1.6];
+% pard.selectscmos.Optional=true;
+% pard.selectscmos.Width=.9;
+% pard.scmosfile.object=struct('Style','edit','String','');
+% pard.scmosfile.TooltipString='Tiff/.mat image containing sCMOS variance map (same ROI on camera as tiff).';
+% pard.scmosfile.position=[7,2.5];
+% pard.scmosfile.Optional=true;
+%     pard.scmosfile.Width=.5;
     
 pard.asymmetry.object=struct('Style','checkbox','String','get asymmetry');   
 pard.asymmetry.position=[5,1];

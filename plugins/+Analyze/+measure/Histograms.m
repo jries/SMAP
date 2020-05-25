@@ -19,24 +19,55 @@ classdef Histograms<interfaces.DialogProcessor
             for k=1:length(layers)
                 locs=obj.locData.getloc({p.locfield.selection},'position','roi','layer',layers(k));
                 val=locs.(p.locfield.selection);
-                h=histogram(axis1,val);
+                val(isinf(val)|isnan(val))=[];
+                
+                switch p.setrange.Value
+                    case 1
+                        q=[min(val) max(val)];
+                    case 2
+                        q=quantile(val,[p.quantile(1), 1-p.quantile(end)]);
+                    case 3     
+                        q=p.quantile; 
+                        if length(q)==1
+                            q=[0 q];
+                        end
+                end
+                
                 if p.setbinwidth
-                    h.BinWidth=p.binwidth;
+                    BinWidth=p.binwidth;
+                else
+                    BinWidth=(q(2)-q(1))/200;
                 end
-                if p.setrange
-                    q=quantile(val,[p.quantile, 1-p.quantile]);
-                    h.BinLimits=q;
+                n=(q(1)-BinWidth:BinWidth:q(2)+BinWidth)';
+                if length(n)>1e5
+                    warndlg('histogram too large, set range or dont set binwidth')
+                    return
                 end
+                h=histogram(axis1,val,n);
                 hold(axis1,'on')
-                legends{k}=['Layer ' num2str(k)];
-                out(:,k)=[median(val),mean(val),std(val)];
+                legends{2*k-1}=['Layer ' num2str(k)];
+                inval=val>=q(1) & val<=q(end);
+                
+                %modal value
+                [~, indmax]=max(h.Values);
+                fitr=2; range=(max(1,indmax-fitr):min(length(h.Values),indmax+fitr))';
+                nrange=n(range)+BinWidth/2;hrange=h.Values(range)';
+                fitp=fit(nrange,hrange,'poly2');
+                maxval=-fitp.p2/fitp.p1/2;    
+                plot(axis1,nrange,fitp(nrange))
+                legends{2*k}=['fit ' num2str(maxval,2)];
+                out(:,k)=[median(val(inval)),mean(val(inval)),std(val(inval)),maxval];
             end
-           legend(axis1,legends);
-           
-           h=uitable(ax2.Parent, 'Data',out,'ColumnName',legends,'RowName',{'median','mean','std'},'Units','normalized','Position',[0 0 1 1]);
-           delete(ax2)
             
-    
+                
+
+           legend(axis1,legends);
+           xlim([n(2) n(end)]);
+           
+           h=uitable(ax2.Parent, 'Data',out,'ColumnName',legends,'RowName',{'median','mean','std','modal'},'Units','normalized','Position',[0 0 1 1]);
+           tab=ax2.Parent;
+           delete(ax2)
+           tab.Parent.Parent.Renderer='painters';
             
             out=[]; %no output
             out.clipboard={'results1',3,'text1'}; % out.clipboard is copied to clipboard, separated by tabs.
@@ -49,11 +80,12 @@ classdef Histograms<interfaces.DialogProcessor
             pard.setbinwidth.object=struct('String','set binwidth','Style','checkbox','Value',0);
             pard.setbinwidth.position=[1,2];
             pard.binwidth.object=struct('String','','Style','edit','Value',0);
-            pard.binwidth.position=[1,3];
-            pard.binwidth.Width=.5;
+            pard.binwidth.position=[1,2.9];
+            pard.binwidth.Width=.3;
             
-            pard.setrange.object=struct('String','range (quantile)','Style','checkbox');
-            pard.setrange.position=[1,3.5];
+            pard.setrange.object=struct('String',{{'automatic range','range (quantile)','range (absolute)'}},'Style','popupmenu','Value',2);
+            pard.setrange.position=[1,3.2];
+            pard.setrange.Width=1.3;
             pard.quantile.object=struct('String','0.001','Style','edit');
             pard.quantile.position=[1,4.5];
             pard.quantile.Width=0.5;

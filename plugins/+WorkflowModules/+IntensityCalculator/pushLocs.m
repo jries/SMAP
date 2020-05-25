@@ -3,6 +3,7 @@ classdef pushLocs<interfaces.WorkflowModule
     properties
         filestruc;
         locs
+        preview
     end
     methods
         function obj=pushLocs(varargin)
@@ -11,16 +12,22 @@ classdef pushLocs<interfaces.WorkflowModule
         function pard=guidef(obj)
             pard=guidef;
         end
-        function initGui(obj)
-            initGui@interfaces.WorkflowModule(obj);
-        end
+%         function initGui(obj)
+%             initGui@interfaces.WorkflowModule(obj);
+%         end
         function prerun(obj,data,p)
             global intLoc2pos_ind2 intLoc2pos_locframes;
-            intLoc2pos_ind2=0;
+            intLoc2pos_ind2=1;
             
             p=obj.getAllParameters;
-          
-            obj.locs=obj.locData.getloc(p.locfields);
+            obj.preview=obj.getPar('loc_preview');
+            ind=[0 strfind(p.locfields,',') length(p.locfields)+1];
+            for k=1:length(ind)-1
+                locfields{k}=p.locfields(ind(k)+1:ind(k+1)-1);
+            end
+            obj.locData.sort('frame')
+            obj.locs=obj.locData.getloc(locfields);
+            obj.filestruc=obj.locData.files.file(1);
             pix_cam=obj.filestruc.info.cam_pixelsize_um*1000;
             x=double(obj.locs.xnm);
             y=double(obj.locs.ynm);
@@ -48,7 +55,7 @@ classdef pushLocs<interfaces.WorkflowModule
          
 
         end
-        function run(obj,data,p)
+        function datout=run(obj,data,p)
             global intLoc2pos_ind2 intLoc2pos_locframes
 
             
@@ -56,43 +63,46 @@ classdef pushLocs<interfaces.WorkflowModule
             frame=data.frame;
                 %find indices for same frame
                 ind1=intLoc2pos_ind2;
-                while ind1>0&&intLoc2pos_locframes(ind1)<frame && ind1<lf;
+                while ind1>0&&intLoc2pos_locframes(ind1)<frame && ind1<lf
                     ind1=ind1+1;
                 end
-                ind1=min(ind1+1,lf);
+                ind1=min(ind1,lf);
                 intLoc2pos_ind2=ind1;
                 while intLoc2pos_ind2<lf&&intLoc2pos_locframes(intLoc2pos_ind2)==frame;
                     intLoc2pos_ind2=intLoc2pos_ind2+1;
                 end
-                
+                intLoc2pos_ind2=intLoc2pos_ind2-1;
                 % XXXXX replace by: nm2pixLoc???
-                locnm=num2pix(obj.locs.xnm(ind1:intLoc2pos_ind2),obj.locs.ynm(ind1:intLoc2pos_ind2),obj.filestruc.info.cam_pixelsize_um*1000,obj.filestruc.info.roi);
+                [locpix,locpixr]=nm2pixLoc(obj.locs.xnm(ind1:intLoc2pos_ind2),obj.locs.ynm(ind1:intLoc2pos_ind2),obj.filestruc.info.cam_pixelsize_um*1000,obj.filestruc.info.roi);
                 fn=fieldnames(obj.locs);
                 for k=1:length(fn)
                     locout.(fn{k})=obj.locs.(fn{k})(ind1:intLoc2pos_ind2);
                 end
-                locout.x=locnm.xr;
-                locout.y=locnm.yr;
+                locout.xpix=locpix.x;
+                locout.ypix=locpix.y;
                
                datout=data;%.copy;
                datout.data=locout;%.set(maxout);
-               obj.output(datout); 
+               if obj.preview &&~isempty(data.data)
+                     obj.setPar('preview_peakfind',locout);
+               end
+%                obj.output(datout); 
         end
     end
 end
 
-% function [loc,locr]=nm2pixLoc(x,y,pixelsize,roi)
-% loc.x=(x/pixelsize)-roi(1);
-% loc.y=(y/pixelsize)-roi(2);
-% locr.x=round(loc.x);
-% locr.y=round(loc.y);
-% end
+function [loc,locr]=nm2pixLoc(x,y,pixelsize,roi)
+loc.x=(x/pixelsize(1))-roi(1);
+loc.y=(y/pixelsize(end))-roi(2);
+locr.x=round(loc.x);
+locr.y=round(loc.y);
+end
 
 
 function pard=guidef
-pard.locfields.object=struct('Style','edit','String',{'znm','xnm','ynm','frame'});
+pard.locfields.object=struct('Style','edit','String','znm,xnm,ynm,frame,phot,bg');
 pard.locfields.position=[1,1];
-pard.locfields.Width=1.3;
+pard.locfields.Width=4;
 pard.plugininfo.type='WorkflowModule'; 
 pard.plugininfo.description='Inserts single-molecule localizations into workflow pipeline';
 end

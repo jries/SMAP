@@ -1,4 +1,5 @@
 classdef AnalyzeRingCME<interfaces.DialogProcessor&interfaces.SEProcessor
+%     calculates radial density distributions
     properties
         sites
         results
@@ -247,4 +248,5 @@ pard.usesites.object=struct('String','150','Style','edit');
 pard.usesites.position=[2,4];
 pard.usesites.TooltipString='first N sites, or LIst of sites or s1:s2 notation';
 pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description='calculates radial density distributions';
 end

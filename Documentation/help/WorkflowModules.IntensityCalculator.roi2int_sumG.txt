@@ -1,0 +1,5 @@
+Determines intensity and background in a ROI around localizations.
+
+gui:Parameters:
+gui:roisize_sum Size of the inner roi in pixels. Eg. 3-7 pixels.
+gui:t1=roisize_sum

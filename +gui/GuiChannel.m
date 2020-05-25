@@ -17,11 +17,12 @@ classdef GuiChannel< interfaces.LayerInterface
             obj.guiPar.mincall=[];
             obj.guiPar.maxcall=[];
             obj.guiPar.srmodes={'normal','z','field'};
-            obj.outputParameters={'ch_filelist','channels','layercheck','rendermode','render_colormode','renderfield',...
+            obj.outputParameters={'ch_filelist','filelistfilter','channels','layercheck','rendermode','render_colormode','renderfield',...
                 'groupcheck','imaxtoggle','imax','lut','remout','shift','shiftxy_min','shiftxy_max','layer','colorrange',...
                 'znm_min','znm_max','frame_min','frame_max','scalex','scaley'};
             obj.guiselector.show=true;
             obj.propertiesToSave={'rec_addparval'};
+            
         end
         
         function pard=guidef(obj)
@@ -41,7 +42,10 @@ classdef GuiChannel< interfaces.LayerInterface
         function makeGui(obj)
             makeGui@interfaces.DialogProcessor(obj);
             hmain=obj.getPar('filterpanel');
+            units=hmain.Units;
+            hmain.Units='pixels';
             pp=hmain.Position;
+            hmain.Units=units;
             
             %filtertable gui
             hfigf=uipanel('Parent',hmain,'Units','pixel','Position',[0 200 pp(3) 130]);
@@ -112,7 +116,9 @@ classdef GuiChannel< interfaces.LayerInterface
              callobj=obj;
             obj.addSynchronization('filelist_short',obj.guihandles.ch_filelist,'String',{@callobj.filelist_callback,1})
             obj.addSynchronization('filenumber',[],[],{@callobj.filenumber_callback})
-           
+            
+            h.filelistfilter.Callback=@obj.filelistfilter_callback;
+            obj.addSynchronization([obj.layerprefix 'filelistfilter'],h.filelistfilter,'Value',{@callobj.filelistfilter_callback})
            
            
             obj.addSynchronization([obj.layerprefix 'selectedField'],[],[],{@callobj.selectedField_callback})
@@ -126,7 +132,7 @@ classdef GuiChannel< interfaces.LayerInterface
 %             obj.addSynchronization([obj.layerprefix 'scalex'],h.scalex,'String')
 %             obj.addSynchronization([obj.layerprefix 'scaley'],h.scaley,'String')
             obj.guihandles=h;
-
+            obj.makeinfobutton('guiselector')
             recpar=renderpardialog(obj.rec_addparval,1);
             p=obj.getAllParameters;
             layerp=copyfields(p,recpar);
@@ -139,13 +145,16 @@ classdef GuiChannel< interfaces.LayerInterface
             updatelayercheck(h.layercheck,0,obj);
             obj.setfiltergray;
         end
-        
+        function filelistfilter_callback(obj,a,b)
+            sf={'filenumber',[],[],obj.getSingleGuiParameter('filelistfilter')};
+            obj.setPar('selectedField',sf,'layer',obj.layer);
+        end
         function updateframes_callback(obj,a,b)
             p.frame_min=obj.getPar('frame_min');
             p.frame_max=obj.getPar('frame_max');
             obj.setGuiParameters(p);
         end
-        function filenumber_callback(obj,a,b,c)
+        function filenumber_callback(obj,a,b,c)            
             fn=obj.getPar('filenumber');
             obj.guihandles.ch_filelist.Value=fn;
             obj.filelist_callback;
@@ -164,8 +173,15 @@ classdef GuiChannel< interfaces.LayerInterface
                     obj.updatefields_callback(0,0,'locprecznm',[],false)
                 end                   
                 obj.updatefields_callback(0,0,'locprecnm',true,true)
-                obj.updatefields_callback(0,0,'frame',false,false)
-            obj.updateLayerField;
+                
+                resetframe=obj.getGlobalSetting('resetframefilter');
+                if ~isempty(resetframe) && resetframe
+                    obj.updatefields_callback(0,0,'frame',false,false)
+                end
+%              sf={'filenumber',[],[],true};
+%              obj.setPar('selectedField',sf,'layer',obj.layer);
+             obj.setGuiParameters(struct('filelistfilter',true));
+             obj.updateLayerField;
              setvisibility(0,0,obj)
              obj.setfiltergray;
         end
@@ -191,7 +207,7 @@ classdef GuiChannel< interfaces.LayerInterface
                 layerp=copyfields(layerp,p,fieldnames(layerp));
                 obj.setPar(obj.layerprefix,layerp);
                 fn=obj.guihandles.ch_filelist.Value;
-                sf={'filenumber',fn,fn,true};
+                sf={'filenumber',fn,fn,p.filelistfilter};
                 obj.setPar('selectedField',sf,'layer',obj.layer);
             else             
                 if nargin<3
@@ -252,7 +268,15 @@ classdef GuiChannel< interfaces.LayerInterface
                     obj.guihandles.([field '_max']).BackgroundColor=color;
                 end
             end
-
+            if strcmp(field,'filenumber')
+                if ~isempty(sfield{4})
+                    obj.setGuiParameters(struct('filelistfilter',sfield{4}(1)))
+%                     if sfield{4} %do filtering
+%                         filenumber=min(max(1,round(sfield{2})),length(obj.guihandles.ch_filelist.String));
+%                         obj.guihandles.ch_filelist.Value=filenumber;
+%                     end
+                end
+            end
         end
         function setfiltergray(obj)
             cf={'locprecnm','znm','PSFxnm','locprecznm','frame'};
@@ -300,7 +324,7 @@ classdef GuiChannel< interfaces.LayerInterface
         end
         
         function default_callback(obj,callobj,b)
-            deffile=[ pwd '/settings/temp/Channel_default.mat'];
+            deffile=[obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Channel_default.mat'];
             fh=getParentFigure(obj.handle);
             modifiers = get(fh,'currentModifier');
             if ismember('shift',modifiers)||strcmpi(callobj.String,'save');
@@ -787,8 +811,14 @@ pard.layercheck.TooltipString='switch layer on and off';
             
 pard.ch_filelist.object=struct('Style','popupmenu','String',{'File'});
 pard.ch_filelist.position=[1,1.2];
-pard.ch_filelist.Width=2.2;
+pard.ch_filelist.Width=1.9;
 pard.ch_filelist.TooltipString='which file (loc or image) to display';
+
+pard.filelistfilter.object=struct('Style','checkbox','String','','Value',1);
+pard.filelistfilter.position=[1,3.1];
+pard.filelistfilter.Width=0.2;
+pard.filelistfilter.TooltipString='Filter files';
+pard.filelistfilter.Optional=true;
 
 pard.text1.object=struct('Style','text','String','Ch');
 pard.text1.position=[1,3.4];
@@ -838,7 +868,7 @@ pard.intensitytxt.Width=w1;
 pard.intensitytxt.TooltipString='How to normalize every localization: normal: Integral=1, photons: total photons, blinks: number of connected localizations';
 pard.intensitytxt.Optional=true;
 
-pard.intensitycoding.object=struct('Style','popupmenu','String',{{'normal','photons','blinks'}});
+pard.intensitycoding.object=struct('Style','popupmenu','String',{{'normal','photons','blinks','√photons','√blinks'}});
 pard.intensitycoding.position=[3,p2];
 pard.intensitycoding.Width=w2;
 pard.intensitycoding.TooltipString=pard.intensitytxt.TooltipString;
@@ -857,7 +887,7 @@ pard.tiftxt.Width=w1;
 
 pard.colortxt.object=struct('Style','text','String','Colormode:');
 pard.colortxt.position=[4,p1];
-pard.colortxt.Width=w1;  
+pard.colortxt.Width=w1*1.1;  
 
 
 pard.render_colormode.object=struct('Style','popupmenu','String',{obj.guiPar.srmodes}); 
@@ -1005,17 +1035,17 @@ pard.locprecznm_max.Optional=true;
 pard.frameb.object=struct('Style','pushbutton','String','frame');
 pard.frameb.position=[6,3.4];
 pard.frameb.Width=.6;
-pard.frameb.Optional=true;
+% pard.frameb.Optional=true;
 
 pard.frame_min.object=struct('Style','edit','String','0','BackgroundColor',[1 1 1]*.7);
 pard.frame_min.position=[6,4];
 pard.frame_min.Width=.5;
-pard.frame_min.Optional=true;
+% pard.frame_min.Optional=true;
 
 pard.frame_max.object=struct('Style','edit','String','inf');  
 pard.frame_max.position=[6,4.5];
 pard.frame_max.Width=.5;
-pard.frame_max.Optional=true;
+% pard.frame_max.Optional=true;
 
 pard.shiftxyb.object=struct('Style','pushbutton','String','shift xyz');
 pard.shiftxyb.position=[7,3.4];
@@ -1081,6 +1111,8 @@ pard.defaultsave_button.position=[9,4.6];
 pard.defaultsave_button.Width=.4;
 pard.defaultsave_button.TooltipString='Save default. ';
 pard.defaultsave_button.Optional=true;
+pard.plugininfo.name='GuiChannel';
+pard.helpfile='SMAP.Gui.GuiChannel.txt';
 %%%put in again
 % pard.layercolorz.object=struct('Style','checkbox','String','layers same c/z');
 % pard.layercolorz.position=[7,3.8];
@@ -1090,9 +1122,12 @@ end
 
 function detach_callback(a,b,obj,handle)
 f=figure('MenuBar','none','Toolbar','none');
-handle.Parent=f;
+f.Units='pixel';
+handle.Units='pixel';
+
 handle.Position(1)=0;
 handle.Position(2)=0;
+handle.Parent=f;
 f.Position(3:4)=handle.Position(3:4);
 handle.Tag='detached';
 % if strcmp(handle.Tag,'OV')

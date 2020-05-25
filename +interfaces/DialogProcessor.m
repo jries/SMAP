@@ -30,13 +30,13 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
                 obj.guiPar.FieldHeight=obj.guiPar.FieldHeight-2;
             end
      
-            makeGui@interfaces.GuiModuleInterface(obj,guidef);
+            anyoptional=makeGui@interfaces.GuiModuleInterface(obj,guidef);
             
-            if obj.guiselector.show
+            if obj.guiselector.show || anyoptional
                 posh=obj.handle.Position;
                 if isempty(obj.guiselector.position)
-                    pos(1:2)=0*posh(1:2)+posh(3:4)-[23,22];
-                    pos(3:4)=[20,20];
+                    pos(1:2)=0*posh(1:2)+posh(3:4)-[17,21];
+                    pos(3:4)=[15,20];
                 else
                     pos=obj.guiselector.position;
                 end
@@ -68,7 +68,7 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
         function setvisibility(obj,name)
             %shows and hides the GUI. called from module selector
             %setvisibility(visible) visible='on'/'off'
-            if isvalid(obj.handle)&&~isa(obj.handle.Parent,'matlab.ui.Figure')
+            if isvalid(obj) && isvalid(obj.handle)&&isvalid(obj.handle.Parent)&&~isa(obj.handle.Parent,'matlab.ui.Figure')
             set(obj.handle,'Visible',name);
             end
         end
@@ -77,6 +77,7 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
             %creates a window with results tabs
             obj.resultshandle=figure;
             obj.resultshandle.Visible='off';
+            obj.resultshandle.Renderer='painters';
             htab=uitabgroup(obj.resultshandle);
             obj.guihandles.resultstabgroup=htab;
             obj.resultstabgroup=obj.guihandles.resultstabgroup;
@@ -183,6 +184,7 @@ if ~isfield(results,'error')||isempty(results.error)
     obj.status([class(obj) ' finished'])
 else
     obj.status(['ERROR in ' class(obj) '. ' results.error])
+    obj.setPar('errorindicator', ['ERROR in ' class(obj) '. ' results.error]);
 end
 end
 
@@ -200,22 +202,33 @@ end
 set(obj.resultshandle,'Visible',state)
 end
 
-function info_callback(~,~,obj)
-warnid='MATLAB:strrep:InvalidInputType';
-warnstruct=warning('off',warnid);
-
-obj.guihandles.showresults.Value=1;
-showresults_callback(obj.guihandles.showresults,0,obj)
-ax=obj.initaxis('Info');
-hp=ax.Parent;
- htxt=uicontrol(hp,'Style','edit','Units','normalized','Position',[0,0,.9,1],...
-     'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100);
- td=obj.info.description;
-  td=strrep(td,9,' ');
-txt=strrep(td,10,13);
- htxt.String=txt;
-  htxt.Position=[0 0 1 1];
-  warning(warnstruct);
+function info_callback(a,b,obj)
+obj.showinfo;
+% warnid='MATLAB:strrep:InvalidInputType';
+% warnstruct=warning('off',warnid);
+% 
+% obj.guihandles.showresults.Value=1;
+% showresults_callback(obj.guihandles.showresults,0,obj)
+% ax=obj.initaxis('Info');
+% hp=ax.Parent;
+% hp.BackgroundColor='w';
+% delete(ax);
+% 
+%  htxt=annotation(hp,'textbox',[0.03,0.03,.9,.93],...
+%      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','BackgroundColor','w','FitBoxToText','off','EdgeColor','w');
+% %  htxt=uicontrol(hp,'Style','text','Units','normalized','Position',[0,0,.9,1],...
+% %      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100); 
+% td=obj.info.description;
+%  if ~iscell(td)
+%   txt=strrep(td,9,' ');
+% % txt=strrep(td,10,13);
+%  else
+%      txt=td;
+%  end
+%  htxt.String=txt;
+% %   htxt.Position=[0 0 1 1];
+%   warning(warnstruct);
+%   h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.95,0.95,.05,.05],'String','Edit','Callback',{@edit_callback,obj});
 end
 
 

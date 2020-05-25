@@ -9,6 +9,8 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
         extension
         makeevaluators=true(3,1);
         peval
+        EvaluateIntensity_intensity
+        timershow
     end
     methods
         function obj=EvaluateIntensity_s(varargin)
@@ -67,8 +69,11 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             obj.setInputChannels(1,'frame');  
         end
         function prerun(obj,data1,data2,data3)
-            global EvaluateIntensity_intensity timershow
-            obj.extension=obj.getPar('intensity_channel');
+%             global EvaluateIntensity_intensity timershow
+            extension=obj.getPar('intensity_channel');
+            if ~isempty(extension)
+                obj.extension=extension;
+            end
             p=obj.getAllParameters;
             for k=1:size(p.evalmodules.Data,1)
                 if isempty(p.evalmodules.Data{k,1})
@@ -83,6 +88,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             for k=1:length(obj.evaluators)
                 obj.peval{k}=obj.evaluators{k}.getAllParameters;
                 if obj.useevaluators(k)
+                    obj.evaluators{k}.extension=obj.extension;
                     obj.evaluators{k}.prerun(obj.peval{k});
                     fields=obj.evaluators{k}.info.fields;
                     for l=1:length(fields)
@@ -93,12 +99,13 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             end
                obj.fields={obj.fields{:} 'int_xpix', 'int_ypix', 'int_frame' ,'phot','bg'};
             obj.intensities=single(0);
-            EvaluateIntensity_intensity=single(0);
-            timershow=tic;
+            obj.EvaluateIntensity_intensity=single(0);
+            obj.timershow=tic;
         end
         function dato=run(obj,data,p) %
-            global EvaluateIntensity_intensity timershow
+%             global EvaluateIntensity_intensity timershow
             so=2;
+%             EvaluateIntensity_intensity=obj.EvaluateIntensity_intensity;
             if ~isempty(data.data)
                 img=data.data.img;
                 loc=data.data.info;
@@ -108,45 +115,45 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                 end
                     
                 numl=s(3);
-                memincrease=1e4;  
+                memincrease=1e7;  
                 useevaluators=obj.useevaluators;
                 evaluators=obj.evaluators;
                 loccounter=obj.loccounter;
                 
-                s=size(EvaluateIntensity_intensity);
+                s=size(obj.EvaluateIntensity_intensity);
                 if loccounter>s(1)-memincrease/4
-                    EvaluateIntensity_intensity(loccounter+memincrease,length(obj.fields))=single(0);
+                    obj.EvaluateIntensity_intensity(loccounter+memincrease,length(obj.fields))=single(0);
                 end
                 
                 inds=1; 
                 for ev=1:length(evaluators)
                     if useevaluators(ev)
                         out=evaluators{ev}.evaluate(obj.peval{ev},img,loc);
-                        EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so-1)=out(1:numl,:);
+                       obj.EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so-1)=out(1:numl,:);
                         inds=inds+so;
                     end
                 end
                                       
                 if isfield(loc,'groupindex')
-                    EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds+5)=loc.groupindex(1:numl);
+                    obj.EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds+5)=loc.groupindex(1:numl);
                 end
                 loccounter=loccounter+numl;
                            
                 obj.useevaluators=useevaluators;
                 obj.evaluators=evaluators;
                 obj.loccounter=loccounter;
-                if toc(timershow)>1
+                if toc(obj.timershow)>1
                     obj.setPar('fittedLocs',loccounter);
-                    timershow=tic;
+                    obj.timershow=tic;
                 end
                 dato=[];
-                
+%                 obj.EvaluateIntensity_intensity=EvaluateIntensity_intensity;
             else
                 dato=data;
                 if data.eof
-                    groupindex=EvaluateIntensity_intensity(1:obj.loccounter,end);
+                    groupindex=obj.EvaluateIntensity_intensity(1:obj.loccounter,end);
                     [~,indsortg]=sort(groupindex);
-                    Evis=single(EvaluateIntensity_intensity(indsortg,:));
+                    Evis=single(obj.EvaluateIntensity_intensity(indsortg,:));
                     for k=1:length(obj.fields)
                         % if grouped localizations: convert to ungrouped
                         % ones
@@ -157,7 +164,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                             vh=Evis(obj.locData.loc.groupindex,k);
 %                             ind=groupindex(obj.locData.loc.groupindex);
                         else
-                            vh=single(EvaluateIntensity_intensity(1:obj.loccounter,k));
+                            vh=single(obj.EvaluateIntensity_intensity(1:obj.loccounter,k));
                         end
                         
                         obj.locData.setloc([obj.fields{k} obj.extension],vh);

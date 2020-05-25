@@ -92,16 +92,23 @@ classdef LocFilter<interfaces.WorkflowModule
                 
                 if p.check_converged && isfield(locs,'iterations')&&~isempty(p.loc_iterations)
                     indinh=locs.iterations<p.loc_iterations;
-                    indin=indin&indinh;
+                    indin=indin & indinh;
                 end
                 
                 if p.check_convergedxy && isfield(locs,'peakfindx') 
 %                  maxfitdist=min(3.5,(p.loc_ROIsize-1)/2);
                     maxfitdist=p.val_convxy;
-                    indin=abs(locs.xpix-locs.peakfindx)<maxfitdist & abs(locs.ypix-locs.peakfindy)<maxfitdist;
+                    indin=indin & abs(locs.xpix-locs.peakfindx)<maxfitdist & abs(locs.ypix-locs.peakfindy)<maxfitdist;
                 end
                 
+                %remove all locs that contain NaN
                 fn=fieldnames(locs);
+                for k=1:length(fn)
+                    indin(isnan(locs.(fn{k})))=false;
+%                     sum(isnan(locs.(fn{k})))
+                end    
+                
+%                 fn=fieldnames(locs);
                 for k=1:length(fn)
                     locsout.(fn{k})=locs.(fn{k})(indin);
                 end                
@@ -119,17 +126,17 @@ function pard=guidef(obj)
 pard.txt.object=struct('Style','text','String','Filter ([min max]):');
 pard.txt.position=[1,1];
 pard.txt.Width=1.3;
-
+pard.txt.Optional=true;
 pard.check_locprec.object=struct('Style','checkbox','String','xy-locprec (nm)','Value',1);
 pard.check_locprec.position=[2,1];
 pard.check_locprec.Width=1.3;
 pard.check_locprec.TooltipString=sprintf('Filter localization precision before saving.');
-
+pard.check_locprec.Optional=true;
 pard.val_locprec.object=struct('Style','edit','String','100');
 pard.val_locprec.position=[2,2.3];
 pard.val_locprec.Width=.7;
 pard.val_locprec.TooltipString=sprintf('maximum localization precision (nm)');
-
+pard.val_locprec.Optional=true;
 pard.check_psf.object=struct('Style','checkbox','String','PSFxy (nm)','Value',0);
 pard.check_psf.position=[3,1];
 pard.check_psf.Width=1.3;

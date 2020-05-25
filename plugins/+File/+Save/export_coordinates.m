@@ -13,7 +13,11 @@ classdef export_coordinates<interfaces.DialogProcessor
                 
         end
         
-        function out=save(obj,p)
+        function out=save(obj,p,defaultfilename)
+            if nargin < 3
+                defaultfilename=false;
+            end
+            
             obj.status('export localizations')
             par=p;
             
@@ -25,6 +29,12 @@ classdef export_coordinates<interfaces.DialogProcessor
                         gr='ungrouped';
                     end
                     locs=obj.locData.getloc(obj.exportfields,'grouping',gr,'position','all');
+                    fn=fieldnames(locs);
+                    for k=1:length(fn)
+                        if isempty(locs.(fn{k}))
+                            locs=rmfield(locs,fn{k});
+                        end
+                    end
                     taball=struct2table(locs);
                 otherwise
                     taball=[];
@@ -40,15 +50,22 @@ classdef export_coordinates<interfaces.DialogProcessor
             end
             
             
-            fn=p.filelist_long.selection;
+%             fn=p.filelist_long.selection;
+            fn=obj.getPar('lastSMLFile');
             [path,file,ext]=fileparts(fn);
             of=[path filesep file  '.' par.format.selection];
             
-            [f,path]=uiputfile(of);
-            if f
-                writetable(taball,[path f]);
-                obj.status('save done')
+            if ~defaultfilename
+                [f,path]=uiputfile(of);
+                if ~f
+                    out=0;
+                    return
+                end
+                of=[path f];
             end
+            out=of;
+            writetable(taball,of);
+            obj.status('save done')
         end
         function initGui(obj)
             obj.guihandles.outputfields.String=sprintf('%s, ',obj.exportfields{:});
@@ -56,8 +73,8 @@ classdef export_coordinates<interfaces.DialogProcessor
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-        function run(obj,p)
-            obj.save(p)
+        function out=run(obj,p)
+            out=obj.save(p,true);
         end
     end
 end
@@ -115,13 +132,15 @@ end
 
 function pard=guidef(obj)
 % pard.plugininfo={'csv saver'};
-pard.savevisible.object=struct('Style','popupmenu','Visible','on','String',{{'all','visible ROI'}},'Value',1);
+p(1).value=1; p(1).on={'grouped'}; p(1).off={};
+p(2).value=2; p(2).on={}; p(2).off={'grouped'};
+pard.savevisible.object=struct('Style','popupmenu','Visible','on','String',{{'all','visible ROI'}},'Value',1,'Callback',{{@obj.switchvisible,p}});
 pard.savevisible.position=[1,1];
-pard.savevisible.Width=1;
+pard.savevisible.Width=1.5;
 
-pard.grouped.object=struct('Style','checkbox','Visible','on','String','grouped (if all)','Value',0);
-pard.grouped.position=[1,2];
-pard.grouped.Width=2;
+pard.grouped.object=struct('Style','checkbox','Visible','on','String','grouped','Value',0);
+pard.grouped.position=[1,2.5];
+pard.grouped.Width=1.5;
 
 pard.format.object=struct('Style','popupmenu','Visible','on','String',{{'csv','txt','dat','xls'}});
 pard.format.position=[1,4];
@@ -134,6 +153,10 @@ pard.outputfields.Width=3;
 pard.selectoutputfields.object=struct('Style','pushbutton','Visible','on','String','select','Callback',{{@selectfields,obj}});
 pard.selectoutputfields.position=[2,4];
 pard.selectoutputfields.Width=1;
+
+% pard.defaultfilename.object=struct('Style','checkbox','Visible','on','String','default filename','Value',0);
+% pard.defaultfilename.position=[3,1];
+% pard.defaultfilename.Width=2;
 
 pard.plugininfo.type='SaverPlugin';
 pard.plugininfo.description='exports localization data in .txt, .csv, .xls format. The user can choose which localization attributes to export and if to export all localizations or filtered localizations.';
