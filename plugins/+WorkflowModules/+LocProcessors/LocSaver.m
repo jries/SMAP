@@ -48,19 +48,19 @@ classdef LocSaver<interfaces.WorkflowModule
             
             pard.savelocal.object=struct('Style','checkbox','String','save local and copy','Value',0);
             pard.savelocal.object.TooltipString='Select this if you fit via a network and the saving of the localizations is very long (stauts bar stops for a long time at last frames).';
-            pard.savelocal.position=[2,1];
+            pard.savelocal.position=[3,1];
             pard.savelocal.Width=2;
             pard.savelocal.Optional=true;
             
             pard.setoutputfile.object=struct('Style','pushbutton','String','Set:','Callback',{{@setoutputfile_callback,obj}});
             pard.setoutputfile.object.TooltipString='Set the output file';
-            pard.setoutputfile.position=[3,1];
+            pard.setoutputfile.position=[2,1];
             pard.setoutputfile.Width=.5;
             pard.setoutputfile.Optional=true;
             
             pard.outputfile.object=struct('Style','edit','String','');
             pard.outputfile.object.TooltipString='output file name';
-            pard.outputfile.position=[3,1.5];
+            pard.outputfile.position=[2,1.5];
             pard.outputfile.Width=1.5;
             pard.outputfile.Optional=true;
             

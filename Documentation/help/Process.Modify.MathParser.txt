@@ -1,0 +1,15 @@
+Perfrom complex calculations on localization fields (attributes). 
+Equations using matlab functions are parsed. Previous calculations are saved for quick access.
+
+Use the field names directly as variables. Don't forget to use vector notation (e.g. ".*", "./", ".^").
+
+gui:Parameters:
+gui:dataselect Choose localization file data set.
+gui:dataselect_all Perfrom calculations on localizations in all opened files.
+gui:equation Type in the equation using MATLAB (vector) notation and localization fields as variables
+gui:equationh Choose an equation you used previously.
+gui:resultfield Assign result of the calculation to this field
+gui:resultfieldh Assign result of the calculation to this previously saved field
+gui:t1 
+gui:t2
+gui:t3 

@@ -29,6 +29,7 @@ indbad=uint8(txttt(indt+4))<65 |uint8(txttt(indt+4))>122;
 indt(indbad)=[];
 indt(end+1)=length(txttt);
 copyf=[];
+tooltips=[];
 for k=1:length(indt)-1
     txth=txttt(indt(k)+4:indt(k+1)-1);
     nameend=find(txth<'0' | (txth>'9' & txth<'A'),1,'first'); %allow for a-z, A-Z,0_9,'_'
@@ -46,10 +47,17 @@ for k=1:length(indt)-1
     end
 end
 
-if ~isempty(copyf)
+
+
+if ~isempty(copyf) && ~isempty(tooltips)
+%     tooltips
     fn=fieldnames(copyf);
     for k=1:length(fn)
-        tooltips.(fn{k})=tooltips.(copyf.(fn{k}));
+        if  isfield(tooltips, copyf.(fn{k}))
+            tooltips.(fn{k})=tooltips.(copyf.(fn{k}));
+        else 
+            display(['check definition for ' fn{k} ' in ' filename])
+        end
     end
 end
 %ADD: gui:h1=h2

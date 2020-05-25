@@ -1,0 +1,33 @@
+In SMAP, the localization fields xnm, ynm and znm are considered the main x, y and
+z coordinates for rendering and analysis. 
+
+With this plugin, you can define any other localization field as main x, y or z coordinate
+and use those for rendering or analysis. These new coordinates overwrite the old xnm, ynm or znm, but 
+those values are saved and can be recoverd with the button "revert to original".
+
+You can rescale the coordinates by a factor and offset, e.g.:
+
+xnm=(field_x + offset_x) * factor_x
+
+locprecnm= field_{\sigma x} * factor_x
+
+You can also change the associated localization precisions.
+
+gui:Parameters:
+gui:changefield Check if you want to overwrite the xnm, ynm or znm coordiantes
+gui:changeprec Check if you want to overwrite the localization
+precision in the lateral or axial direction 
+gui:changex Check if you want to change the x coordinate
+gui:changey Check if you want to change the y coordinate
+gui:changez Check if you want to change the z coordinate
+gui:factext You can rescale the coordinates by a factor and with an offset. If one
+value is entered, it is considered a factor, if two values are inserted, they are factor and offset.
+gui:revert Use original xnm, ynm and znm coordinates again.
+gui:xerrfield field for new localization precision in x,y
+gui:xfac=factext 
+gui:xfield field for new x coordinate
+gui:yfac=factext 
+gui:yfield field for new y coordinate
+gui:zerrfield field for new localization precision in z
+gui:zfac=factext 
+gui:zfield field for new z coordinate

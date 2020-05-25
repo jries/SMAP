@@ -659,12 +659,14 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                     [description,tooltips,interpreter]=parsehelpfile(helpfilep);
                     obj.plugininfo.description=(description);
                     obj.plugininfo.descriptioninterpreter=interpreter;
-                    fnt=fieldnames(tooltips);
-                    for tt=1:length(fnt)
-                        if isfield(obj.guihandles,fnt{tt})
-                            strtt=tooltips.(fnt{tt});
-                            strWrapped=mytextwrap(strtt,maxwidth,10);
-                            obj.guihandles.(fnt{tt}).Tooltip=sprintf(strWrapped);
+                    if ~isempty(tooltips)
+                        fnt=fieldnames(tooltips);
+                        for tt=1:length(fnt)
+                            if isfield(obj.guihandles,fnt{tt})
+                                strtt=tooltips.(fnt{tt});
+                                strWrapped=mytextwrap(strtt,maxwidth,10);
+                                obj.guihandles.(fnt{tt}).Tooltip=sprintf(strWrapped);
+                            end
                         end
                     end
                 else

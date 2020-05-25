@@ -1,0 +1,10 @@
+Assembles a localization data structure from the fitted localizations and 
+saves it as a SMAP *.sml file. When fitting via a network, 
+fitting a local copy which is then moved to the destination can be faster.
+
+gui:Parameters:
+gui:outputfile Output file name. This is set automatically after loading the tiff images. You can overwrite it here, but need to do so every time after loading camera images.
+gui:savelocal Select this if you fit via a network and the saving of the localizations is very long (stauts bar stops for a long time at last frames). 
+Then the file is first saved locally, then copied to the network location.
+gui:selectfields Select which fields to save. Use preview once before to determine which fields are available.
+gui:setoutputfile=outputfile
