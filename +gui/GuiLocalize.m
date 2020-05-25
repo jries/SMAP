@@ -72,6 +72,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             h.wfname.TooltipString='Name of current workflow. Right-click for context menu: info, change workflow, save current workflow settings';
              h.wfload=uicontrol(obj.handle,'Style','pushbutton','String','Change','Position',[370+dhx, l2, 80 h2],...
                 'FontSize',obj.guiPar.fontsize,'Callback',{@wfload_callback,obj});
+            h.wfload.Tooltip='Load a new workflow';
             %h.savepar=uicontrol(obj.handle,'Style','pushbutton','String','Save settings','Position',[290+dhx, l2, 80 h2],...
             %    'FontSize',obj.guiPar.fontsize,'Callback',{@savepar_callback,obj});
             

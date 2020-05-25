@@ -28,8 +28,8 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
             pard.text.position=[1,1];
             pard.text.Width=1.0;
             pard.loc_previewmode.object=struct('Style','popupmenu','String','image|filtered|image-bg|bg','Value',2);
-            pard.loc_previewmode.position=[1,1.7];
-            pard.loc_previewmode.Width=.8;
+            pard.loc_previewmode.position=[2,1];
+            pard.loc_previewmode.Width=1;
             pard.loc_previewmode.TooltipString=sprintf('Determine which image to display in Preview mode. Peak finding is performed on norm(image)');
 
             pard.plugininfo.type='WorkflowModule'; 

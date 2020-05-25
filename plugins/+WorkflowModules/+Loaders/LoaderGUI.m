@@ -54,6 +54,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
             panelpos(3)=hpos(3)-poslist(1)*2;
             panelpos(4)=poslist(4)*5.5;
             ip={};
+            t1=[t1 '\n Specific loaders: '];
             for k=1:length(loadernames)
                 loader=plugin('WorkflowModules','Loaders',loadernames{k});
                 loader.attachPar(obj.P);
@@ -69,7 +70,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
                 obj.loaders{k}=loader;
 %                 hp.Units='normalized';
                 obj.guihandles.([loadernames{k} '_panel'])=hp;
-                t1=[t1 13 '   ' 96+k '. ' loader.info.name loader.info.description];
+                t1=[t1 '\n' 96+k '. ' loader.info.name loader.info.description];
             end
             obj.inputParameters=ip;
             obj.loaders{1}.handle.Visible='on';

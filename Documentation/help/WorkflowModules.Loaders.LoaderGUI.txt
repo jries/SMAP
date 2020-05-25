@@ -1,3 +1,4 @@
+gui:Interpreter:none
 Intermediate GUI to select a loader.
 
 a. TifLoaderLoads raw camera images (single file or direcotry with single images). 

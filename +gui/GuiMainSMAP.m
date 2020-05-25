@@ -248,6 +248,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.status=uicontrol(handle,'Style','text','Units','normalized',...
                            'String','status','Position',[0 0 .8 0.035]);
             h.status.Units='pixels';
+            h.status.Tooltip='Progress of the current analysis';
             if ispc
                 hstatus=30;
             else
@@ -260,6 +261,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             h.errorindicator=uicontrol(handle,'Style','togglebutton','Units','normalized',...
                 'Position',[0.01,0.002,.03,.03],'String',' ','Callback',{@error_reset,obj});
+            h.errorindicator.Tooltip=sprintf('If an error occured during an analysis, this button turns \n red and you can read the error by clicking on it.');
             obj.addSynchronization('errorindicator',[],[],{@error_callback,obj,0}) 
             
             %Plugins
