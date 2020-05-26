@@ -26,35 +26,42 @@ classdef FRCresolution<interfaces.DialogProcessor
 %             bfrc(1:end/2)=1;
             lochere.addloc('FRCblocks',bfrc);
             lochere.regroup;
-%             lochere.filter('FRCblocks',[],'minmax',[-.1 .5])
-            image1=getimage(lochere,p,[-.1 .5]);
-%             lochere.filter('FRCblocks',[],'minmax',[.5 1.1])
-            image2=getimage(lochere,p,[.5 1.1]);
             
-            image1f=filterimage(image1);
-            image2f=filterimage(image2);
-            [frc_curve,frc_nom]=getFRC(image1f,image2f);
-            [FRC_resolutionp,rl,rh]=frctoresolution(frc_curve,size(image1));
-            FRC_resolution=FRC_resolutionp*p.pixrec_frc;
-            errres=(rh-rl)/2*p.pixrec_frc;
-            ax1=obj.initaxis('frc');
-             qmax = 0.5/(p.pixrec_frc);
+            layers=find(obj.getPar('sr_layerson'));
+            outtxt='';
+            for layer=layers
+    %             lochere.filter('FRCblocks',[],'minmax',[-.1 .5])
+                image1=getimage(lochere,p,[-.1 .5],layer);
+    %             lochere.filter('FRCblocks',[],'minmax',[.5 1.1])
+                image2=getimage(lochere,p,[.5 1.1],layer);
+
+                image1f=filterimage(image1);
+                image2f=filterimage(image2);
+                [frc_curve,frc_nom]=getFRC(image1f,image2f);
+                [FRC_resolutionp,rl,rh]=frctoresolution(frc_curve,size(image1));
+                FRC_resolution=FRC_resolutionp*p.pixrec_frc;
+                errres=(rh-rl)/2*p.pixrec_frc;
+                ax1=obj.initaxis(['frc, Layer ' num2str(layer)]);
+                 qmax = 0.5/(p.pixrec_frc);
+
+                plot([0 qmax],[0 0],'k')
+                hold on
+                plot(linspace(0,qmax, length(frc_curve)), frc_curve,'-')
+    %             plot(linspace(0,qmax*sqrt(2), length(frc_curve)), frc_curve,'-')
+                plot([0 qmax],[1/7 1/7],'m')
+                plot(1/(FRC_resolution),1/7,'rx')
+                plot(1/(FRC_resolution)*[1 1],[-0.2 1/7],'r')
+                hold off
+                xlim([0,qmax]);
+                ylim([-0.2 1.2])
+                xlabel('Spatial frequency (nm^{-1})');
+                ylabel('FRC')
+                title(['FRC resolution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
+                drawnow
+                outtxt=[outtxt newline 'FRC reosolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f') 9 'Layer' 9 num2str(layer)];
+            end
             
-            plot([0 qmax],[0 0],'k')
-            hold on
-            plot(linspace(0,qmax, length(frc_curve)), frc_curve,'-')
-%             plot(linspace(0,qmax*sqrt(2), length(frc_curve)), frc_curve,'-')
-            plot([0 qmax],[1/7 1/7],'m')
-            plot(1/(FRC_resolution),1/7,'rx')
-            plot(1/(FRC_resolution)*[1 1],[-0.2 1/7],'r')
-            hold off
-            xlim([0,qmax]);
-            ylim([-0.2 1.2])
-            xlabel('Spatial frequency (nm^{-1})');
-            ylabel('FRC')
-            title(['FRC resolution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
-            
-            out.clipboard=['FRC reosolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f')];
+            out.clipboard=outtxt;
             
 %             ax2=obj.initaxis('Q')
 %             q=linspace(0,qmax, length(frc_curve));
@@ -63,7 +70,7 @@ classdef FRCresolution<interfaces.DialogProcessor
 %             plot(ax2,q,frc_nom./norm');
         end
         function pard=guidef(obj)
-            pard=guidef;
+            pard=guidef(obj);
         end
     end
 end
@@ -120,14 +127,14 @@ maskt=mask.*mask';
 imageo=maskt.*imagei;
 
 end
-function image=getimage(lochere,p,frcrange)
+function image=getimage(lochere,p,frcrange,layer)
 if p.takeimage
     p.sr_axes=[];
     imt=anyRender(lochere,p);
     image=sum(imt.composite,3);
 else
     
-    locs=lochere.getloc({'xnm','ynm','FRCblocks'},'position','roi','layer',1);
+    locs=lochere.getloc({'xnm','ynm','FRCblocks'},'position','roi','layer',layer);
     goodlocs=locs.FRCblocks>frcrange(1) & locs.FRCblocks<frcrange(2);
     rx=p.sr_pos(1)+p.sr_size(1)*[-1 1];
     ry=p.sr_pos(2)+p.sr_size(2)*[-1 1];
@@ -295,16 +302,19 @@ varargout{3} = resolution_low;
 end
 
 
-function pard=guidef
-pard.t0.object=struct('String','FRC resolution, Layer 1. Uses ROI or FoV (if rendered image). ','Style','text');
+function pard=guidef(obj)
+pard.t0.object=struct('String','FRC resolution. Uses ROI or FoV. ','Style','text');
 pard.t0.position=[1,1];
 pard.t0.Width=4;
 
-pard.takeimage.object=struct('String','use settings from rendered image','Style','checkbox','Value',0);
-pard.takeimage.position=[2,1];
+        p(1).value=0; p(1).off={}; p(1).on={'t2','pixrec_frc'};
+            p(2).value=1; p(2).off={'t2','pixrec_frc'}; p(2).on={};
+            
+pard.takeimage.object=struct('String','use settings from rendered image','Style','checkbox','Value',0,'Callback',{{@obj.switchvisible,p}});
+pard.takeimage.position=[3,1];
 pard.takeimage.Width=2;
-pard.t1.object=struct('String','otherwise:','Style','text');
-pard.t1.position=[3,1];
+% pard.t1.object=struct('String','otherwise:','Style','text');
+% pard.t1.position=[3,1];
 pard.t2.object=struct('String','pixelsize (nm)','Style','text');
 pard.t2.position=[4,1];
 

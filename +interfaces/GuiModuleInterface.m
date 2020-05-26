@@ -656,9 +656,9 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 end
                 maxwidth=60;             
                 if ~isempty(helpfile) && exist(helpfilep,'file')
-                    [description,tooltips,interpreter]=parsehelpfile(helpfilep);
+                    [description,tooltips]=parsehelpfile(helpfilep);
                     obj.plugininfo.description=(description);
-                    obj.plugininfo.descriptioninterpreter=interpreter;
+%                     obj.plugininfo.descriptioninterpreter=interpreter;
                     if ~isempty(tooltips)
                         fnt=fieldnames(tooltips);
                         for tt=1:length(fnt)
@@ -806,50 +806,20 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
            obj.showinfo;
        end
        function showinfo(obj, hp)
-%         warnid='MATLAB:strrep:InvalidInputType';
-%         warnstruct=warning('off',warnid);
-%         obj.guihandles.showresults.Value=1;
-%         showresults_callback(obj.guihandles.showresults,0,obj)
-%         ax=obj.initaxis('Info');
-%         hp=uifigure;
           if nargin<2
             hp=figure('MenuBar','none','Toolbar','figure');
+            hp.Position(3)=hp.Position(3)*1.5;
+            hp.Position(4)=hp.Position(4)*1.5;
             hp.Color='w';
             pos=[0.03,0.03,.9,.95];
             fs=obj.guiPar.fontsize;
           else
               pos=[0 0 .7 1];
               fs=12;
-
           end
-%         hp=ax.Parent;
-        
-%         delete(ax);
 
-             %  htxt=uicontrol(hp,'Style','text','Units','normalized','Position',[0,0,.9,1],...
-        %      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100); 
-        td=obj.info.description;
-         if ~iscell(td)
-          txt=strrep(td,char(9),' ');
-          txt=strrep(txt,'\n',newline);
-         else
-             txt=td;
-         end
-         
-         if isfield(obj.plugininfo,'descriptioninterpreter')
-             interpreter=obj.plugininfo.descriptioninterpreter; 
-         else
-             interpreter='none';
-         end
-         
-          htxt=annotation(hp,'textbox',pos,...
-             'FontSize',fs,'HorizontalAlignment','left',...
-             'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
-             'String',txt,'Interpreter',interpreter);
-          htxt.Position=pos;
-%          htxt.String=txt;
-        %   htxt.Position=[0 0 1 1];
-%           warning(warnstruct);
+        showpluginhelp(hp,obj.info.description,pos,fs)
+    
           h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.9,0.0,.1,.05],'String','Edit','Callback',{@edit_callback,obj});
 %           h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
         end
@@ -1003,6 +973,7 @@ parse(p,args{:});
 pres=p.Results;
 
 end
+
 
 function pard=locselectordefault
 pard.selector_filelist.object=struct('String','all','Style','popupmenu');

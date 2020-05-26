@@ -35,6 +35,18 @@ classdef metadataSMAP<handle
             end
 %             obj.assigned.roi=true;
         end
+        function d=description(obj)
+            d.EMon='EMon: true if EM gain used on an EMCCD';
+            d.emgain='emgain: EM gain of the EMCCD';
+            d.conversion='conversion: fator to convert ADU to photons. (e-/ADU)';
+            d.offset='offset of the camera image (ADU)';
+            d.cam_pixelsize_um='Effective pixel size on camera (µm)';
+            d.roi='coordinates of the ROI on the camera chip in pixels(x,y,w,h)';
+            d.exposure='exposre: Exposure time in ms';
+            d.timediff='timediff: difference between frames in ms';
+            d.comment='Comment';
+            d.correctionfile='file with sCMOS correction maps';
+        end
         function roi=get.roi(obj)
             if isempty(obj.roi)
                 roi=[0 0 obj.Width obj.Height];

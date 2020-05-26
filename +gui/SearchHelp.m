@@ -35,7 +35,7 @@ h.searchbutton=uicontrol(hf, 'Style','pushbutton','String','Search','Units','nor
     'Callback',{@search_callback,obj});
 h.resultslist=uicontrol(hf,'Style','listbox','Units','normalized','Position',[0.02,0.02,0.3,0.9],'Callback',{@list_callback,obj});
 h.resultspanel=uipanel(hf,'Units','normalized','Position',[0.32,0.22,0.66,0.7],'BackgroundColor','w');
-h.resultstt=uicontrol(hf,'Style','edit','Units','normalized','Position',[0.32,0.02,0.66,0.2],'BackgroundColor','w','HorizontalAlignment','left');
+h.resultstt=uicontrol(hf,'Style','edit','Units','normalized','Position',[0.32,0.02,0.66,0.2],'BackgroundColor','w','HorizontalAlignment','left','Max',100);
 
 obj.guihandles=h;
 end
@@ -65,15 +65,22 @@ end
 function list_callback(a,b,obj)
 select=a.Value;
 allindh=obj.searchind(select);
-delete(obj.annotation)
+for  k=1:length(obj.annotation)
+delete(obj.annotation{k})
+end
 ss=obj.guihandles.searchstring.String;
-[description,tooltips,interpreter]=parsehelpfile(obj.alltxt.text{allindh});
-txtformat=strrep(description,'\n',newline);
-ind=strfind(txtformat,ss);
-txtformat=setbold(txtformat,ind,length(ss),interpreter);
+[description,tooltips]=parsehelpfile(obj.alltxt.text{allindh});
+fn=fieldnames(description);
+for k=1:length(fn)
+    ind=strfind(description.(fn{k}),ss);
+    description.(fn{k})=setbold(description.(fn{k}),ind,length(ss),fn{k});
+end
+% txtformat=strrep(description,'\n',newline);
+% ind=strfind(txtformat,ss);
+% txtformat=setbold(txtformat,ind,length(ss),interpreter);
 
 fname=strrep(obj.alltxt.filenames{allindh},'_','\_');
-txt=[setbold(fname, 1,length(fname),interpreter) newline txtformat];
+% txt=[setbold(fname, 1,length(fname),interpreter) newline txtformat];
 %find searchstring and set bold.
 fn=fieldnames(tooltips);
 txttt='';
@@ -87,14 +94,14 @@ for k=1:length(fn)
 %     txttt=[txttt fnh ': ' tth newline];
 end
 
-
 pos=[0 0 .65 1];
-obj.annotation=annotation(obj.guihandles.resultspanel,'textbox',pos,...
-             'HorizontalAlignment','left',...
-             'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
-             'String',(txt),'Interpreter',interpreter,'FontSize',12);
-          obj.annotation.Position=pos;
-          obj.guihandles.resultstt.Max=100;
+obj.annotation=showpluginhelp(obj.guihandles.resultspanel,description,pos)
+% obj.annotation=annotation(obj.guihandles.resultspanel,'textbox',pos,...
+%              'HorizontalAlignment','left',...
+%              'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
+%              'String',(txt),'Interpreter',interpreter,'FontSize',12);
+%           obj.annotation.Position=pos;
+obj.guihandles.resultstt.Max=100;
  obj.guihandles.resultstt.String=txttt;       
 end
 

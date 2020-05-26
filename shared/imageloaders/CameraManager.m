@@ -74,6 +74,9 @@ hp=uicontrol('Style','pushbutton','String','Load images','Position',[posbutton h
 hp=uicontrol('Style','pushbutton','String','test','Position',[posbutton height-115,buttonwidth,lineheight],'Callback',{@testcal,obj});
 hp=uicontrol('Style','pushbutton','String','Add camera','Position',[posbutton height-140,buttonwidth,lineheight],'Callback',{@menu_callback,obj,'add'});
 
+hp=uicontrol('Style','pushbutton','String','help on fields','Position',[posbutton height-190,buttonwidth,lineheight],'Callback',{@menu_callback,obj,'help'});
+
+
 
 tcam=uitable(obj.handle,'Position',[10 height-lineheight*8-50 width-200,lineheight*7.5]);
 tcam.ColumnName={'Camera Name','ID field','ID'};
@@ -491,7 +494,15 @@ switch label
             obj.cameras(obj.lastcamtableselected(1)).ID.name=newname{1};
         end
         newpos=obj.currentcam;
-        
+    case 'help'
+        dmm=interfaces.metadataSMAP;
+        d=dmm.description;
+        fn=fieldnames(d);
+        for k=1:length(fn)
+            txt{k}=[fn{k} ': ' d.(fn{k})];
+        end
+        helpdlg(txt)
+        return       
 end
 oldpos=obj.currentcam;
 obj.cameras([oldpos newpos])=obj.cameras([newpos oldpos]);

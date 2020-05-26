@@ -5,15 +5,15 @@ jervistemp=[];
 ax1=initaxis(p.resultstabgroup,'scatter');
 hold off
 [ax2,tab2]=initaxis(p.resultstabgroup,'x profile');
-ax2.Position(3)=0.55;ax2.Position(1)=0.05;
+ax2.Position(3)=0.55;ax2.Position(1)=0.08;
 hold off
 [ax3,tab3]=initaxis(p.resultstabgroup,'y profile');
-ax3.Position(3)=0.55;ax3.Position(1)=0.05;
+ax3.Position(3)=0.55;ax3.Position(1)=0.08;
 hold off
 
 if isfield(locD.loc,'znm')
 ax4=initaxis(p.resultstabgroup,'z profile');
-ax4.Position(3)=0.55;ax4.Position(1)=0.05;
+ax4.Position(3)=0.55;ax4.Position(1)=0.08;
 hold off
 ax5=initaxis(p.resultstabgroup,'scatter xz');
 hold off

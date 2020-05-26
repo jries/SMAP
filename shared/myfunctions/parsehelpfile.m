@@ -1,24 +1,50 @@
-function [description,tooltips,interpreter]=parsehelpfile(filename)
+function [description,tooltips,descriptionall]=parsehelpfile(filename)
 if exist(filename,'file')
     txt=fileread(filename);
 else
     txt=filename;
-end
-%get interpreter and remove line
-indinterpret=strfind(txt,'gui:Interpreter');
-if isempty(indinterpret)
-    interpreter='tex';
-else
-   inde=find(txt(indinterpret+16:indinterpret+25)< 'A',1,'first');
-   interpreter=txt(indinterpret+16:indinterpret+16+inde-2);
-   txt(indinterpret:indinterpret+16+inde-2)=[];
 end
 
 indParameters=strfind(txt,'gui:Parameters');
 if isempty(indParameters)
     indParameters=strfind(txt,'gui:');
 end
-description=reformatline(txt(1:indParameters(1)-1));
+
+%get interpreter and remove line
+indlatex=strfind(txt,'gui:Interpreter:latex');
+indtex=strfind(txt,'gui:Interpreter:tex');
+indnone=strfind(txt,'gui:Interpreter:none');
+if ~isempty(indnone) 
+    inter0='none';
+    indtex=indnone;
+else
+    inter0='tex';
+end
+
+if isempty(indlatex) && isempty(indtex)
+    txth=txt(1:indParameters(1)-1);
+    description.(inter0)=reformatline(txth);
+    descriptionall=description.(inter0);
+elseif isempty(indlatex)
+    ttexh=strrep(txt(1:indParameters(1)-1),'gui:Interpreter:none','');
+    ttex=reformatline(strrep(ttexh,'gui:Interpreter:tex',''));
+    description.tex=reformatline(ttex);
+    descriptionall=description.tex;
+else
+    ttexh=strrep(txt(1:indlatex-1),'gui:Interpreter:none','');
+    ttex=reformatline(strrep(ttexh,'gui:Interpreter:tex',''));
+    tlatex=reformatline(strrep(txt(indlatex:indParameters(1)-1),'gui:Interpreter:latex',''));
+    if isempty(indtex)
+        description.normal=ttex;
+    else
+        description.tex=ttex;
+    end
+    description.latex=tlatex; 
+    descriptionall=[ttex '\n' tlatex];
+end
+
+
+% description=reformatline(txt(1:indParameters(1)-1));
 
 %tooltips
 txttt=txt(indParameters(1):end);

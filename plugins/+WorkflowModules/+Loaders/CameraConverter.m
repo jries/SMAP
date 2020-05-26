@@ -178,11 +178,12 @@ end
 
 function camparbutton_callback(a,b,obj)
 fn=fieldnames(obj.loc_cameraSettingsStructure);
-
+description=obj.loc_cameraSettings.description;
 fi=obj.getPar('loc_fileinfo');
 obj.loc_cameraSettings=copyfields(obj.loc_cameraSettings,fi);
 for k=length(fn):-1:1
-    fields{k}=fn{k};
+    fields{k}=description.(fn{k});
+%     fields{k}=fn{k};
     if myisfield(fi,fn{k})
         defAns{k}=num2str(fi.(fn{k}));
     else
