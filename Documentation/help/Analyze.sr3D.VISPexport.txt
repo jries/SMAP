@@ -1,0 +1,4 @@
+exports localizations in a format compatible with VISP. Exports localizations to be used with: El Beheiry, Mohamed, and Maxime Dahan. “ViSP: Representing Single-Particle Localizations in Three Dimensions.” Nature Methods 10, no. 8 (August 1, 2013): 689–90. https://doi.org/10.1038/nmeth.2566.
+
+gui:Parameters:
+gui:vispformat Export format: 2D: x,y; 2D LP: x,y with localizationp precision; 3D: x,y,z, 3D LP: x,y,z and localization precision in x,y,z.

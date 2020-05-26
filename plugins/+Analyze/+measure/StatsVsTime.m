@@ -10,7 +10,11 @@ classdef StatsVsTime<interfaces.DialogProcessor
         
         function out=run(obj,p)
             out=[];
-            fields={'filenumber','frame','phot','locprecnm','znm','PSFxnm','locprecznm','numberInGroup','bg'};
+           
+            fields={'filenumber','frame','phot','locprecnm','PSFxnm','numberInGroup','bg'};
+            if isfield(obj.locData.loc,'znm')
+                fields{end+1:end+2}={'znm','locprecznm'};
+            end
             if p.useroi
                 position='roi';
             else
@@ -162,7 +166,7 @@ classdef StatsVsTime<interfaces.DialogProcessor
             end
             legend(m2)
 
-            ax3=obj.initaxis('lifetime');
+            ax3=obj.initaxis('on-time');
             hold off
             plot(ax3,filns,ps.lifetime.mu{1})
             plot(axall,filns,ps.lifetime.mu{1}/max(ps.lifetime.mu{1}))
@@ -172,7 +176,7 @@ classdef StatsVsTime<interfaces.DialogProcessor
             plot(axall,filns,ps.lifetime.mu{k}/max(ps.lifetime.mu{k}))
             end
             xlabel(xl)
-            ylabel('lifetime (mu)')
+            ylabel('on-time (frames) ')
             legend(modetxt)
             
              ax4=obj.initaxis('BG');
@@ -200,11 +204,12 @@ classdef StatsVsTime<interfaces.DialogProcessor
                 ylabel('max PSFx (nm)')
                 legend(modetxt)
             end
-                    
+            xlabel(axall,xl)
+            ylabel(axall,'all curves, normalized')
             
         end
         function pard=guidef(obj)
-            pard=guidef;
+            pard=guidef(obj);
         end
     end
 end
@@ -212,7 +217,7 @@ end
 
 
 
-function pard=guidef
+function pard=guidef(obj)
 pard.useroi.object=struct('String','use Roi','Style','checkbox','Value',1);
 pard.useroi.position=[1,1];
 
@@ -242,14 +247,15 @@ pard.lifetimerange.position=[4,2.5];
 % 
 % pard.photrange.object=struct('String','0','Style','edit');
 % pard.photrange.position=[2,3];
-
-pard.timefield.object=struct('String',{{'files','frames'}},'Style','popupmenu');
+p(1).value=1; p(1).on={}; p(1).off={'t1','framewindows'};
+p(2).value=2; p(2).on=p(1).off; p(2).off={};
+pard.timefield.object=struct('String',{{'files','frames'}},'Style','popupmenu','Callback',{{@obj.switchvisible,p}});
 pard.timefield.position=[5,1];
 
-pard.t1.object=struct('String','# time windows (for frame)','Style','text');
+pard.t1.object=struct('String','# time windows (for frame)','Style','text','Visible','off');
 pard.t1.position=[6,1];
 pard.t1.Width=2;
-pard.framewindows.object=struct('String','10','Style','edit');
+pard.framewindows.object=struct('String','10','Style','edit','Visible','off');
 pard.framewindows.position=[6,3];
 
 pard.plugininfo.name='Statistics vs frame/file';

@@ -35,6 +35,7 @@ end
     end
 else
     text0=td;
+    interpreter0='none';
 end
 
   htxt=annotation(hp,'textbox',pos,...

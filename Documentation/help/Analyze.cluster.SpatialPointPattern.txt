@@ -1,0 +1,26 @@
+Calculates spatial statistics based on pair correlation and Ripleys K function. 
+
+The pair correlation g(r) can counts the number of localizations in a ring of radius r around each localization and averages over all localizations.
+
+Ripley's R(r) counts the number of localizations in a circle of radius r around each localization and averages over all localizations. It is the cumulative
+distribution of the pair correlation function.
+
+For Ripley's analysis, usually L(r)-r with L(r)=sqrt(R(r)/\pi) is plottet. 
+
+For clustered localizations, L(r)-r is above 1, and the position of the maximum is related to the cluster size.
+
+For pair correlation functions, the decay is related to the cluster size.
+
+Pair correlation functions are calculated according to: Sengupta et al, "Probing Protein Heterogeneity"  Nature Methods 8 (2011) as correlations using reconstructed images and Fourier Transforms.
+
+Here, the analysis is extended also to two colors displayed in two layers to investigate co-clustering.
+
+gui:Parameters:
+gui:ch1 Layer that shows localizations of color 1
+gui:ch1t=ch1 
+gui:ch2 Layer that shows localizations of color 2. Choose none if you want to analyze a single color only.
+gui:ch2t=ch2 
+gui:rpix Pixel size (in nm) for calculating pair correlation curves (usually a few nm). 
+gui:rpixt=rpix 
+gui:rrange Range (in nm) for which the curves are calculates (large than the cluster size, typically a few 1000 nm). 
+gui:rranget=rrange 

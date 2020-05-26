@@ -1,0 +1,10 @@
+Performs Voronoi clustering and returns the localization density (inverse of voronoi cell).
+If grouped or ungrouped data is used depends on setting in layers. Uses code from SharpViSu:
+L. Andronov, Y. Lutz, J.-L. Vonesch, and B. P. Klaholz, SharpViSu: integrated analysis and segmentation
+of super-resolution microscopy data, Bioinformatics, 2016.
+
+The localization density is saved as a new localization field of the name "clusterdensity". It can for instance
+be used to color code localizations according to localization density by selecting this field in the Render tab, Colormode.
+
+gui:Parameters:
+gui:t1 

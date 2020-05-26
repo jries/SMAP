@@ -109,11 +109,10 @@ if ploton
         plot(axf,ones(2,1)*stat.frames.falloff(k),[0,max(stat.frames.histogram(k).h)])
     end
     legend(plothf,slegend);
+    slf={'Frames'};
+    xlabel(axf,'frames')
+    ylabel(axf,'localizations per frame')
 end
-slf={'Frames'};
-xlabel(axf,'frames')
-ylabel(axf,'localizations per frame')
-
 %photon stats
 phot=getFieldAsVector(locs,'phot');
 if isempty(phot{1})
@@ -132,7 +131,9 @@ end
     pr=0.99;
 % end
 [hphot,mmax,slegend]=plothist(phot,pr,[],0,ax1,modetxt,40);
+if ploton
 xlabel(ax1,'photons');
+end
 
 sphot={'Photons'};
 % phot1=1000;
@@ -207,8 +208,10 @@ for k=datrange
     slp{end+1}=['geomean: ' num2str(geom,3)];
     slegend2{end+1}='quadratic fit';
 end
+if ploton
 xlabel(ax2,'localization precison x (nm)');
 legend(ax2,slegend2)
+end
 
 %lifetime
 lifetime=getFieldAsVector(locs,'numberInGroup');
@@ -230,8 +233,10 @@ for k=datrange
     slegend3{end+1}='multi exp fit';
     stat.lifetime.mu(k)=dat(k).mu;
 end
+if ploton
 xlabel(ax3,'on-time (frames)')
 legend(ax3,slegend3)
+end
 
 %background
 bg=getFieldAsVector(locs,'bg');
@@ -265,8 +270,9 @@ for k=datrange
     stat.background.mean(k)=mbg;
     stat.background.max(k)=maxbg;
 end
+if ploton
 xlabel(ax4,'background (photons/pixel/localization)');
-
+end
 %z/sigma
 if zexist
     v=getFieldAsVector(locs,'znm');
@@ -295,14 +301,13 @@ for k=1:length(datrange)
     sls{end+1}=['max: ' num2str(smxf,4)];
     stat.(txt).max(k)=smxf;
 end
+if ploton
 legend(ax5,slegend5)
 if zexist
     xlabel(ax5,'z (nm)')
 else
     xlabel(ax5,'PSF size (nm)')
 end
-
-if ploton
 fontsize=14;
 if p.overview
     pos=[.25,0.0,-.1,0];
@@ -336,8 +341,10 @@ if zexist && ~isempty(v{1})
         mx=hz{k}.n(ind);    
         slp{end+1}=['max: ' num2str(mx,3)];
         stat.locprecznm.max(k)=mx;
-    end    
+    end   
+    if ploton
     xlabel(ax7,'localization precision z (nm)');
+    end
     znm=getFieldAsVector(locs,'znm');
     rz=[-800 800];
     rsz=[0 100];
