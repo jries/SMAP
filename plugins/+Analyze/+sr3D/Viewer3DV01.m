@@ -1032,7 +1032,7 @@ pard.theta.position=[3,1.7];
 pard.theta.Width=0.5;
 pard.theta.Optional=false;
 
-pard.thetplus.object=struct('String','+90°','Style','pushbutton','Callback',@obj.thetaplus);
+pard.thetplus.object=struct('String','+90','Style','pushbutton','Callback',@obj.thetaplus);
 pard.thetplus.position=[3,2.2];
 pard.thetplus.Width=0.4;
 pard.thetplus.TooltipString='Push to set polar angle to zero';
