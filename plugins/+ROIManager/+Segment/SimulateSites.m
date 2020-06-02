@@ -343,6 +343,16 @@ pard.labeling_efficiency.Width=.5;
 pard.labeling_efficiency.position=[3,2.5];
 pard.labeling_efficiency.TooltipString=pard.t_labelingefficiency.TooltipString;
 
+pard.linkageerrort.object=struct('String','Linkage error std (nm)','Style','text');
+pard.linkageerrort.position=[3,3];
+pard.linkageerrort.Width=1.5;
+
+pard.linkageerror.object=struct('String','0','Style','edit');
+pard.linkageerror.Width=.5;
+pard.linkageerror.position=[3,4.5];
+
+
+
 pard.modelt.object=struct('String','Model:','Style','text');
 pard.modelt.Width=.5;
 pard.modelt.position=[4,1];

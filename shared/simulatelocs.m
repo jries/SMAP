@@ -2,8 +2,7 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
         if nargin<2
             colour=1;
         end
-           [poslabels,possites,parameters]=getlabels(p, colour);
-           
+
            if ~isfield(p,'model')
                p.model.selection='simple';
            end
@@ -25,14 +24,28 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
            if ~isfield(p,'photonsigma')
                p.photonsigma=0;
            end
+           if ~isfield(p,'linkageerror')
+               p.linkageerror=0;
+           end
+           
+           [poslabels,possites,parameters]=getlabels(p, colour);
+           if p.linkageerror>0
+               poslabels=addlinkage(poslabels,p.linkageerror);
+           end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
            
-%            p.lifetime=2;
-%            photonsperframe=p.photons/p.lifetime;
            posphot=getphotons(posreappear,p.photons,p.lifetime,p.photonsigma);
            
            locs=locsfrompos(posphot,p);
            locsout=singlelocs(locs);
+end
+
+function  poslabels=addlinkage(poslabels,linkageerror)
+    for k=1:length(poslabels)
+       poslabels(k).x=poslabels(k).x+randn(length(poslabels(k).x),1)*linkageerror;
+       poslabels(k).y=poslabels(k).y+randn(length(poslabels(k).y),1)*linkageerror;
+       poslabels(k).z=poslabels(k).z+randn(length(poslabels(k).z),1)*linkageerror;
+    end
 end
 
 function posphot=getphotons(locs,photons,lifetime,photonsigma)
@@ -202,7 +215,7 @@ else
 end
 
 % numeroflines=ceil(p.numberofsites/numberofrows);
-fieldstosave={'labeling_efficiency','model','blinks','lifetime','photons','background','maxframes','coordinatefile'};
+fieldstosave={'labeling_efficiency','model','blinks','lifetime','photons','background','maxframes','coordinatefile','linkageerror','photonsigma'};
 psave=copyfields([],p,fieldstosave);
 for k=numberofsites:-1:1
     xh=mod(k-1,numberofrows)+1;
