@@ -32,7 +32,7 @@ void  cs(double *list, double *x, double *y, double *frames,double dX,long dT,do
     {       
         
         
-    while((list[thisentry]>0)&& (thisentry<=lenx-1)) //find next particle which is not connected: list(of this)=0
+    while((list[thisentry]>0)&& (thisentry<=lenx-1-1)) //find next particle which is not connected: list(of this)=0
     {
         thisentry+=1;
     }  
@@ -64,13 +64,13 @@ void  cs(double *list, double *x, double *y, double *frames,double dX,long dT,do
         frtest=frh+1;
         
         //find first entry with fitting x in frame
-        while((x[testentry]<xh-dX) && (frames[testentry]==frtest) && (testentry<=lenx-1)) 
+        while((testentry<=lenx-1) && (x[testentry]<xh-dX) && (frames[testentry]==frtest)) 
         {
             testentry+=1;
         } 
 
         // compare y for all possible x
-        while((x[testentry]<xh+dX) && (frames[testentry]==frtest) && (testentry<=lenx-1))
+        while((testentry<=lenx-1) && (x[testentry]<xh+dX) && (frames[testentry]==frtest))
         {
             dxsigmac=dxsigma[thisentry]*dxsigma[thisentry]+lph*lph;
             if (dxsigmac>dX*dX)
