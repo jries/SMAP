@@ -104,7 +104,17 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
              disp(settingsdir);
 %              end
 %              obj.setPar('maindirectory',pwd);
-            obj.setPar('SettingsDirectory',makerelativetopwr(settingsdir));
+            settingsdirrel=makerelativetopwr(settingsdir);
+            parentdir=fileparts(settingsdirrel);
+            obj.setPar('SettingsDirectory',settingsdirrel);
+            if ~isempty(parentdir)
+                pluginhelp=[parentdir filesep 'Documentation' filesep 'help' ];
+            else
+                pluginhelp=[ 'Documentation' filesep 'help' ];
+            end
+            disp(['plugin help directory: ' pluginhelp]);
+            obj.setPar('PluginHelpDirectory',pluginhelp);
+                
             initglobalsettings(obj);
             if ~isdeployed
                 addpath('shared');
@@ -135,15 +145,16 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %            try 
                 mainaddress='https://www.embl.de/download/ries/Documentation/';
                 docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf'};
-                if isdeployed
-                     outdir=[settingsdir filesep 'temp' filesep 'Documentation' filesep];
-                else
-                     outdir=[pwd filesep 'Documentation' filesep 'pdf' filesep];
-                end
-                if ~exist(outdir,'dir')
-                     mkdir(outdir)
-                end
-                
+%                 if isdeployed
+%                      outdir=[settingsdir filesep 'temp' filesep 'Documentation' filesep];
+%                 else
+%                      outdir=[pwd filesep 'Documentation' filesep 'pdf' filesep];
+%                 end
+%                 if ~exist(outdir,'dir')
+%                      mkdir(outdir)
+%                 end
+               
+                outdir= [fileparts(pluginhelp) filesep 'pdf' filesep];
                 for k=1:length(docfiles)
                     worked=worked|savewebfile([outdir docfiles{k}] ,[mainaddress docfiles{k}]);
                 end

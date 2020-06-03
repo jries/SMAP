@@ -35,7 +35,7 @@ else
     ttex=reformatline(strrep(ttexh,'gui:Interpreter:tex',''));
     tlatex=reformatline(strrep(txt(indlatex:indParameters(1)-1),'gui:Interpreter:latex',''));
     if isempty(indtex)
-        description.normal=ttex;
+        description.none=ttex;
     else
         description.tex=ttex;
     end

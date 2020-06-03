@@ -1,3 +1,4 @@
+gui:Interpreter:latex
 Gui to load and save files.
 
 Grouping: 
@@ -16,7 +17,7 @@ or calculated from the lcoalization precisions of the localizations to be merged
 Here, localizations are still merged if $dx^2< 2.5(\sigma_1^2+\sigma_2^2)$, with $dx$ the
 displacement and $\sigma_1$ and $\sigma_2$ the localization precison of both localizations.
 
-gui:Interpreter:latex
+
 gui:Parameters:
 gui:add add localization data or image
 gui:as_tdx=autosavecheck

@@ -32,11 +32,15 @@ void  cs(double *list, double *x, double *y, double *frames,double dX,long dT,mw
     {       
         
         
-    while((list[thisentry]>0)&& (thisentry<=lenx-1-1)) //find next particle which is not connected: list(of this)=0
+    while((list[thisentry]>0)&& (thisentry<=lenx-1)) //find next particle which is not connected: list(of this)=0
     {
         thisentry+=1;  //XXX can reach lenx! Fixed
     }  
     
+    if(thisentry==lenx)
+    {
+        break;
+    }
     //store coordinates
     particlenumber++;
     xh=x[thisentry];

@@ -239,11 +239,12 @@ end
 function helpsmap_callback(a,b,obj,whichone)
 switch whichone
     case {1,2,3,4}
-        if  isdeployed
-            direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
-        else
-            direc = ['Documentation' filesep 'pdf'];
-        end
+%         if  isdeployed
+%             direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
+%         else
+%             direc = ['Documentation' filesep 'pdf'];
+%         end
+        direc= [fileparts(obj.getPar('PluginHelpDirectory')) filesep 'pdf' filesep];
 
         filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf'};
         myopenpdf([direc filesep filenames{whichone}]);

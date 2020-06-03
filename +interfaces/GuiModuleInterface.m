@@ -553,7 +553,12 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                     elseif strcmp(allFields{k},'outputParameters')
                         obj.outputParameters=thisField;
                     elseif strcmp(allFields{k},'plugininfo')
-                        obj.plugininfo=thisField;
+                        fn=setdiff(fieldnames(thisField),'description');
+                        fieldn=copyfields([],thisField,fn);
+                        if isfield(thisField,'description')
+                            fieldn.description.none=thisField.description;
+                        end
+                        obj.plugininfo=fieldn;
                     elseif strcmp(allFields{k},'locselector')
                         %do nothing here
                     elseif strcmp(allFields{k},'helpfile')
@@ -649,12 +654,18 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                        
                 end 
                 % read help file and write tool tips 
-                settingsdir=obj.getPar('SettingsDirectory');
-                helpfilep=[fileparts(settingsdir) filesep 'Documentation' filesep 'help' filesep helpfile];
-                if strcmp(helpfilep(1),filesep)
-                    helpfilep(1)=[];
-                end
-                maxwidth=60;             
+                plugindir=obj.getPar('PluginHelpDirectory');
+                helpfilep=[plugindir filesep helpfile];
+%                 settingsdir=obj.getPar('SettingsDirectory');
+%                 helpfilep=[fileparts(settingsdir) filesep 'Documentation' filesep 'help' filesep helpfile];
+%                 if strcmp(helpfilep(1),filesep)
+%                     helpfilep(1)=[];
+%                 end
+%                 settingsdir
+%                 helpfilep
+                maxwidth=60;     
+%                helpfilep
+%                exist(helpfilep,'file')
                 if ~isempty(helpfile) && exist(helpfilep,'file')
                     [description,tooltips]=parsehelpfile(helpfilep);
                     obj.plugininfo.description=(description);
@@ -818,7 +829,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
               fs=12;
           end
 
-        showpluginhelp(hp,obj.info.description,pos,fs)
+        showpluginhelp(hp,obj.info.description,pos,fs);
     
           h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.9,0.0,.1,.05],'String','Edit','Callback',{@edit_callback,obj});
 %           h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
@@ -957,7 +968,15 @@ end
 if ~exist([outdir helpfile],'file')
     writehelpfile([outdir helpfile],obj.guidef);
 end
-open([outdir helpfile])
+if isdeployed
+    if ispc
+        system(['notepad ' outdir helpfile]);
+    else
+        system(['open -a TextEdit ' outdir helpfile]);
+    end
+else
+    open([outdir helpfile]);
+end
 
 end
 

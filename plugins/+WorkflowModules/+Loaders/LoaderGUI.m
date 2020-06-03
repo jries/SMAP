@@ -44,8 +44,10 @@ classdef LoaderGUI<interfaces.WorkflowModule
             if isstruct(obj.plugininfo.description)
                 fn=fieldnames(obj.plugininfo.description);
                 t1=obj.plugininfo.description.(fn{1});
+                fieldn=fn{1};
             else
                 t1=obj.plugininfo.description;
+                fieldn='none';
             end
             loadernames=obj.loadernames;
             obj.guihandles.loaderlist.String=obj.loadernames;
@@ -76,7 +78,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
 %                 hp.Units='normalized';
                 obj.guihandles.([loadernames{k} '_panel'])=hp;
                 if isstruct(loader.info.description)
-                    fn=fieldnames(obj.plugininfo.description);
+                    fn=fieldnames(loader.info.description);
                     th=loader.info.description.(fn{1});
                 else
                     th=loader.info.description;
@@ -86,7 +88,10 @@ classdef LoaderGUI<interfaces.WorkflowModule
             obj.inputParameters=ip;
             obj.loaders{1}.handle.Visible='on';
             obj.currentloader=obj.loaders{1};
-            obj.plugininfo.description.none=t1;
+%             obj.plugininfo
+%             t1
+%             obj.plugininfo.description
+            obj.plugininfo.description.(fieldn)=t1;
         end
         function fieldvisibility(obj,varargin)
             fieldvisibility@interfaces.GuiModuleInterface(obj,varargin{:});
