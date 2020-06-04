@@ -15,7 +15,7 @@ newopts=optimset(oldopts,'MaxFunEvals',150,'MaxIter',150,'TolFun',1e-3,'Display'
 switch structure
     
     case 1 %stepfunction
-        start=[m,s1,s2-s1,0,sigma]
+        start=[m,s1,s2-s1,0,sigma];
         fitout=lsqcurvefit(@fitstep,double(start),double(xv),double((profile)),[],[],newopts);
         fout=fitstep(fitout,xv);
         fstart=fitstep(start,xv);
