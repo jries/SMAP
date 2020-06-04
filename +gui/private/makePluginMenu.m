@@ -71,9 +71,10 @@ end
 
 help=uimenu(handle,'Label','Help');
 h.helpplutgin=uimenu(help,'Label','Search plugin','Callback',{@helpsmap_callback,obj,5});
+h.helpsmap=uimenu(help,'Label','Getting Started','Callback',{@helpsmap_callback,obj,6});
 h.helpsmap=uimenu(help,'Label','User Guide','Callback',{@helpsmap_callback,obj,1});
 h.helpuser=uimenu(help,'Label','Programming Guide','Callback',{@helpsmap_callback,obj,2});
-h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpsmap_callback,obj,3});
+% h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpsmap_callback,obj,3});
 h.help2C=uimenu(help,'Label','Step-by-step 3D dual color example','Callback',{@helpsmap_callback,obj,4});
 end
 
@@ -238,7 +239,7 @@ end
 
 function helpsmap_callback(a,b,obj,whichone)
 switch whichone
-    case {1,2,3,4}
+    case {1,2,3,4,6}
 %         if  isdeployed
 %             direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
 %         else
@@ -246,7 +247,7 @@ switch whichone
 %         end
         direc= [fileparts(obj.getPar('PluginHelpDirectory')) filesep 'pdf' filesep];
 
-        filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf'};
+        filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','reserved for search','Getting_Started.pdf'};
         myopenpdf([direc filesep filenames{whichone}]);
     case 5
     sh=gui.SearchHelp;  

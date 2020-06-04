@@ -144,7 +144,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             worked=false;
 %            try 
                 mainaddress='https://www.embl.de/download/ries/Documentation/';
-                docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf'};
+                docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf','Getting_Started.pdf'};
 %                 if isdeployed
 %                      outdir=[settingsdir filesep 'temp' filesep 'Documentation' filesep];
 %                 else
@@ -167,9 +167,10 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 warndlg(['could not download and save documentation pdfs. Help might not work.  Make sure you have write access to settings. Move the settings directory to ' possibledirs])
             end
             
+            %update plugin file if new plugins are saved
             makeplugincallfile('plugins');
             
-            %add java path
+            %add java path to bioformats
                 bfpath=obj.getGlobalSetting('bioformatspath');
             if exist(bfpath,'dir') && ~isdeployed
                 addpath(bfpath)
