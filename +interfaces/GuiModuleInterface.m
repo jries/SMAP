@@ -819,6 +819,9 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
        function showinfo(obj, hp)
           if nargin<2
             hp=figure('MenuBar','none','Toolbar','figure');
+                smappos=obj.getPar('mainGuihandle').Position;
+            hp.Position(1)=smappos(1)+smappos(3);
+            hp.Position(2)=smappos(2);
             hp.Position(3)=hp.Position(3)*1.5;
             hp.Position(4)=hp.Position(4)*1.5;
             hp.Color='w';
