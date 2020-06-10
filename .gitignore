@@ -7,3 +7,4 @@ plugins/plugin.m
 autosave_*
 External/bfmatlab/*
 *.docx
+Documentation/pdf/*
