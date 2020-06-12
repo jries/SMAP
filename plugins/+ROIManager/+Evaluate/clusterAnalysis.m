@@ -14,6 +14,10 @@ classdef clusterAnalysis<interfaces.SEEvaluationProcessor
 %             site = obj(1).locData
             layers=find(inp.sr_layerson);
             locs=obj.getLocs({'locprecnm','locprecznm','xnm','ynm','frame','znm','layer'},'layer',layers,'size',inp.se_siteroi/2);  
+%             if isempty(locs.znm)
+%                 locs.znm=0*locs.xnm;
+%                 locs.locprecznm=0*locs.xnm+1;
+%             end
             X=horzcat(locs.xnm,locs.ynm,locs.znm);
             Xerr=horzcat(locs.locprecnm,locs.locprecnm,locs.locprecznm);
             C=[];
@@ -48,9 +52,18 @@ classdef clusterAnalysis<interfaces.SEEvaluationProcessor
             hc=histcounts(idx(idx>0));
             [~,idr]=sort(hc,'descend');
             
-            ddC.xyz=norm(Cdat(idr(2),:)-Cdat(idr(1),:));
-            ddC.xy=norm(Cdat(idr(2),1:2)-Cdat(idr(1),1:2));
-            ddC.z=abs(Cdat(idr(2),3)-Cdat(idr(1),2));
+            if size(idr,2)>1
+                
+                ddC.xyz=norm(Cdat(idr(2),:)-Cdat(idr(1),:));
+                ddC.xy=norm(Cdat(idr(2),1:2)-Cdat(idr(1),1:2));
+                if size(Cdat,2)>2
+                ddC.z=abs(Cdat(idr(2),3)-Cdat(idr(1),2));
+                end
+            else
+                ddC.xyz=NaN;
+                ddC.xy=NaN;
+                ddC.z=NaN;
+            end
 %             [~,idr]=sort(rand(nc));
             map=hsv(nc+1);
             idxn=idx;
@@ -60,22 +73,32 @@ classdef clusterAnalysis<interfaces.SEEvaluationProcessor
                 scatter(ax,X(incluster,1),X(incluster,2),5,map(idxn(incluster),:))
                 hold (ax,'on')
                  scatter(ax,X(~incluster,1),X(~incluster,2),3,[0.5 0.5 0.5])
+                 if size(idr,2)>1
+                  plot(ax,Cdat(idr(1:2),1),Cdat(idr(1:2),2),'k-o')
+                 end
             else
                 scatter3(ax,X(incluster,1),X(incluster,2),X(incluster,3),5,map(idxn(incluster),:))
                 hold (ax,'on')
                 scatter3(ax,X(~incluster,1),X(~incluster,2),X(~incluster,3),3,[0.5 0.5 0.5])
+                if size(idr,2)>1
+                 plot3(ax,Cdat(idr(1:2),1),Cdat(idr(1:2),2),Cdat(idr(1:2),3),'k-o')
+                end
             end
             hold (ax,'on')
 %                 scatter3(ax,Cdat(idr(1),1),Cdat(idr(1),2),Cdat(idr(1),3),20,'k')
 %                 scatter3(ax,Cdat(idr(2),1),Cdat(idr(2),2),Cdat(idr(2),3),20,'k')
-                plot3(ax,Cdat(idr(1:2),1),Cdat(idr(1:2),2),Cdat(idr(1:2),3),'k-o')
+               
             if ~isempty(C)
 %                 scatter3(ax,C(idr(1),1),C(idr(1),2),C(idr(1),3),20,'b+')
 %                 scatter3(ax,C(idr(2),1),C(idr(2),2),C(idr(2),3),20,'b+')
-                plot3(ax,C(idr(1:2),1),C(idr(1:2),2),C(idr(1:2),3),'b-+')
-                dC.xyz=norm(C(idr(2),:)-C(idr(1),:));
-                dC.xy=norm(C(idr(2),1:2)-C(idr(1),1:2));
-                dC.z=abs(C(idr(2),3)-C(idr(1),3));
+                if ~isempty(locs.znm)
+                    plot3(ax,C(idr(1:2),1),C(idr(1:2),2),C(idr(1:2),3),'b-+')
+                    dC.xyz=norm(C(idr(2),:)-C(idr(1),:));
+                    dC.xy=norm(C(idr(2),1:2)-C(idr(1),1:2));
+                    dC.z=abs(C(idr(2),3)-C(idr(1),3));
+                else
+                    dC=[];
+                end
             else
                 dC=[];
             end
@@ -113,7 +136,7 @@ switch method
 end
 
 
-C=zeros(max(idx),3);
+C=zeros(max(idx),size(X,2));
 for k=1:max(idx)
     indh=idx==k;
     if isempty(indh)

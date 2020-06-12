@@ -101,7 +101,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
              if k>1 %not default
                 obj.setPar('maindirectory',fileparts(settingsdir));
              end
-             disp(settingsdir);
+             disp(['settings directory: ' settingsdir]);
 %              end
 %              obj.setPar('maindirectory',pwd);
             settingsdirrel=makerelativetopwr(settingsdir);

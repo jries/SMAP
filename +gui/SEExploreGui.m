@@ -132,9 +132,11 @@ classdef SEExploreGui<interfaces.SEProcessor
                 obj.guihandles.filelist.Value=1;
             end
             try
-            infofile=['settings' filesep 'infostruct.txt'];
-            obj.infostruct=getinfostruct(infofile);
+                settingsd=obj.getPar('SettingsDirectory');
+                infofile=[settingsd filesep 'infostruct.txt'];
+                obj.infostruct=getinfostruct(infofile);
             catch
+                disp('could not load infostruct.txt')
             end
             %clear images (might have changed)
             delete(obj.guihandles.fileax.Children)

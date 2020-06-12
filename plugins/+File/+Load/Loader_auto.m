@@ -15,6 +15,7 @@ classdef Loader_auto<interfaces.DialogProcessor
                 mode=getfilemode(file);
             end
             loadfile(obj,p,file,mode);
+            obj.guihandles.updateGuiPar.Value=p.updateGuiPar; %do not overwrite update Guipar settings.
         end
         function pard=guidef(obj)
             pard=guidef;

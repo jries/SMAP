@@ -91,7 +91,7 @@ classdef AverageSites<interfaces.DialogProcessor&interfaces.SEProcessor
             dr=5;
 %             rr=dr/2:dr:max(max(r1),max(r2));
             %proper concentration: dA=pi*(ro^2-ri^2)
-            rr=0:dr:max(max(r1),max(r2))+dr;
+            rr=0:dr:max(max([r1;r2]))+dr;
             
             dA=pi*(rr(2:end)+rr(1:end-1)).*(rr(2:end)-rr(1:end-1));
             h1=histcounts(r1,[rr]) ;

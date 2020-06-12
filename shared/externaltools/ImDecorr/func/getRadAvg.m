@@ -35,10 +35,12 @@
 
 function r = getRadAvg(im)
 
-if size(im,1) ~= size(im,2)
-    im = imresize(im,[max(size(im)) max(size(im))],'bilinear');
-elseif length(size(im)) ~= 2
+if length(size(im)) ~= 2
     error('getRadAvg supports only 2D matrix as input');
+elseif size(im,1) ~= size(im,2)
+    N = min(size(im,1),size(im,2));
+    im = im(floor(size(im,1)/2 - N/2)+1:floor(size(im,1)/2 - N/2)+N,...
+        floor(size(im,2)/2 - N/2)+1:floor(size(im,2)/2 - N/2)+N);
 end
 
 r = mean(im2pol(im),1);
