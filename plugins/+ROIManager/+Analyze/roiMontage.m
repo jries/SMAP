@@ -47,11 +47,9 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
                     if p.showLabel
                         % add ROIs' ID labels
                         pause(1e-10)
-                        set(fig, 'Position', [0, 0, imgSize_x, imgSize_y])
-                        set(ax, 'Position', [0, 0, imgSize_x, imgSize_y])
                         text(ax, .05,.9,num2str(se.sites(k).ID),'FontSize',round(38/pxSize),'FontWeight','bold')
                         F = getframe(ax);
-                        if any(size(F.cdata)~=size(img))
+                        if any(size(F.cdata)~=size(roiToPlot{(k-p.roiOrder(1)+1),1}))
                             Fh=imresize(F.cdata,size(img,1:2));
                         else 
                             Fh=F.cdata;
@@ -62,16 +60,22 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
                     end
                 end
             end
-            if p.showLabel
-                close(fig)
-            end
+            
             
             % make montage
             roiToPlot = roiToPlot(~cellfun('isempty',roiToPlot));
             nrow = ceil(length(roiToPlot)/p.ncol);
-            saveTo = [p.folder '\' p.fileName];
             img = montage(roiToPlot, 'Size', [nrow p.ncol], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', p.pad);
-            imwrite(img.CData, saveTo)
+            if ~strcmp(p.folder, '.')
+                if p.showLabel
+                    close(fig)
+                end
+                saveTo = [p.folder '\' p.fileName];
+                imwrite(img.CData, saveTo)
+            else
+                ax0=obj.initaxis('Montage');
+                imagesc(ax0, img.CData);
+            end   
             out=[];
         end
         function pard=guidef(obj)
