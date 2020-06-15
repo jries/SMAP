@@ -15,20 +15,21 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
             %% deal with the image size
             fovSize = se.P.par.se_sitefov.content;
             pxSize = se.P.par.se_sitepixelsize.content;
-            crop_x = round(p.crop(1)./pxSize);
-            crop_y = round(p.crop(2)./pxSize);
-            imgSize_x = round(fovSize./pxSize)-crop_x;
-            imgSize_y = round(fovSize./pxSize)-crop_y;
+            crop_oneSide_x = round(p.crop(1)./pxSize./2);
+            crop_oneSide_y = round(p.crop(2)./pxSize./2);
+            imgSize_x = round(fovSize./pxSize)-crop_oneSide_x*2;
+            imgSize_y = round(fovSize./pxSize)-crop_oneSide_y*2;
             roiToPlot = cell(numOfRoiToPlot,1);
             
             %% extract individual ROIs, add their IDs
             if p.showLabel
                 fig = figure('visible','off');
-                a = axes(fig);
+                pause(1e-10)
+                ax = axes(fig);
                 set(fig, 'Position', [0, 0, imgSize_x, imgSize_y])
-                set(a, 'Position', [0, 0, imgSize_x, imgSize_y])
-                a.XLim = [0 imgSize_x];
-                a.YLim = [0 imgSize_y];
+                set(ax, 'Position', [0, 0, imgSize_x, imgSize_y])
+                ax.XLim = [0 imgSize_x];
+                ax.YLim = [0 imgSize_y];
             end
             if p.takeAll
                 p.roiOrder = [1 obj.SE.numberOfSites];
@@ -42,12 +43,13 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
                 
                 if useThisRoi
                     img = se.sites(k).image.image;
-                    roiToPlot{(k-p.roiOrder(1)+1),1} = imcrop(img,[crop_x+1 crop_y+1 imgSize_x imgSize_y]);
+                    roiToPlot{(k-p.roiOrder(1)+1),1} = imcrop(img,[crop_oneSide_x crop_oneSide_y imgSize_x-1 imgSize_y-1]);
                     if p.showLabel
                         % add ROIs' ID labels
-                        text(a, .05,.9,num2str(se.sites(k).ID),'FontSize',round(38/pxSize),'FontWeight','bold')
-                        F = getframe(a);
-                        cla(fig)
+                        pause(1e-10)
+                        text(ax, .05,.9,num2str(se.sites(k).ID),'FontSize',round(38/pxSize),'FontWeight','bold')
+                        F = getframe(ax);
+                        cla(ax)
                         F = F.cdata==0;
                         roiToPlot{(k-p.roiOrder(1)+1),1}(F==1) = 255;
                     end
