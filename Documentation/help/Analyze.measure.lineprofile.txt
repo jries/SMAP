@@ -6,7 +6,7 @@ as distance of first to the last data point above half the maximum value).
 Flat: step function convolved with Gaussian (=Erf). Result FWHM as defined for the Gauss fit, 
 the step length and the sigma of the Gaussian used for convulution.
 
-Disk: Projection of a homogeneously filled disk, convolved with Gaussian. FWHM as defined for the Gauss fit. Disk R: Radius of the disk. Sigma: sigma of the Gaussian used for convulution.
+Disk: Projection of a homogeneously filled disk, convolved with Gaussian. FWHM as defined for the Gauss fit. Disk R: Radius of the disk. Sigma: sigma of the Gaussian used for convolution.
 
 Ring: As for the disk, but for the projection of a ring (e.g. for side views on microtubules or other ring-like structures). 
 

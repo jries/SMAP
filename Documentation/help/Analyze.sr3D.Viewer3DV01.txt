@@ -9,7 +9,8 @@ The range in z is defined with zmin/zmax. The rotation angle around the horizont
 
 You can also drag with a mouse the reconstruction to the preferred view in the figure showing the 3D reconstruction.
 
-You can continuosly animate the image or save a movie of an animation.
+You can continuosly animate the image or save a movie of an animation. For this, you have the choice of a rotation along the horizontal or the vertical axis, or to render
+a slice and translate this slice horizontally or vertically through the sample.
 
 Keyboard shortcuts (work if the 3D rendered image is the selected window): 
 

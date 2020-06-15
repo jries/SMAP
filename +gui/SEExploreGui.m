@@ -10,6 +10,7 @@ classdef SEExploreGui<interfaces.SEProcessor
             obj@interfaces.SEProcessor(varargin{:})
         end
         function makeGui(obj)
+            makeGui@interfaces.SEProcessor(obj);
 %             obj.handle=figure(37);
 %             clf
             if ispc
@@ -20,42 +21,53 @@ classdef SEExploreGui<interfaces.SEProcessor
             set(obj.handle,'Position',[560,300,800,1000]);
              set(obj.handle,'MenuBar','none','Toolbar','none','SizeChangedFcn',{@sizechanged_callback,obj},'Name','ROIManager','NumberTitle','off')
              h.siteax=axes('Position',[.05,.6,.4,.32],'DataAspectRatio',[1 1 1],'NextPlot','replacechildren');
+%               h.siteax.Tooltip=sprintf(mytextwrap('Reconstructed ROI image. Right-click to center the ROI to the selected point.',60,10));
              h.cellax=axes('Position',[.55,.6,.4,.32],'DataAspectRatio',[1 1 1],'NextPlot','replacechildren');
+%               h.cellax.Tooltip=sprintf(mytextwrap('Reconstructed Cell image. Left-click to define a new ROI (site). Right-click to center the cell to the selected positionn.',60,10));
              h.fileax=axes('Position',[.05,.2,.4,.32],'DataAspectRatio',[1 1 1],'NextPlot','replacechildren');%,'PlotBoxAspectRatio',[1 1 1],'DataAspectRatioMode','manual','PlotBoxAspectRatioMode','manual');
-%              h.filelist=uicontrol(obj.handle,'Position',[.05,.05,.4,.1],'Style','listbox','String','X://','Units','normalized')
+%               h.fileax.Tooltip='Reconstructed File image. Left-click to define a new Cell.'; % h.filelist=uicontrol(obj.handle,'Position',[.05,.05,.4,.1],'Style','listbox','String','X://','Units','normalized')
              h.filelist=uicontrol(obj.handle,'Position',[10,10,580+20,150],'Style','listbox','String','empty ','Units','normalized','FontSize',fontsize-2,'Callback',{@filelist_callback,obj});
+              h.filelist.Tooltip=sprintf(mytextwrap('List of files. These cannot be edited and are the same as in teh main GUI in the File tab. Click on a file to select and draw it.',60,10));
              h.sitelist=uicontrol(obj.handle,'Position',[400-10,160,190+30,380],'Style','listbox',...
                  'String','empty ','Units','normalized','FontSize',fontsize-2,'max',100,'Callback',{@sitelist_callback,obj});
+              h.sitelist.Tooltip=sprintf(mytextwrap('List of ROIs (sites). Select an entry to render it. The name consists of the ROI ID (S), the Cell ID (C), the file ID (F) and the selections of the annotation lists (L). +/- in the end denotes use / dont use.',60,10));
              h.celllist=uicontrol(obj.handle,'Position',[600+20,360,190-20,180],'Style','listbox',...
                  'String',' empty','Units','normalized','FontSize',fontsize-2,'max',100,...
                  'Callback',{@celllist_callback,obj});
+              h.celllist.Tooltip=sprintf(mytextwrap('List of cells. Select entry to render it.',60,10));
              h.redrawsite=uicontrol(obj.handle,'Position',[30,925,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawsite_callback,obj});
+              h.redrawsite.Tooltip=sprintf(mytextwrap('Render the ROI image again, also runs evaluation plugins again.',60,10));
              h.redrawsiteall=uicontrol(obj.handle,'Position',[110,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawsiteall_callback,obj});
-              
+              h.redrawsiteall.Tooltip=sprintf(mytextwrap('Renders and evaluates all ROIs (sites).',60,10));
              h.addsite=uicontrol(obj.handle,'Position',[290,925,60,40],'Style','pushbutton','String','Add','Units','normalized','FontSize',fontsize,'Callback',{@addsite,obj});
+              h.addsite.Tooltip=sprintf(mytextwrap('Add current ROI to the site list',60,10));
              h.removesite=uicontrol(obj.handle,'Position',[400-10,540,90,30],'Style','pushbutton','String','Remove','Units','normalized','FontSize',fontsize,'Callback',{@removesite_callback,obj});
+              h.removesite.Tooltip=sprintf(mytextwrap('Remove currently selected ROI from the list.',60,10));
              h.toggleuse=uicontrol(obj.handle,'Position',[510+20,540,70,30],'Style','pushbutton','String','Use','Units','normalized','FontSize',fontsize,'Callback',{@toggleuse_callback,obj});
+              h.toggleuse.Tooltip=sprintf(mytextwrap('Toggle the use property',60,10));
              h.updatelist=uicontrol(obj.handle,'Position',[480,540,50,30],'Style','pushbutton','String','upd','Units','normalized','FontSize',fontsize,'Callback',{@updatelist_callback,obj});
-             
-             
+              h.updatelist.Tooltip=sprintf(mytextwrap('Update the ROI list. This might be necessary after using some evaluation/Analysis that change the ROIs.',60,10));
              h.redrawcell=uicontrol(obj.handle,'Position',[430,925,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawcell_callback,obj});
-              h.redrawcellall=uicontrol(obj.handle,'Position',[510,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawcellall_callback,obj});
+              h.redrawcell.Tooltip=sprintf(mytextwrap('Render the cell image again.',60,10));
+             h.redrawcellall=uicontrol(obj.handle,'Position',[510,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawcellall_callback,obj});
+              h.redrawcellall.Tooltip=sprintf(mytextwrap('Render all cells',60,10));
              h.addcell=uicontrol(obj.handle,'Position',[650,925,60,40],'Style','pushbutton','String','Add','Units','normalized','FontSize',fontsize,'Callback',{@addcell,obj});
+              h.addcell.Tooltip=sprintf(mytextwrap('Add current cell to the Cell list',60,10));
              h.removecell=uicontrol(obj.handle,'Position',[600+20,540,90,30],'Style','pushbutton','String','Remove','Units','normalized','FontSize',fontsize,'Callback',{@removecell_callback,obj});
-             
+              h.removecell.Tooltip=sprintf(mytextwrap('Remove currently selected Cell from the list.',60,10));
              h.redrawfile=uicontrol(obj.handle,'Position',[30,525,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawfile_callback,obj});
+              h.redrawfile.Tooltip=sprintf(mytextwrap('Render the file overview image.',60,10));
              h.fileax.ButtonDownFcn={@fileaxclick,obj};
              h.cellax.ButtonDownFcn={@cellaxclick,obj};
              h.siteax.ButtonDownFcn={@siteaxclick,obj};
-             
              h.info=uicontrol(obj.handle,'Position',[600+20,10,190-20,340],'Style','listbox','String','info','FontSize',fontsize-2,'Max',10,'Units','normalized');
-             
+                h.info.Tooltip=sprintf(mytextwrap('Show information on the current site. What is shown is defined in settings/infostruct.txt.',60,10));
              h.anglebutton=uicontrol(obj.handle,'Position',[160,925,60,40],'Style','pushbutton','String','Angle','Units','normalized','FontSize',fontsize,'Callback',{@anglebutton_callback,obj});
+                h.anglebutton.Tooltip=sprintf(mytextwrap('Define a linear ROI that denotes the orientation of the structure.',60,10));
              h.angle=uicontrol(obj.handle,'Position',[220,925,50,40],'Style','edit','String','0','Units','normalized','FontSize',fontsize,'Callback',{@angle_callback,obj});
-             
-             
+                h.angle.Tooltip=sprintf(mytextwrap('Angle of the selected ROI and length.',60,10));   
              h.revealsmap=uicontrol(obj.handle,'Position',[30,600,30,30],'Style','pushbutton','String','<-','Units','normalized','FontSize',fontsize,'Callback',{@revealsmap_callback,obj});
-             h.revealsmap.TooltipString='reaveal current site in SMAP';
+                h.revealsmap.Tooltip=sprintf(mytextwrap('reaveal current site in SMAP',60,10));
              
              c=uicontextmenu;
              h.sitelist.UIContextMenu=c;
@@ -71,11 +83,14 @@ classdef SEExploreGui<interfaces.SEProcessor
              obj.hlines.sidemarker.line2=[];
              obj.hlines.sidemarker.roi=[];
 
-             
-             
              obj.handle.WindowKeyPressFcn={@keypress,obj,0};
              obj.addSynchronization('filelist_long',[],[],@obj.updateFilelist);
             obj.addSynchronization('currentsite',[],[],@obj.updatesite);
+             obj.makeinfobutton('nw')
+        end
+        function pard=guidef(obj)
+            pard.plugininfo.name='ROImanagerGUI';
+            pard.helpfile='SMAP.Gui.ROImanager.txt';
         end
         function sitelistmenu(obj,a,b)
             switch a.Text

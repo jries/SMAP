@@ -51,9 +51,14 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
                         set(ax, 'Position', [0, 0, imgSize_x, imgSize_y])
                         text(ax, .05,.9,num2str(se.sites(k).ID),'FontSize',round(38/pxSize),'FontWeight','bold')
                         F = getframe(ax);
+                        if any(size(F.cdata)~=size(img))
+                            Fh=imresize(F.cdata,size(img,1:2));
+                        else 
+                            Fh=F.cdata;
+                        end                         
                         cla(ax)
-                        F = F.cdata==0;
-                        roiToPlot{(k-p.roiOrder(1)+1),1}(F==1) = 255;
+                        Ft = Fh==0;
+                        roiToPlot{(k-p.roiOrder(1)+1),1}(Ft==1) = 255;
                     end
                 end
             end

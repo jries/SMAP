@@ -1,14 +1,15 @@
 density_calculator looks at the neighborhood of each localizations and counts number 
 of neighbours in a defined region and assigns localizations a new field "clusterdensity". 
-This field denotes the number of neighbours in the regionn defined 
+This field denotes the number of neighbours in the region defined 
 by the parameters in the plugin.
 
 Later, this field can be used for color coding according to 
 localization density by selecting this field in the renderer, colormode.
 
+
 gui:Parameters:
-gui:allfiles Apply on all files together
-gui:countingregion count Gauss-weighted locs (more accurate) or locs in circle/cylinder (faster)
+gui:allfiles Apply on all files together. 
+gui:countingregion count localizations weighted by a Gaussian function (more accurate) or localizations in circle/cylinder (faster)
 gui:countingsize_xy radius of circle or sigma of gauss in lateral direction
 gui:countingsize_z size of cylinder or sigma of gauss in z direction
 gui:countwhat Count either all localizations filtered ones that are currently visible in the renderer

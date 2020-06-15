@@ -738,7 +738,15 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                try
                 name=obj.pluginpath{end};
                catch
-                   name=obj.subpluginpath{end};
+                   try
+                        name=obj.subpluginpath{end};
+                   catch
+                       try 
+                            name=obj.guidef.plugininfo.name;
+                       catch
+                           name='unidentified';
+                       end
+                   end
                end
                 [~,file]=fileparts(name);
                 if ~isempty(file)

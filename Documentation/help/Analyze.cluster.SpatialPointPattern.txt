@@ -11,9 +11,12 @@ For clustered localizations, L(r)-r is above 1, and the position of the maximum 
 
 For pair correlation functions, the decay is related to the cluster size.
 
-Pair correlation functions are calculated according to: Sengupta et al, "Probing Protein Heterogeneity"  Nature Methods 8 (2011) as correlations using reconstructed images and Fourier Transforms.
+Pair correlation functions are calculated according to: Sengupta et al, "Probing Protein Heterogeneity"  
+Nature Methods 8 (2011) as correlations using reconstructed images and Fourier Transforms.
 
 Here, the analysis is extended also to two colors displayed in two layers to investigate co-clustering.
+
+gui:Interpreter:tex
 
 gui:Parameters:
 gui:ch1 Layer that shows localizations of color 1

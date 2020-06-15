@@ -30,6 +30,7 @@ classdef SEAnnotation< interfaces.SEProcessor
             obj.guihandles.line2.Callback={@line_callback,obj,2};
             obj.setPar('ROI_lineannotation_handle_1',obj.guihandles.line1);
             obj.setPar('ROI_lineannotation_handle_2',obj.guihandles.line2);
+            obj.makeinfobutton('nw');
 %             set(obj.guihandles.redrawall,'Callback',{@redrawall_callback,obj})
 %             set(obj.guihandles.clearall,'Callback',{@clearall_callback,obj})
 %             addlistener(obj.SE.locData,'loaded',@obj.loaded_notify);
@@ -289,4 +290,6 @@ pard.comments.object=struct('Style','edit','String','','Max',5);
 pard.comments.position=[12,3];
 pard.comments.Height=3;
 pard.comments.Width=2;
+pard.helpfile='SMAP.Gui.ROIannotation.txt';
+pard.plugininfo.name='ROIannotation';
 end

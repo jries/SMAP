@@ -113,7 +113,7 @@ for i=1:m
        inds1=find(xs(inds1:end,2)>=xph-eps,1,'first')+inds1-1;
        inds2=find(xs(inds1:end,2)>=xph+eps,1,'first')+inds1-1;
        ob=xs(i,:);
-       [indi,nind]=dist2(ob(2:n),xs(:,2:n),inds1,inds2,Eps);
+       [indi,nind]=dist2(ob(2:n+1),xs(:,2:n+1),inds1,inds2,Eps);
 %        ind=find(D<=Eps);
 %        indi=D<=Eps;
 %        nind=sum(indi);
@@ -152,7 +152,7 @@ for i=1:m
                     inds2=inds2+1;
                 end
 %                 inds3=find(xs(inds2:end,2)>=ob(2)+eps,1,'first')+inds2-1;
-                [ieps,neps]=dist2(ob(2:n),xs(:,2:n),inds1,inds2,Eps);
+                [ieps,neps]=dist2(ob(2:n+1),xs(:,2:n+1),inds1,inds2,Eps);
 %                 i1=find(D<=Eps);
 %                 ieps=(D<=Eps);
 %                 neps=sum(ieps);
@@ -244,6 +244,8 @@ if plotClusters && max(class) == -1
     scatter (DBSCANmat.Noise(:,2), DBSCANmat.Noise(:,1), 1, [0.2 0.2 0.2],'Parent',plotaxis);
     axis(plotaxis,'equal'); 
     title(['DBSCAN, no clusters detected. k = ' num2str(k), ', ' char(949) ' = ' num2str(Eps)],'Parent',plotaxis);
+    xlabel('x (nm)')
+    ylabel('y (nm)')
 elseif plotClusters
     clustercols = lines(max(class));
 
@@ -254,6 +256,8 @@ elseif plotClusters
     end
     axis (plotaxis,'equal');
     title (['DBSCAN, ' num2str(max(class)) ' clusters detected. k = ' num2str(k), ', ' char(949) ' = ' num2str(Eps)],'Parent',plotaxis);
+        xlabel('x (nm)')
+    ylabel('y (nm)')
 end %end plotting
 
 end

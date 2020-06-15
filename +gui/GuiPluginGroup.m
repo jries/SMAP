@@ -248,7 +248,7 @@ switch callobj.Label
         obj.guiplugins=rmfield(obj.guiplugins,name);
         obj.setprocessorlist;
         guimodules.(obj.maindir{1}).(obj.maindir{2})=rmfield(guimodules.(obj.maindir{1}).(obj.maindir{2}),name);
-        obj.children=rmfield(obj.children,'name');
+        obj.children=rmfield(obj.children,name);
         
     case {'move up','move down'}
         allnames=obj.plugins.allclassnames;
