@@ -47,6 +47,8 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
                     if p.showLabel
                         % add ROIs' ID labels
                         pause(1e-10)
+                        set(fig, 'Position', [0, 0, imgSize_x, imgSize_y])
+                        set(ax, 'Position', [0, 0, imgSize_x, imgSize_y])
                         text(ax, .05,.9,num2str(se.sites(k).ID),'FontSize',round(38/pxSize),'FontWeight','bold')
                         F = getframe(ax);
                         cla(ax)
