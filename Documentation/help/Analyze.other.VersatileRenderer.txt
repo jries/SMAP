@@ -1,0 +1,24 @@
+Render any field vs any other using any 3rd field for coloring.
+
+This renderer uses the settings from the Render tab (e.g. color coding, filtering) and plots locazations within a ROI (if defined).
+
+By selecting a parameter, the minimum and maximum value are automatically estimated, as well as a suitable pixel size. But you can overwrite those. 
+
+
+gui:Parameters:
+gui:assignfield1 choose which field to render
+gui:assignfield2 choose which field to render
+gui:max1 Maximum value to render
+gui:max2=max1 
+gui:min1 Minimum value to render
+gui:min2=min1 
+gui:pixelsize1 Pixel size (in units of the selected field) 
+gui:pixelsize2=pixelsize1 
+gui:setsigma=sigma1 
+gui:sigma1 Gaussian blurring with a sigma in pixels (as defined at pixelsize).
+gui:sigma2=sigma1 
+gui:t1 
+gui:t2 
+gui:t3=pixelsize1 
+gui:t4=min1 
+gui:t5=max1 

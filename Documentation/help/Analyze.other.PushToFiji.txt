@@ -1,0 +1,6 @@
+Opens the reconstructed superresolution image in Fiji. Make sure to specify the path to Fiji in the menu SMAP/Preferences/Directories.
+
+gui:Parameters:
+gui:exitfiji Closes Fiji
+gui:outputformat Define which image to pass on to Fiji.
+gui:t1 

@@ -1,0 +1,20 @@
+Calculates the absolute effective labeling efficiency from NPC images using the results of evaluator: 
+
+NPCLabelingQuantify_s. 
+
+See:Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieslinski, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid, et al. 
+"Nuclear Pores as Versatile Reference Standards for Quantitative Superresolution Microscopy." Nature Methods 16 (2019). doi 10.1038/s41592-019-0574-9.
+
+gui:Parameters:
+gui:PSFrange Only analyzse NPCs with an average PSF in the given range (in nm).
+gui:copy2page Copy results to own page, not only show in the results tab figure.
+gui:corners Number of corners for the NPC (=8).
+gui:filecheck Only evaluate files with the specified file numbers.
+gui:filenumbers=filecheck 
+gui:fitrange Only fit the range of corners specified here (this is necessary as for low labeling efficiencies NPCs with low number of corners are less
+likely to be segmented).
+gui:psfcheck=PSFrange 
+gui:rings Number of proteins per corner. For Nup96 and Nup107 this is 4. 
+gui:t1=corners 
+gui:t2=rings 
+gui:t3=fitrange 

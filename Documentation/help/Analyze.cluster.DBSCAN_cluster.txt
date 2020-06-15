@@ -1,0 +1,24 @@
+DBSCAN_cluster is an optimized version of the DBSCAN algorithm from:
+
+F. A. Caetano, 
+B. S. Dirk, J. H. K. Tam, P. C. Cavanagh, M. Goiko, S. S. G. Ferguson, S. H.
+ Pasternak,J. D. Dikeakos, J. R. de Bruyn, and B. Heit, "MIiSR: Molecular 
+Interactions in Super-Resolution Imaging Enables the Analysis of Protein Interactions,
+ Dynamics and Formation of Multi-protein Structures.", PLoS Comput. Biol., vol. 11, no. 12, p. e1004634, Dec. 2015.
+
+The localizations are assigned an additional field called "clusterindex" that contains the cluster ID, or -1 if 
+the localization is part of the background.
+
+The neighbourhood radius can be specified or estimated automatically as:
+
+Eps=((prod(max(x)-min(x))*k*gamma(.5*n+1))/(m*sqrt(\pi^n)))^{1/n}
+
+x is a matrix containing the x,y (and optionally z) coordinates, n is the dimension (2 for 2D data
+and 3 for 3D data), k denotes the minimum number of localizations in a cluster and m is the number of localizations.
+
+gui:Parameters:
+gui:eps_dbscan Neighbourhood radius (nm)
+gui:k_dbscan Minimum objects in neighbourhood.
+gui:seteps If checked, you can specify the neighborhood radius. Otherwise it is estimated from the data. 
+gui:t1
+gui:t2=k_dbscan
