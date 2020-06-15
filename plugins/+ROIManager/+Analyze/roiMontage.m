@@ -8,20 +8,27 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         
         function out=run(obj,p)
+            disp('To ensure the consistency, please redraw all the sides being exported before running this plugin.')
             se = obj.locData.SE;
             numOfRoiToPlot = p.roiOrder(2)-p.roiOrder(1)+1;
-            roiSize = se.P.par.se_sitefov.content;
             
+            %% deal with the image size
+            fovSize = se.P.par.se_sitefov.content;
+            pxSize = se.P.par.se_sitepixelsize.content;
+            crop_x = round(p.crop(1)./pxSize);
+            crop_y = round(p.crop(2)./pxSize);
+            imgSize_x = round(fovSize./pxSize)-crop_x;
+            imgSize_y = round(fovSize./pxSize)-crop_y;
             roiToPlot = cell(numOfRoiToPlot,1);
             
             %% extract individual ROIs, add their IDs
             if p.showLabel
                 fig = figure('visible','off');
                 a = axes(fig);
-                set(fig, 'Position', [0, 0, roiSize, roiSize])
-                set(a, 'Position', [0, 0, roiSize, roiSize])
-                a.XLim = [0 500];
-                a.YLim = [0 500];
+                set(fig, 'Position', [0, 0, imgSize_x, imgSize_y])
+                set(a, 'Position', [0, 0, imgSize_x, imgSize_y])
+                a.XLim = [0 imgSize_x];
+                a.YLim = [0 imgSize_y];
             end
             if p.takeAll
                 p.roiOrder = [1 obj.SE.numberOfSites];
@@ -34,11 +41,12 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
                 end
                 
                 if useThisRoi
-                    roiToPlot{(k-p.roiOrder(1)+1),1} = se.sites(k).image.image;
+                    img = se.sites(k).image.image;
+                    roiToPlot{(k-p.roiOrder(1)+1),1} = imcrop(img,[crop_x+1 crop_y+1 imgSize_x imgSize_y]);
                     if p.showLabel
                         % add ROIs' ID labels
-                        text(a, .05,.9,num2str(se.sites(k).ID),'FontSize',38,'FontWeight','bold')
-                        F = getframe(a,[0, 0, roiSize, roiSize]);
+                        text(a, .05,.9,num2str(se.sites(k).ID),'FontSize',round(38/pxSize),'FontWeight','bold')
+                        F = getframe(a);
                         cla(fig)
                         F = F.cdata==0;
                         roiToPlot{(k-p.roiOrder(1)+1),1}(F==1) = 255;
@@ -48,9 +56,10 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
             if p.showLabel
                 close(fig)
             end
+            
+            % make montage
             roiToPlot = roiToPlot(~cellfun('isempty',roiToPlot));
             nrow = ceil(length(roiToPlot)/p.ncol);
-            roiToPlot = cellfun(@(x)imcrop(x,[p.crop(1)/2 p.crop(2)/2 roiSize-p.crop(1) roiSize-p.crop(2)]), roiToPlot, 'UniformOutput', false);
             saveTo = [p.folder '\' p.fileName];
             img = montage(roiToPlot, 'Size', [nrow p.ncol], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', p.pad);
             imwrite(img.CData, saveTo)
