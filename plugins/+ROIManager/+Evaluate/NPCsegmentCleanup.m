@@ -97,7 +97,7 @@ pard.minlocs.Width=.5;
 
 pard.maxPSFt.object=struct('Style','text','String','max average PSF');
 pard.maxPSFt.position=[6,1];
-pard.maxPSFt.Width=1.5;
+pard.maxPSFt.Width=1.8;
 pard.maxPSF.object=struct('Style','edit','String','150');
 pard.maxPSF.position=[6,2.5];
 pard.maxPSF.Width=.5;

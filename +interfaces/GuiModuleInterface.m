@@ -808,16 +808,21 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                pos(3:4)=[20 20];
            else
                switch position
-                   case 'sw' %right lower
-                       pos=[h.Position(3)-17,1,15,20];
-                   case 'nw' %right upper
-                       pos=[h.Position(3)-17,h.Position(4)-21,15,20];
+                   case 'se' %right lower
+                       pos=[h.Position(3)-18,1,15,20];
+                   case 'ne' %right upper
+                       pos=[h.Position(3)-18,h.Position(4)-22,15,20];
+                   case 'sw'
+                       pos=[1,1,15,20];
                    case 'guiselector'
                        pos=[h.Position(3)-32,h.Position(4)-21,15,20];
+                   otherwise 
+                       disp('wrong position for help button')
+                       obj
                end
            end
            obj.guihandles.infobutton=uicontrol(h,'Style','pushbutton','String','i',...
-               'Position',pos,'Callback',@obj.showinfo_callback);
+               'Position',pos,'Callback',@obj.showinfo_callback,'BackgroundColor',[0.7,1,.9]);
            h.Units=units;
            obj.guihandles.infobutton.Tooltip='Show information for this plugin';
        end

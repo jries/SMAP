@@ -19,7 +19,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
         function initGui(obj)
             simulation_callback(obj.guihandles.simulationsource, 0,obj)
             obj.setcampar;
-            obj.makeinfobutton('nw');
+            obj.makeinfobutton('ne');
 %             psfpar_callback(0,0,obj,true)
         end
         function out=run(obj,data,p)  

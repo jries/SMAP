@@ -1,0 +1,15 @@
+Calculates the number of visible corners in an NPC which is used to evaluate the absolute effective labeling efficiency. 
+
+See: Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, 
+Manuel Reitberger, Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards for 
+Quantitative Superresolution Microscopy.” Nature Methods 16 (2020), doi:10.1038/s41592-019-0574-9.
+
+Also look at Documentation/SMAP_manual_NPC.xml for a manual on how to analyze NPCs.
+
+gui:Parameters:
+gui:R Radius of the ring
+gui:Rt=R 
+gui:dR Thickness of the ring 
+gui:dRt=dR 
+gui:minlocs Minmum number of localizations per symmetric unit
+gui:minlocst=minlocs

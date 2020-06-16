@@ -14,7 +14,7 @@ classdef SEGUISettings< interfaces.SEProcessor
             set(obj.guihandles.showSE,'Callback',{@make_siteexplorer,obj})
             set(obj.guihandles.redrawall,'Callback',{@redrawall_callback,obj})
             set(obj.guihandles.clearall,'Callback',{@clearall_callback,obj})
-            obj.makeinfobutton('nw');
+            obj.makeinfobutton('ne');
         end
     end
 end

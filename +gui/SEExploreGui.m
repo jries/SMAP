@@ -86,7 +86,7 @@ classdef SEExploreGui<interfaces.SEProcessor
              obj.handle.WindowKeyPressFcn={@keypress,obj,0};
              obj.addSynchronization('filelist_long',[],[],@obj.updateFilelist);
             obj.addSynchronization('currentsite',[],[],@obj.updatesite);
-             obj.makeinfobutton('nw')
+             obj.makeinfobutton('ne')
         end
         function pard=guidef(obj)
             pard.plugininfo.name='ROImanagerGUI';

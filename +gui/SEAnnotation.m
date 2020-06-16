@@ -30,7 +30,7 @@ classdef SEAnnotation< interfaces.SEProcessor
             obj.guihandles.line2.Callback={@line_callback,obj,2};
             obj.setPar('ROI_lineannotation_handle_1',obj.guihandles.line1);
             obj.setPar('ROI_lineannotation_handle_2',obj.guihandles.line2);
-            obj.makeinfobutton('nw');
+            obj.makeinfobutton('ne');
 %             set(obj.guihandles.redrawall,'Callback',{@redrawall_callback,obj})
 %             set(obj.guihandles.clearall,'Callback',{@clearall_callback,obj})
 %             addlistener(obj.SE.locData,'loaded',@obj.loaded_notify);

@@ -1,0 +1,30 @@
+ Evaluates properties of the structure (number of localizations, size of radius of ring, localizations inside or outside of ring,
+ to determine if an 
+automatically segmented structure resembles a nuclear pore complex. Used to clean up automatic segmentation. 
+
+This sets the 'use' property. You can then sort according to this property and remove localizations.
+
+See: Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieśliński, Philipp Hoess, Sudheer Kumar Peneti, 
+Manuel Reitberger, Daniel Heid, et al. “Nuclear Pores as Versatile Reference Standards for 
+Quantitative Superresolution Microscopy.” Nature Methods 16 (2020), doi:10.1038/s41592-019-0574-9.
+
+Also look at Documentation/SMAP_manual_NPC.xml for a manual on how to analyze NPCs.
+
+gui:Parameters:
+gui:R Radius of the NPC (nm)
+gui:Rt=R
+gui:center If checked, the NPC is autmatically centered based on a circle fit. 
+gui:dR Thickness of a rim in which we expect localizations (nm):
+gui:dRt=dR 
+gui:inside Cutoff based on numbers of localizations inside the ring compared to the localizations on the ring. To filter out clusters that are not ring-like.
+gui:insidet=inside 
+gui:maxPSF Maximum of the average size of the fitted PSF (for 2D Gaussian fitting). Used to filter out NPCs that are not in focus.
+gui:maxPSFt=maxPSF 
+gui:minlocs Minimum number of localizations. To filter out small background clusters.
+gui:minlocst=minlocs
+gui:minsize Minimum size of the structure (nm, related to standard deviation). To filter out small background clusters.
+gui:minsizet=minsize 
+gui:outside Cutoff based on numbers of localizations outside the ring compared to the localizations on the ring. To filter out clusters that have a huge background.
+gui:outsidet=outside 
+gui:radiusrange Range of allowed radii based on a circle fit to the coordinates.
+gui:radiusranget=radiusrange 

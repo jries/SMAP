@@ -1,0 +1,10 @@
+Gui
+
+gui:Parameters:
+gui:addmodule 
+gui:evaluateon 
+gui:preview 
+gui:redrawall redraw all sites (inclusive files and cells) or selected sites if more than one site seltected
+gui:removemodule 
+gui:se_display 
+gui:se_keeptempimages 
