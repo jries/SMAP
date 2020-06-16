@@ -50,12 +50,12 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
                         text(ax, .05,.9,num2str(se.sites(k).ID),'FontSize',round(38/pxSize),'FontWeight','bold')
                         F = getframe(ax);
                         if any(size(F.cdata)~=size(roiToPlot{(k-p.roiOrder(1)+1),1}))
-                            Fh=imresize(F.cdata,size(img,1:2));
+                            Fh=imresize(F.cdata,size(roiToPlot{(k-p.roiOrder(1)+1),1},1:2));
                         else 
                             Fh=F.cdata;
                         end                         
                         cla(ax)
-                        Ft = Fh==0;
+                        Ft = Fh<64;
                         roiToPlot{(k-p.roiOrder(1)+1),1}(Ft==1) = 255;
                     end
                 end
@@ -65,16 +65,16 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
             % make montage
             roiToPlot = roiToPlot(~cellfun('isempty',roiToPlot));
             nrow = ceil(length(roiToPlot)/p.ncol);
-            img = montage(roiToPlot, 'Size', [nrow p.ncol], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', p.pad);
-            if ~strcmp(p.folder, '.')
+            imgm = montage(roiToPlot, 'Size', [nrow p.ncol], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', p.pad);
+            if exist(p.folder,'dir')
+                saveTo = [p.folder filesep p.fileName];
+                imwrite(imgm.CData, saveTo)
                 if p.showLabel
                     close(fig)
                 end
-                saveTo = [p.folder '\' p.fileName];
-                imwrite(img.CData, saveTo)
             else
                 ax0=obj.initaxis('Montage');
-                imagesc(ax0, img.CData);
+                imagesc(ax0, imgm.CData);
             end   
             out=[];
         end
