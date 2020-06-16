@@ -1,0 +1,4 @@
+Calculates number of localizations, average PSF size etc. Per default, results of this plugin are displayed in the ROI manager as info.
+
+gui:Parameters:
+gui:circularroi If checked, use the circular ROI, otherwise use a square ROI.

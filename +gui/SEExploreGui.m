@@ -624,7 +624,7 @@ plotsite(obj,site)
 end
 
 function plotinfo(obj,site)
-textwidth=20;
+textwidth=12;
 info=obj.infostruct;
 s={'no info'};
 for k=1:length(info)
@@ -635,23 +635,19 @@ for k=1:length(info)
         elseif isnumeric(val)&&abs(max(val))>100
             fs='%.0f';
         else
-            
             fs=3;
         end
     catch ME
-        
         val='n.d.';
 %         disp('info file error or field not defined')
     end
     vals=num2str(val,fs);
     
     txt=info(k).text;
-    if length(txt)<textwidth&&length(vals)<10;
+    if length(txt)<textwidth&&length(vals)<10
         txt(end+1:textwidth)=' ';
     end
-    
     s{k}=[txt vals];
-
 end
 obj.guihandles.info.String=s;
 end
@@ -660,7 +656,6 @@ end
 
 function filelist_callback(data,action,obj)
     filenumber=obj.SE.files(data.Value).ID;
-
 obj.SE.currentfile=obj.SE.files(filenumber);
 plotfile(obj,filenumber);
 end

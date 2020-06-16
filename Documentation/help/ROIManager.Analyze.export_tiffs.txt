@@ -1,0 +1,5 @@
+Export superresolution reconstructions of selected ROIs as tiff files into a directory.
+
+gui:Parameters:
+gui:export_cells Check if you want to export cell images as well
+gui:export_selected Check if you only want to export selected ROIs.

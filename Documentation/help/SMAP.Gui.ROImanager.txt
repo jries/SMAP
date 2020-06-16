@@ -15,4 +15,5 @@ Then select a ROI (site) in the cell. Center the ROI by right-clicking in the RO
 ROI to the list. You can always re-center ROIs and Cells by right-clicking.
 
 The superresolution images are rendered according to the settings in the Render tab.
+gui:Interpreter:none
 gui:Parameters:

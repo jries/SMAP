@@ -838,11 +838,13 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
           else
               pos=[0 0 .7 1];
               fs=12;
+%               hp=[];
           end
 
         showpluginhelp(hp,obj.info.description,pos,fs);
     
-          h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.9,0.0,.1,.05],'String','Edit','Callback',{@edit_callback,obj});
+          h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.8,0.0,.1,.05],'String','Edit','Callback',{@edit_callback,obj});
+           h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.9,0.0,.1,.05],'String','Close','Callback',{@close_callback,obj,hp});
 %           h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
         end
 
@@ -956,7 +958,9 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %        end
    end
 end
-
+function close_callback(a,b,obj,handle)
+close(handle)
+end
 function edit_callback(a,b,obj)
 basedir=fileparts(obj.getPar('SettingsDirectory'));
 outdir=[basedir filesep 'Documentation' filesep 'help' filesep];

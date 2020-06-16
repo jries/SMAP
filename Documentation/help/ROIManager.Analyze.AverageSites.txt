@@ -1,0 +1,11 @@
+Calculates an simple average of selected ROIs by overlaying them and plotting all localizations into a new file.
+
+Additionally, the radial density is plotted. For this, only data in layer 1 and layer 2 are evaluated.
+
+gui:Parameters:
+gui:addfile If this is checked, a new data set is created in which contains the average, i.e. that contains all localizations in sites with a position relative to the site position.
+gui:name name of the new data set
+gui:namet=name 
+gui:post=sortselection; 
+gui:sortselection If to average all sites or thos with the use attribute.
+gui:t1 

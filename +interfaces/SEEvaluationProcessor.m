@@ -37,7 +37,7 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             end
             if obj.display
             if ~ishandle(obj.output.figure)
-                obj.output.figure=figure;
+                obj.output.figure=figure('Name',obj.name);
                 obj.output.tabgroup=uitabgroup('Parent',obj.output.figure);
                 obj.output.tab=struct('none',0);
             end 

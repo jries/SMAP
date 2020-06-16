@@ -1,8 +1,8 @@
 'pos ','.pos';
 'rotation angle ', '.annotation.rotationpos.angle'
 'rotation length ', '.annotation.rotationpos.length'
-'PSFlayers ', '.evaluation.generalStatistics.PSFlayers'
-'locplayers ', '.evaluation.generalStatistics.locpreclayers'
+'PSF L ', '.evaluation.generalStatistics.PSFlayers'
+'locpmed L ', '.evaluation.generalStatistics.locplayers'
 'Nlayer ', '.evaluation.generalStatistics.Nlayers'
-'Nch ', '.evaluation.generalStatistics.Nch'
-'Nchg', '.evaluation.generalStatistics.Nchg'
+'N ', '.evaluation.generalStatistics.Nch'
+'N g', '.evaluation.generalStatistics.Nchg'

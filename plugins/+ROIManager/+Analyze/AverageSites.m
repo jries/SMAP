@@ -68,25 +68,34 @@ classdef AverageSites<interfaces.DialogProcessor&interfaces.SEProcessor
                 obj.locData.filter;
             end
            
-            
+            layers=find(obj.getPar('sr_layerson'));
             
             %try: add empty file, there put averaged sites
             %for every site: loc.xnm-site.pos(1)+xpossite
             
             loc1=locc.getloc({'xnm','ynm'},'layer',1,'position','all','filenumber',newfile);
-            loc2=locc.getloc({'xnm','ynm'},'layer',2,'position','all','filenumber',newfile);
+            
             %do some statistics:
-           
+           [phi1,r1]=cart2pol(loc1.xnm,loc1.ynm);
             
             
             ax=obj.initaxis('scatter');
             plot(loc1.xnm,loc1.ynm,'.')
-            hold on
-            plot(loc2.xnm,loc2.ynm,'.')
-            hold off
+            xlabel('x (nm)')
+            ylabel('y (nm)')
             
-             [phi1,r1]=cart2pol(loc1.xnm,loc1.ynm);
-             [phi2,r2]=cart2pol(loc2.xnm,loc2.ynm);
+            if any(layers==2)
+                loc2=locc.getloc({'xnm','ynm'},'layer',2,'position','all','filenumber',newfile);
+                [phi2,r2]=cart2pol(loc2.xnm,loc2.ynm);
+                hold on
+                plot(loc2.xnm,loc2.ynm,'.')
+                hold off
+            else
+                r2=[];
+            end
+             
+             
+             
             ax=obj.initaxis('radial distribution');
             dr=5;
 %             rr=dr/2:dr:max(max(r1),max(r2));
@@ -95,16 +104,26 @@ classdef AverageSites<interfaces.DialogProcessor&interfaces.SEProcessor
             
             dA=pi*(rr(2:end)+rr(1:end-1)).*(rr(2:end)-rr(1:end-1));
             h1=histcounts(r1,[rr]) ;
-             h2=histcounts(r2,[rr]) ;
               rrp=rr(1:end-1)+dr/2;
-            plot(rrp,h1,rrp,h2)
+            plot(rrp,h1)
+            if any(layers==2)
+                h2=histcounts(r2,[rr]) ;
+                hold on
+                plot(rrp,h2)
+                hold off
+            end
             xlabel('r')
             ylabel('counts')
             
             ax=obj.initaxis('radial concentration');
 %             plot(rr,h1./rr/2/pi,rr,h2./rr/2/pi)
            
-             plot(rrp,h1./dA,rrp,h2./dA)
+             plot(rrp,h1./dA)
+             if any(layers==2)
+                 hold on
+                 plot(rrp,h2./dA)
+                 hold off
+             end
             xlabel('r')
             ylabel('concentration')
         end
@@ -125,7 +144,7 @@ pard.t1.Width=1;
 
 pard.post.object=struct('String','all or annotated:use','Style','text');
 pard.post.position=[2,1];
-pard.post.Width=1;
+pard.post.Width=1.5;
 
 % pard.pos.object=struct('String','0,0','Style','edit');
 % pard.pos.position=[2,2];
@@ -133,8 +152,8 @@ pard.post.Width=1;
 
 
 pard.sortselection.object=struct('String',{{'all','use'}},'Style','popupmenu');
-pard.sortselection.position=[2,2];
-pard.sortselection.Width=1;
+pard.sortselection.position=[2,2.5];
+pard.sortselection.Width=.5;
 
 pard.namet.object=struct('String','name','Style','text');
 pard.namet.position=[3,1];
