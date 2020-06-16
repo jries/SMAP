@@ -1,0 +1,4 @@
+Keeps only filtered localizations. Can be used to reduce file size.
+
+gui:Parameters:
+gui:textb 

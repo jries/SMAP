@@ -1,0 +1,19 @@
+Makes a montage of many ROIs.
+
+gui:Parameters:
+gui:crop Size in (reconstructed) pixels to crop each ROI to.
+gui:fileName Name of the output file
+gui:folder Directory where to save the montages to. If left empty, the montage is only rendered and displayed, but not saved.
+gui:ncol Number of columns
+gui:onlyUsed If checked, only output ROIs with the 'use' parameter set to '+'
+gui:pad Add additional white space in between ROIs (size in reconstructed pixels)
+gui:roiOrder First and last ROI to output
+gui:selectFolder Select output directory for montage.
+gui:showLabel Show the ROI ID in the images
+gui:t1=roiOrder 
+gui:t2=ncol 
+gui:t3=crop
+gui:t4=pad 
+gui:t5=folder 
+gui:t6 
+gui:takeAll Output all ROIs

@@ -1,0 +1,4 @@
+Simple analysis scripts can be saved under +ROIManager/+Anlaysis/scripts. These can be called from the GUI using this plugin.
+
+gui:Parameters:
+gui:scripts 

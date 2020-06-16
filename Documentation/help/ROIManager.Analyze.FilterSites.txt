@@ -1,0 +1,25 @@
+Filter sites based on any logical combination or arbitrary mathematical expression of evaluation results. This 
+plugin sets the 'use' annotation variable.
+
+You first define variables based on evaluation or annotation results. Then you use mathematical expressions based on these
+variables and logical operators.
+
+gui:Parameters:
+gui:eq1 Mathematical expression based on the variables x1-x6 as defined above that evaluates to a logical value. Use MATLAB notation.
+gui:eq2=eq1 
+gui:eq3=eq1 
+gui:logiceq2 Combine the results of several equations using this operator. 
+gui:logiceq3=logiceq2 
+gui:reset Set all 'use' to true.
+gui:x1 Field that defines variable 
+gui:x1b Select Field that defines variables
+gui:x2=x1 
+gui:x2b=x1b 
+gui:x3=x1 
+gui:x3b=x1b  
+gui:x4=x1 
+gui:x4b=x1b  
+gui:x5=x1 
+gui:x5b=x1b  
+gui:x6=x1 
+gui:x6b=x1b  

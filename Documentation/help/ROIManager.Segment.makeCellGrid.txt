@@ -1,0 +1,7 @@
+Generates a grid of cells for all files.
+
+The size of the cell is determined by the Cell size parameter in the ROIs/Settings tab.
+
+You can remove cells that do not conatain any ROIs with the plugin: RemoveEmptyCells.
+
+gui:Parameters:
