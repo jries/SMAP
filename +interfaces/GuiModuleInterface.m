@@ -803,9 +803,17 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
            h=obj.handle;
            units=h.Units;
            h.Units='pixels';
+           infostring='i';
            if isnumeric(position)
-               pos(1:2)=position(1:2);
-               pos(3:4)=[20 20];
+               if length(position)==2
+                   pos(1:2)=position(1:2);
+                   pos(3:4)=[20 20];
+               else
+                   pos=position;
+                   if pos(3)>50
+                       infostring='info';
+                   end
+               end
            else
                switch position
                    case 'se' %right lower
@@ -821,7 +829,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                        obj
                end
            end
-           obj.guihandles.infobutton=uicontrol(h,'Style','pushbutton','String','i',...
+           obj.guihandles.infobutton=uicontrol(h,'Style','pushbutton','String',infostring,...
                'Position',pos,'Callback',@obj.showinfo_callback,'BackgroundColor',[0.7,1,.9]);
            h.Units=units;
            obj.guihandles.infobutton.Tooltip='Show information for this plugin';
@@ -832,7 +840,12 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
        function showinfo(obj, hp)
           if nargin<2
             hp=figure('MenuBar','none','Toolbar','figure');
-                smappos=obj.getPar('mainGuihandle').Position;
+            smaph=obj.getPar('mainGuihandle');
+            if isempty(smaph)
+                smappos=obj.handle.Position;
+            else
+                smappos=smaph.Position;
+            end
             hp.Position(1)=smappos(1)+smappos(3);
             hp.Position(2)=smappos(2);
             hp.Position(3)=hp.Position(3)*1.5;
