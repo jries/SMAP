@@ -8,8 +8,15 @@ dx1=zeros(length(cellnumbers),1);
 dy1=zeros(length(cellnumbers),1);
 dx2=zeros(length(cellnumbers),1);
 dy2=zeros(length(cellnumbers),1);
-for k=1:length(cellnumbers)
+
+lUsed = getFieldAsVector(sites, 'annotation.use');
+indCells_unused = unique(getFieldAsVector(sites(~lUsed), 'info.cell'));
+
+cellnumbers = cellnumbers(cellnumbers~=indCells_unused);
+
+for k=length(cellnumbers):-1:1
     indcells=find(cells==cellnumbers(k));
+    indcellAll(2*k-1:2*k) = indcells;
     imout=sites(indcells(1)).evaluation.shiftCrossCorrelation.xcorr+imout;
     imout=sites(indcells(2)).evaluation.shiftCrossCorrelation.xcorr+imout;
     dx1(k)=sites(indcells(1)).evaluation.shiftCrossCorrelation.dxline;
@@ -17,9 +24,9 @@ for k=1:length(cellnumbers)
     dx2(k)=sites(indcells(2)).evaluation.shiftCrossCorrelation.dxline;
     dy2(k)=sites(indcells(2)).evaluation.shiftCrossCorrelation.dyline;
 end
-dx=zeros(length(sites),1);
-dy=zeros(length(sites),1);
-for k=1:length(sites)
+dx=zeros(length(indcellAll),1);
+dy=zeros(length(indcellAll),1);
+for k=indcellAll
     dx(k)=sites(k).evaluation.shiftCrossCorrelation.dxline;
     dy(k)=sites(k).evaluation.shiftCrossCorrelation.dyline;
 end
