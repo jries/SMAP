@@ -59,7 +59,12 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             addParameter(p,'keepParsVal',false, @islogical);
             parse(p,varargin{:});
             results = p.Results;
-            out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay, results.keepParsVal);
+            try
+                out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay, results.keepParsVal);
+            catch
+                warning(['Model fitter did not run through. Site ' num2str(obj.site.ID) ' encountered some issues.'])
+                out.fitInfo = 'Fit failed.';
+            end
         end
         
         function makeGui(obj,varargin)
@@ -178,6 +183,16 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             optionTarget = unique([hConvert.ColumnFormat{3} parId]);
             hConvert.ColumnFormat{3} = optionTarget;
             obj.guihandles.anchorConvert=hConvert;
+        end
+        
+        function set.fitter(obj,value) 
+            obj.fitter = value;
+            if isfield(obj.P.par.mainGui.content.children.guiSites.children.Segment.processors,'SimulateSites')
+                simulateSites = obj.P.par.mainGui.content.children.guiSites.children.Segment.processors.SimulateSites;
+                if strcmp(simulateSites.guihandles.useFitter_button.Visible, 'off')
+                    obj.P.par.mainGui.content.children.guiSites.children.Segment.processors.SimulateSites.initGui;
+                end
+            end
         end
     end
     events

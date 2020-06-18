@@ -377,12 +377,15 @@ end
 function [locs,parameters]=locsfromDiscFun(p)
 % added by Yu-Le for SMLMModelFit:   
 fitter = p.obj.getPar('fitter');
+fitter.roiSize = p.se_siteroi;
 modCoord = fitter.getSimRef; % get point type visualization
 parameters = fitter.allParsArg;
 % Export
 locs.x = modCoord{1}.x;
 locs.y = modCoord{1}.y;
-locs.z = modCoord{1}.z;
+if isfield(modCoord{1}, 'z')
+    locs.z = modCoord{1}.z;
+end
 locs.channel = ones(size(modCoord{1}.x));
 end
 
@@ -508,6 +511,7 @@ function locs=locsfromposi(locsi,p)
     locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locprecnm(indin));
     locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locprecnm(indin));
     locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locprecnm(indin)*zfactor);
+    locs.locprecznm=single(locprecnm(indin)*zfactor);
     locs.xnm_gt=single(locsi.x(indin));
     locs.ynm_gt=single(locsi.y(indin));
     locs.znm_gt=single(locsi.z(indin));

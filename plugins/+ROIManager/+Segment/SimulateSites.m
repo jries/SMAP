@@ -6,6 +6,7 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
     %photophysics of the dye. Simulated structures are added to the
     %RoiManager
     properties
+        lSMLMModelFitGUI_loaded = false;    % whether any SMLMModelFitGUI is loaded.
     end
     methods
         function obj=SimulateSites(varargin)        
@@ -314,7 +315,7 @@ pard.useFitter_button.object = struct('Style','pushbutton','String', 'Use fitter
 pard.useFitter_button.position = [2 4];
 
 pard.setModPars_button.object = struct('Style','pushbutton','String', 'Set model pars', 'Callback', {{@setModPars_callback,obj}});
-pard.setModPars_button.position = [3 4];
+pard.setModPars_button.position = [2 3];
 
 
 pard.tif_numbermode.object=struct('String',{{'Density (labels/um^2)','Number of labels'}},'Style','popupmenu');
@@ -445,8 +446,8 @@ pard.randomxyd.position=[7,4.5];
 pard.randomxyd.TooltipString=pard.randomxy.TooltipString;
 
 pard.savez.object=struct('String','save z','Style','checkbox','Value',1);
-pard.savez.Width=1;
-pard.savez.position=[2,3];
+pard.savez.Width=0.5;
+pard.savez.position=[2,2.2];
 pard.savez.TooltipString=sprintf('Also simulate z-coordinate');
 pard.savez.Optional=true;
 
@@ -461,7 +462,7 @@ pard.maxframes.TooltipString=sprintf('Maximum number of frames that contain all 
 pard.t7.TooltipString=pard.maxframes.TooltipString;
 
 pard.savenow.object=struct('String',{{'No saving','Save ground truth','Save simulated locs'}},'Style','popupmenu');
-pard.savenow.Width=2;
+pard.savenow.Width=1.2;
 pard.savenow.position=[2,1];
 pard.savenow.Optional=true;
 pard.plugininfo.type='ROI_Analyze';
