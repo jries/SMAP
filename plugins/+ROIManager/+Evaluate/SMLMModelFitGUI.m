@@ -61,9 +61,14 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             results = p.Results;
             try
                 out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay, results.keepParsVal);
+                out.fitInfo.guiInfo = 'Normal.';
             catch
                 warning(['Model fitter did not run through. Site ' num2str(obj.site.ID) ' encountered some issues.'])
-                out.fitInfo = 'Fit failed.';
+                if results.forceDisplay
+                    out.fitInfo.guiInfo = 'Plot failed.';
+                else
+                    out.fitInfo.guiInfo = 'Fit or plot failed.';
+                end
             end
         end
         
@@ -137,7 +142,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 obj.numMod = 1;                 % init of the model counts
                 obj.guihandles.tabgroup.SelectionChangedFcn={@selectLayer_callback,obj};
                 
-                % Select the M1 tab by default since a user usually starts from loadin a model.
+                % Select the M1 tab by default since a user usually starts from loading a model.
                 obj.guihandles.tabgroup.SelectedTab = obj.guihandles.tab1;
                 
                 %% Converter tab 
