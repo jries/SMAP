@@ -85,6 +85,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             groupmode_callback(0,0,obj);
             pos=obj.guihandles.group_b.Position;
             pos(1)=pos(1)+108;pos(2)=pos(2)+pos(4);
+            pos(3:4)=[];
            obj.makeinfobutton(pos); 
         end
      
