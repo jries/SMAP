@@ -127,7 +127,7 @@ sprintf('file \t area (um2) \t ompaMito \t ompaBg \t ompaMitoRand \t ompaBgRand 
 
 outtxt=sprintf([filen '\t' num2str(area) '\t' num2str(ompaM) '\t' num2str(ompaBg) '\t' num2str(ompaMr) '\t' num2str(ompaBgr) '\t' num2str(locsO) '\t' num2str(locsM)]);
 clipboard('copy',outtxt)
-
+disp(outtxt)
 
 function neighbours=countneighbours23D(locsm,locso,dx,dz)
 sortm=horzcat(locsm.xnm,(1:length(locsm.xnm))');

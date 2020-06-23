@@ -16,7 +16,7 @@ classdef lineprofile<interfaces.DialogProcessor
             out.clipboard=results;
         end
         function pard=guidef(obj)
-            pard=guidef;
+            pard=guidef(obj);
         end
     end
 end
@@ -24,7 +24,7 @@ end
 
 
 
-function pard=guidef
+function pard=guidef(obj)
 
  p(1).value=0; p(1).on={}; p(1).off={'binwidth'};
 p(2).value=1; p(2).on={'binwidth'}; p(2).off={};
