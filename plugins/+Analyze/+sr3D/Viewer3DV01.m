@@ -906,6 +906,10 @@ classdef Viewer3DV01<interfaces.DialogProcessor
         end       
         function savesideview_callback(obj,a,b)
             f=obj.getPar('lastSMLFile');
+            if isempty(f)
+                fa=obj.getPar('filelist_long').selection;
+                f=[fileparts(fa) filesep '*._sml.mat'];
+            end
             fn=strrep(f,'sml.mat','3dxz.tif');
             [file,path]=uiputfile(fn);
             if file
