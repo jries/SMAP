@@ -121,8 +121,11 @@ classdef splinePSF<interfaces.PSFmodel
             normf=obj.normalization;
             Ncorr=N*normf;
         end
-        function [crlb,crlbNBg]=crlb(obj,N,bg,coord,rois)
-            if nargin<5
+        function [crlb,crlbNBg]=crlb(obj,N,bg,coord,rois,correctnormalization)
+            if nargin<6 || isempty(correctnormalization)
+                correctnormalization=true;
+            end
+            if nargin<5 || isempty(rois)
                 rois=obj.roisize;
             end
             coeff=obj.modelpar.coeff; 
@@ -149,7 +152,11 @@ classdef splinePSF<interfaces.PSFmodel
                 end
             end           
             
-            normf=obj.normalization;
+            if correctnormalization
+                normf=obj.normalization;
+            else
+                normf =1;
+            end
 %             normf=1;
 %             Ncorr=N*normf;
             zh=-(z/obj.modelpar.dz)+obj.modelpar.z0;

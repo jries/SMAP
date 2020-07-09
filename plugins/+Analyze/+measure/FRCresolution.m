@@ -29,6 +29,11 @@ classdef FRCresolution<interfaces.DialogProcessor
             
             layers=find(obj.getPar('sr_layerson'));
             outtxt='';
+            p.sameimage=true;
+            p.saturation=0.9999;
+            if p.sameimage
+               ax1=obj.initaxis(['frc']);
+            end
             for layer=layers
     %             lochere.filter('FRCblocks',[],'minmax',[-.1 .5])
                 image1=getimage(lochere,p,[-.1 .5],layer);
@@ -41,8 +46,11 @@ classdef FRCresolution<interfaces.DialogProcessor
                 [FRC_resolutionp,rl,rh]=frctoresolution(frc_curve,size(image1));
                 FRC_resolution=FRC_resolutionp*p.pixrec_frc;
                 errres=(rh-rl)/2*p.pixrec_frc;
-                ax1=obj.initaxis(['frc, Layer ' num2str(layer)]);
-                 qmax = 0.5/(p.pixrec_frc);
+                if ~p.sameimage
+                    ax1=obj.initaxis(['frc, Layer ' num2str(layer)]);
+                    hold off
+                end
+                qmax = 0.5/(p.pixrec_frc);
 
                 plot([0 qmax],[0 0],'k')
                 hold on
@@ -51,14 +59,14 @@ classdef FRCresolution<interfaces.DialogProcessor
                 plot([0 qmax],[1/7 1/7],'m')
                 plot(1/(FRC_resolution),1/7,'rx')
                 plot(1/(FRC_resolution)*[1 1],[-0.2 1/7],'r')
-                hold off
+                
                 xlim([0,qmax]);
                 ylim([-0.2 1.2])
                 xlabel('Spatial frequency (nm^{-1})');
                 ylabel('FRC')
                 title(['FRC resolution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
                 drawnow
-                outtxt=[outtxt newline 'FRC reosolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f') 9 'Layer' 9 num2str(layer)];
+                outtxt=[outtxt newline 'FRC resolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f') 9 'Layer' 9 num2str(layer)];
             end
             
             out.clipboard=outtxt;
@@ -144,6 +152,10 @@ end
 s=size(image);
 if s(2)~=s(1)
     image(max(s(1:2)),max(s(1:2)))=0;
+end
+if isfield(p,'saturation')
+    cutoff=quantile(image(:),p.saturation);
+    image(image>cutoff)=cutoff;
 end
 end
 
