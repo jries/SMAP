@@ -572,7 +572,7 @@ py=(yext(2)-yext(1))/pos(4);
 p.sr_pixrec=max(px,py);
 
 p.sr_sizeRecPix=round(p.sr_size/p.sr_pixrec*2);
-% p.sr_pos=[mean(xext) mean(yext)];
+p.sr_pos=[mean(xext) mean(yext)];
 % p.rangex=xext;
 % p.rangey=yext;
 p.extendrange=true;
