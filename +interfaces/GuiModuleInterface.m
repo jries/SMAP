@@ -781,12 +781,14 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
        end
        
        function setnormalizedpositionunits(obj)
-          fn=fieldnames(obj.guihandles);
-          for k=1:length(fn)
-              if isprop(obj.guihandles.(fn{k}),'Units')
-                  obj.guihandles.(fn{k}).Units='normalized';
+           if isstruct(obj.guihandles)
+              fn=fieldnames(obj.guihandles);
+              for k=1:length(fn)
+                  if isprop(obj.guihandles.(fn{k}),'Units')
+                      obj.guihandles.(fn{k}).Units='normalized';
+                  end
               end
-          end
+           end
           if isempty(obj.children)
               return
           end
