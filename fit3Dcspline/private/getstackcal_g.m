@@ -149,6 +149,20 @@ sstack=size(beads(1).stack.image);
     corrPSFnr(isnan(corrPSFnr))=0;
     corrPSFnr(corrPSFnr<0)=0;
     corrPSFsr=corrPSFnr(rangex,rangey,rangez);   
+    
+    
+    %correct for z-dependent intensity
+    correctzint=false;
+    if correctzint
+        profile=sum(sum(corrPSFsr,1),2);
+        n=(1:size(profile,3))';
+        fitp=fit(n,squeeze(profile),'poly2');
+
+        intcorr(1,1,:)=fitp(n);
+        corrPSFsr=corrPSFsr./intcorr;
+    end
+    
+    
         
     PSFgood=true;
 

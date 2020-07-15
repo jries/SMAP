@@ -108,6 +108,7 @@ else
 end
 dl=0;
 
+
 rangexrec=rangex-p.shiftxy_min;
 rangeyrec=rangey-p.shiftxy_max; 
 
@@ -261,6 +262,12 @@ switch lower(p.rendermode.selection)
 
 end
 
+if isfield(p,'extendrange')&&p.extendrange
+    rangexrec(1)=min(max(min(pos.x),rangexrec(1)), quantile(pos.x,.001));
+    rangexrec(2)=max(min(max(pos.x),rangexrec(2)), quantile(pos.x,.999));
+    rangeyrec(1)=min(max(min(pos.y),rangeyrec(1)), quantile(pos.y,.001));
+    rangeyrec(2)=max(min(max(pos.y),rangeyrec(2)), quantile(pos.y,.999));
+end
 
 rangexrec=rangexrec-p.sr_pixrec(1)/2;
 rangeyrec=rangeyrec-p.sr_pixrec(end)/2;
@@ -273,8 +280,8 @@ if ~(isxnm||isx)
     sx=round((rangeyrec(2)-rangeyrec(1))/p.sr_pixrec(end));
     imageo.image=zeros(sx,sy,'single');
     imageo.lut=lutall;
-    imageo.rangex=rangex;
-    imageo.rangey=rangey;
+    imageo.rangex=rangexrec;
+    imageo.rangey=rangeyrec;
     imageo.numberOfLocs=0;
     return
     
@@ -296,8 +303,8 @@ end
 imageo.image=srimage;
 imageo.lut=lutall;
 imageo.lutapplied=lutapplied;
-imageo.rangex=rangex;
-imageo.rangey=rangey;
+imageo.rangex=rangexrec;
+imageo.rangey=rangeyrec;
 imageo.numberOfLocs=nlocs;
 
 end

@@ -1,0 +1,11 @@
+channel=Channel
+frame=Frame
+xnm=X_nm_
+ynm=Y_nm_
+znm=Z_nm_
+locprecnm=XPrecision_nm_
+locprecznm=YPrecision_nm_
+phot=Photons
+bg=Background
+cam_pixelsize_um=117
+factor=1
