@@ -27,7 +27,9 @@ imstack=[];
              pixelsize=r.metadata.cam_pixelsize_um;
              r.close;
              disp('SMAP image loader used');
+             usesimple=false;
         catch err
+            usesimple=true;
             err
 %             imstack=readfile_tif(file);
 %             roi=[0 0 size(imstack,1) size(imstack,2)]; %check x,y
@@ -35,7 +37,7 @@ imstack=[];
         end
         
     end
-    if isempty(imstack)
+    if isempty(imstack) || usesimple
         disp('using simple reader')
         warndlg('using simple reader, this might create problems if only part of the camera chip is used.','using simple reader','replace');
         if multichannel_4pi
