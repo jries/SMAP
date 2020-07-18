@@ -8,3 +8,5 @@ gui:savelocal Select this if you fit via a network and the saving of the localiz
 Then the file is first saved locally, then copied to the network location.
 gui:selectfields Select which fields to save. Use preview once before to determine which fields are available.
 gui:setoutputfile=outputfile
+gui:diffrawframes Save raw data with the fitted data as reference. Set to zero if not to output frames. Specify the distance between frames to be saved.
+gui:diffrawframest=diffrawframes

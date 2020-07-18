@@ -17,6 +17,8 @@ classdef CameraConverter<interfaces.WorkflowModule
         gainmap;
         offsetmap;
         rawaverage
+        rawaveragecounter
+        rawaveragetype
         rawimagestruct
         rawimagecounter
        
@@ -118,6 +120,8 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.preview=obj.getPar('loc_preview');
             loadcamcalibrationfile(obj);
             obj.rawimagecounter=1;
+            obj.rawaveragecounter=1;
+            obj.rawaverage=[];
             
             %             if fileinf.EMon && p.mirrorem  %if em gain on and mirrorem on: switch roi
 %                 %It seems that on the Andor the roi is independent on the
@@ -133,8 +137,9 @@ classdef CameraConverter<interfaces.WorkflowModule
         end
         function datao=run(obj,data,p)
             if data.eof %transmit image stack
-                obj.rawimagestruct(1).image=cast(obj.rawaverage/(obj.rawimagecounter-1),'like', obj.rawimagestruct(2).image);
+                obj.rawimagestruct(1).image=cast(obj.rawaverage/(obj.rawaveragecounter-1),'like', obj.rawaveragetype);
                 obj.rawimagestruct(1).frame=0;
+                
                 obj.setPar('rawimagestack',obj.rawimagestruct(1:obj.rawimagecounter));
             end
            if isempty(data.data) %no image
@@ -161,7 +166,7 @@ classdef CameraConverter<interfaces.WorkflowModule
            end
            
            %save raw imageas
-           if (mod(data.frame,p.diffrawframes)==0 || data.frame==1) %&& ~obj.preview
+           if (mod(data.frame,p.diffrawframes)==0 || data.frame==1) && ~obj.preview && p.diffrawframes>0
                if obj.rawimagecounter>length(obj.rawimagestruct)
                    obj.rawimagestruct(end+100).image=imphot*0;
                    obj.rawimagestruct(end+100).frame=-1;
@@ -169,12 +174,14 @@ classdef CameraConverter<interfaces.WorkflowModule
                obj.rawimagestruct(obj.rawimagecounter+1).image=imgp;
                obj.rawimagestruct(obj.rawimagecounter+1).frame=data.frame;
                obj.rawimagecounter=obj.rawimagecounter+1;
-               if isempty(obj.rawaverage)
-                   obj.rawaverage=double(imgp);
-               else
-                   obj.rawaverage=obj.rawaverage+double(imgp);
-               end
            end
+           if isempty(obj.rawaverage)
+               obj.rawaverage=double(imgp);
+               obj.rawaveragetype=imgp;
+           else
+               obj.rawaverage=obj.rawaverage+double(imgp);
+           end
+           obj.rawaveragecounter=obj.rawaveragecounter+1;
         end
        
     end

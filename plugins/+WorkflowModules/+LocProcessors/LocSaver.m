@@ -211,6 +211,9 @@ classdef LocSaver<interfaces.WorkflowModule
                 rawframes=obj.getPar('rawimagestack');
                 if ~isempty(rawframes)
                     obj.locDatatemp.files.file.raw=rawframes;
+                else
+                    obj.locDatatemp.files.file.raw(1).image=0;
+                    obj.locDatatemp.files.file.raw(1).frame=0;
                 end
 %                 obj.locDatatemp.files.file.raw(1).image=average;
 %                 obj.locDatatemp.files.file.raw(1).frame=0;
