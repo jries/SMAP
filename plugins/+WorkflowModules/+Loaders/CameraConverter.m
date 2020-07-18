@@ -134,7 +134,7 @@ classdef CameraConverter<interfaces.WorkflowModule
            end
            
            imgp=makepositive(data.data);
-           if p.emmirror && obj.loc_cameraSettings.EMon  %rather put to camera converter!
+           if p.emmirror && obj.loc_cameraSettings.EMon  
                     imgp=imgp(:,end:-1:1);
            end
                 
