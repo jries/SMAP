@@ -4,9 +4,13 @@ function [gainmap,offsetmap,varmap]=makegainoffsetCMOS(camfname,exposuretime_dat
     if length(camfname)>4 && strcmp(camfname(end-3:end),'.mat')
         camfname=camfname(1:end-4);
     end
-    camfile=['settings' filesep 'cameras' filesep camfname '.mat'];
-    if exist(camfile,'file')
-        l=load(camfile);
+    if length(camfname)>5 && strcmp(camfname(end-4:end),'.calb')
+        camfname=camfname(1:end-5);
+    end
+    camfilemat=['settings' filesep 'cameras' filesep camfname '.mat'];
+    camfilejson=['settings' filesep 'cameras' filesep camfname '.calb'];
+    if exist(camfilemat,'file')
+        l=load(camfilemat);
         if isfield(l, 'read_noise_variance') ...
                 && isfield(l, 'thermal_noise_variance_per_s') ...
                 && isfield(l, 'pixel_baseline') ...
@@ -23,6 +27,17 @@ function [gainmap,offsetmap,varmap]=makegainoffsetCMOS(camfname,exposuretime_dat
             varmap=varmap.*gainmap.^2; 
                 %???? in units of photons, to be used later directly. 
                 %A: Yes, conversion to photons^2 is not considered in GPUmleFIT
+    elseif exist(camfilejson,'file')
+        txt=fileread(camfilejson);
+        sr=jseondecode(txt);
+        l.read_noise_variance=reshape(sr.rnSq,sr.width,sr.height)';
+        l.thermal_noise_variance_per_s=reshape(sr.tnSqPerSec,sr.width,sr.height)';
+        l.pixel_baseline=reshape(sr.baseline,sr.width,sr.height)';
+        l.thermal_counts_per_s=reshape(sr.dcPerSec,sr.width,sr.height)';
+        [offsetmap, varmap] = makeExpDependMap(l, exposuretime_data);
+        %what do we do with gain map? Corrrect? Already averaged?
+        gainmap=reshape(sr.gain,sr.width,sr.height)';
+        varmap=varmap.*gainmap.^2;
     else
         gainmap=[];offsetmap=[];varmap=[];
     end

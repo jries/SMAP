@@ -16,6 +16,11 @@ classdef CameraConverter<interfaces.WorkflowModule
         preview;
         gainmap;
         offsetmap;
+        rawaverage
+        rawaveragecounter
+        rawaveragetype
+        rawimagestruct
+        rawimagecounter
        
     end
     methods
@@ -38,6 +43,7 @@ classdef CameraConverter<interfaces.WorkflowModule
            obj.guihandles.calibrate.Callback={@calibrate_callback,obj};
             obj.outputParameters={'loc_cameraSettings'};
            obj.addSynchronization('loc_fileinfo_set',[],[],@obj.setmetadata)
+            obj.inputParameters={'diffrawframes'};
            
         end
         function setmetadata(obj,overwrite)
@@ -113,7 +119,9 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.adu2phot=(pc.conversion/pc.emgain);
             obj.preview=obj.getPar('loc_preview');
             loadcamcalibrationfile(obj);
-            
+            obj.rawimagecounter=1;
+            obj.rawaveragecounter=1;
+            obj.rawaverage=[];
             
             %             if fileinf.EMon && p.mirrorem  %if em gain on and mirrorem on: switch roi
 %                 %It seems that on the Andor the roi is independent on the
@@ -128,13 +136,19 @@ classdef CameraConverter<interfaces.WorkflowModule
 %             obj.mirrorem=fileinf.EMmirror;
         end
         function datao=run(obj,data,p)
+            if data.eof %transmit image stack
+                obj.rawimagestruct(1).image=cast(obj.rawaverage/(obj.rawaveragecounter-1),'like', obj.rawaveragetype);
+                obj.rawimagestruct(1).frame=0;
+                
+                obj.setPar('rawimagestack',obj.rawimagestruct(1:obj.rawimagecounter));
+            end
            if isempty(data.data) %no image
                datao=data;
                return
            end
            
            imgp=makepositive(data.data);
-           if p.emmirror && obj.loc_cameraSettings.EMon  %rather put to camera converter!
+           if p.emmirror && obj.loc_cameraSettings.EMon  
                     imgp=imgp(:,end:-1:1);
            end
                 
@@ -150,6 +164,24 @@ classdef CameraConverter<interfaces.WorkflowModule
            if obj.preview && ~isempty(imphot)
                obj.setPar('preview_image',imphot);
            end
+           
+           %save raw imageas
+           if (mod(data.frame,p.diffrawframes)==0 || data.frame==1) && ~obj.preview && p.diffrawframes>0
+               if obj.rawimagecounter>length(obj.rawimagestruct)
+                   obj.rawimagestruct(end+100).image=imphot*0;
+                   obj.rawimagestruct(end+100).frame=-1;
+               end
+               obj.rawimagestruct(obj.rawimagecounter+1).image=imgp;
+               obj.rawimagestruct(obj.rawimagecounter+1).frame=data.frame;
+               obj.rawimagecounter=obj.rawimagecounter+1;
+           end
+           if isempty(obj.rawaverage)
+               obj.rawaverage=double(imgp);
+               obj.rawaveragetype=imgp;
+           else
+               obj.rawaverage=obj.rawaverage+double(imgp);
+           end
+           obj.rawaveragecounter=obj.rawaveragecounter+1;
         end
        
     end
