@@ -14,14 +14,16 @@ Instructions for using SMAP to analyze nuclear pore complex standard samples:
 Requirements
 ------------
 
-1.  Matlab 2016a or newer. Toolboxes: Optimization, Image
-    processing, Curve fitting, Statistics and Machine Learning.
-    A stand-alone version will be released, but will be limited in extensibility.
+1.  MATLAB 2019a and newer. Toolboxes: Optimization, Image processing, 
+    Curve fitting, Statistics and Machine Learning. 
+    A fully funcrtional stand-alone version that does not require a MATLAB 
+    license but is limited in extendability can be downloaded at rieslab.de.
 
 2.  Mac or Windows
 
 3.  For GPU fitting: Windows, NVIDIA graphics card. CUDA driver
-    (recommended: version 7.5).
+    (recommended: version 7.5). All fitters also come with a CPU version 
+    that is used when these specifications are not met.
 
 Installation
 ------------
