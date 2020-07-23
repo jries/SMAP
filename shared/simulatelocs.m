@@ -383,7 +383,8 @@ function [locs,parameters]=locsfromDiscFun(p)
 fitter = p.obj.getPar('fitter');
 fitter.roiSize = p.se_siteroi;
 modCoord = fitter.getSimRef; % get point type visualization
-parameters = fitter.allParsArg;
+parameters.allParsArg = fitter.allParsArg;
+parameters.model = fitter.model;
 % Export
 locs.x = modCoord{1}.x;
 locs.y = modCoord{1}.y;
