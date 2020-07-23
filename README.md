@@ -17,7 +17,7 @@ Requirements
 1.  MATLAB 2019a and newer. Toolboxes: Optimization, Image processing, 
     Curve fitting, Statistics and Machine Learning. 
     A fully funcrtional stand-alone version that does not require a MATLAB 
-    license but is limited in extendability can be downloaded at rieslab.de.
+    license but is limited in extendability can be downloaded at www.rieslab.de.
 
 2.  Mac or Windows
 
