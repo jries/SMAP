@@ -167,9 +167,11 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     idxFitterFound = find([lFitterFound{:}]);
     
     idxSelected_final = idxFitterFound(idxSelected);
-    fitter = copy(obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter);
+    fitter_ori = obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter;
+    fitter = copy(fitter_ori);
     fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
     obj.setPar('fitter',fitter)
+    obj.setPar('fitter_ori',fitter_ori)
     close(fig);
     obj.guihandles.setModPars_button.Visible='on';
     obj.guihandles.coordinatefile.String='-- Internal SMLMModelFit';
@@ -189,13 +191,19 @@ function setModPars_callback(a,b,obj)
     
     % Data
     % Acquire the SMLMModelFit obj, and then display parameters based on the allParsArg
-    fitter = obj.getPar('fitter');
+    fitterOri = obj.getPar('fitter_ori');
+    fitterOld = obj.getPar('fitter');
+    fitter = copy(fitterOri);
+    allParsArgOld = fitterOld.allParsArg;
+    fitter.setParArgBatch(allParsArgOld, 'allowMissing', true);
+    obj.setPar('fitter',fitter);
+    
     parName = fitter.allParsArg.name;
     parType = fitter.allParsArg.type;
     parModel = fitter.allParsArg.model;
     
     % If 'fix' is ticked, the corresponding parameters will be single
-    % values. Otherwise arange.
+    % values. Otherwise a range.
     parUb = fitter.allParsArg.ub;
     parLb = fitter.allParsArg.lb;
     parFix = fitter.allParsArg.fix;

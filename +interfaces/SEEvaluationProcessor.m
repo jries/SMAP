@@ -61,7 +61,11 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             end
             
             axs=findobj(tab.Children,'type','axes');
-            ax=axs(1);
+            try
+                ax=axs(1);
+            catch
+                warning('Please close the model vierwer.')
+            end
 %             axes(ax);
             else
                 h=figure(319);
