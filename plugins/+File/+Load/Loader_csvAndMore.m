@@ -149,8 +149,17 @@ switch ext
         tab=load(file);
     case '.hdf5'
         info=h5info(file);
-        tab=h5read(file,['/' info.Datasets(1).Name]);
-
+        if length(info.Datasets)>1
+            answ=listdlg('ListString',{info.Datasets(:).Name});
+        else
+            answ=1;
+        end
+        tab=h5read(file,['/' info.Datasets(answ).Name]);
+        if isnumeric(tab)
+             if size(tab,1)<size(tab,2)
+                 tab=tab';
+             end
+        end
 end
 
 if isstruct(tab)
@@ -179,6 +188,10 @@ end
 end
 
 if isnumeric(tab)
+     
+%      if size(tab,1)<size(tab,2)
+%          tab=tab';
+%      end
      tab=array2table(tab);
 %     tab=table2struct(tab);
 % elseif isstruct(tab)
