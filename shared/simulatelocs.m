@@ -154,7 +154,7 @@ switch ext
             locsall.z=plocsa(:,3);
         end
         locsall=copyfields(locsall,plocs,{'x','y','z'});
-    case {'.tif','.png'}
+    case {'.tif','.png','.jpg','.jpeg'}
 %         locs=getlabelstiff(obj,p);
         image=imread(p.coordinatefile);
         img=sum(image,3)/size(image,3); %binarize
@@ -251,7 +251,11 @@ for k=numberofsites:-1:1
     locsh.x=reshape(locsh.x,numlocs,1);
     locsh.y=reshape(locsh.y,numlocs,1);
     locsh.z=reshape(locsh.z,numlocs,1);
+    if isfield(locsh,'channel')
     locsh.channel=reshape(locsh.channel,numlocs,1); %added
+    else
+        locsh.channel=0*locsh.x;
+    end
     if isfield(p,'randomrot') && p.randomrot
         angle=2*pi*rand(1);
         phere.angle=angle;

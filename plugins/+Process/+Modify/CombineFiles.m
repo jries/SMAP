@@ -15,22 +15,44 @@ classdef CombineFiles<interfaces.DialogProcessor
             use=[dat{:,3}];
             ftarget=find(use,1,'first');
             
-            for k=1:length(use)
-                if use(k)
-                    ind=obj.locData.loc.filenumber==k;
-                    if p.addchannel
-                        obj.locData.loc.channel(ind)=obj.locData.loc.channel(ind)+dat{k,2};
-                    else
-                        obj.locData.loc.channel(ind)=dat{k,2};
+            if p.framecontinuous
+                obj.locData.loc.filenumber_old=obj.locData.loc.filenumber;
+                if isempty(p.fileorder)
+                    p.fileorder=find(use);
+                end
+                foffset=0;
+                 for k=1:length(p.fileorder)
+                     fhere=p.fileorder(k);
+                    ind=obj.locData.loc.filenumber==fhere;
+                    obj.locData.loc.filenumber(ind)=12345;
+                    obj.locData.loc.frame(ind)=obj.locData.loc.frame(ind)+foffset;
+                    foffset=max(obj.locData.loc.frame(ind))+1;
+                    if isfield(obj.locData.files.file(ftarget),'tif')
+                        obj.locData.files.file(ftarget).tif=[obj.locData.files.file(ftarget).tif obj.locData.files.file(fhere).tif];
                     end
-                    obj.locData.loc.filenumber(ind)=ftarget;
-                    obj.locData.files.file(ftarget).tif=[obj.locData.files.file(ftarget).tif obj.locData.files.file(k).tif];
                     if isfield(obj.locData.files.file(ftarget),'raw')
-                        obj.locData.files.file(ftarget).raw=[obj.locData.files.file(ftarget).raw obj.locData.files.file(k).raw];
+                        obj.locData.files.file(ftarget).raw=[obj.locData.files.file(ftarget).raw obj.locData.files.file(fhere).raw];
+                    end
+                    
+                 end
+                obj.locData.loc.filenumber(obj.locData.loc.filenumber==12345)=ftarget;
+            else
+                for k=1:length(use)
+                    if use(k)
+                        ind=obj.locData.loc.filenumber==k;
+                        if p.addchannel
+                            obj.locData.loc.channel(ind)=obj.locData.loc.channel(ind)+dat{k,2};
+                        else
+                            obj.locData.loc.channel(ind)=dat{k,2};
+                        end
+                        obj.locData.loc.filenumber(ind)=ftarget;
+                        obj.locData.files.file(ftarget).tif=[obj.locData.files.file(ftarget).tif obj.locData.files.file(k).tif];
+                        if isfield(obj.locData.files.file(ftarget),'raw')
+                            obj.locData.files.file(ftarget).raw=[obj.locData.files.file(ftarget).raw obj.locData.files.file(k).raw];
+                        end
                     end
                 end
             end
-            
 
             %rename file
             obj.locData.files.file(ftarget).name=strrep(obj.locData.files.file(ftarget).name,dat{ftarget,1},p.newfilename);
@@ -67,6 +89,8 @@ classdef CombineFiles<interfaces.DialogProcessor
             ht.ColumnName={'File','Channel','include'};
             wt=pos(3);
             ht.ColumnWidth=num2cell(round(wt*[.7 , .1 ,.1]));
+%             s1=uistyle('HorizontalAlignment','right');
+%             addStyle(ht,s1,'column',1);
             obj.addSynchronization('filelist_short',[],[],{@obj.updatefiles})
             obj.guihandles.table=ht;
             %synch filelist short to table
@@ -107,6 +131,17 @@ pard.newfilename.Width=3;
 pard.addchannel.object=struct('String','add Channel number to existing','Style','checkbox');
 pard.addchannel.position=[6,3];
 pard.addchannel.Width=2;
+
+p(1).value=0; p(1).on={'addchannel'}; p(1).off={'fileordert','fileorder'};
+p(2).value=1;p(2).on=p(1).off;p(2).off=p(1).on;
+pard.framecontinuous.object=struct('String','Continuous Frames','Style','checkbox','Callback',{{@obj.switchvisible,p}});
+pard.framecontinuous.position=[6,1];
+pard.framecontinuous.Width=2;
+pard.fileordert.object=struct('String','File order:','Style','text','Visible','off');
+pard.fileordert.position=[6,3];
+pard.fileorder.object=struct('String','','Style','edit','Visible','off');
+pard.fileorder.position=[6,4];
+
 pard.plugininfo.description='combines several loaded files into one file';
 pard.plugininfo.type='ProcessorPlugin';
 end

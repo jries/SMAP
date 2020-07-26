@@ -256,7 +256,7 @@ switch ext
     case {'.txt','.csv'}
         txt='on';
         tif='off';
-    case {'.tif','.png'}
+    case {'.tif','.png','.jpg','.jpeg'}
         txt='off';
         tif='on';
     case '.mat'
@@ -303,6 +303,8 @@ obj.guihandles.tif_density.Visible=tif;
 obj.guihandles.tif_numbermode.Visible=tif;
 obj.guihandles.tif_imagesizet.Visible=tif;
 obj.guihandles.tif_imagesize.Visible=tif;
+obj.guihandles.linkageerrort.Visible=txt;
+obj.guihandles.linkageerror.Visible=txt;
 end
 
 
