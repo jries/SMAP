@@ -26,7 +26,7 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
             fig.Position(3:4) = fig.Position(3:4).*1.2;
             pos = fig.Position;
             ax = axes(fig);
-            sub = cell(20*4,1);
+            sub = cell(20*5,1);
             % Borrow the evaluate plug-in to use getLocs(obj,...)
             for k = 1:se.numberOfSites
                 dcal.site=sites(k);
@@ -40,28 +40,35 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 [~,modViz] = fitter.plot(locsSite,'plotType','point', 'doNotPlot', true); % get point type visualization
                 locsViz = fitter.locsHandler(locsSite,fitter.exportPars(1,'lPar'),1);
                 
-                for rot = 1:4
-                    fitter.rotCoordNMkImg(ax, modViz, locsViz, [45*(rot-1) -90], 2, 'Data', 30, {'red hot'})
-                    ax.Children(1).Color = [0.7 0.7 0.7];
+                for rot = 1:5
                     if rot == 1
-                        text(ax, 20, 30, num2str(sites(k).indList),'FontSize',50, 'Color','w')
+                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [0 0], 2, 'Data', 30, {'red hot'})
+                    else
+                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [45*(rot-2) -90], 2, 'Data', 30, {'red hot'})
+                    end
+                    ax.Children(1).Color = [0.7 0.7 0.7];
+                    set(ax,'YDir','normal')
+                    if rot == 1
+                        text(ax, 20, 30, num2str(sites(k).ID),'FontSize',50, 'Color','w')
                     end
                     currentFrame = getframe(fig);
                     mon_order = rem(k,20);
                     if mon_order == 0
                         mon_order = 20;
                     end
-                    sub{(mon_order-1)*4+rot} = currentFrame.cdata(40:440,144:544,:);
+                    sub{(mon_order-1)*5+rot} = currentFrame.cdata(40:440,144:544,:);
                 end
                 if rem(k,20)==0 || k==se.numberOfSites
-                    imgm = montage(sub, 'Size', [20 4], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', 2);
+                    imgm = montage(sub, 'Size', [20 5], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', 2);
                     imwrite(imgm.CData, [path file{1} '_' num2str(k/20) '.' file{2}])
                     close(fig)
                     fig = figure(234);
                     ax = axes(fig);
                     fig.Position = pos;
+                    sub = [];
                 end
             end
+            close(fig)
             out = [];
         end
         function pard=guidef(obj)
