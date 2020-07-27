@@ -21,7 +21,10 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
             dcal.makeGui;
             
             % to-do: allow selection
-            fitter = se.processors.eval.processors{2}.fitter;
+            fitterGUI_name = p.fitter.selection;
+            eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+            idxFitterGUI = find(strcmp(fitterGUI_name,eval));
+            fitter = se.processors.eval.processors{idxFitterGUI}.fitter;
             fig = figure(234);
             fig.Position(3:4) = fig.Position(3:4).*1.2;
             pos = fig.Position;
@@ -42,7 +45,7 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 
                 for rot = 1:5
                     if rot == 1
-                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [0 0], 2, 'Data', 30, {'red hot'})
+                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [0 0], 2, 'Data', 500, {'red hot'})
                     else
                         fitter.rotCoordNMkImg(ax, modViz, locsViz, [45*(rot-2) -90], 2, 'Data', 30, {'red hot'})
                     end
@@ -60,7 +63,7 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 end
                 if rem(k,20)==0 || k==se.numberOfSites
                     imgm = montage(sub, 'Size', [20 5], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', 2);
-                    imwrite(imgm.CData, [path file{1} '_' num2str(k/20) '.' file{2}])
+                    imwrite(imgm.CData, [path file{1} '_' ceil(num2str(k/20)) '.' file{2}])
                     close(fig)
                     fig = figure(234);
                     ax = axes(fig);
@@ -82,6 +85,17 @@ end
 
 function pard=guidef(obj)
 
+pard.t1.object=struct('String','Which fitter:','Style','text');
+pard.t1.position=[1,1];
+pard.t1.Width=1;
+
+eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
+lFitter = startsWith(eval,'SMLMModelFitGUI');
+options = eval(lFitter);
+
+pard.fitter.object=struct('String',options,'Value',1,'Style','popupmenu');
+pard.fitter.position=[1,2];
+pard.fitter.Width=1;
 
 pard.plugininfo.description='makes a montage of many ROIs';
 pard.plugininfo.type='ROI_Analyze';
