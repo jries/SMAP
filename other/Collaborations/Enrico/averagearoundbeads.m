@@ -1,7 +1,7 @@
-d=3;
-mindistance=11;
-minintensity=1e6;
-actincutoff=2e5;
+d=3; %number of z slices is 2*d+1
+mindistance=11; % minimum distance between beads
+minintensity=1e6; %of beads
+actincutoff=2e5; %min intensity of actin
 
 %%
 if ~exist('path','var')
@@ -124,3 +124,6 @@ hold on
 plot(mean(rsum(:,incell),2),'k','LineWidth',3);
 hold off
 
+%cellindex=1
+%rall(:,cellindex)=mean(rsum(:,incell),2);
+%cellindex=cellindex+1;
