@@ -66,6 +66,9 @@ classdef GuiFilterTable< interfaces.LayerInterface
 
             fmin=sfield{2};
             fmax=sfield{3};
+            if  ~isfield(obj.filter,field)
+                return
+            end
             obj.filter.(field).minmax=[fmin fmax];
             if length(sfield)<4||isempty(sfield{4})
                 fauto=[];

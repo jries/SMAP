@@ -139,8 +139,12 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                 
                 stackindh=obj.stackind;%pointer to last element
                 stackindh=stackindh+1; %new pointer
-                 
+                
+                if isempty(p.loc_cameraSettings)
+                    roi=[0,0];
+                else
                 roi=p.loc_cameraSettings.roi;
+                end
                 for X=1:sxy(1)
                     for Y=1:sxy(2)
                         if obj.spatial3Dcal&&numberInBlockh>1  %later: dont rearrange, but use instack pointer.
