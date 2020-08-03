@@ -32,6 +32,7 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             setConstrainedPosition(obj.hpoly,obj.hpoly.getPosition);
             hi=addNewPositionCallback(obj.hpoly,@obj.polycallback);
             obj.polycallback(obj.hpoly.getPosition);
+
         end
         
         function outp=polyconstrain(obj,inp)
@@ -44,6 +45,40 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
 %             setConstrainedPosition(obj.hpoly,inp);
             obj.poly{obj.site.ID}=inp;
             obj.site.evaluation.(obj.name).poly=inp;
+            obj.site.evaluation.fibrilDynamics.manualBound = obj.dynamicsManualBound;
+        end
+        
+        function output = dynamicsManualBound(obj)
+            manualBound.data = obj.hpoly.getPosition; % column: pos time
+            binFactor = 10/2.5;                       % pos/time
+            stallThreshold = 0.1;
+            manualBound.segment = diff(manualBound.data);
+            manualBound.ratePerSeg = manualBound.segment(:,1)./manualBound.segment(:,2)*binFactor;
+            stalls = manualBound.ratePerSeg<stallThreshold;
+            
+            % mark denotes a growth step
+            mark = cumsum(stalls)+1;
+            mark(stalls)=0;
+            
+            % multiple segments in a roll will be merged into one step
+            manualBound.ratePerSeg = [manualBound.ratePerSeg mark];
+            [sumPos,names]=grpstats(manualBound.segment(:,1),mark,{'sum','gname'});
+            [sumTime,~]=grpstats(manualBound.segment(:,2),mark,{'sum','gname'});
+            stepMark = str2num(char(names));
+            
+            if stepMark(1) == 0
+                stallTime = sumTime(1);
+                sumTime(1) = [];
+                sumPos(1) = [];
+            else
+                stallTime = 0;
+            end
+            stepRate = sumPos./sumTime;
+            
+            output.stepRate = stepRate;
+            output.stepWidth = sumPos;
+            output.stallTime = stallTime;
+            output.stepSpan = sumTime;
         end
     end
     
