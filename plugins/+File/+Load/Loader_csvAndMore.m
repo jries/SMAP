@@ -155,6 +155,7 @@ switch ext
             answ=1;
         end
         tab=h5read(file,['/' info.Datasets(answ).Name]);
+        file=[file '/' info.Datasets(answ).Name];
         if isnumeric(tab)
              if size(tab,1)<size(tab,2)
                  tab=tab';

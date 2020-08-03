@@ -480,7 +480,7 @@ fitpar.varmap=varmap;
 % fitpar.offsetmap=offsetmap; % added by Robin. Now in camera converter
 % fitpar.gainmap=gainmap; % added by Robin
 
-if p.loc_cameraSettings.EMon
+if ~isempty(p.loc_cameraSettings) && p.loc_cameraSettings.EMon
     fitpar.EMexcessNoise=2;
 else
     fitpar.EMexcessNoise=1;
