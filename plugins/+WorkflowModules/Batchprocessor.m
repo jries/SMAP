@@ -378,7 +378,7 @@ pard.adddironline_button.position=[5,4];
 pard.adddironline_button.Width=1;
 
 
-pard.adddir_mask.object=struct('Style','edit','String','*_Localization_*');
+pard.adddir_mask.object=struct('Style','edit','String','*_Loc_*');
 pard.adddir_mask.position=[6,4];
 pard.adddir_mask.Width=1;
 
