@@ -33,9 +33,11 @@ classdef Vibrations<interfaces.DialogProcessor
                 legends{k}=['layer' num2str(layers(k))];
                 locs=obj.locData.getloc({'xnm','ynm','znm','frame','filenumber','xnmerr','ynmerr','locprecznm','time'},'position','roi','layer',layers(k),'grouping','ungrouped');
                 if ~isempty(locs.time)
+                    locsplot=locs;
                     locsnew=locs;
                     told=locs.time;
-                    dt=quantile(diff(told),0.5)/2;
+                    tplot=told;
+                    dt=quantile(diff(told),0.2)/2
                     t=(min(told):dt:max(told))';
                     Fs=1000/dt;
                     for f=1:length(plotfields)
@@ -57,19 +59,22 @@ classdef Vibrations<interfaces.DialogProcessor
                     dt
                     Fs=1000/dt;
                     t=locs.frame*dt;
+                    tplot=t;
+                    locsplot=locs;
                 end
                 for f=1:length(plotfields)
                     x=locs.(plotfields{f});
+                    xplot=locsplot.(plotfields{f});
                     if isempty(x)
                         continue
                     end
-                    plot(axx(f),t,x-mean(x))
+                    plot(axx(f),tplot,xplot-mean(xplot))
                     xlabel(axx(f),'time(ms)')
                     ylabel(axx(f),['d' plotfields{f} '(nm)']);
-                    title(axx(f),['SD = ' num2str(std(x),3) ', mean(locprec) = ' num2str(mean(locs.(plotfieldserr{f})),3) ' nm']);
+                    title(axx(f),['SD = ' num2str(std(xplot),3) ', mean(locprec) = ' num2str(mean(locs.(plotfieldserr{f})),3) ' nm']);
                     L=length(x);
                     xf=abs(fft(x)/L);
-                    xfp=2*xf(1:L/2+1);
+                    xfp=2*xf(1:floor(L/2)+1);
                     xfp(1)=0;
                     freq=(Fs*(0:(L/2))/L)';
                     semilogy(axfx(f),freq,xfp,'r');
