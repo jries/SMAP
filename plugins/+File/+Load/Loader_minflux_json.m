@@ -1,9 +1,9 @@
-classdef Loader_MINFLUXjson<interfaces.DialogProcessor
+classdef Loader_minflux_json<interfaces.DialogProcessor
     properties
         
     end
     methods
-        function obj=Loader_MINFLUXjson(varargin)        
+        function obj=Loader_minflux_json(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
                 obj.inputParameters={'mainGui'};
         end

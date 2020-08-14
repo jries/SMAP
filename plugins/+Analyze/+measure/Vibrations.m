@@ -14,8 +14,15 @@ classdef Vibrations<interfaces.DialogProcessor
         end
         function out=run(obj,p)
             layers=find(obj.getPar('sr_layerson'));
-            plotfields={'xnm','ynm','znm'};
-            plotfieldserr={'xnmerr','ynmerr','locprecznm'};
+
+            locs=obj.locData.getloc({'znm'},'position','roi','layer',1,'grouping','ungrouped');
+            if isempty(locs.znm)
+                plotfields={'xnm','ynm'};
+                plotfieldserr={'xnmerr','ynmerr'};
+            else
+                plotfields={'xnm','ynm','znm'};
+                plotfieldserr={'xnmerr','ynmerr','locprecznm'};
+            end
             for k=1:length(plotfields)
                 axx(k)=obj.initaxis(plotfields{k}(1));
                 axfx(k)=obj.initaxis(['fft(' plotfields{k}(1) ')']);
@@ -28,7 +35,7 @@ classdef Vibrations<interfaces.DialogProcessor
                 if ~isempty(locs.time)
                     locsnew=locs;
                     told=locs.time;
-                    dt=quantile(diff(told),0.1);
+                    dt=quantile(diff(told),0.5)/2;
                     t=(min(told):dt:max(told))';
                     Fs=1000/dt;
                     for f=1:length(plotfields)
@@ -64,8 +71,17 @@ classdef Vibrations<interfaces.DialogProcessor
                     xf=abs(fft(x)/L);
                     xfp=2*xf(1:L/2+1);
                     xfp(1)=0;
-                    freq=Fs*(0:(L/2))/L;
-                    semilogy(axfx(f),freq,xfp);
+                    freq=(Fs*(0:(L/2))/L)';
+                    semilogy(axfx(f),freq,xfp,'r');
+                    
+                    if length(freq)>2500
+                        dfh=round(length(freq)/2000);
+                        f2=freq(round(dfh/2):dfh:end);
+                        xfpb=bindata(freq,xfp,f2);
+                        hold(axfx(f),'on')
+                        semilogy(axfx(f),f2,xfpb,'b');
+                        ylim(axfx(f),[1e-5 1])
+                    end
                     xlabel(axfx(f),'frequency (Hz)')
                     ylabel(axfx(f),'Amplitude (nm), 2*fft (x)');
                     
