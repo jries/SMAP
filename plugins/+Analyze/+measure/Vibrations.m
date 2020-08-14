@@ -24,15 +24,33 @@ classdef Vibrations<interfaces.DialogProcessor
             legends={};
             for k=1:length(layers)
                 legends{k}=['layer' num2str(layers(k))];
-                locs=obj.locData.getloc({'xnm','ynm','znm','frame','filenumber','xnmerr','ynmerr','locprecznm'},'position','roi','layer',layers(k),'grouping','ungrouped');
-                if p.overwriteframetime
-                    dt=p.frametime;
+                locs=obj.locData.getloc({'xnm','ynm','znm','frame','filenumber','xnmerr','ynmerr','locprecznm','time'},'position','roi','layer',layers(k),'grouping','ungrouped');
+                if ~isempty(locs.time)
+                    locsnew=locs;
+                    told=locs.time;
+                    dt=quantile(diff(told),0.1);
+                    t=(min(told):dt:max(told))';
+                    Fs=1000/dt;
+                    for f=1:length(plotfields)
+                        x=locs.(plotfields{f});
+                        if ~isempty(x)
+                        xn=interp1(told,x,t);
+                        else
+                            xn=[];
+                        end
+                        locsnew.(plotfields{f})=xn;
+                    end
+                    locs=locsnew;
                 else
-                dt=obj.locData.files.file(locs.filenumber(1)).info.timediff;
+                    if p.overwriteframetime
+                        dt=p.frametime;
+                    else
+                    dt=obj.locData.files.file(locs.filenumber(1)).info.timediff;
+                    end
+                    dt
+                    Fs=1000/dt;
+                    t=locs.frame*dt;
                 end
-                dt
-                Fs=1000/dt;
-                t=locs.frame*dt;
                 for f=1:length(plotfields)
                     x=locs.(plotfields{f});
                     if isempty(x)
