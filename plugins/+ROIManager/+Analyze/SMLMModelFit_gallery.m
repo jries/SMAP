@@ -8,8 +8,11 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         
         function out=run(obj,p)
+            % ask user to specify the file name
             [file,path] = uiputfile('*.png', 'Save as', '');
             file = strsplit(file,'.');
+            
+            % basic info.
             se = obj.locData.SE;
             sites = se.sites;
             roiSize = se.P.par.se_siteroi.content;

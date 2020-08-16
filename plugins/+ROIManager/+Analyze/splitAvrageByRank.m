@@ -27,15 +27,14 @@ classdef splitAvrageByRank<interfaces.DialogProcessor&interfaces.SEProcessor
             obj.locData.loc.xnm = obj.locData.loc.xnmori;
             obj.locData.loc.ynm = obj.locData.loc.ynmori;
             
-            lMiddlePart_x = obj.locData.loc.xnm>=p.se_sitefov-p.se_siteroi/2+trim(1)&obj.locData.loc.xnm<=(p.se_sitefov+p.se_siteroi/2-trim(1));
-            lMiddlePart_y = obj.locData.loc.ynm>=p.se_sitefov-p.se_siteroi/2+trim(2)&obj.locData.loc.ynm<=(p.se_sitefov+p.se_siteroi/2-trim(2));
+            lMiddlePart_x = obj.locData.loc.xnm>=p.se_siteroi-p.se_siteroi/2+trim(1)&obj.locData.loc.xnm<=(p.se_siteroi+p.se_siteroi/2-trim(1));
+            lMiddlePart_y = obj.locData.loc.ynm>=p.se_siteroi-p.se_siteroi/2+trim(2)&obj.locData.loc.ynm<=(p.se_siteroi+p.se_siteroi/2-trim(2));
             lMiddlePart = lMiddlePart_x&lMiddlePart_y;
             % get the order of sites based on the previous sorting
             siteOrder = obj.locData.loc.(p.rankOption.selection);
 
             % the site number of the centers of bins
-            centralValue = startingSite:gapBetweenAvg:lastSite;
-            centralValue = centralValue(1:end-1);
+            centralValue = (startingSite:gapBetweenAvg:lastSite);
             if isEven(windowSize)
                 windowLb = round(windowSize/2);
                 windowUb = round(windowSize/2);
@@ -44,6 +43,7 @@ classdef splitAvrageByRank<interfaces.DialogProcessor&interfaces.SEProcessor
                 windowUb = round(windowSize/2)-1;
             end
             centralValue = centralValue+windowLb;
+            centralValue = centralValue(centralValue<lastSite);
             % shift the bins
             for k = length(centralValue):-1:1
                 dx = k*betweenAvgDistance+offset;
