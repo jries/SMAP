@@ -47,7 +47,7 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 fitter.allParsArg = subSites(k).evaluation.(fitterGUI_name).allParsArg;
                 fitter.setParArg('m1.lPar.variation', 'value',0);
                 [~,modViz] = fitter.plot(locsSite,'plotType','point', 'doNotPlot', true); % get point type visualization
-                locsViz = fitter.locsHandler(locsSite,fitter.exportPars(1,'lPar'),1);
+                locsViz = fitter.locsHandler(locsSite, fitter.exportPars(1,'lPar'),1);
                 
                 for rot = 1:5
                     if rot == 1

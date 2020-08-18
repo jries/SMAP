@@ -85,7 +85,8 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             objName = class(obj);
             objName = split(objName, '.');
             
-            obj.fit_manager = SMLMModelFit_manager(output.sites, output.SMLMModelFit);
+            warning('Here for now use CME3D_manager to replace SMLMModelFit_manager.')
+            obj.fit_manager = CME3D_manager(output.sites, output.SMLMModelFit);
             obj.fit_manager.parentObj = obj;
             
             % copy the plot setting from the exsiting fitManager
@@ -184,6 +185,10 @@ pard.tPlotUseOnly.object=struct('Style','text','String','Plot use only');
 pard.tPlotUseOnly.position=[1,3.7];
 pard.tPlotUseOnly.Width=1;
 
+pard.registerSites.object=struct('Style','pushbutton','String','Register sites','Callback', {{@registerSites_callBack,obj}});
+pard.registerSites.position=[3,3.7];
+pard.registerSites.Width=1;
+
 pard.parsTable.object=struct('Style','text','String','table pos');
 pard.parsTable.position=[12,1];
 pard.parsTable.Width=2.5;
@@ -201,6 +206,10 @@ end
 
 function extLoad_callBack(a,b,obj)
     obj.loadData;
+end
+
+function registerSites_callBack(a,b,obj)
+    obj.fit_manager.dynamicReconstruction
 end
 
 function variableTableEditCallback(a,b,obj)
@@ -225,6 +234,7 @@ end
 function save_callBack(a,b,obj)
     [file,path] = uiputfile('*_fitResult.mat', 'Save as', '');
     if file~=0
+        % only when the path is specified
         fit_manager = obj.fit_manager;
         file = strsplit(file,'.');
         if ~endsWith(file{1}, '_fitResult')
@@ -232,8 +242,11 @@ function save_callBack(a,b,obj)
         else
             fileMat = strcat(path, file{1}, '.', file{2});
         end
+        
+        % save the fit_manger first
         save(fileMat, 'fit_manager')
         
+        % get which parameter(s) to save from the table
         dataTable = obj.variableTable_handle.Data;
         
         variableTableCol = {};
