@@ -34,7 +34,9 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
             ax = axes(fig);
             
             page_numOfSites = 20;
-            sub = cell(page_numOfSites*5,1);
+            numOfView = 6;
+            
+            sub = cell(page_numOfSites*numOfView,1);
             subSites = se.sites(p.sites2plot);
             for k = 1:length(subSites)
                 % Borrow the evaluate plug-in to use getLocs(obj,...)
@@ -47,11 +49,32 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 fitter.allParsArg = subSites(k).evaluation.(fitterGUI_name).allParsArg;
                 fitter.setParArg('m1.lPar.variation', 'value',0);
                 [~,modViz] = fitter.plot(locsSite,'plotType','point', 'doNotPlot', true); % get point type visualization
-                locsViz = fitter.locsHandler(locsSite, fitter.exportPars(1,'lPar'),1);
+                lPars = fitter.exportPars(1,'lPar');
+                locsViz = fitter.locsHandler(locsSite, lPars,1);
                 
-                for rot = 1:5
+%                 'XYZ' is for model
+                [x,y,z] = rotcoord3(0,0,-1, deg2rad(lPars.xrot), deg2rad(lPars.yrot), deg2rad(lPars.zrot), 'XYZ');
+                [aziOri,eleOri,~] = cart2sph(0,0,-1);
+                [azi,ele,~] = cart2sph(x,y,z);
+                
+                lParsAzi = lPars;
+                lParsAzi.xrot = 0;
+                lParsAzi.yrot = 0;
+                lParsAzi.zrot = 0;
+                locsVizAzi = fitter.locsHandler(locsSite, lParsAzi,1);
+                [locsVizAzi.xnm, locsVizAzi.ynm] = rotcoord2(locsVizAzi.xnm, locsVizAzi.ynm, azi);
+                
+                fnMod = fieldnames(modViz{1});
+                for l = 1:length(fnMod)
+                    modVizAzi{1}.(fnMod{l}) = modViz{1}.(fnMod{l});
+                end
+                [modVizAzi{1}.x, modVizAzi{1}.z] = rotcoord2(modVizAzi{1}.x, modVizAzi{1}.z, -(ele-eleOri));
+                
+                for rot = 1:numOfView
                     if rot == 1
                         fitter.rotCoordNMkImg(ax, modViz, locsViz, [0 0], 2, 'Data', 500, {'red hot'})
+                    elseif rot == 6
+                        fitter.rotCoordNMkImg(ax, modVizAzi, locsVizAzi, [0 -90], 2, 'Data', 30, {'red hot'})
                     else
                         fitter.rotCoordNMkImg(ax, modViz, locsViz, [45*(rot-2) -90], 2, 'Data', 30, {'red hot'})
                     end
@@ -65,10 +88,10 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                     if mon_order == 0
                         mon_order = page_numOfSites;
                     end
-                    sub{(mon_order-1)*5+rot} = currentFrame.cdata(40:440,144:544,:);
+                    sub{(mon_order-1)*numOfView+rot} = currentFrame.cdata(40:440,144:544,:);
                 end
                 if rem(k,page_numOfSites)==0 || k==length(subSites)
-                    imgm = montage(sub, 'Size', [page_numOfSites 5], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', 2);
+                    imgm = montage(sub, 'Size', [page_numOfSites numOfView], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', 2);
                     imwrite(imgm.CData, [path file{1} '_' num2str(ceil(k/page_numOfSites)) '.' file{2}])
                     close(fig)
                     fig = figure(234);

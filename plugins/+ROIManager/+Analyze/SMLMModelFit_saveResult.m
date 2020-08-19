@@ -165,7 +165,7 @@ end
 
 function pard=guidef(obj)
 
-pard.load.object=struct('Style','pushbutton','String','Load data','Callback', {{@load_callBack,obj}});
+pard.load.object=struct('Style','pushbutton','String','Refresh','Callback', {{@load_callBack,obj}});
 pard.load.position=[1,1];
 pard.load.Width=1;
 
@@ -209,7 +209,10 @@ function extLoad_callBack(a,b,obj)
 end
 
 function registerSites_callBack(a,b,obj)
+    obj.loadData;
     obj.fit_manager.dynamicReconstruction
+    obj.locData.regroup;
+    obj.locData.filter;
 end
 
 function variableTableEditCallback(a,b,obj)
@@ -234,6 +237,7 @@ end
 function save_callBack(a,b,obj)
     [file,path] = uiputfile('*_fitResult.mat', 'Save as', '');
     if file~=0
+        obj.loadData;
         % only when the path is specified
         fit_manager = obj.fit_manager;
         file = strsplit(file,'.');
