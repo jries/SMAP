@@ -1,5 +1,7 @@
 classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
 %     makes a montage of many ROIs
+    % Todo: this plugin is still CME3D specific. Flexibility has to be
+    % improved.
     methods
         function obj=SMLMModelFit_gallery(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -23,7 +25,7 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
             dcal.attachLocData(obj.SE.locData);
             dcal.makeGui;
             
-            % to-do: allow selection
+            % [to-do] allow selection
             fitterGUI_name = p.fitter.selection;
             eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             idxFitterGUI = strcmp(fitterGUI_name,eval);
@@ -48,6 +50,10 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 locsSite.ynm = locsSite.ynmrot;
                 fitter.allParsArg = subSites(k).evaluation.(fitterGUI_name).allParsArg;
                 fitter.setParArg('m1.lPar.variation', 'value',0);
+                
+                % [to-do] here need to generized so that the models are not
+                % limited to the first one.
+                fitter.model{1}.locsPrecFactor = 5;
                 [~,modViz] = fitter.plot(locsSite,'plotType','point', 'doNotPlot', true); % get point type visualization
                 lPars = fitter.exportPars(1,'lPar');
                 locsViz = fitter.locsHandler(locsSite, lPars,1);
