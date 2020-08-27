@@ -45,7 +45,7 @@ function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime
             roi=[];
         end
     else
-        gainmap=[];offsetmap=[];varmap=[];
+        gainmap=[];offsetmap=[];varmap=[];roi=[];
     end
     
 end
