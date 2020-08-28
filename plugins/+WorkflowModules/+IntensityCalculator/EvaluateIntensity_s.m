@@ -150,6 +150,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
 %                 obj.EvaluateIntensity_intensity=EvaluateIntensity_intensity;
             else
                 dato=data;
+            end
                 if data.eof
                     groupindex=obj.EvaluateIntensity_intensity(1:obj.loccounter,end);
                     [~,indsortg]=sort(groupindex);
@@ -171,7 +172,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                     end
                     
                 end
-            end
+            
         end
 
     end
