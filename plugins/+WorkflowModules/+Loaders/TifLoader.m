@@ -127,7 +127,9 @@ classdef TifLoader<interfaces.WorkflowModule
                 obj.output(datout)
                 tfitall=tfitall+toc(th);
 
-      
+%                 if imloader.currentImageNumber>36327
+%                     disp('end')
+%                 end
 
                 
                 %display
@@ -217,7 +219,7 @@ classdef TifLoader<interfaces.WorkflowModule
              if p.onlineanalysis
                  obj.guihandles.framestop.String='inf';
              else
-                numf=obj.imloader.metadata.numberOfFrames;
+                numf=obj.imloader.metadata.numberOfFrames+1;
                 if isnan(numf)
                     numf=inf;
                 end

@@ -97,7 +97,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                 end
                 
             end
-               obj.fields={obj.fields{:} 'int_xpix', 'int_ypix', 'int_frame' ,'phot','bg'};
+                obj.fields={obj.fields{:} 'int_xpix' 'index' };
             obj.intensities=single(0);
             obj.EvaluateIntensity_intensity=single(0);
             obj.timershow=tic;
@@ -133,9 +133,10 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                         inds=inds+so;
                     end
                 end
-                                      
+                obj.EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds+0)=single(loc.xpix(1:numl)); 
+                obj.EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds+1)=single(loc.ind(1:numl));                     
                 if isfield(loc,'groupindex')
-                    obj.EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds+5)=loc.groupindex(1:numl);
+                    obj.EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds+2)=loc.groupindex(1:numl);
                 end
                 loccounter=loccounter+numl;
                            

@@ -87,6 +87,9 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                 if ~data.eof
                     lf=length(obj.locs.xA);
                     frame=data.frame;
+%                     if frame>36326
+%                         disp('last')
+%                     end
                     %find indices for same frame
                     ind1=intLoc2pos_ind2;
                     while ind1>0&&intLoc2pos_locframes(ind1)<frame && ind1<lf
@@ -125,6 +128,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                    maxout.numberInGroup=obj.locs.numberInGroup(ind1:intLoc2pos_ind2);
                    maxout.phot=obj.locs.phot(ind1:intLoc2pos_ind2);
                    maxout.bg=obj.locs.bg(ind1:intLoc2pos_ind2);
+                   maxout.ind=ind1:intLoc2pos_ind2;
                    if ~isempty(obj.locs.znm)
                        maxout.znm=obj.locs.znm(ind1:intLoc2pos_ind2);
                    end
