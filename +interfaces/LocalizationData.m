@@ -695,6 +695,11 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                 end
             end
             
+            if mode==3 %no grouping
+                obj.grouploc=obj.loc;
+                obj.filter
+                return
+            end
 %             obj.setPar('status','grouping')
             grouper=Grouper;
             grouper.attachLocData(obj);
