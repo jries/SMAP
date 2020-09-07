@@ -7,6 +7,7 @@ classdef export_tiffs<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         
         function out=run(obj,p)  
+            out=[];
             sites=obj.SE.sites;
             if p.export_selected
                 sev=obj.getPar('se_viewer');
@@ -69,6 +70,21 @@ classdef export_tiffs<interfaces.DialogProcessor&interfaces.SEProcessor
                 end
             end
             
+            if p.export_files
+                files=obj.SE.files;
+                for k=1:length(files)
+                    file=files(k);
+       
+                    options.color=true;
+                    options.comp='lzw';
+                    filen=[f  '_F' num2str(file.ID)];
+                    fhere= [filen '.tif'];
+                    imout=uint8(file.image.image*255);
+
+                    saveastiff(imout,[path fhere],options);
+                end
+             end
+            
             out=0;
         end
         function pard=guidef(obj)
@@ -89,6 +105,11 @@ pard.export_selected.Width=2;
 pard.export_cells.object=struct('String','export cell images as well','Style','checkbox');
 pard.export_cells.position=[2,1];
 pard.export_cells.Width=2;
+
+pard.export_files.object=struct('String','export file images as well','Style','checkbox');
+pard.export_files.position=[3,1];
+pard.export_files.Width=2;
+
 pard.plugininfo.type='ROI_Analyze';
 pard.plugininfo.description='export superresolution reconstructions of selected ROIs';
 
