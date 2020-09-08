@@ -310,7 +310,7 @@ end
 
 
 
-ztransform=isfield(locref,'znm')&&~isempty(locref.znm);
+ztransform=isfield(locref,'znm')&&~isempty(locref.znm)&& any(locref.znm~=0) && any(loctarget.znm~=0) ;
 if ztransform
     lref=horzcat(locref.x(iAa),locref.y(iAa),locref.znm(iAa));
     lt=horzcat(loctarget.x(iBa),loctarget.y(iBa),loctarget.znm(iBa));

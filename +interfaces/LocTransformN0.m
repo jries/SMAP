@@ -126,7 +126,7 @@ classdef LocTransformN0<handle
                     obj.transform2Target{channel}= fitgeotrans(coordtarget(:,1:2),coordreference(:,1:2),type);
                     obj.transform2Reference{channel}= fitgeotrans(coordreference(:,1:2),coordtarget(:,1:2),type);
             end
-            if size(coordreference,2)>2 %3D data set: also do z-transform
+            if size(coordreference,2)>2 && any(coordreference(:,3)~=0) && any(coordtarget(:,3)~=0) %3D data set: also do z-transform
                 coordtargettransformed=horzcat(obj.transformToReference(channel,coordtarget(:,1:2)),coordtarget(:,3));
                     %only affine3d possible      
                 obj.transformZ2Target{channel}= findAffineTransformZ(coordtargettransformed,coordreference(:,3));
@@ -161,7 +161,7 @@ classdef LocTransformN0<handle
             end
             ci=ci/1000;
             co=transformPointsInverse(obj.transform2Reference{channel},ci(:,1:2)); %inverse of inverse is forward          
-            if size(ci,2)>2 %z coordinates present               
+            if size(ci,2)>2 && channel<=length(obj.transformZ2Reference)%z coordinates present               
                  X=transformPointsInverse(obj.transformZ2Reference{channel},horzcat(co,ci(:,3)));
                  co(:,3)=X(:,3);
             end
