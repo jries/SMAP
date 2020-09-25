@@ -10,6 +10,9 @@ Documentation and installation instructions at:
     /Documents/Manual/SMAPStep-by-StepGuide.md
 Instructions for using SMAP to analyze nuclear pore complex standard samples: 
     /Documentation/Manual/SMAP_manual_NPC.pdf
+    
+Please cite as: Ries, J. SMAP: a modular super-resolution microscopy analysis platform for SMLM data. Nature Methods (2020) doi:10.1038/s41592-020-0938-1.
+    
 
 Requirements
 ------------
