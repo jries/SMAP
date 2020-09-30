@@ -6,3 +6,4 @@
 'locs L ', '.evaluation.generalStatistics.Nlayers'
 'locs ungrouped', '.evaluation.generalStatistics.Nch'
 'locs grouped', '.evaluation.generalStatistics.Nchg'
+'mean phot','.evaluation.generalStatistics.layers1.meanphot'
