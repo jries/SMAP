@@ -3,6 +3,9 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
     % Green line is the original boundary
     % White line is the refined boundary
     
+    % log
+    % 
+    
     properties
         poly
         hpoly
@@ -42,6 +45,27 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
 
         end
         
+        function rmline(obj,a,b,h)
+            % 200929: this funciton is created as an option for removing
+            % the drawn line
+            answer = questdlg('Remove the line?');
+            switch answer
+                case 'Yes'
+                case 'No'
+                    return
+                case 'Cancel'
+                    return
+            end
+            child1 = h.Children(1);
+            if isa(child1,'matlab.graphics.primitive.Group')
+                delete(child1)
+                obj.poly{obj.site.ID}=[];
+                obj.site.evaluation.(obj.name) = rmfield(obj.site.evaluation.(obj.name), 'poly');
+            else
+                disp('Noting to remove.')
+            end
+        end
+        
         function outp=polyconstrain(obj,inp)
             
             outp=vertcat(inp(1,:),max(inp(2:end,:),inp(1:end-1,:)));
@@ -58,11 +82,17 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
         function output = dynamicsManualBound(obj)
             % This function gets the steps from segments
             
-            % Get segements
-            manualBound.data = obj.poly{obj.site.ID}; % column: pos time
+            % Basic info.
             binFactorPos = 10;
             binFactorTime = 2.5;
             stallThreshold = 0.1;
+            
+            % Get segements
+            % manualBound.data: anchor points of the segmentation
+            % manualBound.segment: segments between anchor points
+            % manualBound.ratePerSeg: diffPos/diffTime per segment
+            
+            manualBound.data = obj.poly{obj.site.ID}; % column: pos time
             manualBound.data = [manualBound.data(:,1)*binFactorPos manualBound.data(:,2)*binFactorTime];
             manualBound.segment = diff(manualBound.data);
             manualBound.ratePerSeg = manualBound.segment(:,1)./manualBound.segment(:,2);
@@ -85,7 +115,8 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             
             orderSteps = unique(mark,'stable');       % This is the order of the steps
 
-            avgRate = sum(manualBound.segment,1);
+%             avgRate = sum(manualBound.data,1);
+            avgRate = manualBound.data(end,:)-manualBound.data(1,:);
             avgRate = avgRate(1)/avgRate(2);
             
             [sumPos,names]=grpstats(manualBound.segment(:,1),mark,{'sum','gname'});

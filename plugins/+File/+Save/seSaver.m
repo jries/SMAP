@@ -9,6 +9,8 @@ classdef seSaver<interfaces.DialogProcessor
             obj.status('save SE file')
             lastSMLFile = obj.getPar('lastSMLFile');
             defaultFn = replace(lastSMLFile, '_sml', '_se');
+            
+            % only used sites will be saved
             lUse = getFieldAsVector(obj.locData.SE.sites,'annotation.use');
             subSites = obj.locData.SE.sites(lUse);
             fibrilStatistics = getFieldAsVector(subSites,'evaluation.fibrilStatistics');

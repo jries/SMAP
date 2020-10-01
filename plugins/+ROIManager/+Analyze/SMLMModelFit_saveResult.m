@@ -254,7 +254,14 @@ function save_callBack(a,b,obj)
         dataTable = obj.variableTable_handle.Data;
         
         variableTableCol = {};
-        ind = str2double(dataTable(:,3));
+        if isa([dataTable{:,3}],'double')
+            lEmpty = cellfun(@isempty,dataTable(:,3));
+            ind = dataTable(:,3);
+            ind(lEmpty) = {0};
+            ind = [ind{:}];
+        else
+            ind = str2double(dataTable(:,3));
+        end
         variableTableCol(ind(ind>0)) = dataTable(ind>0,1);
         
         obj.fit_manager.variableTableCol = variableTableCol;
