@@ -58,12 +58,20 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             lModuleToSave = startsWith(listOfModules, 'SMLMModelFitGUI');
             nameModuleToSave = listOfModules(lModuleToSave);
             
+            firstSite = sites(1);
+            if isfield(firstSite.evaluation, 'generalStatistics')
+                nameModuleToSave = [{'generalStatistics'}; nameModuleToSave];
+                pre = 1;    % number of the modules before the SMLMModelFit.
+            else
+                pre = 0;
+            end
+                
             export_sites = [];
             
             % Site info
             for k = se.numberOfSites:-1:1
                 oneSite = sites(k);
-            
+
                 export_sites(k).annotation.use = oneSite.annotation.use;
                 export_sites(k).pos = oneSite.pos;
                 export_sites(k).ID = oneSite.ID;
@@ -75,10 +83,12 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             sites = export_sites;
             output.sites = sites;
             
+            
+            
             % Fit info.
             SMLMModelFitGUI_obj = se.processors.eval.processors(lModuleToSave);
-            for l = 1:length(nameModuleToSave)
-                output.SMLMModelFit.(nameModuleToSave{l}) = SMLMModelFitGUI_obj{l}.fitter;
+            for l = 1:length(nameModuleToSave)-pre
+                output.SMLMModelFit.(nameModuleToSave{pre+l}) = SMLMModelFitGUI_obj{l}.fitter;
             end
             
             % Export
