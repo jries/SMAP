@@ -9,9 +9,13 @@ classdef seSaver<interfaces.DialogProcessor
             obj.status('save SE file')
             lastSMLFile = obj.getPar('lastSMLFile');
             defaultFn = replace(lastSMLFile, '_sml', '_se');
-            fibrilStatistics = getFieldAsVector(obj.locData.SE.sites,'evaluation.fibrilStatistics');
-            fibrilDynamics = getFieldAsVector(obj.locData.SE.sites,'evaluation.fibrilDynamics');
-            fibrilStraightener = getFieldAsVector(obj.locData.SE.sites,'evaluation.fibrilStraightener');
+            
+            % only used sites will be saved
+            lUse = getFieldAsVector(obj.locData.SE.sites,'annotation.use');
+            subSites = obj.locData.SE.sites(lUse);
+            fibrilStatistics = getFieldAsVector(subSites,'evaluation.fibrilStatistics');
+            fibrilDynamics = getFieldAsVector(subSites,'evaluation.fibrilDynamics');
+            fibrilStraightener = getFieldAsVector(subSites,'evaluation.fibrilStraightener');
             fnMeasurement = {'deviation','P','intensity','intensity_rescaled'};
             for k = 1:length(fibrilStatistics)
                 singleSites{k}.fibrilStatistics = fibrilStatistics{k};

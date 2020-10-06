@@ -3,6 +3,9 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
     % Green line is the original boundary
     % White line is the refined boundary
     
+    % log
+    % 
+    
     properties
         poly
         hpoly
@@ -14,6 +17,13 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
         end
         function out=run(obj, inp)
             out=runFibrilDynamics(obj, inp);
+            valh=obj.site.evaluation.(obj.modulename);
+            if length(obj.poly)>=obj.site.ID &&~isempty(obj.poly{obj.site.ID})
+                out.manualBound = obj.dynamicsManualBound;
+            elseif isfield(valh,'poly')
+                obj.poly{obj.site.ID}=valh.poly;
+                out.manualBound = obj.dynamicsManualBound;
+            end
         end
         
         function pard=guidef(obj)
@@ -32,6 +42,28 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             setConstrainedPosition(obj.hpoly,obj.hpoly.getPosition);
             hi=addNewPositionCallback(obj.hpoly,@obj.polycallback);
             obj.polycallback(obj.hpoly.getPosition);
+
+        end
+        
+        function rmline(obj,a,b,h)
+            % 200929: this funciton is created as an option for removing
+            % the drawn line
+            answer = questdlg('Remove the line?');
+            switch answer
+                case 'Yes'
+                case 'No'
+                    return
+                case 'Cancel'
+                    return
+            end
+            child1 = h.Children(1);
+            if isa(child1,'matlab.graphics.primitive.Group')
+                delete(child1)
+                obj.poly{obj.site.ID}=[];
+                obj.site.evaluation.(obj.name) = rmfield(obj.site.evaluation.(obj.name), 'poly');
+            else
+                disp('Noting to remove.')
+            end
         end
         
         function outp=polyconstrain(obj,inp)
@@ -44,6 +76,82 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
 %             setConstrainedPosition(obj.hpoly,inp);
             obj.poly{obj.site.ID}=inp;
             obj.site.evaluation.(obj.name).poly=inp;
+            obj.site.evaluation.fibrilDynamics.manualBound = obj.dynamicsManualBound;
+        end
+        
+        function output = dynamicsManualBound(obj)
+            % This function gets the steps from segments
+            
+            % Basic info.
+            binFactorPos = 10;
+            binFactorTime = 2.5;
+            stallThreshold = 0.1;
+            
+            % Get segements
+            % manualBound.data: anchor points of the segmentation
+            % manualBound.segment: segments between anchor points
+            % manualBound.ratePerSeg: diffPos/diffTime per segment
+            
+            manualBound.data = obj.poly{obj.site.ID}; % column: pos time
+            manualBound.data = [manualBound.data(:,1)*binFactorPos manualBound.data(:,2)*binFactorTime];
+            manualBound.segment = diff(manualBound.data);
+            manualBound.ratePerSeg = manualBound.segment(:,1)./manualBound.segment(:,2);
+            stalls = manualBound.ratePerSeg<stallThreshold;
+            
+            % Get steps. Multiple segments in a row will be merged into one
+            % step.
+            % 'mark' denotes growth/stall steps
+            mark = cumsum(stalls)+1;
+            mark(stalls)=-mark(stalls);
+            
+            manualBound.ratePerSeg = [manualBound.ratePerSeg mark];
+            
+            if mark(end) < 0
+                % remove the last step if it is a stall
+                manualBound.segment(end,:) = [];
+                manualBound.ratePerSeg(end,:) = [];
+                mark(end,:) = [];
+            end
+            
+            orderSteps = unique(mark,'stable');       % This is the order of the steps
+
+%             avgRate = sum(manualBound.data,1);
+            avgRate = manualBound.data(end,:)-manualBound.data(1,:);
+            avgRate = avgRate(1)/avgRate(2);
+            
+            [sumPos,names]=grpstats(manualBound.segment(:,1),mark,{'sum','gname'});
+            [sumTime,~]=grpstats(manualBound.segment(:,2),mark,{'sum','gname'});
+            stepMark = str2num(char(names));
+            
+            [~,ind] = ismember(orderSteps, stepMark);
+            manualBound.steps = [sumPos(ind) sumTime(ind)];
+            firstTimePoint = manualBound.data(1,2);
+            
+            endtimeStep = firstTimePoint + cumsum(manualBound.steps(:,2));
+            midTimeStep = endtimeStep - manualBound.steps(:,2)/2;
+            manualBound.steps = [manualBound.steps midTimeStep orderSteps];
+            
+%             validation = firstTimePoint+sum(manualBound.steps(:,2)); %    this value should be the same end time of the manual boundary.
+%             validation
+            
+            if stepMark(1) < 0
+                % if the first grp is the stall, then rm it from the
+                % sumTime and sumPos.
+                lStall = stepMark<0;
+                stallTime = sum(sumTime(lStall));
+                sumTime(lStall) = [];
+                sumPos(lStall) = [];
+            else
+                stallTime = 0;
+            end
+            stepRate = sumPos./sumTime;
+            
+            output.steps = manualBound.steps;
+            output.stepRate = stepRate;
+            output.stepWidth = sumPos;
+            output.stallTime = stallTime;
+            output.stepSpan = sumTime;
+            output.avgRate = avgRate;
         end
     end
     

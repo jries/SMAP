@@ -165,9 +165,12 @@ classdef imageloaderSMAP<interfaces.GuiParameterInterface
                 camfile=obj.calibrationFile;
                 display('could not find camera file in global settings. Using default file.')
             end
-            try
+%             try
                 usedef=obj.getPar('useDefaultCam');
-            catch
+%             catch
+%                 usedef=true;
+%             end
+            if isempty(usedef)
                 usedef=true;
             end
             [md,~,~,error]=getCameraCalibration(obj,[],usedef,findsettingsfile(camfile,obj));

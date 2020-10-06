@@ -114,9 +114,9 @@ if ~isfield(p,'sr_colorbarthickness')
 end
 for k=1:(length(layers))
     if p.sr_layerson(k)&&~isempty(layers(k).images)
-        if k<=4 && (isempty(p.sr_colorbarthickness) ||  p.sr_colorbarthickness>0)
-        imfinal=addcolorbar(imfinal,layers(k).images.finalImages.lut,k,p.sr_colorbarthickness);
-        end
+%         if k<=4 && (isempty(p.sr_colorbarthickness) ||  p.sr_colorbarthickness>0)
+%         imfinal=addcolorbar(imfinal,layers(k).images.finalImages.lut,k,p.sr_colorbarthickness);
+%         end
         rangexplot=layers(k).images.finalImages.rangex;
          rangeyplot=layers(k).images.finalImages.rangey;
     end
@@ -148,7 +148,17 @@ else
    
 end
     
-
+colorpos=1;
+for k=1:(length(layers))
+    if p.sr_layerson(k)&&~isempty(layers(k).images)
+        if k<=4 && (isempty(p.sr_colorbarthickness) ||  p.sr_colorbarthickness>0)
+        imfinal=addcolorbar(imfinal,layers(k).images.finalImages.lut,colorpos,p.sr_colorbarthickness);
+        colorpos=colorpos+1;
+        end
+%         rangexplot=layers(k).images.finalImages.rangex;
+%          rangeyplot=layers(k).images.finalImages.rangey;
+    end
+end
     
     if isfield(p,'sr_axes')&&~isempty(p.sr_axes)&&ishandle(p.sr_axes)&&~isempty(rangexplot)&&~isempty(rangeyplot)
         sr_imagehandle=image(rangexplot/1000,rangeyplot/1000,imfinal,'Parent',p.sr_axes,'Pickable','none','HitTest','off');

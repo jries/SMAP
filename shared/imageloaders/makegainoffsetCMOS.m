@@ -1,4 +1,4 @@
-function [gainmap,offsetmap,varmap]=makegainoffsetCMOS(camfname,exposuretime_data)
+function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime_data)
     % if the camera has been characterized exposure time dependent,
     % find behavior for exposure time used here
     if length(camfname)>4 && strcmp(camfname(end-3:end),'.mat')
@@ -25,11 +25,12 @@ function [gainmap,offsetmap,varmap]=makegainoffsetCMOS(camfname,exposuretime_dat
 
         %varmap has to be in units of photons^2
             varmap=varmap.*gainmap.^2; 
+            roi=[];
                 %???? in units of photons, to be used later directly. 
                 %A: Yes, conversion to photons^2 is not considered in GPUmleFIT
     elseif exist(camfilejson,'file')
         txt=fileread(camfilejson);
-        sr=jseondecode(txt);
+        sr=jsondecode(txt);
         l.read_noise_variance=reshape(sr.rnSq,sr.width,sr.height)';
         l.thermal_noise_variance_per_s=reshape(sr.tnSqPerSec,sr.width,sr.height)';
         l.pixel_baseline=reshape(sr.baseline,sr.width,sr.height)';
@@ -38,8 +39,13 @@ function [gainmap,offsetmap,varmap]=makegainoffsetCMOS(camfname,exposuretime_dat
         %what do we do with gain map? Corrrect? Already averaged?
         gainmap=reshape(sr.gain,sr.width,sr.height)';
         varmap=varmap.*gainmap.^2;
+        if isfield(sr,'x') && sr.x>=0 %roi defined 
+            roi=[sr.x sr.y sr.width sr.height]; %1 based
+        else
+            roi=[];
+        end
     else
-        gainmap=[];offsetmap=[];varmap=[];
+        gainmap=[];offsetmap=[];varmap=[];roi=[];
     end
     
 end

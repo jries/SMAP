@@ -1,10 +1,15 @@
 # SMAP
 Superresolution microscopy analysis platform
 
-COPYRIGHT:     Jonas Ries, 2020
-LICENSE:       GPLv3
-AUTHOR:        Jonas Ries, EMBL Heidelberg, ries@embl.de 27.03.2020
-               www.rieslab.de, www.github.com/jries/SMAP
+COPYRIGHT:      Jonas Ries, 2020
+LICENSE:        GPLv3
+AUTHOR:         Jonas Ries, EMBL Heidelberg, ries@embl.de 27.03.2020
+                www.rieslab.de, www.github.com/jries/SMAP
+PLEASE CITE AS: Ries, J. SMAP: a modular super-resolution microscopy analysis 
+                platform for SMLM data. Nat Methods (2020). 
+                https://doi.org/10.1038/s41592-020-0938-1
+                Please also cite the references for the plugins you use 
+                (as mentioned in the plugin info).
 
 Documentation and installation instructions at: 
     /Documents/Manual/SMAPStep-by-StepGuide.md

@@ -26,7 +26,7 @@ for k=1:length(loc.siteexplorer.files)
     try
         loc.siteexplorer.files(k).info.allmetadata.files=char(loc.siteexplorer.files(k).info.allmetadata.files');
     catch
-         disp('se')
+%          disp('se')
     end
 end
 end

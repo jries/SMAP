@@ -1,4 +1,6 @@
 fn='/Volumes/LaCie/otherData/deepSMLM/live/beadstacks561nm2DnoAirbubble/nomirror_beadstacks561nm2DnoAirbubble_3dcal.mat';
+fn='/Volumes/LaCie/otherData/deepSMLM/live/beads2/200730_2D_561_3dcal.mat';
+
 l=load(fn);
 
 imgstack=l.SXY.PSF{1};
@@ -33,6 +35,9 @@ g4=fittype( @(a, b, c, d,e,f, g,h,m,n,x, y) a*exp(-((x-b).^2+(y-c).^2)/d^2)+e*ex
  
   l3=[-inf -2 -2 1.5 -inf 4 -inf 0.7];
  u3=[inf 2 2 4 inf 30 inf 1.5];
+ 
+   l4=[-inf -2 -2 1.5 -inf 4 -inf 0.7 -inf -0.7];
+ u4=[inf 2 2 4 inf 30 inf 1.5 inf 5];
  
  
  sp2=sp2_0;
@@ -81,7 +86,7 @@ for k=mps:-1:1
 %     implot2(:,:,k)=[imh, fitp2(X,Y);imh-fitp2(X,Y),imh*0];
 %  implot3(:,:,k)=[imh, fitp3(X,Y);imh-fitp3(X,Y),imh*0];
 %  
-         fitp4=fit([X(:),Y(:)],imh(:),g4,'StartPoint',sp4);
+         fitp4=fit([X(:),Y(:)],imh(:),g4,'StartPoint',sp4,'Lower',l4,'Upper',u4);
     sp4=coeffvalues(fitp4);
      implot4(:,:,k)=[imh, fitp4(X,Y);imh-fitp4(X,Y),imh*0];
      fitpc=fitp4;
@@ -101,14 +106,14 @@ for k=mps:size(imgc,3)
 % %     subplot(2,1,1);imagesc()
 %     implot2(:,:,k)=[imh, fitp2(X,Y);imh-fitp2(X,Y),imh*0];
 %  implot3(:,:,k)=[imh, fitp3(X,Y);imh-fitp3(X,Y),imh*0];
-          fitp4=fit([X(:),Y(:)],imh(:),g4,'StartPoint',sp4);
+          fitp4=fit([X(:),Y(:)],imh(:),g4,'StartPoint',sp4,'Lower',l4,'Upper',u4);
     sp4=coeffvalues(fitp4);
      implot4(:,:,k)=[imh, fitp4(X,Y);imh-fitp4(X,Y),imh*0];
      fitpc=fitp4;
      fitpc.b=0;fitpc.c=0;
      psf4(:,:,k)=fitpc(Xn,Yn);
 end
-
+%%
 imx(implot4)
 imx(psf4)
 
@@ -123,14 +128,14 @@ figure(33);hold off
 plot(squeeze(imagex(16,16,:)));
 hold on
 plot(squeeze(psf4(18,18,:)))
-
+psf4n=psf4/sum(sum(psf4(:,:,round(end/2))));
 figure(34)
 hold off
 plot(squeeze(sum(sum(psf4n,1),2)))
 hold on
 plot(squeeze(sum(sum(imagex,1),2)))
 
-psf4n=psf4/sum(sum(psf4(:,:,round(end/2))));
+
 
 coeff = Spline3D_interp(psf4n(:,:,2:end-1));
 

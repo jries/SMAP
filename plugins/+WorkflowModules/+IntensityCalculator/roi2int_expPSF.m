@@ -26,8 +26,11 @@ classdef roi2int_expPSF<interfaces.GuiModuleInterface
         function load3Dfile(obj,a,b)
             calf=obj.getSingleGuiParameter('cal_3Dfile');
             if isempty(calf) %nothing selected
-                pf=fileparts(obj.getPar('mainfile'));
-                calf=[pf,filesep,'*_3dcal.mat'];
+                mainf=obj.getPar('mainfile');
+                if ~isempty(mainf)
+                    pf=fileparts(mainf);
+                    calf=[pf,filesep,'*_3dcal.mat'];
+                end
             end
             [file,pfad]=uigetfile(calf);
             if file

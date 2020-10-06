@@ -1,0 +1,21 @@
+Calculates x,y and z shift for individual z stacks to combine them into a whole-cell 3D data set.
+
+Load all files corresponding to different slices. The file names should start with LxSy_ with x the repetion, and y the slice number. These nubmers are used for a coarse alignment.
+
+Algorithm:
+
+Image cross-correlation (based on reconstructed superresolution images of each file) is used to determine x and y shifts, and a 1D cross-correlation if small image segments is used to calculate 
+z shift. First all images corresponding to the  same slice are aligned. Then the individual slices (containing data from several files) are aligned with respect to each other.
+
+
+gui:Parameters:
+gui:dz Space between slices in nm. For an oil objective, take into account the refractive index mismatch.
+gui:dzt=dz 
+gui:maxshiftt Maximum shift between slices in xy and z (in nm). Around 100-500 nm.
+gui:maxshiftxy=maxshiftt
+gui:maxshiftz=maxshiftt
+gui:onlynominal If this is selected, the slices are shifted to their nominal positions in the stack. 
+gui:overlap Overlap (in nm) in z in which the cross-correlation is calculated. Should be same order of magnitude as slice distance.
+gui:overlapt=overlap
+gui:zwindow Range in which the cross-correlation curve is fitted to determine the z shift (e.g. 7). 
+gui:zwindowt=zwindow

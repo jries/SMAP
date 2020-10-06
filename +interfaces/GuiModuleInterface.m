@@ -648,7 +648,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %                             h.TooltipString=thisField.TooltipString;
 %                         end
                     end
-                    if anyoptional && synchronizeguistate
+                    if anyoptional && ~isempty(synchronizeguistate) && synchronizeguistate
                         obj.addSynchronization('globalGuiState',[],[],@obj.setglobalguistate);
                     end
                        
