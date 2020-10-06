@@ -3,6 +3,18 @@ can then be saved as a '.yaml' file, which is directly read by the DECODE traini
 
 Click on the InOut/calibration_file entry to choose the position of the calibration file ('*_3dcal.mat'). 
 
+General workflow: 
+
+- Calibrate your PSF on bead stacks using the plugins: Analyse/sr3D/calibrate3DsplinePSF.
+
+- Fit your SMLM data using this calibrated PSF.
+
+- Filter out data with bad LLrel.
+
+- Generate the '.yaml' file with this plugin.
+
+- Use this file to train the DECODE network.
+
 gui:Parameters:
 gui:loadjson Load a '.yaml'  file and use those values as default.
 gui:partablepos 
