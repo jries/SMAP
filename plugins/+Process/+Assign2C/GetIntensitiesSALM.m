@@ -118,6 +118,7 @@ classdef GetIntensitiesSALM<interfaces.DialogProcessor
             end
             delete(f);
             fo=strrep(obj.locData.files.file(1).name,'_sml.mat','_dc_sml.mat');
+            obj.addhistory;
             obj.locData.savelocs(fo);
             obj.locData.regroup;
             obj.setPar('locFields',fieldnames(obj.locData.loc))

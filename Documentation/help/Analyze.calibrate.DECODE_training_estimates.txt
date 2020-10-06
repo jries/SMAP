@@ -1,0 +1,11 @@
+This plugin analyses the loaded SMLM data and calculates training parameters for DECODE. These 
+can then be saved as a '.yaml' file, which is directly read by the DECODE training notebook.
+
+Click on the InOut/calibration_file entry to choose the position of the calibration file ('*_3dcal.mat'). 
+
+gui:Parameters:
+gui:loadjson Load a '.yaml'  file and use those values as default.
+gui:partablepos 
+gui:savejson Save the table as a '.yaml' file to be used directly for DECODE training.
+gui:savejson_default Overwrite the default 'DECODE_default.yaml' file with current values.
+gui:usecurrent Analyse the currently loaded SMLM data to calculate training parameters.

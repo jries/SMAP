@@ -16,7 +16,7 @@ classdef clusterStatistics<interfaces.SEEvaluationProcessor
             else
                 roisizeh=roisize/2;
             end
-            fields0={'locprecnm','xnm','ynm','znm','phot','bg'};
+            fields0={'locprecnm','xnm','ynm','znm','phot','bg','psf_nu','psf_bg'};
             fields1={'locprecznm_SALM','znm_SALM','znm_a','locprecznm_a','xnmerr','ynmerr'};
             fields=[fields0 fields1];
 %             if obj.display
@@ -28,11 +28,16 @@ classdef clusterStatistics<interfaces.SEEvaluationProcessor
                     locs=obj.getLocs(fields,'layer',k,'size',roisizeh);  
                     
                     for f=1:length(fields)
-                          out.(['layers' num2str(k)]).(fields{f}).mean=mean(locs.(fields{f}));
-                          out.(['layers' num2str(k)]).(fields{f}).median=median(locs.(fields{f}));
-                          out.(['layers' num2str(k)]).(fields{f}).std=std(locs.(fields{f}));
-                          out.(['layers' num2str(k)]).(fields{f}).q05=quantile(locs.(fields{f}),0.05);
-                          out.(['layers' num2str(k)]).(fields{f}).q95=quantile(locs.(fields{f}),0.95);
+                        vh=locs.(fields{f});
+                        vh(isnan(vh))=[];
+                        vh(isinf(vh))=[];
+                        
+                          out.(['layers' num2str(k)]).(fields{f}).mean=mean(vh,'omitnan');
+                          out.(['layers' num2str(k)]).(fields{f}).median=median(vh,'omitnan');
+                          out.(['layers' num2str(k)]).(fields{f}).std=std(vh,'omitnan');
+                          out.(['layers' num2str(k)]).(fields{f}).q05=quantile(vh,0.05);
+                          out.(['layers' num2str(k)]).(fields{f}).q95=quantile(vh,0.95);
+                          out.(['layers' num2str(k)]).(fields{f}).vals=locs.(fields{f});
                     end
                     
                      out.(['layers' num2str(k)]).Nlocs=length(locs.xnm);
