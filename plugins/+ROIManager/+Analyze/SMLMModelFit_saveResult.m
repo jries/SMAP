@@ -199,6 +199,10 @@ pard.registerSites.object=struct('Style','pushbutton','String','Register sites',
 pard.registerSites.position=[3,3.7];
 pard.registerSites.Width=1;
 
+pard.recSites.object=struct('Style','pushbutton','String','Reconstruction','Callback', {{@dynamicRec_callBack,obj}});
+pard.recSites.position=[4,3.7];
+pard.recSites.Width=1;
+
 pard.parsTable.object=struct('Style','text','String','table pos');
 pard.parsTable.position=[12,1];
 pard.parsTable.Width=2.5;
@@ -220,7 +224,14 @@ end
 
 function registerSites_callBack(a,b,obj)
     obj.loadData;
-    obj.fit_manager.dynamicReconstruction
+    obj.fit_manager.masterAvg;
+    obj.locData.regroup;
+    obj.locData.filter;
+end
+
+function dynamicRec_callBack(a,b,obj)
+    obj.loadData;
+    obj.fit_manager.dynamicRec;
     obj.locData.regroup;
     obj.locData.filter;
 end
