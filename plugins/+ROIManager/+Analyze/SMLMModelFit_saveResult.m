@@ -269,7 +269,7 @@ function save_callBack(a,b,obj)
         end
         
         % save the fit_manger first
-        save(fileMat, 'fit_manager')
+%         save(fileMat, 'fit_manager')
         
         % get which parameter(s) to save from the table
         dataTable = obj.variableTable_handle.Data;
