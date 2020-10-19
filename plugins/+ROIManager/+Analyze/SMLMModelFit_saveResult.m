@@ -203,6 +203,10 @@ pard.recSites.object=struct('Style','pushbutton','String','Reconstruction','Call
 pard.recSites.position=[4,3.7];
 pard.recSites.Width=1;
 
+pard.mkMovie.object=struct('Style','pushbutton','String','Make movie','Callback', {{@mkMovie_callBack,obj}});
+pard.mkMovie.position=[5,3.7];
+pard.mkMovie.Width=1;
+
 pard.parsTable.object=struct('Style','text','String','table pos');
 pard.parsTable.position=[12,1];
 pard.parsTable.Width=2.5;
@@ -234,6 +238,16 @@ function dynamicRec_callBack(a,b,obj)
     obj.fit_manager.dynamicRec;
     obj.locData.regroup;
     obj.locData.filter;
+end
+
+function mkMovie_callBack(a,b,obj)
+    obj.loadData;
+    [file,path] = uiputfile('*.tif', 'Save as', '');
+    if file~=0
+        obj.fit_manager.mkMovie('saveTo', [path file]);
+    else
+        warning('Please specify where to save.')
+    end
 end
 
 function variableTableEditCallback(a,b,obj)
