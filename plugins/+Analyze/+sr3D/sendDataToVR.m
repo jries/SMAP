@@ -50,21 +50,21 @@ classdef sendDataToVR<interfaces.DialogProcessor
                     cfield=layerfield;
                 end
                 
-                switch cfield %in case existing parameters are selected
-                    case 'xnm'
-                        color_field = 0; 
-                    case 'ynm'
-                        color_field = 1;
-                    case 'znm'
-                        color_field = 2;
-                    case 'locprecnm'
-                        color_field = 3;
-                    case 'frame'
-                        color_field = 4;
-                    case 'locprecznm'
-                        color_field = 5;
-                end
-                disp(color_field)
+%                 switch cfield %in case existing parameters are selected
+%                     case 'xnm'
+%                         color_field = 0; 
+%                     case 'ynm'
+%                         color_field = 1;
+%                     case 'znm'
+%                         color_field = 2;
+%                     case 'locprecnm'
+%                         color_field = 3;
+%                     case 'frame'
+%                         color_field = 4;
+%                     case 'locprecznm'
+%                         color_field = 5;
+%                 end
+%                 disp(color_field)
 
                 nb_bytes = 65336/(4*numel(fieldnames(locs)))
                 
@@ -172,12 +172,16 @@ function pard=guidef
     pard.text.object=struct('String','Send localizations to Genuage. Consult Info for instructions.','Style','text');
     pard.text.position=[1,1];
     pard.text.Width=4;
-    
+        pard.intensitycoding.object=struct('String','Use intensity color coding:','Style','checkbox','Value',1);
+    pard.intensitycoding.position=[2,1];
+    pard.intensitycoding.Width=2;    
     pard.tlt.object=struct('String','Overwrite color coding with:','Style','checkbox');
-    pard.tlt.position=[2,1];
+    pard.tlt.position=[3,1];
     pard.tlt.Width=2;    
     pard.colorfield.object=struct('String',{{'X','Y','Z','Precision', 'Z Precision','Frames'}},'Style','popupmenu');
-    pard.colorfield.position=[2,3];
+    pard.colorfield.position=[3,3];
     
     pard.syncParameters={{'locFields','colorfield',{'String'},{}}};
+    pard.plugininfo.type='ProcessorPlugin';
+    pard.plugininfo.description='Genuage';
 end
