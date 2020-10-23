@@ -13,7 +13,7 @@ classdef DefineMainCoordinates<interfaces.DialogProcessor
             targetfields={'xnm','ynm','znm'};
             targetprec={'locprecnm','locprecnm','locprecznm'};
             fields={'xfield','yfield','zfield'};
-            errfields={'xerrfield','zerrfield'};
+            errfields={'xerrfield','xerrfield','zerrfield'};
             facfields={'xfac','yfac','zfac'};
             
             newfields={p.xfield.selection,p.yfield.selection,p.zfield.selection,p.xerrfield.selection,p.zerrfield.selection};
@@ -45,7 +45,7 @@ classdef DefineMainCoordinates<interfaces.DialogProcessor
                             obj.locData.setloc(backupfield,loctemp.(targetprec{k}));
                         end
                         fac=p.(facfields{k})(1);
-                        xnew=(loctemp.(p.(errfields{k})).selection)*fac;
+                        xnew=(loctemp.(p.(errfields{k}).selection))*fac;
                         obj.locData.setloc(targetprec{k},xnew);
                     end
                 end

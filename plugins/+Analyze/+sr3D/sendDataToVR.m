@@ -4,7 +4,7 @@ classdef sendDataToVR<interfaces.DialogProcessor
         function obj=sendDataToVR(varargin)        
             obj@interfaces.DialogProcessor(varargin{:});
             obj.inputParameters={'sr_layerson','linewidth_roi','znm_min','znm_max','sr_pixrec','layernames'};
-            obj.showresults=true;
+            obj.showresults=false;
         end
         
         function out=run(obj,p)     
@@ -22,12 +22,12 @@ classdef sendDataToVR<interfaces.DialogProcessor
             clear tcpipClient;
             
             
-            for layer = 1:length(layerson)
-                disp(layer);
-           
-            
-            
-                [locs,~, hroi]=locD.getloc({'xnm','ynm','znm','locprecnm','locprecznm','frame','xnmline','ynmline'},'layer',layer,'position','roi');
+            for layer = 1:min(2,length(layerson)) %only maximally two channels
+                
+                colorfieldselected=p.colorfield.selection;
+                layerfield=obj.getPar(['layer' num2str(layerson(layer)) '_renderfield']).selection;
+                
+                [locs,~, hroi]=locD.getloc({'xnm','ynm','znm','locprecnm','locprecznm','frame',colorfieldselected, layerfield,'xnmline','ynmline'},'layer',layerson(layer),'position','roi');
                 % You can also do filtering based on the layers
                 %tcpipClient = tcpclient('127.0.0.1',5555,'Timeout',30);
                 %request = uint8('ID');
@@ -38,24 +38,32 @@ classdef sendDataToVR<interfaces.DialogProcessor
                 %data = uint8('ROI');
                 %write(tcpipClient,data);
                 %clear tcpipClient;
+                
+%                 color_field = 0;
+% 
 
-                color_field = 0;
-
-                switch p.colorfield.selection
-                    case 'X'
+                if p.tlt
+                    color_field=6;
+                    cfield=colorfieldselected;
+                else 
+                    color_field=7;
+                    cfield=layerfield;
+                end
+                
+                switch cfield %in case existing parameters are selected
+                    case 'xnm'
                         color_field = 0; 
-                    case 'Y'
+                    case 'ynm'
                         color_field = 1;
-                    case 'Z'
+                    case 'znm'
                         color_field = 2;
-                    case 'Precision'
+                    case 'locprecnm'
                         color_field = 3;
-                    case 'Frames'
+                    case 'frame'
                         color_field = 4;
-                    case 'Z Precision'
+                    case 'locprecznm'
                         color_field = 5;
                 end
-
                 disp(color_field)
 
                 nb_bytes = 65336/(4*numel(fieldnames(locs)))
@@ -100,6 +108,9 @@ classdef sendDataToVR<interfaces.DialogProcessor
                         package = [package; locs.znm(tot_count)];
                         package = [package; locs.locprecnm(tot_count)];
                         package = [package; locs.frame(tot_count)];
+                        package = [package; locs.locprecznm(tot_count)]; %this was set to zero?
+                        package = [package; locs.(colorfieldselected)(tot_count)];  %I added two fields
+                        package = [package; locs.(layerfield)(tot_count)]; %this as well
                         package = [package; 0];
                         if tot_count == length(locs.xnm)
                             break
@@ -157,9 +168,16 @@ end
 
 function pard=guidef
     % You can implement you gui options here.
-    pard.tlt.object=struct('String','Select color coding field','Style','text');
-    pard.tlt.position=[1,4];
     
+    pard.text.object=struct('String','Send localizations to Genuage. Consult Info for instructions.','Style','text');
+    pard.text.position=[1,1];
+    pard.text.Width=4;
+    
+    pard.tlt.object=struct('String','Overwrite color coding with:','Style','checkbox');
+    pard.tlt.position=[2,1];
+    pard.tlt.Width=2;    
     pard.colorfield.object=struct('String',{{'X','Y','Z','Precision', 'Z Precision','Frames'}},'Style','popupmenu');
-    pard.colorfield.position=[2,4];
+    pard.colorfield.position=[2,3];
+    
+    pard.syncParameters={{'locFields','colorfield',{'String'},{}}};
 end

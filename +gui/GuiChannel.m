@@ -129,6 +129,9 @@ classdef GuiChannel< interfaces.LayerInterface
             obj.addSynchronization([obj.layerprefix 'shiftxy_max'],h.shiftxy_max,'String',{@callobj.updatefields_callback,'shiftxy'})
             obj.addSynchronization(['frame_min'],[],[],{@callobj.updateframes_callback})
             obj.addSynchronization(['frame_max'],[],[],{@callobj.updateframes_callback})
+            
+            obj.addSynchronization([obj.layerprefix 'renderfield'],h.renderfield,'String')
+            obj.addSynchronization([obj.layerprefix 'lut'],h.lut,'String')
 %             obj.addSynchronization([obj.layerprefix 'scalex'],h.scalex,'String')
 %             obj.addSynchronization([obj.layerprefix 'scaley'],h.scaley,'String')
             obj.guihandles=h;
