@@ -218,10 +218,15 @@ pixelsizerec=p.register_parameters.pixelsizenm;
 imr=myhist2(locref.x,locref.y,pixelsizerec,pixelsizerec,rangex,rangey);
 imt=myhist2(loctT.x,loctT.y,pixelsizerec,pixelsizerec,rangex,rangey);
 
+
 qimr=quantile(imr(:),.998);
-imr(imr>qimr)=qimr;
+if qimr>0
+    imr(imr>qimr)=qimr;
+end
 qimt=quantile(imt(:),.998);
-imt(imt>qimt)=qimt;
+if qimt>0
+    imt(imt>qimt)=qimt;
+end
 
 imr=sqrt(imr);
 imt=sqrt(imt);
