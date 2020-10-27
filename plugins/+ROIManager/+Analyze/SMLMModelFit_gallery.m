@@ -1,5 +1,7 @@
 classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
 %     makes a montage of many ROIs
+    % Todo: this plugin is still CME3D specific. Flexibility has to be
+    % improved.
     methods
         function obj=SMLMModelFit_gallery(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -8,8 +10,11 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         
         function out=run(obj,p)
+            % ask user to specify the file name
             [file,path] = uiputfile('*.png', 'Save as', '');
             file = strsplit(file,'.');
+            
+            % basic info.
             se = obj.locData.SE;
             sites = se.sites;
             roiSize = se.P.par.se_siteroi.content;
@@ -20,7 +25,7 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
             dcal.attachLocData(obj.SE.locData);
             dcal.makeGui;
             
-            % to-do: allow selection
+            % [to-do] allow selection
             fitterGUI_name = p.fitter.selection;
             eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             idxFitterGUI = strcmp(fitterGUI_name,eval);
@@ -31,26 +36,70 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
             ax = axes(fig);
             
             page_numOfSites = 20;
-            sub = cell(page_numOfSites*5,1);
+            numOfView = 6;
+            
+            sub = cell(page_numOfSites*numOfView,1);
             subSites = se.sites(p.sites2plot);
             for k = 1:length(subSites)
                 % Borrow the evaluate plug-in to use getLocs(obj,...)
                 dcal.site=subSites(k);
                 dcal.site.image = se.plotsite(subSites(k));
-                [locsSite,indloc] = dcal.getLocs({'xnmrot','ynmrot','znm','locprecnm', 'locprecznm'},'size',roiSize','grouping', 'grouped','layer',1); % per ROI info.
-                locsSite.layer = ones(size(locsSite.xnm));
-                locsSite.xnm = locsSite.xnmrot;
-                locsSite.ynm = locsSite.ynmrot;
+                % Check all the possible layers (up to 6)
+                for l = 1:6
+                    layercheck = obj.getPar(['layer' num2str(l) '_layercheck']);
+                    if layercheck
+                        [locsSiteOne,indlocOne] = dcal.getLocs({'xnmrot','ynmrot','znm','locprecnm', 'locprecznm'},'size',roiSize','grouping', 'grouped','layer',l); % per ROI info.
+                        if l == 1
+                            locsSite = locsSiteOne;
+                            indloc = indlocOne;
+                            locsSite.layer = ones(size(locsSiteOne.xnm));
+                            locsSite.xnm = locsSite.xnmrot;
+                            locsSite.ynm = locsSite.ynmrot;
+                        else
+                            locsSite.layer = [locsSite.layer; ones(size(locsSiteOne.xnm))*l];
+                            locsSite.xnm = [locsSite.xnm; locsSiteOne.xnmrot];
+                            locsSite.ynm = [locsSite.ynm; locsSiteOne.ynmrot];
+                            locsSite.znm = [locsSite.znm; locsSiteOne.znm];
+                            locsSite.locprecnm = [locsSite.locprecnm; locsSiteOne.locprecnm];
+                            locsSite.locprecznm = [locsSite.locprecznm; locsSiteOne.locprecznm];
+                        end
+                    end
+                end
                 fitter.allParsArg = subSites(k).evaluation.(fitterGUI_name).allParsArg;
                 fitter.setParArg('m1.lPar.variation', 'value',0);
-                [~,modViz] = fitter.plot(locsSite,'plotType','point', 'doNotPlot', true); % get point type visualization
-                locsViz = fitter.locsHandler(locsSite,fitter.exportPars(1,'lPar'),1);
                 
-                for rot = 1:5
+                % [to-do] here need to generized so that the models are not
+                % limited to the first one.
+                fitter.model{1}.locsPrecFactor = 5;
+                [~,modViz] = fitter.plot(locsSite,'plotType','point', 'doNotPlot', true); % get point type visualization
+                lPars = fitter.exportPars(1,'lPar');
+                locsViz = fitter.locsHandler(locsSite, lPars,1);
+                
+%                 'XYZ' is for model
+                [x,y,z] = rotcoord3(0,0,-1, deg2rad(lPars.xrot), deg2rad(lPars.yrot), deg2rad(lPars.zrot), 'XYZ');
+                [aziOri,eleOri,~] = cart2sph(0,0,-1);
+                [azi,ele,~] = cart2sph(x,y,z);
+                
+                lParsAzi = lPars;
+                lParsAzi.xrot = 0;
+                lParsAzi.yrot = 0;
+                lParsAzi.zrot = 0;
+                locsVizAzi = fitter.locsHandler(locsSite, lParsAzi,1);
+                [locsVizAzi.xnm, locsVizAzi.ynm] = rotcoord2(locsVizAzi.xnm, locsVizAzi.ynm, azi);
+                
+                fnMod = fieldnames(modViz{1});
+                for l = 1:length(fnMod)
+                    modVizAzi{1}.(fnMod{l}) = modViz{1}.(fnMod{l});
+                end
+                [modVizAzi{1}.x, modVizAzi{1}.z] = rotcoord2(modVizAzi{1}.x, modVizAzi{1}.z, -(ele-eleOri));
+                
+                for rot = 1:numOfView
                     if rot == 1
-                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [0 0], 2, 'Data', 500, {'red hot'})
+                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [0 0], 2, 'Data', 500, {'red hot', 'cyan cold'})
+                    elseif rot == 6
+                        fitter.rotCoordNMkImg(ax, modVizAzi, locsVizAzi, [0 -90], 2, 'Data', 30, {'red hot', 'cyan cold'})
                     else
-                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [45*(rot-2) -90], 2, 'Data', 30, {'red hot'})
+                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [45*(rot-2) -90], 2, 'Data', 30, {'red hot', 'cyan cold'})
                     end
                     ax.Children(1).Color = [0.7 0.7 0.7];
                     set(ax,'YDir','normal')
@@ -62,10 +111,10 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                     if mon_order == 0
                         mon_order = page_numOfSites;
                     end
-                    sub{(mon_order-1)*5+rot} = currentFrame.cdata(40:440,144:544,:);
+                    sub{(mon_order-1)*numOfView+rot} = currentFrame.cdata(40:440,144:544,:);
                 end
                 if rem(k,page_numOfSites)==0 || k==length(subSites)
-                    imgm = montage(sub, 'Size', [page_numOfSites 5], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', 2);
+                    imgm = montage(sub, 'Size', [page_numOfSites numOfView], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', 2);
                     imwrite(imgm.CData, [path file{1} '_' num2str(ceil(k/page_numOfSites)) '.' file{2}])
                     close(fig)
                     fig = figure(234);

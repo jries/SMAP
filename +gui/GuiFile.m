@@ -483,7 +483,7 @@ pard.group_tdx.position=[7,4];
 pard.group_tdx.Width=0.3;
 pard.group_tdx.Optional=true;
 
-pard.group_mode.object=struct('Style','popupmenu','String',{{'fix','locprec'}},'Callback',{{@groupmode_callback,obj}});
+pard.group_mode.object=struct('Style','popupmenu','String',{{'fix','locprec','no grouping'}},'Callback',{{@groupmode_callback,obj}});
 pard.group_mode.position=[7,4.2];
 pard.group_mode.Width=0.8;
 pard.group_mode.Optional=true;

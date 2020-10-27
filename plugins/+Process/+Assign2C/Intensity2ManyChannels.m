@@ -50,8 +50,11 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
                     
                     imbw=poly2mask(xpol,ypol,Nmax,Nmax);
                     linind=sub2ind(size(imbw),round(n1),round(n2));
+                    nanind=isnan(linind);
+                    linind(nanind)=1;
                     ischannel=imbw(linind);
                     channel(ischannel)=k;
+                    channel(nanind)=0;
                 end
             end
             if p.usegrouped %convert back to single

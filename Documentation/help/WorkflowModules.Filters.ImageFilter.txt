@@ -3,6 +3,10 @@ Included are a Gaussian filter (recommended for beads and if the background
 is determined independentely), a Difference-of-Gaussian filter  (works well on most SMLM data) 
 and filtering with an experimental PSF (recommended for non-compact PSFs, e.g. the double-helix PSF.
 
+If an sCMOS camera is used, the variance map is used for weighting of the filtering with weights ~ 1/var. 
+Then, high-variance pixels do not contribute to the filtered image, 
+this avoids repeated localization of high-variance pixels.
+
 gui:Parameters:
 gui:filtermode Filter that is used:\n
 DoG: Difference of Gaussian filter. Parameter s is size of the smaller Gaussian, the larger Gaussian is 2.5*s.\n
@@ -15,3 +19,4 @@ gui:loc_loc_filter_sigma Sigma (in camera pixels) for a Gaussian filter which is
 gui:text=loc_loc_filter_sigma;
 gui:text2=zrange;
 gui:zrange For using experimetnal PSF for peak finding: at which z-positions to probe the PSF for correlation
+gui:correctsCMOS If an sCMOS Camera was used and a variance map has been calculated, the 1/variance is used as a weight for filtering, making detections of high-variance pixels less likely.

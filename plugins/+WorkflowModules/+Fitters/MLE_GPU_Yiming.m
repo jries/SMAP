@@ -9,6 +9,7 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
     properties
         fitpar
         zernike
+        varmap
     end
     methods
         function obj=MLE_GPU_Yiming(varargin)
@@ -70,6 +71,7 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
                     cs=obj.getPar('loc_cameraSettings');
                     cs.cam_pixelsize_um=[pzernike.pixelSizeX pzernike.pixelSizeY]/1000;
                     obj.setPar('loc_cameraSettings',cs);
+                    obj.varmap=[];
             end
             obj.setPar('loc_iterations',p.iterations);
         end
@@ -88,7 +90,13 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
                     obj.fitpar.splinefithere.cspline=obj.zernike{X,Y};
             end
             if obj.fitpar.issCMOS
-                varstack=getvarmap(obj.fitpar.varmap,stackinfo,size(imstack,1));
+                if isempty(obj.varmap)
+                    obj.varmap=obj.getPar('cam_varmap');
+                    if isempty(obj.varmap)
+                        disp('no sCMOS variance map found');
+                    end
+                end
+                varstack=getvarmap(obj.varmap,stackinfo,size(imstack,1));
 %                 imstackraw=imstack; %XXXXXXXXXXXXXXXXXXXX added for test purposes
 %                 if ~isempty(obj.fitpar.offsetmap)
 %                     offsetstack=getvarmap(obj.fitpar.offsetmap,stackinfo,size(imstack,1));
@@ -123,17 +131,17 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
     end
 end
 
-function loadscmos_callback(a,b,obj)
-fs=obj.getSingleGuiParameter('scmosfile');
-if isempty(fs)
-    fs='*.*';
-end
-[file,pfad]=uigetfile(fs);
-if file
-    obj.setGuiParameters(struct('scmosfile',[pfad file]))
-end
-
-end
+% function loadscmos_callback(a,b,obj)
+% fs=obj.getSingleGuiParameter('scmosfile');
+% if isempty(fs)
+%     fs='*.*';
+% end
+% [file,pfad]=uigetfile(fs);
+% if file
+%     obj.setGuiParameters(struct('scmosfile',[pfad file]))
+% end
+% 
+% end
 
 function locs=fit2locs(results,stackinfo,fitpar,image)
 if isempty(results)
@@ -414,69 +422,70 @@ switch fitpar.fitmode
 end
 
 %load sCMOS
-if p.isscmos
-    varmaph=obj.getPar('cam_varmap');
-    if ~isempty(varmaph)
-        roi=p.loc_cameraSettings.roi;
-        varmap=varmaph(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
-    else 
-        varmap=[];
-    end
-%     [~,~,ext]=fileparts(p.scmosfile);
-%     switch ext
-%         case '.tif'
-%             varmaph=imread(p.scmosfile);
-%             offsetmap=[];
-%         case '.mat'
-%             l=load(p.scmosfile);
-% %             if isstruct(l)
-% 
-%                 %fn=fieldnames(varmaph);
-%                 %varmaph=varmaph.(fn{1});
-%                 if isfield(l,'metadata') % get camera settings either from metadata or loc_cameraSetting
-%                     metadata=l.metadata;
-%                 else
-%                     metadata=p.loc_cameraSettings;
-%                 end
-%                 
-%                 if isfield(l,'offsetmap')
-%                 offsetmaph=single(l.offsetmap-metadata.offset)*metadata.pix2phot; % the offset must be provided in counts
-%                 else % test this
-%                     offsetmaph=[];
-%                 end
-%                 if isfield(l,'gainmap')
-%                     gainmap=(single(l.gainmap))/metadata.pix2phot; % NB: the gain is normalized to the gain in the metadata
-%                 else % test this
-%                     gainmap=[];
-%                 end
-%                 varmaph=single(l.varmap)*metadata.pix2phot^2;
-% %             end
-%         otherwise
-%             disp('could not load variance map. No sCMOS noise model used.')
-%             p.isscmos=false;
-%             fitpar.issCMOS=false;
-%             varmaph=[];
-%             offsetmaph=[];
-%     end
+% if p.isscmos
+%     varmaph=obj.getPar('cam_varmap');
 %     if ~isempty(varmaph)
-%         roi=p.loc_cameraSettings.roi;
-%         varmap=varmaph(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
+% %         roi=p.loc_cameraSettings.roi;
+% %         varmap=varmaph(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+% %         %now part of camera converter
+%     else 
+%         varmap=[];
 %     end
-%     if ~isempty(offsetmaph)
-%         roi=p.loc_cameraSettings.roi;
-%         offsetmap=offsetmaph(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
-%     end
-%     if ~isempty(gainmap)
-%         roi=p.loc_cameraSettings.roi;
-%         gainmap=gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
-%     end
-else % else: sCMOS option not used
-    varmap=[];
+% %     [~,~,ext]=fileparts(p.scmosfile);
+% %     switch ext
+% %         case '.tif'
+% %             varmaph=imread(p.scmosfile);
+% %             offsetmap=[];
+% %         case '.mat'
+% %             l=load(p.scmosfile);
+% % %             if isstruct(l)
+% % 
+% %                 %fn=fieldnames(varmaph);
+% %                 %varmaph=varmaph.(fn{1});
+% %                 if isfield(l,'metadata') % get camera settings either from metadata or loc_cameraSetting
+% %                     metadata=l.metadata;
+% %                 else
+% %                     metadata=p.loc_cameraSettings;
+% %                 end
+% %                 
+% %                 if isfield(l,'offsetmap')
+% %                 offsetmaph=single(l.offsetmap-metadata.offset)*metadata.pix2phot; % the offset must be provided in counts
+% %                 else % test this
+% %                     offsetmaph=[];
+% %                 end
+% %                 if isfield(l,'gainmap')
+% %                     gainmap=(single(l.gainmap))/metadata.pix2phot; % NB: the gain is normalized to the gain in the metadata
+% %                 else % test this
+% %                     gainmap=[];
+% %                 end
+% %                 varmaph=single(l.varmap)*metadata.pix2phot^2;
+% % %             end
+% %         otherwise
+% %             disp('could not load variance map. No sCMOS noise model used.')
+% %             p.isscmos=false;
+% %             fitpar.issCMOS=false;
+% %             varmaph=[];
+% %             offsetmaph=[];
+% %     end
+% %     if ~isempty(varmaph)
+% %         roi=p.loc_cameraSettings.roi;
+% %         varmap=varmaph(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
+% %     end
+% %     if ~isempty(offsetmaph)
+% %         roi=p.loc_cameraSettings.roi;
+% %         offsetmap=offsetmaph(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
+% %     end
+% %     if ~isempty(gainmap)
+% %         roi=p.loc_cameraSettings.roi;
+% %         gainmap=gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); 
+% %     end
+% else % else: sCMOS option not used
+%     varmap=[];
 %     offsetmap=[];
 %     gainmap=[];
-end
+% end
 
-fitpar.varmap=varmap;
+% fitpar.varmap=varmap;
 % fitpar.offsetmap=offsetmap; % added by Robin. Now in camera converter
 % fitpar.gainmap=gainmap; % added by Robin
 

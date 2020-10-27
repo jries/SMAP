@@ -27,7 +27,8 @@ x(badind)=[];
 y(badind)=[];
 
 xn=(xx(1:end-1)+xx(2:end))/2;
-xn=[-inf xn inf];
+xn(2:end+1)=xn;
+xn(1)=-inf; xn(end+1)=inf;
 yy=zeros(size(xx));
 for k=1:length(xx)
     ind=x>=xn(k)&x<xn(k+1);

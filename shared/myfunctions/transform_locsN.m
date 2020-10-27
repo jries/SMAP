@@ -218,10 +218,15 @@ pixelsizerec=p.register_parameters.pixelsizenm;
 imr=myhist2(locref.x,locref.y,pixelsizerec,pixelsizerec,rangex,rangey);
 imt=myhist2(loctT.x,loctT.y,pixelsizerec,pixelsizerec,rangex,rangey);
 
+
 qimr=quantile(imr(:),.998);
-imr(imr>qimr)=qimr;
+if qimr>0
+    imr(imr>qimr)=qimr;
+end
 qimt=quantile(imt(:),.998);
-imt(imt>qimt)=qimt;
+if qimt>0
+    imt(imt>qimt)=qimt;
+end
 
 imr=sqrt(imr);
 imt=sqrt(imt);
@@ -310,7 +315,7 @@ end
 
 
 
-ztransform=isfield(locref,'znm')&&~isempty(locref.znm);
+ztransform=isfield(locref,'znm')&&~isempty(locref.znm)&& any(locref.znm~=0) && any(loctarget.znm~=0) ;
 if ztransform
     lref=horzcat(locref.x(iAa),locref.y(iAa),locref.znm(iAa));
     lt=horzcat(loctarget.x(iBa),loctarget.y(iBa),loctarget.znm(iBa));

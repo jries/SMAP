@@ -9,6 +9,8 @@ classdef ImageFilter<interfaces.WorkflowModule
         preview
         filterkernelPSF
         offset=0;
+        scmosvariance
+        scmosfiltered
     end
     methods
         function obj=ImageFilter(varargin)
@@ -20,6 +22,7 @@ classdef ImageFilter<interfaces.WorkflowModule
             pard=guidef(obj);
         end
         function prerun(obj,p)
+            obj.scmosvariance=[];
             p=obj.getAllParameters;
             fs=p.loc_loc_filter_sigma(1);
             if length(p.loc_loc_filter_sigma)>1
@@ -84,12 +87,21 @@ classdef ImageFilter<interfaces.WorkflowModule
                         
                 case 1 %DoG
                     rsize=max(ceil(6*fs-1),3);
-                    hdog=fspecial('gaussian',rsize,fs)-fspecial('gaussian',rsize,max(1,2.5*fs));
-                    obj.filterkernel=hdog;
+                    if p.correctsCMOS
+                        obj.filterkernel(:,:,1)=fspecial('gaussian',rsize,fs);
+                        obj.filterkernel(:,:,2)=fspecial('gaussian',rsize,max(1,2.5*fs));
+                    else
+                        hdog=fspecial('gaussian',rsize,fs)-fspecial('gaussian',rsize,max(1,2.5*fs));
+                        obj.filterkernel=hdog;
+                    end
             end
             obj.preview=obj.getPar('loc_preview');
         end
         function dato=run(obj,data,p)
+            if isempty(data.data)
+                dato=data;
+                return
+            end
             dato=data;%.copy;
             if p.filtermode.Value==1&&~isempty(data.data)&&obj.offset==0
                 offset=min(data.data(:,1));
@@ -97,31 +109,58 @@ classdef ImageFilter<interfaces.WorkflowModule
                 offset=obj.offset;
             end
             
-            switch p.filtermode.Value
-                case {1,2}
-                    imf=filter2(obj.filterkernel,data.data-offset);
-                case 3
-                    dat=(data.data/2).^2-0.375;
-                    imf=conv2(dat,obj.filterkernel,'same');
-                case 4
-                    h=obj.filterkernel;
-                    psfstack=obj.filterkernelPSF.fitpsf;
-                    imf=-inf;
-%                     imf=0;
-                    dat=data.data;
-                    for k=1:size(psfstack,3)
+            if p.correctsCMOS && isempty(obj.scmosvariance)  %initialize scmose variance map
+                vmap=obj.getPar('cam_varmap');
+                vsmallest=quantile(vmap(:),.25); %dont overweigh pixels with too low variance (broken pixels)
+                vmap(vmap<vsmallest)=vsmallest;
+%                 vlargest=100*median(vmap(:));
+%                 vmap(vmap>vlargest)=vlargest;
+                obj.scmosvariance=vmap;
+                switch p.filtermode.Value
+                    case 1
+                        obj.scmosfiltered(:,:,1)=filter2(obj.filterkernel(:,:,1),1./obj.scmosvariance);
+                        obj.scmosfiltered(:,:,2)=filter2(obj.filterkernel(:,:,2),1./obj.scmosvariance);
+                    case 2
+                        obj.scmosfiltered=filter2(obj.filterkernel,1./obj.scmosvariance);
+                    case 3
+                        obj.scmosfiltered=conv2(1./obj.scmosvariance,obj.filterkernel,'same');
+                    case 4
+                        disp('scmose noise correction in peak finder not implemented for MIP');
+                end
+            end
+            
+            if p.correctsCMOS && p.filtermode.Value<4
+               switch p.filtermode.Value
+                   case 1
+                       imf=filter2(obj.filterkernel(:,:,1),(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered(:,:,1)-filter2(obj.filterkernel(:,:,2),(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered(:,:,2);
+                    case 2
+                        imf=filter2(obj.filterkernel,(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered;
+                    case 3
                         dat=(data.data/2).^2-0.375;
-                        imh=conv2(dat,psfstack(:,:,k),'same');
-%                         imh=filter2(psfstack(:,:,k),data.data-offset);
-%                         impl(:,:,k)=imh;
-                        imf=max(imh,imf);
-%                         imf=imf+imh/size(psfstack,3);
-                    end
-                    if ~isempty(obj.filterkernel)
-                        imf=filter2(obj.filterkernel,imf);
-                    end
-                    imf=(2*sqrt(imf+0.3750));
-                    
+                        imf=conv2(dat./obj.scmosvariance,obj.filterkernel,'same').*obj.scmosfiltered;     
+                end
+            else
+                switch p.filtermode.Value
+                    case {1,2}
+                        imf=filter2(obj.filterkernel,data.data-offset);
+                    case 3
+                        dat=(data.data/2).^2-0.375;
+                        imf=conv2(dat,obj.filterkernel,'same');
+                    case 4
+                        h=obj.filterkernel;
+                        psfstack=obj.filterkernelPSF.fitpsf;
+                        imf=-inf;
+                        dat=data.data;
+                        for k=1:size(psfstack,3)
+                            dat=(data.data/2).^2-0.375;
+                            imh=conv2(dat,psfstack(:,:,k),'same');
+                            imf=max(imh,imf);
+                        end
+                        if ~isempty(obj.filterkernel)
+                            imf=filter2(obj.filterkernel,imf);
+                        end
+                        imf=(2*sqrt(imf+0.3750));     
+                end
             end
             
             if obj.preview
@@ -247,6 +286,11 @@ pard.zrange.position=[1,2.8];
 pard.zrange.Width=1;
 pard.zrange.TooltipString=sprintf('For using experimetnal PSF for peak finding: at which z-positions to probe the PSF for correlation');
 
+
+pard.correctsCMOS.object=struct('Style','checkbox','String','correct sCMOS variance');
+pard.correctsCMOS.position=[2,1.25];
+pard.correctsCMOS.Width=1.75;
+pard.correctsCMOS.TooltipString=sprintf('Correct sCMOS variance');
 
 pard.plugininfo.type='WorkflowModule';
 pard.loc_loc_filter_sigma.Optional=true;
