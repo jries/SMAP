@@ -41,20 +41,20 @@ classdef sendDataToVR<interfaces.DialogProcessor
                 
 %                 color_field = 0;
 % 
-
+       color_field=5;
                 if p.tlt
               
-                    color_field = p.colorfield.Value - 2 ;
-                    disp(color_field)
-                    if color_field > 5
-                        color_field = 3;
-                    end
-                     cfield=colorfieldselected
+%                     color_field = p.colorfield.Value - 2 ;
+%                     disp(color_field)
+%                     if color_field > 5
+%                         color_field = 3;
+%                     end
+                     cfield=colorfieldselected;
                 else 
-                    color_field=7;
+%                     color_field=5;
                     cfield=layerfield;
                 end
-                
+%                 
 %                 switch cfield %in case existing parameters are selected
 %                     case 'xnm'
 %                         color_field = 0; 
@@ -113,10 +113,13 @@ classdef sendDataToVR<interfaces.DialogProcessor
                         package = [package; locs.znm(tot_count)];
                         package = [package; locs.locprecnm(tot_count)];
                         package = [package; locs.frame(tot_count)];
-                        package = [package; locs.locprecznm(tot_count)]; %this was set to zero?
-                        %package = [package; locs.(colorfieldselected)(tot_count)];  %I added two fields
+%                         package = [package; locs.locprecznm(tot_count)]; %this was set to zero?
+                        package = [package; single(locs.(cfield)(tot_count))];;%I added two fields
                         %package = [package; locs.(layerfield)(tot_count)]; %this as well
-                        %package = [package; 0];
+                        
+                        %PLACEHOLDER COLUMN
+                        package = [package; 0];
+                        package = [package; 0];
                         if tot_count == length(locs.xnm)
                             break
                         end 
@@ -176,9 +179,9 @@ function pard=guidef
     pard.text.object=struct('String','Send localizations to Genuage. Consult Info for instructions.','Style','text');
     pard.text.position=[1,1];
     pard.text.Width=4;
-        pard.intensitycoding.object=struct('String','Use intensity color coding:','Style','checkbox','Value',1);
-    pard.intensitycoding.position=[2,1];
-    pard.intensitycoding.Width=2;    
+%         pard.intensitycoding.object=struct('String','Use intensity color coding:','Style','checkbox','Value',1);
+%     pard.intensitycoding.position=[2,1];
+%     pard.intensitycoding.Width=2;    
     pard.tlt.object=struct('String','Overwrite color coding with:','Style','checkbox');
     pard.tlt.position=[3,1];
     pard.tlt.Width=2;    
