@@ -563,6 +563,10 @@ if ~isempty(v) && obj.getSingleGuiParameter('colorauto')
 obj.locData.loc.colorfield=single(obj.locData.loc.(field));
 obj.locData.grouploc.colorfield=single(obj.locData.grouploc.(field));
 q=myquantilefast(v,[0.02,0.98]);
+if q(2)-q(1)==0
+    q(2)=max(v);
+    q(1)=min(v);
+end
 dx=10^floor(log10(abs(q(2))/100));
 minv=round(q(1)/dx)*dx;
 maxv=round(q(2)/dx)*dx;            
