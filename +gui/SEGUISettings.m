@@ -29,15 +29,15 @@ if obj.getGlobalSetting('SE_autosavecheck')
         end
     end
 end
-
-SEpreview=obj.SE.processors.preview;
-SEpreview=obj.SEpreview;
-    if isempty(SEpreview)||~isvalid(SEpreview.handle)
-        obj.SE.processors.SEMainGui.make_siteexplorer;
-        SEpreview=obj.SE.processors.preview;
-    end
-        set(SEpreview.handle,'Visible','on')
-        figure(SEpreview.handle)
+showROImanager(obj)
+% SEpreview=obj.SE.processors.preview;
+% SEpreview=obj.SEpreview;
+%     if isempty(SEpreview)||~isvalid(SEpreview.handle)
+%         obj.SE.processors.SEMainGui.make_siteexplorer;
+%         SEpreview=obj.SE.processors.preview;
+%     end
+%         set(SEpreview.handle,'Visible','on')
+%         figure(SEpreview.handle)
 end
 
 function redrawall_callback(a,b,obj)
