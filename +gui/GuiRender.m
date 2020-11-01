@@ -221,7 +221,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                             switch pk.intensitycoding.selection
                                 case {'blinks','√blinks'}
                                     fields{end+1}='numberInGroup';
-                                case {'photons','√hotons'}
+                                case {'photons','√photons'}
                                     fields{end+1}='phot';
                             end
 %                             {'xnm','ynm','znm','locprecnm','PSFxnm','phot',pk.renderfield.selection}
