@@ -96,7 +96,26 @@ classdef sendDataToVR<interfaces.DialogProcessor
                 write(tcpipClient,data);
                 clear tcpipClient;
                 disp(length(locs.xnm))
-
+                sigma=locs.locprecnm;
+                sigma=sigma*p.sfac;
+                sigma=max(sigma, 1);% median(sigma)/4);
+                sigma=min(sigma, 25);%maximal size
+                %sigma(1)=0;
+                brightness=1./sigma.^2;
+                brightness=brightness/max(brightness);
+             
+                brightness=1-brightness*p.bfac;
+                brightness=min(1,max(0,brightness));
+                if p.singlecolor
+                    [sortb,indb]=sort(brightness);
+                    color=0.5+0*locs.xnm;
+                    color(indb(1))=0;
+                    color(indb(2))=1;
+                else
+                    color=locs.(cfield);
+                end
+                
+                
                 for j = 1:nb_packages
 
                     tcpipClient = tcpclient('127.0.0.1',5555,'Timeout',30);
@@ -111,15 +130,16 @@ classdef sendDataToVR<interfaces.DialogProcessor
                         package = [package; locs.xnm(tot_count)];
                         package = [package; locs.ynm(tot_count)];
                         package = [package; locs.znm(tot_count)];
-                        package = [package; locs.locprecnm(tot_count)];
+                        %package = [package; 5];
+                        package = [package; sigma(tot_count)];
                         package = [package; locs.frame(tot_count)];
-%                         package = [package; locs.locprecznm(tot_count)]; %this was set to zero?
-                        package = [package; single(locs.(cfield)(tot_count))];;%I added two fields
+                        % package = [package; locs.locprecznm(tot_count)]; %this was set to zero?
+                        package = [package; single(color(tot_count))];%I added two fields
                         %package = [package; locs.(layerfield)(tot_count)]; %this as well
                         
                         %PLACEHOLDER COLUMN
-                        package = [package; 0];
-                        package = [package; 0];
+                        package = [package; brightness(tot_count)];
+                        package = [package; 0.5];
                         if tot_count == length(locs.xnm)
                             break
                         end 
@@ -187,6 +207,22 @@ function pard=guidef
     pard.tlt.Width=2;    
     pard.colorfield.object=struct('String',{{'X','Y','Z','Precision', 'Z Precision','Frames'}},'Style','popupmenu');
     pard.colorfield.position=[3,3];
+    
+    pard.singlecolor.object=struct('String','No color coding.','Style','checkbox');
+    pard.singlecolor.position=[4,1];
+    pard.singlecolor.Width=2;    
+
+     pard.bfact.object=struct('String','Factor brightness','Style','text');
+    pard.bfact.position=[5,1];
+     pard.bfac.object=struct('String','1','Style','edit');
+    pard.bfac.position=[5,2];
+    pard.bfac.Width=.5; 
+    
+         pard.sfact.object=struct('String','Factor size','Style','text');
+    pard.sfact.position=[5,3];
+     pard.sfac.object=struct('String','1','Style','edit');
+    pard.sfac.position=[5,4];
+    pard.sfac.Width=.5; 
     
     pard.syncParameters={{'locFields','colorfield',{'String'},{}}};
     pard.plugininfo.type='ProcessorPlugin';
