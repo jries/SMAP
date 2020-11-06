@@ -171,7 +171,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                
         function parId = loadParTable(obj, htable, fitter, modelnumber)
             % get parId and update the GUIParTable
-            [parId,subParsArgTemp] = fitter.getAllParId(modelnumber);
+            [parId,subParsArgTemp] = fitter.getAllParId(modelnumber, 'form', 'long');
             htable.Data = struct2Data(subParsArgTemp);
             htable.CellEditCallback = {@parSetting_callback,obj, modelnumber};
             htable.ColumnEditable = obj.lFnParsArgEdit;

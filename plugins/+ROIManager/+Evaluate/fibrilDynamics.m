@@ -83,8 +83,11 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             % This function gets the steps from segments
             
             %% Basic info.
+            % these should match the same parameters defined in the histogram.
             binFactorPos = 10;
             binFactorTime = 2.5;
+            
+            % this value is newly defined here:
             stallThreshold = 0.1;
             
             %% Get segements
@@ -94,7 +97,7 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             
             manualBound.data = obj.poly{obj.site.ID}; % column: pos time
             manualBound.data = [manualBound.data(:,1)*binFactorPos manualBound.data(:,2)*binFactorTime];
-            manualBound.segment = diff(manualBound.data);
+            manualBound.segment = diff(manualBound.data); % segments that form the boundary
             manualBound.ratePerSeg = manualBound.segment(:,1)./manualBound.segment(:,2);
             
             %% Robust measures
@@ -111,7 +114,11 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             
             % Get steps. Multiple segments in a row will be merged into one
             % step.
-            % 'mark' denotes growth/stall steps
+            % 'mark' denotes growth/stall phases:
+            %   *positive: growth
+            %   *negative: stall
+            % Individual phases have their own IDs.
+            %
             mark = cumsum(lStall)+1;
             mark(lStall)=-mark(lStall);
             
@@ -133,6 +140,7 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             [sumPos,names]=grpstats(manualBound.segment(:,1),mark,{'sum','gname'});
             [sumTime,~]=grpstats(manualBound.segment(:,2),mark,{'sum','gname'});
             stepMark = str2num(char(names));
+            timePerStall = sumTime(lStall);
             
             [~,ind] = ismember(orderSteps, stepMark);
             manualBound.steps = [sumPos(ind) sumTime(ind)];
@@ -157,16 +165,22 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             end
             stepRate = sumPos./sumTime;
             
+            %% Export
+            % values per fibril
             output.steps = manualBound.steps;
-            output.stepRate = stepRate;
-            output.stepWidth = sumPos;
             output.stallTime = stallTime;
-            output.stepSpan = sumTime;
             output.avgRate = avgRate;
             output.growthTime = growthTime;
             output.stallFraction = stallFraction;
             output.growthOnlyRate = growthOnlyRate;
             
+            % values per growth phase
+            output.stepRate = stepRate;
+            output.stepWidth = sumPos;
+            output.stepSpan = sumTime;
+
+            % values per stall phase
+            output.timePerStall = timePerStall;
         end
     end
     

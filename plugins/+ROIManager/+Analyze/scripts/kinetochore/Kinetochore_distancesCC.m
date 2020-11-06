@@ -44,7 +44,9 @@ subplot(2,2,2);
 
 % Per cluster statistics
 ID = getFieldAsVector(g.locData.SE.sites(indcellAll),'ID');
-ID_un = getFieldAsVector(g.locData.SE.sites(indcellAll_un),'ID');
+if length(sites(~lUsed))>0
+    ID_un = getFieldAsVector(g.locData.SE.sites(indcellAll_un),'ID');
+end
 
 plotSElink(dx,dy,ID,g.locData.SE,'ok')
 
