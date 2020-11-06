@@ -140,7 +140,7 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             [sumPos,names]=grpstats(manualBound.segment(:,1),mark,{'sum','gname'});
             [sumTime,~]=grpstats(manualBound.segment(:,2),mark,{'sum','gname'});
             stepMark = str2num(char(names));
-            timePerStall = sumTime(lStall);
+            timePerStall = sumTime(stepMark<0);
             
             [~,ind] = ismember(orderSteps, stepMark);
             manualBound.steps = [sumPos(ind) sumTime(ind)];
