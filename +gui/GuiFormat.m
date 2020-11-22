@@ -554,6 +554,9 @@ yext=[roi(2) roi(2)+roi(4)]* pixrec(end);
 files=obj.locData.files.file;
 for k=1:length(files)
     roi=files(k).info.roi;
+    if length(roi)<4
+        continue
+    end
 xexth=[roi(1) roi(1)+roi(3)]* pixrec(1);
 yexth=[roi(2) roi(2)+roi(4)]* pixrec(end); 
 xext(1)=min(xext(1),xexth(1));xext(2)=max(xext(2),xexth(2));
