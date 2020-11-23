@@ -168,8 +168,10 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     
     idxSelected_final = idxFitterFound(idxSelected);
     fitter_ori = obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter;
-    fitter = copy(fitter_ori);
+    fitter = copy(fitter_ori);  % copy the fitter object to not overwrite it
     fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
+    fitter.rmConvertRules;
+    fitter.addPar({1,{'sim'},{'numOfMol'},0, inf,0,1,{''},0,inf}) % add this parameter to control the number of molecules.
     obj.setPar('fitter',fitter)
     obj.setPar('fitter_ori',fitter_ori)
     close(fig);
@@ -191,13 +193,8 @@ function setModPars_callback(a,b,obj)
     
     % Data
     % Acquire the SMLMModelFit obj, and then display parameters based on the allParsArg
-    fitterOri = obj.getPar('fitter_ori');
-    fitterOld = obj.getPar('fitter');
-    fitter = copy(fitterOri);       % copy the fitter object to not overwrite it
-    allParsArgOld = fitterOld.allParsArg;
-    fitter.setParArgBatch(allParsArgOld, 'allowMissing', true);
-    obj.setPar('fitter',fitter);
-    
+    fitter = obj.getPar('fitter');
+
     parName = fitter.allParsArg.name;
     parType = fitter.allParsArg.type;
     parModel = fitter.allParsArg.model;
@@ -215,9 +212,6 @@ function setModPars_callback(a,b,obj)
     
     % Table properties.
     parArgTable.Data = [parName parType num2cell(parModel) parVal repmat({''},size(parVal,1),1)];
-    for k = 1:fitter.numOfModel
-        parArgTable.Data(end+1,:) = [{'numOfMol'} {'sim'} num2cell(k) num2cell(0) {''}];
-    end
     parArgTable.ColumnName = {'Name','Type','Model','Value','Convert'};
     parArgTable.ColumnEditable = [false false false true true];
     parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
@@ -237,30 +231,25 @@ function parArgTable_CellEditCallback(a,b,obj)
     indEdited = b.Indices(1);
     colId = b.Indices(2);
     elements = strsplit(b.NewData,' ');
-    parType = obj.allParsArg.type{indEdited};
-    switch parType
-        case {'lPar','mPar'}
-            switch colId
-                case 4
-                    % column 4: values
-                    if length(elements) == 2
-                        elements = str2double(elements);
-                        obj.allParsArg.fix(indEdited) = false;
-                        obj.allParsArg.value(indEdited) = 0;
-                        obj.allParsArg.lb(indEdited) = elements(1);
-                        obj.allParsArg.ub(indEdited) = elements(2);
-                    elseif length(elements) == 1
-                        obj.allParsArg.fix(indEdited) = true;
-                        obj.allParsArg.value(indEdited) = str2double(b.NewData);
-                    else
-                        warning('The input length is not acceptable. Please assign only 1 (fixed) to 2 (a range) elements.')
-                    end
-                case 5
-                    % column 5: convert
-                    parId = ['m' num2str(obj.allParsArg.model(indEdited)), '.',obj.allParsArg.type{indEdited}, '.', obj.allParsArg.name{indEdited}];
-                    obj.converter(1, b.NewData, parId);
+    switch colId
+        case 4
+            % column 4: values
+            if length(elements) == 2
+                elements = str2double(elements);
+                obj.allParsArg.fix(indEdited) = false;
+                obj.allParsArg.value(indEdited) = 0;
+                obj.allParsArg.lb(indEdited) = elements(1);
+                obj.allParsArg.ub(indEdited) = elements(2);
+            elseif length(elements) == 1
+                obj.allParsArg.fix(indEdited) = true;
+                obj.allParsArg.value(indEdited) = str2double(b.NewData);
+            else
+                warning('The input length is not acceptable. Please assign only 1 (fixed) to 2 (a range) elements.')
             end
-        case {'sim'}
+        case 5
+            % column 5: convert
+            parId = ['m' num2str(obj.allParsArg.model(indEdited)), '.',obj.allParsArg.type{indEdited}, '.', obj.allParsArg.name{indEdited}];
+            obj.converter(obj, b.NewData, parId);
     end
 end
 
