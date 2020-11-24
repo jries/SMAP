@@ -297,13 +297,21 @@ switch ext
         end
     case 'SMLMModelFit'
         modelType = obj.getPar('modelType');
-        switch modelType
-            case 'Image'
-                txt='off';
-                tif='on';
-            case 'Point'
-                txt='on';
-                tif='off';            
+        if ~isempty(modelType)
+            switch modelType
+                case 'Image'
+                    txt='off';
+                    tif='on';
+                case 'Point'
+                    txt='on';
+                    tif='off';
+                case ''
+                    txt='off';
+                    tif='on';
+            end
+        else
+            txt='off';
+            tif='on';
         end
 end
 obj.guihandles.labeling_efficiency.Visible=txt;

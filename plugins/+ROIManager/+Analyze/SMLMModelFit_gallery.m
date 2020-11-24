@@ -70,7 +70,8 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 
                 % [to-do] here need to generized so that the models are not
                 % limited to the first one.
-                fitter.model{1}.locsPrecFactor = 5;
+                fitter.model{1}.sigma = 5;
+                fitter.model{1}.fixSigma = true;
                 [~,modViz] = fitter.plot(locsSite,'plotType','point', 'doNotPlot', true); % get point type visualization
                 lPars = fitter.exportPars(1,'lPar');
                 locsViz = fitter.locsHandler(locsSite, lPars,1);
