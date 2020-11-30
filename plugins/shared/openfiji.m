@@ -16,11 +16,11 @@ if isempty(ijm) %open fiji
     
     dir=pwd;
     obj.setPar('status','open Fiji');
-    if ~isdeployed
-        addpath(fijipath)
-    end
+%     if ~isdeployed
+%         addpath(fijipath)
+%     end
     try
-    ImageJ
+    ImageJ_SMAP(true,false,fijipath);
     ijm=evalin('base','IJM');
 %     Miji();
 %     mij=MIJ;
