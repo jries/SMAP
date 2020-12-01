@@ -73,7 +73,7 @@ switch p.targetpos.selection
         indref=indref&locref.ynm>=separator(2);
         xrangecamr=[0 roiend(1)];yrangecamr=[spix(2) roiend(2)];
         xrangecamt=[0 roiend(1)];yrangecamt=[0 spix(2)];
-        mirroradd(2)=chipsizenm(2);
+        mirroradd(2)=chipsizenm(2)*0; %empirically: no mirroradd.
     case 'bottom'
 %         dy=chipsizenm(2)/2;
         dy=0;
@@ -96,7 +96,8 @@ switch p.targetpos.selection
         spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000);
         xrangecamr=[spix(1) roiend(1)];yrangecamr=[0 spix(2)];
         xrangecamt=[0 spix(1)];yrangecamt=[0 spix(2)];
-         mirroradd(1)=chipsizenm(2);
+         mirroradd(1)=chipsizenm(2)*0; %as before
+         disp('transform_locsN.m line 99: check')
     case 'right'
 %         dx=chipsizenm(1)/2;
         dx=0; %XXXXXX
