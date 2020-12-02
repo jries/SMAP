@@ -49,7 +49,7 @@ classdef Roi_bg<interfaces.WorkflowModule
             if ~isempty(roi)     
                 sroi=size(roi.img);
                 wx=(sroi(1)-1)/2;
-                xpos=roi.info.x;ypos=roi.info.y;
+                xpos=roi.info.xpix;ypos=roi.info.ypix;
                 if ~bufferfilled
                     framerange=max(1,indxhere-p.numframes_bg-1):max(indxhere-1,1);
                 else

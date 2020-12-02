@@ -44,16 +44,34 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 % Borrow the evaluate plug-in to use getLocs(obj,...)
                 dcal.site=subSites(k);
                 dcal.site.image = se.plotsite(subSites(k));
-                [locsSite,indloc] = dcal.getLocs({'xnmrot','ynmrot','znm','locprecnm', 'locprecznm'},'size',roiSize','grouping', 'grouped','layer',1); % per ROI info.
-                locsSite.layer = ones(size(locsSite.xnm));
-                locsSite.xnm = locsSite.xnmrot;
-                locsSite.ynm = locsSite.ynmrot;
+                % Check all the possible layers (up to 6)
+                for l = 1:6
+                    layercheck = obj.getPar(['layer' num2str(l) '_layercheck']);
+                    if layercheck
+                        [locsSiteOne,indlocOne] = dcal.getLocs({'xnmrot','ynmrot','znm','locprecnm', 'locprecznm'},'size',roiSize','grouping', 'grouped','layer',l); % per ROI info.
+                        if l == 1
+                            locsSite = locsSiteOne;
+                            indloc = indlocOne;
+                            locsSite.layer = ones(size(locsSiteOne.xnm));
+                            locsSite.xnm = locsSite.xnmrot;
+                            locsSite.ynm = locsSite.ynmrot;
+                        else
+                            locsSite.layer = [locsSite.layer; ones(size(locsSiteOne.xnm))*l];
+                            locsSite.xnm = [locsSite.xnm; locsSiteOne.xnmrot];
+                            locsSite.ynm = [locsSite.ynm; locsSiteOne.ynmrot];
+                            locsSite.znm = [locsSite.znm; locsSiteOne.znm];
+                            locsSite.locprecnm = [locsSite.locprecnm; locsSiteOne.locprecnm];
+                            locsSite.locprecznm = [locsSite.locprecznm; locsSiteOne.locprecznm];
+                        end
+                    end
+                end
                 fitter.allParsArg = subSites(k).evaluation.(fitterGUI_name).allParsArg;
                 fitter.setParArg('m1.lPar.variation', 'value',0);
                 
                 % [to-do] here need to generized so that the models are not
                 % limited to the first one.
-                fitter.model{1}.locsPrecFactor = 5;
+                fitter.model{1}.sigma = 5;
+                fitter.model{1}.fixSigma = true;
                 [~,modViz] = fitter.plot(locsSite,'plotType','point', 'doNotPlot', true); % get point type visualization
                 lPars = fitter.exportPars(1,'lPar');
                 locsViz = fitter.locsHandler(locsSite, lPars,1);
@@ -78,11 +96,11 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 
                 for rot = 1:numOfView
                     if rot == 1
-                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [0 0], 2, 'Data', 500, {'red hot'})
+                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [0 0], 2, 'Data', 500, {'red hot', 'cyan cold'})
                     elseif rot == 6
-                        fitter.rotCoordNMkImg(ax, modVizAzi, locsVizAzi, [0 -90], 2, 'Data', 30, {'red hot'})
+                        fitter.rotCoordNMkImg(ax, modVizAzi, locsVizAzi, [0 -90], 2, 'Data', 30, {'red hot', 'cyan cold'})
                     else
-                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [45*(rot-2) -90], 2, 'Data', 30, {'red hot'})
+                        fitter.rotCoordNMkImg(ax, modViz, locsViz, [45*(rot-2) -90], 2, 'Data', 30, {'red hot', 'cyan cold'})
                     end
                     ax.Children(1).Color = [0.7 0.7 0.7];
                     set(ax,'YDir','normal')

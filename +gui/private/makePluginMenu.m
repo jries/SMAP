@@ -15,6 +15,8 @@ h.cameraManager=uimenu(hsmap,'Label','Camera Manager','Callback',{@cameramanager
 h.hsimplegui=uimenu(hsmap,'Label','Hide advanced controls','Callback',{@simplegui_callback,obj});
 % obj.addSynchronization('globalGuiState',[],'String',{@changeglobalGuiState,obj});
 h.openfiji=uimenu(hsmap,'Label','Open current image in Fiji','Separator','on','Callback',{@openfiji_callback,obj});
+h.ROIManager=uimenu(hsmap,'Label','ROI manager','Callback',{@openroimanager_callback,obj});
+
 
 h.hexit=uimenu(hsmap,'Label','Quit SMAP','Separator','on','Callback',{@exit_callback,obj});
 
@@ -238,6 +240,10 @@ imout=img.CData;
 title=['Figure ' num2str(f.Number)];
 openstackinfiji(obj,imout,title)
 
+end
+
+function openroimanager_callback(a,b,obj)
+showROImanager(obj);
 end
 
 function helpsmap_callback(a,b,obj,whichone)

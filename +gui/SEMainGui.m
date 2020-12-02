@@ -66,7 +66,7 @@ classdef SEMainGui< gui.GuiPluginWindow
             obj.children.eval=eval;
             
             %Explorer GUI
-            obj.make_siteexplorer;
+%             obj.make_siteexplorer;
             
             se.processors.SEMainGui=obj;
             obj.tabgroup=h.sitetabs;

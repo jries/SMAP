@@ -90,3 +90,8 @@ gui:tiftxt Select which image to display
 gui:znm_max z range to display 
 gui:znm_min=znm_max 
 gui:znmb=znm_max 
+
+gui:LLrelb Filter on normalized (relative) Log Likelihood. The Log Likelihood is a measure for the goodness of fit. You can use 
+this filter to remove poorly localizied localizations, for instance due to nearby activation of another fluorophore.
+gui:LLrel_min=LLrelb
+gui:LLrel_max=LLrelb

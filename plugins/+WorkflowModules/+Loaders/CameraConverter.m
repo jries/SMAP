@@ -160,7 +160,7 @@ classdef CameraConverter<interfaces.WorkflowModule
                     imgp=imgp(:,end:-1:1);
            end
            if isempty(obj.offsetmapuse)
-                loadcamcalibrationfile(obj,p);
+                loadcamcalibrationfile(obj,p,imgp);
            end
            if p.correctcamera %apply offset and brightfield correction
                % scmosroi 
@@ -281,7 +281,7 @@ end
 % obj.readmetadata;
 end
 
-function loadcamcalibrationfile(obj,p)
+function loadcamcalibrationfile(obj,p,imgp)
     
     [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(obj.loc_cameraSettings.correctionfile,obj.loc_cameraSettings.exposure);
     

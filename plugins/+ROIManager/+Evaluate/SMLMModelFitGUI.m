@@ -9,6 +9,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         lFnLayerEdit        %
         currentLoadedModel  %
         alignSettings       % Converter for alignment.
+        sourceModel         % The source function model of the image model.
     end
     methods
         function obj=SMLMModelFitGUI(varargin)
@@ -19,7 +20,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             else
                 addpath(genpath('../SMLMModelFit'))
             end
-            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel'};         
+            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel','sourceModel'};         
             addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
         end
         
@@ -171,7 +172,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                
         function parId = loadParTable(obj, htable, fitter, modelnumber)
             % get parId and update the GUIParTable
-            [parId,subParsArgTemp] = fitter.getAllParId(modelnumber);
+            [parId,subParsArgTemp] = fitter.getAllParId(modelnumber, 'form', 'long');
             htable.Data = struct2Data(subParsArgTemp);
             htable.CellEditCallback = {@parSetting_callback,obj, modelnumber};
             htable.ColumnEditable = obj.lFnParsArgEdit;

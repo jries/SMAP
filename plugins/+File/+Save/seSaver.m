@@ -1,4 +1,5 @@
 classdef seSaver<interfaces.DialogProcessor
+    % this is for alpha-syn project
     methods
         function obj=seSaver(varargin)  
                 obj@interfaces.DialogProcessor(varargin{:}) ;
@@ -18,6 +19,7 @@ classdef seSaver<interfaces.DialogProcessor
             fibrilStraightener = getFieldAsVector(subSites,'evaluation.fibrilStraightener');
             fnMeasurement = {'deviation','P','intensity','intensity_rescaled'};
             for k = 1:length(fibrilStatistics)
+                singleSites{k}.pos = subSites(k).pos;
                 singleSites{k}.fibrilStatistics = fibrilStatistics{k};
                 singleSites{k}.fibrilStatistics.kymograph = [];
                 singleSites{k}.fibrilStatistics.GuiParameters = [];

@@ -418,9 +418,14 @@ end
 end
 
 function addcell(data,action,obj)
-obj.SE.currentcell.ID=obj.SE.addCell(obj.SE.currentcell);
-plotfile(obj,obj.SE.currentfile.ID);
-redraw_celllist(obj);
+allcellIDs=[obj.SE.cells(:).ID];
+if any(obj.SE.currentcell.ID==allcellIDs)
+    warndlg('cell already exists')
+else
+    obj.SE.currentcell.ID=obj.SE.addCell(obj.SE.currentcell);
+    plotfile(obj,obj.SE.currentfile.ID);
+    redraw_celllist(obj);
+end
 end
 
 function addsite(data,action,obj)

@@ -1,8 +1,8 @@
 function ijm=openfiji(obj)
-disp('Due to a Fiji update, the ImageJ-MATLAB plugin does not work properly any more. I am working on fixing it.');
+% disp('Due to a Fiji update, the ImageJ-MATLAB plugin does not work properly any more. I am working on fixing it.');
 
-ijclass='IJM';
-ijclass='MIJ';
+% ijclass='IJM';
+% ijclass='MIJ';
 
 ijm=obj.getPar('IJM');
 if isempty(ijm) %open fiji
@@ -16,11 +16,12 @@ if isempty(ijm) %open fiji
     
     dir=pwd;
     obj.setPar('status','open Fiji');
-    if ~isdeployed
-        addpath(fijipath)
-    end
+%     if ~isdeployed
+%         addpath(fijipath)
+%     end
     try
-    ImageJ
+    ImageJ_SMAP(true,false,fijipath);
+%      ImageJ;
     ijm=evalin('base','IJM');
 %     Miji();
 %     mij=MIJ;

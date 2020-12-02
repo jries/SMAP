@@ -24,10 +24,15 @@ classdef sendDataToVR<interfaces.DialogProcessor
             
             for layer = 1:length(layerson)
                 disp(layer);
-           
+                
+                colorfieldselected=p.colorfield.selection;
+                layerfield=obj.getPar(['layer' num2str(layerson(layer)) '_renderfield']).selection;
+                
+                disp(colorfieldselected);
+                
             
             
-                [locs,~, hroi]=locD.getloc({'xnm','ynm','znm','locprecnm','locprecznm','frame','xnmline','ynmline'},'layer',layer,'position','roi');
+                [locs,~, hroi]=locD.getloc({'xnm','ynm','znm','locprecnm','locprecznm','frame',colorfieldselected, layerfield,'xnmline','ynmline'},'layer',layerson(layer),'position','roi');
                 % You can also do filtering based on the layers
                 %tcpipClient = tcpclient('127.0.0.1',5555,'Timeout',30);
                 %request = uint8('ID');
@@ -38,7 +43,7 @@ classdef sendDataToVR<interfaces.DialogProcessor
                 %data = uint8('ROI');
                 %write(tcpipClient,data);
                 %clear tcpipClient;
-
+              
                 color_field = 0;
 
                 switch p.colorfield.selection

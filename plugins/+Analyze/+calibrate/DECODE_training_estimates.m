@@ -238,10 +238,12 @@ function usecurrent_callback(a,b,obj)
     
     
     js.Simulation.lifetime_avg=stat.lifetime.mu-1;
-    js.Simulation.intensity_mu_sig= [1;0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
-    bgminmax=quantile(locsu.bg,[0.05; 0.95]);
+    js.Simulation.intensity_mu_sig= [1,0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
+    bgminmax=quantile(locsu.bg,[0.05, 0.95]);
     dbg=bgminmax(2)-bgminmax(1);
-    js.Simulation.bg_uniform=bgminmax+ [-1; 1]*dbg*0.2; %set a bit lower to allow for varying background
+    bgrange=bgminmax+ [-1, 1]*dbg*0.2;
+    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.005));
+    js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
 
     
     fi=obj.locData.files.file(1).info;
@@ -261,9 +263,9 @@ function usecurrent_callback(a,b,obj)
     cnm=obj.getPar('cam_pixelsize_nm');
     areapix=area/cnm(1)/cnm(end);
     density=length(locs.frame)/areapix/(max(locs.frame)-min(locs.frame)); %in locs per pix^2 per frame
-    emitters=density*64*64;
-    disp(['emitters in 64x64 per frame: ' num2str(emitters)]);
-    js.Simulation.density=density;
+    emitters=density*40*40;
+    disp(['emitters in 40x40 per frame: ' num2str(emitters)]);
+    js.SMAP.density=density;
     [expdir,js.SMAP.name]=fileparts(obj.locData.files.file(1).name);
     
     if isempty(js.InOut.calibration_file)
@@ -331,17 +333,21 @@ end
 
 function setz(obj)
  [locs,~,hroi]=obj.locData.getloc('znm','layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','grouped');
+%  obj.yamlpar.SMAP.zrange_nm=[-750, 750];
  if isempty(locs.znm)
-     return
+     zminmax=[-750, 750];
+     
+ else
+     z=quantile(locs.znm,[0.05,0.95]); 
+     dz=z(2)-z(1);
+     zminmax=z+dz*0.25;
  end
- z=quantile(locs.znm,[0.1 0.9]); 
- zminmax=z*1.5;
  calf=obj.yamlpar.InOut.calibration_file;
  if ~isempty(calf)
     l=load(calf);
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
-    zminmax(2)=max(zminmax(2),zr);
+    zminmax(2)=min(zminmax(2),zr);
     obj.yamlpar.SMAP.zrange_nm=zminmax;
  end
 end

@@ -38,9 +38,11 @@ classdef clusterStatistics<interfaces.SEEvaluationProcessor
                           out.(['layers' num2str(k)]).(fields{f}).q05=quantile(vh,0.05);
                           out.(['layers' num2str(k)]).(fields{f}).q95=quantile(vh,0.95);
                           out.(['layers' num2str(k)]).(fields{f}).vals=locs.(fields{f});
+                          out.(['layers' num2str(k)]).(fields{f}).NnotNAN=length(vh);
                     end
                     
                      out.(['layers' num2str(k)]).Nlocs=length(locs.xnm);
+                     
                 end
             end
         end

@@ -104,7 +104,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
         end
         function dato=run(obj,data,p) %
 %             global EvaluateIntensity_intensity timershow
-            so=2;
+%             so=2;
 %             EvaluateIntensity_intensity=obj.EvaluateIntensity_intensity;
             if ~isempty(data.data)
                 img=data.data.img;
@@ -129,6 +129,7 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
                 for ev=1:length(evaluators)
                     if useevaluators(ev)
                         out=evaluators{ev}.evaluate(obj.peval{ev},img,loc);
+                        so=size(out,2);
                        obj.EvaluateIntensity_intensity(loccounter+1:loccounter+numl,inds:inds+so-1)=out(1:numl,:);
                         inds=inds+so;
                     end

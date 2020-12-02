@@ -199,6 +199,14 @@ pard.registerSites.object=struct('Style','pushbutton','String','Register sites',
 pard.registerSites.position=[3,3.7];
 pard.registerSites.Width=1;
 
+pard.recSites.object=struct('Style','pushbutton','String','Reconstruction','Callback', {{@dynamicRec_callBack,obj}});
+pard.recSites.position=[4,3.7];
+pard.recSites.Width=1;
+
+pard.mkMovie.object=struct('Style','pushbutton','String','Make movie','Callback', {{@mkMovie_callBack,obj}});
+pard.mkMovie.position=[5,3.7];
+pard.mkMovie.Width=1;
+
 pard.parsTable.object=struct('Style','text','String','table pos');
 pard.parsTable.position=[12,1];
 pard.parsTable.Width=2.5;
@@ -220,9 +228,26 @@ end
 
 function registerSites_callBack(a,b,obj)
     obj.loadData;
-    obj.fit_manager.dynamicReconstruction
+    obj.fit_manager.masterAvg;
     obj.locData.regroup;
     obj.locData.filter;
+end
+
+function dynamicRec_callBack(a,b,obj)
+    obj.loadData;
+    obj.fit_manager.dynamicRec;
+    obj.locData.regroup;
+    obj.locData.filter;
+end
+
+function mkMovie_callBack(a,b,obj)
+    obj.loadData;
+    [file,path] = uiputfile('*.tif', 'Save as', '');
+    if file~=0
+        obj.fit_manager.mkMovie('saveTo', [path file]);
+    else
+        warning('Please specify where to save.')
+    end
 end
 
 function variableTableEditCallback(a,b,obj)
@@ -258,7 +283,7 @@ function save_callBack(a,b,obj)
         end
         
         % save the fit_manger first
-        save(fileMat, 'fit_manager')
+%         save(fileMat, 'fit_manager')
         
         % get which parameter(s) to save from the table
         dataTable = obj.variableTable_handle.Data;

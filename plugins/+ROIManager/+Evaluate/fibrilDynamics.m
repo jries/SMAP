@@ -82,27 +82,45 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
         function output = dynamicsManualBound(obj)
             % This function gets the steps from segments
             
-            % Basic info.
+            %% Basic info.
+            % these should match the same parameters defined in the histogram.
             binFactorPos = 10;
             binFactorTime = 2.5;
+            
+            % this value is newly defined here:
             stallThreshold = 0.1;
             
-            % Get segements
+            %% Get segements
             % manualBound.data: anchor points of the segmentation
             % manualBound.segment: segments between anchor points
             % manualBound.ratePerSeg: diffPos/diffTime per segment
             
             manualBound.data = obj.poly{obj.site.ID}; % column: pos time
             manualBound.data = [manualBound.data(:,1)*binFactorPos manualBound.data(:,2)*binFactorTime];
-            manualBound.segment = diff(manualBound.data);
+            manualBound.segment = diff(manualBound.data); % segments that form the boundary
             manualBound.ratePerSeg = manualBound.segment(:,1)./manualBound.segment(:,2);
-            stalls = manualBound.ratePerSeg<stallThreshold;
+            
+            %% Robust measures
+            lStall = manualBound.ratePerSeg<stallThreshold;
+            fullPosNTime = manualBound.data(end,:)-manualBound.data(1,:);
+            % total growth time
+            growthTime = sum(manualBound.segment(~lStall,2));
+            % total growth length
+            growthLength = sum(manualBound.segment(~lStall,1));
+            % total stall time/total time
+            stallFraction = 1-(growthTime/fullPosNTime(2));
+            % total growth length/total growth time
+            growthOnlyRate = growthLength/growthTime;
             
             % Get steps. Multiple segments in a row will be merged into one
             % step.
-            % 'mark' denotes growth/stall steps
-            mark = cumsum(stalls)+1;
-            mark(stalls)=-mark(stalls);
+            % 'mark' denotes growth/stall phases:
+            %   *positive: growth
+            %   *negative: stall
+            % Individual phases have their own IDs.
+            %
+            mark = cumsum(lStall)+1;
+            mark(lStall)=-mark(lStall);
             
             manualBound.ratePerSeg = [manualBound.ratePerSeg mark];
             
@@ -116,12 +134,13 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             orderSteps = unique(mark,'stable');       % This is the order of the steps
 
 %             avgRate = sum(manualBound.data,1);
-            avgRate = manualBound.data(end,:)-manualBound.data(1,:);
-            avgRate = avgRate(1)/avgRate(2);
+            
+            avgRate = fullPosNTime(1)/fullPosNTime(2);
             
             [sumPos,names]=grpstats(manualBound.segment(:,1),mark,{'sum','gname'});
             [sumTime,~]=grpstats(manualBound.segment(:,2),mark,{'sum','gname'});
             stepMark = str2num(char(names));
+            timePerStall = sumTime(stepMark<0);
             
             [~,ind] = ismember(orderSteps, stepMark);
             manualBound.steps = [sumPos(ind) sumTime(ind)];
@@ -146,12 +165,22 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             end
             stepRate = sumPos./sumTime;
             
+            %% Export
+            % values per fibril
             output.steps = manualBound.steps;
+            output.stallTime = stallTime;
+            output.avgRate = avgRate;
+            output.growthTime = growthTime;
+            output.stallFraction = stallFraction;
+            output.growthOnlyRate = growthOnlyRate;
+            
+            % values per growth phase
             output.stepRate = stepRate;
             output.stepWidth = sumPos;
-            output.stallTime = stallTime;
             output.stepSpan = sumTime;
-            output.avgRate = avgRate;
+
+            % values per stall phase
+            output.timePerStall = timePerStall;
         end
     end
     
