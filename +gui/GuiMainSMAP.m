@@ -171,13 +171,16 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             %add java path to bioformats
                 bfpath=obj.getGlobalSetting('bioformatspath');
-            if exist(bfpath,'dir') && ~isdeployed
-                addpath(bfpath)
-                try
-                    bfCheckJavaPath;
-                catch
-                    disp('bioformats not found')
-                end
+                bffile=[bfpath filesep 'bioformats_package.jar'];
+                
+            if exist(bffile,'file') %&& ~isdeployed
+                javaaddpath(bffile);
+%                 addpath(bfpath)
+%                 try
+%                     bfCheckJavaPath;
+%                 catch
+%                     disp('bioformats not found')
+%                 end
             else
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
                 disp('you can download the Matalb toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
