@@ -333,17 +333,21 @@ end
 
 function setz(obj)
  [locs,~,hroi]=obj.locData.getloc('znm','layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','grouped');
+%  obj.yamlpar.SMAP.zrange_nm=[-750, 750];
  if isempty(locs.znm)
-     return
+     zminmax=[-750, 750];
+     
+ else
+     z=quantile(locs.znm,[0.05,0.95]); 
+     dz=z(2)-z(1);
+     zminmax=z+dz*0.25;
  end
- z=quantile(locs.znm,[0.1 0.9]); 
- zminmax=z*1.5;
  calf=obj.yamlpar.InOut.calibration_file;
  if ~isempty(calf)
     l=load(calf);
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
-    zminmax(2)=max(zminmax(2),zr);
+    zminmax(2)=min(zminmax(2),zr);
     obj.yamlpar.SMAP.zrange_nm=zminmax;
  end
 end
