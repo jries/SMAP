@@ -13,8 +13,8 @@ InOut:
   experiment_out:  # place your path to the output folder here
 Simulation:
   bg_uniform:  # background range to sample from. You can also specify a const. value as 'bg_uniform: 100'
-    - 90
-    - 150
+    - 90.0
+    - 150.0
   emitter_av: 25  # average number of emitters on a frame with extent as specified below
   emitter_extent:  # specify the extent of the emitters in x,y,z on the frame. Please be careful with '-' signs
     - - -0.5
@@ -27,6 +27,6 @@ Simulation:
     - - -750
       - 750
   intensity_mu_sig:  # emitters brightness, mean and standard deviation
-    - 10000.0
-    - 3000.0
+      - 10000.0 
+      - 3000.0
   lifetime_avg: 2.0  # lifetime average of the emitters

@@ -238,10 +238,12 @@ function usecurrent_callback(a,b,obj)
     
     
     js.Simulation.lifetime_avg=stat.lifetime.mu-1;
-    js.Simulation.intensity_mu_sig= [1;0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
-    bgminmax=quantile(locsu.bg,[0.05; 0.95]);
+    js.Simulation.intensity_mu_sig= [1,0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
+    bgminmax=quantile(locsu.bg,[0.05, 0.95]);
     dbg=bgminmax(2)-bgminmax(1);
-    js.Simulation.bg_uniform=bgminmax+ [-1; 1]*dbg*0.2; %set a bit lower to allow for varying background
+    bgrange=bgminmax+ [-1, 1]*dbg*0.2;
+    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.005));
+    js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
 
     
     fi=obj.locData.files.file(1).info;
@@ -261,9 +263,9 @@ function usecurrent_callback(a,b,obj)
     cnm=obj.getPar('cam_pixelsize_nm');
     areapix=area/cnm(1)/cnm(end);
     density=length(locs.frame)/areapix/(max(locs.frame)-min(locs.frame)); %in locs per pix^2 per frame
-    emitters=density*64*64;
-    disp(['emitters in 64x64 per frame: ' num2str(emitters)]);
-    js.Simulation.density=density;
+    emitters=density*40*40;
+    disp(['emitters in 40x40 per frame: ' num2str(emitters)]);
+    js.SMAP.density=density;
     [expdir,js.SMAP.name]=fileparts(obj.locData.files.file(1).name);
     
     if isempty(js.InOut.calibration_file)
