@@ -1,0 +1,11 @@
+Segmenter for nuclear pore complexes and other ring-shaped structures. Looks for circular structures of a defined size.
+
+gui:Parameters:
+gui:cutoff Relative cutoff in the filtered image. Adjust to segment NPCs, but not background localizations.
+gui:diameterNPC Diameter of the NPC in nm
+gui:getmask If selected, you can draw a ROI, only NPCs within that ROI are then segmented.
+gui:rim Thickness of the rim of the circular filter in nam
+gui:saveon Of not checked, NPCs are not added to the ROI manager (useful for testing the cutoff parameter). To save NPCs, check this.
+gui:t1=cutoff 
+gui:t3=diameterNPC
+gui:t4=rim

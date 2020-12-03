@@ -79,7 +79,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                  obj.axis.Position=[0 0 1 1];
                  fig.Color=[0 0 0];
              else
-                 obj.axis.Position=[0.05 0.05 .94 .9];
+                 obj.axis.Position=[0.1 0.1 .85 .85];
                  fig.ToolBar='figure';
                  fig.MenuBar='figure';
                  fig.Color=[0.94 0.94 0.94];
@@ -490,6 +490,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 ax.Units='normalized';
                 ax.Position=[0.0 0.0 1 1];
             end
+            xlabel(ax,'position along line ROI (nm)')
+            ylabel(ax,'rotated position z/perpendicular line ROI (nm)')
            drawnow limitrate 
            
            
@@ -904,6 +906,10 @@ classdef Viewer3DV01<interfaces.DialogProcessor
         end       
         function savesideview_callback(obj,a,b)
             f=obj.getPar('lastSMLFile');
+            if isempty(f)
+                fa=obj.getPar('filelist_long').selection;
+                f=[fileparts(fa) filesep '*._sml.mat'];
+            end
             fn=strrep(f,'sml.mat','3dxz.tif');
             [file,path]=uiputfile(fn);
             if file
@@ -1001,7 +1007,9 @@ pard.fillimage.position=[4,2.2];
 pard.fillimage.Width=0.4;
 pard.fillimage.Optional=true;
 
-pard.transparencymode.object=struct('String',{{'projection', 'transparency','balls'}} ,'Style','popupmenu');
+p(1).value=1; p(1).on={}; p(1).off={'transparencypar'};
+            p(2).value=[2,3]; p(2).on={'transparencypar'}; p(2).off={};
+pard.transparencymode.object=struct('String',{{'projection', 'transparency','balls'}} ,'Style','popupmenu','Callback',{{@obj.switchvisible,p}});
 pard.transparencymode.position=[6,1];
 pard.transparencymode.Width=1.5;
 pard.transparencymode.TooltipString=sprintf('maximum intensity, \n partial transparency (parameter is related to transparency), \n render as ball (parameter is ball diamter in reconstructed pixels');
@@ -1028,20 +1036,17 @@ pard.theta.position=[3,1.7];
 pard.theta.Width=0.5;
 pard.theta.Optional=false;
 
-pard.thetplus.object=struct('String','+90°','Style','pushbutton','Callback',@obj.thetaplus);
+pard.thetplus.object=struct('String','+90','Style','pushbutton','Callback',@obj.thetaplus);
 pard.thetplus.position=[3,2.2];
 pard.thetplus.Width=0.4;
 pard.thetplus.TooltipString='Push to set polar angle to zero';
 pard.thetplus.Optional=false;
 
-
-pard.transparencypar.object=struct('Style','edit','String','1'); 
+pard.transparencypar.object=struct('Style','edit','String','1','Visible','off'); 
 pard.transparencypar.position=[6,2.5];
 pard.transparencypar.Width=0.5;
 pard.transparencypar.TooltipString=pard.transparencymode.TooltipString;
 pard.transparencypar.Optional=true;
-
-
 
 pard.showcontrols.object=struct('String','Show Controls','Style','pushbutton','Callback',@obj.showpanel_callback);
 pard.showcontrols.position=[8,3];

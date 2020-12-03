@@ -18,13 +18,14 @@ classdef SpatialPointPattern<interfaces.DialogProcessor
         function out=run(obj,p)
             %include tilint?
            out=[];          
-           rrange=500;
-           px=2; %nm   
-           edge=rrange; %nm
+           rrange=p.rrange;
+           px=p.rpix; %nm   
+           
            [locs1,~, hroi]=obj.locData.getloc({'xnm','ynm'},'layer',p.ch1.Value,'Position','roi');
            rxrange=[min(locs1.xnm) max(locs1.xnm)];
            ryrange=[min(locs1.ynm) max(locs1.ynm)];
-           
+           edge=500;
+%            edge=min(min(rrange,(ryrange(2)-ryrange(1))/2),(rxrange(2)-rxrange(1))/2); %nm
            if p.ch2.Value>1
                locs2=obj.locData.getloc({'xnm','ynm'},'layer',p.ch2.Value-1,'Position','roi');
                rxrange2=[min(locs2.xnm) max(locs2.xnm)];
@@ -43,14 +44,21 @@ classdef SpatialPointPattern<interfaces.DialogProcessor
            
            %mask
            pm=round(([mean(rx) mean(ry)]-p.sr_pos(1:2))/px);
-           mask=hroi.createMask;
-           maskrs=imresize(mask',p.sr_pixrec/px);
-           mp=round(size(maskrs)/2);
-           rmx=-round(size(img1,1)/2):-round(size(img1,1)/2)+size(img1,1)-1;
-           rmy=-round(size(img1,2)/2):-round(size(img1,2)/2)+size(img1,2)-1;
-           mcut=maskrs(mp(1)+pm(1)+rmx,mp(2)+pm(2)+rmy);
-           mcut(mcut>0)=1;
+           try
+               mask=hroi.createMask;
+               maskrs=imresize(mask',p.sr_pixrec/px);
+               mp=round(size(maskrs)/2);
+               rmx=-round(size(img1,1)/2):-round(size(img1,1)/2)+size(img1,1)-1;
+               rmy=-round(size(img1,2)/2):-round(size(img1,2)/2)+size(img1,2)-1;
+               mcut=maskrs(mp(1)+pm(1)+rmx,mp(2)+pm(2)+rmy);
+               mcut(mcut>0)=1;
+           catch err
+               disp('no ROI selected, use FoV instead');
+               mcut=zeros(size(gr1));
+               mcut(1:round(2*p.sr_size(1)/px),1:round(2*p.sr_size(2)/px))=1;
+           end           
            mgr=fftshift(ifft2(  abs(fft2(mcut)).^2));
+
 %            density
            A=sum(mcut(:));
            rho=length(locs1.xnm)/A;

@@ -1,13 +1,13 @@
-classdef CameraManager<interfaces.GuiParameterInterface
+classdef CameraManager< interfaces.GuiModuleInterface %interfaces.GuiParameterInterface
 % Stores all cameras with metadata structure and default setttings in a
 % data base. This eliminates the need to specify camera or camera settings
 % when loading raw image data.
     
     properties
-        handle
+%         handle
         imloader
         cameras
-        guihandles
+%         guihandles
         currentcam=1;
         currentstate=1;
         lastcamtableselected=[];
@@ -48,6 +48,11 @@ classdef CameraManager<interfaces.GuiParameterInterface
         function makeGui(obj)
             makeGui(obj)
         end
+        function pard=guidef(obj)
+             pard.helpfile='SMAP.Gui.CameraManager.txt';
+             pard.plugininfo.name='CameraManager';
+        end
+
     end
     
 end
@@ -65,14 +70,17 @@ if isempty(obj.handle)||~isvalid(obj.handle)
      delete(obj.handle.Children);
 end
 %load images
-hp=uicontrol('Style','text','String','camera Settings File','Position',[20 height-40,width*.2,lineheight]);
+obj.guihandles.camerafilet=uicontrol('Style','text','String','camera Settings File','Position',[20 height-40,width*.2,lineheight]);
 obj.guihandles.camerafile=uicontrol('Style','edit','String',obj.cameraSettingsFile,'Position',[width*.2 height-40,width*.6,lineheight]);
-hp=uicontrol('Style','pushbutton','String','load','Position',[posbutton height-40,buttonwidth,lineheight],'Callback',{@loadcamerafile,obj});
+obj.guihandles.loadcamerafile=uicontrol('Style','pushbutton','String','load camera file','Position',[posbutton height-40,buttonwidth,lineheight],'Callback',{@loadcamerafile,obj});
 
 
-hp=uicontrol('Style','pushbutton','String','Load images','Position',[posbutton height-90,buttonwidth,lineheight],'Callback',{@loadimages,obj});
-hp=uicontrol('Style','pushbutton','String','test','Position',[posbutton height-115,buttonwidth,lineheight],'Callback',{@testcal,obj});
-hp=uicontrol('Style','pushbutton','String','Add camera','Position',[posbutton height-140,buttonwidth,lineheight],'Callback',{@menu_callback,obj,'add'});
+obj.guihandles.loadimages=uicontrol('Style','pushbutton','String','Load images','Position',[posbutton height-90,buttonwidth,lineheight],'Callback',{@loadimages,obj});
+obj.guihandles.test=uicontrol('Style','pushbutton','String','test','Position',[posbutton height-115,buttonwidth,lineheight],'Callback',{@testcal,obj});
+obj.guihandles.addcam=uicontrol('Style','pushbutton','String','Add camera','Position',[posbutton height-140,buttonwidth,lineheight],'Callback',{@menu_callback,obj,'add'});
+
+obj.guihandles.helpfields=uicontrol('Style','pushbutton','String','help on fields','Position',[posbutton height-190,buttonwidth,lineheight],'Callback',{@menu_callback,obj,'help'});
+
 
 
 tcam=uitable(obj.handle,'Position',[10 height-lineheight*8-50 width-200,lineheight*7.5]);
@@ -100,7 +108,6 @@ tpar.ColumnName={'Parameter','mode','fixvalue','metafield','Value','conversion',
 % dat{1,2}='fix';
 dat=intpartable;
 
-
 wh=tpar.Position(3);
 tpar.ColumnWidth={wh*.12,'auto','auto',wh*.25,'auto',wh*.18,'auto'};
 tpar.CellSelectionCallback={@cellselect,obj,'par'};
@@ -109,16 +116,13 @@ tpar.ColumnFormat={'char',{'fix','metadata','state dependent'},'char','char','ch
 tpar.ColumnEditable=[false true true false false true false];
 tpar.Data=dat;
 
-
 tstates=uicontrol('Style','listbox','String',{'State 1'},'Position',[10 50 width*.15,lineheight*4],'Callback',{@statecallback,obj});
-tstatesadd=uicontrol('Style','pushbutton','String','add','Position',[10 lineheight*3+80 width*.06,lineheight],'Callback',{@stateadd,obj,'add'});
-tstatesrem=uicontrol('Style','pushbutton','String','rem','Position',[width*.09+10 lineheight*3+80 width*0.06,lineheight],'Callback',{@stateadd,obj,'rem'});
-uicontrol('Style','text','String','State defining parameters','Position',[width*.2 lineheight*3+80 width*.2,lineheight])
-tstatesrem=uicontrol('Style','pushbutton','String','close','Position',[posbutton 15 buttonwidth,lineheight],'Callback',{@close_callback,obj});
-hp=uicontrol('Style','pushbutton','String','Save','Position',[posbutton-buttonwidth-15, 15,buttonwidth,lineheight],'Callback',{@savecameras,obj});
-
-hp=uicontrol('Style','pushbutton','String','Calibrate Camera','Position',[15, 15,buttonwidth*1.2,lineheight],'Callback',{@calibrate_cameras,obj});
-
+obj.guihandles.addstate=uicontrol('Style','pushbutton','String','add','Position',[10 lineheight*3+80 width*.06,lineheight],'Callback',{@stateadd,obj,'add'});
+obj.guihandles.remstate=uicontrol('Style','pushbutton','String','rem','Position',[width*.09+10 lineheight*3+80 width*0.06,lineheight],'Callback',{@stateadd,obj,'rem'});
+obj.guihandles.statetxt=uicontrol('Style','text','String','State defining parameters','Position',[width*.2 lineheight*3+80 width*.2,lineheight]);
+obj.guihandles.close=uicontrol('Style','pushbutton','String','close','Position',[posbutton 15 buttonwidth,lineheight],'Callback',{@close_callback,obj});
+obj.guihandles.save=uicontrol('Style','pushbutton','String','Save','Position',[posbutton-buttonwidth-15, 15,buttonwidth,lineheight],'Callback',{@savecameras,obj});
+%obj.guihandles.calcam=uicontrol('Style','pushbutton','String','Calibrate Camera','Position',[15, 15,buttonwidth*1.2,lineheight],'Callback',{@calibrate_cameras,obj});
 
 tdef=uitable(obj.handle,'Position',[width*.18 50 width*.5,lineheight*4]);
 tdef.ColumnName={'Meta Field','Value'};
@@ -151,6 +155,8 @@ showpartable(obj);
 % statestruct=struct('statelist',{tstates.String},'defpar',{tdef.Data},'par',{tval.Data});
 % obj.cameras(1).state(1)=statestruct;
 loadcameras(obj);
+makeGui@interfaces.GuiModuleInterface(obj);
+obj.makeinfobutton([posbutton height-240,buttonwidth,lineheight])
 end
 
 function celledit(table,data,obj,tname)
@@ -491,7 +497,15 @@ switch label
             obj.cameras(obj.lastcamtableselected(1)).ID.name=newname{1};
         end
         newpos=obj.currentcam;
-        
+    case 'help'
+        dmm=interfaces.metadataSMAP;
+        d=dmm.description;
+        fn=fieldnames(d);
+        for k=1:length(fn)
+            txt{k}=[fn{k} ': ' d.(fn{k})];
+        end
+        helpdlg(txt)
+        return       
 end
 oldpos=obj.currentcam;
 obj.cameras([oldpos newpos])=obj.cameras([newpos oldpos]);

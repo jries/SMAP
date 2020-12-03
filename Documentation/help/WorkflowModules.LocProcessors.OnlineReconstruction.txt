@@ -1,0 +1,10 @@
+Directly render the fitted localizations with SMAP during fitting. You can also run analysis plugins on this partially
+fitted data. An update with the newest localizations happens at user-defined time intervals or upon request.
+
+Don't use too short time intervals, because there seems to be a memory leak that can cause errors and very slow processing times 
+the automatic reconstruction is called too often.
+
+gui:Parameters:
+gui:loc_updatetime Render fitted data every XX seconds. We recommend a value of 300-12000.
+gui:update_check If checked, the fitted localizations are directly rendered and can be analyzed during the fit.
+gui:update_now When you press this button, the localizations that have been fitted until now are rendered.

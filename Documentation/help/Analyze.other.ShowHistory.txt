@@ -1,0 +1,3 @@
+Displays parameters of all plugins which were used previously to procss localization data.
+
+gui:Parameters:

@@ -46,7 +46,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             else
                 addpath(genpath('../SMLMModelFit'))
             end
-            
+            obj.makeinfobutton('sw');
         end 
         function evaluate(obj,site)
             evaluatesite(obj,site);
@@ -224,8 +224,9 @@ pard.removemodule.object=struct('Style','pushbutton','String','remove ');
 pard.removemodule.position=[1,1.9];
 pard.removemodule.Width=0.6;
 % 
-pard.preview.object=struct('Style','pushbutton','String','preview');
+pard.preview.object=struct('Style','pushbutton','String','evaluate current ROI');
 pard.preview.position=[11,1];
+pard.preview.Width=1.5;
 
 pard.redrawall.object=struct('Style','pushbutton','String','redraw all','Callback',@obj.redrawall);
 pard.redrawall.position=[10,1.5];
@@ -241,6 +242,7 @@ pard.se_display.Width=1.5;
 pard.se_keeptempimages.object=struct('Style','checkbox','String','keep temp imgs','Value', 0);
 pard.se_keeptempimages.position=[9,1];
 pard.se_keeptempimages.Width=1.5;
-
+pard.helpfile='SMAP.Gui.ROIEvaluate.txt';
+pard.plugininfo.name='ROIEvaluate';
 pard.outputParameters={'se_keeptempimages','se_display'};
 end

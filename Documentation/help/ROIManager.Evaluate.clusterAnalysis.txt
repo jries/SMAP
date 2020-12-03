@@ -1,0 +1,12 @@
+Performs clustering on data using dbscan, k-means, k-medion, Gaussian mixture models or hierarchical clustering and returns positions of clusters and statistics.
+
+gui:Parameters:
+gui:N_kmeans Number of clusters
+gui:N_kmeanst=N_kmeans 
+gui:eps_dbscan DBSCAN: spatial neighbourhood (nm).
+gui:k_dbscan Minimum number of localizations in the radius eps.
+gui:k_dbscant=k_dbscan 
+gui:method Algorithm for cluster analysis.
+gui:posmethod How to extract centroid coordinates from clusters
+gui:posmethodt=posmethod 
+gui:seteps_dbscan=eps_dbscan 

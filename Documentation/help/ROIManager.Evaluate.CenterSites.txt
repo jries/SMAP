@@ -1,0 +1,12 @@
+Calculates the center coordinates of structres in a ROI based on median, mean, circular fit or cross-correlation with a mask and shifts thte ROI to center the structure.
+
+gui:Parameters:
+gui:blurr Blurring of ring for mask fit. Sigma of Gaussian filter (nm).
+gui:blurrt=blurr 
+gui:centermode Mode how to determine center of structure: Median, Mean, cross-correlation with a ring-shaped mask or fit with a circle.
+gui:cxy If to correct x,y position
+gui:cz If to correct z position
+gui:iterations Repeat centering several times, only using localizations in the ROI.
+gui:iterationst=iterations
+gui:radius Radius of ring (nm)
+gui:radiust=radius

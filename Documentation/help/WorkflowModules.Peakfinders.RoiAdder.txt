@@ -1,0 +1,15 @@
+Allows the user to select regions of interest on the preview image. This ROI are 
+either used for fitting, or define regions that are excluded from fitting. If you press preview again,
+the regions not used for fitting are overlaid over the image.
+
+gui:Parameters:
+gui:addroi Add a region of interest in which to fit. 
+ Use Preview before to display image in which to select ROI. 
+ After selcting ROI: double click on it to confirm.
+gui:clearroi Clear all ROIs
+gui:excluderim Use only localizations sufficiently far rom edge of FoV 
+(closer than half the size of the ROI used for fitting).
+gui:removeroi Add a region of interest in which NOT to fit. 
+ Use Preview before to display image in which to select ROI. 
+ After selcting ROI: double click on it to confirm.
+gui:roistyle Use rectangular or elliptical ROI.

@@ -2,8 +2,7 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
         if nargin<2
             colour=1;
         end
-           [poslabels,possites,parameters]=getlabels(p, colour);
-           
+
            if ~isfield(p,'model')
                p.model.selection='simple';
            end
@@ -25,14 +24,28 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
            if ~isfield(p,'photonsigma')
                p.photonsigma=0;
            end
+           if ~isfield(p,'linkageerror')
+               p.linkageerror=0;
+           end
+           
+           [poslabels,possites,parameters]=getlabels(p, colour);
+           if p.linkageerror>0
+               poslabels=addlinkage(poslabels,p.linkageerror);
+           end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
            
-%            p.lifetime=2;
-%            photonsperframe=p.photons/p.lifetime;
            posphot=getphotons(posreappear,p.photons,p.lifetime,p.photonsigma);
            
            locs=locsfrompos(posphot,p);
            locsout=singlelocs(locs);
+end
+
+function  poslabels=addlinkage(poslabels,linkageerror)
+    for k=1:length(poslabels)
+       poslabels(k).x=poslabels(k).x+randn(length(poslabels(k).x),1)*linkageerror;
+       poslabels(k).y=poslabels(k).y+randn(length(poslabels(k).y),1)*linkageerror;
+       poslabels(k).z=poslabels(k).z+randn(length(poslabels(k).z),1)*linkageerror;
+    end
 end
 
 function posphot=getphotons(locs,photons,lifetime,photonsigma)
@@ -141,7 +154,7 @@ switch ext
             locsall.z=plocsa(:,3);
         end
         locsall=copyfields(locsall,plocs,{'x','y','z'});
-    case {'.tif','.png'}
+    case {'.tif','.png','.jpg','.jpeg'}
 %         locs=getlabelstiff(obj,p);
         image=imread(p.coordinatefile);
         img=sum(image,3)/size(image,3); %binarize
@@ -202,7 +215,7 @@ else
 end
 
 % numeroflines=ceil(p.numberofsites/numberofrows);
-fieldstosave={'labeling_efficiency','model','blinks','lifetime','photons','background','maxframes','coordinatefile'};
+fieldstosave={'labeling_efficiency','model','blinks','lifetime','photons','background','maxframes','coordinatefile','linkageerror','photonsigma'};
 psave=copyfields([],p,fieldstosave);
 for k=numberofsites:-1:1
     xh=mod(k-1,numberofrows)+1;
@@ -238,7 +251,11 @@ for k=numberofsites:-1:1
     locsh.x=reshape(locsh.x,numlocs,1);
     locsh.y=reshape(locsh.y,numlocs,1);
     locsh.z=reshape(locsh.z,numlocs,1);
+    if isfield(locsh,'channel')
     locsh.channel=reshape(locsh.channel,numlocs,1); %added
+    else
+        locsh.channel=0*locsh.x;
+    end
     if isfield(p,'randomrot') && p.randomrot
         angle=2*pi*rand(1);
         phere.angle=angle;
@@ -364,12 +381,16 @@ end
 function [locs,parameters]=locsfromDiscFun(p)
 % added by Yu-Le for SMLMModelFit:   
 fitter = p.obj.getPar('fitter');
+fitter.roiSize = p.se_siteroi;
 modCoord = fitter.getSimRef; % get point type visualization
-parameters = fitter.allParsArg;
+parameters.allParsArg = fitter.allParsArg;
+parameters.model = fitter.model;
 % Export
 locs.x = modCoord{1}.x;
 locs.y = modCoord{1}.y;
-locs.z = modCoord{1}.z;
+if isfield(modCoord{1}, 'z')
+    locs.z = modCoord{1}.z;
+end
 locs.channel = ones(size(modCoord{1}.x));
 end
 
@@ -495,6 +516,7 @@ function locs=locsfromposi(locsi,p)
     locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locprecnm(indin));
     locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locprecnm(indin));
     locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locprecnm(indin)*zfactor);
+    locs.locprecznm=single(locprecnm(indin)*zfactor);
     locs.xnm_gt=single(locsi.x(indin));
     locs.ynm_gt=single(locsi.y(indin));
     locs.znm_gt=single(locsi.z(indin));

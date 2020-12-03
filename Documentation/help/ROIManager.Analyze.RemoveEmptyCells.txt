@@ -1,0 +1,3 @@
+Removes cells that do not contain any sites. Useful if Cells are generated automatically with makeCellGrid.
+
+gui:Parameters:

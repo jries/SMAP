@@ -1,0 +1,17 @@
+BlinkingMoviePresentation renders a movie with the left side showing the camera 
+images and the right side showing single molecule localizations slowly 
+building up a superresolution image.
+
+Localizations are rendered with settings defined in the render tab.
+
+gui:Parameters:
+gui:dataselect Select the data set to use for rendering
+gui:frame_min First frame to render
+gui:framerate Frame rate for saving a movie
+gui:numberOfFrames Numer of frames to render
+gui:outputFormat Output format
+gui:removedark Removes frames without localiaztions (recommended for sparse data)
+gui:texta=numberOfFrames 
+gui:textb=frame_min 
+gui:textc=framerate 
+gui:textx 

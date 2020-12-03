@@ -1,0 +1,5 @@
+Adds two field to the localization data containing the site number and the cell number, respectively.
+
+gui:Parameters:
+gui:roimode Select if to assign the cell and site number to localizations in the square ROI, the round ROI or the ROI FoV.
+gui:t1=roimode 

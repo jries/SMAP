@@ -22,6 +22,9 @@ classdef DBSCAN_cluster<interfaces.DialogProcessor
             end
             setstatus=@obj.status;
             ax=obj.initaxis('DBSCAN');
+            if isempty(locs.znm)
+                locs=rmfield(locs,'znm');
+            end
             [DBSCANmat,DBSCANtab]=DBSCANsmap(locs,p.k_dbscan,eps,ax,setstatus);
             clusterind=DBSCANtab(:,4);
             obj.locData.setloc('clusterindex',clusterind,indused);

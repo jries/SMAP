@@ -1,0 +1,17 @@
+Interprets camera metadata (manged by the Camera Manager) and converts camera ADUs into photons. 
+Metadata can be overwritten manually or loaded from a SMAP _sml.mat data file. 
+
+Conversion is performed with:
+
+photons=(imageADU-offset)*conversion/EMgain
+
+gui:Interpreter:none
+
+gui:Parameters:
+gui:calibrate Estimates gain and offset from canera images according to Heinzmann et al, ArXiv:1611.05654 using the plugin Analyze.Calibrate.GainOffsetFFT.
+gui:camparbutton Edit camera acquisition parameters: 
+gui:correctcamera Apply darkfield and brightfield correction.
+gui:emmirror If checked AND if the image was acquired with EM gain (EMon==true in metadata) the image is mirrored.
+gui:loadmetadata Load camera settings metadata from image or _sml.mat file.
+gui:lockcampar If chekced, do not overwrite camera parameters automatically, but keep those set manually.
+gui:text 

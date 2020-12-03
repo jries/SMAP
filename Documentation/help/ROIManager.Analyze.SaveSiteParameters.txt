@@ -1,0 +1,4 @@
+Exports evaluation results and additional ROI parameters
+
+gui:Parameters:
+gui:saveselection Only export evaluation results, or all parameters associated to the sites.

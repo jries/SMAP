@@ -1,0 +1,16 @@
+makes histogram of localizations/cluster from segmented clusters in the ROI manager
+
+gui:Parameters:
+gui:c_PSFmax 
+gui:c_PSFmin 
+gui:c_groupfield 
+gui:c_list 
+gui:c_listofcells 
+gui:c_listofcellsc 
+gui:c_listvalue 
+gui:numberOfSites_perSub 
+gui:numberOfSubsets 
+gui:savehist 
+gui:t_numberOfSites_perSub 
+gui:t_numberOfSubsets 
+gui:text1 

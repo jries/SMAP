@@ -1,0 +1,9 @@
+Plots localizations of a single frame when you press preview for optimization of fitting parameters.
+
+gui:Parameters:
+gui:loc_previewmode Determine which image to display in Preview mode. Peak finding is performed on the filtered image. \n
+image: raw image \n
+filtered: filtered and normalized image on which peak-finding is performed \n
+image-bg: If the background is explicitely calculated (e.g. using wavelet filtering), here you can display the image minus the background. \n
+bg: If the background is calculated, you can dispaly it here.
+gui:text=loc_previewmode

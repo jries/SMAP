@@ -16,6 +16,15 @@ classdef CameraConverter<interfaces.WorkflowModule
         preview;
         gainmap;
         offsetmap;
+        varmap
+        offsetmapuse;
+        gainuse;
+        scmosroi;
+        rawaverage
+        rawaveragecounter
+        rawaveragetype
+        rawimagestruct
+        rawimagecounter
        
     end
     methods
@@ -38,6 +47,7 @@ classdef CameraConverter<interfaces.WorkflowModule
            obj.guihandles.calibrate.Callback={@calibrate_callback,obj};
             obj.outputParameters={'loc_cameraSettings'};
            obj.addSynchronization('loc_fileinfo_set',[],[],@obj.setmetadata)
+            obj.inputParameters={'diffrawframes'};
            
         end
         function setmetadata(obj,overwrite)
@@ -112,8 +122,14 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.offset=pc.offset;
             obj.adu2phot=(pc.conversion/pc.emgain);
             obj.preview=obj.getPar('loc_preview');
-            loadcamcalibrationfile(obj);
             
+            obj.rawimagecounter=1;
+            obj.rawaveragecounter=1;
+            obj.rawaverage=[];
+            obj.offsetmapuse=[];
+            
+            obj.setPar('cam_varmap',[]);
+               
             
             %             if fileinf.EMon && p.mirrorem  %if em gain on and mirrorem on: switch roi
 %                 %It seems that on the Andor the roi is independent on the
@@ -128,20 +144,30 @@ classdef CameraConverter<interfaces.WorkflowModule
 %             obj.mirrorem=fileinf.EMmirror;
         end
         function datao=run(obj,data,p)
+            if data.eof %transmit image stack
+                obj.rawimagestruct(1).image=cast(obj.rawaverage/(obj.rawaveragecounter-1),'like', obj.rawaveragetype);
+                obj.rawimagestruct(1).frame=0;
+                
+                obj.setPar('rawimagestack',obj.rawimagestruct(1:obj.rawimagecounter));
+            end
            if isempty(data.data) %no image
                datao=data;
                return
            end
            
            imgp=makepositive(data.data);
-           if p.emmirror && obj.loc_cameraSettings.EMon  %rather put to camera converter!
+           if p.emmirror && obj.loc_cameraSettings.EMon  
                     imgp=imgp(:,end:-1:1);
            end
-                
+           if isempty(obj.offsetmapuse)
+                loadcamcalibrationfile(obj,p,imgp);
+           end
            if p.correctcamera %apply offset and brightfield correction
-               roi=p.loc_cameraSettings.roi;
-               imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
-                   .*obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
+               % scmosroi 
+
+               imphot=(single(imgp)-obj.offsetmapuse)./obj.gainuse;   
+%                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
+%                    ./obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
            else
                imphot=(single(imgp)-obj.offset)*obj.adu2phot;
            end
@@ -150,6 +176,24 @@ classdef CameraConverter<interfaces.WorkflowModule
            if obj.preview && ~isempty(imphot)
                obj.setPar('preview_image',imphot);
            end
+           
+           %save raw imageas
+           if (mod(data.frame,p.diffrawframes)==0 || data.frame==1) && ~obj.preview && p.diffrawframes>0
+               if obj.rawimagecounter>length(obj.rawimagestruct)
+                   obj.rawimagestruct(end+100).image=imphot*0;
+                   obj.rawimagestruct(end+100).frame=-1;
+               end
+               obj.rawimagestruct(obj.rawimagecounter+1).image=imgp;
+               obj.rawimagestruct(obj.rawimagecounter+1).frame=data.frame;
+               obj.rawimagecounter=obj.rawimagecounter+1;
+           end
+           if isempty(obj.rawaverage)
+               obj.rawaverage=double(imgp);
+               obj.rawaveragetype=imgp;
+           else
+               obj.rawaverage=obj.rawaverage+double(imgp);
+           end
+           obj.rawaveragecounter=obj.rawaveragecounter+1;
         end
        
     end
@@ -178,11 +222,12 @@ end
 
 function camparbutton_callback(a,b,obj)
 fn=fieldnames(obj.loc_cameraSettingsStructure);
-
+description=obj.loc_cameraSettings.description;
 fi=obj.getPar('loc_fileinfo');
 obj.loc_cameraSettings=copyfields(obj.loc_cameraSettings,fi);
 for k=length(fn):-1:1
-    fields{k}=fn{k};
+    fields{k}=description.(fn{k});
+%     fields{k}=fn{k};
     if myisfield(fi,fn{k})
         defAns{k}=num2str(fi.(fn{k}));
     else
@@ -236,15 +281,40 @@ end
 % obj.readmetadata;
 end
 
-function loadcamcalibrationfile(obj)
+function loadcamcalibrationfile(obj,p,imgp)
     
-    [gainmap,offsetmap,varmap]=makegainoffsetCMOS(obj.loc_cameraSettings.correctionfile,obj.loc_cameraSettings.exposure);
+    [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(obj.loc_cameraSettings.correctionfile,obj.loc_cameraSettings.exposure);
     
     if ~isempty(gainmap)
-        obj.setPar('cam_varmap',single(varmap));
+%         obj.setPar('cam_varmap',single(varmap));
+%         obj.setPar('scmos_roi',roi);
+        obj.varmap=single(varmap);
+        obj.scmosroi=roi;
+        obj.gainmap=single(gainmap);
+        obj.offsetmap=single(offsetmap);
+        
+        
+       roiimg=p.loc_cameraSettings.roi;
+       scmosroi=obj.scmosroi;
 
-        obj.gainmap=gainmap;
-        obj.offsetmap=offsetmap;
+       if ~isempty(scmosroi) % specified: use 
+           roi(3:4)=roiimg(3:4);
+           roi(1:2)=roiimg(1:2)-scmosroi(1:2);
+       elseif all(size(obj.offsetmap)==size(imgp)) % not specified: same size as image use like that
+           roi=roiimg;
+           roi(1:2)=0;
+           disp('no scmos ROI specified but scmos calibration size equal to image size: assume it is the same ROI');
+       else 
+           roi=roiimg;
+           roi(1:2)=roi(1:2)-1; %zero based;
+           disp('no scmos ROI specified: assume entire chip used for calibration');
+       end
+       gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
+       obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+       obj.gainuse=median(gainhere(:));
+
+       varmap=obj.varmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+        obj.setPar('cam_varmap',varmap);
     
     else
         if obj.getSingleGuiParameter('correctcamera')
@@ -317,7 +387,7 @@ pard.lockcampar.Width=0.5;
 pard.lockcampar.TooltipString=sprintf('Do not overwrite camera parameters automatically, but keep those set manually.');
 pard.lockcampar.Optional=true;
 
-pard.correctcamera.object=struct('Style','checkbox','String','Correct flatfield/offset','Value',0);
+pard.correctcamera.object=struct('Style','checkbox','String','Correct offset','Value',0);
 pard.correctcamera.position=[2,1];
 pard.correctcamera.Width=2;
 pard.correctcamera.TooltipString=sprintf('Apply darkfield and brightfield correction.');

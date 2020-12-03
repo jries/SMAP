@@ -1,0 +1,3 @@
+ShuffelClusterIndex randomizes the index of clusters. This is useful for color-coded plotting of clusters.
+
+gui:Parameters:

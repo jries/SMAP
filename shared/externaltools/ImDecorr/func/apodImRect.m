@@ -37,25 +37,28 @@
 
 function [out,mask] = apodImRect(in,N)
 
-Nx = min(size(in,1),size(in,2));
+Nx = size(in,2);
+Ny = size(in,1);
 
 x = abs(linspace(-Nx/2,Nx/2,Nx));
-map = x > Nx/2 - N;
+y = abs(linspace(-Ny/2,Ny/2,Ny));
+mapx = x > Nx/2 - N;
+mapy = y > Ny/2 - N;
 
 val = mean(mean(in(:)));
 
-d = (-abs(x)- mean(-abs(x(map)))).*map;
+d = (-abs(x)- mean(-abs(x(mapx)))).*mapx;
 d = linmap(d,-pi/2,pi/2);
-d(not(map)) = pi/2;
-mask = (sin(d)+1)/2;
+d(not(mapx)) = pi/2;
+maskx = (sin(d)+1)/2;
+
+d = (-abs(y)- mean(-abs(y(mapy)))).*mapy;
+d = linmap(d,-pi/2,pi/2);
+d(not(mapy)) = pi/2;
+masky = (sin(d')+1)/2;
 
 % make it 2D
-if size(in,1) > size(in,2)
-    mask = mask.*imresize(mask',[size(in,1) 1],'bilinear');
-elseif size(in,1) < size(in,2)
-    mask = imresize(mask,[1 size(in,2)],'bilinear').*mask';
-else
-    mask = mask.*mask';
-end
-	
+mask = repmat(masky,[1 size(in,2)]).*...
+    repmat(maskx,[size(in,1) 1]);
+
 out = (in-val).*mask + val;

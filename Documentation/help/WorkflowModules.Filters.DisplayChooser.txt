@@ -1,0 +1,9 @@
+Select which image to display during preview.
+
+gui:Parameters:
+gui:loc_previewmode Determine which image to display in Preview mode. Peak finding is performed on filtered. \n
+image: raw image \n
+filtered: filtered and normalized image on which peak-finding is performed \n
+image-bg: If the background is explicitely calculated (e.g. using wavelet filtering), here you can display the image minus the background. \n
+bg: If the background is calculated, you can dispaly it here.
+gui:text=loc_previewmode 

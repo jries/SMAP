@@ -1,0 +1,36 @@
+Batch processing for a) fitting of batch files, b) of multiple image stacks, c) automatic fitting of any data written to a default directory
+
+See the SMAP_UserGuide (Help menu) for details.
+
+1.	Set all fitting parameters and test with preview in the Localize tab. Then save a batch file with the Batch button.
+
+2.	Open the batch Processor.
+
+3.	The batch file you just saved is already set as the main batch file. But you can replace it by another with load main batchfile. If use for all is checked, this will be used for all the fits, otherwise only for the datasets which are not imported to the batch processor with a batch file. 
+
+4.	With add you can add a) further batch files, b) one single image from a stack or c) a tiff stack. These appear in the list on the left.
+
+5.	You can add multiple directories with add directories. These directories contain a) tiff images, b) further directories with Tiff images inside (here use the filter string below to specify which directories to load and fit, and the >#images to set a lower limit for the number of images required to start fitting).
+
+6.	You can remove items from the list, but don't empty it. With Batch process the fitting starts. 
+
+7.	If you add online directory and start the batch processor, it checks for new fittable directories in this directory and automatically fits them (used e.g. for automated microscopy). Make sure you have checked the  Online analysis in the batch file that is used for fitting. 
+
+
+
+gui:Parameters:
+gui:add_button Add a new batch file or camera image file to the list.
+gui:adddir_button Add a directory with many camera image files to the list.
+gui:adddir_mask Only files that match this string are added to the list.
+gui:adddir_minimages Only batch fit data with a minimum number of frames (used e.g. not to fit DL overview images).
+gui:adddir_t=adddir_minimages
+gui:adddironline_button Add online directory. After starting the batch processor, this directory is continuously monitored and newly written files are fitted on the fly.
+gui:filelist 
+gui:mainbatchfile The main batch file that is used for all image files added in the batch list.
+gui:mainbatchfile_button=mainbatchfile 
+gui:omitsml Check this button to not fit again if already fitted (and corresponding *_sml.mat file exist).
+gui:process_button Start the batch processing
+gui:remove_button Remove the selected data set from the list.
+gui:status Fitting status.
+gui:stop Stops the current fitting, equivalent to the stop button in the main GUI.
+gui:useforall If this is selected, settings in the main batch file are used for all files in the list, even for batch files.

@@ -1,0 +1,13 @@
+GUI to load a list of evaluation plugins. These are called whenever a ROI is selected or re-rendered.
+
+
+gui:Parameters:
+gui:addmodule Add an evaluation plugin
+gui:evaluateon Only if this is checked, the evaluation plugins are run.
+gui:preview Use the evaluation plugins on the currently selected ROI.
+gui:redrawall redraw all sites (inclusive files and cells) or selected sites if more than one site seltected
+gui:removemodule Remove the selected plugin from the list.
+gui:se_display Only if this is selected, the evaluation plugins will generate an output. Deselect 
+for faster evalution. Note that some plugins produce an output even if this is de-selected.
+gui:se_keeptempimages Check if all images are stored. Some evaluation plugins require this, but this 
+can fill the memory easily and and leads to increased file sizes.

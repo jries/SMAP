@@ -8,20 +8,28 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         
         function out=run(obj,p)
+            disp('To ensure the consistency, please redraw all the sides being exported before running this plugin.')
             se = obj.locData.SE;
             numOfRoiToPlot = p.roiOrder(2)-p.roiOrder(1)+1;
-            roiSize = se.P.par.se_sitefov.content;
             
+            %% deal with the image size
+            fovSize = se.P.par.se_sitefov.content;
+            pxSize = se.P.par.se_sitepixelsize.content;
+            crop_oneSide_x = round(p.crop(1)./pxSize./2);
+            crop_oneSide_y = round(p.crop(2)./pxSize./2);
+            imgSize_x = round(fovSize./pxSize)-crop_oneSide_x*2;
+            imgSize_y = round(fovSize./pxSize)-crop_oneSide_y*2;
             roiToPlot = cell(numOfRoiToPlot,1);
             
             %% extract individual ROIs, add their IDs
             if p.showLabel
                 fig = figure('visible','off');
-                a = axes(fig);
-                set(fig, 'Position', [0, 0, roiSize, roiSize])
-                set(a, 'Position', [0, 0, roiSize, roiSize])
-                a.XLim = [0 500];
-                a.YLim = [0 500];
+                pause(1e-10)
+                ax = axes(fig);
+                set(fig, 'Position', [0, 0, imgSize_x, imgSize_y])
+                set(ax, 'Position', [0, 0, imgSize_x, imgSize_y])
+                ax.XLim = [0 imgSize_x];
+                ax.YLim = [0 imgSize_y];
             end
             if p.takeAll
                 p.roiOrder = [1 obj.SE.numberOfSites];
@@ -34,26 +42,40 @@ classdef roiMontage<interfaces.DialogProcessor&interfaces.SEProcessor
                 end
                 
                 if useThisRoi
-                    roiToPlot{(k-p.roiOrder(1)+1),1} = se.sites(k).image.image;
+                    img = se.sites(k).image.image;
+                    roiToPlot{(k-p.roiOrder(1)+1),1} = imcrop(img,[crop_oneSide_x crop_oneSide_y imgSize_x-1 imgSize_y-1]);
                     if p.showLabel
                         % add ROIs' ID labels
-                        text(a, .05,.9,num2str(se.sites(k).ID),'FontSize',38,'FontWeight','bold')
-                        F = getframe(a,[0, 0, roiSize, roiSize]);
-                        cla(fig)
-                        F = F.cdata==0;
-                        roiToPlot{(k-p.roiOrder(1)+1),1}(F==1) = 255;
+                        pause(1e-10)
+                        text(ax, .05,.9,num2str(se.sites(k).ID),'FontSize',round(38/pxSize),'FontWeight','bold')
+                        F = getframe(ax);
+                        if any(size(F.cdata)~=size(roiToPlot{(k-p.roiOrder(1)+1),1}))
+                            Fh=imresize(F.cdata,size(roiToPlot{(k-p.roiOrder(1)+1),1},1:2));
+                        else 
+                            Fh=F.cdata;
+                        end                         
+                        cla(ax)
+                        Ft = Fh<64;
+                        roiToPlot{(k-p.roiOrder(1)+1),1}(Ft==1) = 255;
                     end
                 end
             end
-            if p.showLabel
-                close(fig)
-            end
+            
+            
+            % make montage
             roiToPlot = roiToPlot(~cellfun('isempty',roiToPlot));
             nrow = ceil(length(roiToPlot)/p.ncol);
-            roiToPlot = cellfun(@(x)imcrop(x,[p.crop(1)/2 p.crop(2)/2 roiSize-p.crop(1) roiSize-p.crop(2)]), roiToPlot, 'UniformOutput', false);
-            saveTo = [p.folder '\' p.fileName];
-            img = montage(roiToPlot, 'Size', [nrow p.ncol], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', p.pad);
-            imwrite(img.CData, saveTo)
+            imgm = montage(roiToPlot, 'Size', [nrow p.ncol], 'ThumbnailSize', [], 'BackgroundColor', 'white', 'BorderSize', p.pad);
+            if exist(p.folder,'dir')
+                saveTo = [p.folder filesep p.fileName];
+                imwrite(imgm.CData, saveTo)
+                if p.showLabel
+                    close(fig)
+                end
+            else
+                ax0=obj.initaxis('Montage');
+                imagesc(ax0, imgm.CData);
+            end   
             out=[];
         end
         function pard=guidef(obj)

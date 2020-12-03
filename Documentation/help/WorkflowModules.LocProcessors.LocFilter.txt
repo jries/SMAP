@@ -1,0 +1,19 @@
+Filters localizations before saving according to photons, 
+PSF, localization precision, log-likelihood. This can dramatically reduce the file size 
+in case a too low cutoff was chosen during the peak finding.
+Otherwise, all these filters can be applied in SMAP before rendering and analysis and a file with reduced
+size can be saved later.
+
+gui:Parameters:
+gui:check_LL Filter log-lieklihood before saving.
+gui:check_converged Filter fits that did not converge.
+gui:check_convergedxy Filter fits that did not converge to any point close to center of ROI (in pixels)
+gui:check_locprec Filter localization precision before saving.
+gui:check_phot Filter photons before saving.
+gui:check_psf Filter size of fitted PSF before saving.
+gui:txt 
+gui:val_LL Cutoff relative to maximum of log-likelihood distribution (typically 1, not much smaller).
+gui:val_convxy Filter fits that did not converge to any point close to center of ROI
+gui:val_locprec maximum localization precision (nm)
+gui:val_phot minimum number of photons or vector with minimum and maximum number of photons.
+gui:val_psf maximum size of PSF (nm)

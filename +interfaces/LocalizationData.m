@@ -370,7 +370,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                     else
                         obj.layer(layerh).filter.(fields{f})=anyfilter(obj.loc.(fields{f}),filtermode,minmax);
                     end
-                    if ~isempty(obj.grouploc)
+                    if ~isempty(obj.grouploc)&&isfield(obj.grouploc,fields{f})
                         if invert
                             obj.layer(layerh).groupfilter.(fields{f})=~anyfilter(obj.grouploc.(fields{f}),filtermode,minmax);
                         else
@@ -695,6 +695,11 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                 end
             end
             
+            if mode==3 %no grouping
+                obj.grouploc=obj.loc;
+                obj.filter
+                return
+            end
 %             obj.setPar('status','grouping')
             grouper=Grouper;
             grouper.attachLocData(obj);

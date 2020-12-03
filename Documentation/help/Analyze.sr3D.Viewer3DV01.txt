@@ -1,0 +1,61 @@
+Localization based 3D viewer for superresolution data.
+
+Linked to a linear Roi that you need to define by pressing the line icon in the format panel in the main GUI and drawing the line in the 
+reconstructed superresolution image. If you move the line, the 3D reconstruction moves with it.
+
+For rendering, the same settings are used as in the Render tab.
+
+The range in z is defined with zmin/zmax. The rotation angle around the horizontal axis is called Polar angle and can be set in the respective field.
+
+You can also drag with a mouse the reconstruction to the preferred view in the figure showing the 3D reconstruction.
+
+You can continuosly animate the image or save a movie of an animation. For this, you have the choice of a rotation along the horizontal or the vertical axis, or to render
+a slice and translate this slice horizontally or vertically through the sample.
+
+Keyboard shortcuts (work if the 3D rendered image is the selected window): 
+
+left (<-, a,4), right (->,d,6), up (uparrow,w,8),down (downarrow,s,2),front (comma,q,7),back (period,e,9), reset (0)
+
+translate: no modifier, rotate: command/strg, zoom: alt
+
+
+
+gui:Parameters:
+gui:anglerange Start and stop angle/position. Uses step from above.
+gui:animatemode Select rotation or translation
+gui:dangle step in angle /position between frames of continuous rotation/translation
+gui:danglet=dangle 
+gui:dplanemm Distance to plane of reconstruction. Smaller values result in stronger 3D effect
+gui:fillimage Don't keep aspect ratio, but stretch the image to fill the figure. 
+gui:monitorpmm Size of a monitor pixel in nm. Used to calculate eye distance. Adjust freely to optimize 3D reconstruction. iPhone: 0.12; iMac: 0.3.
+gui:pixrecset Set the pixel size (in nm). Pass on two values dx, dz to define the pixel size in the lateral and axial direction. Otherwise, the pixel size of the currrent
+reconstruction is used. 
+gui:raxis axis for continuous rotation / direction of translation
+gui:rotateb Start continuous animation (Rotation or translation)
+gui:savemovie Save a movie for a rotation or translation.  min - max define the minimum and maximum value for the angle or position.
+gui:savesideview Safe an image of the current 3D reconstruction.
+gui:setpixelsize=pixrecset 
+gui:showcontrols opens control panel to move, rotate, zoom. Instead, you can also use keyboard shortcuts.
+gui:stereo mode for stereo reconstruction. Anaglyphs need cyan/red glasses.
+gui:stereomagnification Used only for side-by-side reconstructions of left and right image. You can adjust the magnification with this paramter
+gui:text2=zmax 
+gui:theta Polar angle (in degrees)
+gui:thetat Push to set polar angle to zero
+gui:thetplus Push to rotate by 90 degrees around horizontal axis.
+gui:transparencymode Reconstruction mode. maximum intensity, 
+ partial transparency (parameter is related to transparency), 
+ render as ball (parameter is ball diamter in reconstructed pixels)
+gui:transparencypar Parameter for the Reconstruction mode.
+gui:tx start and stop angle/position. Uses step from above.
+gui:tx2 Size of a monitor pixel in nm. Used to calculate eye distance. Adjust freely to optimize 3D reconstruction. iPhone: 0.12; iMac: 0.3.
+gui:tx3=dplanemm 
+gui:tx4 Used only for side-by-side reconstructions of left and right image. You can adjust the magnification with this paramter.
+gui:zdist step in angle between frames of continuous rotation.
+gui:zdistt slice thickness (nm) for z-movie.
+gui:zfield Select the field that is used as a z-coordiante. Usually znm.
+gui:zfielderr Select the field that is used as a z localization precision. Usually locprecznm.
+gui:zfieldt=zfield 
+gui:zmax Z-range for reocnstruction. This is the size of the reconstructed image in the vertical direction.
+gui:zmin=zmax 
+gui:zpos step in angle between frames of continuous rotation
+gui:zpost slice thickness (nm) for z-movie

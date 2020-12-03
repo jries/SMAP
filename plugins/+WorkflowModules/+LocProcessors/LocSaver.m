@@ -9,10 +9,10 @@ classdef LocSaver<interfaces.WorkflowModule
         fileinfo
         locDatatemp;
         deltaframes;
-        index;
-        numsaved
-        frames;
-        saveframes=100;
+%         index;
+%         numsaved
+%         frames;
+%         saveframes=100;
         savefields=struct('fieldnames',{{''}},'tosave',{{''}},'notsave',{{'PSFxerr','PSFyerr','bgerr','locpthompson','peakfindx','peakfindy'}});
         savefit
         
@@ -48,22 +48,32 @@ classdef LocSaver<interfaces.WorkflowModule
             
             pard.savelocal.object=struct('Style','checkbox','String','save local and copy','Value',0);
             pard.savelocal.object.TooltipString='Select this if you fit via a network and the saving of the localizations is very long (stauts bar stops for a long time at last frames).';
-            pard.savelocal.position=[2,1];
+            pard.savelocal.position=[3,1];
             pard.savelocal.Width=2;
             pard.savelocal.Optional=true;
             
             pard.setoutputfile.object=struct('Style','pushbutton','String','Set:','Callback',{{@setoutputfile_callback,obj}});
             pard.setoutputfile.object.TooltipString='Set the output file';
-            pard.setoutputfile.position=[3,1];
+            pard.setoutputfile.position=[2,1];
             pard.setoutputfile.Width=.5;
             pard.setoutputfile.Optional=true;
             
             pard.outputfile.object=struct('Style','edit','String','');
             pard.outputfile.object.TooltipString='output file name';
-            pard.outputfile.position=[3,1.5];
+            pard.outputfile.position=[2,1.5];
             pard.outputfile.Width=1.5;
             pard.outputfile.Optional=true;
             
+            pard.diffrawframest.object=struct('Style','text','String','Save every xxx raw frames');
+            pard.diffrawframest.position=[4,1];
+            pard.diffrawframest.Width=1.5;
+            pard.diffrawframest.Optional=true;
+            pard.diffrawframes.object=struct('Style','edit','String','500');
+            pard.diffrawframes.position=[4,2.5];
+            pard.diffrawframes.Width=0.5;
+            pard.diffrawframes.Optional=true;
+            
+            pard.outputParameters={'diffrawframes'};
             pard.syncParameters={{'loc_outputfilename','outputfile',{'String','Value'}},{'savefit',[],{'String','Value'},@obj.savefit_callback}};
             
             
@@ -75,12 +85,12 @@ classdef LocSaver<interfaces.WorkflowModule
             if obj.getPar('loc_preview')
                 return
             end
-            numberofframes=obj.getPar('loc_fileinfo').numberOfFrames;
-            obj.deltaframes=floor(numberofframes/obj.saveframes);
-             obj.index=round(obj.deltaframes/2);
-            obj.numsaved=0;
+%             numberofframes=obj.getPar('loc_fileinfo').numberOfFrames;
+%             obj.deltaframes=floor(numberofframes/obj.saveframes);
+%              obj.index=round(obj.deltaframes/2);
+%             obj.numsaved=0;
 %             obj.frames=struct('image',[],'frame',[]);
-            obj.frames=[];
+%             obj.frames=[];
             obj.locDatatemp=interfaces.LocalizationData;
             obj.locDatatemp.attachPar(obj.P);
             obj.locDatatemp.addfile;
@@ -149,15 +159,15 @@ classdef LocSaver<interfaces.WorkflowModule
 %                     end
                     numlocs=numlocs+sindin;
                 end
-                if locs.frame(end)>obj.index && obj.numsaved<obj.saveframes
-                    obj.numsaved=obj.numsaved+1;
-                    obj.index=obj.index+obj.deltaframes;
-                    if isempty(obj.frames)
-                        obj.frames=obj.getPar('loc_currentframe');
-                    else
-                        obj.frames(obj.numsaved)=obj.getPar('loc_currentframe');
-                    end
-                end
+%                 if locs.frame(end)>obj.index && obj.numsaved<obj.saveframes
+%                     obj.numsaved=obj.numsaved+1;
+%                     obj.index=obj.index+obj.deltaframes;
+%                     if isempty(obj.frames)
+%                         obj.frames=obj.getPar('loc_currentframe');
+%                     else
+%                         obj.frames(obj.numsaved)=obj.getPar('loc_currentframe');
+%                     end
+%                 end
             end
             
             
@@ -197,12 +207,16 @@ classdef LocSaver<interfaces.WorkflowModule
                 nosave=intersect(fieldnames(obj.locDatatemp.loc),obj.savefields.notsave);
                 obj.locDatatemp.loc=rmfield(obj.locDatatemp.loc,nosave);
                 
-                average=obj.getPar('tiffloader_averagetiff');
-                if ~isempty(obj.frames)
-                    obj.locDatatemp.files.file.raw(2:length(obj.frames)+1)=obj.frames;
+%                 average=obj.getPar('tiffloader_averagetiff');
+                rawframes=obj.getPar('rawimagestack');
+                if ~isempty(rawframes)
+                    obj.locDatatemp.files.file.raw=rawframes;
+                else
+                    obj.locDatatemp.files.file.raw(1).image=0;
+                    obj.locDatatemp.files.file.raw(1).frame=0;
                 end
-                obj.locDatatemp.files.file.raw(1).image=average;
-                obj.locDatatemp.files.file.raw(1).frame=0;
+%                 obj.locDatatemp.files.file.raw(1).image=average;
+%                 obj.locDatatemp.files.file.raw(1).frame=0;
                 transformation=obj.getPar('loc_globaltransform');
                 if isempty(transformation)
                     transformation=obj.getPar('loc_globaltransform3dcal'); %from spline fitter, only use if none selected in peak finder

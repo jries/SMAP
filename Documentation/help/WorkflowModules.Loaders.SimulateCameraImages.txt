@@ -1,7 +1,37 @@
 Plugin to simulate camera raw frames using a realistic fluorophore blinking model, 
 PSF model  and camera noise model. Useful to test fitting workflows.
 
-Detailed description coming soon.
+
+It contains the following steps:
+
+1. Ground truth (GT) localizations are generated. These can be 
+
+    a. the currently loaded localizations (e.g. loaded from a CSV file),
+
+    b. you can load localizations,
+
+    c. you can simulate the GT localizations with the simulation plugin (ROIManager.Segment.SimulateSites),
+    
+    d. random localizations.
+
+2. You select a PSF model: either an experimentally calibrated, spline-interpolated model or a Gaussian model (with  or without astigmatism).
+
+3. You select a camera model: either a perfect camera (no read noise), an sCMOS camera (you specify the read noise, 
+modeled as a Gaussian distributed random noise) or an emCCD camera (that creates the EM excess noise, in addition
+you can specify the read noise).
+
+4. You can specify the range of the simulated image or determine this automatically.
+
+5. You can either simulate the images in camera units, or in photon units.
+
+
+After fitting, the fitted localizations are compared to the ground truth to assess the accuracy of the fitter and the precision of the peak finder.
+
+Especially useful are the histograms which show the fitting error normalized by the corresponding precision (e.g. dx/sqrt(CRLBx)). For optimal fitting, 
+this fit should have a standard deviation of 1. Thus, we fit this histogram with a Gaussian function. The \sigma of this Gaussian directly tells us how close we are to 
+the optimum localization accuracy, and the fraction of the localizations that are outside the Gaussian denote the badly fitted localizations.
+
+In addition, we calculate the false positives and false negatives.
 
 gui:Parameters:
 gui:autorange Select the size of the simulated images based on the coordinates of the localizations.

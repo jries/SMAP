@@ -69,6 +69,7 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
                 
                 wf.module('TifLoader').addFile(p.tiffiletarget,true);  
                 wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
+                wf.module('TifLoader').setGuiParameters(struct('framestop',p.framestop))
                 wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
                 wf.run;
             else
@@ -78,6 +79,7 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
                     obj.setPar('intensity_channel','t')
                     wf.module('TifLoader').addFile(p.tiffiletarget,true);   
                     wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremtarget))
+                    wf.module('TifLoader').setGuiParameters(struct('framestop',p.framestop))
                     wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',true));
                     overwritedefaultcamera(obj)
                     wf.run;
@@ -90,6 +92,7 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
                     end
                     wf.module('TifLoader').addFile(p.tiffileref,true);   
                     wf.module('TifLoader').setGuiParameters(struct('mirrorem',p.mirroremref))
+                    wf.module('TifLoader').setGuiParameters(struct('framestop',p.framestop))
     %                 wf.module('EvaluateIntensity_s').extension='r';
                     overwritedefaultcamera(obj)
                     wf.module('IntLoc2posN').setGuiParameters(struct('transformtotarget',false));
@@ -130,7 +133,9 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             if isempty(fn)
                 fn=getrawtifpath(obj.locData);
             end
-            
+            if isempty(fn)
+                fn='*.tif';
+            end
             [f,path]=uigetfile(fn,'Select raw tiff file');
             if f
                 obj.guihandles.(field).String=[path f];
@@ -238,7 +243,10 @@ end
 
 
 function tiffile=getrawtifpath(locData)
-    if isfield(locData.files.file(1).info,'imagefile')
+    if isempty(locData.files.file)
+        tiffile='';
+        return
+    elseif isfield(locData.files.file(1).info,'imagefile')
         tiffile=locData.files.file(1).info.imagefile;
     else
         tiffile=locData.files.file(1).info.basefile;

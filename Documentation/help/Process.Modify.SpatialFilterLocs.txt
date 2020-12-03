@@ -1,0 +1,13 @@
+Calculates  mean / median / max / min / quantile of a specific field of localizations 
+in an area around each localization and assigns it as a new field. Useful for displaying color-coded images.
+
+gui:Parameters:
+gui:dataselect Choose localization file data set.
+gui:dataselectall Perfrom calculations on localizations in all opened files.
+gui:filter Select which function to use
+gui:locfield Select the localization field used for calculations
+gui:resultfield Specify under which new field name to save the result
+gui:spatialscale Define the radius of the circle within which mean/median etc are calculated.
+gui:t1 
+gui:t2 
+gui:t3=spatialscale

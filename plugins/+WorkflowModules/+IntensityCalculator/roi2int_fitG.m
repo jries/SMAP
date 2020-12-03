@@ -54,7 +54,7 @@ if length(sim)==2
 end
 mp=round(sim+1)/2;
 dn=round((p.roisize_fit-1)/2);
-outp=zeros(sim(3),2,'single');
+outp=zeros(sim(3),3,'single');
 % X=roi2int_fitG_parameters.X;
 % Y=roi2int_fitG_parameters.Y;
 if p.fixpsf
@@ -70,9 +70,15 @@ if ~p.fitonbg%nargin<7||isempty(bgroi)
 %         weights=sqrt(gauss);
         Xmat=horzcat(gauss(:), gauss(:)*0+1);
         roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
-        outp(k,:)=Xmat\roih(:);
-        if 0 %p(k,1)>2500 %any(roih(:))%p(k,1)>2500~
+        outp(k,1:2)=Xmat\roih(:);
+        
+        imgfit=gauss*outp(k,1)+outp(k,2);
+        resim=imgfit-roih;
+        res=sqrt(resim.^2./max(imgfit,1));
+        outp(k,3)=mean(res(:));
+        if  0% info.phot(k)>2500 %outp(k,1)>300 %any(roih(:))%p(k,1)>2500~
             outp(k,:)
+            outp(k,1)./info.phot(k)
             figure(67)
             subplot(2,2,1)
             imagesc(-dn:dn,-dn:dn,roih);
@@ -86,6 +92,8 @@ if ~p.fitonbg%nargin<7||isempty(bgroi)
             hold off
             subplot(2,2,3);
             imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2)-roih)
+            subplot(2,2,4);
+            imagesc(-dn:dn,-dn:dn,res)
             waitforbuttonpress
         end
     end
@@ -103,6 +111,10 @@ else %fit bg
         roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k)-bgh;
         outp(k,1)=Xmat\roih(:);
         outp(k,2)=bgh;
+        imgfit=gauss*outp(k,1)+outp(k,2);
+        resim=imgfit-roih;
+        res=resim.^2./max(imgfit,1);
+        outp(k,3)=mean(res(:));
 %         p(k,2)=(sum(bgh(:)))/bgnorm;
         if 0%p(k,1)>2500~
             outp(k,:)
@@ -122,6 +134,7 @@ else %fit bg
             waitforbuttonpress
         end
     end
+
 end
 end
 
@@ -150,7 +163,7 @@ pard.fitonbg.TooltipString='If selected, the background is subtracted and the fi
 
 info.prefix='fit';
 info.name='fit';
-info.fields={'fit_n','fit_bg'};
+info.fields={'fit_n','fit_bg','fit_res'};
 pard.plugininfo=info;
 pard.plugininfo.type='WorkflowIntensity'; 
 pard.plugininfo.description='determines intensity around a localization by a regression of a Gaussian model with fixed positions and sigma. Either amplitude and background or only the amplitude are fitting parameters';

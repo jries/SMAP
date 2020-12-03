@@ -14,6 +14,7 @@ classdef SEGUISettings< interfaces.SEProcessor
             set(obj.guihandles.showSE,'Callback',{@make_siteexplorer,obj})
             set(obj.guihandles.redrawall,'Callback',{@redrawall_callback,obj})
             set(obj.guihandles.clearall,'Callback',{@clearall_callback,obj})
+            obj.makeinfobutton('ne');
         end
     end
 end
@@ -28,15 +29,15 @@ if obj.getGlobalSetting('SE_autosavecheck')
         end
     end
 end
-
-SEpreview=obj.SE.processors.preview;
-SEpreview=obj.SEpreview;
-    if isempty(SEpreview)||~isvalid(SEpreview.handle)
-        obj.SE.processors.SEMainGui.make_siteexplorer;
-        SEpreview=obj.SE.processors.preview;
-    end
-        set(SEpreview.handle,'Visible','on')
-        figure(SEpreview.handle)
+showROImanager(obj)
+% SEpreview=obj.SE.processors.preview;
+% SEpreview=obj.SEpreview;
+%     if isempty(SEpreview)||~isvalid(SEpreview.handle)
+%         obj.SE.processors.SEMainGui.make_siteexplorer;
+%         SEpreview=obj.SE.processors.preview;
+%     end
+%         set(SEpreview.handle,'Visible','on')
+%         figure(SEpreview.handle)
 end
 
 function redrawall_callback(a,b,obj)
@@ -152,6 +153,7 @@ pard.showSE.object=struct('Style','pushbutton','String','show ROI manager','Valu
 pard.showSE.position=[11,1];
 pard.showSE.Height=2;
 pard.showSE.Width=1.5;
-
+pard.helpfile='SMAP.Gui.ROIsettings.txt';
+pard.plugininfo.name='ROIsettings';
 pard.outputParameters={'se_sitefov','se_cellfov','se_sitepixelsize','se_cellpixelsize','se_siteroi','se_drawboxes','se_rotate','se_imax_site','se_imaxcheck_cell','se_imax_cell','se_imaxcheck_site','se_dz','se_drawsideview'};
 end

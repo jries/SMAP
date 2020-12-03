@@ -1,23 +1,36 @@
-GPU and CPU-based fitter for 2D and 3D data sets. Uses MLE. Implements Gaussian and spline interpolated PSF models. According to: Li, Yiming, Markus Mund, Philipp Hoess, Joran Deschamps, Ulf Matti, Bianca Nijmeijer, Vilma Jimenez Sabinina, Jan Ellenberg, Ingmar Schoen, and Jonas Ries. “Real-Time 3D Single-Molecule Localization Using Experimental Point Spread Functions.�? Nature Methods 15, no. 5 (April 9, 2018): 367–69. https://doi.org/10.1038/nmeth.4661.
+GPU and CPU-based single-molecule fitter for 2D and 3D data sets based on Maximum-likelihood esitmation (MLE). 
+Implements Gaussian and spline interpolated PSF models. 
+According to: Li et al, "Real-Time 3D Single-Molecule Localization Using 
+Experimental Point Spread Functions." Nature Methods 15 (2018). https://doi.org/10.1038/nmeth.4661.
+
+Data measured with sCMOS cameras can be fitted with an sCMOS specific fitter using the variance map of the camera. 
+See Huang et al, "Localization-based super-resolution microscopy with an sCMOS camera". Opt Express (2011).
+
+Fitting with phase-retrieved PSFs (parametrized by the Zernike coefficients of their aberrations) is still in development.
 
 gui:Parameters:
-gui:PSFx0 start value for PSF, or size of PSF when PSF fixed (in camera pixels)
-gui:addgaussfit 
-gui:addgaussfit_mode 
+gui:PSFx0 start value for PSF, or size of PSF when PSF fixed (in camera pixels).
+gui:addgaussfit Additional perform a fit with a Gaussian PSF model. This can be useful, as a Gaussian fit resolts in more robust x,y
+estimates, as the fitted coordinates in this case do not depend on z. On the other hand, an error in z for an experimental PSF model 
+directly leads to an error in x,y.
+gui:addgaussfit_mode Fit model for additional Gauss fit. Either fix, free for symmetric Gaussian, or elliptical for elliptical Gaussian when
+using astigmatic 3D imaging.
 gui:addgaussfit_t 
-gui:addgaussfit_xyfrom 
-gui:asymmetry 
-gui:cal_3Dfile 3D calibration file for astigmtic 3D. 
- Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig
-gui:dzZ 
-gui:dzZt 
+gui:addgaussfit_xyfrom Define if the final x, y coordinates are taken from the Gauss fit or from the main spline fit with an experimental PSF.
+gui:asymmetry Determine a metric for asymmetry based on the eigenvalues of the ROI.
+gui:cal_3Dfile 3D calibration file for experimental spline interpolated PSF model. 
+ Generate from bead stacks with plugin: Analyze/sr3D/Calibrate3DsplinePSF
+gui:dzZ Distance between z planes for intermediate reconstruction of the PSF.
+gui:dzZt=dzZ
 gui:fitmode Fit mode. Fit with constant PSF, free PSF, 3D with astigmatism, asymmetric PSF (for calibrating astigmatic 3D)
-gui:isscmos 
-gui:iterations number of iterations for the GPU fitter (typical 50, use 100-250 for ellipt: PSFx PSFy or 3Dz).
-gui:loadcal 
-gui:overwritePixelsize 
-gui:pixelsizex 
-gui:pixelsizey 
+gui:isscmos Images were acquired with an sCMOS camera. Then here you switch on fitting using a variance map for the camera. This has to 
+be selected in the camera Manager.
+gui:iterations Number of iterations for the MLE fitter (typical 20-30).
+gui:loadcal Load an experimentally derived PSF model (*3Dcal.mat)
+gui:overwritePixelsize Select if you do not want to use the pixel size specified in the camera Manager but change it. This is often
+necessary for astigmatic 3D SMLM if the cylindrical lens is not placed in the back-focal plane and thus causes compression of the image.
+gui:pixelsizex New pixel size in x (nm)
+gui:pixelsizey New pixel size in y (nm)
 gui:refractive_index_mismatch Correction factor to take into account the different refracrive indices of immersion oil and buffer. 
  This leads to smaller distances inside the sample compared to bead calibration. 
  Bead calibration: in piezo positions (nm). 
@@ -25,13 +38,12 @@ gui:refractive_index_mismatch Correction factor to take into account the differe
  For high-NA oil objectives: typical 0.72 (range 0.7-1).
 gui:roisperfit Number of 10 x 10 pixel ROIs passed to GPU for fitting. For other ROI sizes, the number is adjusted accordingly.
 gui:roisperfitt Number of 10 x 10 pixel ROIs passed to GPU for fitting. For other ROI sizes, the number is adjusted accordingly.
-gui:syncParameters 
-gui:tPSFx0 
-gui:text 
+gui:tPSFx0=PSFx0 
+gui:text=iterations; 
 gui:userefractive_index_mismatch 
-gui:zmaxZ 
-gui:zmaxZt 
-gui:zobjective 
-gui:zobjectivet 
+gui:zmaxZ Maximum z value for calculating the phase-retrieved PSF.
+gui:zmaxZt=zmaxZ 
+gui:zobjective Position of the objective with respect to the coverslip. This is needed to calculate the in site PSF.
+gui:zobjectivet=zobjective 
 gui:zstart z start parameter. Use vector with several values for 2D PSF
 gui:zstartt z start parameter. Use vector with several values for 2D PSF

@@ -1,0 +1,7 @@
+Remove localizations inside / outside a user-defined ROI.
+Use any of the ROIs in the format panel of the main GUI. Select if to remove
+localizations inside or outside the ROI and Run.
+
+gui:Parameters:
+gui:roic Select if to remove
+localizations inside or outside the ROI

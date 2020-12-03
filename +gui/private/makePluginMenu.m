@@ -15,6 +15,8 @@ h.cameraManager=uimenu(hsmap,'Label','Camera Manager','Callback',{@cameramanager
 h.hsimplegui=uimenu(hsmap,'Label','Hide advanced controls','Callback',{@simplegui_callback,obj});
 % obj.addSynchronization('globalGuiState',[],'String',{@changeglobalGuiState,obj});
 h.openfiji=uimenu(hsmap,'Label','Open current image in Fiji','Separator','on','Callback',{@openfiji_callback,obj});
+h.ROIManager=uimenu(hsmap,'Label','ROI manager','Callback',{@openroimanager_callback,obj});
+
 
 h.hexit=uimenu(hsmap,'Label','Quit SMAP','Separator','on','Callback',{@exit_callback,obj});
 
@@ -71,9 +73,10 @@ end
 
 help=uimenu(handle,'Label','Help');
 h.helpplutgin=uimenu(help,'Label','Search plugin','Callback',{@helpsmap_callback,obj,5});
+h.helpsmap=uimenu(help,'Label','Getting Started','Callback',{@helpsmap_callback,obj,6});
 h.helpsmap=uimenu(help,'Label','User Guide','Callback',{@helpsmap_callback,obj,1});
 h.helpuser=uimenu(help,'Label','Programming Guide','Callback',{@helpsmap_callback,obj,2});
-h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpsmap_callback,obj,3});
+% h.helpNPC=uimenu(help,'Label','Analysing NPC reference structures','Callback',{@helpsmap_callback,obj,3});
 h.help2C=uimenu(help,'Label','Step-by-step 3D dual color example','Callback',{@helpsmap_callback,obj,4});
 end
 
@@ -149,7 +152,9 @@ msgbox({'Superresolution microscopy analysis platform (SMAP).',...
     'Jonas Ries, EMBL, Heidelberg, www.rieslab.de',...
     'Licence: GPLv3, Copyright Jonas Ries, 2019',...
     'Source code: www.github.com/jries/SMAP', ...
-    'Documentation and compiled version: www.rieslab.de'});
+    'Documentation and compiled version: www.rieslab.de',...
+    'PLEASE CITE AS: ','Ries, J. SMAP: a modular super-resolution microscopy analysis platform for SMLM data. Nat Methods (2020). https://doi.org/10.1038/s41592-020-0938-1',...
+                'Please also cite the references for the plugins you use (as mentioned in the plugin info).'});
 end
 
 function globalsettings_callback(a,b,obj)
@@ -218,6 +223,7 @@ end
 
 function cameramanager_callback(a,b,obj)
 c=CameraManager;
+c.attachPar(obj.P);
 p=obj.getPar('loc_fileinfo');
 if ~isempty(p)
 c.defaultpath=p.basefile;
@@ -236,16 +242,21 @@ openstackinfiji(obj,imout,title)
 
 end
 
+function openroimanager_callback(a,b,obj)
+showROImanager(obj);
+end
+
 function helpsmap_callback(a,b,obj,whichone)
 switch whichone
-    case {1,2,3,4}
-        if  isdeployed
-            direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
-        else
-            direc = ['Documentation' filesep 'pdf'];
-        end
+    case {1,2,3,4,6}
+%         if  isdeployed
+%             direc = [obj.getPar('SettingsDirectory') filesep 'temp' filesep 'Documentation'];
+%         else
+%             direc = ['Documentation' filesep 'pdf'];
+%         end
+        direc= [fileparts(obj.getPar('PluginHelpDirectory')) filesep 'pdf' filesep];
 
-        filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf'};
+        filenames={'SMAP_UserGuide.pdf','ProgrammingGuide.pdf','SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','reserved for search','Getting_Started.pdf'};
         myopenpdf([direc filesep filenames{whichone}]);
     case 5
     sh=gui.SearchHelp;  

@@ -9,6 +9,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         lFnLayerEdit        %
         currentLoadedModel  %
         alignSettings       % Converter for alignment.
+        sourceModel         % The source function model of the image model.
     end
     methods
         function obj=SMLMModelFitGUI(varargin)
@@ -19,7 +20,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             else
                 addpath(genpath('../SMLMModelFit'))
             end
-            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel'};         
+            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel','sourceModel'};         
             addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
         end
         
@@ -59,7 +60,17 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             addParameter(p,'keepParsVal',false, @islogical);
             parse(p,varargin{:});
             results = p.Results;
-            out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay, results.keepParsVal);
+            try
+                out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay, results.keepParsVal);
+                out.fitInfo.guiInfo = 'Normal.';
+            catch
+                warning(['Model fitter did not run through. Site ' num2str(obj.site.ID) ' encountered some issues.'])
+                if results.forceDisplay
+                    out.fitInfo.guiInfo = 'Plot failed.';
+                else
+                    out.fitInfo.guiInfo = 'Fit or plot failed.';
+                end
+            end
         end
         
         function makeGui(obj,varargin)
@@ -132,7 +143,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 obj.numMod = 1;                 % init of the model counts
                 obj.guihandles.tabgroup.SelectionChangedFcn={@selectLayer_callback,obj};
                 
-                % Select the M1 tab by default since a user usually starts from loadin a model.
+                % Select the M1 tab by default since a user usually starts from loading a model.
                 obj.guihandles.tabgroup.SelectedTab = obj.guihandles.tab1;
                 
                 %% Converter tab 
@@ -161,7 +172,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                
         function parId = loadParTable(obj, htable, fitter, modelnumber)
             % get parId and update the GUIParTable
-            [parId,subParsArgTemp] = fitter.getAllParId(modelnumber);
+            [parId,subParsArgTemp] = fitter.getAllParId(modelnumber, 'form', 'long');
             htable.Data = struct2Data(subParsArgTemp);
             htable.CellEditCallback = {@parSetting_callback,obj, modelnumber};
             htable.ColumnEditable = obj.lFnParsArgEdit;
@@ -178,6 +189,16 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             optionTarget = unique([hConvert.ColumnFormat{3} parId]);
             hConvert.ColumnFormat{3} = optionTarget;
             obj.guihandles.anchorConvert=hConvert;
+        end
+        
+        function set.fitter(obj,value) 
+            obj.fitter = value;
+            if isfield(obj.P.par.mainGui.content.children.guiSites.children.Segment.processors,'SimulateSites')
+                simulateSites = obj.P.par.mainGui.content.children.guiSites.children.Segment.processors.SimulateSites;
+                if strcmp(simulateSites.guihandles.useFitter_button.Visible, 'off')
+                    obj.P.par.mainGui.content.children.guiSites.children.Segment.processors.SimulateSites.initGui;
+                end
+            end
         end
     end
     events

@@ -1,0 +1,38 @@
+Fits circular model to localizations in the ROI to determine the radius and 
+center coordinates of circular structures. 
+
+The basis are the filtered localizaitons as defined in the Render tab.
+
+gui:Interpreter:latex
+
+Two modes are implemented:
+
+\textbf{Circle:} Fits a circle (with center coordinates $x_0$, $y_0$ and radius $R$)
+to the coordinates of the localization $x_i$, $y_i$ by minimizing:
+
+$$ \sum_i \left(\sqrt{(x_i-x_0)^2+(y_i-y_0)^2}-R \right)^2$$
+
+\textbf{Ring:} Fits a ring (with center coordinates $x_0$, $y_0$, outer radius $R_o$,
+thickness of the ring of $d_r$ and localization uncertainty $\sigma$) to the 
+localizations. 
+
+For this, the localizations are rendered as a superresolution 
+image representing each localization as a Gaussian with a standard deviation 
+proportional 
+to the localization precsion (set the proportionality factor in the render par
+field in the Render tab). 
+
+The fitting model is also image based and consists of the ring filtered with a Gaussian
+kernel with a standard deviation given by $\sigma$.
+
+A non-linear least-squares fit is employed to fit the image-based model to the data.
+
+gui:Parameters:
+gui:fit_sigma Treat the stabdard deviation of the Gaussian filter of the model as a free fit parameter.
+gui:gaussfac_imfit Additional blurring of the superresolution image by this factor. For several layers, 
+you can define one factor per layer using vector notation.
+gui:gaussfac_imfitt=gaussfac_imfit
+gui:sqrtfit If checked, fit the square root of the superresolution image instead of the image 
+itself. This can be useful, as it reduces the impact of repeated localizations. Also
+in a histogram the values follow Poisson statistics, thus this normalization reduces the weight of 
+high values with large variance.

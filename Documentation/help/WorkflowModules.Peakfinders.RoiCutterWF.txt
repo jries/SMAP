@@ -1,0 +1,11 @@
+This plugin cuts out regions of interest of a defined size around the candidate positions and passes these on to the fitter
+
+gui:Parameters:
+gui:loc_ROIsize Size (pixels) of regions around each peak candidate which are used for fitting. 
+ Depends on fitter. Use larger ROIs for 3D data. For a symmetric 2D Gaussian fit we use 7 pixels, for astigmatic 3D data 13 pixels, and for 
+a double-helix PSF 25 pixels (based on an effective camera pixel size of 120 nm).
+gui:loc_filterforfit Filter ROI before fitting. Sigma of Gaussian kernel in pixels (0: no filter). Usually, this is not used (value=0). However,
+sometimes the experimental PSF model is too large because of the size of the beads and some registration inaccuracy or 
+field-dependent aberrations when averaging many beads, then this filter can help (especially when recovering 3D positions from symmetric 2D PSFs without
+any induced aberrations).
+gui:text=loc_ROIsize

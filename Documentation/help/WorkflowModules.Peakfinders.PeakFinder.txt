@@ -1,0 +1,38 @@
+Performs peak-finding ont he filtered image using local maximum finding. After maximum finding, all maxima are filtered by a threshold value, 
+and pnly maxima above the threshould are fitted.
+
+The threshold can be an aboslue number, a value related to probabilities that the 
+candidate is not part of the background [1], or dynamically calculated. 
+
+To determine this dynamic value, we invstigate the rank of the intensity valuse of the maxima. As for low-density data most maxima
+correspond to background, we determine the cutoff as a value sufficiently above the majority of values:
+
+threshold=qs(2)+slope*0.5*2*factor
+
+with
+
+slope=(qs(3)-qs(1))/(ps(3)-ps(1))
+
+qs(1), qs(1) and qs(3) are the 0.2, 0.5 and 0.8 quantiles, respectively, ps=[0.2 0.5 0.8]. factor is the dyanamic factor you insert in the GUI.
+
+In addition, this plugin allows filtering out candidates that are too close together and where the proximity of the other fluorophore can lead to fitting errors
+when using low density single-molecule fitting algorithms. However, you can also filter those out later using the log-likelihood filter.
+
+
+[1] U. Koethe, F. Herrmannsdoerfer, I. Kats, and F. A. Hamprecht,
+ SimpleSTORM: a fast, self-calibrating reconstruction algorithm for localization microscopy,
+HISTOCHEMISTRY AND CELL BIOLOGY, pp. 1-15, Apr. 2014.
+
+gui:Parameters:
+gui:cutoffmode How to determine the cutoff: 
+ Dynamic: use the distribution of pixel intensity to estimate likely localizations. Factor: adjust sensitivity. 
+ Probability: use probabilistic model (SimpleSTORM) to determine the likelyhood for pixel being localization. 
+ Absolut: Pixel intensity in normalized image. 
+ Choose display=normalized to read out thes normalized values.
+gui:cutoffstring 
+gui:cutoffvalue How the cutoff value is calculated. \n Dynamic: relative factor as defined in the plugin description. Use values between 1 (low intensity fluorophores, will fit some background pixels) and 
+3 (only fits brightest localizations.  \n
+ Probability: directly probability p. ˙\n
+ absolute: absolute cutoff on the filtered image.
+gui:mindistance Minimum distance that two candidate peaks need to have to be fitted.
+gui:use_mindistance Filter out candidate peaks that are too close together.

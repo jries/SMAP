@@ -1,0 +1,8 @@
+Extensive anlaysis of the geometry of the NPC, based on the evaluation plugin NPCgeometryQuantify. 
+
+See:Thevathasan, Jervis Vermal, Maurice Kahnwald, Konstanty Cieslinski, Philipp Hoess, Sudheer Kumar Peneti, Manuel Reitberger, Daniel Heid, et al. 
+"Nuclear Pores as Versatile Reference Standards for Quantitative Superresolution Microscopy." Nature Methods 16 (2019). doi 10.1038/s41592-019-0574-9.
+
+gui:Parameters:
+gui:copytopage 
+gui:t1 

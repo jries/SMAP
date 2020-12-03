@@ -6,6 +6,7 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
     %photophysics of the dye. Simulated structures are added to the
     %RoiManager
     properties
+        lSMLMModelFitGUI_loaded = false;    % whether any SMLMModelFitGUI is loaded.
     end
     methods
         function obj=SimulateSites(varargin)        
@@ -166,9 +167,13 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     idxFitterFound = find([lFitterFound{:}]);
     
     idxSelected_final = idxFitterFound(idxSelected);
-    fitter = copy(obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter);
+    fitter_ori = obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter;
+    fitter = copy(fitter_ori);  % copy the fitter object to not overwrite it
     fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
+    fitter.rmConvertRules;
+    fitter.addPar({1,{'sim'},{'numOfMol'},0, inf,0,1,{''},0,inf}) % add this parameter to control the number of molecules.
     obj.setPar('fitter',fitter)
+    obj.setPar('fitter_ori',fitter_ori)
     close(fig);
     obj.guihandles.setModPars_button.Visible='on';
     obj.guihandles.coordinatefile.String='-- Internal SMLMModelFit';
@@ -189,12 +194,13 @@ function setModPars_callback(a,b,obj)
     % Data
     % Acquire the SMLMModelFit obj, and then display parameters based on the allParsArg
     fitter = obj.getPar('fitter');
+
     parName = fitter.allParsArg.name;
     parType = fitter.allParsArg.type;
     parModel = fitter.allParsArg.model;
     
     % If 'fix' is ticked, the corresponding parameters will be single
-    % values. Otherwise arange.
+    % values. Otherwise a range.
     parUb = fitter.allParsArg.ub;
     parLb = fitter.allParsArg.lb;
     parFix = fitter.allParsArg.fix;
@@ -205,11 +211,12 @@ function setModPars_callback(a,b,obj)
     parVal = regexprep(parVal,'^\s+','');
     
     % Table properties.
-    parArgTable.Position = [20 50 300 300];
-    parArgTable.Data = [parName parType num2cell(parModel) parVal];
-    parArgTable.ColumnName = {'Name','Type','Model','Value'};
-    parArgTable.ColumnEditable = [false false false true];
+    parArgTable.Data = [parName parType num2cell(parModel) parVal repmat({''},size(parVal,1),1)];
+    parArgTable.ColumnName = {'Name','Type','Model','Value','Convert'};
+    parArgTable.ColumnEditable = [false false false true true];
     parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
+    parArgTable.ColumnWidth = {70 50 40 50 100};
+    parArgTable.Position = [20 50 350 300];
 end
 
 function typeOption_callback(a,b,obj)
@@ -219,19 +226,30 @@ end
 
 function parArgTable_CellEditCallback(a,b,obj)
     % Assign the change to the parArgTable
+    % This function deal will all editings in the parArgTable. Only column
+    % 4 and 5 are editable.
     indEdited = b.Indices(1);
+    colId = b.Indices(2);
     elements = strsplit(b.NewData,' ');
-    if length(elements) == 2
-        elements = str2double(elements);
-        obj.allParsArg.fix(indEdited) = false;
-        obj.allParsArg.value(indEdited) = 0;
-        obj.allParsArg.lb(indEdited) = elements(1);
-        obj.allParsArg.ub(indEdited) = elements(2);
-    elseif length(elements) == 1
-        obj.allParsArg.fix(indEdited) = true;
-        obj.allParsArg.value(indEdited) = str2double(b.NewData);
-    else
-        warning('The input length is not acceptable. Please assign only 1 (fixed) to 2 (a range) elements.')
+    switch colId
+        case 4
+            % column 4: values
+            if length(elements) == 2
+                elements = str2double(elements);
+                obj.allParsArg.fix(indEdited) = false;
+                obj.allParsArg.value(indEdited) = 0;
+                obj.allParsArg.lb(indEdited) = elements(1);
+                obj.allParsArg.ub(indEdited) = elements(2);
+            elseif length(elements) == 1
+                obj.allParsArg.fix(indEdited) = true;
+                obj.allParsArg.value(indEdited) = str2double(b.NewData);
+            else
+                warning('The input length is not acceptable. Please assign only 1 (fixed) to 2 (a range) elements.')
+            end
+        case 5
+            % column 5: convert
+            parId = ['m' num2str(obj.allParsArg.model(indEdited)), '.',obj.allParsArg.type{indEdited}, '.', obj.allParsArg.name{indEdited}];
+            obj.converter(obj, b.NewData, parId);
     end
 end
 
@@ -247,7 +265,7 @@ switch ext
     case {'.txt','.csv'}
         txt='on';
         tif='off';
-    case {'.tif','.png'}
+    case {'.tif','.png','.jpg','.jpeg'}
         txt='off';
         tif='on';
     case '.mat'
@@ -279,13 +297,21 @@ switch ext
         end
     case 'SMLMModelFit'
         modelType = obj.getPar('modelType');
-        switch modelType
-            case 'Image'
-                txt='off';
-                tif='on';
-            case 'Point'
-                txt='on';
-                tif='off';            
+        if ~isempty(modelType)
+            switch modelType
+                case 'Image'
+                    txt='off';
+                    tif='on';
+                case 'Point'
+                    txt='on';
+                    tif='off';
+                case ''
+                    txt='off';
+                    tif='on';
+            end
+        else
+            txt='off';
+            tif='on';
         end
 end
 obj.guihandles.labeling_efficiency.Visible=txt;
@@ -294,6 +320,8 @@ obj.guihandles.tif_density.Visible=tif;
 obj.guihandles.tif_numbermode.Visible=tif;
 obj.guihandles.tif_imagesizet.Visible=tif;
 obj.guihandles.tif_imagesize.Visible=tif;
+obj.guihandles.linkageerrort.Visible=txt;
+obj.guihandles.linkageerror.Visible=txt;
 end
 
 
@@ -314,7 +342,7 @@ pard.useFitter_button.object = struct('Style','pushbutton','String', 'Use fitter
 pard.useFitter_button.position = [2 4];
 
 pard.setModPars_button.object = struct('Style','pushbutton','String', 'Set model pars', 'Callback', {{@setModPars_callback,obj}});
-pard.setModPars_button.position = [3 4];
+pard.setModPars_button.position = [2 3];
 
 
 pard.tif_numbermode.object=struct('String',{{'Density (labels/um^2)','Number of labels'}},'Style','popupmenu');
@@ -342,6 +370,16 @@ pard.labeling_efficiency.object=struct('String','.5','Style','edit');
 pard.labeling_efficiency.Width=.5;
 pard.labeling_efficiency.position=[3,2.5];
 pard.labeling_efficiency.TooltipString=pard.t_labelingefficiency.TooltipString;
+
+pard.linkageerrort.object=struct('String','Linkage error std (nm)','Style','text');
+pard.linkageerrort.position=[3,3];
+pard.linkageerrort.Width=1.5;
+
+pard.linkageerror.object=struct('String','0','Style','edit');
+pard.linkageerror.Width=.5;
+pard.linkageerror.position=[3,4.5];
+
+
 
 pard.modelt.object=struct('String','Model:','Style','text');
 pard.modelt.Width=.5;
@@ -435,8 +473,8 @@ pard.randomxyd.position=[7,4.5];
 pard.randomxyd.TooltipString=pard.randomxy.TooltipString;
 
 pard.savez.object=struct('String','save z','Style','checkbox','Value',1);
-pard.savez.Width=1;
-pard.savez.position=[2,3];
+pard.savez.Width=0.5;
+pard.savez.position=[2,2.2];
 pard.savez.TooltipString=sprintf('Also simulate z-coordinate');
 pard.savez.Optional=true;
 
@@ -451,7 +489,7 @@ pard.maxframes.TooltipString=sprintf('Maximum number of frames that contain all 
 pard.t7.TooltipString=pard.maxframes.TooltipString;
 
 pard.savenow.object=struct('String',{{'No saving','Save ground truth','Save simulated locs'}},'Style','popupmenu');
-pard.savenow.Width=2;
+pard.savenow.Width=1.2;
 pard.savenow.position=[2,1];
 pard.savenow.Optional=true;
 pard.plugininfo.type='ROI_Analyze';

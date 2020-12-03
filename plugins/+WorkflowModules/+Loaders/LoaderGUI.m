@@ -41,7 +41,14 @@ classdef LoaderGUI<interfaces.WorkflowModule
         end
         
         function loadloaders(obj)
-            t1=obj.plugininfo.description;
+            if isstruct(obj.plugininfo.description)
+                fn=fieldnames(obj.plugininfo.description);
+                t1=obj.plugininfo.description.(fn{1});
+                fieldn=fn{1};
+            else
+                t1=obj.plugininfo.description;
+                fieldn='none';
+            end
             loadernames=obj.loadernames;
             obj.guihandles.loaderlist.String=obj.loadernames;
             p=obj.guiPar;
@@ -54,6 +61,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
             panelpos(3)=hpos(3)-poslist(1)*2;
             panelpos(4)=poslist(4)*5.5;
             ip={};
+            t1=[t1 '\n Specific loaders: '];
             for k=1:length(loadernames)
                 loader=plugin('WorkflowModules','Loaders',loadernames{k});
                 loader.attachPar(obj.P);
@@ -69,12 +77,21 @@ classdef LoaderGUI<interfaces.WorkflowModule
                 obj.loaders{k}=loader;
 %                 hp.Units='normalized';
                 obj.guihandles.([loadernames{k} '_panel'])=hp;
-                t1=[t1 13 '   ' 96+k '. ' loader.info.name loader.info.description];
+                if isstruct(loader.info.description)
+                    fn=fieldnames(loader.info.description);
+                    th=loader.info.description.(fn{1});
+                else
+                    th=loader.info.description;
+                end
+                t1=[t1 '\n' 96+k '. ' loader.info.name '\n' th];
             end
             obj.inputParameters=ip;
             obj.loaders{1}.handle.Visible='on';
             obj.currentloader=obj.loaders{1};
-            obj.plugininfo.description=t1;
+%             obj.plugininfo
+%             t1
+%             obj.plugininfo.description
+            obj.plugininfo.description.(fieldn)=t1;
         end
         function fieldvisibility(obj,varargin)
             fieldvisibility@interfaces.GuiModuleInterface(obj,varargin{:});

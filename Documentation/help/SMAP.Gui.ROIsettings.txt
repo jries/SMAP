@@ -1,0 +1,27 @@
+General settings for the ROI manager (e.g. size of the ROI images, scaling etc).
+
+gui:Parameters:
+gui:clearall 
+gui:redrawall redraw all sites (inclusive files and cells) or selected sites if more than one site seltected
+gui:se_cellfov=se_sitefov 
+gui:se_cellpixelsize=se_sitepixelsize 
+gui:se_drawboxes If checked, all segmented Cells are shown in the file image, and all segmented ROIs are shown in the cell image.
+gui:se_drawsideview If checked and data is 3D, a side-view reconstruction is automatically rendered.
+gui:se_dz Size of the ROI in z (if 3D data) in nm.
+gui:se_imax_cell Maximum intensity value of the reconstructed image
+gui:se_imax_cell_current Use current maximum
+gui:se_imax_site=se_imax_cell 
+gui:se_imax_site_current=se_imax_cell_current 
+gui:se_imaxcheck_cell If checked, set maxiumum of the reconstructed image (for equal scaling of all images). Otherwise settings from the Render tab are used.
+gui:se_imaxcheck_site=se_imaxcheck_cell 
+gui:se_rotate If selected and a rotation line is drawn for the ROI, the ROI image is automatically rotated according to this line.
+gui:se_sitefov Field of view (nm), area that is rendered in the preview. 
+gui:se_sitepixelsize Pixel size (in nm) of the reconstructed image.
+gui:se_siteroi Size of the ROI. Only localizations within this ROI are analyzed.
+gui:showSE Show the ROI manager GUI
+gui:text1 
+gui:text2 
+gui:text3=se_sitefov 
+gui:text4=se_sitepixelsize 
+gui:text5=se_siteroi
+gui:textdz=se_dz 

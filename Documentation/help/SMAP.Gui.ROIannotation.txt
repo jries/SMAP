@@ -1,0 +1,37 @@
+Annotate individual ROIs. You can define four lists (by loading a text file, see 
+settings/parlistdefault.txt for the format) and select values for each of the lists.
+
+You can select the previous ROI with the leftarrow key, and the next ROI with the rightarrow key.
+
+You can focus on the previous list with shift-leftarrow and the next list with shift-rightarrow.
+
+Then use up-arrow and down-arrow to select the list entry.
+
+In addition, you can define two additonal line ROIs (with <> you can change the direction of the lines) and 
+a free ROI.
+
+Finally, you can change the 'use' property of a site that denotes if the site should be used
+for further analysis. You can change this switch also in the ROImanager GUI above the ROI list.
+
+In the List of ROIs (ROImanager GUI) you find the selected entries of the four lists after L, and the status of use in the end (+: used, -: not used).
+
+
+gui:Parameters:
+gui:comments Free comment   
+gui:line1 Line ROI
+gui:line1switch reverse direction of the line
+gui:line2=line1 
+gui:line2switch=line1switch
+gui:list1 List with properties. Define properties in text file and load with the load button.
+gui:list1_title=list1 
+gui:list2=list1  
+gui:list2_title=list1  
+gui:list3=list1  
+gui:list3_title=list1  
+gui:list4=list1  
+gui:list4_title=list1  
+gui:loadlist Load a text file containing the properties of the sites that are selected in the lists. See settings/parlistdefault.txt as an example.
+gui:roi Draw a free ROI. 
+gui:roiselect Choose what kind of ROI to draw
+gui:t1=comments
+gui:usesite Each site has a switch 'use' that is modified by some evaluators and used by many Analyze plugins. Here you can change this.

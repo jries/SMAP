@@ -264,7 +264,7 @@ transform.setTransform(2,pt)
 th=ph.tabgroup;
 ph.ax=th;
 numf=5;
-mp=round(size(bead1.x,1)+1)/2;
+mp=round((size(bead1.x,1)+1)/2);
 range=mp-numf:mp+numf;
 bc1=horzcat(reshape(bead1.x(range,:),[],1),...
     reshape(bead1.y(range,:),[],1),...

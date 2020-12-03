@@ -34,9 +34,13 @@ void  cs(double *list, double *x, double *y, double *frames,double dX,long dT,mw
         
     while((list[thisentry]>0)&& (thisentry<=lenx-1)) //find next particle which is not connected: list(of this)=0
     {
-        thisentry+=1;
+        thisentry+=1;  //XXX can reach lenx! Fixed
     }  
     
+    if(thisentry==lenx)
+    {
+        break;
+    }
     //store coordinates
     particlenumber++;
     xh=x[thisentry];
@@ -47,15 +51,14 @@ void  cs(double *list, double *x, double *y, double *frames,double dX,long dT,mw
     numdark=0;
     
     testentry=thisentry;
-    while ( (numdark<=dT) && (testentry <=lenx-1) && (frames[testentry]>=frh) )//search for dT frames in the future
+    while ((testentry <=lenx-1) && (numdark<=dT) &&  (frames[testentry]>=frh) )//search for dT frames in the future
     {
         particlefound=0;
-        
-        
+       
         // find index of next frame
-        while((frames[testentry]==frh) && (testentry<=lenx-1)) 
+        while((testentry<=lenx-1) && (frames[testentry]==frh)) 
         {
-            testentry+=1;
+            testentry+=1;  //this can extend. Test for testentry first in next while. Fixed
         } 
     
         
@@ -63,13 +66,13 @@ void  cs(double *list, double *x, double *y, double *frames,double dX,long dT,mw
         frtest=frh+1;
         
         //find first entry with fitting x in frame
-        while((x[testentry]<xh-dX) && (frames[testentry]==frtest) && (testentry<=lenx-1)) 
+        while((testentry<=lenx-1) && (x[testentry]<xh-dX) && (frames[testentry]==frtest)) 
         {
-            testentry+=1;
+            testentry+=1;  //this is ok if below testentry is tested first. fixed
         } 
 
         // compare y for all possible x
-        while((x[testentry]<xh+dX) && (frames[testentry]==frtest) && (testentry<=lenx-1))
+        while((testentry<=lenx-1) && (x[testentry]<xh+dX) && (frames[testentry]==frtest))
         {
             if ((y[testentry]>yh-dX) && (y[testentry]<yh+dX) && (list[testentry]==0)) 
             {
@@ -85,7 +88,7 @@ void  cs(double *list, double *x, double *y, double *frames,double dX,long dT,mw
             }
             else
             {
-                testentry+=1;
+                testentry+=1; // thats ok, because it is not used before comparison in while.
             }
         }
         if (particlefound==0) 

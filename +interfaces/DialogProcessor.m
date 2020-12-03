@@ -59,7 +59,8 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
                 obj.guihandles.processgo_b=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*3, hpos(4)-vrim+20,100,50],...
                     'Style','pushbutton','String','Run','FontSize',obj.guiPar.fontsize*1.5,'Callback',{@processgo_callback,obj},'Visible',vis);
                 obj.guihandles.info=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*2, hpos(4)-vrim+50,100,25],...
-                    'Style','pushbutton','String','Info','FontSize',obj.guiPar.fontsize,'Callback',{@info_callback,obj},'Visible',vis);
+                    'Style','pushbutton','String','Info','FontSize',obj.guiPar.fontsize,'Callback',{@info_callback,obj},'Visible',vis,...
+                    'BackgroundColor',[0.7,1,0.9]);
             end
             obj.initGuiFinal;
         end

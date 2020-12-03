@@ -1,0 +1,64 @@
+The Camera Manager provides a data base for cameras used in the lab. Based on the meta data extracted from the image files, the right camera is identified, the camera settings are determined and 
+based on those the parameters essential for fitting are extracted (e.g. conversion, offset, em-gain).
+
+To add your own camera to SMAP follow the SMAP_UserGuide.xml in the Documentation directory.
+
+1.	If you want to use your own camera collection choose a new name for the configuration file in Menu: SMAP/Preferences/File. Here you can also toggle between different camera configuration files.
+
+2.	Acquire a data set with the same camera settings as used for SMLM.
+
+3.	Open Menu: SMAP/Camera Manager.
+
+4.	Use Load images to load the data set. If the camera has not been recognized you will be prompted to add a new camera. Otherwise you can add and remove cameras with a right click on the camera list. 
+
+5.	Click on the cell ‘ID field’ belonging to your camera and select a metadata field that uniquely describes the camera. This field is used to distinguish between different cameras based on their metadata.
+
+6.	The “Default” camera will be used if no camera is recognized.
+
+7.	The camera manager allows extracting acquisition parameters from the metadata. SMAP uses the following parameters:
+
+    a.	EMon (logical, if EM gain is on).
+
+    b.	cam_pixelsize_um (pixel size in the object plane in micrometers, a vector [px py] for non-square pixels).
+
+    c.	conversion (in ADU/e , used to calculate photons from the camera units, by default it does not include the EM gain. Usually, this value is provided in the data sheet of the camera).
+
+    d.	emgain (EM gain value).
+
+    e.	offset (camera image offset in ADU, this does not include background).
+
+    f.	roi (acquisition ROI position and dimension on the camera chip in pixels, given as vector [minx miny width height]).
+
+    g.	exposure (camera exposure time), timediff (time difference between frames), comment (any user defined string). These values are stored for information only, they are not used in SMAP. Per convention, times are usually in milliseconds.
+
+    h.	numberOfFrames (number of frames).
+
+    i.	Width, Height of the image, in pixel units.
+
+    j.	For sCMOS cameras you can specify the name of the correctionfile, a file that contains the flatfield, offset and variance maps and that is stored in settings/cameras. You can generate this file with the plugin Process/Images/calibrateSCMOS.
+
+8.	For each parameter that SMAP uses define the mode:
+
+    a.	fix: uses the value in the column 'fixvalue'.
+
+    b.	metadata: uses the field defined in 'metafield' together with the parser defined in the 'conversion' column. Here X is substituted by the metadata corresponding to the metafield. Choose the metafield by clicking on it.
+
+    c.	State dependent: This allows you to define camera parameters in dependence on camera settings. This is useful e.g. for the conversion factor which might change depending on the camera-internal amplifier setting. The state is defined by the parameters in the list state defining parameters. Select the metadatafields whose values define the camera state. Define the respective values in the list to the right.
+
+9.	Save and Close.
+
+
+
+gui:Parameters:
+gui:camerafile The current file containing the camera data base.
+gui:camerafilet=camerafile
+gui:loadcamerafile=camerafile
+gui:loadimages Load camera images from a real experiment to find the available meta data
+gui:test Use the current camerea data base on the loaded experiment to test the meta data extraction
+gui:addcam Add a new camera to the data base
+gui:helpfields Help on the main parameters that need to be defined in the CameraManager
+gui:addstate Add a new state. A camera state is a camera setting that comes with its own parameters (e.g. a different gain can effect the conversion).
+gui:remstate Remvoe the selected state
+gui:statetxt A camera state is a camera setting that comes with its own parameters. Select here meta data fields and corresponding values that define the state. Then set the paramters in the list on the right.
+gui:close Close the camera manager
+gui:save Save the changes to the camera data base file.

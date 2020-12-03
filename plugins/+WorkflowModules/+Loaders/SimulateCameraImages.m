@@ -19,7 +19,7 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
         function initGui(obj)
             simulation_callback(obj.guihandles.simulationsource, 0,obj)
             obj.setcampar;
-            obj.makeinfobutton('nw');
+            obj.makeinfobutton('ne');
 %             psfpar_callback(0,0,obj,true)
         end
         function out=run(obj,data,p)  
@@ -184,7 +184,8 @@ classdef SimulateCameraImages<interfaces.WorkflowModule
             xrp=(par.xrange/par.pixelsize);
             yrp=(par.yrange/par.pixelsize);        
             info=interfaces.metadataSMAP;
-            info.roi=round([xrp(1) yrp(1) xrp(2)-xrp(1) yrp(2)-yrp(1)]);
+%             info.roi=round([xrp(1) yrp(1) xrp(2)-xrp(1) yrp(2)-yrp(1)]);
+            info.roi=([xrp(1)+.5 yrp(1)+.5 xrp(2)-xrp(1) yrp(2)-yrp(1)]);
             info.cam_pixelsize_um=p.pixelsize/1000;
            
             if p.usecam
@@ -295,9 +296,10 @@ if settings.lifetime==0
 else
     lttot=settings.lifetime*1.5;
 end
-frames=zeros(totallocs*lttot,1);
-photons=zeros(totallocs*lttot,1);
-coord=zeros(totallocs*lttot,3);
+nloc=ceil(totallocs*lttot);
+frames=zeros(nloc,1);
+photons=zeros(nloc,1);
+coord=zeros(nloc,3);
 for k=1:totallocs
     onf=ceil(startf(k));
     offf=ceil(startf(k)+lifet(k));

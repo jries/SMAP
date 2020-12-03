@@ -97,8 +97,8 @@ classdef GuiChannel< interfaces.LayerInterface
             fn=fieldnames(guimodules.Analyze.render);
             h.externalrender.String=[{'Select'},fn];
             
-            cfields={ 'colorfield','String', 'locprecnm','znm','PSFxnm','locprecznm','frame','shiftxy'};
-            obj.synchronizedFields={ 'colorfield', 'locprecnm','znm','PSFxnm','locprecznm','frame','shiftxy'};
+            cfields={ 'colorfield','String', 'locprecnm','znm','PSFxnm','locprecznm','frame','shiftxy','LLrel'};
+            obj.synchronizedFields={ 'colorfield', 'locprecnm','znm','PSFxnm','locprecznm','frame','shiftxy','LLrel'};
             for k=1:length(cfields)
                  h.([cfields{k} 'b']).Callback={@obj.updatefields_callback,cfields{k}};
                  h.([cfields{k} '_min']).Callback={@obj.updatefields_callback,cfields{k}};
@@ -129,6 +129,9 @@ classdef GuiChannel< interfaces.LayerInterface
             obj.addSynchronization([obj.layerprefix 'shiftxy_max'],h.shiftxy_max,'String',{@callobj.updatefields_callback,'shiftxy'})
             obj.addSynchronization(['frame_min'],[],[],{@callobj.updateframes_callback})
             obj.addSynchronization(['frame_max'],[],[],{@callobj.updateframes_callback})
+            
+            obj.addSynchronization([obj.layerprefix 'renderfield'],h.renderfield,'String')
+            obj.addSynchronization([obj.layerprefix 'lut'],h.lut,'String')
 %             obj.addSynchronization([obj.layerprefix 'scalex'],h.scalex,'String')
 %             obj.addSynchronization([obj.layerprefix 'scaley'],h.scaley,'String')
             obj.guihandles=h;
@@ -256,7 +259,7 @@ classdef GuiChannel< interfaces.LayerInterface
             obj.updateLayerField([field '_min'],sfield{2})
             obj.updateLayerField([field '_max'],sfield{3})
             
-            allfields={'PSFxnm','znm','locprecznm','locprecnm','frame'};
+            allfields={'PSFxnm','znm','locprecznm','locprecnm','frame','LLrel'};
             if any(strcmp(allfields,field))
                 if ~isempty(sfield{4})
                     if sfield{4}(1)
@@ -560,6 +563,10 @@ if ~isempty(v) && obj.getSingleGuiParameter('colorauto')
 obj.locData.loc.colorfield=single(obj.locData.loc.(field));
 obj.locData.grouploc.colorfield=single(obj.locData.grouploc.(field));
 q=myquantilefast(v,[0.02,0.98]);
+if q(2)-q(1)==0
+    q(2)=max(v);
+    q(1)=min(v);
+end
 dx=10^floor(log10(abs(q(2))/100));
 minv=round(q(1)/dx)*dx;
 maxv=round(q(2)/dx)*dx;            
@@ -1047,25 +1054,40 @@ pard.frame_max.position=[6,4.5];
 pard.frame_max.Width=.5;
 % pard.frame_max.Optional=true;
 
+pard.LLrelb.object=struct('Style','pushbutton','String','LLrel');
+pard.LLrelb.position=[7,3.4];
+pard.LLrelb.Width=.6;
+% pard.frameb.Optional=true;
+
+pard.LLrel_min.object=struct('Style','edit','String','-1','BackgroundColor',[1 1 1]*.7);
+pard.LLrel_min.position=[7,4];
+pard.LLrel_min.Width=.5;
+% pard.frame_min.Optional=true;
+
+pard.LLrel_max.object=struct('Style','edit','String','0');  
+pard.LLrel_max.position=[7,4.5];
+pard.LLrel_max.Width=.5;
+
+
 pard.shiftxyb.object=struct('Style','pushbutton','String','shift xyz');
-pard.shiftxyb.position=[7,3.4];
+pard.shiftxyb.position=[8,3.4];
 pard.shiftxyb.Width=.6;
 pard.shiftxyb.TooltipString='Shift reconstructed image by this value (nm). Useful to correct for chromatic aberrations.';
 pard.shiftxyb.Optional=true;
 
 pard.shiftxy_min.object=struct('Style','edit','String','0');
-pard.shiftxy_min.position=[7,4];
+pard.shiftxy_min.position=[8,4];
 pard.shiftxy_min.Width=1/3;
 pard.shiftxy_min.TooltipString=pard.shiftxyb.TooltipString;
 pard.shiftxy_min.Optional=true;
 pard.shiftxy_max.object=struct('Style','edit','String','0');
-pard.shiftxy_max.position=[7,4+1/3];
+pard.shiftxy_max.position=[8,4+1/3];
 pard.shiftxy_max.Width=1/3;
 pard.shiftxy_max.TooltipString=pard.shiftxyb.TooltipString;
 pard.shiftxy_max.Optional=true;
 
 pard.shiftxy_z.object=struct('Style','edit','String','0');
-pard.shiftxy_z.position=[7,5-1/3];
+pard.shiftxy_z.position=[8,5-1/3];
 pard.shiftxy_z.Width=1/3;
 pard.shiftxy_z.TooltipString=pard.shiftxyb.TooltipString;
 pard.shiftxy_z.Optional=true;
@@ -1097,17 +1119,17 @@ pard.shiftxy_z.Optional=true;
 % pard.scaley.Optional=true;
 
 pard.copyalllayers_button.object=struct('Style','pushbutton','String','-> all L');
-pard.copyalllayers_button.position=[9,3.4];
+pard.copyalllayers_button.position=[9.3,3.4];
 pard.copyalllayers_button.Width=.6;
 pard.copyalllayers_button.TooltipString='Copy these parameters to all layers';
 pard.copyalllayers_button.Optional=true;
 pard.default_button.object=struct('Style','pushbutton','String','Default');
-pard.default_button.position=[9,4];
+pard.default_button.position=[9.3,4];
 pard.default_button.Width=.6;
 pard.default_button.TooltipString='Reset to default. ';
 pard.default_button.Optional=true;
 pard.defaultsave_button.object=struct('Style','pushbutton','String','Save');
-pard.defaultsave_button.position=[9,4.6];
+pard.defaultsave_button.position=[9.3,4.6];
 pard.defaultsave_button.Width=.4;
 pard.defaultsave_button.TooltipString='Save default. ';
 pard.defaultsave_button.Optional=true;

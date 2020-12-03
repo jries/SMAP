@@ -31,7 +31,7 @@ classdef generalStatistics<interfaces.SEEvaluationProcessor
                     out.(['layers' num2str(k)]).PSF=psf;
                     end
                     
-                    locp=mean(locs.locprecnm);
+                    locp=median(locs.locprecnm);
                     out.locplayers(end+1)=locp;
                     out.(['layers' num2str(k)]).locp=locp;
                     

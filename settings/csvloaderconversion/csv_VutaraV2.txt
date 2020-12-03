@@ -1,0 +1,14 @@
+frame=image_ID
+phot=photon_count
+xnm=x
+ynm=y
+znm=z
+bg=background11
+log_likelihood=log_likelihood
+accuracy=accuracy
+llr=llr
+locprecnm=precisionx
+locprecznm=precisionz
+channel=vis_probe
+cam_pixelsize_um=100
+factor=1

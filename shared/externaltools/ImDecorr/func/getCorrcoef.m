@@ -43,5 +43,5 @@ if nargin < 3
 	c1 = sqrt(sum(sum(abs(I1).^2)));
 end
 
-% N = (numel(I1)-1);
 cc = sum(sum(real(I1.*conj(I2))))./((c1*c2));
+cc = floor(1000*cc)/1000;

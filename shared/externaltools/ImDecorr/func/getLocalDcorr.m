@@ -44,19 +44,19 @@
 
 function [kcMap,A0Map] = getLocalDcorr(im,tileSize,tileOverlap,r,Ng,figID)
 
-if nargin < 7; figID = 0; end
-if nargin < 6; Ng = 10; end
-if nargin < 5; r = linspace(0,1,50);end
+if nargin < 6; figID = 0; end
+if nargin < 5; Ng = 10; end
+if nargin < 4; r = linspace(0,1,50);end
 
-px = ceil(linspace(1,size(im,2),ceil(size(im,2)/(tileSize-tileOverlap))));
-py = ceil(linspace(1,size(im,1),ceil(size(im,1)/(tileSize-tileOverlap))));
+px = 1:(tileSize-tileOverlap+1):(size(im,2)-tileSize);
+py = 1:(tileSize-tileOverlap+1):(size(im,1)-tileSize);
 kcMap = zeros(length(py)-1,length(px)-1);
 A0Map = kcMap;
-for xx = 1:length(px)-1
-	for yy = 1:length(py)-1
-        subIm = im(py(yy):py(yy+1),px(xx):px(xx+1),1);
+for xx = 1:length(px)
+	for yy = 1:length(py)
+        subIm = im(py(yy):py(yy)+tileSize,px(xx):px(xx)+tileSize,1);
         subIm = subIm(1:size(subIm,1)-not(mod(size(subIm,1),2)),1:size(subIm,2)-not(mod(size(subIm,2),2)));
-        [kc,A0] = getDcorr(apodImRect(subIm,20),r,Ng);
+        [kc,A0] = getDcorr(apodImRect(subIm,20),r,Ng,(figID+1)*(figID>0));
         kcMap(yy,xx) = kc;
         A0Map(yy,xx) = A0;
 	end

@@ -553,7 +553,12 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                     elseif strcmp(allFields{k},'outputParameters')
                         obj.outputParameters=thisField;
                     elseif strcmp(allFields{k},'plugininfo')
-                        obj.plugininfo=thisField;
+                        fn=setdiff(fieldnames(thisField),'description');
+                        fieldn=copyfields([],thisField,fn);
+                        if isfield(thisField,'description')
+                            fieldn.description.none=thisField.description;
+                        end
+                        obj.plugininfo=fieldn;
                     elseif strcmp(allFields{k},'locselector')
                         %do nothing here
                     elseif strcmp(allFields{k},'helpfile')
@@ -643,28 +648,36 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %                             h.TooltipString=thisField.TooltipString;
 %                         end
                     end
-                    if anyoptional && synchronizeguistate
+                    if anyoptional && ~isempty(synchronizeguistate) && synchronizeguistate
                         obj.addSynchronization('globalGuiState',[],[],@obj.setglobalguistate);
                     end
                        
                 end 
                 % read help file and write tool tips 
-                settingsdir=obj.getPar('SettingsDirectory');
-                helpfilep=[fileparts(settingsdir) filesep 'Documentation' filesep 'help' filesep helpfile];
-                if strcmp(helpfilep(1),filesep)
-                    helpfilep(1)=[];
-                end
-                maxwidth=60;             
+                plugindir=obj.getPar('PluginHelpDirectory');
+                helpfilep=[plugindir filesep helpfile];
+%                 settingsdir=obj.getPar('SettingsDirectory');
+%                 helpfilep=[fileparts(settingsdir) filesep 'Documentation' filesep 'help' filesep helpfile];
+%                 if strcmp(helpfilep(1),filesep)
+%                     helpfilep(1)=[];
+%                 end
+%                 settingsdir
+%                 helpfilep
+                maxwidth=60;     
+%                helpfilep
+%                exist(helpfilep,'file')
                 if ~isempty(helpfile) && exist(helpfilep,'file')
-                    [description,tooltips,interpreter]=parsehelpfile(helpfilep);
+                    [description,tooltips]=parsehelpfile(helpfilep);
                     obj.plugininfo.description=(description);
-                    obj.plugininfo.descriptioninterpreter=interpreter;
-                    fnt=fieldnames(tooltips);
-                    for tt=1:length(fnt)
-                        if isfield(obj.guihandles,fnt{tt})
-                            strtt=tooltips.(fnt{tt});
-                            strWrapped=mytextwrap(strtt,maxwidth,10);
-                            obj.guihandles.(fnt{tt}).Tooltip=sprintf(strWrapped);
+%                     obj.plugininfo.descriptioninterpreter=interpreter;
+                    if ~isempty(tooltips)
+                        fnt=fieldnames(tooltips);
+                        for tt=1:length(fnt)
+                            if isfield(obj.guihandles,fnt{tt})
+                                strtt=tooltips.(fnt{tt});
+                                strWrapped=mytextwrap(strtt,maxwidth,10);
+                                obj.guihandles.(fnt{tt}).Tooltip=sprintf(strWrapped);
+                            end
                         end
                     end
                 else
@@ -725,7 +738,15 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                try
                 name=obj.pluginpath{end};
                catch
-                   name=obj.subpluginpath{end};
+                   try
+                        name=obj.subpluginpath{end};
+                   catch
+                       try 
+                            name=obj.guidef.plugininfo.name;
+                       catch
+                           name='unidentified';
+                       end
+                   end
                end
                 [~,file]=fileparts(name);
                 if ~isempty(file)
@@ -760,12 +781,14 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
        end
        
        function setnormalizedpositionunits(obj)
-          fn=fieldnames(obj.guihandles);
-          for k=1:length(fn)
-              if isprop(obj.guihandles.(fn{k}),'Units')
-                  obj.guihandles.(fn{k}).Units='normalized';
+           if isstruct(obj.guihandles)
+              fn=fieldnames(obj.guihandles);
+              for k=1:length(fn)
+                  if isprop(obj.guihandles.(fn{k}),'Units')
+                      obj.guihandles.(fn{k}).Units='normalized';
+                  end
               end
-          end
+           end
           if isempty(obj.children)
               return
           end
@@ -782,21 +805,34 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
            h=obj.handle;
            units=h.Units;
            h.Units='pixels';
+           infostring='i';
            if isnumeric(position)
-               pos(1:2)=position(1:2);
-               pos(3:4)=[20 20];
+               if length(position)==2
+                   pos(1:2)=position(1:2);
+                   pos(3:4)=[20 20];
+               else
+                   pos=position;
+                   if pos(3)>50
+                       infostring='info';
+                   end
+               end
            else
                switch position
-                   case 'sw' %right lower
-                       pos=[h.Position(3)-17,1,15,20];
-                   case 'nw' %right upper
-                       pos=[h.Position(3)-17,h.Position(4)-21,15,20];
+                   case 'se' %right lower
+                       pos=[h.Position(3)-18,1,15,20];
+                   case 'ne' %right upper
+                       pos=[h.Position(3)-18,h.Position(4)-22,15,20];
+                   case 'sw'
+                       pos=[1,1,15,20];
                    case 'guiselector'
                        pos=[h.Position(3)-32,h.Position(4)-21,15,20];
+                   otherwise 
+                       disp('wrong position for help button')
+                       obj
                end
            end
-           obj.guihandles.infobutton=uicontrol(h,'Style','pushbutton','String','i',...
-               'Position',pos,'Callback',@obj.showinfo_callback);
+           obj.guihandles.infobutton=uicontrol(h,'Style','pushbutton','String',infostring,...
+               'Position',pos,'Callback',@obj.showinfo_callback,'BackgroundColor',[0.7,1,.9]);
            h.Units=units;
            obj.guihandles.infobutton.Tooltip='Show information for this plugin';
        end
@@ -804,51 +840,31 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
            obj.showinfo;
        end
        function showinfo(obj, hp)
-%         warnid='MATLAB:strrep:InvalidInputType';
-%         warnstruct=warning('off',warnid);
-%         obj.guihandles.showresults.Value=1;
-%         showresults_callback(obj.guihandles.showresults,0,obj)
-%         ax=obj.initaxis('Info');
-%         hp=uifigure;
           if nargin<2
             hp=figure('MenuBar','none','Toolbar','figure');
+            smaph=obj.getPar('mainGuihandle');
+            if isempty(smaph)
+                smappos=obj.handle.Position;
+            else
+                smappos=smaph.Position;
+            end
+            hp.Position(1)=smappos(1)+smappos(3);
+            hp.Position(2)=smappos(2);
+            hp.Position(3)=hp.Position(3)*1.5;
+            hp.Position(4)=hp.Position(4)*1.5;
             hp.Color='w';
             pos=[0.03,0.03,.9,.95];
             fs=obj.guiPar.fontsize;
           else
               pos=[0 0 .7 1];
               fs=12;
-
+%               hp=[];
           end
-%         hp=ax.Parent;
-        
-%         delete(ax);
 
-             %  htxt=uicontrol(hp,'Style','text','Units','normalized','Position',[0,0,.9,1],...
-        %      'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left','Max',100); 
-        td=obj.info.description;
-         if ~iscell(td)
-          txt=strrep(td,char(9),' ');
-          txt=strrep(txt,'\n',newline);
-         else
-             txt=td;
-         end
-         
-         if isfield(obj.plugininfo,'descriptioninterpreter')
-             interpreter=obj.plugininfo.descriptioninterpreter; 
-         else
-             interpreter='none';
-         end
-         
-          htxt=annotation(hp,'textbox',pos,...
-             'FontSize',fs,'HorizontalAlignment','left',...
-             'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
-             'String',txt,'Interpreter',interpreter);
-          htxt.Position=pos;
-%          htxt.String=txt;
-        %   htxt.Position=[0 0 1 1];
-%           warning(warnstruct);
-          h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.9,0.0,.1,.05],'String','Edit','Callback',{@edit_callback,obj});
+        showpluginhelp(hp,obj.info.description,pos,fs);
+    
+          h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.8,0.0,.1,.05],'String','Edit','Callback',{@edit_callback,obj});
+           h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.9,0.0,.1,.05],'String','Close','Callback',{@close_callback,obj,hp});
 %           h=uibutton( hp,'push','Text','Edit','Position',[hp.Position(3)-40,hp.Position(4)-30,30,20],'ButtonPushedFcn',{@edit_callback,obj});
         end
 
@@ -962,7 +978,9 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
 %        end
    end
 end
-
+function close_callback(a,b,obj,handle)
+close(handle)
+end
 function edit_callback(a,b,obj)
 basedir=fileparts(obj.getPar('SettingsDirectory'));
 outdir=[basedir filesep 'Documentation' filesep 'help' filesep];
@@ -985,7 +1003,15 @@ end
 if ~exist([outdir helpfile],'file')
     writehelpfile([outdir helpfile],obj.guidef);
 end
-open([outdir helpfile])
+if isdeployed
+    if ispc
+        system(['notepad ' outdir helpfile]);
+    else
+        system(['open -a TextEdit ' outdir helpfile]);
+    end
+else
+    open([outdir helpfile]);
+end
 
 end
 
@@ -1001,6 +1027,7 @@ parse(p,args{:});
 pres=p.Results;
 
 end
+
 
 function pard=locselectordefault
 pard.selector_filelist.object=struct('String','all','Style','popupmenu');

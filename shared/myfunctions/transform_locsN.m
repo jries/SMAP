@@ -73,7 +73,7 @@ switch p.targetpos.selection
         indref=indref&locref.ynm>=separator(2);
         xrangecamr=[0 roiend(1)];yrangecamr=[spix(2) roiend(2)];
         xrangecamt=[0 roiend(1)];yrangecamt=[0 spix(2)];
-        mirroradd(2)=chipsizenm(2);
+        mirroradd(2)=chipsizenm(2)*0; %empirically: no mirroradd.
     case 'bottom'
 %         dy=chipsizenm(2)/2;
         dy=0;
@@ -96,7 +96,8 @@ switch p.targetpos.selection
         spix=separator/(p.currentfileinfo.cam_pixelsize_um(1)*1000);
         xrangecamr=[spix(1) roiend(1)];yrangecamr=[0 spix(2)];
         xrangecamt=[0 spix(1)];yrangecamt=[0 spix(2)];
-         mirroradd(1)=chipsizenm(2);
+         mirroradd(1)=chipsizenm(2)*0; %as before
+         disp('transform_locsN.m line 99: check')
     case 'right'
 %         dx=chipsizenm(1)/2;
         dx=0; %XXXXXX
@@ -218,10 +219,15 @@ pixelsizerec=p.register_parameters.pixelsizenm;
 imr=myhist2(locref.x,locref.y,pixelsizerec,pixelsizerec,rangex,rangey);
 imt=myhist2(loctT.x,loctT.y,pixelsizerec,pixelsizerec,rangex,rangey);
 
+
 qimr=quantile(imr(:),.998);
-imr(imr>qimr)=qimr;
+if qimr>0
+    imr(imr>qimr)=qimr;
+end
 qimt=quantile(imt(:),.998);
-imt(imt>qimt)=qimt;
+if qimt>0
+    imt(imt>qimt)=qimt;
+end
 
 imr=sqrt(imr);
 imt=sqrt(imt);
@@ -310,7 +316,7 @@ end
 
 
 
-ztransform=isfield(locref,'znm')&&~isempty(locref.znm);
+ztransform=isfield(locref,'znm')&&~isempty(locref.znm)&& any(locref.znm~=0) && any(loctarget.znm~=0) ;
 if ztransform
     lref=horzcat(locref.x(iAa),locref.y(iAa),locref.znm(iAa));
     lt=horzcat(loctarget.x(iBa),loctarget.y(iBa),loctarget.znm(iBa));

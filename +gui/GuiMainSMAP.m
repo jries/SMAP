@@ -101,10 +101,20 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
              if k>1 %not default
                 obj.setPar('maindirectory',fileparts(settingsdir));
              end
-             disp(settingsdir);
+             disp(['settings directory: ' settingsdir]);
 %              end
 %              obj.setPar('maindirectory',pwd);
-            obj.setPar('SettingsDirectory',makerelativetopwr(settingsdir));
+            settingsdirrel=makerelativetopwr(settingsdir);
+            parentdir=fileparts(settingsdirrel);
+            obj.setPar('SettingsDirectory',settingsdirrel);
+            if ~isempty(parentdir)
+                pluginhelp=[parentdir filesep 'Documentation' filesep 'help' ];
+            else
+                pluginhelp=[ 'Documentation' filesep 'help' ];
+            end
+            disp(['plugin help directory: ' pluginhelp]);
+            obj.setPar('PluginHelpDirectory',pluginhelp);
+                
             initglobalsettings(obj);
             if ~isdeployed
                 addpath('shared');
@@ -134,39 +144,43 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             worked=false;
 %            try 
                 mainaddress='https://www.embl.de/download/ries/Documentation/';
-                docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf'};
-                if isdeployed
-                     outdir=[settingsdir filesep 'temp' filesep 'Documentation' filesep];
-                else
-                     outdir=[pwd filesep 'Documentation' filesep 'pdf' filesep];
-                end
-                if ~exist(outdir,'dir')
-                     mkdir(outdir)
-                end
-                
+                docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf','Getting_Started.pdf'};
+%                 if isdeployed
+%                      outdir=[settingsdir filesep 'temp' filesep 'Documentation' filesep];
+%                 else
+%                      outdir=[pwd filesep 'Documentation' filesep 'pdf' filesep];
+%                 end
+                 outdir= [fileparts(pluginhelp) filesep 'pdf' filesep];
+                 if ~exist(outdir,'dir')
+                      mkdir(outdir)
+                 end
                 for k=1:length(docfiles)
                     worked=worked|savewebfile([outdir docfiles{k}] ,[mainaddress docfiles{k}]);
                 end
 %             catch err
 %                 err
-%                 
+%                 s
 %             end
             if ~worked
                 disp(['could not download and save documentation pdfs. Help might not work. Make sure you have write access to settings. Move the settings directory to ' possibledirs]);
                 warndlg(['could not download and save documentation pdfs. Help might not work.  Make sure you have write access to settings. Move the settings directory to ' possibledirs])
             end
             
+            %update plugin file if new plugins are saved
             makeplugincallfile('plugins');
             
-            %add java path
+            %add java path to bioformats
                 bfpath=obj.getGlobalSetting('bioformatspath');
-            if exist(bfpath,'dir') && ~isdeployed
-                addpath(bfpath)
-                try
-                    bfCheckJavaPath;
-                catch
-                    disp('bioformats not found')
-                end
+                bffile=[bfpath filesep 'bioformats_package.jar'];
+                
+            if exist(bffile,'file') %&& ~isdeployed
+                javaaddpath(bffile);
+%                 addpath(bfpath)
+%                 try
+%                     bfCheckJavaPath;
+%                 catch
+%                     disp('bioformats not found')
+%                 end
             else
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
                 disp('you can download the Matalb toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
@@ -248,6 +262,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.status=uicontrol(handle,'Style','text','Units','normalized',...
                            'String','status','Position',[0 0 .8 0.035]);
             h.status.Units='pixels';
+            h.status.Tooltip='Progress of the current analysis';
             if ispc
                 hstatus=30;
             else
@@ -260,6 +275,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             h.errorindicator=uicontrol(handle,'Style','togglebutton','Units','normalized',...
                 'Position',[0.01,0.002,.03,.03],'String',' ','Callback',{@error_reset,obj});
+            h.errorindicator.Tooltip=sprintf('If an error occured during an analysis, this button turns \n red and you can read the error by clicking on it.');
             obj.addSynchronization('errorindicator',[],[],{@error_callback,obj,0}) 
             
             %Plugins

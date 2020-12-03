@@ -1,0 +1,19 @@
+This is the ROI manager main GUI. Here you can select ROIs. 
+
+These are stored if you save the data set as an _sml.mat file in the File tab.
+
+The settings for the ROI manager are found in the ROIs tab in the main GUI.
+
+Here you can also select evaluation plugins that are executed on all selected ROIs 
+and segmentation and analysis plugins.
+
+Click on the File list to render the overview image of the selected File. Then left-click in the
+image to define a cell. You can center the cell by right-clicking in the cell image. Add the cell 
+to the cell list with the Add button.
+
+Then select a ROI (site) in the cell. Center the ROI by right-clicking in the ROI image and add the 
+ROI to the list. You can always re-center ROIs and Cells by right-clicking.
+
+The superresolution images are rendered according to the settings in the Render tab.
+gui:Interpreter:none
+gui:Parameters:

@@ -108,16 +108,16 @@ classdef TifLoader<interfaces.WorkflowModule
 %             if p.parallelload
 %                 parp=gcp;
 %             end
-            allimages=0;
-            imcounter=0;
+%             allimages=0;
+%             imcounter=0;
             while ~isempty(image)&&imloader.currentImageNumber<=obj.framestop&&~SMAP_stopnow                
                 datout=interfaces.WorkflowData;
 
 %                 if obj.mirrorem %rather put to camera converter!
 %                     image=image(:,end:-1:1);
 %                 end
-                allimages=double(image)+allimages;
-                imcounter=imcounter+1;
+%                 allimages=double(image)+allimages;
+%                 imcounter=imcounter+1;
                 datout.data=image;
 
                 datout.frame=imloader.currentImageNumber;
@@ -127,7 +127,9 @@ classdef TifLoader<interfaces.WorkflowModule
                 obj.output(datout)
                 tfitall=tfitall+toc(th);
 
-      
+%                 if imloader.currentImageNumber>36327
+%                     disp('end')
+%                 end
 
                 
                 %display
@@ -158,7 +160,7 @@ classdef TifLoader<interfaces.WorkflowModule
             
             obj.setPar('tiffloader_loadingtime',tall);
             obj.setPar('tiffloader_fittime',tfitall);
-            obj.setPar('tiffloader_averagetiff',cast(allimages/imcounter,'like',image));
+%             obj.setPar('tiffloader_averagetiff',cast(allimages/imcounter,'like',image));
             dateof=interfaces.WorkflowData;
             dateof.frame=imloader.currentImageNumber+1;
             dateof.ID=id;
@@ -217,7 +219,7 @@ classdef TifLoader<interfaces.WorkflowModule
              if p.onlineanalysis
                  obj.guihandles.framestop.String='inf';
              else
-                numf=obj.imloader.metadata.numberOfFrames;
+                numf=obj.imloader.metadata.numberOfFrames+1;
                 if isnan(numf)
                     numf=inf;
                 end

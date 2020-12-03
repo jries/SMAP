@@ -14,8 +14,15 @@ classdef Vibrations<interfaces.DialogProcessor
         end
         function out=run(obj,p)
             layers=find(obj.getPar('sr_layerson'));
-            plotfields={'xnm','ynm','znm'};
-            plotfieldserr={'xnmerr','ynmerr','locprecznm'};
+
+            locs=obj.locData.getloc({'znm'},'position','roi','layer',1,'grouping','ungrouped');
+            if isempty(locs.znm)
+                plotfields={'xnm','ynm'};
+                plotfieldserr={'xnmerr','ynmerr'};
+            else
+                plotfields={'xnm','ynm','znm'};
+                plotfieldserr={'xnmerr','ynmerr','locprecznm'};
+            end
             for k=1:length(plotfields)
                 axx(k)=obj.initaxis(plotfields{k}(1));
                 axfx(k)=obj.initaxis(['fft(' plotfields{k}(1) ')']);
@@ -24,30 +31,62 @@ classdef Vibrations<interfaces.DialogProcessor
             legends={};
             for k=1:length(layers)
                 legends{k}=['layer' num2str(layers(k))];
-                locs=obj.locData.getloc({'xnm','ynm','znm','frame','filenumber','xnmerr','ynmerr','locprecznm'},'position','roi','layer',layers(k),'grouping','ungrouped');
-                if p.overwriteframetime
-                    dt=p.frametime;
+                locs=obj.locData.getloc({'xnm','ynm','znm','frame','filenumber','xnmerr','ynmerr','locprecznm','time'},'position','roi','layer',layers(k),'grouping','ungrouped');
+                if ~isempty(locs.time)
+                    locsplot=locs;
+                    locsnew=locs;
+                    told=locs.time;
+                    tplot=told;
+                    dt=quantile(diff(told),0.2)/2
+                    t=(min(told):dt:max(told))';
+                    Fs=1000/dt;
+                    for f=1:length(plotfields)
+                        x=locs.(plotfields{f});
+                        if ~isempty(x)
+                        xn=interp1(told,x,t);
+                        else
+                            xn=[];
+                        end
+                        locsnew.(plotfields{f})=xn;
+                    end
+                    locs=locsnew;
                 else
-                dt=obj.locData.files.file(locs.filenumber(1)).info.timediff;
+                    if p.overwriteframetime
+                        dt=p.frametime;
+                    else
+                    dt=obj.locData.files.file(locs.filenumber(1)).info.timediff;
+                    end
+                    dt
+                    Fs=1000/dt;
+                    t=locs.frame*dt;
+                    tplot=t;
+                    locsplot=locs;
                 end
-                dt
-                Fs=1000/dt;
-                t=locs.frame*dt;
                 for f=1:length(plotfields)
                     x=locs.(plotfields{f});
+                    xplot=locsplot.(plotfields{f});
                     if isempty(x)
                         continue
                     end
-                    plot(axx(f),t,x-mean(x))
+                    plot(axx(f),tplot,xplot-mean(xplot))
                     xlabel(axx(f),'time(ms)')
                     ylabel(axx(f),['d' plotfields{f} '(nm)']);
-                    title(axx(f),['SD = ' num2str(std(x),3) ', mean(locprec) = ' num2str(mean(locs.(plotfieldserr{f})),3) ' nm']);
+                    title(axx(f),['SD = ' num2str(std(xplot),3) ', mean(locprec) = ' num2str(mean(locs.(plotfieldserr{f})),3) ' nm']);
                     L=length(x);
                     xf=abs(fft(x)/L);
-                    xfp=2*xf(1:L/2+1);
+                    xfp=2*xf(1:floor(L/2)+1);
                     xfp(1)=0;
-                    freq=Fs*(0:(L/2))/L;
-                    semilogy(axfx(f),freq,xfp);
+                    freq=(Fs*(0:(L/2))/L)';
+                    semilogy(axfx(f),freq,xfp,'r');
+                    
+                    if length(freq)>2500
+                        dfh=round(length(freq)/2000);
+                        f2=freq(round(dfh/2):dfh:end);
+                        xfpb=bindata(freq,xfp,f2);
+                        hold(axfx(f),'on')
+                        semilogy(axfx(f),f2,xfpb,'b');
+                        ylim(axfx(f),[1e-5 1])
+                    end
                     xlabel(axfx(f),'frequency (Hz)')
                     ylabel(axfx(f),'Amplitude (nm), 2*fft (x)');
                     

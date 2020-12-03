@@ -554,6 +554,9 @@ yext=[roi(2) roi(2)+roi(4)]* pixrec(end);
 files=obj.locData.files.file;
 for k=1:length(files)
     roi=files(k).info.roi;
+    if length(roi)<4
+        continue
+    end
 xexth=[roi(1) roi(1)+roi(3)]* pixrec(1);
 yexth=[roi(2) roi(2)+roi(4)]* pixrec(end); 
 xext(1)=min(xext(1),xexth(1));xext(2)=max(xext(2),xexth(2));
@@ -573,6 +576,10 @@ p.sr_pixrec=max(px,py);
 
 p.sr_sizeRecPix=round(p.sr_size/p.sr_pixrec*2);
 p.sr_pos=[mean(xext) mean(yext)];
+% p.rangex=xext;
+% p.rangey=yext;
+p.extendrange=true;
+
 p.sr_axes=hax;
 
 p.sr_plotlayernames=false;

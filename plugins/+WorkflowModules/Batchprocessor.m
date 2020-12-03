@@ -24,6 +24,10 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
                 obj.guihandles.mainbatchfile.String=obj.mainbatchfile;
                 obj.guihandles.filelist.String={obj.mainbatchfile};
             end
+            pos1=obj.guihandles.stop.Position;
+            pos2=obj.guihandles.remove_button.Position;
+            pos1(1)=pos2(1);
+            obj.makeinfobutton(pos1);
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -374,7 +378,7 @@ pard.adddironline_button.position=[5,4];
 pard.adddironline_button.Width=1;
 
 
-pard.adddir_mask.object=struct('Style','edit','String','*_Localization_*');
+pard.adddir_mask.object=struct('Style','edit','String','*_Loc_*');
 pard.adddir_mask.position=[6,4];
 pard.adddir_mask.Width=1;
 
@@ -386,7 +390,7 @@ pard.adddir_minimages.position=[7,4.5];
 pard.adddir_minimages.Width=.5;
 
 
-pard.omitsml.object=struct('Style','checkbox','String','skip if .sml exist','Value',1);
+pard.omitsml.object=struct('Style','checkbox','String','skip if *_sml.mat exist','Value',1);
 pard.omitsml.position=[8,4];
 pard.omitsml.Width=1;
 
@@ -412,6 +416,7 @@ pard.stop.object=struct('Style','togglebutton','String','stop','Value',0);
 pard.stop.position=[12.3,4.5];
 pard.stop.Width=.5;
 
+pard.helpfile='SMAP.Gui.Batchprocessor.txt';
 pard.plugininfo.type='ProcessorPlugin'; 
 pard.plugininfo.description='Batch processing for a) fitting of batch files, b) of multiple image stacks, c) automatic fitting of any data written to a default directory';
 end

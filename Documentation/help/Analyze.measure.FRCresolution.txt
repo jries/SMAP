@@ -1,15 +1,45 @@
-FRC resolution. Uses ROI or FoV (if rendered image is ticked). 
-Implementation based on the matlab code provided with: 
+gui:Interpreter:tex
+Fourier Ring Correlation (FRC) resolution based on the matlab code provided with: 
 
-[1]	R. P. J. Nieuwenhuizen, K. A. Lidke, M. Bates, D. L. Puig, D. Grunwald, S. Stallinga, and B. Rieger, Measuring image resolution in optical nanoscopy., Nat Methods, vol. 10, no. 6, pp. 557-562, Jun. 2013.
+Nieuwenhuizen, Lidke, Bates, Puig, Grunwald, Stallinga, and Rieger, 
+Measuring image resolution in optical nanoscopy., Nat Methods, 10 (2013).
+
+The idea is to compare two independent images of the same sample. Real structures will appear
+in both images, whereas noise will be independent and thus not appear correlated in both images.
+
+This allows extraction of a direct resolution measure independent on relying on camera calibration or fitting routines. This resolution 
+not only depends on the localization precision, but also e.g. on the labeling density.
+
+In SMLM, independent images can be constructed from sub-sets of the data. For example, one can divide
+the data into N blocks and reconstruct image 1 from the even and image 2 from uneven block numbers.
+
+The images are compared cross-correlation, which in Fourier space becomes a multiplication. The correlation
+is calculated for rings of differnt radius in Fourier space, corresponding to different spatial frequencies. This
+allows plotting the correlation signal vs the spatial freuqency.
+
+Finally, a threshold value (typically 0.17 of the maximum of the correlation curve) identifies the maximum spatial frequency that 
+still shows a correlation.
+
+Note that here corrections for multiple activations are not integrated. Thus, for fluorophores that can be
+re-activated sevaral times and thus appear in many blocks, the single-molecule peak also contributes to the
+FRC resolution, not only structural details.
+
+gui:Interpreter:latex
+The FRC curve is defined as:
+
+$$ FRC(q)=\frac{\sum_{\vec{q} \in \textrm{circle}} \hat{f_1}(\vec{q})\hat{f_2}(\vec{q})^*}{\sqrt{\sum_{\vec{q} \in \textrm{circle}} \left|\hat{f_1}(\vec{q})\right|^2} \sqrt{\sum_{\vec{q} \in \textrm{circle}} \left|\hat{f_2}(\vec{q})\right|^2}} $$
+
+Here $\vec{q}$ is the spatial frequency and $\hat{f_1}$ and $\hat{f_2}$ are the Fourier transforms of image 1 and image 2, respectively.
+
+
 
 gui:Parameters:
-gui:blockassignment 
-gui:frc_blocks 
-gui:pixrec_frc 
+gui:blockassignment How blocks are assigned to the two images. Alteranting or Random.
+gui:frc_blocks Numer of blocks to calculate the two images.
+gui:pixrec_frc Pixel size of the reconstructed images 1 and 2 used for FRC 
 gui:t0 
-gui:t1 
-gui:t2 
+gui:t2=pixrec_frc 
 gui:t3 
-gui:t4 
-gui:takeimage 
+gui:t4=frc_blocks 
+gui:takeimage If checked, the pixel size of the current rendering is used. Othwerwise you can specify
+the pixel size. It should be several times smaller than the FRC resolution.

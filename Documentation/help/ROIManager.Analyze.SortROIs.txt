@@ -1,0 +1,23 @@
+Sort ROIs (sites) according to any parameter (e.g. evaluation results) or to combination of parameters.
+
+gui:Parameters:
+gui:direction1 Sort according to ascending or descending values 
+gui:direction2=direction1 
+gui:direction3=direction1  
+gui:direction4=direction1  
+gui:sortbutton1 Select the parameter (e.g. evaluation result) for sorting 
+gui:sortbutton2=sortbutton1 
+gui:sortbutton3=sortbutton1  
+gui:sortbutton4=sortbutton1  
+gui:sortedit1 Parameter (e.g. evaluation result) for sorting 
+gui:sortedit2=sortedit1 
+gui:sortedit3=sortedit1  
+gui:sortedit4=sortedit1  
+gui:sortprop1 Select category of results, afterwards press select button 
+gui:sortprop2=sortprop1 
+gui:sortprop3=sortprop1 
+gui:sortprop4=sortprop1 
+gui:title1 
+gui:title2 
+gui:title3 
+gui:title4 

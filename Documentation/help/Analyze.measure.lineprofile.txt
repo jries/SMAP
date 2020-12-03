@@ -1,0 +1,30 @@
+Calculates profiles along a linear ROI and fits it with a model of choice. All results in nm.
+
+Gauss: Fit with Gaussian. Results: sigma of the Gaussian and FWHM (directly measured 
+as distance of first to the last data point above half the maximum value).
+
+Flat: step function convolved with Gaussian (=Erf). Result FWHM as defined for the Gauss fit, 
+the step length and the sigma of the Gaussian used for convulution.
+
+Disk: Projection of a homogeneously filled disk, convolved with Gaussian. FWHM as defined for the Gauss fit. Disk R: Radius of the disk. Sigma: sigma of the Gaussian used for convolution.
+
+Ring: As for the disk, but for the projection of a ring (e.g. for side views on microtubules or other ring-like structures). 
+
+Distance: Fit with a double Gaussian with the same sigma. FWHM as defined for the Gauss fit, Distance d: distance between the maxima of the two Gaussians.
+
+The convolution with a Gaussian can also be fixed to the average localization precision.
+
+gui:Parameters:
+gui:binwidth Binwidth for profiles. If not checked, use pixel size of reconstruction.
+gui:fitmodel Model to fit: \n
+Gauss: Fit with Gaussian. \n
+Flat: step function convolved with Gaussian (=Erf). \n
+Disk: Projection of a homogeneously filled disk, convolved with Gaussian. \n
+Ring: Projection of a ring (e.g. for side views on microtubules or other ring-like structures). \n
+Distance: Fit with a double Gaussian with the same sigma. 
+
+gui:linelength This overrides the length of the ROI and uses a well-defined ROI. Useful for direct comparison.
+gui:linelengthcheck This overrides the length of the ROI and uses a well-defined ROI. Useful for direct comparison.
+gui:restrictsigma If checked, the sigma of the Gaussian used for convulution is not fitted, but the average localization precision is used instead.
+gui:setbinwidth Binwidth for profiles. If not checked, use pixel size of reconstruction
+gui:text2=fitmodel 

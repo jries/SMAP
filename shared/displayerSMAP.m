@@ -114,9 +114,9 @@ if ~isfield(p,'sr_colorbarthickness')
 end
 for k=1:(length(layers))
     if p.sr_layerson(k)&&~isempty(layers(k).images)
-        if k<=4 && (isempty(p.sr_colorbarthickness) ||  p.sr_colorbarthickness>0)
-        imfinal=addcolorbar(imfinal,layers(k).images.finalImages.lut,k,p.sr_colorbarthickness);
-        end
+%         if k<=4 && (isempty(p.sr_colorbarthickness) ||  p.sr_colorbarthickness>0)
+%         imfinal=addcolorbar(imfinal,layers(k).images.finalImages.lut,k,p.sr_colorbarthickness);
+%         end
         rangexplot=layers(k).images.finalImages.rangex;
          rangeyplot=layers(k).images.finalImages.rangey;
     end
@@ -148,7 +148,17 @@ else
    
 end
     
-
+colorpos=1;
+for k=1:(length(layers))
+    if p.sr_layerson(k)&&~isempty(layers(k).images)
+        if k<=4 && (isempty(p.sr_colorbarthickness) ||  p.sr_colorbarthickness>0)
+        imfinal=addcolorbar(imfinal,layers(k).images.finalImages.lut,colorpos,p.sr_colorbarthickness);
+        colorpos=colorpos+1;
+        end
+%         rangexplot=layers(k).images.finalImages.rangex;
+%          rangeyplot=layers(k).images.finalImages.rangey;
+    end
+end
     
     if isfield(p,'sr_axes')&&~isempty(p.sr_axes)&&ishandle(p.sr_axes)&&~isempty(rangexplot)&&~isempty(rangeyplot)
         sr_imagehandle=image(rangexplot/1000,rangeyplot/1000,imfinal,'Parent',p.sr_axes,'Pickable','none','HitTest','off');
@@ -184,8 +194,8 @@ end
                         dx=0;
                         dy=dxy;
                      end
-                     px=layers(k).images.srimage.rangex(1)/1000+dx+p.sr_pixrec/1000*5;
-                     py=layers(k).images.srimage.rangey(1)/1000;
+                     px=double(layers(k).images.srimage.rangex(1)/1000+dx+p.sr_pixrec/1000*5);
+                     py=double(layers(k).images.srimage.rangey(1)/1000);
                      lutm=mean(lut,1);lutm=lutm/max(lutm);
                      th=text(p.sr_axes,px,py,p.layernames{k},'Color',lutm,'FontSize',fontsize,'BackgroundColor','k','Units','data');
 %                      th.Units='pixels';

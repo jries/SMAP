@@ -25,6 +25,9 @@ end
 function makeGui(obj)
 if isempty(obj.figure) || ~isvalid(obj.figure)
     obj.figure=figure('MenuBar','none','Name','Search in Help','Units','pixels');
+    smappos=obj.getPar('mainGuihandle').Position;
+    obj.figure.Position(1)=smappos(1)+smappos(3);
+    obj.figure.Position(2)=smappos(2);
     obj.figure.Position(3:4)=[700 800];
     obj.figure.Units='normalized';
     obj.handle=obj.figure;
@@ -35,7 +38,7 @@ h.searchbutton=uicontrol(hf, 'Style','pushbutton','String','Search','Units','nor
     'Callback',{@search_callback,obj});
 h.resultslist=uicontrol(hf,'Style','listbox','Units','normalized','Position',[0.02,0.02,0.3,0.9],'Callback',{@list_callback,obj});
 h.resultspanel=uipanel(hf,'Units','normalized','Position',[0.32,0.22,0.66,0.7],'BackgroundColor','w');
-h.resultstt=uicontrol(hf,'Style','edit','Units','normalized','Position',[0.32,0.02,0.66,0.2],'BackgroundColor','w','HorizontalAlignment','left');
+h.resultstt=uicontrol(hf,'Style','edit','Units','normalized','Position',[0.32,0.02,0.66,0.2],'BackgroundColor','w','HorizontalAlignment','left','Max',100);
 
 obj.guihandles=h;
 end
@@ -65,36 +68,45 @@ end
 function list_callback(a,b,obj)
 select=a.Value;
 allindh=obj.searchind(select);
-delete(obj.annotation)
-ss=obj.guihandles.searchstring.String;
-[description,tooltips,interpreter]=parsehelpfile(obj.alltxt.text{allindh});
-txtformat=strrep(description,'\n',newline);
-ind=strfind(txtformat,ss);
-txtformat=setbold(txtformat,ind,length(ss),interpreter);
-
-fname=strrep(obj.alltxt.filenames{allindh},'_','\_');
-txt=[setbold(fname, 1,length(fname),interpreter) newline txtformat];
-%find searchstring and set bold.
-fn=fieldnames(tooltips);
-txttt='';
-for k=1:length(fn)   
-%     indf=strfind(fn{k},ss);
-    fnh=fn{k};
-%     indt=strfind(tooltips.(fn{k}) ,ss);
-    tth=strrep(tooltips.(fn{k}), newline,' ');
-    tth=regexprep(tth,' +',' ');
-    txttt{k}=[fnh ': ' tth];
-%     txttt=[txttt fnh ': ' tth newline];
+for  k=1:length(obj.annotation)
+delete(obj.annotation{k})
 end
-
-
+ss=obj.guihandles.searchstring.String;
+[description,tooltips]=parsehelpfile(obj.alltxt.text{allindh});
+fn=fieldnames(description);
+for k=1:length(fn)
+    ind=strfind(description.(fn{k}),ss);
+    description.(fn{k})=setbold(description.(fn{k}),ind,length(ss),fn{k});
+end
+% txtformat=strrep(description,'\n',newline);
+% ind=strfind(txtformat,ss);
+% txtformat=setbold(txtformat,ind,length(ss),interpreter);
+if isempty(tooltips)
+    txttt{1}='';
+else
+    fname=strrep(obj.alltxt.filenames{allindh},'_','\_');
+    % txt=[setbold(fname, 1,length(fname),interpreter) newline txtformat];
+    %find searchstring and set bold.
+    fn=fieldnames(tooltips);
+    txttt='';
+    for k=1:length(fn)   
+    %     indf=strfind(fn{k},ss);
+        fnh=fn{k};
+    %     indt=strfind(tooltips.(fn{k}) ,ss);
+        tth=strrep(tooltips.(fn{k}), newline,' ');
+        tth=regexprep(tth,' +',' ');
+        txttt{k}=[fnh ': ' tth];
+    %     txttt=[txttt fnh ': ' tth newline];
+    end
+end
 pos=[0 0 .65 1];
-obj.annotation=annotation(obj.guihandles.resultspanel,'textbox',pos,...
-             'HorizontalAlignment','left',...
-             'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
-             'String',(txt),'Interpreter',interpreter,'FontSize',12);
-          obj.annotation.Position=pos;
-          obj.guihandles.resultstt.Max=100;
+obj.annotation=showpluginhelp(obj.guihandles.resultspanel,description,pos);
+% obj.annotation=annotation(obj.guihandles.resultspanel,'textbox',pos,...
+%              'HorizontalAlignment','left',...
+%              'BackgroundColor','w','FitBoxToText','off','EdgeColor','w',...
+%              'String',(txt),'Interpreter',interpreter,'FontSize',12);
+%           obj.annotation.Position=pos;
+obj.guihandles.resultstt.Max=100;
  obj.guihandles.resultstt.String=txttt;       
 end
 
