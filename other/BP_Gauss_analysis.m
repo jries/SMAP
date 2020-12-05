@@ -1,21 +1,26 @@
 
-pixs=100;
+% pixs=100;
 dz=10;
+zoff=750;
 
 %% BEADS: calibrate sx
-figure(88);
+pixs=g.locData.files.file(1).info.cam_pixelsize_um(1)*1000;
+loc=g.locData.getloc({'PSFxnm','PSFynm','frame'},'layer',1,'position','roi');
+indg=loc.PSFxnm>0.1&loc.PSFynm>0.1;
+sx=loc.PSFxnm(indg)/pixs;
+sy=loc.PSFynm(indg)/pixs;
 
-sx=g.locData.loc.PSFxnm/pixs;
-sy=g.locData.loc.PSFynm/pixs;
-frame=g.locData.loc.frame;
-z=frame*dz;
-plot(frame,sx,'.',frame,sy,'.')
+
+frame=loc.frame(indg);
+z=frame*dz-zoff;
+figure(88);
+plot(frame,sx,'+',frame,sy,'.')
 
 ds=sx.^2-sy.^2;
 figure(89)
 plot(frame,ds,'.')
 
-range=[45,95];
+range=[44,100];
 
 inr=frame>range(1)&frame<range(2);
 
@@ -23,52 +28,29 @@ figure(89)
 hold off
 plot(ds(inr),z(inr),'.')
 
-calbead=fit(ds(inr),z(inr),'poly4');
+calbead=fit(ds(inr),z(inr),'smoothingspline','SmoothingParam',.1);
 hold on
-plot(ds(inr),calbead(ds(inr)))
+nds=min(ds(inr)):0.1:max(ds(inr));
+plot(nds,calbead(nds))
 
 maxrangeds=[min(ds(inr)) max(ds(inr))];
+%%
+pfad=[fileparts(g.locData.files.file(1).name) filesep 'beadcal_Gauss_smoothingspline'];
+save(pfad,'calbead','maxrangeds')
 
 %% data: calculate z
+pixs=g.locData.files.file(1).info.cam_pixelsize_um(1)*1000;
 outz=1000;
 sx=g.locData.loc.PSFxnm/pixs;
 sy=g.locData.loc.PSFynm/pixs;
 ds=sx.^2-sy.^2;
 z=calbead(ds);
-g.locData.loc.znm=z-750;
+g.locData.loc.znm=z;
 
-outofrange=ds<maxrangeds(1) | ds>maxrange(2);
+outofrange=ds<maxrangeds(1) | ds>maxrangeds(2) | sx==0 | sy==0;
 g.locData.loc.znm(outofrange)=outz;
+g.locData.regroup;
+
 
 %% data: average x,y
-trafo=g.locData.files.file.transformation;
-inref=trafo.getRef(g.locData.loc.xnm,g.locData.loc.ynm);
-cr=[g.locData.loc.xnm(inref),g.locData.loc.ynm(inref)];
-ct=[g.locData.loc.xnm(~inref),g.locData.loc.ynm(~inref)];
-ctt=trafo.transformToReference(2,ct/pixs)*pixs;
-lr.x=g.locData.loc.xnm;lr.y=g.locData.loc.ynm;lr.frame=g.locData.loc.frame;
-ft=g.locData.loc.frame(~inref);
-locpt=g.locData.loc.locprecnm(~inref);
-lt.x=ctt(:,1);lt.y=ctt(:,2);lt.frame=ft;
-[iA,iB]=matchlocsall(lr,lt,0,0,500);
-
-normw=1./g.locData.loc.locprecnm(iA).^2+1./locpt(iB).^2;
-xav=(lr.x(iA)./g.locData.loc.locprecnm(iA).^2+lt.x(iB)./locpt(iB).^2)./normw;
-yav=(lr.y(iA)./g.locData.loc.locprecnm(iA).^2+lt.y(iB)./locpt(iB).^2)./normw;
-
-figure(91)
-plot(lr.y(iA),lt.y(iB),'.')
-
-
-% plot(g.locData.loc.xnm(inref),g.locData.loc.ynm(inref),'.',g.locData.loc.xnm(~inref),g.locData.loc.ynm(~inref),'.')
-figure(92)
-plot(g.locData.loc.xnm(inref),g.locData.loc.ynm(inref),'.',cn(:,1),cn(:,2),'.',xav,yav,'.')
-
-
-ind=true(size(g.locData.loc.xnm));
-ind(iA)=false;
-g.locData.removelocs(ind)
-g.locData.loc.xnm=xav; 
-g.locData.loc.ynm=yav;
-
-g.locData.regroup;
+%use combine channels plugin 
