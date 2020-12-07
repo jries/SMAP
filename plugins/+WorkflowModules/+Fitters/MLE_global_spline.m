@@ -253,8 +253,8 @@ for k=1:length(names)
             switch fitpar.mainchannel
                 case 1
                     locs.([names{k} 'err'])=1./sqrt(1./ve(:,1).^2+1./ve(:,2).^2)*sqrt(2);
-                    ve(:,1)=ve(:,1)/errfactor(1);
-                    ve(:,2)=ve(:,2)/errfactor(2);
+                    ve(:,1)=(ve(:,1)/errfactor(1)).^2; %use as weights the correct 1/sigma^2
+                    ve(:,2)=(ve(:,2)/errfactor(2)).^2;
                     locs.(names{k})=sum(v./ve,2)./sum(1./ve,2); %average based on CRLB before weighting
                 case 2
                     locs.(names{k})=v(:,1);

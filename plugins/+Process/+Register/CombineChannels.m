@@ -45,13 +45,13 @@ classdef CombineChannels<interfaces.DialogProcessor
                 unmatchedB=copystructReduce(loctt,uiB);
                 fn=fieldnames(loc);
                 if isfield(matchedA,'locprecnm')
-                    wA=1./matchedA.locprecnm;
-                    wB=1./matchedB.locprecnm;
+                    wA=1./matchedA.locprecnm.^2;
+                    wB=1./matchedB.locprecnm.^2;
                 else
                     photA=matchedA.phot;
                     photB=matchedB.phot;
-                    wA=sqrt(photA);
-                    wB=sqrt(photB);
+                    wA=(photA);
+                    wB=(photB);
                 end
                 for k=1:length(fn)
                     switch fn{k}

@@ -17,9 +17,20 @@ classdef Biplane_getPSFxy<interfaces.DialogProcessor
                 out.error='selected transformation file does not have a valid transformation';
                 return
             end
-            file=obj.locData.files.file(p.dataselect.Value);
+            
              p.datapart.selection='all';
-            loc=get2ClocPSF(obj.locData.loc,tload.transformation,file,p);
+             if p.allfiles
+                 loc=obj.locData.loc;
+                 keepold=true;
+                 for k=1:length(obj.locData.files.file)
+                     k
+                     loc=get2ClocPSF(loc,tload.transformation,obj.locData.files.file(k),p,keepold);
+                 end
+             else
+                 file=obj.locData.files.file(p.dataselect.Value);
+                 keepold=false;
+                loc=get2ClocPSF(obj.locData.loc,tload.transformation,file,p,keepold);
+             end
             obj.locData.loc=copyfields(obj.locData.loc,loc);
             obj.locData.regroup;
              obj.setPar('locFields',fieldnames(obj.locData.loc))
@@ -53,21 +64,43 @@ classdef Biplane_getPSFxy<interfaces.DialogProcessor
 end
 
 
-function loco=get2ClocPSF(loc,transform,file,p)
+function loco=get2ClocPSF(loc,transform,file,p,keepold)
 
- p.datapart.selection='all (T->R)';
-loct=apply_transform_locs(loc,transform,file,p);
+p.datapart.selection='all (T->R)';
+% p.datapart.selection='target';
+infi=file.number==loc.filenumber;
+
+inref=transform.getRef(loc.xnm,loc.ynm);
+locref=copystructReduce(loc,infi&inref);
+locth=copystructReduce(loc,infi&~inref);
+loct=apply_transform_locs(locth,transform,file,p);
 
 % only valid parts?
-[iA,iB,uiA,uiB]=matchlocsall(renamefields(loc),renamefields(loct),0,0,1000);
+[iA,iB,uiA,uiB]=matchlocsall(renamefields(locref),renamefields(loct),0,0,1000);
 length(iA)/(length(uiA)+length(uiB))
-loco.PSFxnm_old=loc.PSFxnm;
-loco.PSFxnm=zeros(size(loc.xnm),'single');
-loco.PSFynm=zeros(size(loc.xnm),'single');
-loco.PSFxnm(iA)=loc.PSFxnm(iA);
-loco.PSFynm(iA)=loc.PSFxnm(iB);
-loco.PSFxnm(iB)=loc.PSFxnm(iA);
-loco.PSFynm(iB)=loc.PSFxnm(iB);
+inffr=find(infi&inref);
+infft=find(infi&~inref);
+
+
+if ~keepold
+    loco.PSFxnm_old=loc.PSFxnm;
+    loco.PSFxnm=zeros(size(loc.xnm),'single');
+    loco.PSFynm=zeros(size(loc.xnm),'single');
+else
+    loco=loc;
+    if ~isfield(loco,'PSFxnm')
+        loco.PSFxnm=zeros(size(loc.xnm),'single');
+    end
+    if ~isfield(loco,'PSFynm')
+        loco.PSFynm=zeros(size(loc.xnm),'single');
+    end
+end
+
+
+loco.PSFxnm(inffr(iA))=loc.PSFxnm(inffr(iA));
+loco.PSFynm(inffr(iA))=loc.PSFxnm(infft(iB));
+loco.PSFxnm(infft(iB))=loc.PSFxnm(inffr(iA));
+loco.PSFynm(infft(iB))=loc.PSFxnm(infft(iB));
 end
 
 function loco=renamefields(loci)
@@ -84,6 +117,8 @@ pard.texta.position=[1,1];
 pard.dataselect.object=struct('Style','popupmenu','String','File');
 pard.dataselect.position=[2,1];
 
+pard.allfiles.object=struct('Style','checkbox','String','all files');
+pard.allfiles.position=[2,2];
 % pard.datapart.object=struct('Style','popupmenu','String','all|left|right|top|bottom');
 % pard.datapart.position=[3,1];
 
