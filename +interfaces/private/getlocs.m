@@ -270,7 +270,7 @@ if isempty(p.fields)||any(strcmpi(p.fields,'all'))
     p.fields=fieldnames(locs);
 end
 
- for k=1:length(p.fields)
+for k=1:length(p.fields)
      field=p.fields{k};
      if isfield(locs,field)
          vh=addshift(locs.(field),field,p.shiftxy);
@@ -294,10 +294,9 @@ end
             locsout.(p.fields{k})=indlayer;            
      else
          locsout.(field)=[];
+         warning(['locData.getloc called with non-existing field: ' field])
      end
- end            
-
- 
+end            
 end
 
 function out=addshift(in,field,shift)
