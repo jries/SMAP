@@ -562,8 +562,9 @@ v=obj.locData.getloc(field,'layer',obj.layer).(field);
 if ~isempty(v) && obj.getSingleGuiParameter('colorauto')
 obj.locData.loc.colorfield=single(obj.locData.loc.(field));
 obj.locData.grouploc.colorfield=single(obj.locData.grouploc.(field));
-q=myquantilefast(v,[0.02,0.98]);
-if q(2)-q(1)==0
+q0=myquantilefast(v,[0.001,0.999]);
+q=myquantilefast(v(v>q0(1)&v<q0(2)),[0.01,0.99]);
+if isempty(q) || q(2)-q(1)==0
     q(2)=max(v);
     q(1)=min(v);
 end
