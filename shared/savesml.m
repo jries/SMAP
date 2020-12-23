@@ -22,6 +22,8 @@ end
 if isfield(p,'savefile') && p.savefile
     filenumber=p.dataselect.Value;
 %     indg=indg&locData.loc.filenumber==filenumber;
+elseif isfield(p,'saveSepFile') && p.saveSepFile
+    lastfile=locData.files.filenumberEnd;
 else
     filenumber=[];
 end
@@ -42,9 +44,15 @@ end
 %     saveloc.loc.filenumber=ones(size(locData.loc.filenumber));
 % end
 
-
-saveloc=locData.savelocs(file,indg,[],[],excludesavefields,filenumber); % BETA , maybe problematic with more than 1 file: this will save only displayed loicalizations
-
+if isfield(p,'saveSepFile') && p.saveSepFile % Yu-Le added
+    for k = 1:lastfile
+        filenumber = k;
+        oneFile = [file(1:end-8) '_' num2str(filenumber) '_' file(end-7:end)];
+        saveloc=locData.savelocs(oneFile,indg,[],[],excludesavefields,filenumber);
+    end
+else
+    saveloc=locData.savelocs(file,indg,[],[],excludesavefields,filenumber); % BETA , maybe problematic with more than 1 file: this will save only displayed loicalizations
+end
 
 
 % rg=p.mainGui; 
