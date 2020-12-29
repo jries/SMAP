@@ -84,7 +84,9 @@ classdef VersatileRenderer<interfaces.DialogProcessor
                     if lp{k}.lutinv
                         lut=1-lut;
                     end                    
-                    lutm=mean(lut,1);lutm=lutm/max(lutm);
+%                     lutm=mean(lut,1);
+                    lutm=lut(end/2,:);
+                    lutm=lutm/max(lutm);
 
                     loch=obj.locData.getloc({p.assignfield1.selection, p.assignfield2.selection },'position','roi','layer',layers(k));
                     v1=loch.(p.assignfield1.selection);
