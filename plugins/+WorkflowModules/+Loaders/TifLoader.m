@@ -309,6 +309,9 @@ catch err
     obj.status('error in loading file. Choose different tiff loader')
     err
 end  
+outfile=[obj.getPar('loc_fileinfo').basefile];
+[path, file]=fileparts(outfile);
+obj.setPar('loc_outputfilename',[path filesep file  '_sml.mat'])
 end
 
 % function mirrorem_callback(a,b,obj)

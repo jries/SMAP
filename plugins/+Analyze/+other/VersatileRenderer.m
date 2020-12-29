@@ -71,6 +71,31 @@ classdef VersatileRenderer<interfaces.DialogProcessor
             xlabel(ax,p.assignfield1.selection)
             ylabel(ax,p.assignfield2.selection)
             axis(ax,'xy')
+            
+            linemode=p.plotline.selection;
+            if ~strcmp(linemode,'none')
+                rangex=p.min1:p.pixelsize1:p.max1;
+                layers=find(obj.getPar('sr_layerson'));
+                 hold(ax,'on')
+         
+                for k=1:length(layers)
+                    lp{k}.lut.selection
+                    lut=mymakelut(lp{k}.lut.selection);
+                    if lp{k}.lutinv
+                        lut=1-lut;
+                    end                    
+                    lutm=mean(lut,1);lutm=lutm/max(lutm);
+
+                    loch=obj.locData.getloc({p.assignfield1.selection, p.assignfield2.selection },'position','roi','layer',layers(k));
+                    v1=loch.(p.assignfield1.selection);
+                    v2=loch.(p.assignfield2.selection);
+                    linedat=bindata(v1,v2,rangex,linemode);
+                    plot(ax,rangex,linedat,'k','LineWidth',3)
+                    plot(ax,rangex,linedat,'Color',lutm)
+                end
+                hold(ax,'off')
+            end
+            
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -154,6 +179,11 @@ pard.max1.object=struct('String','','Style','edit');
 pard.max1.position=[5,2];
 pard.max2.object=struct('String','','Style','edit');
 pard.max2.position=[5,3];
+
+pard.plotlinet.object=struct('String','Plot line:','Style','text');
+pard.plotlinet.position=[7,1];
+pard.plotline.object=struct('String',{{'none','mean','median','std','robustmean'}},'Style','popupmenu');
+pard.plotline.position=[7,2];
 
 % pard.t6.object=struct('String','sigma rec (pix)','Style','text');
 % pard.t6.position=[3,4];
