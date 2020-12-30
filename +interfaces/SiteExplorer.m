@@ -263,7 +263,7 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
                 site=obj.sites(ind);
             end
             
-            if isempty(site.image)
+            if isempty(site.image) || ~isempty(haxz)
                 
 %                  display('draw site')
     %             p1=obj.locData.parameters;
@@ -303,6 +303,13 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
     %             haxz=gca;
 
                 if ~isempty(haxz)
+                    p1.rotationanglez=angle;
+                    if isfield(site.annotation,'polarangle')
+                        p1.polarangle=site.annotation.polarangle;
+                    else
+                        p1.polarangle=0;
+                    end
+                    
                     p1.sr_size(3)=obj.locData.getPar('se_dz')/2;
                     [site.image, imz]=obj.plotobject(p1,site.info.filenumber,pl);%filenumber
                 else
@@ -310,10 +317,32 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
                 end
                 site.image.angle=p1.rotationangle; %remove later? not needed
                 if ishandle(haxz)
-                    displayimage(imz,haxz);
-                    axis(haxz,'equal')
-                    set(haxz,'YDir','normal')
-                    line(site.pos(1)/1000+[-1 1]*p1.sr_size(1),[site.pos(3) site.pos(3)]/1000,'Color',[1 1 1],'Parent',haxz,'LineWidth',1)
+                    if iscell(imz)
+                        imzc.image=horzcat(imz{2}.image(end:-1:1,:,:), imz{1}.image); 
+                        imzc.rangey=imz{1}.rangey;
+                        imzc.rangex=[ imz{2}.rangex(1)-imz{2}.rangex(2) imz{1}.rangex(2)-imz{1}.rangex(1)];
+%                         imzc.image=vertcat(imz{1}.image, imz{2}.image);
+%                         imzc.rangex=imz{1}.rangex;
+%                         imzc.rangey=[ imz{1}.rangey(1)-imz{1}.rangey(2) imz{2}.rangey(2)-imz{2}.rangey(1)];
+                    else
+                        imzc=imz;
+                    end
+                        displayimage(imzc,haxz);
+                        axis(haxz,'equal')
+                        set(haxz,'YDir','normal')
+                        axis(haxz,'tight')
+                        haxz.XTick=0;
+                        haxz.YTick=0;
+                        haxz.XTickLabel={};
+                        haxz.YTickLabel={};
+                        haxz.TickDir='out';
+                        haxz.YAxisLocation='right';
+                        haxz.Box='on';
+%                         axis(haxz,'off')
+                        fl='%2.0f';
+                        title(haxz,['\theta=' num2str(p1.polarangle,fl) '\circ, \rho=' num2str(p1.rotationanglez,fl) '\circ, z= ' num2str(p1.sr_pos(3),fl) ' nm'])
+%                         line(site.pos(1)/1000+[-1 1]*p1.sr_size(1),[site.pos(3) site.pos(3)]/1000,'Color',[1 1 1],'Parent',haxz,'LineWidth',1)
+                    
 %                     plotbox
                 end
             end
@@ -493,19 +522,35 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
 %                      rawimage=renderSMAP(obj.locData,pr,k);
                     
                     if ~isempty(locz.znm)&&nargout>1
-                        locz.x=locz.xnm;locz.y=locz.znm;
-                        locz.sx=locz.locprecnm;locz.sy=locz.locprecznm;
                         prz=pr;
-                        prz.normalizeFoV=[];
                         if length(prz.sr_pos)<3
-                            prz.sr_pos(2)=0;
-                        else
-                            
-                            prz.sr_pos(2)=prz.sr_pos(3);
+                            prz.sr_pos(3)=0;
                         end
+                        xi=locz.xnm-posh(1);
+                        yi=locz.ynm-posh(2);
+                        zi=locz.znm-prz.sr_pos(3);
+                        [x2,y2]=rotcoorddeg(xi,yi,pr.rotationanglez);
+                        [y3,z3]=rotcoorddeg(y2,zi,pr.polarangle);
+                        
+%                         locz.x=locz.xnm;locz.y=locz.znm;
+                        
+                        locz.sx=locz.locprecnm;locz.sy=locz.locprecznm;
+                        
+                        prz.normalizeFoV=[];
+                        prz.sr_pos=[0,0,0];
+%                         if length(prz.sr_pos)<3
+%                             prz.sr_pos(2)=0;
+%                         else
+%                             prz.sr_pos(2)=prz.sr_pos(3);
+%                         end
                         prz.sr_size(2)=prz.sr_size(3);
+                        locz.x=x2;locz.y=z3;
                         rawimagez=renderSMAP(locz,prz,k);
+                        locz.x=x2;locz.y=y3;
+                        rawimagezxy=renderSMAP(locz,prz,k);
                         layersz(k).images.finalImages=drawerSMAP(rawimagez,prz);
+                        layerszxy(k).images.finalImages=drawerSMAP(rawimagezxy,prz);
+                        
                         plotz=true;
                     end
                     
@@ -527,7 +572,9 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
            image.imax=imax;
            
            if plotz
-               imagez=displayerSMAP(layersz,prz);
+               imagez{1}=displayerSMAP(layersz,prz);
+               imagez{2}=displayerSMAP(layerszxy,prz);
+%                imagez=vertcat(imagezxy,imagez);
            end
 %            axis equal
             

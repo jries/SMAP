@@ -8,6 +8,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
         files %localization files and file meta data
         SE %siteexplorer object, linked here why?
         history={};
+        warning=false;
 %         iscopy=true;
     end
     

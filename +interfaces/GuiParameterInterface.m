@@ -3,7 +3,7 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
     %parameters such as synchronization
     properties
        syncParameters %cell array of {field, handle of uicontrol, syncmode ='String|Value|otherproperty'}. Set in guidef.
-      
+       
     end
     methods
         function addSynchronization(obj,field,handle,syncmode,changecallback)
@@ -195,14 +195,15 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                 end
             else
                 value=[];
-                pluginh='?';
+%                 pluginh='?';
                 try
                     pluginh=obj.pluginpath{end};
+                    if obj.getparwarning
+                        warning(['obj.getPar: "' field '" not a parameter, plugin: ' pluginh])
+                    end
                 catch err
-              
+%                     disp(['obj.getPar: "' field '" not a parameter, plugin: ' pluginh])
                 end
-                warning(['obj.getPar: ' field ' not a parameter, plugin: ' pluginh])
-               
             end      
         end
         

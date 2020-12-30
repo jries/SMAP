@@ -294,7 +294,9 @@ for k=1:length(p.fields)
             locsout.(p.fields{k})=indlayer;            
      else
          locsout.(field)=[];
-         warning(['locData.getloc called with non-existing field: ' field])
+         if locData.warning
+            warning(['locData.getloc called with non-existing field: ' field])
+         end
      end
 end            
 end

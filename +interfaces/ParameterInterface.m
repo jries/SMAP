@@ -4,6 +4,7 @@ classdef ParameterInterface<handle
         P %interfaces.ParameterData. Parameters are saved here
         inputParameters %parameters a module needs from P. Passed on to getAllParameters etc
         outputParameters %parameter a module provides. 
+        getparwarning=true;
     end
     methods
         function attachPar(obj,par)
@@ -38,7 +39,9 @@ classdef ParameterInterface<handle
                 else
                     pluginh='?';
                 end
-                warning(['obj.getPar: ' field ' not a parameter, plugin: ' pluginh])
+                if obj.getparwarning
+                    warning(['obj.getPar: ' field ' not a parameter, plugin: ' pluginh])
+                end
             end
         end
         function p=getAllParameters(obj,inputParameters)   
