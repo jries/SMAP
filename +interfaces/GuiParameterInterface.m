@@ -195,6 +195,13 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                 end
             else
                 value=[];
+                pluginh='?';
+                try
+                    pluginh=obj.pluginpath{end};
+                catch err
+              
+                end
+                warning(['obj.getPar: ' field ' not a parameter, plugin: ' pluginh])
                
             end      
         end

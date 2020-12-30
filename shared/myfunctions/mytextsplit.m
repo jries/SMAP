@@ -9,6 +9,14 @@ end
 ind=1;
 indl=1;
 to='';
+s=size(txt);
+if s(1)>1
+    txto='';
+    for k=1:s(1)
+        txto=[txto txt(k,:) 10];
+    end
+    txt=txto;
+end
 while 1
     searchrange=max(1,ind+width-tol):min(ind+width+tol,length(txt));
     if isempty(searchrange)

@@ -62,79 +62,96 @@ if p.fixpsf
     PSFypix=PSFxpix;
 end
  nrange=-dn:dn;
-if ~p.fitonbg%nargin<7||isempty(bgroi)
+ 
+switch p.fitmode.selection
+ 
+    case 'fit'
+        if ~p.fitonbg%nargin<7||isempty(bgroi)
 
-    for k=1:sim(3)
-        gauss=make2DGaussfast(dx(k),dy(k),PSFxpix(k),PSFypix(k),nrange);
-%         gauss=exp((-(dx(k)-X).^2)/2/PSFxpix(k)^2-((dy(k)-Y).^2)/2/PSFypix(k)^2)/pi/PSFxpix(k)/PSFypix(k)/2;
-%         weights=sqrt(gauss);
-        Xmat=horzcat(gauss(:), gauss(:)*0+1);
-        roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
-        outp(k,1:2)=Xmat\roih(:);
-        
-        imgfit=gauss*outp(k,1)+outp(k,2);
-        resim=imgfit-roih;
-        res=sqrt(resim.^2./max(imgfit,1));
-        outp(k,3)=mean(res(:));
-        if  0% info.phot(k)>2500 %outp(k,1)>300 %any(roih(:))%p(k,1)>2500~
-            outp(k,:)
-            outp(k,1)./info.phot(k)
-            figure(67)
-            subplot(2,2,1)
-            imagesc(-dn:dn,-dn:dn,roih);
-            hold on
-            plot(dx(k),dy(k),'+')
-            hold off
-            subplot(2,2,2);
-            imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2))
-            hold on
-            plot(dx(k),dy(k),'+')
-            hold off
-            subplot(2,2,3);
-            imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2)-roih)
-            subplot(2,2,4);
-            imagesc(-dn:dn,-dn:dn,res)
-            waitforbuttonpress
-        end
-    end
-else %fit bg
-%     bgnorm=(2*dn+1)^2;
-    nrange=-dn:dn;
-    for k=1:sim(3)
-        bgh=bg(k);
-%         exponent=(-(dx(k)-X).^2)/2/PSFxpix(k)^2-((dy(k)-Y).^2)/2/PSFypix(k)^2;
-%         gauss=exp(exponent)/pi/PSFxpix(k)/PSFypix(k)/2;
-        gauss=make2DGaussfast(dx(k),dy(k),PSFxpix(k),PSFypix(k),nrange);
-%         weights=sqrt(gauss);
-        Xmat=horzcat(gauss(:));
-%         bgh=bg(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
-        roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k)-bgh;
-        outp(k,1)=Xmat\roih(:);
-        outp(k,2)=bgh;
-        imgfit=gauss*outp(k,1)+outp(k,2);
-        resim=imgfit-roih;
-        res=resim.^2./max(imgfit,1);
-        outp(k,3)=mean(res(:));
-%         p(k,2)=(sum(bgh(:)))/bgnorm;
-        if 0%p(k,1)>2500~
-            outp(k,:)
-            figure(67)
-            subplot(2,2,1)
-            imagesc(-dn:dn,-dn:dn,roih);
-            hold on
-            plot(dx(k),dy(k),'+')
-            hold off
-            subplot(2,2,2);
-            imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2))
-            hold on
-            plot(dx(k),dy(k),'+')
-            hold off
-            subplot(2,2,3);
-            imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2)-roih)
-            waitforbuttonpress
-        end
-    end
+            for k=1:sim(3)
+                gauss=make2DGaussfast(dx(k),dy(k),PSFxpix(k),PSFypix(k),nrange);
+        %         gauss=exp((-(dx(k)-X).^2)/2/PSFxpix(k)^2-((dy(k)-Y).^2)/2/PSFypix(k)^2)/pi/PSFxpix(k)/PSFypix(k)/2;
+        %         weights=sqrt(gauss);
+                Xmat=horzcat(gauss(:), gauss(:)*0+1);
+                roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
+                outp(k,1:2)=Xmat\roih(:);
 
+                imgfit=gauss*outp(k,1)+outp(k,2);
+                resim=imgfit-roih;
+                res=sqrt(resim.^2./max(imgfit,1));
+                outp(k,3)=mean(res(:));
+                if  0% info.phot(k)>2500 %outp(k,1)>300 %any(roih(:))%p(k,1)>2500~
+                    outp(k,:)
+                    outp(k,1)./info.phot(k)
+                    figure(67)
+                    subplot(2,2,1)
+                    imagesc(-dn:dn,-dn:dn,roih);
+                    hold on
+                    plot(dx(k),dy(k),'+')
+                    hold off
+                    subplot(2,2,2);
+                    imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2))
+                    hold on
+                    plot(dx(k),dy(k),'+')
+                    hold off
+                    subplot(2,2,3);
+                    imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2)-roih)
+                    subplot(2,2,4);
+                    imagesc(-dn:dn,-dn:dn,res)
+                    waitforbuttonpress
+                end
+            end
+        else %fit bg
+        %     bgnorm=(2*dn+1)^2;
+            nrange=-dn:dn;
+            for k=1:sim(3)
+                bgh=bg(k);
+        %         exponent=(-(dx(k)-X).^2)/2/PSFxpix(k)^2-((dy(k)-Y).^2)/2/PSFypix(k)^2;
+        %         gauss=exp(exponent)/pi/PSFxpix(k)/PSFypix(k)/2;
+                gauss=make2DGaussfast(dx(k),dy(k),PSFxpix(k),PSFypix(k),nrange);
+        %         weights=sqrt(gauss);
+                Xmat=horzcat(gauss(:));
+        %         bgh=bg(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k);
+                roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k)-bgh;
+                outp(k,1)=Xmat\roih(:);
+                outp(k,2)=bgh;
+                imgfit=gauss*outp(k,1)+outp(k,2);
+                resim=imgfit-roih;
+                res=resim.^2./max(imgfit,1);
+                outp(k,3)=mean(res(:));
+        %         p(k,2)=(sum(bgh(:)))/bgnorm;
+                if 0%p(k,1)>2500~
+                    outp(k,:)
+                    figure(67)
+                    subplot(2,2,1)
+                    imagesc(-dn:dn,-dn:dn,roih);
+                    hold on
+                    plot(dx(k),dy(k),'+')
+                    hold off
+                    subplot(2,2,2);
+                    imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2))
+                    hold on
+                    plot(dx(k),dy(k),'+')
+                    hold off
+                    subplot(2,2,3);
+                    imagesc(-dn:dn,-dn:dn,gauss*outp(k,1)+outp(k,2)-roih)
+                    waitforbuttonpress
+                end
+            end
+        end
+    case 'multiply'
+        for k=1:sim(3)
+            if p.fitonbg
+                bgh=bg(k);
+            else
+                bgh=0;
+            end
+            gauss=make2DGaussfast(dx(k),dy(k),PSFxpix(k),PSFypix(k),nrange);
+            roih=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,k)-bgh;
+            outp(k,1)=sum(roih(:).*gauss(:))/sum(gauss(:));
+            outp(k,2)=bgh;
+            outp(k,3)=0;
+        end
 end
 end
 
@@ -158,8 +175,12 @@ pard.psfsize_fit.TooltipString=pard.fixpsf.TooltipString;
 
 pard.fitonbg.object=struct('Style','checkbox','String','subtract BG before fitting','Value',0);
 pard.fitonbg.position=[3,1];
-pard.fitonbg.Width=4;
+pard.fitonbg.Width=3;
 pard.fitonbg.TooltipString='If selected, the background is subtracted and the fit is performed with an offset=0. Otherwise the background is a fit parameter.';
+
+pard.fitmode.object=struct('Style','popupmenu','String',{{'fit','multiply'}},'Value',1);
+pard.fitmode.position=[3,4];
+pard.fitmode.Width=1;
 
 info.prefix='fit';
 info.name='fit';
