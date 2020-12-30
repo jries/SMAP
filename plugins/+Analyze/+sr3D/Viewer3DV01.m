@@ -23,6 +23,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             obj.inputParameters=unique(obj.inputParameters);
              obj.showresults=false;
              obj.guiselector.show=true;
+             obj.getparwarning=false;
         end
 %         function makeGui(obj)
 %             makeGui@interfaces.DialogProcessor(obj);

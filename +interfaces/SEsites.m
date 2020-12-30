@@ -36,6 +36,7 @@ classdef SEsites<matlab.mixin.Copyable
             obj.annotation.line2=line;
             obj.annotation.rotationpos=line;
             obj.annotation.line3=[];
+            obj.annotation.polarangle=0;
         end
         function setlineangle(obj,number,angledeg,len)
             angle=angledeg/180*pi;

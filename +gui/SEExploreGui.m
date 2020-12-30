@@ -572,6 +572,11 @@ if obj.getPar('se_drawsideview')&&isfield(obj.locData.loc,'znm')
         obj.sideviewax=gca;
         obj.sideviewax.NextPlot='replacechildren';
         obj.sideviewax.ButtonDownFcn={@sideview_click,obj};
+        f.Units='normalized';
+        uicontrol(f,'Style','pushbutton','String','reset','Units','normalized','Position',[0.9,0.05,0.08,0.05],'Callback',{@resetview,obj,site})
+        uicontrol(f,'Style','pushbutton','String','Info','Units','normalized','Position',[0.05,0.05,0.08,0.05],'Callback',@info)
+%         axp=obj.sideviewax.Position;
+%         uicontrol(f,'Style','text','String','-','Units','normalized','Position',[axp(1)+axp(3),0.475,0.08,0.05])
     end
     axz=obj.sideviewax;
 else
@@ -620,8 +625,26 @@ end
 
 function sideview_click(hax,dat,obj)
 site=obj.SE.currentsite;
+dx=site.image.rangex(2)-site.image.rangex(1);
+dy=site.image.rangey(2)-site.image.rangey(1);
 pos=dat.IntersectionPoint;
-site.pos(3)=pos(2)*1000;
+if pos(1)>0 && pos(1)<dx*0.75 %only right side: side view%
+    site.pos(3)=site.pos(3)+pos(2)*1000;
+elseif pos(1)>dx*.75  %outside: rotate polarangle
+    if ~isfield(site.annotation,'polarangle')
+        site.annotation.polarangle=0;
+    end
+    anglenew=site.annotation.polarangle+pos(2)/dy/pi/2*180;
+    anglered=mod(anglenew+180,360)-180;
+    site.annotation.polarangle=anglered;
+    obj.setPar('se_currentPolarAngle',anglered);
+elseif pos(1)<0 %rotate rotation angle
+    angle=atan2d(pos(2),(dx/2+pos(1)))+180;
+    anglenew=site.annotation.rotationpos.angle-angle;
+    anglered=mod(anglenew+180,360)-180;
+    site.setlineangle(0,anglered);
+end
+    
 site.image=[];
 plotsite(obj,site)
 
@@ -956,4 +979,18 @@ if  ~isempty(ind)
     varargin{ind+1}=varargin{ind+1}(1:2);
 end
 hroi=drawellipse(varargin{:});
+end
+
+function resetview(a,b,obj,site)
+site.setlineangle(0,0);
+site.annotation.polarangle=0;
+site.pos(3)=0;
+obj.setPar('se_currentPolarAngle',0)
+redrawsite_callback(a,b,obj)
+end
+function info(a,b)
+text='To rotate in x-y plane: click in the left top view image in the direction you want to point left. \nTo change the z-position, click on the right image, left part, this position will be centered. \nTo change the polar angle, click in the right image, right part. The closer you are to the center, the smaller the change.';
+msgbox(sprintf(text));
+
+
 end

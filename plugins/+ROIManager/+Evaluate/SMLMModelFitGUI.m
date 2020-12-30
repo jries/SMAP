@@ -10,6 +10,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         currentLoadedModel  %
         alignSettings       % Converter for alignment.
         sourceModel         % The source function model of the image model.
+        advanceSetting     % Advanced settings.
     end
     methods
         function obj=SMLMModelFitGUI(varargin)
@@ -20,9 +21,11 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             else
                 addpath(genpath('../SMLMModelFit'))
             end
-            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel','sourceModel'};         
+            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel','sourceModel', 'advanceSetting'};         
             addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
+            obj.defaultAdvanceSetting;
         end
+        
         
         function setGuiParameters(obj,p)
             obj.fitter = p.fitter;
@@ -191,6 +194,15 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.anchorConvert=hConvert;
         end
         
+        %% advanced settings
+        function setAdvanceSetting(obj, par, value)
+            obj.advanceSetting.(par) = value;
+        end
+        
+        function defaultAdvanceSetting(obj)
+            obj.advanceSetting.controlLogLikelihood = 'none';
+        end
+        
         function set.fitter(obj,value) 
             obj.fitter = value;
             if isfield(obj.P.par.mainGui.content.children.guiSites.children.Segment.processors,'SimulateSites')
@@ -200,6 +212,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 end
             end
         end
+        
     end
     events
         mParsArgModified

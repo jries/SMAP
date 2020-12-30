@@ -95,6 +95,10 @@ classdef SEAnnotation< interfaces.SEProcessor
             p=obj.getSingleGuiParameter('roiselect');
              obj.SE.processors.preview.lineannotation(3,p.selection);
         end
+        function setpolar_callback(obj,a,b)
+            site=obj.SE.currentsite;
+            site.annotation.polarangle=str2double(a.String);
+        end
 %         function updateSingleParameter(obj, data,actionData,field)
 %             val=obj.getSingleGuiParameter(field);
 % %             obj.SE.sePar.(data.Parent.Title).(field)=val;
@@ -286,10 +290,17 @@ pard.usesite.Height=1;
 pard.t1.object=struct('Style','text','String','Comments:');
 pard.t1.position=[9,3];
 
+pard.polart.object=struct('Style','text','String','Polar angle (deg)');
+pard.polart.position=[7,3];
+pard.polar.object=struct('Style','edit','String','0','Callback',@obj.setpolar_callback);
+pard.polar.position=[7,4];
+
 pard.comments.object=struct('Style','edit','String','','Max',5);
 pard.comments.position=[12,3];
 pard.comments.Height=3;
 pard.comments.Width=2;
+
+pard.syncParameters={{'se_currentPolarAngle','polar',{'String'},{}}};
 pard.helpfile='SMAP.Gui.ROIannotation.txt';
 pard.plugininfo.name='ROIannotation';
 end
