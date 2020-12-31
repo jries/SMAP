@@ -199,7 +199,7 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                 try
                     pluginh=obj.pluginpath{end};
                     if obj.getparwarning
-                        warning(['obj.getPar: "' field '" not a parameter, plugin: ' pluginh])
+                        disp(['  obj.getPar: "' field '" not a parameter, plugin: ' pluginh])
                     end
                 catch err
 %                     disp(['obj.getPar: "' field '" not a parameter, plugin: ' pluginh])

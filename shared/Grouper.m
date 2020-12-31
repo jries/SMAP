@@ -55,7 +55,6 @@ classdef Grouper< interfaces.LocDataInterface
             obj.combinemodes.numberInGroup='first';
             obj.combinemodes.groupindex='first';
             obj.combinemodes.filenumber='first';
-            obj.combinemodes.neighbours='sum';
             obj.combinemodes.clusterdensity='mean';
             obj.combinemodes.cellnumbers='max';
             obj.combinemodes.sitenumbers='max';

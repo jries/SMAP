@@ -1,17 +1,35 @@
-density_calculator looks at the neighborhood of each localizations and counts number 
-of neighbours in a defined region and assigns localizations a new field "clusterdensity". 
+density\_calculator looks at the neighborhood of each localizations and counts number 
+of neighbours in a defined region and assigns localizations a new field, e.g. "clusterdensity". 
 This field denotes the number of neighbours in the region defined 
 by the parameters in the plugin.
 
 Later, this field can be used for color coding according to 
 localization density by selecting this field in the renderer, colormode.
 
+Specifically, you can define which localization are counted as neighbours, and for which localizations 
+the number of neighbours are counted. This allows you to also count the numbers of neighbours of a different
+color and to assess co-localization.
+
+If neighbours have not been counted for a specific localization, the number of neighbours is set to -1.
 
 gui:Parameters:
-gui:allfiles Apply on all files together. 
+gui:channels Only count neighbours for localizations in these channels (a:b or a,b,c notation works).
+gui:channelst=channels 
 gui:countingregion count localizations weighted by a Gaussian function (more accurate) or localizations in circle/cylinder (faster)
 gui:countingsize_xy radius of circle or sigma of gauss in lateral direction
 gui:countingsize_z size of cylinder or sigma of gauss in z direction
-gui:countwhat Count either all localizations filtered ones that are currently visible in the renderer
+gui:excludelayer Exclude the layer defined here from the neighbours to be counted 
+gui:excludelayernumber=excludelayer 
+gui:fileselector Determine if density calculation is performed only on the current file, on all files together
+treated as one file or on each file separately.
+gui:filtermore Define in addition the Channels and Layers that are used to determine for which localizations the neighbours are counted.
+gui:layern Only count neighbours for localizations in these layers (a:b or a,b,c notation works).
+gui:layerst=layern 
+gui:newfield Name of the field in which the number of neighbours are saved. 
+gui:newfieldt=newfield 
+gui:refselection Select if you want to count the neighbours only for the filtered localizations in the ROI 
+(typically those displayed), or for all localizations in the ROI, even if they are not displayed.
+gui:reft 
+gui:targett 
 gui:text1=countingsize_z
-gui:texta=countingsize_xy 
+gui:texta=countingsize_xy  
