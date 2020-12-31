@@ -10,7 +10,7 @@ classdef density_calculator<interfaces.DialogProcessor
     methods
         function obj=density_calculator(varargin)    
             obj@interfaces.DialogProcessor(varargin{:}) ;
-            obj.inputParameters={'sr_pixrec','numberOfLayers','sr_pos','sr_size','layers','sr_layerson'};
+            obj.inputParameters={'sr_pixrec','numberOfLayers','sr_pos','sr_size','sr_layerson'};
             obj.history=true;    
             obj.showresults=false;
         end
@@ -31,16 +31,23 @@ classdef density_calculator<interfaces.DialogProcessor
                 case 2 %all files
                     fieldremt={'filenumber'};
                 case 3 %individually
-                    disp('not yet implemented')
+                    lf=obj.locData.getloc('filenumber');
+                    allf=1:max(lf.filenumber);
+                    ph=p;
+                    ph.fileselector.Value=1;
+                    for f=allf
+                        ph.layer1_.ch_filelist.Value=f;
+                        obj.locData.filter('filenumber',[],'inlist',f)
+                        obj.run(ph); %recursive 
+                    end
                     return
-                     %try changing p and calling run(obj,p) again
             end   
             targetlocs=obj.locData.getloc({'xnm','ynm','filenumber','channel','frame','znm','ingrouped','inungrouped'},'layer',targetlayers,'position','roi','removeFilter',fieldremt);
             % get locs for which to count: indices and position
             switch p.refselection.selection
                 case 'filtered'
                     if p.filtermore
-                        reflayers=setdiff(activelayers,p.layern);
+                        reflayers=intersect(activelayers,p.layern);
                     else
                         reflayers=activelayers;
                     end
@@ -63,9 +70,14 @@ classdef density_calculator<interfaces.DialogProcessor
                 dxyz=[p.countingsize_xy, p.countingsize_z];
             else
                 refcoord=[reflocs.xnm(indgood) reflocs.ynm(indgood)];
-                targetcoord=[targetlocs.xnm];
+                targetcoord=[targetlocs.xnm,targetlocs.ynm];
                 dxyz=[p.countingsize_xy];
             end
+            
+%             figure(88)
+%             plot(refcoord(:,1),refcoord(:,2),'.',targetcoord(:,1),targetcoord(:,2),'.')
+%             drawnow
+            
             nn=countneighbours(refcoord,targetcoord,dxyz,p.countingregion.Value);
             findref=find(indref);
             if isempty(reflocs.(p.newfield)) %does not exist
@@ -283,7 +295,7 @@ pard.countingsize_z.Width=0.5;
 
 pard.newfieldt.object=struct('String','Field name','Style','text');
 pard.newfieldt.position=[4,1];
-pard.newfield.object=struct('String','neighbours','Style','edit');
+pard.newfield.object=struct('String','clusterdensity','Style','edit');
 pard.newfield.position=[4,2];
 
 
@@ -308,8 +320,8 @@ pard.refselection.position=[4,3.5];
 pard.refselection.Width=1;
 
 p(1).value=0; p(1).on={}; p(1).off={'channelst','channels','layerst','layern'};
-p(2).value=1; p(2).on={'channelst','channels','layerst','layers'}; p(2).off={};
-pard.filtermore.object=struct('String','filter in addition:','Style','checkbox','Callback',{{@obj.switchvisible,p}});
+p(2).value=1; p(2).on={'channelst','channels','layerst','layern'}; p(2).off={};
+pard.filtermore.object=struct('String','filter in addition (keep only):','Style','checkbox','Callback',{{@obj.switchvisible,p}});
 pard.filtermore.position=[5,3.5];
 pard.filtermore.Width=2;
 
@@ -319,7 +331,7 @@ pard.channels.object=struct('String','0','Style','edit','Visible','off');
 pard.channels.position=[6,4.5];
 pard.channels.Width=0.5;
 
-pard.layerst.object=struct('String','Layers (filterd only)','Style','text','Visible','off');
+pard.layerst.object=struct('String','Layers (filtered only)','Style','text','Visible','off');
 pard.layerst.position=[7,3.5];
 pard.layern.object=struct('Style','edit','String','1','Visible','off');
 pard.layern.position=[7,4.5];
