@@ -38,16 +38,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             
             %% determine the cutoff of one-ring NPCs
             ax=obj.initaxis('One-ring NPC');
-            bin_edges = floor(min(ringDistS1)):5:ceil(max(ringDistS1));
-            bin_n = histcounts(ringDistS1,bin_edges);
-            bin_center = movmean(bin_edges,2,'Endpoints', 'discard');
-            
-            % fit two gauss
-            curve = fit(bin_center', bin_n','gauss2','StartPoint', [15,max(bin_n)/2,5,80,max(bin_n),10],'Lower', [0, 10, 0, 0,20,0],'Upper', [Inf, 30, 30, Inf,80,30],'Robust', 'LAR');
-            gauss = @(x,a,b,c) a.*exp(-((x-b)./c).^2);
-            
-            % get the intersection between the two gauss
-            intersection = fzero(@(x) gauss(x,curve.a1,curve.b1,curve.c1) - gauss(x,curve.a2,curve.b2,curve.c2), (curve.b1+curve.b2)/2);
+            [intersection, bin_edges,~,curve] = getOneRingCutoff(ringDistS1);
             histogram(ax,ringDistS1,bin_edges)
             hold(ax,'on')
             plot(curve)
@@ -104,7 +95,6 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
         end
     end
 end
-
 
 function pard=guidef
 

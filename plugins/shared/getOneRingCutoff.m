@@ -1,5 +1,6 @@
-function [cutoff, bin_edges, bin_n] = getOneRingCutoff(ringDist)
+function [cutoff, bin_edges, bin_n, curve] = getOneRingCutoff(ringDist)
     % Determine the cutoff between one-ring and dual-ring NPCs.
+    
     bin_edges = floor(min(ringDist)):5:ceil(max(ringDist));
     bin_n = histcounts(ringDist,bin_edges);
     bin_center = movmean(bin_edges,2,'Endpoints', 'discard');
