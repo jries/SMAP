@@ -16,9 +16,14 @@ classdef Loader_minflux_json<interfaces.DialogProcessor
             pard=guidef(obj);
         end
         function run(obj,p)
-            [f,path]=uigetfile('*.json');
-            obj.load(p,[path f]);
-            initGuiAfterLoad(obj);
+            [f,path]=uigetfile(obj.info.extensions);
+            if exist([path f],'file')
+                obj.load(p,[path f]);
+                initGuiAfterLoad(obj);
+                out.file=[f,path];
+            else
+                out.error='file not found. Cannot be loaded.';
+            end
         end
         function clear(obj,file,isadd)
             if isadd 

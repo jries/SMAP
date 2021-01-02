@@ -38,8 +38,8 @@ classdef BatchAnalysis<interfaces.DialogProcessor
             aplugins=fieldnames(gabatch.children);
             
             %switch off restoration of evaluation plugins
-            roi_restore=obj.getPar('ROI_restorparamters');
-            obj.setPar('ROI_restorparamters',false);
+            roi_restore=obj.getPar('ROI_restoreparameters');
+            obj.setPar('ROI_restoreparameters',false);
             
             gFile=gsmap.children.guiFile;
             gFormat=gsmap.children.guiRender.children.guiFormat;
@@ -86,7 +86,7 @@ classdef BatchAnalysis<interfaces.DialogProcessor
                 end
             end
             save(p.outdir,'results','filelist')
-            obj.setPar('ROI_restorparamters',roi_restore);
+            obj.setPar('ROI_restoreparameters',roi_restore);
 % - Text file with all SML files
 % if this is directory (maybe with switch): recursive search
 % - Make new tab (batch) in analyse, add all analysis plugins, configure

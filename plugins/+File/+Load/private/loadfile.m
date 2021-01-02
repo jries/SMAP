@@ -99,7 +99,7 @@ if isempty(siteexplorer)||siteexplorer.numberOfFiles==0||strcmp(siteexplorer.fil
     end
 %     newfilenumbers=1:templocData.files.file(end).number;
 else
-    rgp=obj.getPar('ROI_restorparamters');
+    rgp=obj.getPar('ROI_restoreparameters');
     if ~p.updateGuiPar && length(siteexplorer.sites)>0 && (isempty(rgp) ||rgp) &&~isempty(GUIsettings)%restore parameters only if not already globally restored
         psites=GUIsettings.children.guiSites;
         p.mainGui.children.guiSites.setGuiParameters(psites,true);

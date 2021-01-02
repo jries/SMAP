@@ -15,10 +15,15 @@ classdef Loader_sml<interfaces.DialogProcessor
             end
             loadfile(obj,p,file,mode);
         end
-        function run(obj,p)
-            [f,p]=uigetfile(obj.info.extensions);
-            obj.load(p,[p f]);
-            initGuiAfterLoad(obj);
+        function out=run(obj,p)
+            [f,path]=uigetfile(obj.info.extensions);
+            if exist([path f],'file')
+                obj.load(p,[path f]);
+                initGuiAfterLoad(obj);
+                out.file=[f,path];
+            else
+                out.error='file not found. Cannot be loaded.';
+            end
         end
         function pard=guidef(obj)
             pard=guidef;
