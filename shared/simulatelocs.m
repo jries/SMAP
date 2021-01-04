@@ -381,8 +381,9 @@ end
 function [locs,parameters]=locsfromDiscFun(p)
 % added by Yu-Le for SMLMModelFit:   
 fitter = p.obj.getPar('fitter');
+finalROISize = p.obj.getPar('finalROISize');
 fitter.roiSize = p.se_siteroi;
-modCoord = fitter.getSimRef; % get point type visualization
+modCoord = fitter.getSimRef('finalROISize',str2num(finalROISize)); % get point type visualization
 parameters.allParsArg = fitter.allParsArg;
 parameters.model = fitter.model;
 % Export

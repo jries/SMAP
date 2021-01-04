@@ -19,9 +19,13 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
             setvisibility(obj);
             % added by Yu-Le
             % check through the name of loaded eval plugins and find SMLMModelFit 
-            lFitterFound = strfind(obj.locData.SE.processors.eval.guihandles.modules.Data(:,2), 'SMLMModelFitGUI');
-            lFitterFound = [lFitterFound{:}];
-            lFitterFound = any(lFitterFound);
+            if ~isempty(obj.locData.SE.processors.eval.guihandles.modules.Data)
+                lFitterFound = strfind(obj.locData.SE.processors.eval.guihandles.modules.Data(:,2), 'SMLMModelFitGUI');
+                lFitterFound = [lFitterFound{:}];
+                lFitterFound = any(lFitterFound);
+            else
+                lFitterFound = 0;
+            end
             if lFitterFound 
                 fitterFound = 'on';
             else
@@ -183,15 +187,30 @@ function setModPars_callback(a,b,obj)
     % Added by Yu-Le
     % Use the function of allParsArg to set the range for simulation.
     
-    % GUI
+    %% GUI
     fig = figure(513);
     clf(fig);
     parArgTable = uitable(fig);
+    
+    % Model type
     typeOption = uicontrol('Style','popupmenu','String',{'Point','Image'},'Value',1);
     typeOption.Position = [20 20 60 30];
     typeOption.Callback = {@typeOption_callback,obj};
     
-    % Data
+    % Final ROI size
+    t_FinalROISize = uicontrol('Style','text','String','Final ROI size:');
+    t_FinalROISize.Position = [100 20 100 30];
+    
+    finalROISize = obj.getPar('finalROISize');
+    if isempty(finalROISize)
+        obj.setPar('finalROISize','200')
+        finalROISize = '200';
+    end
+    finalROISize = uicontrol('Style','edit','String',finalROISize);
+    finalROISize.Position = [200 20 60 30];
+    finalROISize.Callback = {@finalROISize_callback,obj};
+    
+    %% Data
     % Acquire the SMLMModelFit obj, and then display parameters based on the allParsArg
     fitter = obj.getPar('fitter');
 
@@ -222,6 +241,10 @@ end
 function typeOption_callback(a,b,obj)
     obj.setPar('modelType',a.String{a.Value});
     setvisibility(obj)
+end
+
+function finalROISize_callback(a,b,obj)
+    obj.setPar('finalROISize_callback',a.String);
 end
 
 function parArgTable_CellEditCallback(a,b,obj)

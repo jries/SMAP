@@ -20,10 +20,11 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             indProcessor = find(strcmp('SMLMModelFitGUI',evalList));
             relativePosLastStep = 2;
             ID = getFieldAsVector(usedSites, 'ID');
-
+            numOfLocsL1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo.numOfLocsPerLayer', 1);
             % [~,idxZ] = g.locData.SE.processors.eval.processors{indProcessor-2}.fitter.wherePar('pars.m1.lPar.z');
             % zS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxZ);
             % 
+            
             [~,idxRingDist] = se.processors.eval.processors{indProcessor}.fitter.wherePar('pars.m2.lPar.z');
             ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
 
@@ -100,6 +101,34 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             ylabel(ax3, 'Count')
             out = [];
             
+            if p.showIntActPlot
+                ax4 = obj.initaxis('Interactive'); 
+                plotSElink(ax4,azi_new,numOfLocsL1,ID,se,' ob')
+                xlabel(ax4, ['Twist angle (' char(176) ')'])
+                ylabel(ax4, 'Number of Locs')
+            end
+            
+            
+            if p.showExampleMod
+                fitter = se.processors.eval.processors{indProcessor+2}.fitter;
+                fitter.setParArg('m1.mPar.ringDistance', 'value',50)
+                fitter.setParArg('m1.mPar.azimuthalShift', 'value',8)
+                fitter.setParArg('m1.mPar.radius', 'value',54)
+                modPoints = fitter.model{1}.getPoint(fitter.exportPars(1,'mPar'));
+                lLower = modPoints.z < 0;
+                col = zeros([size(lLower,1) 3]);
+                col(lLower,:) = repmat([0.9 0.9 0.9],sum(lLower),1);
+                ax5 = obj.initaxis('Example model'); 
+                scatter3(ax5, modPoints.x, modPoints.y, modPoints.z, 90, col,'filled','MarkerEdgeColor','k', 'LineWidth',1)
+                axis(ax5,'equal')
+                axis(ax5,'vis3d')
+                set(ax5,'XLim',[-120 120])
+                set(ax5,'YLim',[-120 120])
+                view(0,45);
+                grid(ax5, 'off')
+                
+            end
+            
             clipboard('copy', sprintf('%.1f',medAzi))
         end
         function pard=guidef(obj)
@@ -123,6 +152,14 @@ end
 
 
 function pard=guidef(obj)
+
+pard.showIntActPlot.object=struct('String','Display interactive','Style','checkbox');
+pard.showIntActPlot.position=[2,1];
+pard.showIntActPlot.Width=1.5;
+
+pard.showExampleMod.object=struct('String','Display example model','Style','checkbox');
+pard.showExampleMod.position=[3,1];
+pard.showExampleMod.Width=1.5;
 
 pard.plugininfo.type='ROI_Analyze';
 

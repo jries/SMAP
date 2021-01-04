@@ -47,7 +47,14 @@ end
 if isfield(p,'saveSepFile') && p.saveSepFile % Yu-Le added
     for k = 1:lastfile
         filenumber = k;
-        oneFile = [file(1:end-8) '_' num2str(filenumber) '_' file(end-7:end)];
+        [path,fileName] = fileparts(file);
+        if startsWith(fileName,'__')
+            [~,oriName] = fileparts(locData.files.file(filenumber).name);
+            newName = [oriName(1:end-6) fileName(2:end-4) file(end-7:end)];
+            oneFile = [path filesep newName];
+        else
+            oneFile = [file(1:end-8) '_' num2str(filenumber) file(end-7:end)];
+        end
         saveloc=locData.savelocs(oneFile,indg,[],[],excludesavefields,filenumber);
     end
 else
