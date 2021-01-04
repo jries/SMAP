@@ -198,7 +198,8 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
 %                 pluginh='?';
                 try
                     pluginh=obj.pluginpath{end};
-                    if obj.getparwarning
+                    ao=obj.getGlobalSetting('advancedoutput');
+                    if myistrue(ao)
                         disp(['  obj.getPar: "' field '" not a parameter, plugin: ' pluginh])
                     end
                 catch err

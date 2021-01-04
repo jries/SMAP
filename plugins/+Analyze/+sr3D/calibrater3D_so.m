@@ -32,6 +32,7 @@ classdef calibrater3D_so<interfaces.DialogProcessor
 
              smappos.fit3ddir=fit3ddir;
              smappos.smapdir=smapdir;
+             smappos.advancedoutput=obj.getGlobalSetting('advancedoutput');
              cg=calibrate3D_GUI_g(smappos);    
              out=[];
         end

@@ -476,6 +476,7 @@ classdef calibrate3D_GUI_g<handle
             p.status=obj.guihandles.status;
             p.mindistance=str2double(obj.guihandles.mindistance.String);
             p.cutoffrel=str2double(obj.guihandles.cutoffrel.String);
+            
             if isempty(p.filelist)
                 warndlg('please select image files first')
                 return
@@ -491,6 +492,9 @@ classdef calibrate3D_GUI_g<handle
                 
                 if isfield(obj.smappos,'framerangeuse')
                     p.framerangeuse=obj.smappos.framerangeuse;
+                end
+                if isfield(obj.smappos,'advancedoutput')
+                    p.advancedoutput=obj.smappos.advancedoutput;
                 end
 %                 p.files=obj.smappos.files;
             

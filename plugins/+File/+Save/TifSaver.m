@@ -23,34 +23,39 @@ classdef TifSaver<interfaces.DialogProcessor
             [f,path]=uiputfile(serchstr,'select output file for image', of);
             if f
                 img=obj.getPar('sr_image');
-                res=ones(2,1)/p.sr_pixrec*2.5e7/1e6;%rescale to macroscopic values, otherwise size in PPT is zero  
+%                 res=ones(2,1)/p.sr_pixrec*2.5e7/1e6;%rescale to macroscopic values, otherwise size in PPT is zero  
                 p.scalebarnm=img.scalebarnm;
                 txt=filterpar(obj,p);
                 description=sprintf(txt);
-                [~,~,ext]=fileparts(f);
-%                 switch ext
-%                     case '.tif'
-                        imwrite(img.image,[path f],'Description',description);
-%                     case '.png'
-%                          imwrite(img.image,[path f],'Description',description,'XResolution',res(1),'YResolution',res(2),'ResolutionUnit','inch');
-%                         imwrite(img.image,[path f],'Description',description,'XResolution',res(1),'YResolution',res(2),'ResolutionUnit','inch');
-%                 end
+%                 [~,~,ext]=fileparts(f);
+                outim=makeoutputtif(obj,p);
+                imwrite(outim,[path f],'Description',description);
             end
             obj.status('save done')
-          
+            out=[];
         end
         function pard=guidef(obj)
            pard.plugininfo.type='SaverPlugin';
            pard.plugininfo.description='Saves reconstructed images in tiff format';
            
+           pard.outputformat.object=struct('String',{{'rendered image with scalebar','rendered image','layer 1-3 as RGB','layer1 as grayscale'}},'Style','popupmenu');
+            pard.outputformat.position=[1,1];
+            pard.outputformat.Width=3;
+            
+           pard.addscalebar.object=struct('String','add scale bar','Style','checkbox');
+            pard.addscalebar.position=[2,1];
+            pard.addscalebar.Width=2;
+            
             pard.img_ext.object=struct('Style','popupmenu','String',{{'.tif','.png'}});
-            pard.img_ext.position=[1,1];
-            pard.img_ext.Width=2;
+            pard.img_ext.position=[1,4];
+            pard.img_ext.Width=1;
         end
         function run(obj,p)
             obj.save(p)
         end        
-
+        function initGui(obj)
+            obj.guihandles.outputformat.String=makeoutputtif;
+        end
     end
 end
 
@@ -82,6 +87,7 @@ for k=1:length(p.sr_layerson)
         txt=[txt 'quantile/Imax: ' num2str(p.([lp '_']).imax_min) '\n'];
         txt=[txt 'color range: \t' num2str(p.([lp '_']).colorfield_min) ' : \t' num2str(p.([lp '_']).colorfield_max) '\n'];
         txt=[txt 'remove outside c-range: ' num2str(p.([lp '_']).remout) '\n'];
+        txt=[txt 'relative log-likelihood > ' num2str(p.([lp '_']).LLrel_min) '\n'];
         if strcmp(p.([lp '_']).renderfield.selection,'field')
             txt=[txt 'render field: ' (p.([lp '_']).render_colormode.selection) '\n'];
         end

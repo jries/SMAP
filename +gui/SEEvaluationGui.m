@@ -57,7 +57,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
         
         function setGuiParameters(obj,p,setchildren,setmenulist)
 
-            rgp=obj.getPar('ROI_restorparamters');
+            rgp=obj.getPar('ROI_restoreparameters');
             if isempty(rgp)|| rgp
                 setGuiParameters@interfaces.SEProcessor(obj,p,setchildren,setmenulist);
                 obj.guihandles.modules.Data={};

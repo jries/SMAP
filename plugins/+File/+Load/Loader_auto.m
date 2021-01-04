@@ -22,12 +22,12 @@ classdef Loader_auto<interfaces.DialogProcessor
         end
         function out=run(obj,p)
             [f,path]=uigetfile(obj.info.extensions);
-            obj.load(p,[path f]);
-            
-            if obj.notfound
-                out.error='file not recognized. Cannot be loaded.';
+            if exist([path f],'file')
+                obj.load(p,[path f]);
+                initGuiAfterLoad(obj);
+                out.file=[f,path];
             else
-            initGuiAfterLoad(obj);
+                out.error='file not found. Cannot be loaded.';
             end
         end
         function clear(obj,file,isadd)
@@ -67,6 +67,7 @@ function loadfile(obj,p,file,mode)
         p=copyfields(p,pout);
         if ~isempty(loader)
         loader.load(p,file);
+        obj.notfound=obj.notfound&&loader.notfound;
         end
 end
 

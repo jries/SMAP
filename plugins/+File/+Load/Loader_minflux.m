@@ -14,10 +14,15 @@ classdef Loader_minflux<interfaces.DialogProcessor
         function pard=guidef(obj)
             pard=guidef;
         end
-        function run(obj,p)
-            [f,p]=uigetfile('*.mat');
-            obj.load(p,[p f]);
-            initGuiAfterLoad(obj);
+        function out=run(obj,p)            
+            [f,path]=uigetfile(obj.info.extensions);
+            if exist([path f],'file')
+                obj.load(p,[path f]);
+                initGuiAfterLoad(obj);
+                out.file=[f,path];
+            else
+                out.error='file not found. Cannot be loaded.';
+            end
         end
         function clear(obj,file,isadd)
             if isadd 
