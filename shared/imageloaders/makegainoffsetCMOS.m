@@ -21,8 +21,11 @@ function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime
             varmap=l.varmap;
         end
         %assume gainmap is independent of exposure time
-            gainmap=l.gainmap;
-
+        %NB: gainmap has to be inverted, since we need the unit
+        %    electrons/counts
+            gainmap=1/l.gainmap;
+        %only use media of gainmap
+            gainmap = ones(size(gainmap))*median(gainmap(:));
         %varmap has to be in units of photons^2
             varmap=varmap.*gainmap.^2; 
             roi=[];
@@ -38,6 +41,12 @@ function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime
         [offsetmap, varmap] = makeExpDependMap(l, exposuretime_data);
         %what do we do with gain map? Corrrect? Already averaged?
         gainmap=reshape(sr.gain,sr.width,sr.height)';
+            %assume gainmap is independent of exposure time
+            %NB: gainmap has to be inverted, since we need the unit
+            %    electrons/counts
+                gainmap=1./gainmap;
+            %only use media of gainmap
+                gainmap = ones(size(gainmap))*median(gainmap(:));
         varmap=varmap.*gainmap.^2;
         if isfield(sr,'x') && sr.x>=0 %roi defined 
             roi=[sr.x sr.y sr.width sr.height]; %1 based
