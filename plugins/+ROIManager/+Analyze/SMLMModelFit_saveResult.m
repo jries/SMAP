@@ -52,6 +52,9 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             % basic info.
             se = obj.locData.SE;
             sites = se.sites;
+            if isempty(sites)  %Jonas: this plugin stops loading SMAP in Linux
+                return
+            end
             roiSize = se.P.par.se_siteroi.content;
             
             listOfModules = se.processors.eval.guihandles.modules.Data(:,2);

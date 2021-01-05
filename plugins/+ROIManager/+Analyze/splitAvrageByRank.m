@@ -119,8 +119,11 @@ pard.trim.Width=1;
 pard.t5.object=struct('String','Rank','Style','text');
 pard.t5.position=[6,1];
 pard.t5.Width=1;
-
+if ~isempty(obj.locData.loc)
 fn = fieldnames(obj.locData.loc);
+else
+    fn={};
+end
 pard.rankOption.object=struct('Style', 'popupmenu', 'String',{fn'},'value',1);
 pard.rankOption.position=[6,2];
 pard.rankOption.Width=1;
