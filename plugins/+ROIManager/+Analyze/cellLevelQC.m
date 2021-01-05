@@ -17,7 +17,15 @@ classdef cellLevelQC<interfaces.DialogProcessor&interfaces.SEProcessor
 end
 
 function pard=guidef(obj)
-    [defaultDir, defaultFn]= fileparts(obj.P.par.mainfile.content);
+mainfile = obj.getPar('mainfile');
+if isempty(mainfile)
+    defaultDir='';
+    defaultFn='';
+else
+    
+ [defaultDir, defaultFn]=fileparts();
+end
+   % [defaultDir, defaultFn]= fileparts(obj.P.par.mainfile.content); %this creates errors. Somehow this plugin gets loaded in Linux before data is loaded.
 
     pard.t_shakingCell.object = struct('Style','text','String','Shaking cells (bandwidth&percentile&cutoff(z-score))');
     pard.t_shakingCell.position = [1,1];

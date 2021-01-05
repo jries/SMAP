@@ -44,6 +44,14 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                  guiPar.Vsep=3;
                  guiPar.Xrim=3;
                  guiPar.Vrim=2;  
+            elseif isunix
+                 guiPar.fontsize=9;
+                 guiPar.FieldHeight=26;
+                 guiPar.tabsize1=[2    1  542 338];
+                 guiPar.tabsize2=[2    5  534 302];    
+                 guiPar.Vsep=3;
+                 guiPar.Xrim=7;
+                 guiPar.Vrim=2;  
             else
                 guiPar.fontsize=15;
                 guiPar.FieldHeight=25;
@@ -639,7 +647,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         
                         if isfield(thisField,'uimenu')
                             if iscell(thisField.uimenu)
-                            makemenuindicator(hg,thisField.uimenu{1},thisField.uimenu{2})
+                                makemenuindicator(hg,thisField.uimenu{1},thisField.uimenu{2})
                             else
                                 makemenuindicator(hg,thisField.uimenu);
                             end

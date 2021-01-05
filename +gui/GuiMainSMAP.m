@@ -17,6 +17,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             global SMAP_stopnow
             if ispc
                 set(0,'DefaultUIControlFontSize',9);
+            elseif isunix
+                set(0,'DefaultUIControlFontSize',9);
             else
                 set(0,'DefaultUIControlFontSize',12);
             end
@@ -41,7 +43,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                         [homedir filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
                         'C:\Program Files\SMAP\application\settings',...
                         [homedir(1) ':\Program Files\SMAP\application\settings']};
-             
+            
+                     
                  else
                      programroot=ctfroot;
                      ind=strfind(programroot,'application/SMAP.app/');
@@ -105,7 +108,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 if ~exist([settingsdir filesep 'temp'],'dir')
                     mkdir([settingsdir filesep 'temp'])
                 end
-                addpath('fit3dcspline')
+                addpath('fit3Dcspline')
             else
                 disp(pwd)
             end
@@ -206,6 +209,9 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             h.maintab = uitabgroup(handle,'Units','pixels','Position',tabpos);
             if ispc
+                posmen='tri';
+                shiftmen=[-10 -5];
+            elseif isunix
                 posmen='tri';
                 shiftmen=[-10 -5];
             else

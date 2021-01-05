@@ -92,7 +92,7 @@ classdef Get2CIntImagesWF<interfaces.DialogProcessor
         function initGui(obj)
             par.Vpos=3;
             par.Xpos=3;
-            obj.children.evaluate=makeplugin(obj,{'WorkflowModules','IntensityCalculator','EvaluateIntensity'},obj.handle,par);
+            obj.children.evaluate=makeplugin(obj,{'WorkflowModules','IntensityCalculator','EvaluateIntensity_s'},obj.handle,par);
             obj.guihandles.loadbutton.Callback=@obj.loadbutton;
 
         end
