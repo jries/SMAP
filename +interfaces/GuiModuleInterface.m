@@ -43,7 +43,15 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                  guiPar.tabsize2=[0    -1  540 311];    
                  guiPar.Vsep=3;
                  guiPar.Xrim=3;
-                 guiPar.Vrim=2;  
+                 guiPar.Vrim=2;              
+            elseif ismac
+                 guiPar.fontsize=15;
+                 guiPar.FieldHeight=25;
+                 guiPar.tabsize1=[1    0  527 324];
+                 guiPar.tabsize2=[0    -1  521 292];
+                 guiPar.Vsep=1;
+                 guiPar.Xrim=2;
+                 guiPar.Vrim=0; 
             elseif isunix
                  guiPar.fontsize=9;
                  guiPar.FieldHeight=26;
@@ -52,14 +60,6 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                  guiPar.Vsep=3;
                  guiPar.Xrim=7;
                  guiPar.Vrim=2;  
-            else
-                guiPar.fontsize=15;
-                guiPar.FieldHeight=25;
-                guiPar.tabsize1=[1    0  527 324];
-                guiPar.tabsize2=[0    -1  521 292];
-                guiPar.Vsep=1;
-                guiPar.Xrim=2;
-                guiPar.Vrim=0; 
             end
             
             %initialze guiPar

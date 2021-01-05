@@ -17,10 +17,10 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             global SMAP_stopnow
             if ispc
                 set(0,'DefaultUIControlFontSize',9);
-            elseif isunix
-                set(0,'DefaultUIControlFontSize',9);
-            else
+            elseif ismac
                 set(0,'DefaultUIControlFontSize',12);
+            elseif isunix
+                set(0,'DefaultUIControlFontSize',9);               
             end
             SMAP_stopnow=false;
             
@@ -210,13 +210,13 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.maintab = uitabgroup(handle,'Units','pixels','Position',tabpos);
             if ispc
                 posmen='tri';
-                shiftmen=[-10 -5];
+                shiftmen=[-10 -5];            
+            elseif ismac
+                posmen='tli';
+                shiftmen=[10 -10];
             elseif isunix
                 posmen='tri';
                 shiftmen=[-10 -5];
-            else
-                posmen='tli';
-                shiftmen=[10 -10];
             end
             makemenuindicator(h.maintab,posmen,shiftmen);
             f=getParentFigure(obj.handle);
