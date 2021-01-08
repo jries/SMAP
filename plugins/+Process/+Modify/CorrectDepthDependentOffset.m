@@ -10,8 +10,8 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
         
         function out=run(obj,p)
             out=[];
-            obj.setPar('undoModule','CorrectDepthDependentOffset');
-            notify(obj.P,'backup4undo');
+            
+            knownSeparation = 49.3;
             
             %% Get info from SMLMModelFit
             sites = obj.SE.sites;
@@ -24,6 +24,21 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             
             [~,idxRingDist] = fitter.wherePar('pars.m2.lPar.z');
             ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
+            
+            [~,idxXrot] = fitter.wherePar('pars.m1.lPar.xrot');
+            xrot = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxXrot);
+            
+            [~,idxYrot] = fitter.wherePar('pars.m1.lPar.yrot');
+            yrot = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxYrot);
+            
+            % find the true elevation
+            [x,y,z] = rotcoord3(0,0,-1, deg2rad(xrot), deg2rad(yrot), 0, 'XYZ');
+            [~,eleOri,~] = cart2sph(0,0,-1);
+            [~,ele,~] = cart2sph(x,y,z);
+            trueEle = -(ele-eleOri);
+            
+            ringDistS1Z = ringDistS1.*cos(trueEle');
+            knownSepZ = knownSeparation.*cos(trueEle');
             
             % get z pos of the 1st model
             [~,idxZ] = fitter.wherePar('pars.m1.lPar.z');
@@ -52,21 +67,22 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             lTwoRing = ringDistS1>intersection;
 
             %% moving mean
-            xx = -120:10:80;
+            xx = getHistogramEdge(z(lTwoRing),10);
             xxCenter = movmean(xx,2);
-            dz = ((ringDistS1(lTwoRing))-50)/50;
-            yy=bindata(z(lTwoRing),dz,xx,'mean');
+            dOffset = (ringDistS1Z-knownSepZ)./knownSepZ;
+            dOffset = dOffset(lTwoRing);
+            yy=bindata(z(lTwoRing),dOffset,xx,'mean');
             
             ax2=obj.initaxis('Depth-depedent offset');
             
-            plot(ax2,z(lTwoRing),dz, ' ob')
+            plot(ax2,z(lTwoRing),dOffset, ' ob')
             hold(ax2, 'on')
             h1 = plot(ax2, xx,yy);
             hold(ax2, 'off')
             
             
             %% curve fit
-            f = fit(z(lTwoRing),dz,'poly1','Robust','LAR');
+            f = fit(z(lTwoRing),dOffset,'poly1','Robust','LAR');
             hold(ax2, 'on')
             h2 = plot(f, 'c');
             hold(ax2, 'off')
@@ -79,13 +95,16 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             c = -(fInt(1)*z0^2+fInt(2)*z0);
             fInt(3) = c;
 
-            dzFun = @(z) fInt(1).*z.^2+fInt(2).*z+fInt(3);
+            dOffsetFun = @(z) fInt(1).*z.^2+fInt(2).*z+fInt(3);
             
             
             %% apply the correction
             if ~p.preview
+                obj.setPar('undoModule','CorrectDepthDependentOffset');
+                notify(obj.P,'backup4undo');
+            
                 locs = obj.locData.loc;
-                obj.locData.loc.znm = locs.znm-dzFun(locs.znm);           
+                obj.locData.loc.znm = locs.znm-dOffsetFun(locs.znm);           
                 obj.locData.regroup;
                 obj.locData.filter;
             end
