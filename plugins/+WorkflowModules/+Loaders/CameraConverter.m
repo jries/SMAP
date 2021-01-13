@@ -309,6 +309,9 @@ function loadcamcalibrationfile(obj,p,imgp)
            roi(1:2)=roi(1:2)-1; %zero based;
            disp('no scmos ROI specified: assume entire chip used for calibration');
        end
+       if any(size(obj.gainmap)<roi(1:2)+roi(3:4)) %gainmap too small
+           roi(1:2)=0;
+       end
        gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
        obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
        obj.gainuse=median(gainhere(:));
