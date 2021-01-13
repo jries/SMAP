@@ -27,3 +27,4 @@ obj.createGlobalSetting('useDefaultCam','File','Use default camera if not recogn
 obj.setPar('useDefaultCam',obj.getGlobalSetting('useDefaultCam'));
 obj.createGlobalSetting('cameraSettingsFile','File','CameraManager: File to save camera settings ',struct('Style','file','String','settings/cameras.mat'))  
 obj.createGlobalSetting('resetframefilter','File','Reset frame filter upon loading ',struct('Style','checkbox','String','remove frame filter','Value',1))  
+obj.createGlobalSetting('advancedoutput','Other','Advanced output for trouble shooting ',struct('Style','checkbox','String','advanced output','Value',0))  

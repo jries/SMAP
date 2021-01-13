@@ -6,9 +6,9 @@
 
 
 /*void correlate(double *n1, double *G, mwSize lenG, mwSize lenn)*/
-double gaussrender(float *srim,float *xpix, float *ypix, mwSize *srec, float *sigma, float *Gtemplate, float Gsigma, float roiks,  float *N, int uselut, float *c, float *lut, float *rangec, mwSize Gx,mwSize numlocs, mwSize sl)
+double gaussrender(float *srim,float *xpix, float *ypix,  unsigned int *srec, float *sigma, float *Gtemplate, float Gsigma, float roiks,  float *N, int uselut, float *c, float *lut, float *rangec, unsigned int Gx, unsigned int numlocs,  unsigned int sl)
 {
-mwSize Gsizegauss,indc,xt,yt,col,srimindlin;
+unsigned int Gsizegauss,indc,xt,yt,col,srimindlin;
 float dx,dy,intcorrection,gaussnorm;
 long k,dn,xr,yr,xax,yax,xp,yp;
 double numberOfLocs;
@@ -64,15 +64,16 @@ void mexFunction( int nlhs, mxArray *plhs[],
   float *lut,*rangec;
   float Gsigma,roiks;
   int uselut;
-  mwSize *srec,srec3[]={10,10,3};
+   unsigned int *srec;
+   mwSize srec3[]={10,10,3};
  double numberOfLocs;
-    mwSize Gx,Gy,numlocs,sl,sz;
+    unsigned int Gx,Gy,numlocs,sl,sz;
   /* xpix, ypix, srec, sigma, 4.Gtemplate, 5. Gsigma, roiks, 7. N, uselut, 9. c, 10. lut, 11. rangec */
 
   /*  create a pointer to the input matrix y */
   xpix = (float*) mxGetData(prhs[0]);
  ypix = (float*)mxGetData(prhs[1]);
- srec = (mwSize*)mxGetData(prhs[2]);
+ srec = (unsigned int*)mxGetData(prhs[2]);
  sigma = (float*)mxGetData(prhs[3]);
  Gtemplate = (float*)mxGetData(prhs[4]);
  N = (float*)mxGetData(prhs[7]);
@@ -95,14 +96,15 @@ void mexFunction( int nlhs, mxArray *plhs[],
   /*  set the output pointer to the output matrix */
  if(uselut==0)
      {
-      srec3[2]=1;
+      srec3[2]= 1;
       }
 
-     srec3[0]=srec[0];
-     srec3[1]=srec[1];
-     plhs[0] = mxCreateNumericArray(3,srec3,mxSINGLE_CLASS,mxREAL);
-     /*printf("output size %i,%i,%i\n",srec3[0],srec3[1],sl);*/
+     srec3[0]=(mwSize)srec[0];
+     srec3[1]=(mwSize)srec[1];
+        // printf("output size %i,%i,%i\n",srec3[0],srec3[1],sl);
 
+     plhs[0] = mxCreateNumericArray(3,srec3,mxSINGLE_CLASS,mxREAL);
+ 
   
   /*  create a C pointer to a copy of the output matrix */
   srim = mxGetData(plhs[0]);

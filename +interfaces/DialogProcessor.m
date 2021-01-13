@@ -79,6 +79,16 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
             obj.resultshandle=figure;
             obj.resultshandle.Visible='off';
             obj.resultshandle.Renderer='painters';
+            
+            %make convert to grid
+            hToolbar=findall(obj.resultshandle, 'type', 'uitoolbar');
+            pushtool=uipushtool(hToolbar);
+            img=ones(16,16,3);
+            img(6,:,:)=0;img(11,:,:)=0;img(:,6,:)=0;img(:,11,:)=0;
+            pushtool.CData=img;
+            pushtool.ClickedCallback=@makegridoutput;
+            pushtool.Tooltip='Create new figure with all tabs arranged next to each other';
+            
             htab=uitabgroup(obj.resultshandle);
             obj.guihandles.resultstabgroup=htab;
             obj.resultstabgroup=obj.guihandles.resultstabgroup;
@@ -232,4 +242,9 @@ obj.showinfo;
 %   h=uicontrol(hp,'Style','pushbutton','Units','normalized','Position',[0.95,0.95,.05,.05],'String','Edit','Callback',{@edit_callback,obj});
 end
 
-
+function makegridoutput(a,b)
+fig=a.Parent.Parent;
+numtabs=length(fig.Children.Children);
+numrows=ceil(sqrt(numtabs));
+flattenTabs(fig,numrows);
+end

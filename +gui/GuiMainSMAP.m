@@ -16,9 +16,11 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
         function makeGui(obj)
             global SMAP_stopnow
             if ispc
-            set(0,'DefaultUIControlFontSize',9);
-            else
+                set(0,'DefaultUIControlFontSize',9);
+            elseif ismac
                 set(0,'DefaultUIControlFontSize',12);
+            elseif isunix
+                set(0,'DefaultUIControlFontSize',9);               
             end
             SMAP_stopnow=false;
             
@@ -41,7 +43,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                         [homedir filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
                         'C:\Program Files\SMAP\application\settings',...
                         [homedir(1) ':\Program Files\SMAP\application\settings']};
-             
+            
+                     
                  else
                      programroot=ctfroot;
                      ind=strfind(programroot,'application/SMAP.app/');
@@ -65,17 +68,6 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                  };
                  end
              end
-%              possibledirs={'settings',...
-%                  [pwd filesep 'MATLAB' filesep 'settings'],...
-%                  [pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
-%                  [pwd filesep 'Documents' filesep 'settings'],...
-%                  [pwd filesep 'Documents' filesep 'MATLAB' filesep 'settings'],...
-%                  [pwd filesep 'Documents' filesep 'MATLAB' filesep 'SMAP' filesep 'settings'],...
-%                  [pwd filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
-%                  [pwd filesep  'settings'],...
-%                  [fileparts(pwd) filesep  'settings'],...
-%                  [fileparts(fileparts(pwd)) filesep  'settings'],...
-%                  };
              settingsdir='';
              for k=1:length(possibledirs)
                  if exist(possibledirs{k},'dir')
@@ -84,11 +76,6 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                  end
              end
              
-%              settingsdir='settings';
-%              if ~exist(settingsdir,'dir')
-%                  settingsdir=[pwd filesep 'MATLAB' filesep 'settings'];
-%                  if ~exist(settingsdir,'dir')
-%                      settingsdir=[pwd filesep 'MATLAB' filesep 'SMAP' filesep 'settings'];
              if isempty(settingsdir)
                  hwd=warndlg(['please select the directory /settings/ with the SMAP settings or copy the settings directory in any of the default directories and restart: ' possibledirs],'select settings','modal');
                  waitfor(hwd);
@@ -97,13 +84,12 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                      settingsdir=d;
                  end
              end
-%                  end
+
              if k>1 %not default
                 obj.setPar('maindirectory',fileparts(settingsdir));
              end
              disp(['settings directory: ' settingsdir]);
-%              end
-%              obj.setPar('maindirectory',pwd);
+
             settingsdirrel=makerelativetopwr(settingsdir);
             parentdir=fileparts(settingsdirrel);
             obj.setPar('SettingsDirectory',settingsdirrel);
@@ -122,7 +108,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 if ~exist([settingsdir filesep 'temp'],'dir')
                     mkdir([settingsdir filesep 'temp'])
                 end
-                addpath('fit3dcspline')
+                addpath('fit3Dcspline')
             else
                 disp(pwd)
             end
@@ -175,12 +161,6 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 
             if exist(bffile,'file') %&& ~isdeployed
                 javaaddpath(bffile);
-%                 addpath(bfpath)
-%                 try
-%                     bfCheckJavaPath;
-%                 catch
-%                     disp('bioformats not found')
-%                 end
             else
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
                 disp('you can download the Matalb toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
@@ -211,18 +191,14 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             set(handle,'ButtonDownFcn',{@figure_selected,obj},...
                 'SizeChangedFcn',{@sizechanged_callback,obj},'NumberTitle','off')
             drawnow 
-
             tabpos=[2 32 obj.guiPar.width-2 368];
 
-   
-            
+  
             gfile=obj.getGlobalSetting('guiPluginConfigFile');
             if ~exist(gfile,'file')
                 gfile=strrep(gfile,'settings', settingsdir);
             end
                 
-%             gfile=findsettingsfile(gfile);
-            
             if exist(gfile,'file')
                 guimodules=readstruct(gfile,[],true);
             else
@@ -234,10 +210,13 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.maintab = uitabgroup(handle,'Units','pixels','Position',tabpos);
             if ispc
                 posmen='tri';
-                shiftmen=[-10 -5];
-            else
+                shiftmen=[-10 -5];            
+            elseif ismac
                 posmen='tli';
                 shiftmen=[10 -10];
+            elseif isunix
+                posmen='tri';
+                shiftmen=[-10 -5];
             end
             makemenuindicator(h.maintab,posmen,shiftmen);
             f=getParentFigure(obj.handle);
@@ -342,15 +321,13 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.sitespanel=uipanel(h.tab_siteexplorer,'Units','pixel','Position',obj.guiPar.tabsize1);
             gsites=gui.SEMainGui(h.sitespanel,obj.P);
             gsites.attachLocData(obj.locData);
-%             gsites.addGuiParameters(guipar);
+
             gsites.maindir='ROIManager';
             gsites.guiplugins=myrmfield(guimodules.ROIManager,'Evaluate');
             gsites.makeGui();
             obj.children.guiSites=gsites;
             
             obj.guihandles=h;
-%             gui.setTooltips(obj);
-            
             
             %undo
             undo=gui.Undo(obj.handle,obj.P);
@@ -372,8 +349,6 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 feval(cb{1},struct('Checked','on'),0,cb{2})
             end
             
-            
-%             sizechanged_callback(obj.handle, 0, obj)
             obj.status('all initialized')
             drawnow  
             set(handle, 'HandleVisibility', 'off');

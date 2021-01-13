@@ -15,7 +15,7 @@ for k=length(sites):-1:1
     frame=double(sites(k).evaluation.beadanalysis.frame);
     [frame,ia]=unique(frame);
     phot=double(sites(k).evaluation.beadanalysis.phot(ia));
-    phot=phot-mean(phot(end-30:end));
+%     phot=phot-mean(phot(end-30:end));
     plot(frame,phot)
     hold on
     photi=interp1(frame, phot,frames);

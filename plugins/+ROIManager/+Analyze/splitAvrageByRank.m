@@ -27,8 +27,8 @@ classdef splitAvrageByRank<interfaces.DialogProcessor&interfaces.SEProcessor
             obj.locData.loc.xnm = obj.locData.loc.xnmori;
             obj.locData.loc.ynm = obj.locData.loc.ynmori;
             
-            lMiddlePart_x = obj.locData.loc.xnm>=p.se_siteroi-p.se_siteroi/2+trim(1)&obj.locData.loc.xnm<=(p.se_siteroi+p.se_siteroi/2-trim(1));
-            lMiddlePart_y = obj.locData.loc.ynm>=p.se_siteroi-p.se_siteroi/2+trim(2)&obj.locData.loc.ynm<=(p.se_siteroi+p.se_siteroi/2-trim(2));
+            lMiddlePart_x = obj.locData.loc.xnm>=offset-p.se_siteroi/2+trim(1)&obj.locData.loc.xnm<=(p.se_siteroi/2-trim(1)+offset);
+            lMiddlePart_y = obj.locData.loc.ynm>=offset-p.se_siteroi/2+trim(2)&obj.locData.loc.ynm<=(p.se_siteroi/2-trim(2)+offset);
             lMiddlePart = lMiddlePart_x&lMiddlePart_y;
             % get the order of sites based on the previous sorting
             siteOrder = obj.locData.loc.(p.rankOption.selection);
@@ -119,8 +119,11 @@ pard.trim.Width=1;
 pard.t5.object=struct('String','Rank','Style','text');
 pard.t5.position=[6,1];
 pard.t5.Width=1;
-
+if ~isempty(obj.locData.loc)
 fn = fieldnames(obj.locData.loc);
+else
+    fn={};
+end
 pard.rankOption.object=struct('Style', 'popupmenu', 'String',{fn'},'value',1);
 pard.rankOption.position=[6,2];
 pard.rankOption.Width=1;

@@ -17,8 +17,12 @@ classdef Histograms<interfaces.DialogProcessor
             axis1=obj.initaxis('histograms');
             
             for k=1:length(layers)
+                
                 locs=obj.locData.getloc({p.locfield.selection},'position','roi','layer',layers(k));
                 val=locs.(p.locfield.selection);
+                if isempty(val)
+                    continue
+                end
                 val(isinf(val)|isnan(val))=[];
                 
                 switch p.setrange.Value
@@ -43,9 +47,9 @@ classdef Histograms<interfaces.DialogProcessor
                     warndlg('histogram too large, set range or dont set binwidth')
                     return
                 end
-                h=histogram(axis1,val,n);
+                h=histogram(axis1,val,n,'DisplayStyle',p.plotformat.selection);
                 hold(axis1,'on')
-                legends{2*k-1}=['Layer ' num2str(k)];
+                legends{2*k-1}=['Layer ' num2str(layers(k))];
                 inval=val>=q(1) & val<=q(end);
                 
                 %modal value
@@ -89,6 +93,11 @@ classdef Histograms<interfaces.DialogProcessor
             pard.quantile.object=struct('String','0.001','Style','edit');
             pard.quantile.position=[1,4.5];
             pard.quantile.Width=0.5;
+            
+            pard.plotformat.object=struct('String',{{'bar','stairs'}},'Style','popupmenu');
+            pard.plotformat.position=[2,1];
+            pard.plotformat.Width=1.5;
+            
             pard.plugininfo.name='Histograms';
             pard.plugininfo.description='Calculates histograms and statistics for any localization attribute (field)';
             pard.plugininfo.type='Histograms'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity

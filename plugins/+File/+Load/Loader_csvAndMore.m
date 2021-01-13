@@ -1,6 +1,7 @@
 classdef Loader_csvAndMore<interfaces.DialogProcessor
     properties
         loaderpath='settings/csvloaderconversion/';
+        notfound=false;
     end
     methods
         function obj=Loader_csvAndMore(varargin)        
@@ -17,10 +18,15 @@ classdef Loader_csvAndMore<interfaces.DialogProcessor
         function pard=guidef(obj)
             pard=guidef;
         end
-        function run(obj,p)
+        function out=run(obj,p)
             [f,path]=uigetfile(obj.info.extensions);
-            obj.load(p,[path f]);
-            initGuiAfterLoad(obj);
+            if exist([path f],'file')
+                obj.load(p,[path f]);
+                initGuiAfterLoad(obj);
+                out.file=[f,path];
+            else
+                out.error='file not found. Cannot be loaded.';
+            end
         end
         function clear(obj,file,isadd)
             if isadd 

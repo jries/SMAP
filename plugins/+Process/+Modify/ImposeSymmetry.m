@@ -21,6 +21,7 @@ classdef ImposeSymmetry<interfaces.DialogProcessor&interfaces.SEProcessor
                 ll.class=0*ll.nm;
             end
             mc=max(ll.class)+1;
+            file = 10^(floor(log10(mc))+2);
 
             x=ll.xnm-dx;
             y=ll.ynm-dy;
@@ -33,7 +34,7 @@ classdef ImposeSymmetry<interfaces.DialogProcessor&interfaces.SEProcessor
                 lln=ll;
                 lln.xnm=xn+dx;
                 lln.ynm=yn+dy;
-                lln.class=lln.class+mc*k;
+                lln.class=lln.class+mc*k+file.*double(lln.filenumber);
                 obj.locData.addLocData(lln);
             end
             obj.locData.regroup;
