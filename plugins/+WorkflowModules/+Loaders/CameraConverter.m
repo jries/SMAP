@@ -282,7 +282,7 @@ end
 end
 
 function loadcamcalibrationfile(obj,p,imgp)
-    
+    obj.setPar('cam_varmap',[]);
     [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(obj.loc_cameraSettings.correctionfile,obj.loc_cameraSettings.exposure);
     
     if ~isempty(gainmap)
