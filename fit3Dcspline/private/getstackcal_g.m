@@ -329,6 +329,9 @@ sstack=size(beads(1).stack.image);
             
 
             drawnow
+            
+ 
+            
             %quality control: refit all beads
             if isempty(stackcal_testfit)||stackcal_testfit  %not implemented yet in fitter. Fix later
                 ax=axes(uitab(p.tabgroup,'Title','validate'));
@@ -364,6 +367,57 @@ sstack=size(beads(1).stack.image);
             else
                 posbeads=[];
             end
+            
+            if isfield(p,'advancedoutput') && p.advancedoutput %test for each bead if PSF fits well.
+                testsizeh=7;
+                psfmodel=splinePSF;
+                psfmodel.modelpar.coeff=single(coeffr);
+                psfmodel.modelpar.dz=cspline.dz;
+                psfmodel.modelpar.x0=cspline.x0;
+                psfmodel.modelpar.z0=cspline.z0;
+                psfmodel.roisize=testsizeh*2+1;
+                coord=zeros(size(allstacks,3)-2,3);
+                coord(:,1)=0;
+                coord(:,2)=0;
+                coord(:,3)=0+cspline.dz*((size(allstacks,3)-1:-1:2)'-cspline.z0);
+                psfm=psfmodel.PSF(coord);
+
+                shdm=size(corrPSFhdr);
+                midp=(shdm(1)+1)/2;
+                PSFc=corrPSFhdr(midp-testsizeh:midp+testsizeh,midp-testsizeh:midp+testsizeh,:);
+
+                dpsf=psfm(:,:,2:end-1)-PSFc(:,:,2:end-1);
+                max(dpsf(:))/max(psfm(:)); %maximal relative error
+
+
+                allg=allstacks(:,:,:,beadgood);
+                shifth=shift(beadgood,:);
+
+                diffall=zeros(2*testsizeh+1,2*testsizeh+1,size(allg,3),size(allg,4),'single');
+                sideall=zeros(2*(2*testsizeh+1),2*testsizeh+1,size(allg,3),size(allg,4),'single');
+    %             findgood=find(beadgood);
+                for k=1:size(allg,4)
+                    coord=zeros(size(allg,3),3);
+                    coord(:,1)=-shifth(k,1); coord(:,2)=-shifth(k,2);
+    %                 coord(:,1)=beads(findgood(k)).pos(1)-posbeads.x(:,k); coord(:,2)=-shifth(k,2);
+                    coord(:,3)=0+cspline.dz*((size(allstacks,3):-1:1)'-cspline.z0-shifth(k,3));
+                    psfb=psfmodel.PSF(coord);
+                    shdm=size(allg);
+                    midp=(shdm(1)+1)/2;
+                    PSFc=allg(midp-testsizeh:midp+testsizeh,midp-testsizeh:midp+testsizeh,:,k);
+                    phot=reshape(posbeads.phot(:,k),1,1,[]);
+                    diffall(:,:,:,k)=psfb-PSFc./phot;
+                    sideall(1:2*testsizeh+1,:,:,k)=PSFc./phot;
+                    sideall(2*testsizeh+1+1:end,:,:,k)=psfb;
+                end
+                sideall=sideall(:,:,1:2:end,:);
+                diffall=diffall(:,:,1:2:end,:);
+                axp=(uitab(p.tabgroup,'Title','residuals'));
+                imx(diffall,'Parent',axp);
+                axp=(uitab(p.tabgroup,'Title','compare'));
+                imx(sideall,'Parent',axp);
+            end
+            
         end 
 end
 

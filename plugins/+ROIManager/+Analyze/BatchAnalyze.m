@@ -22,8 +22,8 @@ classdef BatchAnalyze<interfaces.DialogProcessor&interfaces.SEProcessor
             if ~iscell(f)
                 f={f};
             end
-            rp=obj.getPar('ROI_restorparamters');
-            obj.setPar('ROI_restorparamters',false)
+            rp=obj.getPar('ROI_restoreparameters');
+            obj.setPar('ROI_restoreparameters',false)
             for files=1:length(f)
                 gf=g.children.guiFile;
                 
@@ -60,7 +60,7 @@ classdef BatchAnalyze<interfaces.DialogProcessor&interfaces.SEProcessor
                
                 analyzering.saveall([pfad  folder filesep],fileprefix);
             end
-            obj.setPar('ROI_restorparamters',rp);
+            obj.setPar('ROI_restoreparameters',rp);
         end
         function pard=guidef(obj)
             pard=guidef(obj);

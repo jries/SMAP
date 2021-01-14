@@ -24,7 +24,7 @@ classdef ShuffelClusterIndex<interfaces.DialogProcessor
             mi=max(clusterindex);
             n=rand(mi,1);
             [~,indsort]=sort(n);
-            indsort=vertcat(1,indsort);
+%             indsort=vertcat(1,indsort);
             clusterindexnew=zeros(size(clusterindex),'single');
             clusterindexnew(posind) = indsort(clusterindex(posind));
             obj.locData.loc.(field)=clusterindexnew;

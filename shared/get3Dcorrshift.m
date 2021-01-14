@@ -54,6 +54,7 @@ else
             end
      end
      shift=maxind/4-size(refim)/2+1/4;
+
      
 %      shift=maxind/2-size(refim)/2;
 %      shift=maxind-size(refim)/2;

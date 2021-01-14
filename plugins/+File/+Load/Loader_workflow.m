@@ -17,9 +17,13 @@ classdef Loader_workflow<interfaces.DialogProcessor
         end
         function out=run(obj,p)
             [f,path]=uigetfile(obj.info.extensions);
-            obj.load(p,[path f]);
-            initGuiAfterLoad(obj);
-            out=[];
+            if exist([path f],'file')
+                obj.load(p,[path f]);
+                initGuiAfterLoad(obj);
+                out.file=[f,path];
+            else
+                out.error='file not found. Cannot be loaded.';
+            end
         end
         function clear(file,isadd)
         end

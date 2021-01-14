@@ -1,0 +1,14 @@
+﻿Build started 22.11.2016 10:44:06.
+     1>Project "D:\Yiming\code\VS2010 Project\CPUmleFit_LM\CPUmleFit_LM\CPUmleFit_LM\CPUmleFit_LM.vcxproj" on node 2 (build target(s)).
+     1>PrepareForBuild:
+         Creating directory "D:\Yiming\code\VS2010 Project\CPUmleFit_LM\CPUmleFit_LM\Debug\".
+       InitializeBuildStatus:
+         Creating "Debug\CPUmleFit_LM.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /GL /D _WINDLL /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt CPUgaussLib.cpp CPUmleFit_LM.cpp CPUsplineLib.cpp mexFunction.cpp
+     1>cl : Command line error D8016: '/ZI' and '/GL' command-line options are incompatible
+     1>Done Building Project "D:\Yiming\code\VS2010 Project\CPUmleFit_LM\CPUmleFit_LM\CPUmleFit_LM\CPUmleFit_LM.vcxproj" (build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:00.12

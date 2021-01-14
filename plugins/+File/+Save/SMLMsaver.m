@@ -80,6 +80,11 @@ pard.dataselect.position=[2,2];
 pard.dataselect.Width=3;
 pard.dataselect.object.TooltipString='save only selected file';
 
+pard.saveSepFile.object=struct('Style','checkbox','Visible','on','String','All individually','Value',0);
+pard.saveSepFile.position=[3,1.2];
+pard.saveSepFile.Width=2;
+pard.saveSepFile.object.TooltipString='save all files individually';
+
 pard.selectfields.object=struct('Style','pushbutton','String','Fields to save','Callback',{{@outputfields_callback,obj}});
 pard.selectfields.object.TooltipString='Select which fields to save. Use preview before.';
 pard.selectfields.position=[1,3];
