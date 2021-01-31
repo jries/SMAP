@@ -312,6 +312,7 @@ function loadcamcalibrationfile(obj,p,imgp)
        if any(size(obj.gainmap)<roi(1:2)+roi(3:4)) %gainmap too small
            roi(1:2)=0;
        end
+%        roi(1)=roi(1)+5 %test
        gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
        obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
        obj.gainuse=median(gainhere(:));
