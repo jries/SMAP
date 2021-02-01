@@ -313,11 +313,17 @@ function loadcamcalibrationfile(obj,p,imgp)
            roi(1:2)=0;
        end
 %        roi(1)=roi(1)+5 %test
-       gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
-       obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+%        gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
+%        obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+%        obj.gainuse=median(gainhere(:));
+%        varmap=obj.varmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+        
+%        This seems to work together with the calibrateCMOS.m plugin
+       gainhere=(obj.gainmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3)));
+       obj.offsetmapuse=obj.offsetmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3));
        obj.gainuse=median(gainhere(:));
-
-       varmap=obj.varmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+       varmap=obj.varmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3));
+       
         obj.setPar('cam_varmap',varmap);
     
     else
