@@ -64,7 +64,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             obj.makelocDatacopy;
             obj.addSynchronization('sr_roiposition',[],[],{@obj.redraw}); 
             if isempty(obj.axis)||isstruct(obj.axis)||~isvalid(obj.axis)
-                figure;
+                f=figure;
+                obj.setPar('figurehandle_3Dviewer',f)
                 obj.axis=gca;
             end
             
