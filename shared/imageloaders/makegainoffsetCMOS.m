@@ -11,24 +11,34 @@ function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime
     camfilejson=['settings' filesep 'cameras' filesep camfname '.calb'];
     if exist(camfilemat,'file')
         l=load(camfilemat);
+        roi=[];
         if isfield(l, 'read_noise_variance') ...
                 && isfield(l, 'thermal_noise_variance_per_s') ...
                 && isfield(l, 'pixel_baseline') ...
                 && isfield(l, 'thermal_counts_per_s')
             [offsetmap, varmap] = makeExpDependMap(l, exposuretime_data);
-        else
+            gainmap=1./l.gainmap;
+        elseif isfield(l, 'offsetmap')
             offsetmap=l.offsetmap;
             varmap=l.varmap;
+            gainmap=1./l.gainmap;
+        elseif isfield(l, 'mean')
+            offsetmap=l.mean;
+            varmap=l.variance;  
+            gainmap=1./l.metadata.pix2phot*ones(size(offsetmap));
+            roi=l.metadata.roi;
+        else 
+            disp(['no camera calibration found in file ' camfname])
         end
         %assume gainmap is independent of exposure time
         %NB: gainmap has to be inverted, since we need the unit
         %    electrons/counts
-            gainmap=1/l.gainmap;
+%             gainmap=1/l.gainmap;
         %only use media of gainmap
             gainmap = ones(size(gainmap))*median(gainmap(:));
         %varmap has to be in units of photons^2
             varmap=varmap.*gainmap.^2; 
-            roi=[];
+            
                 %???? in units of photons, to be used later directly. 
                 %A: Yes, conversion to photons^2 is not considered in GPUmleFIT
     elseif exist(camfilejson,'file')
