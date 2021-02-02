@@ -285,6 +285,8 @@ if ~options.append
     else
         tempfile = '._temporal.tif';
     end
+    pfad=fileparts(path);
+    tempfile=[pfad filesep  tempfile];
     t = Tiff(tempfile, 'w');
     if ispc
         fileattrib(tempfile, '+h +w', '', 's');

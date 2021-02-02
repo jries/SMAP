@@ -15,25 +15,52 @@ classdef calibrateCMOS<interfaces.DialogProcessor
           end
           il=imageloaderAll([pfad  file],[],obj.P);
 
-          mean=double(il.getimage(1));
-          M2=0*mean;
-          for k=2:il.metadata.numberOfFrames
-              image=double(il.getimage(k));
-              if isempty(image)
-                  break
+          t=tic;
+          if 0 %naive algorithm
+              sumim=double(il.getimage(1));
+              sumim2=sumim.^2;
+              count=1;
+              for k=2:il.metadata.numberOfFrames+1
+                  imageh=double(il.getimage(k));
+                  if isempty(imageh)
+                      break
+                  end
+                  count=count+1;
+                  sumim=sumim+imageh;
+                  sumim2=sumim2+imageh.^2;
+                  if toc(t)>10
+                      disp([num2str(k) ' of ' num2str(il.metadata.numberOfFrames)]);
+                      t=tic;
+                  end
               end
-              delta=image-mean;
-              mean=mean+delta/k;
-              delta2=image-mean;
-              M2=M2+delta.*delta2;
-              
+              mean=sumim/(count);
+              variance=sumim2/(count)-mean.^2;
+
+                  
+          else         %Welfords algorithm
+              mean=double(il.getimage(1));
+              M2=mean.^2;
+              count=1;
+              for k=2:il.metadata.numberOfFrames+1
+                  imageh=double(il.getimage(k));
+                  if isempty(imageh)
+                      break
+                  end
+                  count=count+1;
+                  delta=imageh-mean; %is this correct?
+                  mean=mean+delta/count;
+                  delta2=imageh-mean;
+                  M2=M2+delta.*delta2;
+                  if toc(t)>10
+                      disp([num2str(k) ' of ' num2str(il.metadata.numberOfFrames)]);
+                      t=tic;
+                  end
+              end
+              variance=M2/count;
           end
-          variance=M2/(k-1);
           outputfile=[pfad  strrep(file,'.tif','_var.mat')];
           metadata=il.metadata;
           save(outputfile,'mean','variance','metadata');
-
-             
         end
         function pard=guidef(obj)
             pard=guidef(obj);
