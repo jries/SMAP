@@ -282,7 +282,7 @@ end
 end
 
 function loadcamcalibrationfile(obj,p,imgp)
-    
+    obj.setPar('cam_varmap',[]);
     [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(obj.loc_cameraSettings.correctionfile,obj.loc_cameraSettings.exposure);
     
     if ~isempty(gainmap)
@@ -309,11 +309,21 @@ function loadcamcalibrationfile(obj,p,imgp)
            roi(1:2)=roi(1:2)-1; %zero based;
            disp('no scmos ROI specified: assume entire chip used for calibration');
        end
-       gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
-       obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+       if any(size(obj.gainmap)<roi(1:2)+roi(3:4)) %gainmap too small
+           roi(1:2)=0;
+       end
+%        roi(1)=roi(1)+5 %test
+%        gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
+%        obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+%        obj.gainuse=median(gainhere(:));
+%        varmap=obj.varmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+        
+%        This seems to work together with the calibrateCMOS.m plugin
+       gainhere=(obj.gainmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3)));
+       obj.offsetmapuse=obj.offsetmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3));
        obj.gainuse=median(gainhere(:));
-
-       varmap=obj.varmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+       varmap=obj.varmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3));
+       
         obj.setPar('cam_varmap',varmap);
     
     else

@@ -77,26 +77,46 @@ classdef movieframes<interfaces.SEEvaluationProcessor
             end
             if ismovie
                     F(numt)=im2frame(imh*0+0.5);
+                    obj.outmovie=F;
                     axis(ax,'off')
                     axis(ax,'equal')
                     movie(ax,F,2,6)  
-                    outmovie=F;
+                    
             else
 
                     image(ax,outim)
                     colormap(ax,hot)
                     axis(ax,'equal')
                     axis(ax,'off')
-                    outmovie=outim;
+                    obj.outmovie=outim;
 
-
-                    
-            end
-            
+            end          
         end
      
         function pard=guidef(obj)
             pard=guidef(obj);
+        end
+        function savemovie(obj,a,b)
+            f=obj.getPar('lastSMLFile');
+            fout=strrep(f,'_sml.mat','.tif');
+             [fout,pf]=uiputfile(fout);
+            if isnumeric(obj.outmovie)
+                imwrite(obj.outmovie,[pf fout]) 
+            else
+                
+
+               
+                if fout
+                    v=VideoWriter([pf fout],'MPEG-4');
+
+                    v.FrameRate=obj.getSingleGuiParameter('framerate');
+                    open(v);
+                    writeVideo(v,obj.outmovie(1:end-1))
+                    close(v);
+    %                 savemovie(obj.outmovie)
+    %                 saveastiff(obj.outmovie,[pf  fout], struct('comp','LZW'))
+                end
+            end
         end
     end
 
@@ -145,6 +165,19 @@ pard.exposuretimet.Width=2;
 pard.exposuretime.object=struct('String','','Style','edit');
 pard.exposuretime.position=[6,3];
 pard.exposuretime.Width=0.5;
+
+
+pard.savemovie.object=struct('String','save','Style','pushbutton','Callback',@obj.savemovie);
+pard.savemovie.position=[8,3.5];
+pard.savemovie.Width=1.5;
+
+pard.frameratet.object=struct('String','framerate (fps)','Style','text');
+pard.frameratet.position=[8,1];
+pard.frameratet.Width=2;
+pard.framerate.object=struct('String','15','Style','edit');
+pard.framerate.position=[8,3];
+pard.framerate.Width=.5;
+
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};
