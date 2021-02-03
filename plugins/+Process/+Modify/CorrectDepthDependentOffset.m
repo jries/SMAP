@@ -67,17 +67,17 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             lTwoRing = ringDistS1>intersection;
 
             %% moving mean
-            xx = getHistogramEdge(z(lTwoRing),10);
-            xxCenter = movmean(xx,2);
             dOffset = (ringDistS1Z-knownSepZ)./knownSepZ;
             dOffset = dOffset(lTwoRing);
-            yy=bindata(z(lTwoRing),dOffset,xx,'mean');
-            
+            [~,rankZ] = sort(z(lTwoRing));
+            zTwoRing = z(lTwoRing);
+            yy = movmedian(dOffset(rankZ),10,'SamplePoints',zTwoRing(rankZ));
+
             ax2=obj.initaxis('Depth-depedent offset');
             
             plot(ax2,z(lTwoRing),dOffset, ' ob')
             hold(ax2, 'on')
-            h1 = plot(ax2, xx,yy);
+            h1 = plot(ax2, linspace(min(zTwoRing),max(zTwoRing),length(yy)),yy);
             hold(ax2, 'off')
             
             
@@ -88,7 +88,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             hold(ax2, 'off')
             xlabel(ax2, 'z position (nm)')
             ylabel(ax2, 'ring separation (nm)')
-            legend([h1 h2],{'Move mean','Linear fit'})
+            legend([h1 h2],{'Move median','Linear fit'})
             
             z0 = (0-f.p2)/f.p1;
             fInt = polyint([f.p1 f.p2]);
