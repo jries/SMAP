@@ -11,7 +11,7 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
             locs=obj.locData.getloc({'xnm','ynm','znm','frame','time','xnmline','ynmline'},'layer',find(obj.getPar('sr_layerson')), 'grouping','ungrouped','Position','roi');
             if ~isempty(locs.time)
                 time=locs.time;
-                xax='time (xx)';
+                xax='time (ms)';
                 ds=quantile(diff(locs.time),0.05);
                 
             else
@@ -21,19 +21,111 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
             end
             if ~isempty(locs.xnmline)
                 x=locs.xnmline;
+                y=locs.ynmline;
             else
                 x=locs.xnm;
+                y=locs.ynm;
             end
-            ax=obj.initaxis('x');
-            plot(ax,time,x,'r');
-            xlabel(ax,xax)
-            ylabel(ax,'position (nm)')
+            
+            mintimestep=250; 
+            %keep longest continuous track
+            indgood=true(size(time));
+            dtmax=inf;
+            while dtmax>mintimestep
+                dt=diff(time(indgood));
+                findgood=find(indgood);
+                [dtmax,indm]=max(dt);
+                if dtmax>mintimestep
+                    if indm>length(dt)/2
+                        indgood(findgood(indm):end)=false;
+                    else
+                        indgood(1:findgood(indm))=false;
+                    end
+                end
+            end
+            
+            x=x(indgood);
+            time=time(indgood);
+            y=y(indgood);
+            
+            median(diff(time))
+            
+            ax=obj.initaxis('correlation');
+            h=histcounts(x,min(x):1:max(x));
+            xc=myxcorr(h,h);
+            plot(ax,xc);
+            xlabel('delta x (nm)');
+            ylabel('auto corr')
+            
+            if p.stepsize>0
+                ax=obj.initaxis('steppos');
+                xm=mod(x,p.stepsize);
+                hxm=histcounts(xm,0:p.stepsize);
+                plot(hxm);
+                [~,stepshift]=max(hxm);
+
+
+
+                axx=obj.initaxis('x');
+                steps=(ceil(min(x)/p.stepsize)*p.stepsize:p.stepsize:max(x)+stepshift)-stepshift;
+                stepsa=vertcat(steps,steps);
+                tsteps=vertcat(ones(size(steps))*min(time),ones(size(steps))*max(time));
+                hold(axx,'off')
+                plot(axx,tsteps,stepsa,'c')
+                hold(axx,'on')
+            
+            else
+                axx=obj.initaxis('x');
+                hold(axx,'off')
+            end
+                
+            timenorm=true;
+            if timenorm
+                timeplot=(time-time(1))/1000;
+                xax='time (s)';
+            else
+                timeplot=time;
+            end
+            plot(axx,timeplot,x,'m');
+            hold(axx,'on')
+            xlabel(axx,xax)
+            ylabel(axx,'position (nm)')
             windowsize=p.filtersize*ds;
             xf=runningWindowAnalysis(time,x,time,windowsize,p.filtermode.selection);
-            hold(ax,'on')
-            plot(ax,time,xf,'b');
-            hold(ax,'off')
             
+            plot(axx,timeplot,xf,'b');
+            
+%             plot(ax,time,y,'m');
+            
+            
+            
+            %step finder
+            ax=obj.initaxis('stepfind');
+            inds=findchangepts(x,'MaxNumChanges',round((max(x)-min(x))/20));
+            inds=[0 ;inds ;length(x)+1];
+            mv=zeros(length(inds)-1,1);
+            tv=mv;
+            for k=1:length(inds)-1
+                mv(k)=mean(x(inds(k)+1:inds(k+1)-1));
+                tv(k)=timeplot(inds(k)+1);
+
+            end
+            stairs(axx,tv,mv,'k')
+            
+            
+            dmv=diff(mv);
+            for k=1:length(dmv)
+                text(axx,tv(k+1),mean(mv(k:k+1)),num2str(dmv(k),'%2.0f'))
+            end
+            histogram(ax,dmv,min(dmv)-5:5:max(dmv)+5)
+            
+            ax=obj.initaxis('x-y');
+            plot(ax,x,y,'.-')
+            
+            obj.initaxis('x','keep')
+            
+           
+
         end
         function pard=guidef(obj)
             pard=guidef;
@@ -51,6 +143,13 @@ pard.filtersize.object=struct('String','10','Style','edit');
 pard.filtersize.position=[1,2];
 pard.filtermode.object=struct('String',{{'median','mean'}},'Style','popupmenu');
 pard.filtermode.position=[1,3];
+
+
+pard.stepsizet.object=struct('String','Step size (nm)','Style','text');
+pard.stepsizet.position=[2,1];
+pard.stepsize.object=struct('String','0','Style','edit');
+pard.stepsize.position=[2,2];
+
 % pard.analysismode.Width=3;
 % % ,'grid based diffusion coefficients'
 % 
