@@ -122,7 +122,7 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
             ax=obj.initaxis('x-y');
             plot(ax,x,y,'.-')
             
-            obj.initaxis('x','keep')
+            obj.initaxis('x','keep');
             
            
 
