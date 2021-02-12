@@ -18,6 +18,8 @@ function [locsout,indcombined,hroio]=getlocs(locData,fields,varargin)
 %           respectively.
 % 'within': return true if inside the ROI.
 % inlayeru, inlayerg: return cell array with indices for each layer
+% layer: the last layer the localization is in. Works only for 'layer'
+% parameter.
 
 %Properties: Name, value pairs
 %'grouping': If to return grouped or ungrouped localizations
@@ -157,6 +159,7 @@ end
 
 indfilter=false(size(locs.xnm));
 % layerused=false;
+layernumber=0*locs.xnm;
 for k=1:length(p.layer)
     if p.layer(k)>length(locData.layer)||p.layer(k)<1
         disp('getloc layer out of range')
@@ -180,6 +183,7 @@ for k=1:length(p.layer)
          locData.setFilter(filter,p.layer(k),grouping);
       end
       indlayer{k}=locData.inFilter(p.layer(k),grouping);
+      layernumber(indlayer{k})=p.layer(k);
 %      indfilter=indfilter|locData.inFilter(p.layer(k),grouping);
      indfilter=indfilter|indlayer{k};
      locData.setFilter(filterold,p.layer(k),grouping);
@@ -291,7 +295,9 @@ for k=1:length(p.fields)
             for l=1:length(indlayer)
                 indlayer{l}=getindices(locData,indcombined,1)&getindices(locData,indlayer{l},1);
             end
-            locsout.(p.fields{k})=indlayer;            
+            locsout.(p.fields{k})=indlayer;          
+     elseif strcmp(p.fields{k},'layer')
+            locsout.layer=layernumber(indf);
      else
          locsout.(field)=[];
          if locData.warning
