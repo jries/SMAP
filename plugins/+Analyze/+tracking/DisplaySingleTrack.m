@@ -27,7 +27,7 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
                 y=locs.ynm;
             end
             
-            mintimestep=250; 
+            mintimestep=100; 
             %keep longest continuous track
             indgood=true(size(time));
             dtmax=inf;
@@ -124,7 +124,50 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
             
             obj.initaxis('x','keep');
             
-           
+            if p.makemovie
+                ts=min(time):p.frametime:max(time);
+                f=figure(99);
+                ax=gca;
+
+                delete(ax.Children)
+                
+                axis(ax,'equal');
+%                 axis(ax,'off');
+                    xlim(ax,[min(x)-10 max(x)+10])
+                    ylim(ax,[min(y)-10 max(y)+10])
+                    hold(ax,'on')
+                    plot([min(x)-5 min(x)+10-5], [min(y)-5 min(y)-5],'k','LineWidth',3)
+                    ax.XTick=[];
+                    ax.YTick=[];
+                for k=1:length(ts)
+                    indh=time<=ts(k);
+                    xh=x(indh);
+                    yh=y(indh);
+                    th=time(indh);
+%                     hold(ax,'off')
+                    hl=plot(ax,xh,yh,'k');
+                    hold(ax,'on')
+                    hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',10);
+                    plot(ax,xh(end),yh(end),'b.')
+                    tpassed=ts(k)-ts(1);
+                    ht=text(ax,min(x),max(y),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
+                    
+                    drawnow
+                    Fr(k)=getframe(ax);
+                    delete(hd)
+                    delete(hl)
+                    delete(ht)
+                end
+                pfad=fileparts(obj.getPar('lastSMLFile'));
+%                 fo=strrep(fo,'_sml.mat','.mp4');
+                [file,pfad]=uiputfile([pfad filesep '*.mp4']);
+                if file
+                    mysavemovie(Fr,[pfad  file],'FrameRate',20)
+                end
+                  
+                    
+                   
+            end
 
         end
         function pard=guidef(obj)
@@ -150,6 +193,15 @@ pard.stepsizet.position=[2,1];
 pard.stepsize.object=struct('String','0','Style','edit');
 pard.stepsize.position=[2,2];
 
+
+pard.makemovie.object=struct('String','Make movie','Style','checkbox');
+pard.makemovie.position=[3,1];
+
+pard.frametimet.object=struct('String','frame time (ms)','Style','text');
+pard.frametimet.position=[3,2];
+
+pard.frametime.object=struct('String','10','Style','edit');
+pard.frametime.position=[3,3];
 % pard.analysismode.Width=3;
 % % ,'grid based diffusion coefficients'
 % 

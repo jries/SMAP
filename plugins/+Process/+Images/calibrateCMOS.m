@@ -71,7 +71,7 @@ end
 function pard=guidef(obj)
 pard.text.object=struct('Style','text','String','Select tiff stacks containing dark field images of the sCMOS camera.');
 pard.text.position=[1,1];
-pard.dataselect.Width=4;
+pard.text.Width=4;
 % pard.dataselect.object.TooltipString='sCMOS file localizations';
 % pard.dataselect.Width=2;
 % pard.tiffselect.object=struct('Style','popupmenu','String','empty');
