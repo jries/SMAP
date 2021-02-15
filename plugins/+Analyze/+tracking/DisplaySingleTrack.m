@@ -150,7 +150,7 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
                     hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',10);
                     plot(ax,xh(end),yh(end),'b.')
                     tpassed=ts(k)-ts(1);
-                    ht=text(ax,min(x),max(y),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
+                    ht=text(ax,double(min(x)),double(max(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
                     
                     drawnow
                     Fr(k)=getframe(ax);
