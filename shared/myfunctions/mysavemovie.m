@@ -5,7 +5,7 @@ function mysavemovie(img,fsave,varargin)
 % img: frames or array
 % fsave: output path
 
-% framerate
+% FrameRate
 ind=find(strcmp(varargin,'profile'),1,'first');
 if ~isempty(ind)
     profile=varargin{ind+1};
