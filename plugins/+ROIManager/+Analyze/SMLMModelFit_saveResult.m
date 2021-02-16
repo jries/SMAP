@@ -19,6 +19,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
                 %Settings               
             
             obj.loadData
+            obj.setPar('SMLMModelFit_saveResult',obj)
         end
         
         function out=run(obj,p)
@@ -168,6 +169,48 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             names = namesAllEval(allSMLMModelFitGUI);
         end
         
+        function registerSites_callBack(obj,a,b)
+            obj.loadData;
+            obj.fit_manager.masterAvg;
+            obj.locData.regroup;
+            obj.locData.filter;
+        end
+        
+        function module = dynamicRec_callBack(obj,a,b)
+            % hack an evaluate plug-in in order to use the obj.getLocs(...)
+            module=plugin('ROIManager','Analyze','SMLMModelFit_dynamicRec_mCME');
+            p.Vrim=100;
+
+            module.handle=figure('MenuBar','none','Toolbar','none','Name','SMLMModelFit_dynamicRec_mCME');
+            module.attachPar(obj.P);
+            module.attachLocData(obj.locData);
+
+            p.Xrim=10;
+            module.setGuiAppearence(p)
+            module.makeGui;
+
+            module.linkedManager = obj.fit_manager;
+        %     fdcal=figure(233);
+        %     dcal=plugin('ROIManager','Analyze','SMLMModelFit_dynamicRec_mCME',fdcal,obj.P);
+        %     dcal.attachLocData(obj.SE.locData);
+        %     dcal.makeGui;
+
+        %     obj.loadData;
+        %     obj.fit_manager.dynamicRec;
+        %     obj.locData.regroup;
+        %     obj.locData.filter;
+        end
+        
+        function mkMovie_callBack(obj,a,b)
+            obj.loadData;
+            [file,path] = uiputfile('*.tif', 'Save as', '');
+            if file~=0
+                obj.fit_manager.mkMovie('saveTo', [path file]);
+            else
+                warning('Please specify where to save.')
+            end
+        end
+        
         function createPlot(obj)
         end
     end
@@ -191,22 +234,22 @@ pard.extLoad.position=[2,1];
 pard.extLoad.Width=1;
 
 pard.plotUseOnly.object=struct('Style','checkbox','Value',1);
-pard.plotUseOnly.position=[1,3.5];
+pard.plotUseOnly.position=[1,4.5];
 pard.plotUseOnly.Width=0.2;
 
 pard.tPlotUseOnly.object=struct('Style','text','String','Plot use only');
 pard.tPlotUseOnly.position=[1,3.7];
 pard.tPlotUseOnly.Width=1;
 
-pard.registerSites.object=struct('Style','pushbutton','String','Register sites','Callback', {{@registerSites_callBack,obj}});
+pard.registerSites.object=struct('Style','pushbutton','String','Register sites','Callback', {{@obj.registerSites_callBack}});
 pard.registerSites.position=[3,3.7];
 pard.registerSites.Width=1;
 
-pard.recSites.object=struct('Style','pushbutton','String','Reconstruction','Callback', {{@dynamicRec_callBack,obj}});
+pard.recSites.object=struct('Style','pushbutton','String','Reconstruction','Callback', {{@obj.dynamicRec_callBack}});
 pard.recSites.position=[4,3.7];
 pard.recSites.Width=1;
 
-pard.mkMovie.object=struct('Style','pushbutton','String','Make movie','Callback', {{@mkMovie_callBack,obj}});
+pard.mkMovie.object=struct('Style','pushbutton','String','Make movie','Callback', {{@obj.mkMovie_callBack}});
 pard.mkMovie.position=[5,3.7];
 pard.mkMovie.Width=1;
 
@@ -229,29 +272,22 @@ function extLoad_callBack(a,b,obj)
     obj.loadData;
 end
 
-function registerSites_callBack(a,b,obj)
-    obj.loadData;
-    obj.fit_manager.masterAvg;
-    obj.locData.regroup;
-    obj.locData.filter;
+
+
+
+
+function recSettings_callBack(a,b,obj)
+    fig = figure;
+    set(fig,'Tag', 'recSettings', 'Name', 'Settings - Dyanmic reconstruction')
+    hOld = uicontrol(fig,'Position',[50 100 100 200]); 
+    fitter = obj.fit_manager.data.fitter.SMLMModelFitGUI_2;
+    fitter.createConvertTable(hOld, 'hTable');
+    
+    uicontrol(fig,'Position',[50 70 25 25], 'Style', 'pushbutton','String','+','Callback',{@fitter.addRow, 'hTable'}); 
+    uicontrol(fig,'Position',[75 70 25 25], 'Style', 'pushbutton','String','-','Callback',{@fitter.rmRow, 'hTable'});
 end
 
-function dynamicRec_callBack(a,b,obj)
-    obj.loadData;
-    obj.fit_manager.dynamicRec;
-    obj.locData.regroup;
-    obj.locData.filter;
-end
 
-function mkMovie_callBack(a,b,obj)
-    obj.loadData;
-    [file,path] = uiputfile('*.tif', 'Save as', '');
-    if file~=0
-        obj.fit_manager.mkMovie('saveTo', [path file]);
-    else
-        warning('Please specify where to save.')
-    end
-end
 
 function variableTableEditCallback(a,b,obj)
     if b.Indices(2) == 2
