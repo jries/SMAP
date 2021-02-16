@@ -122,6 +122,11 @@ function [grpMean, grpStd] = errorPlot(obj, settings, parStack, grp)
             case 'bg'
                 var = var*10;
                 xlab = 'Background (%)';
+            case 'LE'
+                var = ((1-var*0.1)-0.3)*100;
+                xlab = 'Labeling efficiency (%)';
+            case 'RB'
+                xlab = 'Re-blinks';
             otherwise
         end
         for con = 1:max(cond)

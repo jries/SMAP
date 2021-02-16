@@ -14,6 +14,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             knownSeparation = 49.3;
             
             %% Get info from SMLMModelFit
+            se = obj.SE;
             sites = obj.SE.sites;
             lUsed = getFieldAsVector(sites, 'annotation.use');
             usedSites = sites(lUsed);
@@ -21,6 +22,8 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             evalList = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             indProcessor = find(strcmp('SMLMModelFitGUI',evalList));
             fitter = obj.SE.processors.eval.processors{indProcessor}.fitter;
+            
+            ID = getFieldAsVector(usedSites, 'ID');
             
             [~,idxRingDist] = fitter.wherePar('pars.m2.lPar.z');
             ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
@@ -69,25 +72,30 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             %% moving mean
             xx = getHistogramEdge(z(lTwoRing),10);
             xxCenter = movmean(xx,2);
-            dOffset = (ringDistS1Z-knownSepZ)./knownSepZ;
+            dOffset = (ringDistS1Z-knownSepZ)./ringDistS1Z;
             dOffset = dOffset(lTwoRing);
             yy=bindata(z(lTwoRing),dOffset,xx,'mean');
             
             ax2=obj.initaxis('Depth-depedent offset');
             
-            plot(ax2,z(lTwoRing),dOffset, ' ob')
+            z_twoRing = z(lTwoRing);
+            ID_twiRing = ID(lTwoRing);
+            lFocus = z_twoRing<100&z_twoRing>-100;
+%             plot(ax2,z_twoRing(lFocus),dOffset(lFocus), ' ob')
+            plotSElink(ax2,z_twoRing(lFocus),dOffset(lFocus),ID_twiRing(lFocus),se, ' ob');
             hold(ax2, 'on')
+            plot(ax2,z_twoRing(~lFocus),dOffset(~lFocus), ' ok')
             h1 = plot(ax2, xx,yy);
             hold(ax2, 'off')
             
             
             %% curve fit
-            f = fit(z(lTwoRing),dOffset,'poly1','Robust','LAR');
+            f = fit(z_twoRing(lFocus),dOffset(lFocus),'poly1','Robust','LAR');
             hold(ax2, 'on')
             h2 = plot(f, 'c');
             hold(ax2, 'off')
             xlabel(ax2, 'z position (nm)')
-            ylabel(ax2, 'ring separation (nm)')
+            ylabel(ax2, 'Relative offset')
             legend([h1 h2],{'Move mean','Linear fit'})
             
             z0 = (0-f.p2)/f.p1;
@@ -96,6 +104,35 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             fInt(3) = c;
 
             dOffsetFun = @(z) fInt(1).*z.^2+fInt(2).*z+fInt(3);
+            
+            %%
+            ax2_1=obj.initaxis('Ring separation');
+            plotSElink(ax2_1, z_twoRing,ringDistS1Z(lTwoRing),ID,se,' ob') 
+            f = fit(z_twoRing,ringDistS1Z(lTwoRing),'poly1','Robust','LAR');
+            hold(ax2_1, 'on')
+            h3 = plot(f, 'c');
+            hold(ax2_1, 'off')
+            
+            %% validation
+            newZLower = zM1-dOffsetFun(zM1);
+            
+            zUpper = zM1+ringDistS1Z;
+            newZUpper = zUpper-dOffsetFun(zUpper);
+            newRingDistS1Z = newZUpper-newZLower;
+            
+            lateralDist = sqrt(ringDistS1.^2-ringDistS1Z.^2);
+            newRingDist = sqrt(lateralDist.^2+newRingDistS1Z.^2);
+            newZPos = newZLower+newRingDistS1Z/2;
+            f2 = fit(newZPos(lTwoRing),newRingDist(lTwoRing),'poly1','Robust','LAR');
+            ax3=obj.initaxis('Validation');
+            plot(ax3, newZPos(lTwoRing),newRingDist(lTwoRing),' ob')
+            hold(ax3, 'on')
+            h2 = plot(f2, 'c');
+            hold(ax3, 'off')
+            xlabel(ax3, 'z position (nm)')
+            ylabel(ax3, 'ring separation (nm)')
+            legend([h1 h2],{'Move mean','Linear fit'})
+            
             
             
             %% apply the correction
