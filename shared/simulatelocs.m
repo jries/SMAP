@@ -387,12 +387,25 @@ modCoord = fitter.getSimRef('finalROISize',str2num(finalROISize)); % get point t
 parameters.allParsArg = fitter.allParsArg;
 parameters.model = fitter.model;
 % Export
-locs.x = modCoord{1}.x;
-locs.y = modCoord{1}.y;
-if isfield(modCoord{1}, 'z')
-    locs.z = modCoord{1}.z;
+for l = 1:length(modCoord)
+    nLabel(l) = length(modCoord{l}.x);
 end
-locs.channel = ones(size(modCoord{1}.x));
+cumNLabel = [0 cumsum(nLabel)];
+nAllLabel = sum(nLabel);
+locs.x = zeros(nAllLabel,1);
+locs.y = zeros(nAllLabel,1);
+    if isfield(modCoord{l}, 'z')
+        locs.z = zeros(nAllLabel,1);
+    end
+for l = 1:length(modCoord)
+    locs.x(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.x;
+    locs.y(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.y;
+    if isfield(modCoord{1}, 'z')
+        locs.z(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.z;
+    end
+    locs.channel(cumNLabel(l)+1:cumNLabel(l+1)) = ones(size(modCoord{l}.x))*l;
+end
+locs.channel = locs.channel';
 end
 
 function locs=labelremove(locin,p)
