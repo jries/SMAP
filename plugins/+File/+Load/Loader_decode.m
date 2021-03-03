@@ -1,19 +1,73 @@
-classdef Loader_csvAndMore<interfaces.DialogProcessor
+classdef Loader_decode<interfaces.DialogProcessor
     properties
-        loaderpath='settings/csvloaderconversion/';
-        notfound=false;
+        
     end
     methods
-        function obj=Loader_csvAndMore(varargin)        
+        function obj=Loader_decode(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:}) ;
                 obj.inputParameters={'mainGui'};
         end
         
         function out=load(obj,p,file,mode)
-            if nargin<4
-                mode=getfilemode(file);
+            out=[];
+            [~,~,ext]=fileparts(file);
+            switch ext
+                case '.h5'
+                    [locs,info]=loadh5(file);
+                case '.csv'
+                    [locs,info]=loadcsv(file);
             end
-            loadfile(obj,p,file,mode);
+            locData=interfaces.LocalizationData;
+            if strcmp(info.unit,'px')
+                pix2nm=info.px_size;
+            else
+                pix2nm=[1 1];
+            end
+            filenumber=obj.locData.files.filenumberEnd+1;
+            zd=zeros(size(locs.x),'single');
+            
+            locData.setloc('ynm',single(locs.x*pix2nm(1)));
+            locData.setloc('xnm',single(locs.y*pix2nm(2)));
+            locData.setloc('znm',single(locs.z));
+            locData.setloc('phot',single(locs.phot));
+            locData.setloc('frame',double(locs.frame_ix+1));
+            locData.setloc('prob',single(locs.prob));
+            locData.setloc('LLrel',single(locs.prob));
+            
+            locData.setloc('filenumber',zd+filenumber);
+            locData.setloc('channel',zd);
+            
+            if ~info.thin
+                locData.setloc('ynmerr',single(locs.x_sig*pix2nm(1)));
+                locData.setloc('xnmerr',single(locs.y_sig*pix2nm(2)));
+                locData.setloc('locprecznm',single(locs.z_sig));
+                locData.setloc('bg',single(locs.bg));
+                locData.setloc('phot_err',single(locs.phot_sig));
+                locData.setloc('locprecnm',(locData.loc.xnmerr+locData.loc.ynmerr)/2);
+            else
+                locData.setloc('bg',zd);
+                locData.setloc('locprecznm',mean(pix2nm)./sqrt(locs.phot)*3);
+                locData.setloc('locprecnm',mean(pix2nm)./sqrt(locs.phot));
+            end
+
+            obj.locData.addLocData(locData);
+
+            filestruc=locData.files.file;
+            filestruc.name=file;
+            mx=ceil(max(locData.loc.xnm)/pix2nm(2));
+            my=ceil(max(locData.loc.ynm)/pix2nm(1));
+
+            filestruc.info=struct('Width',mx,'Height',my,'roi',[0 0 mx my],'cam_pixelsize_um',pix2nm([2 1])/1000);
+            filestruc.info=copyfields(filestruc.info,info);
+            if obj.locData.files.filenumberEnd==0
+                obj.locData.files.file=filestruc;
+
+            else
+                obj.locData.files.file(filenumber)=copyfields(obj.locData.files.file(1),filestruc,fieldnames(obj.locData.files.file(1)));
+            end
+            obj.locData.files.filenumberEnd=length(obj.locData.files.file);
+            obj.locData.files.file(filenumber).number=filenumber;
+
         end
         function pard=guidef(obj)
             pard=guidef;
@@ -35,111 +89,56 @@ classdef Loader_csvAndMore<interfaces.DialogProcessor
                 obj.locData.clear;
             end
         end
-        function initGui(obj)
-            obj.loaderpath='settings/csvloaderconversion/';
-            files=dir([obj.loaderpath '*.txt']);
-            string={'New format', files(:).name};
-            obj.guihandles.importdef.String=string;
-%             obj.guihandles.importdef.Callback=@obj.csvconvert_callback;
-        end
-%         function csvconvert_callback(obj,object,b)
-%            if object.Value==1
-%                newformat(obj);
-%            end
-%         end
     end
 end
 
-% function newformat(obj)
-% [f,p]=uigetfile(obj.info.extensions);
-% end
 
-function table_callback(object,value)
-if value.Indices(2)==4 %popupmenu
-    if strcmp(value.NewData,'edit')
-        object.Data(value.Indices(1),3)=object.Data(value.Indices(1),1);
-    else
-    object.Data{value.Indices(1),3}=value.NewData;
-    end
+function [locs,io]=loadh5(file)
+info=h5info(file);
+io.version=info.Groups(2).Attributes.Value;
+io.unit=info.Groups(3).Attributes(1).Value;
+io.px_size=info.Groups(3).Attributes(2).Value;
+for k=1:length(info.Groups(1).Datasets) 
+    locs.(info.Groups(1).Datasets(k).Name)=h5read(file,['/data/' info.Groups(1).Datasets(k).Name]);
+end
+locs.x(:,1)=locs.xyz(1,:);
+locs.y(:,1)=locs.xyz(2,:);
+locs.z(:,1)=locs.xyz(3,:);
+
+io.thin=true;
+if ~isempty(locs.xyz_sig)
+    io.thin=false;
+    locs.x_sig(:,1)=locs.xyz_sig(1,:);
+    locs.y_sig(:,1)=locs.xyz_sig(2,:);
+    locs.z_sig(:,1)=locs.xyz_sig(3,:);
+end
+
+if ~isempty(locs.xyz_cr)
+    locs.x_cr(:,1)=locs.xyz_cr(1,:);
+    locs.y_cr(:,1)=locs.xyz_cr(2,:);
+    locs.z_cr(:,1)=locs.xyz_cr(3,:);
+end
 
 end
+
+function [locs,io]=loadcsv(file)
+locs=readtable(file,'NumHeaderLines',3);
+fid=fopen(file);
+fgetl(fid);
+l2=fgetl(fid);
+l3=fgetl(fid);
+fclose(fid);
+io.version=sscanf(l2,'# {%*s "%s}');
+io.version(end-2:end)='';
+io.unit=sscanf(l3,'# {%*s "%s}');
+io.unit(end-2:end)=[];
+io.px_size=sscanf(l3,'# {%*s %*s %*s [%f, %f }');
+locs=table2struct(locs);
+io.thin=false;
+if all(isnan(locs.x_sig))
+    io.thin=true;
 end
 
-function pfileo=importdialog(tab,pfile,obj)
- defnames={'edit','ID','frame','channel','xnm','ynm','znm','phot','bg','locprecnm','locprecznm','PSFxnm','PSFynm'};
-%         varnames=tab.Properties.VariableNames;
-        varnames=fieldnames(tab);
-        columnformat={'char','logical','char',defnames};
-%         f=dialog;
-f=figure;
-        f.Position(3:4)=[400,500];
-        ht=uitable('units','normalized','Parent',f,'Position',[0 0.2 1 .5]);
-        ht.ColumnFormat=columnformat;
-        ht.ColumnEditable=[false true true true];
-        ht.ColumnName={'Column name','import','field name','select field'};
-        ds(:,1)=varnames;ds(:,3)=varnames;
-        ds(:,4)=repmat({'edit'},length(varnames),1);
-        
-        ht2=uitable('units','normalized','Parent',f,'Position',[0 0.7 1 .3]);
-        ht2.ColumnName=varnames;
-        a=table2array(struct2table(tab));
-%         a=struct2cell(tab);
-        ht2.Data=a(1:min(100,size(a,1)),:);
-        
-        fn=fieldnames(pfile);
-        for k=1:length(fn)
-            vh=pfile.(fn{k});
-            if isnumeric(vh)
-                ds{vh,3}=fn{k};
-                try
-                    ds{vh,4}=fn{k};
-                    ds{vh,2}=true;
-                catch
-                end
-            end
-        end
-        
-        ht.Data=ds;
-        ht.CellEditCallback=@table_callback;
-        
-        uicontrol('Parent',f,'Style','text','String','Cam pixel size (nm)','Position',[5,50,150,20]);
-        hcam=uicontrol('Parent',f,'Style','edit','String','100','Position',[155,50,100,20]);
-        
-        uicontrol('Parent',f,'Style','text','String','Factor (xy or [xy z])','Position',[5,70,150,20]);
-        hfac=uicontrol('Parent',f,'Style','edit','String','1','Position',[155,70,100,20]);
-        
-        b1=uicontrol('Parent',f,'Style','pushbutton','String','Cancel','Callback',{@button_callback,0},'Position',[5,5,50,20]);
-        b2=uicontrol('Parent',f,'Style','pushbutton','String','Save conversion structure','Callback',{@button_callback,2},'Position',[70,5,190,20]);
-        b3=uicontrol('Parent',f,'Style','pushbutton','String','Ok','Callback',{@button_callback,1},'Position',[275,5,50,20]);
-        
-         uiwait(f);
-        
-    function button_callback(a,b,number)
-       dsh=ht.Data; 
-       
-       if number>0
-           sd=size(dsh);
-       for k2=1:sd(1)
-             if dsh{k2,2}
-                 pfileo.(dsh{k2,3})=dsh{k2,1};
-             end
-       end
-       else
-           pfileo=[];
-       end
-       pfileo.cam_pixelsize_um=str2double(hcam.String);
-       pfileo.factor=str2num(hfac.String);
-       if number==2 %save
-%            path='settings/csvloaderconversion/';
-           [ file, path]=uiputfile([obj.loaderpath 'csv_.txt']);
-           writestruct([path file],pfileo);
-           disp('converstion structure saved');
-           obj.initGui;
-       end
-       delete(f);
-    end
-% pfileo=pfile;
-        
 end
 
 function loadfile(obj,p,file,mode)
@@ -395,15 +394,15 @@ end
 
 
 function pard=guidef
-info.name='Import CSV/MAT/HDF5';
-info.extensions={'*.csv;*.xls;*.mat;*.hdf5;*.h5;*.txt','*.*'};
-info.dialogtitle='select any .csv .mat or .hdf5 file';
+info.name='Import DECODE .csv/.h5';
+info.extensions={'*.csv;*.h5','*.*'};
+info.dialogtitle='select a DECODE .csv .mat or .h5 file';
 pard.plugininfo=info;  
 pard.plugininfo.type='LoaderPlugin';
-pard.plugininfo.description='loades localzation data from a variety of files including text (.csv, .txt), hdf5 or MATLAB files. Localization data properties can be converted to those used in SMAP, and conversions can be saved for repeated use.';
+pard.plugininfo.description='DECODE Loader';
 
-pard.importdef.object=struct('Style','popupmenu','String',{{'select import'}});
-pard.importdef.position=[1,1];
-pard.importdef.Width=2;
-pard.importdef.TooltipString='Select definition file for import';
+% pard.importdef.object=struct('Style','popupmenu','String',{{'select import'}});
+% pard.importdef.position=[1,1];
+% pard.importdef.Width=2;
+% pard.importdef.TooltipString='Select definition file for import';
 end

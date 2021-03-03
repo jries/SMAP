@@ -1,5 +1,5 @@
 classdef DECODE_training_estimates<interfaces.DialogProcessor
-%     Saves a training file for deepSMLM
+%     Saves a training file for DECODE
     properties
         yamldefault='settings/cameras/DECODE_default.yaml';
         yamlfile
