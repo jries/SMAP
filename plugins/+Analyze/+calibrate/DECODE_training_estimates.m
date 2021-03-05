@@ -91,6 +91,7 @@ end
 % what is a file?
 jtype.SMAP.watchFolder='d';
 jtype.InOut.calibration_file='3d';
+jtype.InOut.experiment_out='d';
 obj.jsontypes=jtype;
 
 ta=obj.guihandles.parttable;
@@ -249,8 +250,15 @@ function usecurrent_callback(a,b,obj)
     fi=obj.locData.files.file(1).info;
     js.Camera.em_gain=fi.emgain*fi.EMon;
     js.Camera.e_per_adu=fi.conversion;
-    js.Camera.px_size=fi.cam_pixelsize_um*1000;
+    js.Camera.px_size=fi.cam_pixelsize_um([2 1])*1000;
     js.Camera.baseline=fi.offset;
+    if js.Camera.em_gain>0 
+        js.Camera.read_sigma=74.4;
+        disp('read noise set to 74.4 e- for EM gain')
+    else
+        js.Camera.read_sigma=1.5;
+        disp('read noise set to 1.5 e- for sCMOS or non-EM camera')   
+    end
     
     if isa(hroi,'imroi') && isvalid(hroi)
         m=hroi.createMask;
@@ -271,9 +279,9 @@ function usecurrent_callback(a,b,obj)
     if isempty(js.InOut.calibration_file)
         js.InOut.calibration_file=get3dcalfile(obj);
     end
-    if ~isempty(js.InOut.calibration_file)
-        js.InOut.experiment_out=fileparts(js.InOut.calibration_file);
-    end
+%     if ~isempty(js.InOut.calibration_file)
+%         js.InOut.experiment_out=fileparts(js.InOut.calibration_file);
+%     end
     obj.yamlpar=js;  
     setz(obj);
     makejsontable(obj)
@@ -344,7 +352,16 @@ function setz(obj)
  end
  calf=obj.yamlpar.InOut.calibration_file;
  if ~isempty(calf)
+     if ~exist(calf,'file')
+         disp('please load PSF calibration file')
+         [fn,pn]=uigetfile(calf,'load PSF calibration file');
+         calf=[pn fn];
+     end
     l=load(calf);
+    obj.yamlpar.InOut.calibration_file=calf;
+    if isempty(obj.yamlpar.InOut.experiment_out)
+        obj.yamlpar.InOut.experiment_out=fileparts(calf);
+    end
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
     zminmax(2)=min(zminmax(2),zr);
