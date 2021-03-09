@@ -71,9 +71,9 @@ classdef LocalizationData<interfaces.GuiParameterInterface
             end
             obj.SE.addFile(filenew.name,obj.files.filenumberEnd,obj.files.file(obj.files.filenumberEnd).info);
         end
-        function setloc(obj,name, value,indused)
+        function setloc(obj,name, value,indused,skipregroup)
             %Add a field to all localizations. setloc(field, value) sets obj.loc.(name)=value
-            if nargin<4
+            if nargin<4 || isempty(indused)
                 obj.loc.(name)=real(value);
             else %only part of locs are calculated. Fill rest with zeros. Can be grouped or ungrouped.
                 nu=length(obj.loc.frame);
@@ -85,7 +85,9 @@ classdef LocalizationData<interfaces.GuiParameterInterface
                     v=obj.grouped2ungrouped(indused,value);
                 end
                 obj.loc.(name)=real(v);
-                obj.regroup;    
+                if nargin<5 || ~skipregroup
+                    obj.regroup;  
+                end
             end
             
             locfields=fieldnames(obj.loc);
