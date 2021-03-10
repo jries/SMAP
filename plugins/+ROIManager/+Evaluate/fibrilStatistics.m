@@ -4,7 +4,13 @@ classdef fibrilStatistics<interfaces.SEEvaluationProcessor
     % "fibrilKymograph" is required.
     methods
         function obj=fibrilStatistics(varargin)        
-                obj@interfaces.SEEvaluationProcessor(varargin{:});
+            obj@interfaces.SEEvaluationProcessor(varargin{:});
+            flagDirExist = exist('../fibrilkymograph','dir');
+            if flagDirExist==0
+                warning('Please install fibrilkymograph.')
+            else
+                addpath(genpath('../fibrilkymograph'))
+            end
         end
         
         function out=run(obj,p)
