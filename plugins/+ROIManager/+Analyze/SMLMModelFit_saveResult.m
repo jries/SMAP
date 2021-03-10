@@ -170,6 +170,66 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
         end
         
         function registerSites_callBack(obj,a,b)
+            answer = questdlg('registerSites will change the use annotation and re-sort your sites. Do you want to continue?', ...
+                'Register sites', ...
+                'Yes','No','No');
+            % Handle response
+            switch answer
+                case 'Yes'
+                case 'No'
+                    disp('Stopped by the user.')
+                    return
+            end
+            
+            p = obj.getGuiParameters;
+            sites = obj.SE.sites;
+            if any([p.onlyPositive p.withoutClouds])
+                fn = fieldnames(obj.locData.SE.processors.eval.children);
+                lFitterGUI = strcmp('SMLMModelFitGUI_2',fn);
+                fitter = obj.locData.SE.processors.eval.processors{lFitterGUI}.fitter;
+                [~,idxCurvature] = fitter.getVariable('m1.curvature');
+%                 idx = 
+                for k = obj.SE.numberOfSites:-1:1
+                    path = ['sites(k).evaluation.SMLMModelFitGUI_2' idxCurvature];
+                    curvature(k) = eval(path);
+                end
+            end
+            
+            if p.onlyPositive
+                for k = obj.SE.numberOfSites:-1:1
+                    if sites(k).annotation.use == 1&&curvature(k)<0
+                        sites(k).annotation.use = false;
+                    end
+                end
+            end
+            
+            if p.withoutClouds
+                for k = obj.SE.numberOfSites:-1:1
+                    if sites(k).annotation.use == 1&&curvature(k)>0.015
+                        sites(k).annotation.use = false;
+                    end
+                end
+            end
+            
+            % enable the first two sorts
+            g = obj.getPar('mainGui');
+            sortROIs = g.children.guiSites.children.Helper.children.SortROIs;
+            sortROIs.guihandles.direction1.Value = 2;
+            sortROIs.guihandles.sortedit1.String = 'annotation.use';
+            sortROIs.guihandles.sortprop1.Value = 3;
+
+            sortROIs.guihandles.direction2.Value = 1;
+            sortROIs.guihandles.sortprop2.Value = 4;
+            sortROIs.guihandles.sortedit2.String = 'evaluation.SMLMModelFitGUI_2.allParsArg.value(13)';
+
+            % disable all other sorts
+            sortROIs.guihandles.sortedit3.String = '';
+            sortROIs.guihandles.sortprop3.Value = 1;
+            sortROIs.guihandles.sortedit4.String = '';
+            sortROIs.guihandles.sortprop4.Value = 1;
+
+            sortROIs.run(sortROIs.getAllParameters);
+            
             obj.loadData;
             obj.fit_manager.masterAvg;
             obj.locData.regroup;
@@ -233,13 +293,21 @@ pard.extLoad.object=struct('Style','pushbutton','String','Load from external','C
 pard.extLoad.position=[2,1];
 pard.extLoad.Width=1;
 
-pard.plotUseOnly.object=struct('Style','checkbox','Value',1);
-pard.plotUseOnly.position=[1,4.5];
-pard.plotUseOnly.Width=0.2;
+pard.plotUseOnly.object=struct('Style','checkbox','Value',1,'String','Plot use only');
+pard.plotUseOnly.position=[1,3.5];
+pard.plotUseOnly.Width=0.7;
 
-pard.tPlotUseOnly.object=struct('Style','text','String','Plot use only');
-pard.tPlotUseOnly.position=[1,3.7];
-pard.tPlotUseOnly.Width=1;
+% pard.tPlotUseOnly.object=struct('Style','text','String','Plot use only');
+% pard.tPlotUseOnly.position=[1,3.7];
+% pard.tPlotUseOnly.Width=1;
+
+pard.onlyPositive.object=struct('Style','checkbox','Value',0,'String','Only curvature>0');
+pard.onlyPositive.position=[1,4.2];
+pard.onlyPositive.Width=1;
+
+pard.withoutClouds.object=struct('Style','checkbox','Value',0,'String','No clouds');
+pard.withoutClouds.position=[2,4.2];
+pard.withoutClouds.Width=1;
 
 pard.registerSites.object=struct('Style','pushbutton','String','Register sites','Callback', {{@obj.registerSites_callBack}});
 pard.registerSites.position=[3,3.7];

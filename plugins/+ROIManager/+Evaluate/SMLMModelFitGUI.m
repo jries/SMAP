@@ -10,7 +10,6 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         currentLoadedModel  %
         alignSettings       % Converter for alignment.
         sourceModel         % The source function model of the image model.
-        advanceSetting     % Advanced settings.
     end
     methods
         function obj=SMLMModelFitGUI(varargin)
@@ -21,9 +20,8 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             else
                 addpath(genpath('../SMLMModelFit'))
             end
-            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel','sourceModel', 'advanceSetting'};         
+            obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel','sourceModel'};         
             addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
-            obj.defaultAdvanceSetting;
         end
         
         
@@ -63,10 +61,14 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             addParameter(p,'keepParsVal',false, @islogical);
             parse(p,varargin{:});
             results = p.Results;
+            obj.fitter.linkedGUI = obj;
             try
                 out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay, results.keepParsVal);
                 out.fitInfo.guiInfo = 'Normal.';
             catch
+                if isfield(obj.site.evaluation, obj.name)
+                    out = obj.site.evaluation.(obj.name);
+                end
                 warning(['Model fitter did not run through. Site ' num2str(obj.site.ID) ' encountered some issues.'])
                 if results.forceDisplay
                     out.fitInfo.guiInfo = 'Plot failed.';
@@ -87,7 +89,6 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                     dataDim = 2;
                 end
             obj.fitter = SMLMModelFit('DataDim',dataDim);
-            obj.fitter.linkedGUI = obj;
                 
             obj.currentLoadedModel = [];
             
@@ -139,7 +140,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 delete(oldh);
                 obj.guihandles.layerSetting=hLayer;
                 
-                %% add first module and  + tab
+                %% add first module and + tab
                 obj.guihandles.tabgroup=obj.guihandles.tab1.Parent;
                 obj.addguitotab(1);
                 obj.guihandles.addtab=uitab(obj.guihandles.tabgroup,'Title','+');
@@ -198,11 +199,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         function setAdvanceSetting(obj, par, value)
             obj.advanceSetting.(par) = value;
         end
-        
-        function defaultAdvanceSetting(obj)
-            obj.advanceSetting.controlLogLikelihood = 'none';
-        end
-        
+                
         function set.fitter(obj,value) 
             obj.fitter = value;
             if isfield(obj.P.par.mainGui.content.children.guiSites.children.Segment.processors,'SimulateSites')
