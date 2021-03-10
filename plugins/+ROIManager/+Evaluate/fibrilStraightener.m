@@ -8,7 +8,13 @@ classdef fibrilStraightener<interfaces.SEEvaluationProcessor
     end
     methods
         function obj=fibrilStraightener(varargin)        
-                obj@interfaces.SEEvaluationProcessor(varargin{:});
+            obj@interfaces.SEEvaluationProcessor(varargin{:});
+            flagDirExist = exist('../fibrilkymograph','dir');
+            if flagDirExist==0
+                warning('Please install fibrilkymograph.')
+            else
+                addpath(genpath('../fibrilkymograph'))
+            end
         end
         function out=run(obj, inp)
             out=runFibrilStraightener(obj, inp);
