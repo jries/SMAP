@@ -240,10 +240,10 @@ function usecurrent_callback(a,b,obj)
     
     js.Simulation.lifetime_avg=stat.lifetime.mu-1;
     js.Simulation.intensity_mu_sig= [1,0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
-    bgminmax=quantile(locsu.bg,[0.05, 0.95]);
+    bgminmax=quantile(locsu.bg,[0.01, 0.95]);
     dbg=bgminmax(2)-bgminmax(1);
     bgrange=bgminmax+ [-1, 1]*dbg*0.3;
-    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.0005));
+    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.0005)*0.9);
     js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
 
     
