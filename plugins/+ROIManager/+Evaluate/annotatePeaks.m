@@ -28,7 +28,7 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
         hold(obj.axis,'off');
         plot(obj.axis,posx,dev,'-')
         hold(obj.axis,'on');
-        plot(posx,dsmooth,'r-','LineWidth',3);
+        plot(obj.axis,posx,dsmooth,'r-','LineWidth',3);
         if isfield(obj.site.evaluation,obj.name)
             out=obj.site.evaluation.(obj.name);
         else
