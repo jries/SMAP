@@ -29,7 +29,11 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
         plot(obj.axis,posx,dev,'-')
         hold(obj.axis,'on');
         plot(posx,dsmooth,'r-','LineWidth',3);
-        out=obj.site.evaluation.(obj.name);
+        if isfield(obj.site.evaluation,obj.name)
+            out=obj.site.evaluation.(obj.name);
+        else
+            out.(modality).Position=[];
+        end
         if isfield(obj.site.evaluation,obj.name) && isfield(obj.site.evaluation.(obj.name),modality) && ~isempty(obj.site.evaluation.(obj.name).(modality).Position)
             obj.roihandle=images.roi.Polyline(obj.axis,'Position',obj.site.evaluation.(obj.name).(modality).Position);
             out=obj.site.evaluation.(obj.name);
