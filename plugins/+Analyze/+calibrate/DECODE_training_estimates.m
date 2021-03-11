@@ -242,8 +242,8 @@ function usecurrent_callback(a,b,obj)
     js.Simulation.intensity_mu_sig= [1,0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
     bgminmax=quantile(locsu.bg,[0.05, 0.95]);
     dbg=bgminmax(2)-bgminmax(1);
-    bgrange=bgminmax+ [-1, 1]*dbg*0.2;
-    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.005));
+    bgrange=bgminmax+ [-1, 1]*dbg*0.3;
+    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.0005));
     js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
 
     
@@ -346,9 +346,9 @@ function setz(obj)
      zminmax=[-750, 750];
      
  else
-     z=quantile(locs.znm,[0.05,0.95]); 
+     z=quantile(locs.znm,[0.01,0.99]); 
      dz=z(2)-z(1);
-     zminmax=z+dz*0.25;
+     zminmax=z+[-1 1]*dz*0.2;
  end
  calf=obj.yamlpar.InOut.calibration_file;
  if ~isempty(calf)
