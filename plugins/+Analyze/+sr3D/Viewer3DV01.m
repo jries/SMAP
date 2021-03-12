@@ -64,7 +64,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             obj.makelocDatacopy;
             obj.addSynchronization('sr_roiposition',[],[],{@obj.redraw}); 
             if isempty(obj.axis)||isstruct(obj.axis)||~isvalid(obj.axis)
-                figure;
+                f=figure;
+                obj.setPar('figurehandle_3Dviewer',f)
                 obj.axis=gca;
             end
             
@@ -771,7 +772,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 options.comp='lzw';
 
                 imout=uint8(outim*(2^8-1));
-                saveastiff(imout,savemovie.file,options)
+                mysavemovie(imout,savemovie.file,'FrameRate',20)
+%                 saveastiff(imout,savemovie.file,options)
             end
             
             obj.recpar={};
@@ -781,8 +783,9 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             
         end
         function savemovie_callback(obj,a,b)
+            p=obj.getAllParameters;
             [path,fo]=fileparts(obj.locData.files.file(1).name);
-            [file,path]=uiputfile([path filesep fo '.tif']);
+            [file,path]=uiputfile([path filesep fo '.' p.savemoviemode.selection]);
             if ~file
                 return
             end
@@ -1106,10 +1109,17 @@ pard.zdist.Width=0.5;
 pard.zdist.TooltipString=pard.danglet.TooltipString;
 pard.zdist.Optional=true;
 
-pard.savemovie.object=struct('String','save movie','Style','pushbutton','Callback',@obj.savemovie_callback);
+pard.savemovie.object=struct('String','save','Style','pushbutton','Callback',@obj.savemovie_callback);
 pard.savemovie.position=[2,3];
 pard.savemovie.TooltipString='Save rotating movie. Uses min - max angle';
 pard.savemovie.Optional=false;
+pard.savemovie.Width = 0.4;
+
+pard.savemoviemode.object=struct('String',{{'tif','mp4'}},'Style','popupmenu');
+pard.savemoviemode.position=[2,3.4];
+pard.savemoviemode.TooltipString='Save rotating movie. Uses min - max angle';
+pard.savemoviemode.Optional=false;
+pard.savemoviemode.Width = 0.6;
 
 pard.tx.object=struct('String','min max','Style','text');
 pard.tx.position=[4,3];

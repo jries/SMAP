@@ -48,9 +48,12 @@ elseif isa(handle,'Axes')
     delete(ax.Children(:));
     tab=ax.Parent;
     tabgroup=tab.Parent;
+elseif isa(handle,'matlab.ui.Figure')
+    ax=axes(handle);
+    return
 end
 tabgroup.SelectedTab=tab;
 state=tab.Parent.Parent.Visible;
  axes(ax);
- figure=tab.Parent.Parent;
- figure.Visible=state;
+ fig=tab.Parent.Parent;
+ fig.Visible=state;

@@ -1,9 +1,18 @@
-function v=voxelblurr(fun,par,sigma, pixelsize,rangex, rangey, rangez)
+function v=voxelblurr(fun,par,sigma, pixelsize,rangex, rangey, rangez, varargin)
 % fun: function handle
 % par: parameters for function
 % sigma: scalar, 2-vector (x,y vs z) 
-factor=pixelsize/2; % sampling compared to sigma of Gauss
-roiks=2.7; % size of ROI in units of sigma
+p = inputParser;
+p.parameter('fitter',[]);
+p.parse(varargin{:})
+p = p.Results;
+fitter = p.fitter;
+if isempty(fitter)
+    factor=pixelsize/2; % sampling compared to sigma of Gauss
+else
+    roiks=2.7; % size of ROI in units of sigma
+end
+% [x,y,z,norm]=fun(par,single(min(sigma)*factor));
 [x,y,z,norm]=fun(par,single(min(sigma)*factor));
 indRm = norm == 0;
 x = x(~indRm); y = y(~indRm); norm = norm(~indRm);

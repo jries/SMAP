@@ -76,7 +76,8 @@ classdef SMLMModelFit_gallery<interfaces.DialogProcessor&interfaces.SEProcessor
                 lPars = fitter.exportPars(1,'lPar');
                 locsViz = fitter.locsHandler(locsSite, lPars,1);
                 
-%                 'XYZ' is for model
+%                 'XYZ' is for mode
+                % rotate the view to show the open
                 [x,y,z] = rotcoord3(0,0,-1, deg2rad(lPars.xrot), deg2rad(lPars.yrot), deg2rad(lPars.zrot), 'XYZ');
                 [aziOri,eleOri,~] = cart2sph(0,0,-1);
                 [azi,ele,~] = cart2sph(x,y,z);

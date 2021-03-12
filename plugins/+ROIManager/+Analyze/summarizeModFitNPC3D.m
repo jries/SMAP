@@ -9,6 +9,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
         function out=run(obj,p)
             se = obj.locData.SE;
             sites = se.sites;
+            cutoffOneRing = 35;
 
             lUsed = getFieldAsVector(sites, 'annotation.use');
             siteOrder = 1:se.numberOfSites;
@@ -28,7 +29,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             [~,idxRingDist] = se.processors.eval.processors{indProcessor}.fitter.wherePar('pars.m2.lPar.z');
             ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
 
-            [cutoffOneRing, bin_edges] = getOneRingCutoff(ringDistS1);
+%             [cutoffOneRing, bin_edges] = getOneRingCutoff(ringDistS1);
             
             [~,idxZ] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.z');
             z = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxZ);
@@ -46,11 +47,30 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             azi = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxAzi);
             azi = rem(rem(azi,45)+90, 45);
             
+            lOneRing = ringDist<=cutoffOneRing;
+            
+            for k = find(lFailed)
+                usedSites(k).annotation.list3.value = 5;
+            end
+
+            for k = find(lOneRing)'
+                % 7: one-ring detected by the z correction
+                % 8: one-ring detected by this plugin only
+                % 9: one-ring detected by both
+                if usedSites(k).annotation.list3.value == 7
+                    usedSites(k).annotation.list3.value = 9;
+                else
+                    usedSites(k).annotation.list3.value = 8;
+                end
+            end
+            list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
+            lGood = list3 == 1;
+            
             %% Shift the athimuthal angle periodically 
             medAzi_0 = 0;
             medAzi = 90;
-            lOneRing = ringDist<=cutoffOneRing;
-            azi_new = azi(~(lOneRing|lFailed'));
+            
+            azi_new = azi(lGood);
             while abs(medAzi_0-medAzi)>1e-6
                 medAzi_0 = medAzi;
                 medAzi = median(azi_new);
@@ -61,20 +81,20 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             end
 
             %%
-            for k = 1:length(usedSites)
-                usedSites(k).annotation.list3.value = 1;
-            end
-
-            for k = find(lFailed)
-                usedSites(k).annotation.list3.value = 9;
-            end
-
-            for k = find(lOneRing)'
-                usedSites(k).annotation.list3.value = 8;
-            end
-
+            %% Ring separation
+            axRS=obj.initaxis('Ring separation vs z');
+            f = fit(z(lGood),ringDist(lGood),'poly1','Robust','LAR');
+            h1 = plot(axRS, z(lGood),ringDist(lGood), ' ob');
+            hold(axRS,'on')
+            h2 = plot(axRS, z(~lGood),ringDist(~lGood), ' ok');
+            h3 = plot(f, 'c');
+            hold(axRS,'off')
+            xlabel(axRS, 'z position (nm)')
+            ylabel(axRS, 'Ring separation (nm)')
+            legend([h1 h2 h3],{'Included','Excluded','Linear fit'})
+            
             ax1 = obj.initaxis('Ring separation');
-            par = ringDist(~lOneRing);
+            par = ringDist(lGood);
             binWidth = 3;
             bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
             histogram(ax1, par, bin_Edge)
@@ -92,7 +112,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             ylabel(ax2, 'Count')
             
             ax3 = obj.initaxis('Radius');
-            par = r(~lOneRing);
+            par = r(lGood);
             binWidth = 2;
             bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
             histogram(ax3, par, bin_Edge)

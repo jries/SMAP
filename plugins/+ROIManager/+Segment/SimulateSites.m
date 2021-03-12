@@ -175,7 +175,9 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     fitter = copy(fitter_ori);  % copy the fitter object to not overwrite it
     fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
     fitter.rmConvertRules;
-    fitter.addPar({1,{'sim'},{'numOfMol'},0, inf,0,1,{''},0,inf}) % add this parameter to control the number of molecules.
+    for l = 1:length(fitter.allModelLayer)
+        fitter.addPar({90+fitter.allModelLayer(l),{'sim'},{'numOfMol'},0, inf,0,1,{''},0,inf}) % add this parameter to control the number of molecules.
+    end
     obj.setPar('fitter',fitter)
     obj.setPar('fitter_ori',fitter_ori)
     close(fig);
@@ -188,26 +190,35 @@ function setModPars_callback(a,b,obj)
     % Use the function of allParsArg to set the range for simulation.
     
     %% GUI
-    fig = figure(513);
+    fig = obj.getPar('parameter_handle');
+    if isempty(fig)||~isgraphics(fig)
+        fig = figure('Name','Model parameters');
+        obj.setPar('parameter_handle',fig);
+    end
     clf(fig);
     parArgTable = uitable(fig);
+    convertTable = uitable(fig);
+    
+    figHeight = fig.Position(4);
+    oneLine = 20;
+    unitWidth = 50;
     
     % Model type
-    typeOption = uicontrol('Style','popupmenu','String',{'Point','Image'},'Value',1);
-    typeOption.Position = [20 20 60 30];
+    typeOption = uicontrol(fig, 'Style','popupmenu','String',{'Point','Image'},'Value',1);
+    typeOption.Position = [unitWidth*0.5 figHeight-oneLine*19 60 oneLine];
     typeOption.Callback = {@typeOption_callback,obj};
     
     % Final ROI size
-    t_FinalROISize = uicontrol('Style','text','String','Final ROI size:');
-    t_FinalROISize.Position = [100 20 100 30];
+    t_FinalROISize = uicontrol(fig, 'Style','text','String','Final ROI size:');
+    t_FinalROISize.Position = [unitWidth*2 figHeight-oneLine*19 100 oneLine];
     
     finalROISize = obj.getPar('finalROISize');
     if isempty(finalROISize)
         obj.setPar('finalROISize','200')
         finalROISize = '200';
     end
-    finalROISize = uicontrol('Style','edit','String',finalROISize);
-    finalROISize.Position = [200 20 60 30];
+    finalROISize = uicontrol(fig, 'Style','edit','String',finalROISize);
+    finalROISize.Position = [unitWidth*4 figHeight-oneLine*19 60 oneLine];
     finalROISize.Callback = {@finalROISize_callback,obj};
     
     %% Data
@@ -229,13 +240,36 @@ function setModPars_callback(a,b,obj)
     parVal(~parFix)=parRange(~parFix);
     parVal = regexprep(parVal,'^\s+','');
     
+    t_parTable = uicontrol(fig, 'Style','text','String','Parameters for simulation:');
+    t_parTable.Position = [unitWidth*0.5 figHeight-oneLine*1.5 unitWidth*3 oneLine];
+    
+    t_convertTable = uicontrol(fig, 'Style','text','String','User-defined variables:');
+    t_convertTable.Position = [unitWidth*7 figHeight-oneLine*1.5 unitWidth*3 oneLine];
+    
     % Table properties.
     parArgTable.Data = [parName parType num2cell(parModel) parVal repmat({''},size(parVal,1),1)];
     parArgTable.ColumnName = {'Name','Type','Model','Value','Convert'};
     parArgTable.ColumnEditable = [false false false true true];
     parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
-    parArgTable.ColumnWidth = {70 50 40 50 100};
-    parArgTable.Position = [20 50 350 300];
+    parArgTable.ColumnWidth = {70 40 30 50 100};
+    tableHeight = 300;
+    parArgTable.Position = [unitWidth*0.5 figHeight-oneLine*2-tableHeight unitWidth*6 tableHeight];
+    
+    convertTable.Data = [];
+    convertTable.ColumnName = {'Name','Rule'};
+    convertTable.ColumnEditable = [true true];
+    convertTable.ColumnWidth = {70 100};
+    tableHeight = 300;
+    convertTable.Position = [unitWidth*7 figHeight-oneLine*2-tableHeight unitWidth*4 tableHeight];
+    
+    addRow = addRowButton(fig,convertTable);
+    addRow.Position = [unitWidth*7 figHeight-oneLine*18 oneLine oneLine];
+    
+    rmRow = rmRowButton(fig,convertTable);
+    rmRow.Position = [unitWidth*7.4 figHeight-oneLine*18 oneLine oneLine];
+    
+    apply = uicontrol(fig, 'Style','pushbutton','String','Apply','Callback',{@applyConvertRules,convertTable,fitter});
+    apply.Position = [unitWidth*7.8 figHeight-oneLine*18 unitWidth oneLine];
 end
 
 function typeOption_callback(a,b,obj)
@@ -244,7 +278,7 @@ function typeOption_callback(a,b,obj)
 end
 
 function finalROISize_callback(a,b,obj)
-    obj.setPar('finalROISize_callback',a.String);
+    obj.setPar('finalROISize',a.String);
 end
 
 function parArgTable_CellEditCallback(a,b,obj)
@@ -273,6 +307,13 @@ function parArgTable_CellEditCallback(a,b,obj)
             % column 5: convert
             parId = ['m' num2str(obj.allParsArg.model(indEdited)), '.',obj.allParsArg.type{indEdited}, '.', obj.allParsArg.name{indEdited}];
             obj.converter(obj, b.NewData, parId);
+    end
+end
+
+function applyConvertRules(a,b,hTable,obj)
+    data = hTable.Data;
+    for r = 1:size(data,1)
+        obj.converter([],data{r,2},['usr_' data{r,1}])
     end
 end
 

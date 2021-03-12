@@ -13,8 +13,10 @@ classdef movieframes<interfaces.SEEvaluationProcessor
             layers=find(p.sr_layerson);
             ax=obj.setoutput(p.moviegallery.selection);
             locs=obj.getLocs({'xnmrot','ynmrot','frame'},'layer',layers,'size',p.se_siteroi*[1 1]);  
+            locs.frame=locs.frame-min(locs.frame);
             maxf=max(locs.frame);
-            numt=ceil(maxf/p.df);
+            
+            numt=ceil((maxf-p.window)/p.df);
             rows=ceil(numt/p.columns);
             nedge=-p.se_siteroi/2:p.se_sitepixelsize:p.se_siteroi/2;
             spix=length(nedge)-1;
@@ -30,9 +32,10 @@ classdef movieframes<interfaces.SEEvaluationProcessor
                 hf=filter2(h,hc);
                 allim(:,:,k)=hf;
             end
+            qcutoff=.999;
             meanim=sum(allim,3);
-            meanim=meanim/quantile(meanim(:),.9999);
-            maxv=quantile(allim(:),0.9999);
+            meanim=meanim/quantile(meanim(:),qcutoff);
+            maxv=quantile(allim(:),qcutoff);
             allim(allim>maxv)=maxv;
             allim=allim/maxv;
             allim(end,:,:)=1;
@@ -40,7 +43,7 @@ classdef movieframes<interfaces.SEEvaluationProcessor
 
             cmap=hot(256); 
             
-            scalebarlength=round(100/p.se_sitepixelsize);
+            scalebarlength=round(1000/p.se_sitepixelsize);
             if isempty(p.exposuretime)
                 dt=obj.locData.files.file(obj.site.info.filenumber).info.timediff;
             else
@@ -50,7 +53,7 @@ classdef movieframes<interfaces.SEEvaluationProcessor
             ismovie=p.moviegallery.Value==2;
             for k=1:numt
                 imh=ind2rgb(uint8(allim(:,:,k)*255),cmap);
-                imh=imh+(meanim)*0.7;
+                imh=imh+(meanim)*0.7*p.showaverage;
                 imh(imh>1)=1;
                 
                 %time
@@ -77,26 +80,49 @@ classdef movieframes<interfaces.SEEvaluationProcessor
             end
             if ismovie
                     F(numt)=im2frame(imh*0+0.5);
+                    obj.outmovie=F;
                     axis(ax,'off')
                     axis(ax,'equal')
                     movie(ax,F,2,6)  
-                    outmovie=F;
+                    
             else
 
                     image(ax,outim)
                     colormap(ax,hot)
                     axis(ax,'equal')
                     axis(ax,'off')
-                    outmovie=outim;
+                    obj.outmovie=outim;
 
-
-                    
-            end
-            
+            end          
         end
      
         function pard=guidef(obj)
             pard=guidef(obj);
+        end
+        function savemovie(obj,a,b)
+            f=obj.getPar('lastSMLFile');
+
+            if isnumeric(obj.outmovie)
+                
+                 fout=strrep(f,'_sml.mat','.tif');
+                [fout,pf]=uiputfile(fout);
+                imwrite(obj.outmovie,[pf fout]) 
+            else
+                  fout=strrep(f,'_sml.mat','.mp4');
+                [fout,pf]=uiputfile(fout);               
+                
+               
+                if fout
+                    v=VideoWriter([pf fout],'MPEG-4');
+
+                    v.FrameRate=obj.getSingleGuiParameter('framerate');
+                    open(v);
+                    writeVideo(v,obj.outmovie(1:end-1))
+                    close(v);
+    %                 savemovie(obj.outmovie)
+    %                 saveastiff(obj.outmovie,[pf  fout], struct('comp','LZW'))
+                end
+            end
         end
     end
 
@@ -145,6 +171,22 @@ pard.exposuretimet.Width=2;
 pard.exposuretime.object=struct('String','','Style','edit');
 pard.exposuretime.position=[6,3];
 pard.exposuretime.Width=0.5;
+
+pard.showaverage.object=struct('String','show average','Style','checkbox');
+pard.showaverage.position=[7,1];
+pard.showaverage.Width=2;
+
+pard.savemovie.object=struct('String','save','Style','pushbutton','Callback',@obj.savemovie);
+pard.savemovie.position=[8,3.5];
+pard.savemovie.Width=1.5;
+
+pard.frameratet.object=struct('String','framerate (fps)','Style','text');
+pard.frameratet.position=[8,1];
+pard.frameratet.Width=2;
+pard.framerate.object=struct('String','15','Style','edit');
+pard.framerate.position=[8,3];
+pard.framerate.Width=.5;
+
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};

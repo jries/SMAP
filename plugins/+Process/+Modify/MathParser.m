@@ -76,10 +76,12 @@ classdef MathParser<interfaces.DialogProcessor
                 if isfield(obj.locData.loc,p.resultfield)
                     obj.locData.loc.(p.resultfield)(indin)=newval;
                 else
-                 obj.locData.setloc(p.resultfield,newval,indin);
+                 obj.locData.setloc(p.resultfield,newval,indin,~p.regroup);
                 end
+                if p.regroup
                  obj.locData.filter(p.resultfield)
                  obj.locData.regroup;
+                end
                  obj.setPar('locFields',fieldnames(obj.locData.loc))
                
                  exe=(contains(obj.equationhistory.equation,p.equation));
@@ -173,6 +175,12 @@ pard.dataselect.object.TooltipString='choose localization file data set';
 pard.dataselect_all.object=struct('Style','checkbox','String','all');
 pard.dataselect_all.position=[1,2];
 pard.dataselect_all.object.TooltipString='choose localization file data set';
+
+
+pard.regroup.object=struct('Style','checkbox','String','Regroup and filter','Value',1);
+pard.regroup.position=[1,3.5];
+pard.regroup.object.TooltipString='Regroup and filter after calculation';
+pard.regroup.Width=1.5;
 
 pard.syncParameters={{'filelist_short','dataselect',{'String'}},{'MathParserHistory','resultfieldh',{'Value'}},{'MathParserHistory','equationh',{'Value'}}};
 

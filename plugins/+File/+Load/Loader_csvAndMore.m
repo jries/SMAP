@@ -153,7 +153,7 @@ switch ext
         tab=readtable(file);
     case '.mat'
         tab=load(file);
-    case '.hdf5'
+    case {'.hdf5','.h5'}
         info=h5info(file);
         if length(info.Datasets)>1
             answ=listdlg('ListString',{info.Datasets(:).Name});
@@ -396,7 +396,7 @@ end
 
 function pard=guidef
 info.name='Import CSV/MAT/HDF5';
-info.extensions={'*.csv;*.xls;*.mat;*.hdf5;*.txt','*.*'};
+info.extensions={'*.csv;*.xls;*.mat;*.hdf5;*.h5;*.txt','*.*'};
 info.dialogtitle='select any .csv .mat or .hdf5 file';
 pard.plugininfo=info;  
 pard.plugininfo.type='LoaderPlugin';

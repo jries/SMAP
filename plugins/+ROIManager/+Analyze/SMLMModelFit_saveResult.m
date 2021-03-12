@@ -19,6 +19,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
                 %Settings               
             
             obj.loadData
+            obj.setPar('SMLMModelFit_saveResult',obj)
         end
         
         function out=run(obj,p)
@@ -168,6 +169,108 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             names = namesAllEval(allSMLMModelFitGUI);
         end
         
+        function registerSites_callBack(obj,a,b)
+            answer = questdlg('registerSites will change the use annotation and re-sort your sites. Do you want to continue?', ...
+                'Register sites', ...
+                'Yes','No','No');
+            % Handle response
+            switch answer
+                case 'Yes'
+                case 'No'
+                    disp('Stopped by the user.')
+                    return
+            end
+            
+            p = obj.getGuiParameters;
+            sites = obj.SE.sites;
+            if any([p.onlyPositive p.withoutClouds])
+                fn = fieldnames(obj.locData.SE.processors.eval.children);
+                lFitterGUI = strcmp('SMLMModelFitGUI_2',fn);
+                fitter = obj.locData.SE.processors.eval.processors{lFitterGUI}.fitter;
+                [~,idxCurvature] = fitter.getVariable('m1.curvature');
+%                 idx = 
+                for k = obj.SE.numberOfSites:-1:1
+                    path = ['sites(k).evaluation.SMLMModelFitGUI_2' idxCurvature];
+                    curvature(k) = eval(path);
+                end
+            end
+            
+            if p.onlyPositive
+                for k = obj.SE.numberOfSites:-1:1
+                    if sites(k).annotation.use == 1&&curvature(k)<0
+                        sites(k).annotation.use = false;
+                    end
+                end
+            end
+            
+            if p.withoutClouds
+                for k = obj.SE.numberOfSites:-1:1
+                    if sites(k).annotation.use == 1&&curvature(k)>0.015
+                        sites(k).annotation.use = false;
+                    end
+                end
+            end
+            
+            % enable the first two sorts
+            g = obj.getPar('mainGui');
+            sortROIs = g.children.guiSites.children.Helper.children.SortROIs;
+            sortROIs.guihandles.direction1.Value = 2;
+            sortROIs.guihandles.sortedit1.String = 'annotation.use';
+            sortROIs.guihandles.sortprop1.Value = 3;
+
+            sortROIs.guihandles.direction2.Value = 1;
+            sortROIs.guihandles.sortprop2.Value = 4;
+            sortROIs.guihandles.sortedit2.String = 'evaluation.SMLMModelFitGUI_2.allParsArg.value(13)';
+
+            % disable all other sorts
+            sortROIs.guihandles.sortedit3.String = '';
+            sortROIs.guihandles.sortprop3.Value = 1;
+            sortROIs.guihandles.sortedit4.String = '';
+            sortROIs.guihandles.sortprop4.Value = 1;
+
+            sortROIs.run(sortROIs.getAllParameters);
+            
+            obj.loadData;
+            obj.fit_manager.masterAvg;
+            obj.locData.regroup;
+            obj.locData.filter;
+        end
+        
+        function module = dynamicRec_callBack(obj,a,b)
+            % hack an evaluate plug-in in order to use the obj.getLocs(...)
+            module=plugin('ROIManager','Analyze','SMLMModelFit_dynamicRec_mCME');
+            p.Vrim=100;
+
+            module.handle=figure('MenuBar','none','Toolbar','none','Name','SMLMModelFit_dynamicRec_mCME');
+            module.attachPar(obj.P);
+            module.attachLocData(obj.locData);
+
+            p.Xrim=10;
+            module.setGuiAppearence(p)
+            module.makeGui;
+
+            module.linkedManager = obj.fit_manager;
+        %     fdcal=figure(233);
+        %     dcal=plugin('ROIManager','Analyze','SMLMModelFit_dynamicRec_mCME',fdcal,obj.P);
+        %     dcal.attachLocData(obj.SE.locData);
+        %     dcal.makeGui;
+
+        %     obj.loadData;
+        %     obj.fit_manager.dynamicRec;
+        %     obj.locData.regroup;
+        %     obj.locData.filter;
+        end
+        
+        function mkMovie_callBack(obj,a,b)
+            obj.loadData;
+            [file,path] = uiputfile('*.tif', 'Save as', '');
+            if file~=0
+                obj.fit_manager.mkMovie('saveTo', [path file]);
+            else
+                warning('Please specify where to save.')
+            end
+        end
+        
         function createPlot(obj)
         end
     end
@@ -190,23 +293,31 @@ pard.extLoad.object=struct('Style','pushbutton','String','Load from external','C
 pard.extLoad.position=[2,1];
 pard.extLoad.Width=1;
 
-pard.plotUseOnly.object=struct('Style','checkbox','Value',1);
+pard.plotUseOnly.object=struct('Style','checkbox','Value',1,'String','Plot use only');
 pard.plotUseOnly.position=[1,3.5];
-pard.plotUseOnly.Width=0.2;
+pard.plotUseOnly.Width=0.7;
 
-pard.tPlotUseOnly.object=struct('Style','text','String','Plot use only');
-pard.tPlotUseOnly.position=[1,3.7];
-pard.tPlotUseOnly.Width=1;
+% pard.tPlotUseOnly.object=struct('Style','text','String','Plot use only');
+% pard.tPlotUseOnly.position=[1,3.7];
+% pard.tPlotUseOnly.Width=1;
 
-pard.registerSites.object=struct('Style','pushbutton','String','Register sites','Callback', {{@registerSites_callBack,obj}});
+pard.onlyPositive.object=struct('Style','checkbox','Value',0,'String','Only curvature>0');
+pard.onlyPositive.position=[1,4.2];
+pard.onlyPositive.Width=1;
+
+pard.withoutClouds.object=struct('Style','checkbox','Value',0,'String','No clouds');
+pard.withoutClouds.position=[2,4.2];
+pard.withoutClouds.Width=1;
+
+pard.registerSites.object=struct('Style','pushbutton','String','Register sites','Callback', {{@obj.registerSites_callBack}});
 pard.registerSites.position=[3,3.7];
 pard.registerSites.Width=1;
 
-pard.recSites.object=struct('Style','pushbutton','String','Reconstruction','Callback', {{@dynamicRec_callBack,obj}});
+pard.recSites.object=struct('Style','pushbutton','String','Reconstruction','Callback', {{@obj.dynamicRec_callBack}});
 pard.recSites.position=[4,3.7];
 pard.recSites.Width=1;
 
-pard.mkMovie.object=struct('Style','pushbutton','String','Make movie','Callback', {{@mkMovie_callBack,obj}});
+pard.mkMovie.object=struct('Style','pushbutton','String','Make movie','Callback', {{@obj.mkMovie_callBack}});
 pard.mkMovie.position=[5,3.7];
 pard.mkMovie.Width=1;
 
@@ -229,29 +340,22 @@ function extLoad_callBack(a,b,obj)
     obj.loadData;
 end
 
-function registerSites_callBack(a,b,obj)
-    obj.loadData;
-    obj.fit_manager.masterAvg;
-    obj.locData.regroup;
-    obj.locData.filter;
+
+
+
+
+function recSettings_callBack(a,b,obj)
+    fig = figure;
+    set(fig,'Tag', 'recSettings', 'Name', 'Settings - Dyanmic reconstruction')
+    hOld = uicontrol(fig,'Position',[50 100 100 200]); 
+    fitter = obj.fit_manager.data.fitter.SMLMModelFitGUI_2;
+    fitter.createConvertTable(hOld, 'hTable');
+    
+    uicontrol(fig,'Position',[50 70 25 25], 'Style', 'pushbutton','String','+','Callback',{@fitter.addRow, 'hTable'}); 
+    uicontrol(fig,'Position',[75 70 25 25], 'Style', 'pushbutton','String','-','Callback',{@fitter.rmRow, 'hTable'});
 end
 
-function dynamicRec_callBack(a,b,obj)
-    obj.loadData;
-    obj.fit_manager.dynamicRec;
-    obj.locData.regroup;
-    obj.locData.filter;
-end
 
-function mkMovie_callBack(a,b,obj)
-    obj.loadData;
-    [file,path] = uiputfile('*.tif', 'Save as', '');
-    if file~=0
-        obj.fit_manager.mkMovie('saveTo', [path file]);
-    else
-        warning('Please specify where to save.')
-    end
-end
 
 function variableTableEditCallback(a,b,obj)
     if b.Indices(2) == 2

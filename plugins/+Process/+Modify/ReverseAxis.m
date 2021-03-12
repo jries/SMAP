@@ -23,6 +23,7 @@ classdef ReverseAxis<interfaces.DialogProcessor&interfaces.SEProcessor
             %% Apply changes to sites
             if obj.SE.numberOfSites>0
                 sites = obj.SE.sites;
+                cells = obj.SE.cells;
                 switch (selectedAxis)
                     case 'xnm'
                         onePos = 1;
@@ -31,6 +32,9 @@ classdef ReverseAxis<interfaces.DialogProcessor&interfaces.SEProcessor
                 end
                 for k = 1:obj.SE.numberOfSites
                     sites(k).pos(onePos) = -sites(k).pos(onePos)+dMin;
+                end
+                for k = 1:obj.SE.numberOfCells
+                    cells(k).pos(onePos) = -cells(k).pos(onePos)+dMin;
                 end
             end
             obj.locData.loc.(selectedAxis) = locs.(selectedAxis);           
