@@ -23,7 +23,8 @@ end
 if iscell(p.histograms)
     inputhist=false;
     [histograms, edges]=makehistogramsi(p.histograms,p.binpositions);
-    dat=p.histograms;
+   % [histograms, edges]=makehistogramsdensity(p.histograms,p.binpositions);
+    dat=p.histograms;          
 else
     inputhist=true;
     histograms=p.histograms;
@@ -33,7 +34,8 @@ end
 numhist=size(histograms,2);
 h0=[zeros(size(histograms,1),1) histograms];
 hcum=cumsum(h0,2);
-medval=mean(hcum,2);
+% medval=mean(hcum,2);
+medval=hcum(:,end)/2;
 histp=hcum-medval;
 histp=histp/max(hcum(:,end))*p.width;
 
@@ -144,6 +146,39 @@ for k=2:length(dat)
 end
 edges=edges';
 end
+
+function [histograms, edges]=makehistogramsdensity(dat,binpositions)
+% kernel bandwidth: 10 % of data range
+nd = zeros([1 numel(dat)]);
+alldat = [];
+for i=1:numel(dat)
+    nd(i) = numel(dat{i});
+    alldat = [alldat dat{i}'];
+end
+maxdd = max(alldat);
+mindd = min(alldat);
+bw = (maxdd-mindd).*max([0.05,min([0.15,10./min(nd)])]); % bandwidth adapted to data
+disp(bw)
+if nargin==1 || isempty(binpositions)
+    binpositions = mindd:(bw*0.1):maxdd;
+    binw = binpositions(2)-binpositions(1);
+else
+    binw = binpositions(2)-binpositions(1);
+    binpositions(binpositions>maxdd+binw)=[];
+    binpositions(binpositions<mindd-binw)=[];
+end
+histograms = zeros(numel(binpositions),numel(dat));
+for k=1:length(dat)
+    mind = min(dat{k});
+    maxd = max(dat{k});
+    % calculate kernel density estimation for the first violin
+    [histograms(:,k), ~] = ksdensity(dat{k}, binpositions, 'bandwidth', bw);
+    histograms((binpositions < mind | binpositions > maxd), k)= 0.;
+end
+edges = binpositions(1)-binw*0.5:binw:binpositions(end)+0.5*binw;
+end
+
+
 
 
 function po=parseinput(in)
