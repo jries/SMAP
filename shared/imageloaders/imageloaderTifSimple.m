@@ -62,11 +62,11 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
                 desc='';
                 %manually find frames
                 
-                ttt.setDirectory(numf)
-                while ~ttt.lastDirectory
-                    numf=numf+1;
-                    ttt.setDirectory(numf);
-                end
+%                 ttt.setDirectory(numf)
+%                 while ~ttt.lastDirectory
+%                     numf=numf+1;
+%                     ttt.setDirectory(numf);
+%                 end
                     
             end
            
@@ -83,13 +83,18 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
             if numf==1 %might not have worked
                 disp('could not determine number of images. Directly evaluate file, might take time.');
                 warning('off','MATLAB:imagesci:tiffmexutils:libtiffWarning');
-                while ~ttt.lastDirectory
-                    ttt.nextDirectory
+                try
+                    while ~ttt.lastDirectory
+                        ttt.nextDirectory
+                    end
+                catch err
+                    disp('could not determine number of images')
                 end
                 numf=ttt.currentDirectory;
             end
             ttt.close;
             allmd(end+1,:)={'Frames',numf};
+            allmd(end+1,:)={'frames direct',numf};
             obj.allmetadatatags=allmd;
                 
         
