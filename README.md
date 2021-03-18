@@ -25,7 +25,7 @@ Requirements
 1.  MATLAB 2019a and newer. Toolboxes: Optimization, Image processing,
     Curve fitting, Statistics and Machine Learning.
     A fully functional stand-alone version that does not require a MATLAB
-    license but is limited in extendability can be downloaded at www.rieslab.de.
+    license but is limited in extendability can be downloaded from https://www.embl.de/download/ries/SMAPCompiled/ (Installation notes see below).
 
 2.  Mac or Windows
 
@@ -41,7 +41,7 @@ Installation
     a.  Use Terminal (MacOS) or Cmd (Win). Use cd to navigate to the
         target directory. (e.g. cd git)
 
-    b.  Type: `git clone` <https://github.com/jries/SMAP> and type
+    b.  Type: `git clone https://github.com/jries/SMAP` and type
         in your username and password for your git account.
 
     c.  Install the 3D fitter by typing
@@ -59,7 +59,7 @@ Installation
 
 Typical install times: 15 minutes.
 
-Installation of compiled version
+Installation of stand-alone version
 ------------
 
 1.  Download the respective version from https://www.embl.de/download/ries/SMAPCompiled/ corresponding to your operating system.
