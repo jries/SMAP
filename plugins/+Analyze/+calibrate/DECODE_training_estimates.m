@@ -1,7 +1,7 @@
 classdef DECODE_training_estimates<interfaces.DialogProcessor
 %     Saves a training file for DECODE
     properties
-        yamldefault='settings/cameras/DECODE_default.yaml';
+        yamldefault='DECODE_default.yaml';
         yamlfile
         yamlpar
         jsontypes
@@ -16,31 +16,38 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
            disp('no function. Use save yaml in the GUI.')
            return
            %set defaults
-            outdir=finalizejson(obj);
-            js=obj.jsonstruct;
-           %make directory
-           status=mkdir(outdir);
-           %copy 3dcal and set 3dcal path relative
-           status2=copyfile(js.InOut.calibration_file,outdir);
-           %save jsonfile
-           
-           fileout=[outdir filesep 'model_' js.SMAP.name '.json'];
-           if status && status2
-                savejsonfile(obj,fileout)
-           end
+%             outdir=finalizejson(obj);
+%             js=obj.jsonstruct;
+%            %make directory
+%            status=mkdir(outdir);
+%            %copy 3dcal and set 3dcal path relative
+%            status2=copyfile(js.InOut.calibration_file,outdir);
+%            %save jsonfile
+%            
+%            fileout=[outdir filesep 'model_' js.SMAP.name '.json'];
+%            if status && status2
+%                 savejsonfile(obj,fileout)
+%            end
         end
         function pard=guidef(obj)
             pard=guidef(obj);
         end
         function initGui(obj)
+%             try
+%                 javaaddpath('/shared/externaltools/YAMLMatlab/external/snakeyaml-1.9.jar')
+%             catch
+%                 disp('could not add javapath for yaml')
+%             end
             initGui@interfaces.DialogProcessor(obj);
-            obj.yamlfile=obj.yamldefault;
+            
+            yamldefault=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep obj.yamldefault];
+            obj.yamlfile=yamldefault;
             tt=uitable(obj.handle);
             tt.Position=obj.guihandles.partablepos.Position;
             tt.Position(4)=tt.Position(4)*7;
             obj.guihandles.parttable=tt;
-            obj.yamlpar=ReadYaml(obj.yamldefault);
-            obj.yamlfile=obj.yamldefault;
+            obj.yamlpar=ReadYaml(yamldefault);
+            obj.yamlfile=yamldefault;
             makejsontable(obj);
         end
 

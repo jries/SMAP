@@ -77,7 +77,7 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
             form='%2.2f';
             period=(pos(end,1)-pos(1,1))/(size(pos,1)-1);
             
-            title(['Period: ' num2str(period,form)])
+            title(obj.axis,['Period: ' num2str(period,form)])
             
             obj.site.evaluation.(obj.name).(modality).Period=period;
             
