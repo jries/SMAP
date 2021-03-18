@@ -88,6 +88,7 @@ classdef ImageFilter<interfaces.WorkflowModule
                 case 1 %DoG
                     rsize=max(ceil(6*fs-1),3);
                     if p.correctsCMOS
+                        obj.filterkernel=[];
                         obj.filterkernel(:,:,1)=fspecial('gaussian',rsize,fs);
                         obj.filterkernel(:,:,2)=fspecial('gaussian',rsize,max(1,2.5*fs));
                     else
