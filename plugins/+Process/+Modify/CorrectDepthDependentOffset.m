@@ -183,6 +183,15 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
 %             
             % 2nd order
             z0 = fzero(fP2, 0);
+            if isnan(z0)
+                if fP2.p1<0
+                    fP2_reverse = fP2;
+                    fP2_reverse.p1 = -fP2_reverse.p1;
+                    fP2_reverse.p2 = -fP2_reverse.p2;
+                    fP2_reverse.p3 = -fP2_reverse.p3;
+                end
+                z0 = fminsearch(fP2_reverse,0);
+            end
             fInt = polyint([fP2.p1 fP2.p2 fP2.p3]);
             c = -(fInt(1)*z0^3+fInt(2)*z0^2+fInt(3)*z0);
             fInt(4) = c;
