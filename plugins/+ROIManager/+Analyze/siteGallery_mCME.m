@@ -107,11 +107,14 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                 set(ax,'XLim',[0 fitter.roiSize/p.pixelSize]);
                 set(ax,'XTick',[], 'YTick', [], 'ZTick', []);
                 set(ax, 'XColor', 'none', 'YColor', 'none', 'ZColor', 'none');
+                axis(ax, 'image')
                 tempFig = ax.Parent;
                 pan(2,1,k).select(ax);
                 close(tempFig);
             end
             update_callback([],[],obj);
+            ax = pan(1,2,k).axis;
+            addScalebar(ax,'bottom-right', [20 20]./p.pixelSize,100/p.pixelSize);
             out = [];
         end
         function pard=guidef(obj)
@@ -137,7 +140,7 @@ function update_callback(a,b,obj)
     f.Position(3:4) = [numOfPickedSites*4*(roiSize-p.crop*2)/roiSize+0.4 3*4*(roiSize-p.crop*2)/roiSize+0.4];
     p1 = pan(1).de.object;
     p2 = pan(2).de.object;
-    p1Line = findobj(p1,'Type','line');
+    p1Line = findobj(p1,{'Type','line'},'-and',{'-not',{'Tag','scale bar'}});
     axis(p1, 'image')
     axis(p2, 'equal')
 %     axis(p2, 'square')
@@ -171,7 +174,7 @@ pard.t_isoBlurr.object=struct('String','isoBlurr','Style','text');
 pard.t_isoBlurr.position=[rowRun+2,1];
 pard.t_isoBlurr.Width=1;
 
-pard.isoBlurr.object=struct('String','15','Style','edit');
+pard.isoBlurr.object=struct('String','10','Style','edit');
 pard.isoBlurr.position=[rowRun+2,2];
 pard.isoBlurr.Width=1;
 pard.isoBlurr.Tooltip = 'The gaussian sigma for blurring. This controls the smoothness of the isosurface model rendering.';
@@ -195,7 +198,7 @@ pard.t_crop.object=struct('String','Crop','Style','text');
 pard.t_crop.position=[rowUpdate,1];
 pard.t_crop.Width=1;
 
-pard.crop.object=struct('String','0','Style','edit');
+pard.crop.object=struct('String','90','Style','edit');
 pard.crop.position=[rowUpdate,2];
 pard.crop.Width=1;
 
@@ -211,7 +214,7 @@ pard.t_lineWidth.object=struct('String','Line width','Style','text');
 pard.t_lineWidth.position=[rowUpdate+2,1];
 pard.t_lineWidth.Width=1;
 
-pard.lineWidth.object=struct('String','2.5','Style','edit');
+pard.lineWidth.object=struct('String','1.5','Style','edit');
 pard.lineWidth.position=[rowUpdate+2,2];
 pard.lineWidth.Width=1;
 

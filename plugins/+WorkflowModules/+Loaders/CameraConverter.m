@@ -165,7 +165,7 @@ classdef CameraConverter<interfaces.WorkflowModule
            if p.correctcamera %apply offset and brightfield correction
                % scmosroi 
 
-               imphot=(single(imgp)-obj.offsetmapuse)./obj.gainuse;   
+               imphot=(single(imgp)-obj.offsetmapuse)*obj.gainuse;   
 %                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
 %                    ./obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
            else
