@@ -98,16 +98,17 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
 %                        text(ax, page_numOfSites, 30, num2str(subSites(k).ID),'FontSize',50, 'Color','w')
 %                     end
                     set(ax,'XTick',[], 'YTick', []);
+                    set(ax, 'Visible', 'off')
                     axis(ax, 'image')
                     tempFig = ax.Parent;
                     pan(1,rot,k).select(ax);
                     close(tempFig);
                 end
-                ax = fitter.model{1}.patchPlot(fitter.exportPars(1,'mPar'));
+                ax = fitter.model{1}.patchPlot(fitter.exportPars(1,'mPar'), 'ele_view', p.tilt);
                 set(ax,'XLim',[0 fitter.roiSize/p.pixelSize]);
                 set(ax,'XTick',[], 'YTick', [], 'ZTick', []);
                 set(ax, 'XColor', 'none', 'YColor', 'none', 'ZColor', 'none');
-                axis(ax, 'image')
+%                 axis(ax, 'equal')
                 tempFig = ax.Parent;
                 pan(2,1,k).select(ax);
                 close(tempFig);
@@ -137,16 +138,24 @@ function update_callback(a,b,obj)
     
     f = pan.figure;
     f.Units = 'centimeters';
-    f.Position(3:4) = [numOfPickedSites*4*(roiSize-p.crop*2)/roiSize+0.4 3*4*(roiSize-p.crop*2)/roiSize+0.4];
+    f.Position(3:4) = [numOfPickedSites*4*(roiSize-p.crop*2)/roiSize+0.4 3*4*(roiSize-p.crop*2)/roiSize+0.4]*1.1;
     p1 = pan(1).de.object;
     p2 = pan(2).de.object;
+    
+    set(p1, 'Visible', 'off')
     p1Line = findobj(p1,{'Type','line'},'-and',{'-not',{'Tag','scale bar'}});
+    
+    p1SB = findobj(p1,'Tag','scale bar');
+    delete(p1SB);
+    ax = pan(1,2,length(p.sites)).axis;
+    addScalebar(ax,'bottom-right', [20 20]./p.pixelSize,100/p.pixelSize);
+%     axis(p2, 'equal')
     axis(p1, 'image')
-    axis(p2, 'equal')
-%     axis(p2, 'square')
     set(p1, 'XLim', [p.crop/pixelSize (roiSize-p.crop)/pixelSize]);
     set(p1, 'YLim', [p.crop/pixelSize (roiSize-p.crop)/pixelSize]);
     set(p2, 'XLim', [p.crop/pixelSize (roiSize-p.crop)/pixelSize]);
+    
+%     axis(p2, 'tight')
     set(p1Line, 'Color', p.lineColor)
     set(p1Line, 'LineWidth', p.lineWidth)
 end
@@ -174,7 +183,7 @@ pard.t_isoBlurr.object=struct('String','isoBlurr','Style','text');
 pard.t_isoBlurr.position=[rowRun+2,1];
 pard.t_isoBlurr.Width=1;
 
-pard.isoBlurr.object=struct('String','10','Style','edit');
+pard.isoBlurr.object=struct('String','5','Style','edit');
 pard.isoBlurr.position=[rowRun+2,2];
 pard.isoBlurr.Width=1;
 pard.isoBlurr.Tooltip = 'The gaussian sigma for blurring. This controls the smoothness of the isosurface model rendering.';
@@ -183,12 +192,21 @@ pard.t_isoGap.object=struct('String','isoGap','Style','text');
 pard.t_isoGap.position=[rowRun+3,1];
 pard.t_isoGap.Width=1;
 
-pard.isoGap.object=struct('String','0.15','Style','edit');
+pard.isoGap.object=struct('String','0.14','Style','edit');
 pard.isoGap.position=[rowRun+3,2];
 pard.isoGap.Width=1;
 pard.isoGap.Tooltip = 'Gap between sampled points. This controls the sampling rate of the isosurface model rendering.';
 
-rowUpdate = 6;
+pard.t_tilt.object=struct('String','Tilt','Style','text');
+pard.t_tilt.position=[rowRun+4,1];
+pard.t_tilt.Width=1;
+
+pard.tilt.object=struct('String','-5','Style','edit');
+pard.tilt.position=[rowRun+4,2];
+pard.tilt.Width=1;
+pard.tilt.Tooltip = 'Tilt angle of the 3d rendering';
+
+rowUpdate = 7;
 
 pard.update.object=struct('String','update','Style','pushbutton','callback',{{@update_callback,obj}});
 pard.update.position=[rowUpdate+0.5,3.5];
