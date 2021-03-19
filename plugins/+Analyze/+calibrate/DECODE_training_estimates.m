@@ -1,7 +1,7 @@
 classdef DECODE_training_estimates<interfaces.DialogProcessor
 %     Saves a training file for DECODE
     properties
-        yamldefault='settings/cameras/DECODE_default.yaml';
+        yamldefault='DECODE_default.yaml';
         yamlfile
         yamlpar
         jsontypes
@@ -16,31 +16,38 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
            disp('no function. Use save yaml in the GUI.')
            return
            %set defaults
-            outdir=finalizejson(obj);
-            js=obj.jsonstruct;
-           %make directory
-           status=mkdir(outdir);
-           %copy 3dcal and set 3dcal path relative
-           status2=copyfile(js.InOut.calibration_file,outdir);
-           %save jsonfile
-           
-           fileout=[outdir filesep 'model_' js.SMAP.name '.json'];
-           if status && status2
-                savejsonfile(obj,fileout)
-           end
+%             outdir=finalizejson(obj);
+%             js=obj.jsonstruct;
+%            %make directory
+%            status=mkdir(outdir);
+%            %copy 3dcal and set 3dcal path relative
+%            status2=copyfile(js.InOut.calibration_file,outdir);
+%            %save jsonfile
+%            
+%            fileout=[outdir filesep 'model_' js.SMAP.name '.json'];
+%            if status && status2
+%                 savejsonfile(obj,fileout)
+%            end
         end
         function pard=guidef(obj)
             pard=guidef(obj);
         end
         function initGui(obj)
+%             try
+%                 javaaddpath('/shared/externaltools/YAMLMatlab/external/snakeyaml-1.9.jar')
+%             catch
+%                 disp('could not add javapath for yaml')
+%             end
             initGui@interfaces.DialogProcessor(obj);
-            obj.yamlfile=obj.yamldefault;
+            
+            yamldefault=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep obj.yamldefault];
+            obj.yamlfile=yamldefault;
             tt=uitable(obj.handle);
             tt.Position=obj.guihandles.partablepos.Position;
             tt.Position(4)=tt.Position(4)*7;
             obj.guihandles.parttable=tt;
-            obj.yamlpar=ReadYaml(obj.yamldefault);
-            obj.yamlfile=obj.yamldefault;
+            obj.yamlpar=ReadYaml(yamldefault);
+            obj.yamlfile=yamldefault;
             makejsontable(obj);
         end
 
@@ -240,10 +247,10 @@ function usecurrent_callback(a,b,obj)
     
     js.Simulation.lifetime_avg=stat.lifetime.mu-1;
     js.Simulation.intensity_mu_sig= [1,0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
-    bgminmax=quantile(locsu.bg,[0.05, 0.95]);
+    bgminmax=quantile(locsu.bg,[0.01, 0.95]);
     dbg=bgminmax(2)-bgminmax(1);
-    bgrange=bgminmax+ [-1, 1]*dbg*0.2;
-    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.005));
+    bgrange=bgminmax+ [-1, 1]*dbg*0.3;
+    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.0005)*0.9);
     js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
 
     
@@ -346,9 +353,9 @@ function setz(obj)
      zminmax=[-750, 750];
      
  else
-     z=quantile(locs.znm,[0.05,0.95]); 
+     z=quantile(locs.znm,[0.01,0.99]); 
      dz=z(2)-z(1);
-     zminmax=z+dz*0.25;
+     zminmax=z+[-1 1]*dz*0.2;
  end
  calf=obj.yamlpar.InOut.calibration_file;
  if ~isempty(calf)
