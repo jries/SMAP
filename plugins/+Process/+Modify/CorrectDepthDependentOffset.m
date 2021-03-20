@@ -181,6 +181,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
 %             fInt(3) = c;
 %             relMeasuredOffsetFun = @(z) fInt(1).*z.^2+fInt(2).*z+fInt(3);
 %             
+
             % 2nd order
             z0 = fzero(fP2, 0);
             if isnan(z0)
