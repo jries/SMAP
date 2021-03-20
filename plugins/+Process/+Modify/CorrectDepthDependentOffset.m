@@ -255,7 +255,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
 %             newZLower_good = newZLower(lGood);
             
             %% show the difference between measured and expectation
-            if isfield(obj.locData.loc,'znm_original')
+            if isfield(obj.locData.loc,'znm_rs_original')
                 for k = length(usedSites):-1:1
                     expCorrRingSep(k) = usedSites(k).evaluation.CorrectDepthDependentOffset.expCorrRingSep;
                 end
@@ -283,8 +283,8 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
                     obj.setPar('undoModule','CorrectDepthDependentOffset');
                     notify(obj.P,'backup4undo');
                     locs = obj.locData.loc;
-                    if ~isfield(obj.locData.loc,'znm_original')
-                        obj.locData.loc.znm_original = locs.znm;
+                    if ~isfield(obj.locData.loc,'znm_rs_original')
+                        obj.locData.loc.znm_rs_original = locs.znm;
                     end
     %                 for k = 1:length(sites_good)
     %                    sites_good(k).evaluation.SMLMModelFitGUI.allParsArg.value(idxRingDist) = newRingDist_good(k);
