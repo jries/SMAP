@@ -39,11 +39,19 @@ end
 
 
 function loadfile(obj,p,file)
+[~,~,ext]=fileparts(file);
+switch ext
+    case '.mat'
+        jt=load(file);
+        loc=minfluxmat2loc(jt);
+    case '.json'
+        txt=fileread(file);
+        jt=jsondecode(txt);
+        loc=minfluxjson2loc(jt);
+end
 
-txt=fileread(file);
-jt=jsondecode(txt);
 
-loc=minfluxjson2loc(jt);
+
 
 
 filenumber=obj.locData.files.filenumberEnd+1;
@@ -128,10 +136,31 @@ loc.xnm=loc.xnm-min(loc.xnm);
 loc.ynm=loc.ynm-min(loc.ynm);
 end
 
+function loc=minfluxmat2loc(jt)
+valid=[jt.vld];
+% jtv=jt(valid);
+% for k=length(jtv):-1:1
+    locs=single(jt.loc(valid,end,:)*1e9);
+    loc.xnm(:,1)=locs(:,1,1);
+    loc.ynm(:,1)=locs(:,1,2);
+    if size(locs,3)>2
+        loc.znm(:,1)=locs(:,1,3);
+    end
+    loc.time(:,1)=single(jt.tim(valid))*1e3;  %from seconds to milliseconds
+    loc.iter(:,1)=single(jt.itr(valid,end));
+    loc.cfr(:,1)=single(jt.cfr(valid,end));
+    loc.dcr(:,1)=single(jt.dcr(valid,end));
+    loc.frame(:,1)=1:length(loc.xnm);
+% end
+
+loc.xnm=loc.xnm-min(loc.xnm);
+loc.ynm=loc.ynm-min(loc.ynm);
+end
+
 function pard=guidef(obj)
 info.name='Import MINFLUX Json';
-info.extensions={'*.json'};
-info.dialogtitle='select any .csv .mat or .hdf5 file';
+info.extensions={'*.json;*.mat'};
+info.dialogtitle='select any .json or .mat  file';
 pard.plugininfo=info;  
 pard.plugininfo.type='LoaderPlugin';
 pard.plugininfo.description='loades localzation data from a variety of files including text (.csv, .txt), hdf5 or MATLAB files. Localization data properties can be converted to those used in SMAP, and conversions can be saved for repeated use.';
