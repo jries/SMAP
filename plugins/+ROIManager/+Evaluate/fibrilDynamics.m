@@ -256,18 +256,18 @@ pard.displayOpt.object = struct('Style','checkbox','String','show optimisation')
 pard.displayOpt.position=[7,1];
 pard.displayOpt.Width = 2;
 
-pard.isFlip.object = struct('Style','checkbox','String','Flip(position)');
-pard.isFlip.position=[7,3];
-pard.isFlip.Width = 1.5;
-
-pard.isFlipSave.object = struct('Style','checkbox','Callback', {{@isFlipSave_callback,obj}});
-pard.isFlipSave.position=[7,4.5];
-pard.isFlipSave.Width = 0.2;
-
-pard.isFlipLock.object = struct('Style','checkbox');
-pard.isFlipLock.position=[7,4.7];
-pard.isFlipLock.Width = 0.2;
-pard.isFlipLock.Enable = 'off';
+% pard.isFlip.object = struct('Style','checkbox','String','Flip(position)');
+% pard.isFlip.position=[7,3];
+% pard.isFlip.Width = 1.5;
+% 
+% pard.isFlipSave.object = struct('Style','checkbox','Callback', {{@isFlipSave_callback,obj}});
+% pard.isFlipSave.position=[7,4.5];
+% pard.isFlipSave.Width = 0.2;
+% 
+% pard.isFlipLock.object = struct('Style','checkbox');
+% pard.isFlipLock.position=[7,4.7];
+% pard.isFlipLock.Width = 0.2;
+% pard.isFlipLock.Enable = 'off';
 
 pard.t_frameCut.object = struct('Style','text', 'string', 'Frame cut:');
 pard.t_frameCut.position=[8,1];
