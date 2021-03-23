@@ -140,16 +140,16 @@ function loc=minfluxmat2loc(jt)
 valid=[jt.vld];
 % jtv=jt(valid);
 % for k=length(jtv):-1:1
-    locs=single(jt.loc(valid,end,:)*1e9);
-    loc.xnm(:,1)=locs(:,1,1);
-    loc.ynm(:,1)=locs(:,1,2);
+    locs=single(jt.loc(valid,:)*1e9);
+    loc.xnm(:,1)=locs(:,1);
+    loc.ynm(:,1)=locs(:,2);
     if size(locs,3)>2
-        loc.znm(:,1)=locs(:,1,3);
+        loc.znm(:,1)=locs(:,3);
     end
     loc.time(:,1)=single(jt.tim(valid))*1e3;  %from seconds to milliseconds
-    loc.iter(:,1)=single(jt.itr(valid,end));
-    loc.cfr(:,1)=single(jt.cfr(valid,end));
-    loc.dcr(:,1)=single(jt.dcr(valid,end));
+    loc.iter(:,1)=single(jt.itr(valid));
+    loc.cfr(:,1)=single(jt.cfr(valid));
+    loc.dcr(:,1)=single(jt.dcr(valid));
     loc.frame(:,1)=1:length(loc.xnm);
 % end
 
