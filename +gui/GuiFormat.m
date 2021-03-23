@@ -732,7 +732,7 @@ function resetview_callback(oject,data,obj)
       return
   end
   obj.setPar('sr_pos',[(maxx+minx)/2 (maxy+miny)/2]);
-  pixrec=round(max((maxx-minx)/si(1),(maxy-miny)/si(2)));
+  pixrec=max(round(max((maxx-minx)/si(1),(maxy-miny)/si(2))),1);
   obj.setPar('sr_pixrec',pixrec);
   obj.pixrec_callback(obj)
   notify(obj.P,'sr_render')
