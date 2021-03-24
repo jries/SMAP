@@ -12,8 +12,13 @@ classdef StatsVsTime<interfaces.DialogProcessor
             out=[];
            
             fields={'filenumber','frame','phot','locprecnm','PSFxnm','numberInGroup','bg'};
+            if ~isfield(obj.locData.loc,'bg')
+                obj.locData.setloc('bg',obj.locData.loc.bg1)
+                disp('bg1 used for bg')
+                obj.locData.regroup;
+            end
             if isfield(obj.locData.loc,'znm')
-                fields{end+1:end+2}={'znm','locprecznm'};
+                fields(end+1:end+2)={'znm','locprecznm'};
             end
             if p.useroi
                 position='roi';
