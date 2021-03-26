@@ -193,7 +193,7 @@ loc.ynm=loc.ynm-min(loc.ynm(loc.vld));
 end
 
 function pard=guidef(obj)
-info.name='Import MINFLUX Json';
+info.name='Import MINFLUX Abberior';
 info.extensions={'*.json;*.mat'};
 info.dialogtitle='select any .json or .mat  file';
 pard.plugininfo=info;  
