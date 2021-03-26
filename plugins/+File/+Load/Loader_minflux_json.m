@@ -159,7 +159,7 @@ else
     indz=sub2ind(size(locs),g1,g2,3*ones(size(g1)));
     ind2=sub2ind(size(jt.cfr),g1,g2);
     ind1=goodind;
-    loc.vld(:,1)=jt.vld(ind1);
+    
     loc.iterations(:,1)=g2;
 end
 
@@ -173,7 +173,7 @@ loc.time(:,1)=single(jt.tim(ind1))*1e3;  %from seconds to milliseconds
 loc.frame(:,1)=1:length(loc.xnm);
 loc.dcr(:,1)=single(jt.eco(ind2));
 loc.cfr(:,1)=single(jt.cfr(ind2));
-
+loc.vld(:,1)=jt.vld(ind1);
 if loadall
     loc.eco(:,1)=single(jt.eco(ind2));
     loc.ecc(:,1)=single(jt.ecc(ind2));
