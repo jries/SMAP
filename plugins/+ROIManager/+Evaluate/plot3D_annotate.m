@@ -4,73 +4,106 @@ classdef plot3D_annotate<interfaces.SEEvaluationProcessor
     properties
         roicoordinates
         roihandles
-        currentroi
+%         currentroi=0;
         axis
+        images
+%         roihandle
     end
     methods
         function obj=plot3D_annotate(varargin)        
                 obj@interfaces.SEEvaluationProcessor(varargin{:});
         end
         function out=run(obj, p)
+            out=[];
             make3Daxis(obj) %make axis,
+            plot3Dviews(obj,p);%plot image,
             
-            plot3Dviews(obj,p)
-            %plot image, add callbacks
-            %plot ROIs: in same function
-            %function:
-               %plotimage
-               %plotrois
-               %newroi_callback
-               
-
-%         if isfield(obj.site.evaluation,obj.name) && isfield(obj.site.evaluation.(obj.name),modality) && ~isempty(obj.site.evaluation.(obj.name).(modality).Position)
-%             obj.roihandle=images.roi.Polyline(obj.axis,'Position',obj.site.evaluation.(obj.name).(modality).Position);
-%             out=obj.site.evaluation.(obj.name);
-%             addlistener(obj.roihandle,'ROIMoved',@(src,evt) obj.updateposition(src,evt));
-%             addlistener(obj.roihandle,'VertexAdded',@(src,evt) obj.updateposition(src,evt));
-%             addlistener(obj.roihandle,'VertexDeleted',@(src,evt) obj.updateposition(src,evt));
-%             obj.plotdistances;
-%         end
-
+%             obj.currentroi=0;
+            if isfield(obj.site.evaluation,obj.name) && isfield(obj.site.evaluation.(obj.name),'roicoordinates')
+                obj.roicoordinates=obj.site.evaluation.(obj.name).roicoordinates;
+                obj.plotrois;
+            else
+                obj.roicoordinates=[];
+            end
         end
      
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-        function select_callback(obj,a,b)
-            if ~isempty(obj.roihandle)&&isvalid(obj.roihandle)
-                delete(obj.roihandle);
+        function addroi_callback(obj,a,b)
+            roistyle=obj.getSingleGuiParameter('roiform').selection;
+            [roifun,roifunmake,vertexbased]=roistyle2fun(roistyle);
+            
+            newroi1=roifun(obj.axis);
+            [roipospix,roipos]=getpixcoord(obj,newroi1.Position,zeros(size(newroi1.Position,1),3));
+            roiposnm=roipospix; %later: convert with rotation and position
+%             obj.currentroi=obj.currentroi+1;  
+            obj.roicoordinates(end+1).roistyle=roistyle;
+            obj.roicoordinates(end).Position=roiposnm;
+            delete(newroi1);
+            obj.plotrois;         
+        end
+        
+        function plotrois(obj)
+             %loop over roicoords
+%              k=obj.currentroi;
+            %delete old rois
+            for k=1:length(obj.roihandles{1})
+                delete(obj.roihandles{1}(k));
+                delete(obj.roihandles{2}(k));
             end
-            obj.roihandle=drawpolyline;
-%             obj.site.evaluation.(obj.name).Position=obj.roihandle.Position;
-            addlistener(obj.roihandle,'ROIMoved',@(src,evt) obj.updateposition(src,evt));
-            addlistener(obj.roihandle,'VertexAdded',@(src,evt) obj.updateposition(src,evt));
-            addlistener(obj.roihandle,'VertexDeleted',@(src,evt) obj.updateposition(src,evt));
-            updateposition(obj,a,b)
-        end
-        function updateposition(obj,a,b)
-            if obj.getSingleGuiParameter('equaldistance')
-                pos=obj.roihandle.Position;
-                pos(:,1)=linspace(pos(1,1),pos(end,1),size(pos,1));
-                obj.roihandle.Position=pos;
+            
+            for k=1:length(obj.roicoordinates)
+                 [roifun,roifunmake,vertexbased]=roistyle2fun(obj.roicoordinates(k).roistyle);
+                 roiposnm=obj.roicoordinates(k).Position;
+                 roipospix=roiposnm; %later convert
+                 roipos1=[];roipos2=[];
+                 roipos1(:,1:2)=roipospix(:,1:2);
+                 roipos2(:,1)=roipospix(:,1)+obj.images.rangex(2);
+                 roipos2(:,2)=roipospix(:,3);
+
+                newroi1(k)=roifunmake(obj.axis,'Position',roipos1);
+                addlistener(newroi1(k),'ROIMoved',@(src,evt) obj.updateposition(src,evt,k,1));
+                addlistener(newroi1(k),'DeletingROI',@(src,evt) obj.deleteroi(src,evt,k,1));
+                if vertexbased
+                    addlistener(newroi1(k),'VertexAdded',@(src,evt) obj.updateposition(src,evt,k,1));
+                    addlistener(newroi1(k),'VertexDeleted',@(src,evt) obj.updateposition(src,evt,k,1));
+                end
+
+                newroi2(k)=roifunmake(obj.axis,'Position',roipos2);
+                addlistener(newroi2(k),'ROIMoved',@(src,evt) obj.updateposition(src,evt,k,2));
+                addlistener(newroi2(k),'DeletingROI',@(src,evt) obj.deleteroi(src,evt,k,2));
+                if vertexbased
+                    addlistener(newroi2(k),'VertexAdded',@(src,evt) obj.updateposition(src,evt,k,2));
+                    addlistener(newroi2(k),'VertexDeleted',@(src,evt) obj.updateposition(src,evt,k,2));
+                end           
             end
-            modality=obj.getSingleGuiParameter('modality').selection;
-            obj.site.evaluation.(obj.name).(modality).Position=obj.roihandle.Position;
-            obj.plotdistances;
+            obj.roihandles={newroi1, newroi2};
+            obj.site.evaluation.(obj.name).roicoordinates=obj.roicoordinates;
         end
-        function plotdistances(obj)
-            modality=obj.getSingleGuiParameter('modality').selection;
-            pos=obj.site.evaluation.(obj.name).(modality).Position;
+        
+        function updateposition(obj,src,evt,currentroi,roiside)
+            oldpospix=obj.roicoordinates(currentroi).Position; %convert
+            [roipospix,roipos]=getpixcoord(obj,src.Position,oldpospix);
             
-            period2=mean(diff(pos(:,1)));
-            form='%2.2f';
-            period=(pos(end,1)-pos(1,1))/(size(pos,1)-1);
-            
-            title(obj.axis,['Period: ' num2str(period,form)])
-            
-            obj.site.evaluation.(obj.name).(modality).Period=period;
-            
+            newroiposnm=roipospix;
+            obj.roicoordinates(currentroi).Position=newroiposnm;
+            plotrois(obj)
+
         end
+%         function plotdistances(obj)
+%             modality=obj.getSingleGuiParameter('modality').selection;
+%             pos=obj.site.evaluation.(obj.name).(modality).Position;
+%             
+%             period2=mean(diff(pos(:,1)));
+%             form='%2.2f';
+%             period=(pos(end,1)-pos(1,1))/(size(pos,1)-1);
+%             
+%             title(obj.axis,['Period: ' num2str(period,form)])
+%             
+%             obj.site.evaluation.(obj.name).(modality).Period=period;
+%             
+%         end
 %         function fit_callback(obj,a,b)
 %             pos=obj.site.evaluation.(obj.name).Position;
 %             period=mean(diff(pos(:,1)));
@@ -81,21 +114,36 @@ classdef plot3D_annotate<interfaces.SEEvaluationProcessor
 
 end
 
+function [roipospix,roipos]=getpixcoord(obj,roiposh,roiposold)
+roipospix=roiposold;
+ if mean(roiposh(:,1))>0
+    roipos=2; %right
+    roiposh(:,1)=max(roiposh(:,1),0);
+    roipospix(:,1)=roiposh(:,1)-obj.images.rangex(2);
+    roipospix(:,3)=roiposh(:,2); %move to left
+%     roipospix(:,2)=0;
+else
+    roipos=1;
+    roiposh(:,1)=min(roiposh(:,1),0);
+    roipospix(:,1:2)=roiposh(:,1:2);
+%     roipospix(:,3)=0;
+end
+end
 
 
 
 function pard=guidef(obj)
-pard.drawline.object=struct('Style','pushbutton','String','select peaks','Callback',@obj.select_callback);
-pard.drawline.position=[1,1];
-pard.drawline.Width=2;
+pard.addroi.object=struct('Style','pushbutton','String','add','Callback',@obj.addroi_callback);
+pard.addroi.position=[1,1];
+pard.addroi.Width=1;
 
-pard.modality.object=struct('Style','popupmenu','String',{{'deviation','polarization'}});
-pard.modality.position=[1,3];
-pard.modality.Width=2;
+pard.roiform.object=struct('Style','popupmenu','String',{{'line','polyline','rectangle','ellipse','polygon','free'}});
+pard.roiform.position=[1,2];
+pard.roiform.Width=2;
 
-pard.equaldistance.object=struct('Style','checkbox','String','equal distances');
-pard.equaldistance.position=[2,1];
-pard.equaldistance.Width=2;
+% pard.equaldistance.object=struct('Style','checkbox','String','equal distances');
+% pard.equaldistance.position=[2,1];
+% pard.equaldistance.Width=2;
 
 % pard.fitpeaks.object=struct('Style','pushbutton','String','fit peaks','Callback',@obj.fit_callback);
 % pard.fitpeaks.position=[1,1];
@@ -112,28 +160,24 @@ end
 
 
 function plot3Dviews(obj,p)
+if nargin<2
+    p=[];
+end
 site=obj.site;
 angle=pos2angle(site.annotation.rotationpos.pos);
-p1.rotationanglez=angle;
+p.rotationanglez=angle;
 if isfield(site.annotation,'polarangle')
-    p1.polarangle=site.annotation.polarangle;
+    p.polarangle=site.annotation.polarangle;
 else
-    p1.polarangle=0;
+    p.polarangle=0;
 end
 % p1.sr_size(3)=obj.locData.getPar('se_dz')/2;
 
 
-imz=make3Dimages(obj,p1);
-imzc.image=horzcat(imz{2}.image(end:-1:1,:,:), imz{1}.image); 
-imzc.rangey=imz{1}.rangey;
-imzc.rangex=[ imz{2}.rangex(1)-imz{2}.rangex(2) imz{1}.rangex(2)-imz{1}.rangex(1)];
-
-displayimage(imzc,obj.axis);
-fl='%2.0f';
-title(obj.axis,['\theta=' num2str(p1.polarangle,fl) '\circ, \rho=' num2str(p1.rotationanglez,fl) '\circ, z= ' num2str(p1.sr_pos(3),fl) ' nm'])
-end         
+% imz=make3Dimages(obj,p);
+% end         
                 
-function imagez=make3Dimages(obj,p)                
+% function imagez=make3Dimages(obj,p)                
 % imagez=[];
 % fileind=obj.locData.SE.indexFromID(obj.locData.SE.files,obj.site.info.filenumber);
 numlayers=obj.locData.getPar('numberOfLayers');
@@ -156,22 +200,22 @@ if obj.locData.getPar('se_imaxcheck_site')
 end
 for k=1:numlayers
     prz=copyfields(players{k},p);
-     posh=[prz.sr_pos(1) prz.sr_pos(2) prz.sr_size(1)*2 prz.sr_size(2)*2];
-%     locz=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','PSFxnm','intensity_render','phot','numberInGroup',pr.renderfield.selection},'layer',k,'position',posh);
+    
+    prz.sr_pos=site.pos;  %later move all of this out of the loop
+    prz.sr_size=ones(2,1)*obj.locData.getPar('se_sitefov')/2;
+    prz.sr_pixrec=obj.locData.getPar('se_sitepixelsize');
+    prz.sr_sizeRecPix=round((prz.sr_size*2)/prz.sr_pixrec);
+    prz.sr_axes=-1;
+    prz.normalizeFoV=prz.sr_sizeRecPix(1)/obj.locData.getPar('se_sitefov')*obj.locData.getPar('se_siteroi')/2;
+                 
+    posh=[prz.sr_pos(1) prz.sr_pos(2) prz.sr_size(1)*2 prz.sr_size(2)*2];
     locz=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','PSFxnm','intensity_render','phot','numberInGroup',prz.renderfield.selection},'layer',k,'position',obj.site);
-    %     if strcmpi('tiff', pr.rendermode.selection)||strcmpi('raw', pr.rendermode.selection)
-%         rawimage=renderSMAP(obj.locData,pr,k);
-%     else
-%     rawimage=renderSMAP(locz,pr,k);
-%     end
-%     
-%     prz=pr;
     if length(prz.sr_pos)<3
         prz.sr_pos(3)=0;
     end
     xi=locz.xnm-posh(1);
     yi=locz.ynm-posh(2);
-    zi=locz.znm-prz.sr_pos(3);
+    zi=locz.znm-site.pos(3);
     [x2,y2]=rotcoorddeg(xi,yi,prz.rotationanglez);
     [y3,z3]=rotcoorddeg(y2,zi,prz.polarangle);
     locz.sx=locz.locprecnm;locz.sy=locz.locprecznm;
@@ -187,64 +231,17 @@ for k=1:numlayers
     layerszxy(k).images.finalImages=drawerSMAP(rawimagezxy,prz);
     imax(k)=max(layersz(k).images.finalImages.imax,layerszxy(k).images.finalImages.imax);                   
 end
-imagez{1}=displayerSMAP(layersz,prz);
-imagez{2}=displayerSMAP(layerszxy,prz);  
-    
-%           plotz=false;
-%           imax=zeros(numlayers,1);
-           
-%                 pr=obj.getLayerParameters(k, obj.processors.renderer.inputParameters);   
-%                 pd=obj.getLayerParameters(k, obj.processors.drawer.inputParameters); 
-%                 pr=copyfields(pr,p);pd=copyfields(pd,p);
+imz{1}=displayerSMAP(layersz,prz);
+imz{2}=displayerSMAP(layerszxy,prz);  
 
-                
-%                 if nargin>3&&~isempty(pl)&&length(pl)>=k
-%                     pr=copyfields(pr,pl{k});
-%                 end
-%                 if pr.layercheck
-%                     pr.ch_filelist.Value=fileind;
-%                     pr.ch_filelist.selection=pr.ch_filelist.String{fileind};
+imzc.image=horzcat(imz{2}.image(end:-1:1,:,:), imz{1}.image); 
+imzc.rangey=imz{1}.rangey;
+imzc.rangex=[ imz{2}.rangex(1)-imz{2}.rangex(2) imz{1}.rangex(2)-imz{1}.rangex(1)];
 
-%                     obj.processors.renderer.setParameters(pr)
-%                     obj.processors.drawer.setParameters(pr);
-                
-                %filter filenumber
-%                     groupc=pr.groupcheck;
-%                     filterold=obj.locData.getFilter(k);
-% %                     filternew=filterold;
-% %                     locs=obj.locData.getloc({'filenumber','xnm','ynm'},'grouping',groupc);
-%                     obj.locData.filter('filenumber',k,'inlist',filenumber)
-%                     obj.locData.filter('xnm',k,'minmax',[p.sr_pos(1)-p.sr_size(1),p.sr_pos(1)+p.sr_size(1)])
-%                     obj.locData.filter('ynm',k,'minmax',[p.sr_pos(2)-p.sr_size(2),p.sr_pos(2)+p.sr_size(2)])
-                    
-                
-%                     filternew.filenumber=(locs.filenumber==filenumber);
-%                     filternew.xnm=rec.LocalizationFilter.minMaxFilter(locs.xnm,p.sr_pos(1)-p.sr_size(1),p.sr_pos(1)+p.sr_size(1));
-%                     filternew.ynm=rec.LocalizationFilter.minMaxFilter(locs.ynm,p.sr_pos(2)-p.sr_size(2),p.sr_pos(2)+p.sr_size(2));
-%                 filternew=myrmfield(filternew,'xnm');
-%                 filternew=myrmfield(filternew,'ynm');
-%                 obj.locData.setFilter(filternew,k)
-                
-                    
-
-                    
-
-%                 end
-%            end
-%            pd=obj.getLayerParameters(k, obj.processors.displayer.inputParameters); 
-%            pd=copyfields(pd,p);
-
-%            image=displayerSMAP(layers,pr);
-%            image.parameters=pr;
-%            image.parameters.layerparameters=players;
-%            image.layers=layers;
-%            image.imax=imax;
-           
-%            if plotz
-
-%                imagez=vertcat(imagezxy,imagez);
-%            end
-%            axis equal
+displayimage(imzc,obj.axis);
+fl='%2.0f';
+title(obj.axis,['\theta=' num2str(p.polarangle,fl) '\circ, \rho=' num2str(p.rotationanglez,fl) '\circ, z= ' num2str(site.pos(3),fl) ' nm'])
+obj.images=imzc; 
 end
 
 
@@ -261,9 +258,9 @@ end
         
 
 function sideview_click(hax,dat,obj)
-site=obj.SE.currentsite;
-dx=site.image.rangex(2)-site.image.rangex(1);
-dy=site.image.rangey(2)-site.image.rangey(1);
+site=obj.site;
+dx=(obj.images.rangex(2)-obj.images.rangex(1))/2;
+dy=obj.images.rangey(2)-obj.images.rangey(1);
 pos=dat.IntersectionPoint;
 if pos(1)>0 && pos(1)<dx*0.75 %only right side: side view%
     site.pos(3)=site.pos(3)+pos(2)*1000;
@@ -282,10 +279,7 @@ elseif pos(1)<0 %rotate rotation angle
     site.setlineangle(0,anglered);
 end
     
-site.image=[];
-plotsite(obj,site)
-
-
+plot3Dviews(obj)
 end
 
 function displayimage(img,hax)
@@ -300,7 +294,6 @@ set(hax,'YDir','reverse')
 hax.HitTest='on';
 hax.PickableParts='all';
 
-
 axis(hax,'equal')
 set(hax,'YDir','normal')
 axis(hax,'tight')
@@ -314,16 +307,35 @@ hax.Box='on';
 
 end
 
+
+function [roifun,roifunmake,vertexbased]=roistyle2fun(roistyle)
+vertexbased=true;
+switch roistyle
+    case 'rectangle'
+        roifun=@drawrectangle;
+        roifunmake=@Rectangle;
+    case 'ellipse'
+        roifun=@mydrawellipse;
+    case 'polygon'
+        roifun=@drawpolygon;
+    case 'free'
+        roifun=@drawfreehand;
+    case 'polyline'
+        roifun=@drawpolyline;  
+        roifunmake=@images.roi.Polyline;
+    case 'line'
+        roifun=@drawline; 
+        vertexbased=false;
+end
+end
 function resetview(a,b,obj,site)
 site.setlineangle(0,0);
 site.annotation.polarangle=0;
 site.pos(3)=0;
 obj.setPar('se_currentPolarAngle',0)
-redrawsite_callback(a,b,obj)
+plot3Dviews(obj)
 end
 function info(a,b)
 text='To rotate in x-y plane: click in the left top view image in the direction you want to point left. \nTo change the z-position, click on the right image, left part, this position will be centered. \nTo change the polar angle, click in the right image, right part. The closer you are to the center, the smaller the change.';
 msgbox(sprintf(text));
-
-
 end
