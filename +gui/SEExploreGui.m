@@ -981,14 +981,14 @@ end
 hroi=drawellipse(varargin{:});
 end
 
-function resetview(a,b,obj,site)
+function resetview(a,b,obj,site) %3D
 site.setlineangle(0,0);
 site.annotation.polarangle=0;
 site.pos(3)=0;
 obj.setPar('se_currentPolarAngle',0)
 redrawsite_callback(a,b,obj)
 end
-function info(a,b)
+function info(a,b) %3D
 text='To rotate in x-y plane: click in the left top view image in the direction you want to point left. \nTo change the z-position, click on the right image, left part, this position will be centered. \nTo change the polar angle, click in the right image, right part. The closer you are to the center, the smaller the change.';
 msgbox(sprintf(text));
 
