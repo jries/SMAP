@@ -87,6 +87,7 @@ classdef SEExploreGui<interfaces.SEProcessor
              obj.addSynchronization('filelist_long',[],[],@obj.updateFilelist);
             obj.addSynchronization('currentsite',[],[],@obj.updatesite);
              obj.makeinfobutton('ne')
+             obj.guihandles.infobutton.Units='normalized';
         end
         function pard=guidef(obj)
             pard.plugininfo.name='ROImanagerGUI';
