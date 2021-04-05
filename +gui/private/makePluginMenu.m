@@ -202,8 +202,20 @@ end
 end
 function savegui_callback(hmenu,b,obj)
 gfile=obj.getGlobalSetting('guiPluginConfigFile');
+[~,fn]=fileparts(gfile);
+if strcmp(fn,'SimpleGUI')
+    gfile=strrep(gfile,'SimpleGUI','SimpleGUI_local');
+end
+
 [f, p]=uiputfile(gfile);
 if f
+    if strcmp(fn,'SimpleGUI')
+        answ=questdlg('Overwrite SimpleGUI.txt? This file is synchronized via git with all other SMAP users worldwide. If not, select NO and save under a different name.');
+        if ~strcmp(answ, 'Yes')
+            disp('saving of settings aborted.')
+            return
+        end
+    end
     guimodules=obj.getPar('guimodules');
     guimodules.globalGuiState=obj.getPar('globalGuiState');
     if isempty(guimodules.globalGuiState)
