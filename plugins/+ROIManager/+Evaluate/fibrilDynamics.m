@@ -23,12 +23,14 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
         end
         function out=run(obj, inp)
             out=runFibrilDynamics(obj, inp);
-            valh=obj.site.evaluation.(obj.modulename);
-            if length(obj.poly)>=obj.site.ID &&~isempty(obj.poly{obj.site.ID})
-                out.manualBound = obj.dynamicsManualBound;
-            elseif isfield(valh,'poly')
-                obj.poly{obj.site.ID}=valh.poly;
-                out.manualBound = obj.dynamicsManualBound;
+            if isfield(obj.site.evaluation, obj.modulename)
+                valh=obj.site.evaluation.(obj.modulename);
+                if length(obj.poly)>=obj.site.ID &&~isempty(obj.poly{obj.site.ID})
+                    out.manualBound = obj.dynamicsManualBound;
+                elseif isfield(valh,'poly')
+                    obj.poly{obj.site.ID}=valh.poly;
+                    out.manualBound = obj.dynamicsManualBound;
+                end
             end
         end
         
