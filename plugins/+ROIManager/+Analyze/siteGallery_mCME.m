@@ -104,7 +104,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                     pan(1,rot,k).select(ax);
                     close(tempFig);
                 end
-                ax = fitter.model{1}.patchPlot(fitter.exportPars(1,'mPar'), 'ele_view', p.tilt);
+                ax = fitter.model{1}.patchPlot(fitter.exportPars(1,'mPar'), 'ele_view', p.tilt, 'pixelSize', p.pixelSize, 'isoCutoff', p.isoCutoff);
                 set(ax,'XLim',[0 fitter.roiSize/p.pixelSize]);
                 set(ax,'XTick',[], 'YTick', [], 'ZTick', []);
                 set(ax, 'XColor', 'none', 'YColor', 'none', 'ZColor', 'none');
@@ -150,14 +150,35 @@ function update_callback(a,b,obj)
     ax = pan(1,2,length(p.sites)).axis;
     addScalebar(ax,'bottom-right', [20 20]./p.pixelSize,100/p.pixelSize);
 %     axis(p2, 'equal')
+
+    set(p1Line, 'Color', p.lineColor)
+    set(p1Line, 'LineWidth', p.lineWidth)
+    
+    lineObj = findobj(p2, 'type', 'line');
+    if isempty(lineObj)
+        for k = 1:length(p2)
+            outline_Mod = copy(findobj(pan(1,2,k).axis,'Color',p.lineColor));
+            outline_Mod.ZData = outline_Mod.YData;
+            outline_Mod.YData = zeros(size(outline_Mod.YData))+50;
+            outline_Mod.Parent = p2(k);
+        end
+        axis(p2, 'normal')
+        axis(p2, 'equal')
+        axis(p2, 'vis3d')
+    else
+        delete(lineObj)
+        axis(p2, 'equal')
+        axis(p2, 'vis3d')
+    end
+    
     axis(p1, 'image')
+    
+%     axis(p2, 'equal')
     set(p1, 'XLim', [p.crop/pixelSize (roiSize-p.crop)/pixelSize]);
     set(p1, 'YLim', [p.crop/pixelSize (roiSize-p.crop)/pixelSize]);
     set(p2, 'XLim', [p.crop/pixelSize (roiSize-p.crop)/pixelSize]);
-    
 %     axis(p2, 'tight')
-    set(p1Line, 'Color', p.lineColor)
-    set(p1Line, 'LineWidth', p.lineWidth)
+    
 end
 
 function pard=guidef(obj)
@@ -183,7 +204,7 @@ pard.t_isoBlurr.object=struct('String','isoBlurr','Style','text');
 pard.t_isoBlurr.position=[rowRun+2,1];
 pard.t_isoBlurr.Width=1;
 
-pard.isoBlurr.object=struct('String','5','Style','edit');
+pard.isoBlurr.object=struct('String','3','Style','edit');
 pard.isoBlurr.position=[rowRun+2,2];
 pard.isoBlurr.Width=1;
 pard.isoBlurr.Tooltip = 'The gaussian sigma for blurring. This controls the smoothness of the isosurface model rendering.';
@@ -197,16 +218,25 @@ pard.isoGap.position=[rowRun+3,2];
 pard.isoGap.Width=1;
 pard.isoGap.Tooltip = 'Gap between sampled points. This controls the sampling rate of the isosurface model rendering.';
 
+pard.t_isoCutoff.object=struct('String','isoCutoff','Style','text');
+pard.t_isoCutoff.position=[rowRun+4,1];
+pard.t_isoCutoff.Width=1;
+
+pard.isoCutoff.object=struct('String','4','Style','edit');
+pard.isoCutoff.position=[rowRun+4,2];
+pard.isoCutoff.Width=1;
+pard.isoCutoff.Tooltip = 'Intensity cutoff of the original image for the isosurface model rendering.';
+
 pard.t_tilt.object=struct('String','Tilt','Style','text');
-pard.t_tilt.position=[rowRun+4,1];
+pard.t_tilt.position=[rowRun+5,1];
 pard.t_tilt.Width=1;
 
-pard.tilt.object=struct('String','-5','Style','edit');
-pard.tilt.position=[rowRun+4,2];
+pard.tilt.object=struct('String','0','Style','edit');
+pard.tilt.position=[rowRun+5,2];
 pard.tilt.Width=1;
 pard.tilt.Tooltip = 'Tilt angle of the 3d rendering';
 
-rowUpdate = 7;
+rowUpdate = 8;
 
 pard.update.object=struct('String','update','Style','pushbutton','callback',{{@update_callback,obj}});
 pard.update.position=[rowUpdate+0.5,3.5];
