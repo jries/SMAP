@@ -55,7 +55,7 @@ for k=1:length(layers)
               txtN=[txtN 'N'  num2str(k) '=' shortnumber(fi.numberOfLocs) ', '];
          end
          if layersnext
-             if fi.istiff
+             if fi.istiff && exist('imall','var')
                  if ~all(size(imall)==size(fi.image))%s&&~layersnext
                     simh=size(imall); 
                     fi.image=imresize(fi.image,simh(1:2));
