@@ -241,6 +241,16 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
         function plotovbox(obj,a,b)
             pos=obj.getPar('sr_pos');
             size=obj.getPar('sr_size');
+            
+            %layersnext
+            if obj.getPar('sr_layersseparate')
+                composite=obj.getPar('sr_plotcomposite');
+                nlayers=sum(obj.getPar('sr_layerson'));
+                sfac=nlayers+composite;
+                size(1)=size(1)/sfac;
+            end
+            
+            
             x(1)=(pos(1)-size(1))/1000;
             x(2)=(pos(1)+size(1))/1000;
             y(1)=(pos(2)-size(2))/1000;
