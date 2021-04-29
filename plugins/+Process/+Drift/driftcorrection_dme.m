@@ -119,15 +119,19 @@ end
 function [drift,driftinfo,fieldc]=getxyzdrift(locs,p)
 
 drift=[];driftinfo=[];
-
+norm(1)=p.cam_pixelsize_nm(1);
+norm(2)=p.cam_pixelsize_nm(2);
+norm(3)=1000;
 if ~isempty(locs.znm)&&p.correctz
     dim=3;
-    coords=horzcat(locs.xnm,locs.ynm,locs.znm);
-    crlb=horzcat(locs.locprecnm.^2,locs.locprecnm.^2,locs.locprecznm.^2);
+    coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2),locs.znm/norm(3));
+    crlb=horzcat((locs.locprecnm/norm(1)).^2,(locs.locprecnm/norm(2)).^2,(locs.locprecznm/norm(3)).^2);
+    crlbs=[0.1 0.1 0.03];
 else
     dim=2;
-    coords=horzcat(locs.xnm,locs.ynm);
-    crlb=horzcat(locs.locprecnm.^2,locs.locprecnm.^2);
+    coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2));
+    crlb=horzcat((locs.locprecnm/norm(1)).^2,(locs.locprecnm/norm(2)).^2);
+    crlbs=[0.1 0.1];
 end
 framenum=int32(locs.frame);
 numspots=length(framenum);
@@ -138,12 +142,13 @@ gradientStep=1e-6;
 maxdrift=0;
 scores=zeros(1,maxit,'single');
 flags=5;
-maxneighbors=1000;
+maxneighbors=10000;
 nIterations =int32([
 0;
 0;
 ]);
 
+crlb=crlbs;
 
 dme_cpu(single(coords'), single(crlb'), int32(framenum),...
     numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
