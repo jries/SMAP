@@ -119,36 +119,42 @@ end
 function [drift,driftinfo,fieldc]=getxyzdrift(locs,p)
 
 drift=[];driftinfo=[];
-
+norm(1)=p.cam_pixelsize_nm(1);
+norm(2)=p.cam_pixelsize_nm(end);
+norm(3)=1000;
 if ~isempty(locs.znm)&&p.correctz
     dim=3;
-    coords=horzcat(locs.xnm,locs.ynm,locs.znm);
-    crlb=horzcat(locs.locprecnm.^2,locs.locprecnm.^2,locs.locprecznm.^2);
+    coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2),locs.znm/norm(3));
+    crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2,locs.locprecznm.^2/norm(3)^2);
+    crlb0=[0.2 0.2 0.2]';
 else
     dim=2;
-    coords=horzcat(locs.xnm,locs.ynm);
-    crlb=horzcat(locs.locprecnm.^2,locs.locprecnm.^2);
+    coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2));
+    crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2);
+    crlb0=[0.2 0.2]';
 end
 framenum=int32(locs.frame);
+maxframe=max(locs.frame);
 numspots=length(framenum);
 maxit=10000;
-drift=zeros(size(coords),'single');
+drift=zeros(dim,maxframe,'single');
 framesperbin=p.dme_fbin;
 gradientStep=1e-6;
 maxdrift=0;
 scores=zeros(1,maxit,'single');
 flags=5;
-maxneighbors=1000;
+maxneighbors=10000;
 nIterations =int32([
 0;
 0;
 ]);
 
-
+crlb=crlb0;
 dme_cpu(single(coords'), single(crlb'), int32(framenum),...
     numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
  flags, maxneighbors, nIterations);
-
+figure(88);plot(drift(:,:)')
+return
 flags=7;
 dme_cuda(single(coords'), single(crlb'), int32(framenum),...
     numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
