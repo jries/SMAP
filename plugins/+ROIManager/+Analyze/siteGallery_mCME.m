@@ -28,17 +28,53 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             obj.setPar('fitter',fitter)
             
-            numOfView = 2;
+            % parameters
+            view = {'top', 'side0', 'side90'};
+            layout = 'horizontal';
+            plotModelSchem = false;
+
+            if plotModelSchem
+                extraRow = 1;
+            else
+                extraRow = 0;
+            end
+            obj.setPar('extraRow', extraRow);
             
+            % different views
+            numOfView = length(view);
+            obj.setPar('numOfView', numOfView);
+                        
             siteID = getFieldAsVector(se.sites, 'ID');
             
             [~,siteOrder] = ismember(sites2plot,siteID);
             subSites = se.sites(siteOrder);
+            
+            % layout
+            obj.setPar('layout',layout)
+            switch layout
+                case 'vertical'
+                    panMode = 'v';
+                    rowR1 = numOfView;
+                    colR1 = length(subSites);
+                    rowR2 = 1;
+                    colR2 = length(subSites);
+                case 'horizontal'
+                    panMode = 'h';
+                    rowR1 = length(subSites);
+                    colR1 = numOfView;
+                    rowR2 = length(subSites);
+                    colR2 = 1;
+            end
+            obj.setPar('rowR1',rowR1);
+            obj.setPar('colR1',colR1);
+            obj.setPar('rowR2',rowR2);
+            obj.setPar('colR2',colR2);
+            
             f=figure;
             pan = panel(f);
-            pan.pack('v', {2/3 1/3});
-            pan(1).pack(2, length(subSites));
-            pan(2).pack(1, length(subSites));
+            pan.pack(panMode, {numOfView/(numOfView+extraRow) 1/(numOfView+1)});
+            pan(1).pack(rowR1, colR1);
+            pan(2).pack(rowR2, colR2);
 
             numOfPickedSites = length(subSites);
             obj.setPar('numOfPickedSites',numOfPickedSites);
@@ -87,12 +123,8 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                 % rotate the view to show the open
                 
                 
-                for rot = 1:numOfView
-                    if rot == 1
-                        ax = fitter.rotCoordNMkImg(modViz, locsViz, [0 0], 2, 'Data', 500, {'red hot', 'cyan cold'});
-                    else
-                        ax = fitter.rotCoordNMkImg(modViz, locsViz, [45*(rot-2) -90], 2, 'Data', 30, {'red hot', 'cyan cold'});
-                    end
+                for indView = 1:numOfView
+                    ax = makePlot(fitter, modViz, locsViz, view{indView});
                     set(ax,'YDir','normal')
 %                     if rot == 1
 %                        text(ax, page_numOfSites, 30, num2str(subSites(k).ID),'FontSize',50, 'Color','w')
@@ -101,26 +133,56 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                     set(ax, 'Visible', 'off')
                     axis(ax, 'image')
                     tempFig = ax.Parent;
-                    pan(1,rot,k).select(ax);
+                    switch layout
+                        case 'vertical'
+                            subR1 = indView;
+                            subR2 = k;
+                        case 'horizontal'
+                            subR1 = k;
+                            subR2 = indView;
+                    end
+            
+                    pan(1,subR1,subR2).select(ax);
                     close(tempFig);
                 end
-                ax = fitter.model{1}.patchPlot(fitter.exportPars(1,'mPar'), 'ele_view', p.tilt, 'pixelSize', p.pixelSize, 'isoCutoff', p.isoCutoff);
-                set(ax,'XLim',[0 fitter.roiSize/p.pixelSize]);
-                set(ax,'XTick',[], 'YTick', [], 'ZTick', []);
-                set(ax, 'XColor', 'none', 'YColor', 'none', 'ZColor', 'none');
-%                 axis(ax, 'equal')
-                tempFig = ax.Parent;
-                pan(2,1,k).select(ax);
-                close(tempFig);
+                if plotModelSchem
+                    ax = fitter.model{1}.patchPlot(fitter.exportPars(1,'mPar'), 'ele_view', p.tilt, 'pixelSize', p.pixelSize, 'isoCutoff', p.isoCutoff);
+                    set(ax,'XLim',[0 fitter.roiSize/p.pixelSize]);
+                    set(ax,'XTick',[], 'YTick', [], 'ZTick', []);
+                    set(ax, 'XColor', 'none', 'YColor', 'none', 'ZColor', 'none');
+    %                 axis(ax, 'equal')
+                    tempFig = ax.Parent;
+                    switch layout
+                        case 'vertical'
+                            subLast1 = 1;
+                            subLast2 = k;
+                        case 'horizontal'
+                            subLast1 = k;
+                            subLast2 = 1;
+                    end
+                    pan(2,subLast1,subLast2).select(ax);
+                    close(tempFig);
+                end
             end
             update_callback([],[],obj);
-            ax = pan(1,2,k).axis;
-            addScalebar(ax,'bottom-right', [20 20]./p.pixelSize,100/p.pixelSize);
             out = [];
         end
         function pard=guidef(obj)
             pard=guidef(obj);
         end
+    end
+end
+
+function ax = makePlot(fitter, modViz, locsViz, view)
+    if startsWith(view, 'side')
+        deg = str2double(view(5:end));
+        view = 'side';
+    end
+    switch view
+        case 'top'
+            ax = fitter.rotCoordNMkImg(modViz, locsViz, [0 0], 2, 'Data', 500, {'red hot', 'cyan cold'});
+        case 'side'
+            ax = fitter.rotCoordNMkImg(modViz, locsViz, [deg -90], 2, 'Data', 30, {'red hot', 'cyan cold'});
     end
 end
 
@@ -132,13 +194,29 @@ function update_callback(a,b,obj)
     roiSize = fitter.roiSize;
     pixelSize = p.pixelSize;
     numOfPickedSites = obj.getPar('numOfPickedSites');
+    numOfView = obj.getPar('numOfView');
+    rowR1 = obj.getPar('rowR1');
+    colR1 = obj.getPar('colR1');
+    rowR2 = obj.getPar('rowR2');
+    colR2 = obj.getPar('colR2');
+    layout = obj.getPar('layout');
+    extraRow = obj.getPar('extraRow');
+    
+    switch layout
+        case 'vertical'
+            r_fig = numOfPickedSites*4*(roiSize-p.crop*2)/roiSize+0.4;
+            h_fig = (numOfView+extraRow)*4*(roiSize-p.crop*2)/roiSize+0.4;
+        case 'horizontal'
+            r_fig = (numOfView+extraRow)*4*(roiSize-p.crop*2)/roiSize+0.4;
+            h_fig = numOfPickedSites*4*(roiSize-p.crop*2)/roiSize+0.4;
+    end
     
     pan.de.margin = 0;
     pan.margin = [2 2 2 2];
     
     f = pan.figure;
     f.Units = 'centimeters';
-    f.Position(3:4) = [numOfPickedSites*4*(roiSize-p.crop*2)/roiSize+0.4 3*4*(roiSize-p.crop*2)/roiSize+0.4]*1.1;
+    f.Position(3:4) = [r_fig h_fig]*1.1;
     p1 = pan(1).de.object;
     p2 = pan(2).de.object;
     
@@ -147,7 +225,7 @@ function update_callback(a,b,obj)
     
     p1SB = findobj(p1,'Tag','scale bar');
     delete(p1SB);
-    ax = pan(1,2,length(p.sites)).axis;
+    ax = pan(1,rowR1,colR1).axis;
     addScalebar(ax,'bottom-right', [20 20]./p.pixelSize,100/p.pixelSize);
 %     axis(p2, 'equal')
 
