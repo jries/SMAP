@@ -19,7 +19,7 @@ classdef driftcorrection_dme<interfaces.DialogProcessor
                 return
             end
 
-            obj.setPar('undoModule','driftfeature');
+            obj.setPar('undoModule','driftDME');
             notify(obj.P,'backup4undo');
             numberOfFiles=obj.locData.files.filenumberEnd;
             layers=find(obj.getPar('sr_layerson'));
@@ -65,6 +65,7 @@ classdef driftcorrection_dme<interfaces.DialogProcessor
                     p.framestart=min(locs.frame);
                     p.framestop=max(locs.frame);
                     p.roi=obj.locData.files.file(k).info.roi;
+                    p.ax=obj.initaxis('driftxyz');
                     [drift,driftinfo,fieldc]=getxyzdrift(locs,p);
                     
                     locsall=copyfields([],lochere.loc,{fieldc{:},'frame','filenumber'});
@@ -116,9 +117,9 @@ classdef driftcorrection_dme<interfaces.DialogProcessor
 end
 
 
-function [drift,driftinfo,fieldc]=getxyzdrift(locs,p)
+function [drifto,driftinfo,fieldc]=getxyzdrift(locs,p)
 
-drift=[];driftinfo=[];
+drifto=[];driftinfo=[];
 norm(1)=p.cam_pixelsize_nm(1);
 norm(2)=p.cam_pixelsize_nm(end);
 norm(3)=1000;
@@ -127,14 +128,16 @@ if ~isempty(locs.znm)&&p.correctz
     coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2),locs.znm/norm(3));
     crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2,locs.locprecznm.^2/norm(3)^2);
     crlb0=[0.2 0.2 0.2]';
+    fieldc={'xnm','ynm','znm'};
 else
     dim=2;
     coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2));
     crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2);
     crlb0=[0.2 0.2]';
+    fieldc={'xnm','ynm'};
 end
 framenum=int32(locs.frame);
-maxframe=max(locs.frame);
+maxframe=max(p.maxframeall);
 numspots=length(framenum);
 maxit=10000;
 drift=zeros(dim,maxframe,'single');
@@ -143,7 +146,7 @@ gradientStep=1e-6;
 maxdrift=0;
 scores=zeros(1,maxit,'single');
 flags=5;
-maxneighbors=10000;
+maxneighbors=p.maxneighbours;
 nIterations =int32([
 0;
 0;
@@ -153,12 +156,26 @@ crlb=crlb0;
 dme_cpu(single(coords'), single(crlb'), int32(framenum),...
     numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
  flags, maxneighbors, nIterations);
-figure(88);plot(drift(:,:)')
-return
-flags=7;
-dme_cuda(single(coords'), single(crlb'), int32(framenum),...
-    numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
- flags, maxneighbors, nIterations);
+
+
+
+drifto.xy.x=drift(1,:)'*norm(1);
+drifto.xy.y=drift(2,:)'*norm(2);
+
+frames=1:maxframe;
+plot(p.ax,frames,(drift(:,:).*(norm'))'+[00 10 -10])
+
+xlabel(p.ax,'frames');
+ylabel(p.ax,'drift (nm)');
+legend(p.ax,'x','y','z','Location','northwest')
+if dim==3
+    drifto.z=drift(3,:)'*norm(3);
+end
+% driftinfo=p;
+% flags=7;
+% dme_cuda(single(coords'), single(crlb'), int32(framenum),...
+%     numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
+%  flags, maxneighbors, nIterations);
 
 % if 1
 %     finddriftfeatureM(locs,p);
@@ -189,40 +206,39 @@ dme_cuda(single(coords'), single(crlb'), int32(framenum),...
 %     
     
     
-    
-    [driftxy,driftinfoxy]=finddriftfeature(copystructReduce(locs,ind),p);
-    driftinfoxy.mirror=mirror; driftinfoxy.midpoint=midpoint;
-    driftinfo.xy=driftinfoxy;
-    drift.xy=copyfields([],driftxy,{'x','y'});
-    drift.xy(1).mirror=mirror;drift(1).xy(1).midpoint=midpoint;
+%     
+%     [driftxy,driftinfoxy]=finddriftfeature(copystructReduce(locs,ind),p);
+%     driftinfoxy.mirror=mirror; driftinfoxy.midpoint=midpoint;
+%     driftinfo.xy=driftinfoxy;
+%     drift.xy=copyfields([],driftxy,{'x','y'});
+%     drift.xy(1).mirror=mirror;drift(1).xy(1).midpoint=midpoint;
 
-    if rep
-         p.repetitionname='2';
-        [driftxy,driftinfoxy]=finddriftfeature(copystructReduce(locs,~ind),p);
-        driftinfoxy.mirror=mirror; driftinfoxy.midpoint=midpoint;
-        driftinfo.xy(2)=(driftinfoxy);
-        drift.xy(2)=copyfields(drift.xy(1),driftxy,{'x','y'});
-%         drift.xy(2).mirror=mirror;drift(2).midpoint=midpoint;
-    end
+%     if rep
+%          p.repetitionname='2';
+%         [driftxy,driftinfoxy]=finddriftfeature(copystructReduce(locs,~ind),p);
+%         driftinfoxy.mirror=mirror; driftinfoxy.midpoint=midpoint;
+%         driftinfo.xy(2)=(driftinfoxy);
+%         drift.xy(2)=copyfields(drift.xy(1),driftxy,{'x','y'});
+% %         drift.xy(2).mirror=mirror;drift(2).midpoint=midpoint;
+%     end
 
     
-if ~isempty(locs.znm)&&p.correctz
-    if p.correctxy
-        locsnew=copyfields(locs,applydriftcorrection(drift,locs),{'xnm','ynm'});
-    else
-        locsnew=locs;
-        drift=[];
-    end
-    [driftz,driftinfoz]=finddriftfeatureZ(locsnew,p);
-    
-    drift.z=driftz.z;%copyfields(drift,driftz,'z');
-     driftinfo.z=driftinfoz;%copyfields(driftinfo,driftinfoz);
-     fieldc={'xnm','ynm','znm'};
-else
-    fieldc={'xnm','ynm'};
-end
-% locsall=copyfields([],obj.locData.loc,{fieldc{:},'frame','filenumber'});
-% locsnew=applydriftcorrection(drift,locsall);
+% if ~isempty(locs.znm)&&p.correctz
+%     if p.correctxy
+%         locsnew=copyfields(locs,applydriftcorrection(drift,locs),{'xnm','ynm'});
+%     else
+%         locsnew=locs;
+%         drift=[];
+%     end
+%     [driftz,driftinfoz]=finddriftfeatureZ(locsnew,p);
+%     
+%     drift.z=driftz.z;%copyfields(drift,driftz,'z');
+%      driftinfo.z=driftinfoz;%copyfields(driftinfo,driftinfoz);
+%      fieldc={'xnm','ynm','znm'};
+% else
+%     fieldc={'xnm','ynm'};
+% end
+
 end
 
 function pard=guidef(obj)
@@ -230,25 +246,33 @@ function pard=guidef(obj)
 
 pard.dme_fbint.object=struct('String','frames/bin','Style','text');
 pard.dme_fbint.position=[2,1];
-pard.dme_fbint.Width=0.75;
+pard.dme_fbint.Width=1;
 
 pard.dme_fbin.object=struct('String','100','Style','edit');
-pard.dme_fbin.position=[2,1.65];
+pard.dme_fbin.position=[2,2];
 pard.dme_fbin.isnumeric=1;
-pard.dme_fbin.Width=0.25;
+pard.dme_fbin.Width=0.5;
 
+pard.maxneighbourst.object=struct('String','max neighbours','Style','text');
+pard.maxneighbourst.position=[3,1];
+pard.maxneighbourst.Width=1;
+
+pard.maxneighbours.object=struct('String','10000','Style','edit');
+pard.maxneighbours.position=[3,2];
+pard.maxneighbours.isnumeric=1;
+pard.maxneighbours.Width=0.5;
 
 p(1).value=0; p(1).on={}; p(1).off={'zranget','zrange'};
 p(2).value=1; p(2).on=p(1).off; p(2).off={};
-pard.correctz.object=struct('String','Correct z-drift','Style','checkbox','Value',0,'Callback',{{@obj.switchvisible,p}});
+pard.correctz.object=struct('String','Correct z-drift','Style','checkbox','Value',1,'Callback',{{@obj.switchvisible,p}});
 pard.correctz.position=[1,3];
 
 
-pard.zranget.object=struct('String','zrange nm','Style','text','Visible','off');
+pard.zranget.object=struct('String','zrange nm','Style','text','Visible','on');
 pard.zranget.position=[4,3];
 pard.zranget.Optional=true;
 
-pard.zrange.object=struct('String','-400 400','Style','edit','Visible','off');
+pard.zrange.object=struct('String','-400 400','Style','edit','Visible','on');
 pard.zrange.position=[4,4];
 pard.zrange.Optional=true;
 pard.zrange.Width=0.9;
