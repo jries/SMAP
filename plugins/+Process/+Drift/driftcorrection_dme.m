@@ -118,44 +118,51 @@ end
 
 
 function [drifto,driftinfo,fieldc]=getxyzdrift(locs,p)
-
+isconstc=p.crlbconst;
 drifto=[];driftinfo=[];
 norm(1)=p.cam_pixelsize_nm(1);
 norm(2)=p.cam_pixelsize_nm(end);
 norm(3)=1000;
 if ~isempty(locs.znm)&&p.correctz
-    dim=3;
     coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2),locs.znm/norm(3));
-    crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2,locs.locprecznm.^2/norm(3)^2);
-    crlb0=[0.2 0.2 0.2]';
+%     crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2,locs.locprecznm.^2/norm(3)^2);
+    crlb=horzcat(locs.locprecnm/norm(1),locs.locprecnm/norm(2),locs.locprecznm/norm(3));
+%     crlb0=[0.2 0.2 0.2]';
+    crlb0=median(crlb)';
     fieldc={'xnm','ynm','znm'};
+    isz=1;
 else
-    dim=2;
     coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2));
-    crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2);
-    crlb0=[0.2 0.2]';
+    crlb=horzcat(locs.locprecnm/norm(1),locs.locprecnm/norm(2));
+%     crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2);
+%     crlb0=[0.2 0.2]';
+    crlb0=median(crlb)';
     fieldc={'xnm','ynm'};
+    isz=0;
+    norm=norm(1:2);
 end
 framenum=int32(locs.frame);
 maxframe=max(p.maxframeall);
 numspots=length(framenum);
 maxit=10000;
-drift=zeros(dim,maxframe,'single');
+drift=zeros(isz+2,maxframe,'single');
 framesperbin=p.dme_fbin;
 gradientStep=1e-6;
 maxdrift=0;
 scores=zeros(1,maxit,'single');
-flags=5;
 maxneighbors=p.maxneighbours;
 nIterations =int32([
 0;
 0;
 ]);
 
-crlb=crlb0;
+if isconstc
+    crlb=crlb0;
+end
 
+isgpu=p.usegpu;
 
-isconst
+flags=4*isconstc+2*isgpu+isz;
 
 % Flags
 % Flags               cuda    cpu
@@ -163,26 +170,36 @@ isconst
 % 2D & variable CRLB  2       0
 % 3D & constant CRLB  7       5
 % 3D & variable CRLB  3       1
+if isgpu
+    dme_cuda(single(coords'), single(crlb'), int32(framenum),...
+        numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
+        flags, maxneighbors, nIterations);
+else
 
-
-dme_cpu(single(coords'), single(crlb'), int32(framenum),...
-    numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
- flags, maxneighbors, nIterations);
-
+    dme_cpu(single(coords'), single(crlb'), int32(framenum),...
+        numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
+        flags, maxneighbors, nIterations);
+end
 
 
 drifto.xy.x=drift(1,:)'*norm(1);
 drifto.xy.y=drift(2,:)'*norm(2);
 
 frames=1:maxframe;
-plot(p.ax,frames,(drift(:,:).*(norm'))'+[00 10 -10])
+hold(p.ax,'off')
+plot(p.ax,frames,drifto.xy.x)
+hold(p.ax,'on')
+plot(p.ax,frames,drifto.xy.y+10)
+
+if isz
+    drifto.z=drift(3,:)'*norm(3);
+    plot(p.ax,frames,drifto.z-10)
+end
 
 xlabel(p.ax,'frames');
 ylabel(p.ax,'drift (nm)');
 legend(p.ax,'x','y','z','Location','northwest')
-if dim==3
-    drifto.z=drift(3,:)'*norm(3);
-end
+
 % driftinfo=p;
 % flags=7;
 % dme_cuda(single(coords'), single(crlb'), int32(framenum),...
@@ -281,14 +298,21 @@ pard.correctz.position=[1,3];
 
 
 pard.zranget.object=struct('String','zrange nm','Style','text','Visible','on');
-pard.zranget.position=[4,3];
+pard.zranget.position=[3,3];
 pard.zranget.Optional=true;
 
 pard.zrange.object=struct('String','-400 400','Style','edit','Visible','on');
-pard.zrange.position=[4,4];
+pard.zrange.position=[3,4];
 pard.zrange.Optional=true;
 pard.zrange.Width=0.9;
 
+pard.crlbconst.object=struct('String','use median CRLB','Style','checkbox','Visible','on');
+pard.crlbconst.position=[4,1];
+% pard.crlbconst.Optional=true;
+
+pard.usegpu.object=struct('String','use GPU','Style','checkbox','Visible','on','Value',1);
+pard.usegpu.position=[5,1];
+% pard.usegpu.Optional=true;
 
 pard.drift_reference.object=struct('String','reference is last frame','Style','checkbox');
 pard.drift_reference.position=[7,3];
