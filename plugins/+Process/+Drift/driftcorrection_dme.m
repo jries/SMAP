@@ -153,6 +153,18 @@ nIterations =int32([
 ]);
 
 crlb=crlb0;
+
+
+isconst
+
+% Flags
+% Flags               cuda    cpu
+% 2D & constant CRLB  6       4
+% 2D & variable CRLB  2       0
+% 3D & constant CRLB  7       5
+% 3D & variable CRLB  3       1
+
+
 dme_cpu(single(coords'), single(crlb'), int32(framenum),...
     numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
  flags, maxneighbors, nIterations);
