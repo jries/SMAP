@@ -170,6 +170,7 @@ flags=4*isconstc+2*isgpu+isz;
 % 2D & variable CRLB  2       0
 % 3D & constant CRLB  7       5
 % 3D & variable CRLB  3       1
+tic
 if isgpu
     dme_cuda(single(coords'), single(crlb'), int32(framenum),...
         numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
@@ -180,7 +181,8 @@ else
         numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
         flags, maxneighbors, nIterations);
 end
-
+t=toc;
+disp(['Time for DME drift correction: ' num2str(t) 's'])
 
 drifto.xy.x=drift(1,:)'*norm(1);
 drifto.xy.y=drift(2,:)'*norm(2);

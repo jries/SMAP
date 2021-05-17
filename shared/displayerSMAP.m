@@ -160,7 +160,7 @@ for k=1:(length(layers))
     end
 end
     
-if ~isempty(p.sr_lutwhite) && p.sr_lutwhite
+if isfield(p,'sr_lutwhite') && ~isempty(p.sr_lutwhite) && p.sr_lutwhite
     imfinal=invertwhite(imfinal,0.0);
 end
 
