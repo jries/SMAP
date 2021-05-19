@@ -353,6 +353,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         try
                             child.setGuiParameters(pchild,true,setmenulist);
                         catch err
+                            disp('setGuiParameters for children: error in:')
                             child
                             err
                         end

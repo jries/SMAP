@@ -3,11 +3,13 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
         numberOfLayers=1;
         multilayerfig;
         temproi
+        layernames
     end
 
     methods
         function obj=GuiRender(varargin)
-            obj@interfaces.GuiModuleInterface(varargin{:})            
+            obj@interfaces.GuiModuleInterface(varargin{:}) 
+            obj.propertiesToSave={'layernames'};
         end
  
         function makeGui(obj)            
@@ -59,14 +61,27 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
         
         function setGuiParameters(obj,p,setchildren,setmenulist)
 %             add layers if needed
+            %remove all layers
             fn=fieldnames(p.children);
-            layertabnames={obj.guihandles.layertab.Children(:).Title};
-            for k=1:length(fn)
-                if length(fn{k})>5&&strcmp(fn{k}(1:5),'Layer')
-                    if ~any(strcmp(layertabnames,fn{k}))
+            currentlayers=fieldnames(obj.children);
+            for k=2:length(currentlayers)-1
+                obj.removelayer(k)
+            end
+            if isfield(p,'layernames')
+                obj.guihandles.layertab.SelectedTab.Title=p.layernames{1};
+            end
+            indl=2;
+%             layertabnames={obj.guihandles.layertab.Children(:).Title};
+            for k=2:length(fn)
+                if length(fn{k})>5&&strcmp(fn{k}(1:5),'Layer') && ~strcmp(fn{k}(6:end),'1')
+%                     if ~any(strcmp(layertabnames,fn{k}))
                         eventdata.NewValue.Title='+';
                         selectLayer_callback(obj.guihandles.layertab,eventdata,obj)
-                    end
+                        if isfield(p,'layernames')
+                            obj.guihandles.layertab.SelectedTab.Title=p.layernames{indl};
+                            indl=indl+1;
+                        end
+%                     end
                 end
             end
             setGuiParameters@interfaces.GuiModuleInterface(obj,p,setchildren,setmenulist);            
@@ -269,6 +284,37 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             obj.status('render done')  
             end
         end
+    
+        function removelayer(obj,number)
+            layername=['Layer' num2str(number)];
+            tabname=obj.children.(layername).name;
+            lon=obj.getPar('sr_layerson');
+            lon(number)=[];
+            lon(end+1)=0;
+            obj.setPar('sr_layerson',lon);
+            
+            %         numold=obj.numberOfLayers;
+%         
+         obj.setPar(['layer' num2str(number) '_layercheck'],0);
+         if length(obj.locData.layer)>=number
+            obj.locData.layer(number)=[];
+         end
+         deletechildren(obj.children.(layername));
+         chn=fieldnames(obj.children);
+         for k=number+1:length(chn)-1
+             obj.children.(['Layer' num2str(k-1)])=obj.children.(['Layer' num2str(k)]);
+         end
+         obj.children=rmfield(obj.children,chn{end});
+         
+         
+         tab=findobj(obj.guihandles.layertab,'Title',tabname);
+        delete(tab);
+         obj.numberOfLayers=obj.numberOfLayers-1;
+         obj.setPar('numberOfLayers',obj.numberOfLayers);
+         tab=obj.guihandles.layertab.Children(1);
+         obj.guihandles.layertab.SelectedTab=tab;
+        updatelayernames(obj)
+        end
     end
 end
 
@@ -282,7 +328,12 @@ layertitle=(eventdata.NewValue.Title);
 if strcmp(layertitle,'+')
     newlayernumber=obj.numberOfLayers+1;
     tag=['Layer' num2str(newlayernumber)];
-      h.(['tab_layer' num2str(newlayernumber)])=uitab(obj.guihandles.layertab,'Title',tag,'Tag',tag);
+    title=tag;
+    while any(strcmp({obj.guihandles.layertab.Children.Title},title))
+        title=[title 'n'];
+    end
+    
+      h.(['tab_layer' num2str(newlayernumber)])=uitab(obj.guihandles.layertab,'Title',title,'Tag',tag);
        h.(['layer_' num2str(newlayernumber)])=obj.addlayer(  h.(['tab_layer' num2str(newlayernumber)]),newlayernumber);
     obj.numberOfLayers=newlayernumber;
     obj.setPar('numberOfLayers',newlayernumber);
@@ -292,14 +343,18 @@ if strcmp(layertitle,'+')
     tabgroup.Children=tabgroup.Children(s);
     tabgroup.SelectedTab=tabgroup.Children(end-1); 
     selectedlayer=newlayernumber;
+    
     obj.setPar('layercheck',true,'Value','layer',selectedlayer)
 else
-    selectedlayer=sscanf(layer,'Layer%d');
+    number=find(strcmp({obj.guihandles.layertab.Children.Title},eventdata.NewValue.Title));
+    selectedlayer=['Layer' num2str(number)];
+%     selectedlayer=sscanf(layer,'Layer%d');
 end
 for k=1:length(tabgroup.Children)-1
 %     layernumber=tabgroup.Children(k).Title;
-    layertag=tabgroup.Children(k).Tag;
-    obj.children.(layertag).setlayer(selectedlayer);
+%     layertag=tabgroup.Children(k).Tag;
+    layertag=['Layer' num2str(k)];
+    obj.children.(layertag).setlayer(number);
 end
 updatelayernames(obj)
 end
@@ -317,22 +372,26 @@ switch callobj.Label
             disp('one layer required, cannot delete layer 1');
              return
         end
-        numold=obj.numberOfLayers;
-        
-        name=['Layer',num2str(numold)];
-        p=obj.getPar('sr_layerson');
-        p(numold)=0;
-        obj.setPar('sr_layerson',p);
-        obj.setPar(['layer' num2str(numold) '_layercheck'],0);
-        obj.locData.layer(numold)=[];
-        deletechildren(obj.children.(name));
-        tab=findobj(obj.guihandles.layertab,'Title',['Layer',num2str(numold)]);
-        delete(tab);
-        obj.numberOfLayers=obj.numberOfLayers-1;
-        obj.setPar('numberOfLayers',obj.numberOfLayers);
-%         tab=findobj(obj.guihandles.layertab,'Title','Layer1');
-        tab=obj.guihandles.layertab.Children(1);
-        obj.guihandles.layertab.SelectedTab=tab;
+        number=find(strcmp({obj.guihandles.layertab.Children.Title},obj.guihandles.layertab.SelectedTab.Title));
+%         tag=obj.guihandles.layertab.SelectedTab.Tag;
+        obj.removelayer(number);
+        return
+%         numold=obj.numberOfLayers;
+%         
+%         name=['Layer',num2str(numold)];
+%         p=obj.getPar('sr_layerson');
+%         p(numold)=0;
+%         obj.setPar('sr_layerson',p);
+%         obj.setPar(['layer' num2str(numold) '_layercheck'],0);
+%         obj.locData.layer(numold)=[];
+%         deletechildren(obj.children.(name));
+%         tab=findobj(obj.guihandles.layertab,'Title',['Layer',num2str(numold)]);
+%         delete(tab);
+%         obj.numberOfLayers=obj.numberOfLayers-1;
+%         obj.setPar('numberOfLayers',obj.numberOfLayers);
+% %         tab=findobj(obj.guihandles.layertab,'Title','Layer1');
+%         tab=obj.guihandles.layertab.Children(1);
+%         obj.guihandles.layertab.SelectedTab=tab;
     case 'rename layer'
         currentname=obj.guihandles.layertab.SelectedTab.Title;
         tag=obj.guihandles.layertab.SelectedTab.Tag;
@@ -350,7 +409,6 @@ end
 end
 
 
-
 function updatelayernames(obj)
 k=1;
 names={};
@@ -361,4 +419,5 @@ while isfield(obj.children,['Layer' num2str(k)])
             k=k+1;
 end
 obj.setPar('layernames',names);
+obj.layernames=names;
 end        
