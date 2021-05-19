@@ -59,6 +59,10 @@ if isempty(fitter)
     disp(['using: ' char(allfitters{fitter})]);
 end
 
+if isempty(fitter)
+    error('No working GPU or CPU fitter found.')
+end
+
 %convert all parameters to the correct format
 imagestack=single(varargin{1});
 
