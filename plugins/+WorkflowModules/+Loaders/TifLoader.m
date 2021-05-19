@@ -303,6 +303,9 @@ end
 
 function changeloader(a,b,obj)
 file=obj.getSingleGuiParameter('tiffile');
+if isempty(file) ||strcmp(file,' ')
+    return
+end
 try
 addFile(obj,file)
 catch err
@@ -310,6 +313,9 @@ catch err
     err
 end  
 outfile=[obj.getPar('loc_fileinfo').basefile];
+if isempty(outfile)
+    return
+end
 [path, file]=fileparts(outfile);
 obj.setPar('loc_outputfilename',[path filesep file  '_sml.mat'])
 end
