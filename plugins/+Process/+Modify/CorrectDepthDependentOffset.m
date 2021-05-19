@@ -18,17 +18,25 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             %% Get info from SMLMModelFit
             se = obj.SE;
             sites = obj.SE.sites;
-            lUsed = getFieldAsVector(sites, 'annotation.use');
-            usedSites = sites(lUsed);
             
             evalList = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             indProcessor = find(strcmp('SMLMModelFitGUI',evalList));
+            
             fitter = obj.SE.processors.eval.processors{indProcessor}.fitter;
+            [~,idxRingDist] = fitter.wherePar('pars.m2.lPar.z');
+            ringDistS1 = getFieldAsVectorInd(sites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
+            
+            idxNan = find(isnan(ringDistS1));
+            
+            for k = 1:length(idxNan)
+                sites(idxNan(k)).annotation.use = 0;
+            end
+            lUsed = getFieldAsVector(sites, 'annotation.use');
+            usedSites = sites(lUsed);
             
             ID = getFieldAsVector(usedSites, 'ID');
             
-            [~,idxRingDist] = fitter.wherePar('pars.m2.lPar.z');
-            ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
+            ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);            
             
             [~,idxXrot] = fitter.wherePar('pars.m1.lPar.xrot');
             xrot = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxXrot);
