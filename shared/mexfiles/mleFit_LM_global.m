@@ -54,7 +54,9 @@ if isempty(fitter)
     disp(['using: ' char(allfitters{fitter})]);
 end
 
-
+if isempty(fitter)
+    error('No working GPU or CPU fitter found.')
+end
 
 splinecoeff=single(varargin{4});
 coeffsize=size(splinecoeff);

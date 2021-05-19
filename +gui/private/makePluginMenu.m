@@ -145,6 +145,7 @@ end
     p.Xrim=10;
     module.setGuiAppearence(p)
     module.makeGui;
+    obj.children.menu.(pluginpath{end})=module;
 end
 
 function info_callback(a,b)

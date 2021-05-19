@@ -7,8 +7,9 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         jsontypes
     end
     methods
-        function obj=DECODE_training_estimates(varargin)    
+        function obj=DECODE_training_estimates(varargin)  
             obj@interfaces.DialogProcessor(varargin{:}) ;
+            obj.showresults=false;
         end
         
         function out=run(obj,p)

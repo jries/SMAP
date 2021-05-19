@@ -81,8 +81,11 @@ classdef calibrate3D_GUI_g<handle
             if ispc
                 fontsize=10;
                 fieldheight=vsep;
-            else 
+            elseif ismac 
                 fontsize=14;
+                fieldheight=vsep;
+            elseif isunix
+                fontsize=9;
                 fieldheight=vsep;
             end
             xpos1=10;
