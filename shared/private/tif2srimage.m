@@ -34,7 +34,8 @@ tnum=p.render_colormode.Value;
 %      pixsize(2)=pixsize(1); %XXXXXXX hack to put images together. No idea why. XXXXX
  end
 
-srec=round(p.sr_sizeRecPix);
+% srec=round(p.sr_sizeRecPix);
+srec=round(p.sr_size/p.sr_pixrec*2);
 rangex=rangex+pixsize(1)*1000/2;rangey=rangey+pixsize(end)*1000/2;
 rangexpix=rangex/1000/pixsize(1);rangeypix=rangey/1000/pixsize(end);
 % rpixrx=[floor(rangexpix(1)) ceil(rangexpix(2))];rpixry=[floor(rangeypix(1)) ceil(rangeypix(2))];

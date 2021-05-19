@@ -15,6 +15,7 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
         modality=p.modality.selection;
         obj.axis=obj.setoutput('profile');
         fs=obj.site.evaluation.fibrilStatistics.measurement;
+
         switch modality
             case 'deviation'
                 dev=fs.deviation.value;
@@ -23,12 +24,16 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
                 dev=fs.P.value;
                 dsmooth=fs.P.value_smo;
         end
-        
+        if isfield(fs,'P')
+            indKeptCurve = fs.P.indKeptCurve;
+        else
+            indKeptCurve = true(length(dev),1);
+        end
         posx=(1:length(dev))'*10;
         hold(obj.axis,'off');
-        plot(obj.axis,posx,dev,'-')
+        plot(obj.axis,posx(indKeptCurve),dev(indKeptCurve),'-')
         hold(obj.axis,'on');
-        plot(obj.axis,posx,dsmooth,'r-','LineWidth',3);
+        plot(obj.axis,posx(indKeptCurve),dsmooth(indKeptCurve),'r-','LineWidth',3);
         if isfield(obj.site.evaluation,obj.name)
             out=obj.site.evaluation.(obj.name);
         else

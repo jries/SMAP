@@ -15,6 +15,21 @@ end
 if nargin<5
     transparency.mode=1;
 end
+
+sizefac=1;
+if isfield(p,'sr_layersseparate')&&~isempty(p.sr_layersseparate)&&p.sr_layersseparate
+    if isfield(p,'sr_plotcomposite')&&~isempty(p.sr_plotcomposite)&&p.sr_plotcomposite
+        addc=1;
+    else
+        addc=0;
+    end
+    if isfield(p,'sr_size')&&~isempty(p.sr_size)&&isfield(p,'sr_layerson')
+        p.sr_size(1)=p.sr_size(1)/(sum(p.sr_layerson)+addc);
+        sizefac=1/(sum(p.sr_layerson)+addc);
+    else   
+    end
+end
+
 if strcmpi('tiff', p.rendermode.selection)%obj.locData.files.file(p.ch_filelist.value).istiff
     file=locs.files.file;
     imageo=tif2srimage(file,p);
@@ -69,19 +84,7 @@ if nargin>3&&isempty(indin)
     imageo.rangey=[];
     return
 end
-sizefac=1;
-if isfield(p,'sr_layersseparate')&&~isempty(p.sr_layersseparate)&&p.sr_layersseparate
-    if isfield(p,'sr_plotcomposite')&&~isempty(p.sr_plotcomposite)&&p.sr_plotcomposite
-        addc=1;
-    else
-        addc=0;
-    end
-    if isfield(p,'sr_size')&&~isempty(p.sr_size)&&isfield(p,'sr_layerson')
-        p.sr_size(1)=p.sr_size(1)/(sum(p.sr_layerson)+addc);
-        sizefac=1/(sum(p.sr_layerson)+addc);
-    else   
-    end
-end
+
     
 if ~isfield(locsh,'x')||isempty(locsh.x)
 %     length(locsh.xnm)

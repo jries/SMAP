@@ -241,6 +241,16 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
         function plotovbox(obj,a,b)
             pos=obj.getPar('sr_pos');
             size=obj.getPar('sr_size');
+            
+            %layersnext
+            if obj.getPar('sr_layersseparate')
+                composite=obj.getPar('sr_plotcomposite');
+                nlayers=sum(obj.getPar('sr_layerson'));
+                sfac=nlayers+composite;
+                size(1)=size(1)/sfac;
+            end
+            
+            
             x(1)=(pos(1)-size(1))/1000;
             x(2)=(pos(1)+size(1))/1000;
             y(1)=(pos(2)-size(2))/1000;
@@ -608,6 +618,7 @@ if isempty(settings)
     settings.colorbarthickness=4;
     settings.plotscalebar=true;
     settings.customcheck=false;
+    settings.lutwhite=false;
 %     settings.plotlayernames=false;
 end
 [settings, button] = settingsdlg(...
@@ -616,8 +627,9 @@ end
     'Pixelsize',{'1x1','2x2','3x3','4x4'},...
     {'thickness of colorbar (pix)','colorbarthickness'},settings.colorbarthickness,...
     {'Plot scale bar';'plotscalebar'},[true ],...
+    {'Invert image for white background','lutwhite'},logical(settings.lutwhite),...
     {'Custom image size';'customcheck'},[false true],...
-    {'Imagesize (pixel) or magnification (if <20)','imsize'},num2str(settings.imsize) );
+    {'Imagesize (pixel) or magnification (if <20)','imsize'},num2str(settings.imsize));
      
 
 if strcmpi(button,'ok')
@@ -648,6 +660,7 @@ if strcmpi(button,'ok')
 %     obj.setPar('sr_layersseparate',settings.layerssep);
     obj.setPar('sr_colorbarthickness',settings.colorbarthickness);
     obj.setPar('sr_plotscalebar',settings.plotscalebar);
+    obj.setPar('sr_lutwhite',settings.lutwhite);
 %     obj.setPar('sr_plotlayernames',settings.plotlayernames);
 %     if settings.newfig
 %         obj.setPar('sr_axes',obj.makesrfigure((settings.fignumber)));
@@ -732,7 +745,7 @@ function resetview_callback(oject,data,obj)
       return
   end
   obj.setPar('sr_pos',[(maxx+minx)/2 (maxy+miny)/2]);
-  pixrec=round(max((maxx-minx)/si(1),(maxy-miny)/si(2)));
+  pixrec=max(round(max((maxx-minx)/si(1),(maxy-miny)/si(2))),1);
   obj.setPar('sr_pixrec',pixrec);
   obj.pixrec_callback(obj)
   notify(obj.P,'sr_render')

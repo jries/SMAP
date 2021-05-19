@@ -98,7 +98,7 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
 %             plot(ax,time,y,'m');
             
             
-            
+            try
             %step finder
             ax=obj.initaxis('stepfind');
             inds=findchangepts(x,'MaxNumChanges',round((max(x)-min(x))/20));
@@ -123,7 +123,9 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
             plot(ax,x,y,'.-')
             
             obj.initaxis('x','keep');
-            
+            catch err
+                disp('Signal processing Toolbox needed')
+            end
             if p.makemovie
                 ts=min(time):p.frametime:max(time);
                 f=figure(99);

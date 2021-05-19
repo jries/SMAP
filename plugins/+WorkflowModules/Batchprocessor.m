@@ -208,7 +208,7 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
             while obj.guihandles.stop.Value==0
                 checksml=p.omitsml;
 %                 profile on
-                imf=findunprocessed(p.filelist.selection,p,obj.dirsprocessed,checksml)
+                imf=findunprocessed(p.filelist.selection,p,obj.dirsprocessed,checksml);
 %                 profile viewer
 %                 imf=findimageindir(p.filelist.selection,p);
 %                 unprocessed=setdiff(imf,obj.filesprocessed);
