@@ -354,7 +354,7 @@ for k=1:length(tabgroup.Children)-1
 %     layernumber=tabgroup.Children(k).Title;
 %     layertag=tabgroup.Children(k).Tag;
     layertag=['Layer' num2str(k)];
-    obj.children.(layertag).setlayer(selectedlayer);
+    obj.children.(layertag).setlayer(number);
 end
 updatelayernames(obj)
 end
