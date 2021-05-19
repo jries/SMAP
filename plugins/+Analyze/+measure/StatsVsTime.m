@@ -13,8 +13,13 @@ classdef StatsVsTime<interfaces.DialogProcessor
            
             fields={'filenumber','frame','phot','locprecnm','PSFxnm','numberInGroup','bg'};
             if ~isfield(obj.locData.loc,'bg')
-                obj.locData.setloc('bg',obj.locData.loc.bg1)
-                disp('bg1 used for bg')
+                if isfield(obj.locData.loc,'bg1')
+                    obj.locData.setloc('bg',obj.locData.loc.bg1)
+                    disp('bg1 used for bg')
+                    
+                else
+                    obj.locData.setloc('bg',obj.locData.loc.locprecnm*0);
+                end
                 obj.locData.regroup;
             end
             if isfield(obj.locData.loc,'znm')
@@ -83,7 +88,11 @@ classdef StatsVsTime<interfaces.DialogProcessor
                             sum(indf)
                             fn=fieldnames(locs{k});
                             for l=1:length(fn)
-                                loc2{k}.(fn{l})=locs{k}.(fn{l})(indf);
+                                if ~isempty(locs{k}.(fn{l}))
+                                    loc2{k}.(fn{l})=locs{k}.(fn{l})(indf);
+                                else
+                                    loc2{k}.(fn{l})=zeros(sum(indf),1,'single');
+                                end
                             end
                         end
                         stats=make_statistics2(loc2,p,false);
