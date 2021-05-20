@@ -588,7 +588,7 @@ p.sr_sizeRecPix=round(p.sr_size/p.sr_pixrec*2);
 p.sr_pos=[mean(xext) mean(yext)];
 % p.rangex=xext;
 % p.rangey=yext;
-p.extendrange=true;
+% p.extendrange=true;
 
 p.sr_axes=hax;
 
