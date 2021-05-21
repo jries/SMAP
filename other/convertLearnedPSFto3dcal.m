@@ -33,7 +33,7 @@ coeffr = single(Spline3D_interp(corrPSFhdr));
 %% test
 midp=size(PSF,3)/2;
  rangef=20:198;
- rangef=1:2*midp;
+%  rangef=1:2*midp;
 roisize=15;
 dx=floor(roisize/2);
 roiP=ceil(size(PSF,1)/2);
@@ -47,7 +47,7 @@ PSFfit=single(PSF(rangex,rangex,rangef));
  plot(rangef,P(:,2)-dx+1);hold off;
  
  xlabel('frame')
- ylabel('x (nm), y (nm)')
+ ylabel('x, y (pixel)')
  subplot(2,2,2)
  plot(rangef,P(:,5)-rangef'+1);
   xlabel('frame')
@@ -82,7 +82,7 @@ hold on
             subplot(2,2,4)
   plot(rangef,P(:,5)-rangef'+1,'k')
   xlabel('frame')
- ylabel('z (frame)')
+ ylabel('zfit-frame (frame)')
  
 %% assemble output structure
 S.cspline.dz=single(dz);
