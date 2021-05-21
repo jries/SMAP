@@ -9,6 +9,7 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
         history=false;
          parent; %encapsulating object, e.g. used to call methods in plugin4workflow from plugin directly
          undo=false;
+         showloadsavepar=false;
 %         moduleinfo;
     end
     properties (SetAccess = private, GetAccess = private)
@@ -53,14 +54,20 @@ classdef DialogProcessor<interfaces.GuiModuleInterface & interfaces.LocDataInter
             if isvalid(obj.handle)
                 hpos=obj.handle.Position;
                 vrim=obj.guiPar.Vrim;
-                obj.guihandles.showresults=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*2, hpos(4)-vrim+20,120,20],...
+                obj.guihandles.showresults=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*2+40, hpos(4)-vrim+20,120,20],...
                     'FontSize',obj.guiPar.fontsize,'Style','checkbox', 'String', 'Show results',...
                     'Value',obj.showresults,'Callback',{@showresults_callback,obj},'Visible',vis);
-                obj.guihandles.processgo_b=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*3, hpos(4)-vrim+20,100,50],...
+                obj.guihandles.processgo_b=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*4-100, hpos(4)-vrim+20,100,55],...
                     'Style','pushbutton','String','Run','FontSize',obj.guiPar.fontsize*1.5,'Callback',{@processgo_callback,obj},'Visible',vis);
-                obj.guihandles.info=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*2, hpos(4)-vrim+50,100,25],...
+                obj.guihandles.info=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*2+40, hpos(4)-vrim+50,100,25],...
                     'Style','pushbutton','String','Info','FontSize',obj.guiPar.fontsize,'Callback',{@info_callback,obj},'Visible',vis,...
                     'BackgroundColor',[0.7,1,0.9]);
+                if obj.showloadsavepar %show parameter load and save functions
+                    obj.guihandles.saveguipar=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*2-20, hpos(4)-vrim+52,40,20],...
+                        'Style','pushbutton','String','save','FontSize',obj.guiPar.fontsize*1.,'Callback',{@saveguipar_callback,obj},'Visible',vis);
+                     obj.guihandles.loadguipar=uicontrol(obj.handle,'Position',[obj.guiPar.FieldWidth*2-20, hpos(4)-vrim+22,40,20],...
+                        'Style','pushbutton','String','load','FontSize',obj.guiPar.fontsize*1.,'Callback',{@loadguipar_callback,obj},'Visible',vis);            
+                end
             end
             obj.initGuiFinal;
         end
@@ -247,4 +254,24 @@ fig=a.Parent.Parent;
 numtabs=length(fig.Children.Children);
 numrows=ceil(sqrt(numtabs));
 flattenTabs(fig,numrows);
+end
+
+function loadguipar_callback(a,b,obj)
+   pfad=fileparts(obj.getPar('lastSMLFile'));
+   outf=[pfad filesep obj.pluginpath{end} '*_parameters.mat'];   
+   [f,pfad]=uigetfile(outf);
+   if f
+       l=load([pfad f]);
+   end  
+   obj.setGuiParameters(l.par,true);
+end
+
+function saveguipar_callback(a,b,obj)
+   par=obj.getGuiParameters(true);
+   pfad=fileparts(obj.getPar('lastSMLFile'));
+   outf=[pfad filesep obj.pluginpath{end} '_parameters.mat'];
+   [f,pfad]=uiputfile(outf);
+   if f
+       save([pfad f], 'par')
+   end    
 end
