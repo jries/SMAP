@@ -70,10 +70,10 @@ for k=1:length(p.sr_layerson)
     if p.sr_layerson(k)
         lp=['layer' num2str(k)];
         txt=[txt lp ':\n'];
-        txt=[txt p.([lp '_']).ch_filelist.selection '\n'];
+        txt=[txt strrep(p.([lp '_']).ch_filelist.selection,'\','/') '\n'];
         
         filn=p.([lp '_']).ch_filelist.Value;
-        txt=[txt p.filelist_long.String{filn} '\n'];
+        txt=[txt strrep(p.filelist_long.String{filn},'\','/') '\n'];
         try
             fn=obj.locData.files.file(filn).info.filename;
             fn=strrep(fn,'\','/');
