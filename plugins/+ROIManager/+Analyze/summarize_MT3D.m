@@ -36,10 +36,16 @@ classdef summarize_MT3D<interfaces.DialogProcessor&interfaces.SEProcessor
             
             [~,idxZMid] = se.processors.eval.processors{indProcessor}.fitter.wherePar('pars.m1.mPar.zMid');
             zMid = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_2.allParsArg.value',idxZMid);
-            
+                        
             if p.comp
                 fileNumber = getFieldAsVector(usedSites, 'info.filenumber');
                 grpLabel = p.grpTable.Data(:,2);
+            end
+            
+            if ~isempty(usedSites(1).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars)&&isfield(usedSites(1).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1},'avgCurvature')
+                for k = sum(lUsed):-1:1
+                    curvature(k) = usedSites(k).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.avgCurvature;
+                end
             end
             %             [cutoffOneRing, bin_edges] = getOneRingCutoff(ringDistS1);
             
@@ -88,6 +94,7 @@ classdef summarize_MT3D<interfaces.DialogProcessor&interfaces.SEProcessor
             ax2 = obj.initaxis('Variation vs r');
             par1 = r;
             par2 = var;
+            
             if p.comp
                 hold(ax2, 'on')
                 for k = 1:length(grpLabel)
@@ -98,27 +105,70 @@ classdef summarize_MT3D<interfaces.DialogProcessor&interfaces.SEProcessor
                 plot(ax2, par1, par2, ' o');
             end
             
-                xlabel(ax2, 'Radius (nm)')
-                ylabel(ax2, 'Variation (nm)')
-                
-                ax3 = obj.initaxis('z vs r');
-                par1 = zMid;
-                par2 = r;
-                if p.comp
-                    hold(ax3, 'on')
-                    for k = 1:length(grpLabel)
-                        plot(ax3, par1(fileNumber == k), par2(fileNumber == k), ' o');
-                    end
-                    hold(ax3, 'off')
-                else
-                    plot(ax3, par1, par2, ' o');
+            xlabel(ax2, 'Radius (nm)')
+            ylabel(ax2, 'Variation (nm)')
+
+            ax3 = obj.initaxis('z vs r');
+            par1 = zMid;
+            par2 = r;
+            if p.comp
+                hold(ax3, 'on')
+                for k = 1:length(grpLabel)
+                    plot(ax3, par1(fileNumber == k), par2(fileNumber == k), ' o');
                 end
-                
-                xlabel(ax3, 'z position (nm)')
-                ylabel(ax3, 'Radius (nm)')
-                out = [];
-                
-                clipboard('copy', sprintf('%.1f',median(r)))
+                hold(ax3, 'off')
+            else
+                plot(ax3, par1, par2, ' o');
+            end
+
+            xlabel(ax3, 'z position (nm)')
+            ylabel(ax3, 'Radius (nm)')
+            out = [];
+
+            clipboard('copy', sprintf('%.1f',median(r)))
+            
+            axCur = obj.initaxis('r vs curvature');
+            par1 = r;
+            par2 = curvature;
+            ax = axCur;
+            if p.comp
+                hold(ax, 'on')
+                for k = 1:length(grpLabel)
+                    if 0
+                        plot(ax, par1(fileNumber == k), par2(fileNumber == k), ' o');
+                    else
+                        plotSElink(ax, par1(fileNumber == k), par2(fileNumber == k),ID,se, ' o');
+                    end
+                    finalLabel{k} = grpLabel{k};
+                end
+                hold(ax, 'off')
+                legend(ax,finalLabel(~cellfun(@isempty, finalLabel)))
+            else
+                if 0
+                    plot(ax, par1, par2, ' o');
+                else
+                    plotSElink(ax, par1, par2,ID,se, ' o');
+                end
+            end
+            xlabel(ax, 'Radius (nm)')
+            ylabel(ax, 'Curvature (r^-1; nm^-1)')
+            
+            par = curvature;
+            if p.comp
+                axCurComp = obj.initaxis('Curvature');
+                ax = axCurComp;
+                if 1
+                    plot(ax, par(fileNumber == 1), par(fileNumber == 3), ' o');
+                else
+                    plotSElink(ax, par(fileNumber == k), par(fileNumber == k),ID,se, ' o');
+                end
+                finalLabel = grpLabel;
+%                 legend(ax,finalLabel(~cellfun(@isempty, finalLabel)))
+                title(ax, 'Curvature (r^-1; nm^-1)')
+                xlabel(ax, grpLabel{1})
+                ylabel(ax, grpLabel{3})
+            end
+            
         end
         function createGrpTable(obj)
             hOld = obj.guihandles.grpTable;

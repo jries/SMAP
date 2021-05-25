@@ -22,17 +22,19 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             
             ax = obj.initaxis('Raw LL');
             axes(ax)
-            colorID = [3 4 2 8 7];
+            colorID = [1 3 8 2 6];
             hold on
+            
+%             palette= getPyPlot_cMap('tab10', 8,[],'"C:\Users\ries\AppData\Local\Programs\Python\Python37\python.exe"');
             for m = 1:5
                 LLfit_oneModel = LLfit.(['sym',num2str(m+5),'f']);
                 curve{m} = cdfplot(LLfit_oneModel);
-                curve{m}.Color = palette_cb(colorID(m));
+                curve{m}.Color = myDiscreteLUT(colorID(m));
             end
             xlabel(ax,'Log-likelihood');
             ylabel(ax,'Cumulative probability');
             allLine = findobj(ax,'type','line');
-            set(allLine,'linewidth',1)
+            set(allLine,'linewidth',1.5)
             title(ax,[]);
             grid(ax, 'off')
             legend({'6-fold','7-fold','8-fold','9-fold','10-fold'})

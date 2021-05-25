@@ -120,7 +120,8 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 pos=oldh.Position;
                 htable=uitable(oldh.Parent,'Data',Data,'Position',pos);
                 htable.ColumnEditable = true;
-                htable.ColumnName = {'Setting', 'Value'};
+                htable.ColumnName = {'Parameters', 'Value'};
+                htable.ColumnWidth = {100, 60};
                 htable.CellSelectionCallback = {@optimizerSetting_selectionCallback,obj};
                 htable.CellEditCallback = {@optimizerSetting_editCallback,obj};
                 htable.RowName = [];
