@@ -342,8 +342,8 @@ if strcmp(layertitle,'+')
     s(end)=s(end)-1;
     tabgroup.Children=tabgroup.Children(s);
     tabgroup.SelectedTab=tabgroup.Children(end-1); 
-    selectedlayer=newlayernumber;
-    
+    number=newlayernumber;
+    selectedlayer=['Layer' num2str(number)];
     obj.setPar('layercheck',true,'Value','layer',selectedlayer)
 else
     number=find(strcmp({obj.guihandles.layertab.Children.Title},eventdata.NewValue.Title));

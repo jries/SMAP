@@ -62,7 +62,7 @@ methods
                     obj.dimrgb=[];
                     dims=3:length(size(obj.V));
                 end
-            str={'x','y'};
+            str={'y','x'};
             for k=1:length(dims)
                 str{end+1}=num2str(dims(k));
             end
@@ -105,7 +105,7 @@ methods
                 obj.dimrgb=[];
                 dims=3:length(s);
             end
-            str={'x','y'};
+            str={'y','x'};
             for k=1:length(dims)
                 str{end+1}=num2str(dims(k));
             end
@@ -378,10 +378,10 @@ obj.V=V;
     obj.guihandles.hslidert{1}=uicontrol('Parent',obj.handle,'Style','edit','Units','normalized','Position',[0.02 vp1 0.03 0.05],'String','3', 'Callback',{@obj.changeaxis,2});
     obj.guihandles.hslidert{2}=uicontrol('Parent',obj.handle,'Style','edit','Units','normalized','Position',[0.02 vp2 0.03 0.05],'String','4', 'Callback',{@obj.changeaxis,3});
 
-    obj.guihandles.hmenu{1}=uicontrol('Parent',obj.handle,'Style','popupmenu','Units','normalized','String',{'x','y','z'},'Position',[0.475 vp1 0.125 0.05],...
-        'Callback',{@obj.changeaxis,0});
-    obj.guihandles.hmenu{2}=uicontrol('Parent',obj.handle,'Style','popupmenu','Units','normalized','String',{'x','y','z'},'Position',[0.6 vp1 0.125 0.05],...
-        'Callback',{@obj.changeaxis,1},'Value',2);
+    obj.guihandles.hmenu{1}=uicontrol('Parent',obj.handle,'Style','popupmenu','Units','normalized','String',{'y','x','z'},'Position',[0.475 vp1 0.125 0.05],...
+        'Callback',{@obj.changeaxis,0},'Value',2);
+    obj.guihandles.hmenu{2}=uicontrol('Parent',obj.handle,'Style','popupmenu','Units','normalized','String',{'y','x','z'},'Position',[0.6 vp1 0.125 0.05],...
+        'Callback',{@obj.changeaxis,1},'Value',1);
     obj.guihandles.haxscale=uicontrol('Parent',obj.handle,'Style','checkbox','Units','normalized','String','fill','Position',[0.475 vp2 0.1 0.05],...
         'Callback',@obj.plotimage,'Value',p.fill);
     obj.guihandles.hlut=uicontrol('Parent',obj.handle,'Style','popupmenu','Units','normalized','String',{'parula','gray','hot','jet'},'Position',[0.725 vp1 0.175 0.05],...
@@ -411,8 +411,8 @@ p.addOptional('z',[],@isnumeric);
 
 p.addParameter('Parent',[]);
 p.addParameter('fill',false);
-p.addParameter('xdim',1,@isnumeric);
-p.addParameter('ydim',2,@isnumeric);
+p.addParameter('xdim',2,@isnumeric);
+p.addParameter('ydim',1,@isnumeric);
 p.addParameter('rgb',false);
 p.addParameter('globalcontrast',false,@islogical);
 p.addParameter('Title',[]);
