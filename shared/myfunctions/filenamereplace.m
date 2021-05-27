@@ -34,18 +34,42 @@ fout=[pathout fileout];
 end
 
 function fileout=replacename(filein,fileref,filetar)
-    fileout=filein;
+    fileout='';
 if ~strcmp(fileref,filetar)
     % search for _ and .
-    frr=['_' strrep(fileref,'.','_') '_'];frt=['_' strrep(filetar,'.','_') '_'];fri=['_' strrep(filein,'.','_') '_'];
-    frri=strfind(frr,'_');frti=strfind(frt,'_');frii=strfind(fri,'_');
+    frr=fileref;frt=filetar;fri=filein;
+%     frr=['_' strrep(fileref,'.','_') '_'];frt=['_' strrep(filetar,'.','_') '_'];fri=['_' strrep(filein,'.','_') '_'];
+    frri=[1 strfind(frr,"_"|".") length(frr)+1];frti=[1 strfind(frt,"_"|".") length(frt)+1];frii=[1 strfind(fri,"_"|".") length(fri)+1];
     for k=0:min([length(frri) length(frti) length(frii)])-2
-        pr=frr(frri(end-k-1)+1:frri(end-k)-1);pt=frt(frti(end-k-1)+1:frti(end-k)-1);
+        pr=frr(frri(end-k-1):frri(end-k)-1);pt=frt(frti(end-k-1):frti(end-k)-1);pi=fri(frii(end-k-1):frii(end-k)-1);
 %         pi=fileout(frii(end-k-1):frii(end-k)-2);
-        if ~strcmp(pr,pt)
-            fileout=[fileout(1:frii(end-k-1)-1) pt fileout(frii(end-k)-1:end)];
+% if the same: use this part
+%if different: use the corresponding part from filein
+        if strcmp(pi,pr)
+            if strcmp(pi,pt)
+                %keep either
+                fileout=[pi fileout];
+            else
+                fileout=[pt fileout];
+%                 disp('pattern do not seem to match. Output reference file.')
+%                 fileout=fileref;
+%                 return
+                %warning
+            end
+            
+        else
+            if strcmp(pr,pt)
+                fileout=[pi fileout];
+                %keep in
+            else
+                %keep tar
+                fileout=[pt fileout];
+            end            
+%             fileout=[fileout(1:frii(end-k-1)-1) pt fileout(frii(end-k)-1:end)];
 %             fileout(frii(end-k-1):frii(end-k)-2)=pt;
         end
     end
+    %append missing target parts
+    
 end
 end

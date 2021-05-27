@@ -32,7 +32,7 @@ coeffr = single(Spline3D_interp(corrPSFhdr));
 
 %% test
 midp=size(PSF,3)/2;
- rangef=20:198;
+ rangef=1:141;
 %  rangef=1:2*midp;
 roisize=15;
 dx=floor(roisize/2);
