@@ -209,7 +209,7 @@ for k=1:sim(3)
     end
 end
 
-if 0%loc.frame(1)==60
+if 1%loc.frame(1)==60
     
     roia=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,:);
     tp=template;
