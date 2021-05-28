@@ -1,7 +1,9 @@
 function [b,p]=images2beads_globalfit(p)
-% addpath('bfmatlab')
-fs=p.filtersize;
-hfilterim=fspecial('gaussian',2*round(fs*3/2)+1,fs);
+% determines position of beads and cuts out rois from the bead stacks
+% conatainign an individual bead
+%initialize some parameters:
+fs=p.filtersize; %for smoothing
+hfilterim=fspecial('gaussian',2*round(fs*3/2)+1,fs); 
 fmax=0;
 roisize=p.ROIxy;
 roisizeh=min(round(1.5*(p.ROIxy-1)/2),(p.ROIxy-1)/2+1); %create extra space if we need to shift;
@@ -13,7 +15,7 @@ tg=uitabgroup(ht);
 is4pi=contains(p.modality,'4Pi');
 
 if p.isglobalfit 
-   if ischar(p.Tfile)%extend later to 4Pi
+   if ischar(p.Tfile)
         l=load(p.Tfile);
         transform=l.transformation;
    else
@@ -21,11 +23,11 @@ if p.isglobalfit
    end
     p.transformation=transform;
     p.mirror=transform.info{2}.mirror;
-%     p.mirror=contains(transform.tinfo.mirror.targetmirror,'up-down')|contains(transform.tinfo.mirror.targetmirror,'left-right');
 else
     p.mirror=false;
 end
 
+% load beads in all files
 p.multifile=false;
 for k=1:length(filelist)
     ax=axes(uitab(tg,'Title',num2str(k)));
@@ -43,9 +45,9 @@ for k=1:length(filelist)
         filelisth=filelist{k};
         [imstack, p.roi{k}, p.pixelsize{k},settings3D,p.emgain]=readbeadimages(filelisth,p);
         p.roi2=p.roi;
-        imstack2=imstack;
+        imstack2=imstack; %for simplicity and to avoid code duplication: when only one channel is considered
     end
-%     size(imstack)
+
     if is4pi
         if ~isempty(settings3D)
             p.settings_3D=settings3D;
@@ -61,10 +63,6 @@ for k=1:length(filelist)
             p.settings_3D=struct('y4pi',[0 0 0 0],'x4pi',[0 wx 2*wx 3*wx], 'width4pi',wx,'height4pi',wy,'mirror4pi',[0 0 0 0],'pixelsize_nm',100,'offset',100,'conversion',0.5);
         end
     end
-   % em mirror goes to readbeadimages, also to take care of the roi 
-%     if p.emgain
-%         imstack=imstack(:,end:-1:1,:);
-%     end
        
     if isfield(p,'framerangeuse')
         imstack=imstack(:,:,p.framerangeuse(1):p.framerangeuse(end));
@@ -73,11 +71,9 @@ for k=1:length(filelist)
     
     imstack=imstack-min(imstack(:)); %fast fix for offset;
     imstack2=imstack2-min(imstack2(:)); %fast fix for offset;
-%     imageslicer(imstack)%%%%%%%%XXXXXXX
     
-    mim=max(imstack,[],3);
-
-%     mim=mean(imstack,3);
+    %segment beads
+    mim=max(imstack,[],3); %maximum intensity projection
     mim=filter2(hfilterim,mim);
     imagesc(ax,mim);
     axis(ax,'image');
@@ -91,20 +87,17 @@ for k=1:length(filelist)
         end
         maxima=maximumfindcall(mim);
         indgh=maxima(:,1)>p.xrange(1) & maxima(:,1)<p.xrange(2) & maxima(:,2)>p.yrange(1) & maxima(:,2)<p.yrange(2); 
-        %XXXXXXXXXXX
-%         maxima(:,1)=(maxima(:,1)+2*round(rand(size(maxima,1),1)))-1; % for testing if positions match
         int=maxima(:,3);
         try
-        r1=max(roisize,p.yrange(1)):min(size(mim,1)-roisize,p.yrange(2));
-        r2=max(roisize,p.xrange(1)):min(size(mim,2)-roisize,p.xrange(2));
-        mimc=mim(r1,r2);
-        mmed=myquantile(mimc(:),0.3);
-        imt=mimc(mimc<=mmed);
-            sm=sort(int);
-        mv=mean(sm(end-5:end));
-%         cutoff=mean(imt(:))+max(2.5*std(imt(:)),(mv-mean(imt(:)))/10);
-        cutoff=mean(imt(:))+max(2.5*std(imt(:)),(mv-mean(imt(:)))/15);
-        catch
+            r1=max(roisize,p.yrange(1)):min(size(mim,1)-roisize,p.yrange(2));
+            r2=max(roisize,p.xrange(1)):min(size(mim,2)-roisize,p.xrange(2));
+            mimc=mim(r1,r2);
+            mmed=myquantile(mimc(:),0.3);
+            imt=mimc(mimc<=mmed);
+                sm=sort(int);
+            mv=mean(sm(end-5:end));
+            cutoff=mean(imt(:))+max(2.5*std(imt(:)),(mv-mean(imt(:)))/15);
+        catch err
             cutoff=myquantile(mimc(:),.95);
         end
         cutoff=cutoff*p.cutoffrel;
@@ -117,9 +110,9 @@ for k=1:length(filelist)
     end
     maximafound=maxima;
     indgoodb=true(size(maxima,1),1);
+    
     %remove beads that are closer together than mindistance
     if isfield(p,'mindistance')&&~isempty(p.mindistance)
-        
         for bk=1:size(maxima,1)
             for bl=bk+1:size(maxima,1)
                 if  sum((maxima(bk,1:2)-maxima(bl,1:2)).^2)<p.mindistance^2
@@ -138,15 +131,13 @@ for k=1:length(filelist)
        ym=maxima(:,2);
        ym(ym>hs/2)=ym(ym>hs/2)-hs;
        indgoodb(abs(ym)<p.mindistance/2)=false;
-%         maxima=maxima(indgoodb,:);
-         maxima=maxima(indgoodb,:);
+       maxima=maxima(indgoodb,:);
     end 
     
   
     if p.isglobalfit
         %calculate in nm on chip (reference for transformation)
         maximanm=(maxima(:,1:2)+p.roi{k}([1 2]));
-        
         if strcmp(transform.unit,'pixel')
             pixfac=[1 1];
             pixfac2=[1 1];
@@ -154,36 +145,21 @@ for k=1:length(filelist)
             pixfac=[p.pixelsize{k}(1)*1000 p.pixelsize{k}(end)*1000];
             pixfac2=[p.pixelsize2{k}(1)*1000 p.pixelsize2{k}(end)*1000];
         end
-            maximanm(:,1)=maximanm(:,1)*pixfac(1);
-            maximanm(:,2)=maximanm(:,2)*pixfac(end);
+        maximanm(:,1)=maximanm(:,1)*pixfac(1);
+        maximanm(:,2)=maximanm(:,2)*pixfac(end);
 
         %transform reference to target
+        indref=transform.getPart(1,maximanm(:,1:2));
+        maximaref=maxima(indref,:);
+        xy=transform.transformToTarget(2,maximanm(indref,1:2));
+        
+        %calculate coordinates in pixels on target image
+        maximatargetf=[];
+        maximatargetf(:,1)=xy(:,1)/pixfac2(1)-p.roi2{k}(1); %now on target chip: use roi2
+        maximatargetf(:,2)=xy(:,2)/pixfac2(end)-p.roi2{k}(2);
 
-%             indref=transform.getRef(maximanm(:,1),maximanm(:,2));
-            indref=transform.getPart(1,maximanm(:,1:2));
-            maximaref=maxima(indref,:);
-            xy=transform.transformToTarget(2,maximanm(indref,1:2));
-%             [x,y]=transform.transformCoordinatesFwd(maximanm(indref,1),maximanm(indref,2));
-        %     [x,y]=transform.transformCoordinatesFwd(maximanm(indref,2),maximanm(indref,1));
-
-            maximatargetf=[];
-            maximatargetf(:,1)=xy(:,1)/pixfac2(1)-p.roi2{k}(1); %now on target chip: use roi2
-            maximatargetf(:,2)=xy(:,2)/pixfac2(end)-p.roi2{k}(2);
-    %     maximatargetf(:,2)=x/p.smappos.pixelsize{k}(1)/1000-p.smappos.roi{k}(1);
-    %     maximatargetf(:,1)=y/p.smappos.pixelsize{k}(end)/1000-p.smappos.roi{k}(2);
-
-
-        if 0 %for testing
-            maximatargetf(:,1)=maximatargetf(:,1)+1;
-            maximatargetf(:,2)=maximatargetf(:,2)+0.5;
-        maximatargetfm(:,1)=maximatargetf(:,1)-0.1+2;
-        maximatargetfm(:,2)=maximatargetf(:,2)+0.1;
-        maximatar=round(maximatargetfm);
-        else 
-            maximatar=round(maximatargetf);
-        end
-        dxy=maximatargetf-maximatar;       
-          
+        maximatar=round(maximatargetf); %round for integer pixel positions
+        dxy=maximatargetf-maximatar;   %distance between true transformed bead positions and pixel positions    
     else
         indgoodr=maxima(:,1)>p.xrange(1)&maxima(:,1)<p.xrange(end)&maxima(:,2)>p.yrange(1)&maxima(:,2)<p.yrange(end);
         maxima=maxima(indgoodr,:);
@@ -194,7 +170,8 @@ for k=1:length(filelist)
    
     numframes=size(imstack,3);
     bind=length(b)+size(maximaref,1);
-
+    
+    %assemble structure with beads
     for l=1:size(maximaref,1)
         b(bind).loc.frames=(1:numframes)';
         b(bind).loc.filenumber=zeros(numframes,1)+k;
@@ -202,25 +179,22 @@ for k=1:length(filelist)
         b(bind).pos=maximaref(l,1:2);
         b(bind).postar=maximatar(l,1:2);
         b(bind).shiftxy=dxy(l,:);
-        try
+        try %if transformed beads are outside image, then remove
             b(bind).stack.image=imstack(b(bind).pos(2)+rsr,b(bind).pos(1)+rsr,:);
             b(bind).stack.imagetar=imstack2(b(bind).postar(2)+rsr,b(bind).postar(1)+rsr,:);
             b(bind).stack.framerange=1:numframes;
             b(bind).isstack=true;
-            
         catch err
             b(bind).isstack=false;
-%             err
         end
-        
-            b(bind).roi=p.roi{k};
-            b(bind).roi2=p.roi2{k};
+        b(bind).roi=p.roi{k};
+        b(bind).roi2=p.roi2{k};
         bind=bind-1;
     end
     fmax=max(fmax,numframes);
-     hold (ax,'on')
+    hold (ax,'on')
     if p.isglobalfit
-        if p.multifile
+        if p.multifile %two channels in different files (e.g. different cameras)
             plot(ax,maxima(:,1),maxima(:,2),'ko',maximafound(:,1),maximafound(:,2),'r.')
             ax2=axes(uitab(tg,'Title',[num2str(k) 't']));
             mim2=max(imstack2,[],3);
@@ -230,9 +204,8 @@ for k=1:length(filelist)
             axis(ax2,'off')
             plot(ax2,maximatar(:,1),maximatar(:,2),'md',maximafound(:,1),maximafound(:,2),'r.') 
             hold(ax2,'off');
-            
-        else
-        plot(ax,maximaref(:,1),maximaref(:,2),'ko',maximatar(:,1),maximatar(:,2),'md',maximafound(:,1),maximafound(:,2),'r.') 
+        else %on same camera chip
+            plot(ax,maximaref(:,1),maximaref(:,2),'ko',maximatar(:,1),maximatar(:,2),'md',maximafound(:,1),maximafound(:,2),'r.') 
         end
     else
         plot(ax,maxima(:,1),maxima(:,2),'ko',maximafound(:,1),maximafound(:,2),'r.')
@@ -242,18 +215,7 @@ for k=1:length(filelist)
 end
 indgoodbead=[b(:).isstack];
 b=b(indgoodbead);
-
-% plot
-
-    
 p.fminmax=[1 fmax];
-
-%         if isfield(p,'files')&&~isempty(p.files)
-%             p.cam_pixelsize_um=p.files(k).info.cam_pixelsize_um;
-%         else
-%             p.cam_pixelsize_um=[1 1]/10; %?????
-%         end      
-
 p.pathhere=fileparts(filelist{1});
 end
 

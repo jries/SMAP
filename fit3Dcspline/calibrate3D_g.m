@@ -88,11 +88,9 @@ else
     calibrationfigure=p.tabgroup.Parent;
 end
 %get beads from images
-% if isfield(p,'isglobalfit')&&p.isglobalfit
+
     [beads,p]=images2beads_globalfit(p);
-% else
-%     [beads,p]=images2beads_so(p);
-% end
+
 imageRoi=p.roi{1};
 %get positions of beads
 for k=length(beads):-1:1
@@ -112,15 +110,10 @@ if isempty(beads)
     return
 end
 
-
 p.midpoint=round(size(beads(1).stack.image,3)/2); %reference for beads
 p.ploton=false;
 
-
-
-if contains(p.modality,'astig') %|| contains(p.modality,'2D') %XXXX %needs to be fixed and extended to global
-    %determine sx,sy
-
+if contains(p.modality,'astig') % determine sx, sy vs z for Gaussian fitting. Obsolete.
     t=tic;
     p.status.String=['Gaussian fit of beads to get spatial parameters '];drawnow
     for k=1:length(beads)
@@ -214,7 +207,7 @@ for X=1:length(p.xrange)-1
 
         % get cspline calibration
         p.status.String='get cspline calibration';drawnow
-        [csplinecal,indgoods,beadpos{X,Y},~,testallrois]=getstackcal_g(beadsh(indgoodc),p);
+        [csplinecal,indgoods,beadpos{X,Y},~,testallrois]=getstackcal_g(beadsh(indgoodc),p); %calculate average PSF
         
         if ~isempty(beadpos{X,Y})
             for f=1:max(beadpos{X,Y}.filenumber(:))

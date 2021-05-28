@@ -10,12 +10,7 @@ range=d+1:d+roifit;
 
 numstack=size(teststack,4);
 t=tic;
-% f=figure(989);ax2=gca;hold off
-% dx1=[];
-% dx2=[];dy1=[];
-% dy2=[];
 
-% f=figure(134);ax2=gca;hold(ax2,'off')
     for k=1:size(teststack,4)
         if toc(t)>1
             p.status.String=['fitting test stacks: ' num2str(k/numstack,'%1.2f')];drawnow
@@ -40,12 +35,7 @@ t=tic;
             dT(2,2,:)=shiftxy(k,1);           
             coeffh(:,:,:,:,2)=single(coeff{2});
             sharedA = repmat(shared,[1 size(fitstack,3)]);
-%             if fitmode==6
-%                 zst=500/p.dz*[-1 1];
-%             else
-%                 zst=0;
-%             end
-             [P,CRLB, LL] =mleFit_LM_global(fitstack,int32(sharedA),iterations,coeffh,single(dT),1,zst);
+            [P,CRLB, LL] =mleFit_LM_global(fitstack,int32(sharedA),iterations,coeffh,single(dT),1,zst);
             zind=3;
             photind=4;
         else
@@ -57,21 +47,7 @@ t=tic;
             photind=3;
         end
         
-
-        
-%         [PM,CRLBM, LLM,update, error] =  kernel_MLEfit_Spline_LM_multichannel_finalized(fitstack,coeffh, shared,dT,50);
-        
-%         try
-%         [P,CRLB, LL] =GPUmleFit_LM_MultiChannel(fitstack,int32(sharedA),iterations,coeffh,single(dT));
-%         catch err
-%               [P,CRLB, LL] =CPUmleFit_LM_MultiChannel(fitstack,int32(sharedA),iterations,coeffh,single(dT));
-%         end
-        
-        
-%         [P,CRLB, LL,residuals] =CPUmleFit_LM_MultiChannel_R(fitstack,int32(sharedA),iterations,coeffh,single(dT));
- 
         z=(1:size(P,1))'-1;
-
         znm=(P(:,zind)-p.z0)*p.dz;
         plot(ax,z,znm,linepar{:})
         hold(ax,'on')
@@ -85,15 +61,8 @@ t=tic;
         posbeads.frame(:,k)=1:length(z);
         posbeads.LL(:,k)=LL;
         posbeads.phot(:,k)=P(:,photind);
-% 
-% plot(ax2,P(:,1),P(:,2),'.')
-% hold(ax2,'on')
 
-
-
-        
         if 0% imageslicer to test
-%             coord=P1(:,[1 2 5 3 4]);
             coord=P(:,[1 2 3 4 6]);
             coord2=coord;
             coord2(:,1)=coord2(:,1)+squeeze(dT(1,2,:));
@@ -105,9 +74,6 @@ t=tic;
             ims(:,:,:,1)=imall;ims(:,:,:,2)=res;
             f=figure(105);
             imageslicer(ims,'Parent',f);
-        end
-        
+        end 
     end
-    
-
 end

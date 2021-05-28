@@ -1,6 +1,43 @@
 function calibrate_globalworkflow(p)
+% main function that calculates global PSF
+% parameter p (usually from calibrate3D_Gui_g):
+% filelist
+% outputfile
+% dz
+% modality
+% PSF2D
+% zcorr
+% ROIxy
+% ROIz
+% smoothxy
+% smoothz
+% gaussrange
+% filtersize
+% zcorr
+% frames
+% gaussroi
+% status
+% mindistance
+% cutoffrel
+% smap
+% smappos
+% advancedoutput
+% roimask
+% xrange
+% yrange
+% emmirror
+% isglobalfit
+% Tfile
+% makeT
+% Tmode
+% Tform
+% Tsplitpos
+% settingsfile4pi
+% zernikefit
+% switchchannels
 
-if ~p.isglobalfit %only normal local calibratin, just call old proram
+
+if ~p.isglobalfit %only normal local calibration, just call old proram
     calibrate3D_g(p);
     return
 end
@@ -9,54 +46,49 @@ global S beadpos1 beadpos2
 f=figure('Name','Bead calibration');
 tg=uitabgroup(f);
 
-
-if p.makeT || isempty(p.Tfile)
-pr=getranges(p) ;
-ph=p;
-ph.isglobalfit=false;
-%set spatial calibration
-ph.outputfile={};
-if contains(p.filelist{1},';') %each channel in separate file
-    for k=1:length(p.filelist)
-        ind=strfind(p.filelist{k},';');
-        filelist1{k}=p.filelist{k}(1:ind-1);
-        filelist2{k}=p.filelist{k}(ind+1:end);
+% if transformation needs to be calculated: calibrate each channel
+% separately, then use results to calculate T
+if p.makeT || isempty(p.Tfile) 
+    pr=getranges(p) ;
+    ph=p;
+    ph.isglobalfit=false;
+    %set spatial calibration
+    ph.outputfile={};
+    if contains(p.filelist{1},';') %each channel in separate file
+        for k=1:length(p.filelist)
+            ind=strfind(p.filelist{k},';');
+            filelist1{k}=p.filelist{k}(1:ind-1);
+            filelist2{k}=p.filelist{k}(ind+1:end);
+        end
+    else
+        filelist1=p.filelist; filelist2=p.filelist;
     end
-else
-    filelist1=p.filelist; filelist2=p.filelist;
-end
+
+    %get PSF and positions of beads for channel1
+    t1=uitab(tg,'Title','first channel');
+    ph.filelist=filelist1;
+    ph.tabgroup=  uitabgroup(t1);  
+    ph.yrange=pr.yrange1;ph.xrange=pr.xrange1;
+    ph.filechannel=1;
+    [S1,beadpos1,parameters1]=calibrate3D_gs(ph); 
+
+    %get PSF and positions of beads for channel2
+    t2=uitab(tg,'Title','second channel');
+    ph.filelist=filelist2;
+    ph.tabgroup=  uitabgroup(t2);  
+    ph.yrange=pr.yrange2;ph.xrange=pr.xrange2;
+    ph.filechannel=2;
+    [S2,beadpos2,parameters2]=calibrate3D_gs(ph);
 
 
-t1=uitab(tg,'Title','first channel');
-ph.filelist=filelist1;
-ph.tabgroup=  uitabgroup(t1);  
-ph.yrange=pr.yrange1;ph.xrange=pr.xrange1;
-ph.filechannel=1;
-[S1,beadpos1,parameters1]=calibrate3D_g(ph);
+    tt=uitab(tg,'Title','transformation');
+    p.tabgroup=uitabgroup(tt);
+    p.separator=p.Tsplitpos;
 
-
-
-t2=uitab(tg,'Title','second channel');
-ph.filelist=filelist2;
-ph.tabgroup=  uitabgroup(t2);  
-ph.yrange=pr.yrange2;ph.xrange=pr.xrange2;
-ph.filechannel=2;
-[S2,beadpos2,parameters2]=calibrate3D_g(ph);
-
-
-% [S,beadpos]=calibrate3D_g(ph);
-
-% Later: also do test-fitting with corresponding spline coefficients
-tt=uitab(tg,'Title','transformation');
-p.tabgroup=  uitabgroup(tt);
-% p.separator=p.Tsplitpos+parameters1.roi{1}(pr.roiind);
-p.separator=p.Tsplitpos;
-
-p.parameters1=parameters1;
-p.parameters2=parameters2; %for ROI
-% find transform
-% if p.makeT || isempty(p.Tfile)
-%     transform=transform_locs_simple(beadpos1{1},beadpos2{1},p);
+    p.parameters1=parameters1;
+    p.parameters2=parameters2; 
+    
+    %calculate the transform based on bead positions
     transform=makeglobalTransform(beadpos1{1},beadpos2{1},p);
 else
     l=load(p.Tfile);
@@ -78,7 +110,7 @@ t4=uitab(tg,'Title','global cal');
 ph.tabgroup=  uitabgroup(t4);  
 % ph.yrange=yrange1;ph.xrange=xrange1;
 ph.filelist=p.filelist;
-[S,beadpos,parameters_g]=calibrate3D_g(ph);
+[S,beadpos,parameters_g]=calibrate3D_gs(ph);
 
 % if ~exist('S1','var') %take global one apart...
 % recover S1, S2 dfrom S_glob to ensure same z reference, and PSF from
@@ -245,19 +277,7 @@ pt.unit='pixel';
 pt.type='projective';
 transform.setTransform(1,pt)
 pt.mirror=pp.mirrorax;
-% if pp.mirror
-% if contains(pp.split,'rl')
-%     pt.mirror= 1;
-% elseif contains(pp.split,'ud')
-%     pt.mirror= 2;
-% elseif contains(ph.Tmode,'r-l')
-%     pt.mirror= 1;
-% elseif contains(ph.Tmode,'u-d')
-%     pt.mirror= 2;    
-% else
-%     pt.mirror=0;
-% end
-% end
+
 pt.xrange=pp.xrange2+camroi2(1);
 pt.yrange=pp.yrange2+camroi2(2);
 transform.setTransform(2,pt)
@@ -282,7 +302,4 @@ switch pp.split
         ph.separator=ph.separator+camroi1(2);
 end
 [transform ,iAa,iBa]=transform_locs_simpleN(transform,1, bc1,2,bc2,ph); 
-
-end
-% 
-
+end 
