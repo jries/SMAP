@@ -4,6 +4,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                 obj@interfaces.DialogProcessor(varargin{:});
             obj.inputParameters={'se_viewer', 'se_siteroi', 'se_sitefov'};
             obj.showresults=true;
+            obj.showloadsavepar=true;
         end
         
         function out=run(obj,p)
@@ -280,6 +281,15 @@ function update_callback(a,b,obj)
                 chch{k}.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
             end
         end
+%         findObj()
+%         labelOn
+        hAllText = findobj(pan{np}.de.axis,'type','text');
+        if p.labelOn
+            textVisible = 'on';
+        else
+            textVisible = 'off';
+        end
+        set(hAllText,'Visible',textVisible)
     end
 end
 
@@ -448,6 +458,10 @@ pard.t_fSize.object=struct('String','Figure size','Style','text');
 pard.t_fSize.position=[rowUpdate+3,1];
 pard.t_fSize.Width=1;
 
+pard.labelOn.object=struct('String','Show close angle','Value',1,'Style','checkbox');
+pard.labelOn.position=[rowUpdate+4,1];
+pard.labelOn.Width=1;
+
 pard.fSize.object=struct('String','','Style','edit');
 pard.fSize.position=[rowUpdate+3,col2];
 pard.fSize.Width=1;
@@ -515,6 +529,7 @@ function closeAllFig(a,b,obj)
     for k = 1:length(pan)
         delete(pan{k}.figure)
     end
+    delete(a)
 end
 
 function saveFigs(a,b,obj)
