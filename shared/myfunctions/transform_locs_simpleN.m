@@ -3,17 +3,12 @@ function [transform,iAa,iBa]=transform_locs_simpleN(transform,channelref,locref,
 if isfield(p,'sepscale')
     sepscale=p.sepscale;
 else
-sepscale=3;
+    sepscale=3;
 end
-
-
 
 if isfield(p,'Tfile') && exist(p.Tfile,'file')
     Tinitial=load(p.tfile);
     locT=Tinitial.transform2Reference(loctarget);
-%     [loctT.x,loctT.y]=Tinitial.transformCoordinatesInv(loctarget.x(:),loctarget.y(:));
-%     mirrorinfo=Tinitial.tinfo.mirror;
-%     dx=0;dy=0;
 else %all initial estimation:
     inforef=transform.info{channelref};
     infotarget=transform.info{channeltarget};
@@ -29,50 +24,44 @@ else %all initial estimation:
         infotarget=takeoutinf(infotarget,p.ref2, ref2b);
     end
     
-%     locT(:,1)=loctarget(:,1)-infotarget.xrange(1);locT(:,2)=loctarget(:,2)-infotarget.yrange(1);
-%     locR(:,1)=locref(:,1)-inforef.xrange(1);locR(:,2)=locref(:,2)-inforef.yrange(1);
-   locT(:,1)=loctarget(:,1)-infotarget.xrange(1);locT(:,2)=loctarget(:,2)-infotarget.yrange(1);
+    locT(:,1)=loctarget(:,1)-infotarget.xrange(1);locT(:,2)=loctarget(:,2)-infotarget.yrange(1);
     locR(:,1)=locref(:,1)-inforef.xrange(1);locR(:,2)=locref(:,2)-inforef.yrange(1);
      
     %mirror if neede
-%     sref=[inforef.xrange(2)-inforef.xrange(1) inforef.yrange(2)-inforef.yrange(1)];
-%     if any(isinf(sref))
-      if contains(p.modality,'4Pi')
-          sref(1)=max(max(locT(:,1)),max(locR(:,1)));
-          sref(2)=max(max(locT(:,2)),max(locR(:,2)));
-      elseif contains(p.Tmode,'2 cam')
-          sref(1)=max(max(locT(:,1)),max(locR(:,1)));
-          sref(2)=max(max(locT(:,2)),max(locR(:,2)));
-          locT=locT*p.separator(1);
-          if length(p.separator)>1
-              [xs,ys]=rotcoorddeg(locT(:,1),locT(:,2),p.separator(2));
-              locT=horzcat(xs,ys);
-          end
-      else
-          if contains(p.Tmode,'up-down') %
-              splitdir=2;
-          elseif contains(p.Tmode,'right-left')
-              splitdir=1;
-          end
-          separator=p.separator-p.parameters1.roi{1}(splitdir);
-           sref= [separator separator]*2;
-           sref(splitdir)=sref(splitdir)/2;
+    if contains(p.modality,'4Pi')
+      sref(1)=max(max(locT(:,1)),max(locR(:,1)));
+      sref(2)=max(max(locT(:,2)),max(locR(:,2)));
+    elseif contains(p.Tmode,'2 cam')
+      sref(1)=max(max(locT(:,1)),max(locR(:,1)));
+      sref(2)=max(max(locT(:,2)),max(locR(:,2)));
+      locT=locT*p.separator(1);
+      if length(p.separator)>1
+          [xs,ys]=rotcoorddeg(locT(:,1),locT(:,2),p.separator(2));
+          locT=horzcat(xs,ys);
       end
-%     end
+    else
+      if contains(p.Tmode,'up-down') %
+          splitdir=2;
+      elseif contains(p.Tmode,'right-left')
+          splitdir=1;
+      end
+      separator=p.separator-p.parameters1.roi{1}(splitdir);
+      sref= [separator separator]*2;
+      sref(splitdir)=sref(splitdir)/2;
+    end
+
     for k=1:length(inforef.mirror)
         if inforef.mirror(k)>0
             locR(:,k)=sref(k)-locR(:,k);
         end
     end
-%     star=[infotarget.xrange(2)-infotarget.xrange(1) infotarget.yrange(2)-infotarget.yrange(1)];
-      star=sref;
+    star=sref;
     for k=1:length(infotarget.mirror)
         if infotarget.mirror(k)>0
             locT(:,k)=star(k)-locT(:,k);
         end
     end
     
-
     %determine approximate shift
     xr=1:1:sref(1);yr=1:sref(2);
     ht=histcounts2(locT(:,1),locT(:,2),xr,yr);
@@ -84,8 +73,6 @@ else %all initial estimation:
     [x0,y0]=ind2sub(size(Gf),indmax);
     dx0=x0-ceil(size(Gf,1)/2);
     dy0=y0-ceil(size(Gf,2)/2);
-  
-
 end
 
 
@@ -104,34 +91,24 @@ cutofffactor=[1 0.5 0.2 0.1 0.05 0.03];
 dd=zeros(size(iAa,1),2);
 
 for k=1:length(cutofffactor)
-goodind=abs(dd(:,1))<cutofffactor(k)*sepscale & abs(dd(:,2))<cutofffactor(k)*sepscale;
- transform.findTransform(channeltarget,locref(iAa(goodind),1:2),loctarget(iBa(goodind),1:2))
- tback=transform.transformToReference(channeltarget,loctarget(iBa,1:2));
-dd=tback-locref(iAa,1:2);
+    goodind=abs(dd(:,1))<cutofffactor(k)*sepscale & abs(dd(:,2))<cutofffactor(k)*sepscale;
+    transform.findTransform(channeltarget,locref(iAa(goodind),1:2),loctarget(iBa(goodind),1:2))
+    tback=transform.transformToReference(channeltarget,loctarget(iBa,1:2));
+    dd=tback-locref(iAa,1:2);
 end
 dd=dd(goodind,:);
-% transform.findTransform(channeltarget,locref(iAa,1:2),loctarget(iBa,1:2))
 
-
-% 
-%  tback=transform.transformToReference(channeltarget,loctarget(iBa,1:2));
-% dd=tback-locref(iAa,1:2);
-
-%  figure(88);plot(tback(:,1),tback(:,2),'x',locref(:,1),locref(:,2),'o')  
-%   figure(88);plot(locref.x,locref.y,'b.',loctT.x,loctT.y,'r+',loctT.x-dx0,loctT.y-dy0,'g.',loctargeti.x,loctargeti.y,'rx',xa,ya,'cx') 
-   
 if isfield(p,'ax')&& ~isempty(p.ax) && isa(p.ax,'matlab.graphics.axis.Axes')
     axh=p.ax;
     plot(axh,dd(:,1),dd(:,2),'x')
     title(axh,[num2str(std(dd(:,1))) ', ' num2str(std(dd(:,2)))]);
-elseif isfield(p,'ax')&& ~isempty(p.ax) && isa(p.ax,'matlab.ui.container.TabGroup') 
-     
+    
+elseif isfield(p,'ax')&& ~isempty(p.ax) && isa(p.ax,'matlab.ui.container.TabGroup')      
     axh=axes(uitab(p.ax,'Title','beads'));
     plot(axh,locRh.x,locRh.y,'x',locTh.x,locTh.y,'o')
     plot(axh,locRh.x(iAa),locRh.y(iAa),'ro',locTh.x(iBa)-dx0,locTh.y(iBa)-dy0,'bo')
     legend(axh,'reference','target');
 
-    
     axh=axes(uitab(p.ax,'Title','difference'));
     plot(axh,dd(:,1),dd(:,2),'x')
     title(axh,[num2str(std(dd(:,1))) ', ' num2str(std(dd(:,2)))]);
@@ -142,12 +119,6 @@ elseif isfield(p,'ax')&& ~isempty(p.ax) && isa(p.ax,'matlab.ui.container.TabGrou
     plot(axh,locref(iAa,1),locref(iAa,2),'o',locref(na,1),locref(na,2),'+')
     legend(axh,'paired','not paired')
 end
-% transform.tinfo.targetpos=targetpos;
-% transform.tinfo.separator=separators;
-% transform.tinfo.mirror=mirrorinfo;
-% transform.tinfo.cam_pixelsize_nm=1;
-% transform.tinfo.units='pixels';
-
 end
 
 function struct=takeoutinf(struct, replace1, replace2)

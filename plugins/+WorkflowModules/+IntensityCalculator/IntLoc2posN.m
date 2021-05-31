@@ -5,6 +5,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
         locs
         roi
         transformation=[];
+        samechip=true;
     end
     methods
         function obj=IntLoc2posN(varargin)
@@ -32,12 +33,13 @@ classdef IntLoc2posN<interfaces.WorkflowModule
 
             x=double(obj.locs.xnm)/cpix(1);  %in pixels
             y=double(obj.locs.ynm)/cpix(end);
-            
-            indref=transform.getPart(1,horzcat(x,y));
-            indtarget=transform.getPart(2,horzcat(x,y));
-             obj.locs.xA=x;obj.locs.yA=y;
-             
-             obj.locs.xB=x;obj.locs.yB=y;
+            obj.locs.xA=x;obj.locs.yA=y;
+            postotarget=transform.transformToTarget(2,horzcat(x,y));
+            if obj.samechip
+                obj.locs.xB=x;obj.locs.yB=y;   
+                indref=transform.getPart(1,horzcat(x,y));
+                indtarget=transform.getPart(2,horzcat(x,y));
+
              %XXXXXXXXXXXX
              %if in two separate files: only consider correct file. Now:
              %only load reference file. Make sure that then target
@@ -46,18 +48,22 @@ classdef IntLoc2posN<interfaces.WorkflowModule
 %              make xref, xtar: all localizations put into one or other
 %              channel. Below just assign theh right one, and the other to
 %              xB.
-            postotarget=transform.transformToTarget(2,horzcat(x,y));
-            postoreference=transform.transformToReference(2,horzcat(x,y));
-            if p.transformtotarget    
-                    obj.locs.xA(indref)=postotarget(indref,1);obj.locs.yA(indref)=postotarget(indref,2);
-                    obj.locs.xB(indtarget)=postoreference(indtarget,1);obj.locs.yB(indtarget)=postoreference(indtarget,2);
+                postoreference=transform.transformToReference(2,horzcat(x,y));
+                if p.transformtotarget    
+                        obj.locs.xA(indref)=postotarget(indref,1);obj.locs.yA(indref)=postotarget(indref,2);
+                        obj.locs.xB(indtarget)=postoreference(indtarget,1);obj.locs.yB(indtarget)=postoreference(indtarget,2);
+                else
+
+                        obj.locs.xA(indtarget)=postoreference(indtarget,1);obj.locs.yA(indtarget)=postoreference(indtarget,2);
+                        obj.locs.xB(indref)=postotarget(indref,1);obj.locs.yB(indref)=postotarget(indref,2);
+                end
             else
-                    
-                    obj.locs.xA(indtarget)=postoreference(indtarget,1);obj.locs.yA(indtarget)=postoreference(indtarget,2);
-                    obj.locs.xB(indref)=postotarget(indref,1);obj.locs.yB(indref)=postotarget(indref,2);
+                obj.locs.xB=[];obj.locs.yB=[]; 
+                if p.transformtotarget  
+                    obj.locs.xA=postotarget(:,1);obj.locs.yA=postotarget(:,2);
+                end
             end
 
-            
             if ~isempty(obj.locs.znm)
                     d=0.42;
                     g=-0.2;
@@ -68,7 +74,7 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                 if  p.transformtotarget
 %                     cpix=transform.cam_pixnm{1}(1); %nor target cam pix???
                     try
-                    cpix=transform.cam_pixnm{2}(1);
+                        cpix=transform.cam_pixnm{2}(1);
                     catch error
                         cpix=obj.locData.files.file(1).info.cam_pixelsize_um*1000;
                     end
@@ -78,7 +84,6 @@ classdef IntLoc2posN<interfaces.WorkflowModule
             end
             intLoc2pos_locframes=obj.locs.frame;
             obj.roi=obj.getPar('loc_fileinfo').roi;
-
         end
         function nodatout=run(obj,data,p)
             nodatout=[];
@@ -87,9 +92,6 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                 if ~data.eof
                     lf=length(obj.locs.xA);
                     frame=data.frame;
-%                     if frame>36326
-%                         disp('last')
-%                     end
                     %find indices for same frame
                     ind1=intLoc2pos_ind2;
                     while ind1>0&&intLoc2pos_locframes(ind1)<frame && ind1<lf
@@ -106,15 +108,11 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                         intLoc2pos_ind2=intLoc2pos_ind2+1;
                     end
                     intLoc2pos_ind2=intLoc2pos_ind2-1;
-    %                 if  (intLoc2pos_ind2-ind1+1)~=(sum(obj.locs.frame==frame))
-    %                     disp((intLoc2pos_ind2-ind1+1)-(sum(obj.locs.frame==frame)))
-    %                     disp(frame)
-    %                 end
+
                    xrel=(obj.locs.xA(ind1:intLoc2pos_ind2)-obj.roi(1));
                    yrel=(obj.locs.yA(ind1:intLoc2pos_ind2)-obj.roi(2));
 
-                   xrelB=(obj.locs.xB(ind1:intLoc2pos_ind2)-obj.roi(1));
-                   yrelB=(obj.locs.yB(ind1:intLoc2pos_ind2)-obj.roi(2));
+
 
                   % do the same output for xB, the other one. Mabe with swithc if to put out other channel, if not, only one. Tehn we can use the same WF for all.  
                    maxout.xpix=round(xrel);
@@ -135,17 +133,20 @@ classdef IntLoc2posN<interfaces.WorkflowModule
                    datout=data;%.copy;
                    datout.data=maxout;%.set(maxout);
                    obj.output(datout,1); 
-
-                   %%xxxx
-                   maxoutA=maxout; %for testing
-                   %output second channel
-                   maxout.xpix=round(xrelB);
-                   maxout.ypix=round(yrelB);
-                   maxout.dx=xrelB-maxout.xpix;
-                   maxout.dy=yrelB-maxout.ypix;
-                   datout=data;%.copy;
-                   datout.data=maxout;%.set(maxout);
-                   obj.output(datout,2);                
+                    
+                   if obj.samechip
+                       xrelB=(obj.locs.xB(ind1:intLoc2pos_ind2)-obj.roi(1));
+                       yrelB=(obj.locs.yB(ind1:intLoc2pos_ind2)-obj.roi(2));
+%                        maxoutA=maxout; %for testing
+                       %output second channel
+                       maxout.xpix=round(xrelB);
+                       maxout.ypix=round(yrelB);
+                       maxout.dx=xrelB-maxout.xpix;
+                       maxout.dy=yrelB-maxout.ypix;
+                       datout=data;%.copy;
+                       datout.data=maxout;%.set(maxout);
+                       obj.output(datout,2);   
+                   end
                 else
                    datout=data;
                     datout.data=struct('xpix',[]);
