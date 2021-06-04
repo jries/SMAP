@@ -110,6 +110,7 @@ end
 
 
 function pout=roi2int_fit_e(obj,p,roi,loc)
+global debugon
 % persistent splinehere
 % if nargin==0
 %     splinehere=[];
@@ -209,7 +210,7 @@ for k=1:sim(3)
     end
 end
 
-if 1%loc.frame(1)==60
+if ~isempty(debugon) && debugon%loc.frame(1)==60
     
     roia=roi(mp(1)-dn:mp(1)+dn,mp(2)-dn:mp(2)+dn,:);
     tp=template;
@@ -219,6 +220,7 @@ if 1%loc.frame(1)==60
     impl=[roia,tp;roia-tp,0*tp];
     f=figure(88);
     imx(impl,'Parent',f)
+    waitforbuttonpress
 end
 end
 
