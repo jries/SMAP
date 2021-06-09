@@ -704,11 +704,11 @@ if fitpar.fitmode==3||fitpar.fitmode==5
 %         end
         for X=s(1):-1:1
             for Y=s(2):-1:1
-%                     if isfield(cal.SXY(X,Y,Z),'gauss_zfit')
-                zpar{X,Y}=SS(X,Y,Z).gauss_zfit;
-%                     else
-%                         zpar{X,Y}=[];
-%                     end
+                     if isfield(cal.SXY(X,Y,Z),'gauss_zfit')
+                        zpar{X,Y}=SS(X,Y,Z).gauss_zfit;
+                    else
+                        zpar{X,Y}=[];
+                    end
                 %global:combine splines
 %                 cs=cal.SXY(X,Y,Z).cspline_all;
                 cs=SS(X,Y,Z).cspline;
