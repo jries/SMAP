@@ -24,7 +24,9 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
                 LLfit.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites, ['evaluation.SMLMModelFitGUI_' num2str(m+2) '.fitInfo.LLfit']);
             end
             
+            
             allSym = unique(sym);
+            colorID = [2 8 1 6 3];
             for d = 1:length(allSym)
                 ax = obj.initaxis(['data_sym',num2str(d+5),'f']);
                 lOneSym = sym == allSym(d);
@@ -33,8 +35,20 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
                 for m = 1:5
                     LLfit_oneModel = LLfit.(['sym',num2str(m+5),'f'])(lOneSym);
                     cdfplot(LLfit_oneModel)
+                    curve{m} = cdfplot(LLfit_oneModel);
+                    curve{m}.Color = myDiscreteLUT(colorID(m));
                 end
-                legend({'6-fold','7-fold','8-fold','9-fold','10-fold'})
+                xlabel(ax,'Log-likelihood');
+                ylabel(ax,'Cumulative probability');
+                allLine = findobj(ax,'type','line');
+                set(allLine,'linewidth',1.5)
+                title(ax,[]);
+                grid(ax, 'off')
+                if d == 1
+                    legend([curve{:}], {'6-fold','7-fold','8-fold','9-fold','10-fold'})
+                end
+%                 hold off
+%                 out = [];    
                 hold off
             end
         out = [];    

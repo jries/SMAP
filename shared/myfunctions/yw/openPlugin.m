@@ -11,4 +11,6 @@ function module = openPlugin(g, pPath)
     p.Xrim=10;
     module.setGuiAppearence(p)
     module.makeGui;
+    
+    g.children.menu.(pPath{end}) = module;
 end

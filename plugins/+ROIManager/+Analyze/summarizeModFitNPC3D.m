@@ -47,6 +47,9 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             azi = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxAzi);
             azi = rem(rem(azi,45)+90, 45);
             
+            [~,idxBG] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m91.offset.weight');
+            bg = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxBG);
+            
             lOneRing = ringDist<=cutoffOneRing;
             
             for k = find(lFailed)
@@ -101,6 +104,15 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             title(ax1, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
             xlabel(ax1, 'Distance (nm)')
             ylabel(ax1, 'Count')
+            
+            ax4 = obj.initaxis('Ring separation all');
+            par = ringDist;
+            binWidth = 3;
+            bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
+            histogram(ax4, par, bin_Edge)
+            title(ax4, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
+            xlabel(ax4, 'Distance (nm)')
+            ylabel(ax4, 'Count')
             
             ax2 = obj.initaxis('Ring twist');
             par = azi_new;
