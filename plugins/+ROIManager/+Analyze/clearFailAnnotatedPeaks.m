@@ -1,6 +1,6 @@
 classdef clearFailAnnotatedPeaks<interfaces.DialogProcessor&interfaces.SEProcessor
     methods
-        function obj=clearUselessAnnotatedPeaks(varargin)        
+        function obj=clearFailAnnotatedPeaks(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
             obj.inputParameters={'se_viewer', 'se_siteroi', 'se_sitefov'};
             obj.showresults=true;
