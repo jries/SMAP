@@ -27,6 +27,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         
         function setGuiParameters(obj,p)
             obj.fitter = p.fitter;
+            obj.fitter.updateVersion;
             initTabWhenLoading(obj);
             setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);
         end
@@ -65,11 +66,12 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             try
                 out=runSMLMModelFitGUI(obj, inp, results.onlySetUp, results.forceDisplay, results.keepParsVal);
                 out.fitInfo.guiInfo = 'Normal.';
-            catch
+            catch ME
                 if isfield(obj.site.evaluation, obj.name)
                     out = obj.site.evaluation.(obj.name);
                 end
                 warning(['Model fitter did not run through. Site ' num2str(obj.site.ID) ' encountered some issues.'])
+                disp(getReport(ME, 'extended', 'hyperlinks', 'on'))
                 if results.forceDisplay
                     out.fitInfo.guiInfo = 'Plot failed.';
                 else
@@ -210,7 +212,46 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
                 end
             end
         end
-        
+        %% Updating the layer settings for the GUI
+        function updateLayer(obj)
+            % Update the layers in use.
+            % Get the fitter.
+            fitter = obj.fitter;
+            hLayer=obj.guihandles.layerSetting; % Hande of the layer table.
+            % Get the current settings for the layers.
+            layerParsArg = fitter.subParsArg([]);
+            % Convert cellstr into chr array so that uitalble can handle.
+            fn = obj.layerFieldnames;
+            layerStr = num2str(layerParsArg.model);
+            layerParsArgDisp.layer = char(strcat('layer', layerStr(:,2)));
+            for k = 2:length(fn)
+                if iscell(layerParsArg.(fn{k}))
+                    layerParsArgDisp.(fn{k}) = char(layerParsArg.(fn{k}));
+                else
+                    layerParsArgDisp.(fn{k}) = layerParsArg.(fn{k});
+                end
+            end
+            hLayer.Data = struct2Data(layerParsArgDisp);
+            hLayer.ColumnEditable = obj.lFnLayerEdit;
+            % save the table back to the GUI
+            obj.guihandles.layerSetting = hLayer;
+            layerParId = {};
+            for k = length(layerParsArg.model):-1:1
+                layerParId(k) = fitter.getAllParId(layerParsArg.model(k));
+            end
+            %% update the convert table
+            hConvert = obj.guihandles.anchorConvert;
+            colFormat = hConvert.ColumnFormat{3};
+            % remove old layer parID
+            lLayerParID = contains(colFormat,'.offset.weight');
+            if any(lLayerParID)
+                colFormat(lLayerParID) = [];
+            end
+            % add new layer parID
+            optionTarget = unique([colFormat layerParId{:}]);
+            hConvert.ColumnFormat{3} = optionTarget;
+            obj.guihandles.anchorConvert=hConvert;
+        end
     end
     events
         mParsArgModified
