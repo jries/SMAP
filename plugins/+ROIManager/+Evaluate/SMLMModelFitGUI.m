@@ -93,7 +93,12 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
             obj.fitter = SMLMModelFit('DataDim',dataDim);
                 
             obj.currentLoadedModel = [];
-            
+            if ismac
+                obj.guiPar.fontsize=12;
+                obj.guiPar.Vrim=0;
+                obj.guiPar.FieldHeight=20;
+                
+            end
             % field names in the parsArg table
             fnParsArg={'name','value','fix','lb','ub','type','min','max','label'};
             lFnParsArgEdit = logical([0 1 1 1 1 0 1 1 1]);
