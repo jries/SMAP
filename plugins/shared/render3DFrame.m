@@ -1,4 +1,6 @@
 function oneFrame=render3DFrame(locs,f,varargin)
+% Log: 
+%   210702: fix the tick labels (from pixels to the real scale)
     pp = inputParser;
     pp.addParameter('labelText', [])
     pp.parse(varargin{:})
@@ -66,6 +68,10 @@ function oneFrame=render3DFrame(locs,f,varargin)
                 offset = [10 -10 -10];
             	text(ax,0+offset(1),40+offset(2),80+offset(3), pp.labelText,'Color','white','FontSize',14)
             end
+            set(ax,...
+                'XTickLabel', arrayfun(@num2str , (ax.XTick-median(ax.XTick)).*p.pxSize,'UniformOutput',false),...
+                'YTickLabel', arrayfun(@num2str , ax.YTick.*p.pxSize,'UniformOutput',false),...
+                'ZTickLabel', arrayfun(@num2str , (ax.ZTick-median(ax.ZTick)).*p.pxSize,'UniformOutput',false))
             drawnow
             oneFrame = getframe(f);
 %             oneFrame = oneFrame.cdata;
