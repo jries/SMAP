@@ -25,7 +25,7 @@ classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
         end
         
         
-        function setGuiParameters(obj,p)
+        function setGuiParameters(obj,p,setchildren,setmenu)
             obj.fitter = p.fitter;
             obj.fitter.updateVersion;
             initTabWhenLoading(obj);

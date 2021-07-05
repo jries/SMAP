@@ -67,7 +67,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             for k=2:length(currentlayers)-1
                 obj.removelayer(k)
             end
-            if isfield(p,'layernames')
+            if isfield(p,'layernames') && ~isempty(p.layernames)
                 obj.guihandles.layertab.SelectedTab.Title=p.layernames{1};
             end
             indl=2;

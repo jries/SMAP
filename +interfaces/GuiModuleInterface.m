@@ -355,7 +355,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         catch err
                             disp(getReport(err, 'extended', 'hyperlinks', 'on'))
 %                             disp('setGuiParameters for children: error in:')
-%                             child
+                             child
 %                             err
                         end
                     
