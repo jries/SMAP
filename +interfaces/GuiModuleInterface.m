@@ -353,9 +353,10 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         try
                             child.setGuiParameters(pchild,true,setmenulist);
                         catch err
-                            disp('setGuiParameters for children: error in:')
-                            child
-                            err
+                            disp(getReport(err, 'extended', 'hyperlinks', 'on'))
+%                             disp('setGuiParameters for children: error in:')
+%                             child
+%                             err
                         end
                     
                     end
@@ -427,18 +428,21 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 try
                 obj.guihandles.(fn{k}).FontSize=obj.guihandles.(fn{k}).FontSize*factor;
                 catch err
+                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
                 try
                     if strcmpi(obj.guihandles.(fn{k}).Units,'pixels')
                         obj.guihandles.(fn{k}).Position=obj.guihandles.(fn{k}).Position*factor;
                     end
                 catch err
+                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
                 try
                     if isa(obj.guihandles.(fn{k}),'matlab.ui.control.Table')
                     obj.guihandles.(fn{k}).ColumnWidth=num2cell([obj.guihandles.(fn{k}).ColumnWidth{:}]*factor);
                     end
                 catch err
+                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
             end
             end
