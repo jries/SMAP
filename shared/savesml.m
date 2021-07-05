@@ -48,11 +48,20 @@ if isfield(p,'saveSepFile') && p.saveSepFile % Yu-Le added
     for k = 1:lastfile
         filenumber = k;
         [path,fileName] = fileparts(file);
-        if startsWith(fileName,'__')
-            [~,oriName] = fileparts(locData.files.file(filenumber).name);
-            newName = [oriName(1:end-4) fileName(2:end-4) file(end-7:end)];
-            oneFile = [path filesep newName];
+        lSameFolder__ = startsWith(fileName,'__');
+        lOwnFolder__ = startsWith(fileName,'own__');
+        if lSameFolder__||lOwnFolder__
+            % different names, same suffix
+            [ownPath,oriName] = fileparts(locData.files.file(filenumber).name);
+            if lOwnFolder__
+                newName = [oriName(1:end-4) fileName(5:end-4) file(end-7:end)];
+                oneFile = [ownPath filesep newName];
+            else
+                newName = [oriName(1:end-4) fileName(2:end-4) file(end-7:end)];
+                oneFile = [path filesep newName];
+            end
         else
+            % same name, different suffix
             oneFile = [file(1:end-8) '_' num2str(filenumber) file(end-7:end)];
         end
         saveloc=locData.savelocs(oneFile,indg,[],[],excludesavefields,filenumber);
