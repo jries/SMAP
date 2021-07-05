@@ -203,8 +203,8 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
                         disp(['  obj.getPar: "' field '" not a parameter, plugin: ' pluginh])
                     end
                 catch err%
-                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
-%                     disp(['obj.getPar: "' field '" not a parameter, plugin: ' pluginh])
+                    %disp(getReport(err, 'extended', 'hyperlinks', 'on'))
+                    %disp(['obj.getPar: "' field '" not a parameter, plugin: ' pluginh])
                 end
             end      
         end
