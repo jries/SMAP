@@ -159,8 +159,13 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                         ax.Tag = 'schematic';
                         close(tempFig);
                     end
-                    theta = subSites(siteInd).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
-                    text(panSite(1).axis,20,20,['\theta=',num2str(theta,'%.1f')],'Color',[1 1 1],'VerticalAlignment','baseline')
+                    fn = fieldnames(obj.locData.SE.processors.eval.children);
+                    idx = strcmp(fn, 'SMLMModelFitGUI_2');
+                    modelName = class(obj.locData.SE.processors.eval.processors{idx}.fitter.model{1}.modelObj);
+                    if ~strcmp(modelName, 'NPCPointModel_flexible2')
+                        theta = subSites(siteInd).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
+                        text(panSite(1).axis,20,20,['\theta=',num2str(theta,'%.1f')],'Color',[1 1 1],'VerticalAlignment','baseline')
+                    end
                 end
                 if np ~= nPage
                     f.Visible = 'off';

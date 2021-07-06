@@ -16,7 +16,7 @@ function h = errorshade(varargin)
         p.addParameter('LineWidth',[]);
         p.addParameter('Marker',[]);
         p.addParameter('MarkerFaceColor',[]);
-        p.addParameter('MarkerSize',4);
+        p.addParameter('MarkerSize',3);
 %         p.addParameter('Shade_FaceColor',[]);
         p.addParameter('Shade_EdgeColor','none');
         p.addParameter('Shade_FaceAlpha',0.5);

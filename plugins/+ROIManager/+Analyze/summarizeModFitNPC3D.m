@@ -50,6 +50,9 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             [~,idxBG] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m91.offset.weight');
             bg = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxBG);
             
+            numOfLocsLayer1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo.numOfLocsPerLayer',1);
+            bgDensity = numOfLocsLayer1.*bg/(p.se_siteroi/1000)^3;
+            
             lOneRing = ringDist<=cutoffOneRing;
             
             for k = find(lFailed)
@@ -131,6 +134,15 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             title(ax3, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
             xlabel(ax3, 'Radius (nm)')
             ylabel(ax3, 'Count')
+            
+            ax4 = obj.initaxis('BGDensity');
+            par = bgDensity(lGood);
+            binWidth = 50;
+            bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
+            histogram(ax4, par, bin_Edge)
+            title(ax4, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
+            xlabel(ax4, 'Density (um^-^3)')
+            ylabel(ax4, 'Count')
             out = [];
             
             if p.showIntActPlot
