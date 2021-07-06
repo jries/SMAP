@@ -10,14 +10,15 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             se = obj.locData.SE;
             sites = se.sites;
 
-            lUsed = getFieldAsVector(sites, 'annotation.use');
-            siteOrder = 1:se.numberOfSites;
+            list3 = getFieldAsVector(sites, 'annotation.list3.value');
+            lUsed = list3==1;
+%             siteOrder = 1:sum(lUsed);
 
            
             LLfit = [];
             
             for m = 1:5
-                LLfit.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites, ['evaluation.SMLMModelFitGUI_' num2str(m+2) '.fitInfo.LLfit']);
+                LLfit.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.SMLMModelFitGUI_' num2str(m+2) '.fitInfo.LLfit']);
             end
             
             ax = obj.initaxis('Raw LL');
@@ -33,7 +34,7 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
                 curve{m} = cdfplot(LLfit_oneModel);
                 curve{m}.Color = myDiscreteLUT(colorID(m));
             end
-            xlabel(ax,'Log-likelihood');
+            xlabel(ax,'Maximum Log-likelihood');
             ylabel(ax,'Cumulative probability');
             allLine = findobj(ax,'type','line');
             set(allLine,'linewidth',1.5)

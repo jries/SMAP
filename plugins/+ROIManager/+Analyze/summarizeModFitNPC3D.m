@@ -15,13 +15,19 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             siteOrder = 1:se.numberOfSites;
 
             usedSites = sites(lUsed);
-            fitInfo = getFieldAsVector(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo');
+            fn = fieldnames(obj.SE.processors.eval.children);
+            if ismember('SMLMModelFitGUI_5', fn)
+                whichSMLMModelFitGUI = '5';
+            else
+                whichSMLMModelFitGUI = '3';
+            end
+            fitInfo = getFieldAsVector(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo']);
             lFailed = cellfun(@(x)strcmp(x.guiInfo,'Fit or plot failed.'), fitInfo);
             evalList = se.processors.eval.guihandles.modules.Data(:,2);
             indProcessor = find(strcmp('SMLMModelFitGUI',evalList));
             relativePosLastStep = 2;
             ID = getFieldAsVector(usedSites, 'ID');
-            numOfLocsL1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo.numOfLocsPerLayer', 1);
+            numOfLocsL1 = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.numOfLocsPerLayer'], 1);
             % [~,idxZ] = g.locData.SE.processors.eval.processors{indProcessor-2}.fitter.wherePar('pars.m1.lPar.z');
             % zS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxZ);
             % 
@@ -32,25 +38,25 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
 %             [cutoffOneRing, bin_edges] = getOneRingCutoff(ringDistS1);
             
             [~,idxZ] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.z');
-            z = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxZ);
+            z = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxZ);
 
             [~,idxRingDist] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.ringDistance');
-            ringDist = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxRingDist);
+            ringDist = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxRingDist);
 
             [~,idxR] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.radius');
-            r = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxR);
+            r = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxR);
 
             [~,idxVar] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.variation');
-            var = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxVar);
+            var = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxVar);
 
             [~,idxAzi] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.azimuthalShift');
-            azi = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxAzi);
+            azi = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxAzi);
             azi = rem(rem(azi,45)+90, 45);
             
             [~,idxBG] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m91.offset.weight');
-            bg = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxBG);
+            bg = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxBG);
             
-            numOfLocsLayer1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo.numOfLocsPerLayer',1);
+            numOfLocsLayer1 = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.numOfLocsPerLayer'],1);
             bgDensity = numOfLocsLayer1.*bg/(p.se_siteroi/1000)^3;
             
             lOneRing = ringDist<=cutoffOneRing;

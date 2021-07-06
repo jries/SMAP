@@ -30,6 +30,11 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             obj.setPar('fitter',fitter)
             
+            % check the model name (to differentiate mCME and NPC)
+            fn = fieldnames(obj.locData.SE.processors.eval.children);
+            idx = strcmp(fn, 'SMLMModelFitGUI_2');
+            modelName = class(obj.locData.SE.processors.eval.processors{idx}.fitter.model{1}.modelObj);
+                    
             % parameters
             view = strsplit(p.view,' ');
             layout = p.layout.selection;
@@ -73,7 +78,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             for np = 1:nPage
                 f=figure;
                 pan{np} = panel(f);
-                pan{np}.pack(dim(1), dim(2));
+                pan{np}.pack(dim(2), dim(1));
                 % [current]
                 f.SizeChangedFcn = {@whenFSizeChanged, f.SizeChangedFcn, {}, @setFSize, {obj}};
                 f.CloseRequestFcn = {@closeAllFig,obj};
@@ -88,8 +93,13 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                     nSiteThisPage = nSitePage;
                 end
                 for k = 1:nSiteThisPage
+                    if ~strcmp(modelName, 'NPCPointModel_flexible2')
+                        plotDirection = 'down';
+                    else
+                        plotDirection = 'right';
+                    end
+                    [panR,panC] = tilePosition(k, dim, plotDirection);
                     siteInd = (np-1)*nSitePage+k;
-                    [panR,panC] = ind2sub(dim,k);
                     panSite = pan{np}(panR,panC);
                     panSite.pack(panMode, numOfView+extraRow);  % for data
                     % Borrow the evaluate plug-in to use getLocs(obj,...)
@@ -159,9 +169,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                         ax.Tag = 'schematic';
                         close(tempFig);
                     end
-                    fn = fieldnames(obj.locData.SE.processors.eval.children);
-                    idx = strcmp(fn, 'SMLMModelFitGUI_2');
-                    modelName = class(obj.locData.SE.processors.eval.processors{idx}.fitter.model{1}.modelObj);
+                    
                     if ~strcmp(modelName, 'NPCPointModel_flexible2')
                         theta = subSites(siteInd).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
                         text(panSite(1).axis,20,20,['\theta=',num2str(theta,'%.1f')],'Color',[1 1 1],'VerticalAlignment','baseline')
