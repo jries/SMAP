@@ -38,7 +38,7 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
                     curve{m} = cdfplot(LLfit_oneModel);
                     curve{m}.Color = myDiscreteLUT(colorID(m));
                 end
-                xlabel(ax,'Log-likelihood');
+                xlabel(ax,'Maximum log-likelihood');
                 ylabel(ax,'Cumulative probability');
                 allLine = findobj(ax,'type','line');
                 set(allLine,'linewidth',1.5)
@@ -51,7 +51,30 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
 %                 out = [];    
                 hold off
             end
-        out = [];    
+            out = [];
+            %% Comparison plot (6f vs 8f)
+            axCmp = obj.initaxis('Comparison');
+            pt = [LLfit.('sym8f')(sym == 8);LLfit.('sym6f')(sym == 8)]';
+            Idx = rangesearch(pt,pt,0.1);
+            count = cellfun(@length, Idx);
+            scatter(axCmp, LLfit.('sym8f')(sym == 8), LLfit.('sym6f')(sym == 8),2, count, 'filled')
+            hold(axCmp, 'on')
+            plot(axCmp, [-17 -11],[-17 -11], '-k')
+            hold(axCmp, 'off')
+            xlabel(axCmp, 'Eight-fold symmetry')
+            ylabel(axCmp, 'Six-fold symmetry')
+            colorbar(axCmp)
+            %% Mix (6f and 8f)
+            axMix = obj.initaxis('Mix');
+            sz = 3;
+            hs8 = scatter(axMix, LLfit.('sym8f')(sym==8), LLfit.('sym6f')(sym==8),sz, myDiscreteLUT(colorID(3), 'type', 'rgb'), 'filled');
+            hold(axMix, 'on')
+            hs6 = scatter(axMix, LLfit.('sym8f')(sym==6), LLfit.('sym6f')(sym==6),sz, myDiscreteLUT(colorID(1), 'type', 'rgb'), 'filled');
+%             set([hs8 hs6],'MarkerFaceAlpha', 0.3)
+            plot(axMix, [-17 -11],[-17 -11], '-k')
+            hold(axMix, 'off')
+            xlabel(axMix, 'Eight-fold symmetry')
+            ylabel(axMix, 'Six-fold symmetry')
         end
         function pard=guidef(obj)
             pard=guidef(obj);

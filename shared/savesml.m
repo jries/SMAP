@@ -50,14 +50,15 @@ if isfield(p,'saveSepFile') && p.saveSepFile % Yu-Le added
         [path,fileName] = fileparts(file);
         lSameFolder__ = startsWith(fileName,'__');
         lOwnFolder__ = startsWith(fileName,'own__');
+        fileName = regexprep(fileName, '^(|own)__', '_');
+        fileName = regexprep(fileName, '(_{1,2}sml)$', '');
         if lSameFolder__||lOwnFolder__
             % different names, same suffix
             [ownPath,oriName] = fileparts(locData.files.file(filenumber).name);
+            newName = [oriName(1:end-4) fileName file(end-7:end)]; % take out '_sml'
             if lOwnFolder__
-                newName = [oriName(1:end-4) fileName(5:end-4) file(end-7:end)];
                 oneFile = [ownPath filesep newName];
             else
-                newName = [oriName(1:end-4) fileName(2:end-4) file(end-7:end)];
                 oneFile = [path filesep newName];
             end
         else
