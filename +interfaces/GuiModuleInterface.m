@@ -427,22 +427,22 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             for k=1:length(fn)
                 try
                 obj.guihandles.(fn{k}).FontSize=obj.guihandles.(fn{k}).FontSize*factor;
-                catch err
-                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
+%                 catch err
+%                     disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
                 try
                     if strcmpi(obj.guihandles.(fn{k}).Units,'pixels')
                         obj.guihandles.(fn{k}).Position=obj.guihandles.(fn{k}).Position*factor;
                     end
                 catch err
-                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
+%                     disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
                 try
                     if isa(obj.guihandles.(fn{k}),'matlab.ui.control.Table')
                     obj.guihandles.(fn{k}).ColumnWidth=num2cell([obj.guihandles.(fn{k}).ColumnWidth{:}]*factor);
                     end
                 catch err
-                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
+%                     disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
             end
             end
