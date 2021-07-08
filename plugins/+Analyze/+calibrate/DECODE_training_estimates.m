@@ -5,42 +5,49 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         yamlfile
         yamlpar
         jsontypes
+        decodeprocess
+        tensorboardprocess
     end
     methods
         function obj=DECODE_training_estimates(varargin)  
             obj@interfaces.DialogProcessor(varargin{:}) ;
             obj.showresults=false;
         end
-        
         function out=run(obj,p)
+           pdecode=obj.getGlobalSetting('DECODE_path');
+           if ~exist(pdecode,'dir')
+               warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
+               return
+           end
            out=[];
-           disp('no function. Use save yaml in the GUI.')
-           return
-           %set defaults
-%             outdir=finalizejson(obj);
-%             js=obj.jsonstruct;
-%            %make directory
-%            status=mkdir(outdir);
-%            %copy 3dcal and set 3dcal path relative
-%            status2=copyfile(js.InOut.calibration_file,outdir);
-%            %save jsonfile
-%            
-%            fileout=[outdir filesep 'model_' js.SMAP.name '.json'];
-%            if status && status2
-%                 savejsonfile(obj,fileout)
-%            end
+           [~,fname]=fileparts(obj.locData.files.file(1).name);
+           fnameo=[obj.yamlpar.InOut.experiment_out filesep 'DECODE_train_' fname '.yaml'];
+           finalizejson(obj);
+           saveyaml(obj,fnameo);
+%            https://github.com/brian-lau/MatlabProcessManager
+           pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' fnameo ];
+           pm=processManager('command',pcall,'autoStart',false,'workingDir',obj.yamlpar.InOut.experiment_out);
+           pm.printStdout=false ;
+           pm.printStderr=true;
+           pm.wrap=1000;
+           pm.pollInterval=10;
+           pm.start()
+           obj.decodeprocess=pm;
+
+           pcalltb=[pdecode '/bin/tensorboard --samples_per_plugin images=100 --port=6007 --logdir=runs' ];
+           ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
+           obj.tensorboardprocess=ptb;
+           obj.guihandles.stoplearning.Visible='on';
+           obj.guihandles.tensorboard.Visible='on';
         end
         function pard=guidef(obj)
             pard=guidef(obj);
         end
         function initGui(obj)
-%             try
-%                 javaaddpath('/shared/externaltools/YAMLMatlab/external/snakeyaml-1.9.jar')
-%             catch
-%                 disp('could not add javapath for yaml')
-%             end
+
             initGui@interfaces.DialogProcessor(obj);
-            
+                obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
+        
             yamldefault=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep obj.yamldefault];
             obj.yamlfile=yamldefault;
             tt=uitable(obj.handle);
@@ -60,6 +67,7 @@ use.SMAP={'set_emitters_per_um2','zrange_nm'};
 use.InOut={'calibration_file','experiment_out'};
 use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform'};
 use.Camera={'em_gain','e_per_adu','baseline','read_sigma','spur_noise','px_size'};
+use.Hardware={'device','device_simulation'};
 fnu=fieldnames(use);
 
 js=obj.yamlpar;
@@ -377,6 +385,18 @@ function setz(obj)
  end
 end
 
+function stoplearning_callback(a,b,obj)
+    obj.tensorboardprocess.stop;
+    obj.decodeprocess.stop;
+    obj.guihandles.stoplearning.Visible='off';
+    obj.guihandles.tensorboard.Visible='off';
+end
+
+function tensorboard_callback(a,b,obj)
+page='http://localhost:6007';
+web(page,'-browser')
+end
+
 function pard=guidef(obj)
 pard.plugininfo.type='ProcessorPlugin';
 pard.plugininfo.description='Saves a training file for DECODE';
@@ -385,6 +405,13 @@ pard.usecurrent.object=struct('Style','pushbutton','String','Use parameters from
 pard.usecurrent.position=[1,1];
 pard.usecurrent.Width=2;
 
+pard.tensorboard.object=struct('Style','pushbutton','String','Tensorboard','Callback',{{@tensorboard_callback,obj}},'Visible','off');
+pard.tensorboard.position=[1,3];
+pard.tensorboard.Width=1;
+
+pard.stoplearning.object=struct('Style','pushbutton','String','Stop training','Callback',{{@stoplearning_callback,obj}},'Visible','off');
+pard.stoplearning.position=[1,4];
+pard.stoplearning.Width=1;
 
 pard.loadjson.object=struct('Style','pushbutton','String','Load yaml','Callback',{{@load_callback,obj,'.yaml'}});
 pard.loadjson.position=[9,1];
