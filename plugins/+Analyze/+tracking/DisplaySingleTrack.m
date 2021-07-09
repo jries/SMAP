@@ -57,7 +57,7 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
             xlabel('delta x (nm)');
             ylabel('auto corr')
             
-            if p.stepsize>0
+            if 0% p.stepsize>0
                 ax=obj.initaxis('steppos');
                 xm=mod(x,p.stepsize);
                 hxm=histcounts(xm,0:p.stepsize);
@@ -101,7 +101,10 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
             try
             %step finder
             ax=obj.initaxis('stepfind');
-            inds=findchangepts(x,'MaxNumChanges',round((max(x)-min(x))/20));
+            stepsize=p.stepsize;
+
+            inds=findchangepts(x,'MaxNumChanges',round((max(x)-min(x))/max(20,stepsize)));
+
             inds=[0 ;inds ;length(x)+1];
             mv=zeros(length(inds)-1,1);
             tv=mv;
