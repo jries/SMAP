@@ -153,7 +153,7 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
                     hl=plot(ax,xh,yh,'k');
                     hold(ax,'on')
                     hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',10);
-                    plot(ax,xh(end),yh(end),'b.')
+                    hb=plot(ax,xh,yh,'b.');
                     tpassed=ts(k)-ts(1);
                     ht=text(ax,double(min(x)),double(max(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
                     
@@ -162,8 +162,14 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
                     delete(hd)
                     delete(hl)
                     delete(ht)
+                    delete(hb)
                 end
-                pfad=fileparts(obj.getPar('lastSMLFile'));
+                smlfile=obj.getPar('lastSMLFile');
+                if ~isempty(smlfile)
+                    pfad=fileparts(smlfile);
+                else
+                    pfad=fileparts(obj.locData.files.file(1).name);
+                end
 %                 fo=strrep(fo,'_sml.mat','.mp4');
                 [file,pfad]=uiputfile([pfad filesep '*.mp4']);
                 if file
