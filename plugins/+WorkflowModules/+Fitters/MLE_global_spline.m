@@ -980,9 +980,9 @@ pard.pixelsizey.Optional=true;
 
 % p(1).value=0; p(1).on={}; p(1).off={'selectscmos','scmosfile'};
 % p(2).value=1; p(2).on={'selectscmos','scmosfile'}; p(2).off={};
-pard.isscmos.object=struct('Style','checkbox','String','sCMOS');%,'Callback',{{@obj.switchvisible,p}});   
-pard.isscmos.position=[7,1];
-pard.isscmos.Optional=true;
+% pard.isscmos.object=struct('Style','checkbox','String','sCMOS');%,'Callback',{{@obj.switchvisible,p}});   
+% pard.isscmos.position=[7,1];
+% pard.isscmos.Optional=true;
 % pard.selectscmos.object=struct('Style','pushbutton','String','Load var map','Callback',{{@loadscmos_callback,obj}});   
 % pard.selectscmos.TooltipString='Select sCMOS variance map (in ADU^2) of same size ROI on chip as image stack';
 % pard.selectscmos.position=[7,1.6];
