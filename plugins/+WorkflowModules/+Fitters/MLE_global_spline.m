@@ -114,17 +114,17 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
     end
 end
 
-function loadscmos_callback(a,b,obj)
-fs=obj.getSingleGuiParameter('scmosfile');
-if isempty(fs)
-    fs='*.*';
-end
-[file,pfad]=uigetfile(fs);
-if file
-    obj.setGuiParameters(struct('scmosfile',[pfad file]))
-end
-
-end
+% function loadscmos_callback(a,b,obj)
+% fs=obj.getSingleGuiParameter('scmosfile');
+% if isempty(fs)
+%     fs='*.*';
+% end
+% [file,pfad]=uigetfile(fs);
+% if file
+%     obj.setGuiParameters(struct('scmosfile',[pfad file]))
+% end
+% 
+% end
 
 
 function locs=fit2locs_global(results,stackinfo,fitpar,image)
@@ -379,7 +379,6 @@ numberOfChannels=2;
 nfits=ceil(size(imstack,3)/numberOfChannels);
 npar=5;
 
-
 s=size(imstack);
 if length(s)==2 
  s(3)=1;
@@ -461,6 +460,7 @@ switch fitpar.mode
         %fitmode, varmap
 %         arguments{6}=fitpar.fitmode;
         arguments{6}=fitpar.zstart/fitpar.dz;
+        arguments{7}=fitpar.PhotonRatios;
     otherwise
         disp('fitmode not implemented for global fitting')
 end
@@ -660,6 +660,7 @@ end
 end
 
 function fitpar=getfitpar(obj)
+%get all necessary parameters for fitting and store them 
 p=obj.getAllParameters;
 fitpar.iterations=p.iterations;
 fitpar.fitmode=p.fitmode.Value;
@@ -667,6 +668,12 @@ fitpar.roisperfit=p.roisperfit;
 fitpar.issCMOS=false;
 fitpar.mainchannel=p.mainchannel.Value;
 fitpar.weightsch=p.weightsch;
+fitpar.fixPhot=p.fixPhot;
+if fitpar.fixPhot
+    fitpar.PhotonRatios=p.PhotonRatios;
+else
+    fitpar.PhotonRatios=[];
+end
 if length(fitpar.weightsch)==1
     fitpar.weightsch(2)=1;
 end
@@ -675,13 +682,9 @@ for k=1:size(p.globaltable.Data,1)
 end
 fitpar.link=[p.globaltable.Data{:,1}];
 fitpar.zstart=p.zstart;
-if fitpar.fitmode==3||fitpar.fitmode==5
+if fitpar.fitmode==3||fitpar.fitmode==5 %calibration file
     fitpar.issCMOS=p.isscmos;
-%     fitpar.PSF2D=p.fit2D;
-%     if p.fit2D
-%         fitpar.fitmode=6;
-%     end
-    
+  
     calfile=p.cal_3Dfile;
     cal=load(calfile);
 
@@ -697,20 +700,15 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         end
         s=size(SS);
         Z=1;
-%         if p.useObjPos
-%             zr=cal.SXY(1).Zrangeall;
-%             zr(1)=[];zr(end)=inf;
-%             Z=find(p.objPos<=zr,1,'first');
-%         end
+
         for X=s(1):-1:1
             for Y=s(2):-1:1
-                     if isfield(cal.SXY(X,Y,Z),'gauss_zfit')
+                    if isfield(cal.SXY(X,Y,Z),'gauss_zfit')
                         zpar{X,Y}=SS(X,Y,Z).gauss_zfit;
                     else
                         zpar{X,Y}=[];
                     end
-                %global:combine splines
-%                 cs=cal.SXY(X,Y,Z).cspline_all;
+
                 cs=SS(X,Y,Z).cspline;
                 if iscell(cs.coeff)
                     coeff(:,:,:,:,1)=cs.coeff{1};
@@ -720,8 +718,6 @@ if fitpar.fitmode==3||fitpar.fitmode==5
                 splinefit{X,Y}=cs;
                 obj.spatialXrange{X,Y}=SS(X,Y).Xrange;
                 obj.spatialYrange{X,Y}=SS(X,Y).Yrange;
-                
-
             end
         end
         if ~isempty(splinefit{1})
@@ -736,12 +732,7 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         else
             obj.spatial3Dcal=false;
         end
-%         xr=SS(1,1).Xrangeall;
-%         xr(1)=-inf;xr(end)=inf;
-%         yr=SS(1,1).Yrangeall;
-%         yr(1)=-inf;yr(end)=inf;
-%         obj.spatialXrange=xr;
-%         obj.spatialYrange=yr;
+
         fitpar.EMon=SS(1).EMon;
         fitpar.mode='cspline';
     elseif isfield(cal,'cspline')
@@ -779,27 +770,6 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         else 
             varmap=[];
         end
-%         [~,~,ext]=fileparts(p.scmosfile);
-%         switch ext
-%             case '.tif'
-%                 varmaph=imread(p.scmosfile);
-%             case '.mat'
-%                 varmaph=load(p.scmosfile);
-%                 if isstruct(varmaph)
-%                     fn=fieldnames(varmaph);
-%                     varmaph=varmaph.(fn{1});
-%                 end
-%             otherwise
-%                 disp('could not load variance map. No sCMOS noise model used.')
-%                 p.isscmos=false;
-%                 fitpar.issCMOS=false;
-%                 varstack=0;
-%                 varmaph=[];
-%         end
-%         if ~isempty(varmaph)
-%             roi=p.loc_cameraSettings.roi;
-%             varmap=varmaph(max(1,roi(1)):roi(3),max(1,roi(2)):roi(4));
-%         end
     else 
         varmap=[];
     end
@@ -810,15 +780,6 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         fitpar.refractive_index_mismatch=1;
     end
 
-
-% elseif fitpar.fitmode==5
-%     calfile=p.cal_3Dfile;
-%     cal=load(calfile);
-%     fitpar.splinecoefficients=single(cal.cspline.coeff);
-%     fitpar.z0=cal.z0;
-%     fitpar.dz=cal.dz; 
-%     fitpar.refractive_index_mismatch=p.refractive_index_mismatch;
-%     fitpar.objPos=p.objPos;
     
 else
     fitpar.mode='Gauss';
@@ -837,8 +798,6 @@ numim=length(stackinfo.xpix);
 varstack=zeros(roisize,roisize,numim,'single');
 dn=floor(roisize/2);
 for k=1:numim
-%     stackinfo.x(k)
-%     stackinfo.y(k)
     varstack(:,:,k)=varmap(stackinfo.xpix(k)-dn:stackinfo.xpix(k)+dn,stackinfo.ypix(k)-dn:stackinfo.ypix(k)+dn);
 end
 end
@@ -846,16 +805,6 @@ end
 function fitmode_callback(a,b,obj)
 p=obj.getGuiParameters;
 fitmode=p.fitmode.Value;
-% fitz={'loadcal','cal_3Dfile','trefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','pixelsizex','pixelsizey','automirror','fit2D','isscmos','selectscmos','scmosfile'};
-% fitxy={'PSFx0','tPSFx0'};
-% switch fitmode
-%     case {3,5}
-%         ton=fitz;
-%         toff=fitxy;
-%     otherwise
-%         toff=fitz;
-%         ton=fitxy;
-% end
 
 switch fitmode
     case {1,2}
@@ -871,7 +820,7 @@ end
 
 obj.setPar('loc_ROIsize',roisize);
 
-% obj.fieldvisibility('on',ton,'off',toff);
+
 obj.setGuiParameters(struct('iterations',iterations));
 obj.guihandles.globaltable.RowName=RowName;
 end
@@ -1046,9 +995,22 @@ pard.isscmos.Optional=true;
 %     pard.scmosfile.Width=.5;
     
 pard.asymmetry.object=struct('Style','checkbox','String','get asymmetry');   
-pard.asymmetry.position=[5,1];
+pard.asymmetry.position=[7,3];
 pard.asymmetry.Optional=true;
     
+
+p(1).value=0; p(1).on={}; p(1).off={'PhotonRatios'};
+p(2).value=1; p(2).on={'PhotonRatios'}; p(2).off={};
+
+pard.fixPhot.object=struct('Style','checkbox','String','Multi color: fix ratio to: ','Callback',{{@obj.switchvisible,p}});   
+pard.fixPhot.position=[6,1];
+pard.fixPhot.Optional=true;
+pard.fixPhot.Width=1.5;
+
+pard.PhotonRatios.object=struct('Style','edit','String','1 1');%,'Callback',{{@obj.switchvisible,p}});   
+pard.PhotonRatios.position=[6,2.5];
+pard.PhotonRatios.Optional=true;
+pard.PhotonRatios.Width=1.5;
 
 
 pard.syncParameters={{'cal_3Dfile','',{'String'}}};

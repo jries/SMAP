@@ -13,11 +13,11 @@ function [P,CRLB,LogL]=mleFit_LM_global(varargin)
 %   cspline: cspline coefficients (single)
 %   cspline for 2D PSF: as 5, but two fits to break asymmetry. cspline coefficients (single)
 % 5. shifts dT
-% 6. silent (suppress output if 1)
-% 7. scmoS varmap
-% 8. z start parameter (more than one: return solution with maximum
+% not working 6. silent (suppress output if 1)
+% not working7. scmoS varmap
+% 6. z start parameter (more than one: return solution with maximum
 %       LIkelihood). Units: distance of stack calibration, center based
-
+% 7. Intenstiy ratios to test for multi-color SMLM, don't link if empty
 
 %Output:
 %P
@@ -57,24 +57,31 @@ end
 if isempty(fitter)
     error('No working GPU or CPU fitter found.')
 end
-
+imstack=single(varargin{1});
+shared=int32(varargin{2});
 splinecoeff=single(varargin{4});
-coeffsize=size(splinecoeff);
+channelshift=single(varargin{5});
 
+coeffsize=size(splinecoeff);
+fitmode=5;
 % if nargin<7||isempty(varargin{7})
 %     varmap=0; %emccd
 % end 
-if nargin<7||isempty(varargin{7})
-    zstart=single(coeffsize(3)/2); %emccd
+
+if nargin<7 || isempty(varargin{7})
+    PhotonRatios=[];
 else
-    zstart=single(coeffsize(3)/2+varargin{7});
+    PhotonRatios=varargin{7};
+    shared(4,:)=1; %if we fit with ratios, N needs to be linked
 end
 
-if nargin<6 || isempty(varargin{6})
-    fitmode=5;
+if nargin<6||isempty(varargin{6})
+    zstart=single(coeffsize(3)/2); %emccd
 else
-    fitmode=varargin{6};
+    zstart=single(coeffsize(3)/2+varargin{6});
 end
+
+
 
 if nargin>2 && ~isempty(varargin{3})
     iterations=varargin{3};
@@ -82,26 +89,13 @@ else
     iterations=30;
 end
 
-% if fitmode==6
-%     fitmode=5;
-%     zstart=single([-coeffsize(3)/4, coeffsize(3)/4]+coeffsize(3)/2);
-% %     zstart=single([-coeffsize(3)/3, coeffsize(3)/3]+coeffsize(3)/2);
-% end
-imstack=single(varargin{1});
-shared=int32(varargin{2});
-channelshift=single(varargin{5});
 
-% if fitmode==6 %2D fit: find proper results
-% %     [P1,CRLB1,LogL1,P2,CRLB2,LogL2]=allfitters{fitter}(varargin{:});
-% %     ind1=LogL1>=LogL2;
-% %     ind2=LogL1<LogL2;
-% %     P=zeros(size(P1),'single');CRLB=zeros(size(CRLB1),'single');LogL=zeros(size(LogL1),'single');
-% %     P(ind1,:)=P1(ind1,:);P(ind2,:)=P2(ind2,:);
-% %     CRLB(ind1,:)=CRLB1(ind1,:);CRLB(ind2,:)=CRLB2(ind2,:);
-% %     LogL(ind1,:)=LogL1(ind1,:);LogL(ind2,:)=LogL2(ind2,:);
-% else
+%Yiming: PhotonRatios is a vector with photon ratios. You know best how to
+%pass it on to the function. If length(PhotonRatios)>1: loop over, choose
+%highest LL, save color (e.g. at P(:, end+1))
+
+
 [P,CRLB,LogL]=allfitters{fitter}(imstack,shared,iterations,splinecoeff,channelshift,zstart(1));
-
 
 if length(zstart)>1
     for k=2:length(zstart)
@@ -113,18 +107,7 @@ if length(zstart)>1
         LogL(indbetter)=LogLh(indbetter);
     end
 end
-%     [P,CRLB,LogL]=allfitters{fitter}(imstack,shared,iterations,splinecoeff,channelshift,zstart);
-% end
-%%
-% 
-% <latex>
-% \begin{tabular}{|c|c|} \hline
-% $n$ & $n!$ \\ \hline
-% 1 & 1 \\
-% 2 & 2 \\
-% 3 & 6 \\ \hline
-% \end{tabular}
-% </latex>
-% 
+
+
  clear(allfittersnames{fitter})
 
