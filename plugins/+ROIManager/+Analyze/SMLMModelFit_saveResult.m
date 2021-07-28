@@ -263,9 +263,25 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
         
         function mkMovie_callBack(obj,a,b)
             obj.loadData;
+            p = obj.getAllParameters;
             [file,path] = uiputfile('*.tif', 'Save as', '');
+
             if file~=0
-                obj.fit_manager.mkMovie('saveTo', [path file]);
+                boundCurvature = [0 inf]; % must exclude sites with neg. curvature
+                if p.withoutClouds
+                    boundCurvature(2) = 0.015;
+                end
+                % site filtering on sites
+                lFiter = obj.fit_manager.filter('SMLMModelFitGUI_2.m1.curvature', boundCurvature);
+                lFiter = lFiter&obj.fit_manager.useSites;
+                obj.fit_manager.usedSites = lFiter;
+                
+                % get the number of neg. curvature sites
+                lFiter = obj.fit_manager.filter('SMLMModelFitGUI_2.m1.curvature', [-inf 0]);
+                lFiter = lFiter&obj.fit_manager.useSites;
+                numOfNegCur = sum(lFiter);
+                
+                obj.fit_manager.mkMovie('saveTo', [path file],'numberOfSitesWithNegCur',numOfNegCur);
             else
                 warning('Please specify where to save.')
             end
@@ -318,8 +334,24 @@ pard.recSites.position=[4,3.7];
 pard.recSites.Width=1;
 
 pard.mkMovie.object=struct('Style','pushbutton','String','Make movie','Callback', {{@obj.mkMovie_callBack}});
-pard.mkMovie.position=[5,3.7];
+pard.mkMovie.position=[6,3.7];
 pard.mkMovie.Width=1;
+
+pard.t_winSize.object=struct('Style','text','String','Window size');
+pard.t_winSize.position=[7,3.7];
+pard.t_winSize.Width=0.7;
+
+pard.winSize.object=struct('Style','edit','String','30');
+pard.winSize.position=[7,4.4];
+pard.winSize.Width=0.5;
+
+pard.t_stepSize.object=struct('Style','text','String','Step size');
+pard.t_stepSize.position=[8,3.7];
+pard.t_stepSize.Width=0.7;
+
+pard.stepSize.object=struct('Style','edit','String','30');
+pard.stepSize.position=[8,4.4];
+pard.stepSize.Width=0.5;
 
 pard.parsTable.object=struct('Style','text','String','table pos');
 pard.parsTable.position=[12,1];

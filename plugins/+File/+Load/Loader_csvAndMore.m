@@ -36,7 +36,8 @@ classdef Loader_csvAndMore<interfaces.DialogProcessor
             end
         end
         function initGui(obj)
-            obj.loaderpath='settings/csvloaderconversion/';
+            sd=obj.getPar('SettingsDirectory');
+            obj.loaderpath=[sd filesep 'csvloaderconversion' filesep];
             files=dir([obj.loaderpath '*.txt']);
             string={'New format', files(:).name};
             obj.guihandles.importdef.String=string;

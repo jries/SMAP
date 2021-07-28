@@ -250,7 +250,7 @@ classdef SEExploreGui<interfaces.SEProcessor
                 obj.SE.currentsite=sites(k);
                 plotsite(obj,sites(k));
 %                 obj.SE.plotsite(sites(k),obj.guihandles.siteax,obj.guihandles.cellax);
-                obj.SE.processors.eval.evaluate(sites(k));
+%                 obj.SE.processors.eval.evaluate(sites(k));
                 if ~obj.getPar('se_keeptempimages')
                 sites(k).image.composite=[];
                 sites(k).image.layers=[];

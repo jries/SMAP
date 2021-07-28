@@ -22,13 +22,22 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             end
         end
         function out=run(obj, inp)
+            if isfield(obj.site.evaluation, obj.modulename)&&isfield(obj.site.evaluation.(obj.modulename), 'manualBound') && ~isfield(obj.site.evaluation.(obj.modulename), 'poly')
+                % recover the ploy from the steps
+                steps = obj.site.evaluation.(obj.modulename).manualBound.steps;
+                obj.site.evaluation.(obj.modulename).poly = [0 0;cumsum(steps(:,1:2))./[10 2.5]];
+            end
             out=runFibrilDynamics(obj, inp);
             if isfield(obj.site.evaluation, obj.modulename)
                 valh=obj.site.evaluation.(obj.modulename);
                 if length(obj.poly)>=obj.site.ID &&~isempty(obj.poly{obj.site.ID})
+                    if isfield(valh,'poly')
+                        out.poly = valh.poly;
+                    end
                     out.manualBound = obj.dynamicsManualBound;
                 elseif isfield(valh,'poly')
                     obj.poly{obj.site.ID}=valh.poly;
+                    out.poly = valh.poly;
                     out.manualBound = obj.dynamicsManualBound;
                 end
             end
@@ -104,12 +113,13 @@ classdef fibrilDynamics<interfaces.SEEvaluationProcessor
             % manualBound.ratePerSeg: diffPos/diffTime per segment
             
             manualBound.data = obj.poly{obj.site.ID}; % column: pos time
-            manualBound.data = [manualBound.data(:,1)*binFactorPos manualBound.data(:,2)*binFactorTime];
-            manualBound.segment = diff(manualBound.data); % segments that form the boundary
+            manualBound.data = [manualBound.data(:,1)*binFactorPos manualBound.data(:,2)*binFactorTime]; % back to the origainl scale
+            manualBound.segment = diff(manualBound.data); % segments of the boundary
             manualBound.ratePerSeg = manualBound.segment(:,1)./manualBound.segment(:,2);
             
             %% Robust measures
             lStall = manualBound.ratePerSeg<stallThreshold;
+            % acummulated length and time
             fullPosNTime = manualBound.data(end,:)-manualBound.data(1,:);
             % total growth time
             growthTime = sum(manualBound.segment(~lStall,2));

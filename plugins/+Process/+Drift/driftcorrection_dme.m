@@ -19,7 +19,7 @@ classdef driftcorrection_dme<interfaces.DialogProcessor
                 return
             end
 
-            obj.setPar('undoModule','driftfeature');
+            obj.setPar('undoModule','driftDME');
             notify(obj.P,'backup4undo');
             numberOfFiles=obj.locData.files.filenumberEnd;
             layers=find(obj.getPar('sr_layerson'));
@@ -65,6 +65,7 @@ classdef driftcorrection_dme<interfaces.DialogProcessor
                     p.framestart=min(locs.frame);
                     p.framestop=max(locs.frame);
                     p.roi=obj.locData.files.file(k).info.roi;
+                    p.ax=obj.initaxis('driftxyz');
                     [drift,driftinfo,fieldc]=getxyzdrift(locs,p);
                     
                     locsall=copyfields([],lochere.loc,{fieldc{:},'frame','filenumber'});
@@ -116,48 +117,103 @@ classdef driftcorrection_dme<interfaces.DialogProcessor
 end
 
 
-function [drift,driftinfo,fieldc]=getxyzdrift(locs,p)
 
-drift=[];driftinfo=[];
+function [drifto,driftinfo,fieldc]=getxyzdrift(locs,p)
+isconstc=p.crlbconst;
+drifto=[];driftinfo=[];
 norm(1)=p.cam_pixelsize_nm(1);
-norm(2)=p.cam_pixelsize_nm(2);
+norm(2)=p.cam_pixelsize_nm(end);
 norm(3)=1000;
 if ~isempty(locs.znm)&&p.correctz
-    dim=3;
     coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2),locs.znm/norm(3));
-    crlb=horzcat((locs.locprecnm/norm(1)).^2,(locs.locprecnm/norm(2)).^2,(locs.locprecznm/norm(3)).^2);
-    crlbs=[0.1 0.1 0.03];
+%     crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2,locs.locprecznm.^2/norm(3)^2);
+    crlb=horzcat(locs.locprecnm/norm(1),locs.locprecnm/norm(2),locs.locprecznm/norm(3));
+%     crlb0=[0.2 0.2 0.2]';
+    crlb0=median(crlb)';
+    fieldc={'xnm','ynm','znm'};
+    isz=1;
 else
-    dim=2;
     coords=horzcat(locs.xnm/norm(1),locs.ynm/norm(2));
-    crlb=horzcat((locs.locprecnm/norm(1)).^2,(locs.locprecnm/norm(2)).^2);
-    crlbs=[0.1 0.1];
+    crlb=horzcat(locs.locprecnm/norm(1),locs.locprecnm/norm(2));
+%     crlb=horzcat(locs.locprecnm.^2/norm(1)^2,locs.locprecnm.^2/norm(2)^2);
+%     crlb0=[0.2 0.2]';
+    crlb0=median(crlb)';
+    fieldc={'xnm','ynm'};
+    isz=0;
+    norm=norm(1:2);
 end
 framenum=int32(locs.frame);
+maxframe=max(p.maxframeall);
 numspots=length(framenum);
 maxit=10000;
-drift=zeros(size(coords),'single');
+drift=zeros(isz+2,maxframe,'single');
 framesperbin=p.dme_fbin;
 gradientStep=1e-6;
 maxdrift=0;
 scores=zeros(1,maxit,'single');
-flags=5;
-maxneighbors=10000;
+
+
+maxneighbors=p.maxneighbours;
+
 nIterations =int32([
 0;
 0;
 ]);
 
-crlb=crlbs;
 
-dme_cpu(single(coords'), single(crlb'), int32(framenum),...
-    numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
- flags, maxneighbors, nIterations);
 
-flags=7;
-dme_cuda(single(coords'), single(crlb'), int32(framenum),...
-    numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
- flags, maxneighbors, nIterations);
+if isconstc
+    crlb=crlb0;
+end
+
+isgpu=p.usegpu;
+
+flags=4*isconstc+2*isgpu+isz;
+
+% Flags
+% Flags               cuda    cpu
+% 2D & constant CRLB  6       4
+% 2D & variable CRLB  2       0
+% 3D & constant CRLB  7       5
+% 3D & variable CRLB  3       1
+tic
+if isgpu
+    dme_cuda(single(coords'), single(crlb'), int32(framenum),...
+        numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
+        flags, maxneighbors, nIterations);
+else
+
+    dme_cpu(single(coords'), single(crlb'), int32(framenum),...
+        numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
+        flags, maxneighbors, nIterations);
+end
+t=toc;
+disp(['Time for DME drift correction: ' num2str(t) 's'])
+
+drifto.xy.x=drift(1,:)'*norm(1);
+drifto.xy.y=drift(2,:)'*norm(2);
+
+frames=1:maxframe;
+hold(p.ax,'off')
+plot(p.ax,frames,drifto.xy.x)
+hold(p.ax,'on')
+plot(p.ax,frames,drifto.xy.y+10)
+
+
+if isz
+    drifto.z=drift(3,:)'*norm(3);
+    plot(p.ax,frames,drifto.z-10)
+end
+
+xlabel(p.ax,'frames');
+ylabel(p.ax,'drift (nm)');
+legend(p.ax,'x','y','z','Location','northwest')
+
+% driftinfo=p;
+% flags=7;
+% dme_cuda(single(coords'), single(crlb'), int32(framenum),...
+%     numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores,...
+%  flags, maxneighbors, nIterations);
 
 % if 1
 %     finddriftfeatureM(locs,p);
@@ -188,40 +244,39 @@ dme_cuda(single(coords'), single(crlb'), int32(framenum),...
 %     
     
     
-    
-    [driftxy,driftinfoxy]=finddriftfeature(copystructReduce(locs,ind),p);
-    driftinfoxy.mirror=mirror; driftinfoxy.midpoint=midpoint;
-    driftinfo.xy=driftinfoxy;
-    drift.xy=copyfields([],driftxy,{'x','y'});
-    drift.xy(1).mirror=mirror;drift(1).xy(1).midpoint=midpoint;
+%     
+%     [driftxy,driftinfoxy]=finddriftfeature(copystructReduce(locs,ind),p);
+%     driftinfoxy.mirror=mirror; driftinfoxy.midpoint=midpoint;
+%     driftinfo.xy=driftinfoxy;
+%     drift.xy=copyfields([],driftxy,{'x','y'});
+%     drift.xy(1).mirror=mirror;drift(1).xy(1).midpoint=midpoint;
 
-    if rep
-         p.repetitionname='2';
-        [driftxy,driftinfoxy]=finddriftfeature(copystructReduce(locs,~ind),p);
-        driftinfoxy.mirror=mirror; driftinfoxy.midpoint=midpoint;
-        driftinfo.xy(2)=(driftinfoxy);
-        drift.xy(2)=copyfields(drift.xy(1),driftxy,{'x','y'});
-%         drift.xy(2).mirror=mirror;drift(2).midpoint=midpoint;
-    end
+%     if rep
+%          p.repetitionname='2';
+%         [driftxy,driftinfoxy]=finddriftfeature(copystructReduce(locs,~ind),p);
+%         driftinfoxy.mirror=mirror; driftinfoxy.midpoint=midpoint;
+%         driftinfo.xy(2)=(driftinfoxy);
+%         drift.xy(2)=copyfields(drift.xy(1),driftxy,{'x','y'});
+% %         drift.xy(2).mirror=mirror;drift(2).midpoint=midpoint;
+%     end
 
     
-if ~isempty(locs.znm)&&p.correctz
-    if p.correctxy
-        locsnew=copyfields(locs,applydriftcorrection(drift,locs),{'xnm','ynm'});
-    else
-        locsnew=locs;
-        drift=[];
-    end
-    [driftz,driftinfoz]=finddriftfeatureZ(locsnew,p);
-    
-    drift.z=driftz.z;%copyfields(drift,driftz,'z');
-     driftinfo.z=driftinfoz;%copyfields(driftinfo,driftinfoz);
-     fieldc={'xnm','ynm','znm'};
-else
-    fieldc={'xnm','ynm'};
-end
-% locsall=copyfields([],obj.locData.loc,{fieldc{:},'frame','filenumber'});
-% locsnew=applydriftcorrection(drift,locsall);
+% if ~isempty(locs.znm)&&p.correctz
+%     if p.correctxy
+%         locsnew=copyfields(locs,applydriftcorrection(drift,locs),{'xnm','ynm'});
+%     else
+%         locsnew=locs;
+%         drift=[];
+%     end
+%     [driftz,driftinfoz]=finddriftfeatureZ(locsnew,p);
+%     
+%     drift.z=driftz.z;%copyfields(drift,driftz,'z');
+%      driftinfo.z=driftinfoz;%copyfields(driftinfo,driftinfoz);
+%      fieldc={'xnm','ynm','znm'};
+% else
+%     fieldc={'xnm','ynm'};
+% end
+
 end
 
 function pard=guidef(obj)
@@ -229,29 +284,44 @@ function pard=guidef(obj)
 
 pard.dme_fbint.object=struct('String','frames/bin','Style','text');
 pard.dme_fbint.position=[2,1];
-pard.dme_fbint.Width=0.75;
+pard.dme_fbint.Width=1;
 
 pard.dme_fbin.object=struct('String','100','Style','edit');
-pard.dme_fbin.position=[2,1.65];
+pard.dme_fbin.position=[2,2];
 pard.dme_fbin.isnumeric=1;
-pard.dme_fbin.Width=0.25;
+pard.dme_fbin.Width=0.5;
 
+pard.maxneighbourst.object=struct('String','max neighbours','Style','text');
+pard.maxneighbourst.position=[3,1];
+pard.maxneighbourst.Width=1;
+
+pard.maxneighbours.object=struct('String','10000','Style','edit');
+pard.maxneighbours.position=[3,2];
+pard.maxneighbours.isnumeric=1;
+pard.maxneighbours.Width=0.5;
 
 p(1).value=0; p(1).on={}; p(1).off={'zranget','zrange'};
 p(2).value=1; p(2).on=p(1).off; p(2).off={};
-pard.correctz.object=struct('String','Correct z-drift','Style','checkbox','Value',0,'Callback',{{@obj.switchvisible,p}});
+pard.correctz.object=struct('String','Correct z-drift','Style','checkbox','Value',1,'Callback',{{@obj.switchvisible,p}});
 pard.correctz.position=[1,3];
 
 
-pard.zranget.object=struct('String','zrange nm','Style','text','Visible','off');
-pard.zranget.position=[4,3];
+pard.zranget.object=struct('String','zrange nm','Style','text','Visible','on');
+pard.zranget.position=[3,3];
 pard.zranget.Optional=true;
 
-pard.zrange.object=struct('String','-400 400','Style','edit','Visible','off');
-pard.zrange.position=[4,4];
+pard.zrange.object=struct('String','-400 400','Style','edit','Visible','on');
+pard.zrange.position=[3,4];
 pard.zrange.Optional=true;
 pard.zrange.Width=0.9;
 
+pard.crlbconst.object=struct('String','use median CRLB','Style','checkbox','Visible','on');
+pard.crlbconst.position=[4,1];
+% pard.crlbconst.Optional=true;
+
+pard.usegpu.object=struct('String','use GPU','Style','checkbox','Visible','on','Value',1);
+pard.usegpu.position=[5,1];
+% pard.usegpu.Optional=true;
 
 pard.drift_reference.object=struct('String','reference is last frame','Style','checkbox');
 pard.drift_reference.position=[7,3];

@@ -8,7 +8,7 @@ try
     notwork=false;
 save(file,'-struct','ls',v);
 catch err
-    err
+    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
     notwork=true;
 end
 [msg,msgid]=lastwarn;

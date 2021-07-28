@@ -1,8 +1,14 @@
-function oneFrame=render3DFrame(locs,f)
-
+function oneFrame=render3DFrame(locs,f,varargin)
+% Log: 
+%   210702: fix the tick labels (from pixels to the real scale)
+    pp = inputParser;
+    pp.addParameter('labelText', [])
+    pp.parse(varargin{:})
+    pp = pp.Results;
       p.sgauss=[1.5, 0.8];%smoothing of volume
             p.cutoff=4; % for isosurface, at max(V(:))/cutoff
-            p.cutoffdc=[2.2 3]; % for isosurface, at max(V(:))/cutoff
+%             p.cutoffdc=[2.2 3]; % for isosurface, at max(V(:))/cutoff
+            p.cutoffdc=[4 3]; % for isosurface, at max(V(:))/cutoff
             p.pxSize = 5; % pixel size
             
             mx = [0 200];
@@ -57,6 +63,15 @@ function oneFrame=render3DFrame(locs,f)
             lightangle(45,30);
             lighting gouraud
             colormap hot;
+            
+            if ~isempty(pp.labelText)
+                offset = [10 -10 -10];
+            	text(ax,0+offset(1),40+offset(2),80+offset(3), pp.labelText,'Color','white','FontSize',14)
+            end
+            set(ax,...
+                'XTickLabel', arrayfun(@num2str , (ax.XTick-median(ax.XTick)).*p.pxSize,'UniformOutput',false),...
+                'YTickLabel', arrayfun(@num2str , ax.YTick.*p.pxSize,'UniformOutput',false),...
+                'ZTickLabel', arrayfun(@num2str , (ax.ZTick-median(ax.ZTick)).*p.pxSize,'UniformOutput',false))
             drawnow
             oneFrame = getframe(f);
 %             oneFrame = oneFrame.cdata;

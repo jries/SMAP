@@ -12,7 +12,7 @@ nIterations =int32([
 
 disp('test cpu...');
 tic
-dme_cpu(coords, crlb, framenum, numspots, maxit, drift, framesperbin, gradientStep, maxdrift, scores, flags, maxneighbors, nIterations);
+dme_cpu(coords(1:2,:), crlb(1:2), framenum, numspots, maxit, drift(1:2,:), framesperbin, gradientStep, maxdrift, scores, flags, maxneighbors, nIterations);
 
 toc
 

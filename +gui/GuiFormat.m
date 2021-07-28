@@ -588,7 +588,7 @@ p.sr_sizeRecPix=round(p.sr_size/p.sr_pixrec*2);
 p.sr_pos=[mean(xext) mean(yext)];
 % p.rangex=xext;
 % p.rangey=yext;
-p.extendrange=true;
+% p.extendrange=true;
 
 p.sr_axes=hax;
 
@@ -618,6 +618,7 @@ if isempty(settings)
     settings.colorbarthickness=4;
     settings.plotscalebar=true;
     settings.customcheck=false;
+    settings.lutwhite=false;
 %     settings.plotlayernames=false;
 end
 [settings, button] = settingsdlg(...
@@ -626,8 +627,9 @@ end
     'Pixelsize',{'1x1','2x2','3x3','4x4'},...
     {'thickness of colorbar (pix)','colorbarthickness'},settings.colorbarthickness,...
     {'Plot scale bar';'plotscalebar'},[true ],...
+    {'Invert image for white background','lutwhite'},logical(settings.lutwhite),...
     {'Custom image size';'customcheck'},[false true],...
-    {'Imagesize (pixel) or magnification (if <20)','imsize'},num2str(settings.imsize) );
+    {'Imagesize (pixel) or magnification (if <20)','imsize'},num2str(settings.imsize));
      
 
 if strcmpi(button,'ok')
@@ -658,6 +660,7 @@ if strcmpi(button,'ok')
 %     obj.setPar('sr_layersseparate',settings.layerssep);
     obj.setPar('sr_colorbarthickness',settings.colorbarthickness);
     obj.setPar('sr_plotscalebar',settings.plotscalebar);
+    obj.setPar('sr_lutwhite',settings.lutwhite);
 %     obj.setPar('sr_plotlayernames',settings.plotlayernames);
 %     if settings.newfig
 %         obj.setPar('sr_axes',obj.makesrfigure((settings.fignumber)));
