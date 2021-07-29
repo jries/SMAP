@@ -171,7 +171,7 @@ if any(znm>0)
 end
 loc.time(:,1)=single(jt.tim(ind1))*1e3;  %from seconds to milliseconds
 loc.frame(:,1)=1:length(loc.xnm);
-loc.dcr(:,1)=single(jt.eco(ind2));
+loc.dcr(:,1)=single(jt.dcr(ind2));
 loc.cfr(:,1)=single(jt.cfr(ind2));
 loc.vld(:,1)=jt.vld(ind1);
 if loadall
