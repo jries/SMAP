@@ -309,7 +309,8 @@ function layerSetting_callback(a,b,obj)
     indices = b.Indices;
     layer = a.Data{indices(1),1};
     layer = strrep(layer,'layer','9');
-    [~,idx] = fitter.wherePar(['pars.m' layer '.offset.weight']);
+    offsetForm = obj.fitter.getAdvanceSetting(['m' num2str(layer) '_background']);
+    [~,idx] = fitter.wherePar(['pars.m' layer '.offset.' offsetForm]);
     fitter.allParsArg.(fn{indices(2)})(idx) = b.NewData;
     obj.fitter = fitter;
 end

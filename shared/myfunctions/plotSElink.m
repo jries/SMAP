@@ -1,4 +1,4 @@
-function plotSElink(varargin)
+function h = plotSElink(varargin)
 % axis (optional), x, y, sitenumber, SE-object, plot-parameters
 
 if isa(varargin{1},'matlab.graphics.axis.Axes')
@@ -18,7 +18,7 @@ sitenumber=sitenumber0(sortind);
 
 SE=varargin{startind+3};
 plotpar=varargin{startind+4};
-plothandle=plot(ax,xdat,ydat,plotpar);
+h=plot(ax,xdat,ydat,plotpar);
 
 parent=ax.Parent;
 while ~isa(parent,'matlab.ui.Figure')

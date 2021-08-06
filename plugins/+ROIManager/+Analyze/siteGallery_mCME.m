@@ -43,7 +43,11 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             section = p.section;
             
             siteID = getFieldAsVector(se.sites, 'ID');
-            [~,siteOrder] = ismember(sites2plot,siteID);
+            if ischar(sites2plot)&&startsWith(sites2plot, '#')
+                siteOrder = str2num(sites2plot(2:end));
+            else
+                [~,siteOrder] = ismember(sites2plot,siteID);
+            end
             subSites = se.sites(siteOrder);
             numOfPickedSites = length(subSites);
             obj.setPar('numOfPickedSites',numOfPickedSites);
@@ -77,6 +81,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             for np = 1:nPage
                 f=figure;
+                f.Name = 'siteGallery_mCME_result';
                 pan{np} = panel(f);
                 pan{np}.pack(dim(2), dim(1));
                 % [current]

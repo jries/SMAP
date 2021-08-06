@@ -84,13 +84,20 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
 
             %% Ring separation
             axRS=obj.initaxis('Ring separation vs z');
-            plotSElink(axRS, z,ringDistS1,ID,se,' ob')
+            hInc = plotSElink(axRS, z(lGood),ringDistS1(lGood),ID,se,' ob');
             hold(axRS,'on')
-            h = yline(axRS, twoRingCutoff);
+            hExc = plot(axRS, z(~lGood),ringDistS1(~lGood), 'ok');
+            if ~isempty(p.highlight)
+                plot(axRS, z(ismember(ID,p.highlight)),ringDistS1(ismember(ID,p.highlight)), 'or')
+            end
+            hRing = yline(axRS, twoRingCutoff);
+            hZ_lb = xline(axRS, -150);
+            hZ_ub = xline(axRS, 150);
             hold(axRS,'off')
             xlabel(axRS, 'z position (nm)')
             ylabel(axRS, 'Ring separation (nm)')
-            legend(h,{'Cutoff'})
+%             legend([hInc hExc hY hX],{'Included', 'Excluded', 'Cutoff: one-ring', 'Cutoff: out-of-focus'})
+            legend([hInc hExc],{'Included', 'Excluded'})
             
             %% Reletive z offset
             axRO=obj.initaxis('Reletive offset');
@@ -140,7 +147,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             h = yline(axCF, expectSep/twoRingCutoff);
             hold(axCF,'off')
             xlabel(axCF, 'z position (nm)')
-            ylabel(axCF, 'Relative offset (%)')
+            ylabel(axCF, 'Correction factor')
             legend([h_TwoRing h_NotTwoRing h h1 pf],{'Included','Excluded','Cutoff','Move median','Quadratic fit'})
             
             %% histogram
@@ -349,6 +356,12 @@ function pard=guidef
 pard.preview.object=struct('String','Preview','Style','checkbox');
 pard.preview.position=[2,1];
 pard.preview.Width=1.5;
+
+pard.t_highlight.object=struct('String','Highlight (siteID)','Style','text');
+pard.t_highlight.position=[3,1];
+
+pard.highlight.object=struct('String','','Style','edit');
+pard.highlight.position=[3,2];
 
 pard.plugininfo.type='ProcessorPlugin';
 

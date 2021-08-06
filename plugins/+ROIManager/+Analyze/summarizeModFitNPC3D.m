@@ -57,7 +57,9 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             bg = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxBG);
             
             numOfLocsLayer1 = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.numOfLocsPerLayer'],1);
-            bgDensity = numOfLocsLayer1.*bg/(p.se_siteroi/1000)^3;
+            bgDensity = numOfLocsLayer1.*bg./(pi*(p.se_siteroi/2)^2/1000^2);
+            
+            bgDensity_fitter = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.BGDensity'],1);
             
             lOneRing = ringDist<=cutoffOneRing;
             
