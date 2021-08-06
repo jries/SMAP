@@ -1,4 +1,6 @@
 classdef SMLMModelFitGUI<interfaces.SEEvaluationProcessor
+    % Important:  This plugin is obsolete and will be removed in future
+    % update. Please use LocMoFitGUI instead.
     properties
         fitter              % An SMLMModelFit object.
         numMod              % Number of component models.
