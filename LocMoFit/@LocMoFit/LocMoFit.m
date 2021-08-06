@@ -52,7 +52,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         currentCascadeStep = 1; % Indicating the curent cascasde step.
     end
     methods
-        function obj = SMLMModelFit(varargin)
+        function obj = LocMoFit(varargin)
             % Construct the object of the class 'SMLMModelFit'
             %
             % Usage:

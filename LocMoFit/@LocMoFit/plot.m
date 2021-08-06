@@ -1,7 +1,8 @@
-Display the fit results
-For a coordinate-based model in 3D, the fitted model can be displayed as points, projected images, or both simultaneously.
 function [ax,finalImg] = plot(obj,locs,varargin)          % visualize the best fit
-Initiation
+%% PLOT Display the fit results
+% For a coordinate-based model in 3D, the fitted model can be displayed as points, 
+% projected images, or both simultaneously.
+%% Initiation
 p = inputParser;
 p.addParameter('bestPar',true);
 p.addParameter('lPars',[]);
@@ -19,12 +20,10 @@ p.addParameter('doNotPlot', false);
 p.addParameter('modelSamplingFactor', []);
 p.addParameter('displayLocs',1)
 p.addParameter('color_max',ones([1 obj.numOfLayer])*255)
-
 % If the first argument is an handle of axes, then use it as the parent
 if ~exist('locs',"var")
     locs = obj.locs;
 end
-
 if isa(locs,'matlab.graphics.axis.Axes')
     ax = locs;
     locs = varargin{1};
@@ -35,20 +34,18 @@ results = p.Results;
 whichModel = results.whichModel;
 projection = results.Projection;
 pixelSize = results.pixelSize;
-
-Check the model types and the number of layers
-If any of the model is an image then display an image at the end.
+%% Check the model types and the number of layers
+% If any of the model is an image then display an image at the end.
 for k = obj.numOfModel:-1:1
     modelType{k} = obj.model{k}.modelType;
     modelLayer(k) = obj.model{k}.layer;
 end
-
 if ismember({'image'}, modelType)
     results.plotType = 'image';
 end
 allModelLayers = unique(modelLayer);
-Transform lPars to the shared coordinates system
-Only do lPars have additionality always move the model rather than the locs
+%% Transform lPars to the shared coordinates system
+% Only do lPars have additionality always move the model rather than the locs
 if results.bestPar
     lPars = {};
     for k = 1:obj.numOfModel
@@ -72,8 +69,9 @@ if results.bestPar
 else
     lPars = results.lPars;
 end
-Get images of the models
- Image model should always display image visulization, while point model can display either image or point visulization.
+%% Get images of the models
+% Image model should always display image visulization, while point model can 
+% display either image or point visulization.
 % Determine the image size
 modelType = obj.model{1}.modelType;
 modelDim = obj.model{1}.dimension;
@@ -100,7 +98,7 @@ end
 if any(imgSize == 0)
     imgSize = repelem((obj.roiSize+2*obj.imgExtension), modelDim)./pixelSize;
 end
-        For the image type
+%         For the image type
 if isequal(results.plotType,'image')
     % for an image model, use the method 'plot()' of image model class
     % to generate the image
@@ -182,7 +180,7 @@ if isequal(results.plotType,'image')
             modelImage{k} = finalImg;
         end
     end
-        For the point type   
+%         For the point type   
 else
     for k = obj.numOfModel:-1:1
         if k==1
@@ -225,9 +223,8 @@ else
         end
     end
 end
-
-Render the models
-Generate for each layer an image
+%% Render the models
+% Generate for each layer an image
 dataCol = {'r','g','b'};
 if isequal(results.plotType,'image')
 %     nameAllLut = mymakelut;
@@ -299,7 +296,7 @@ else
         end
     end
 end
-Display images
+%% Display images
 if isequal(results.plotType,'image')&&~isempty(locs)
     % project the 3D image
     if obj.dataDim == 3
