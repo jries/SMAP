@@ -1,283 +1,387 @@
+Display the fit results
+For a coordinate-based model in 3D, the fitted model can be displayed as points, projected images, or both simultaneously.
 function [ax,finalImg] = plot(obj,locs,varargin)          % visualize the best fit
-    % initiation
-    p = inputParser;
-    p.addParameter('bestPar',true);
-    p.addParameter('lPars',[]);
-    p.addParameter('mPars',[]);
-    p.addParameter('plotType','image');
-    p.addParameter('whichModel', obj.numOfModel);
-    p.addParameter('Projection', 'xy');
-    p.addParameter('pixelSize', 2);
-    p.addParameter('axes', []);
-    p.addParameter('movModel', true);
-    p.addParameter('normalizationMax', true);
-    parse(p, varargin{:});
-    results = p.Results;
-    whichModel = results.whichModel;
-    projection = results.Projection;
-    pixelSize = results.pixelSize;
-    
-    
-    if results.bestPar                                  %??? maybe user would like to view with specific parameters?
-         %% transformed lPars to the shared coordinates system
-         % only do lPars have additionality 
-         % always move the model rather than the locs
-         lPars = {};
-         for k = 1:obj.numOfModel
-            indModel = obj.allParsArg.model == k;
-            indLp = ismember(obj.allParsArg.type,'lPar');
-            indMp = ismember(obj.allParsArg.type,'mPar');
-            % lPars
-            fn = obj.allParsArg.name(indModel&indLp);
-            bestFit = obj.allParsArg.value(indModel&indLp);
-            if k == 1
-                for l = 1:length(fn)
-                    lPars{k}.(fn{l}) = bestFit(l);
-                end
-            else
-                for l = 1:length(fn)
-                    lPars{k}.(fn{l}) = lPars{k-1}.(fn{l}) + bestFit(l);
-                end
+Initiation
+p = inputParser;
+p.addParameter('bestPar',true);
+p.addParameter('lPars',[]);
+p.addParameter('mPars',[]);
+p.addParameter('plotType','image');                   % can be either image or point
+p.addParameter('whichModel', obj.numOfModel);
+p.addParameter('Projection', 'xy');
+p.addParameter('pixelSize', obj.model{1}.pixelSize);
+p.addParameter('axes', []);
+p.addParameter('movModel', false);
+p.addParameter('normalizationMax', true);
+p.addParameter('shift', [0 0 0]);                     %!!! This is implemented for the case when model is cropped at the edge. Need to be further tested.
+p.addParameter('color', {});                          %!!! need to be further introduced. take the input from SMAP
+p.addParameter('doNotPlot', false);
+p.addParameter('modelSamplingFactor', []);
+p.addParameter('displayLocs',1)
+p.addParameter('color_max',ones([1 obj.numOfLayer])*255)
+
+% If the first argument is an handle of axes, then use it as the parent
+if ~exist('locs',"var")
+    locs = obj.locs;
+end
+
+if isa(locs,'matlab.graphics.axis.Axes')
+    ax = locs;
+    locs = varargin{1};
+    varargin(1)=[];
+end
+parse(p, varargin{:});
+results = p.Results;
+whichModel = results.whichModel;
+projection = results.Projection;
+pixelSize = results.pixelSize;
+
+Check the model types and the number of layers
+If any of the model is an image then display an image at the end.
+for k = obj.numOfModel:-1:1
+    modelType{k} = obj.model{k}.modelType;
+    modelLayer(k) = obj.model{k}.layer;
+end
+
+if ismember({'image'}, modelType)
+    results.plotType = 'image';
+end
+allModelLayers = unique(modelLayer);
+Transform lPars to the shared coordinates system
+Only do lPars have additionality always move the model rather than the locs
+if results.bestPar
+    lPars = {};
+    for k = 1:obj.numOfModel
+        indModel = obj.allParsArg.model == k;
+        indLp = ismember(obj.allParsArg.type,'lPar');
+        indMp = ismember(obj.allParsArg.type,'mPar');
+        % lPars
+        fn = obj.allParsArg.name(indModel&indLp);
+        bestFit = obj.allParsArg.value(indModel&indLp);
+%         if k == 1
+            for l = 1:length(fn)
+                lPars{k}.(fn{l}) = bestFit(l);
             end
-         end
-    else
-        lPars = results.lPars;
+%         else
+            % aligned all models to the model one
+%             for l = 1:length(fn)
+%                 lPars{k}.(fn{l}) = lPars{1}.(fn{l}) + bestFit(l);
+%             endR
+%         end
     end
-        %% get an image of the model
-        modelType = obj.model{1}.modelType;
-        modelDim = obj.model{1}.dimension;
-        imgSize = size(obj.model{1}.img);
-        imgSize = imgSize./pixelSize;
-        if any(imgSize == 0)
-            imgSize = repelem(obj.roiSize, modelDim)./pixelSize;
+else
+    lPars = results.lPars;
+end
+Get images of the models
+ Image model should always display image visulization, while point model can display either image or point visulization.
+% Determine the image size
+modelType = obj.model{1}.modelType;
+modelDim = obj.model{1}.dimension;
+imgSize = size(obj.model{1}.img);
+if ~strcmp(modelType,'image')
+    imgSize = imgSize./pixelSize;
+end
+lParM1 = obj.exportPars(1,'lPar');
+if strcmp(modelType,'image')
+    lParM1.x = lParM1.x-pixelSize;
+    lParM1.y = lParM1.y-pixelSize;
+    if obj.dataDim==3
+        lParM1.z = lParM1.z-pixelSize;
+    end
+end
+if ~isempty(locs)
+    % do not transform the locs if moving the model
+    if ~results.movModel
+        newLocs = obj.locsHandler(locs, lParM1,1);
+    else
+        newLocs = locs;
+    end
+end
+if any(imgSize == 0)
+    imgSize = repelem((obj.roiSize+2*obj.imgExtension), modelDim)./pixelSize;
+end
+        For the image type
+if isequal(results.plotType,'image')
+    % for an image model, use the method 'plot()' of image model class
+    % to generate the image
+    artBoard = zeros(imgSize);
+    for k = 1:obj.numOfModel
+        if ~isequal(obj.model{k}.modelType,'image')
+            obj.model{k}.deriveSigma(locs);
         end
-        finalImg = zeros(imgSize);
-
-        if isequal(modelType, 'discrete')
-            fig = figure('Name', 'Fit result');
-            ax = axes(fig);
-            % need to allow different model
-            mPars = obj.exportPars(1,'mPar');
-            oneModel = obj.model{1}.modelFun(mPars);
-            % translate lPars to mPars
-            lPars = obj.exportPars(1,'lPar');
-            if results.movModel
-                locs = obj.locsHandler(locs, lPars);
-                %% !!!specific for NPC, should be removed later
-                lLocsUpRing = locs.znm>=0;
-                lModelUpRing = oneModel.z >= 0;
-                plot3(ax, oneModel.x(lModelUpRing), oneModel.y(lModelUpRing), oneModel.z(lModelUpRing), ' or', 'MarkerSize', 12, 'MarkerFaceColor', [1 0 0]);
-                hold(ax, 'on')
-                plot3(ax, oneModel.x(~lModelUpRing), oneModel.y(~lModelUpRing), oneModel.z(~lModelUpRing), ' or', 'MarkerSize', 12, 'MarkerFaceColor', [1 0.7 0.7]);
-                hold(ax, 'off')
-            else
-                oneModel.x = oneModel.x + lPars.x;
-                oneModel.y = oneModel.y + lPars.y;
-                oneModel.z = oneModel.z + lPars.z;
-                [oneModel.x, oneModel.z] = rotcoord(oneModel.x, oneModel.z, lPars.yrot*pi/180);
-                [oneModel.x, oneModel.y] = rotcoord(oneModel.x, oneModel.y, lPars.zrot*pi/180);
-                [oneModel.y, oneModel.z] = rotcoord(oneModel.y, oneModel.z, lPars.xrot*pi/180);
-                plot3(ax, oneModel.x, oneModel.y, oneModel.z, ' or')
-            end
-        elseif isequal(results.plotType, 'point')
-            if modelDim == 3
-                for k = 1:obj.numOfModel
-                    if results.bestPar
-                        oneMPars = obj.exportPars(k,'mPar');          % get mPars
-                    else
-                        oneMPars = results.mPars{k};
-                    end
-                    reference{k} = obj.model{k}.modelFun(oneMPars,3);
-
-                    if results.movModel
-                        locs = obj.locsHandler(locs, lPars{k});
-                    else
-                        % translate lPars to mPars
-                        xPos=lPars{k}.x;
-                        yPos=lPars{k}.y;
-                        zPos=lPars{k}.z;
-                        xrot=lPars{k}.xrot;
-                        yrot=lPars{k}.yrot;
-                        zrot=lPars{k}.zrot;
-
-                        [reference{k}.x,reference{k}.z] = rotcoord(reference{k}.x+xPos,reference{k}.z+zPos,yrot*pi/180);
-                        [reference{k}.y,reference{k}.z] = rotcoord(reference{k}.y+yPos,reference{k}.z,xrot*pi/180);
-                        [reference{k}.x,reference{k}.y] = rotcoord(reference{k}.x,reference{k}.y,zrot*pi/180);
-                        reference{k}.x = reference{k}.x;
-                        reference{k}.y = reference{k}.y;
-                        reference{k}.z = reference{k}.z;
-                    end
-                 end
-            else
-            end
-        else
-            % for image model
-            if modelDim == 3
-                for k = 1:obj.numOfModel
-                    if results.movModel
-                        oneMPars = obj.exportPars(k,'mPar');          % get mPars
-                        img = obj.model{k}.getImage(oneMPars, 'pixelSize',pixelSize,'roiSize',obj.roiSize);
-
-                        % translate lPars to mPars
-                        [X,Y,Z] = meshgrid(1:imgSize(1),1:imgSize(2),1:imgSize(3)); 
-                        F = griddedInterpolant(img,'cubic', 'nearest');
-
-                        xPos=lPars{k}.x;
-                        yPos=lPars{k}.y;
-                        zPos=lPars{k}.z;
-                        xrot=lPars{k}.xrot;
-                        yrot=lPars{k}.yrot;
-                        zrot=lPars{k}.zrot;
-
-                        XMean = mean(X(:)); YMean = mean(Y(:)); ZMean = mean(Z(:));
-                        cenX = X-XMean;
-                        cenY = Y-YMean;
-                        cenZ = Z-ZMean;
-                        [cenX, cenZ] = rotcoord(cenX(:),cenZ(:),-yrot*pi/180);
-                        [cenY, cenZ] = rotcoord(cenY(:),cenZ(:),-xrot*pi/180);
-                        [cenX, cenY] = rotcoord(cenX(:),cenY(:),-zrot*pi/180);
-                        valNew = F(cenX+XMean-(xPos)./pixelSize, cenY+YMean-(yPos)./pixelSize, cenZ+ZMean-(zPos)./pixelSize);
-                        ind = sub2ind(imgSize, X(:),Y(:),Z(:));
-                        finalImg(ind)=finalImg(ind)+valNew;
-                    else
-                        oneMPars = obj.exportPars(k,'mPar');          % get mPars
-                        img = obj.model{k}.getImage(oneMPars, 'pixelSize',pixelSize,'roiSize',obj.roiSize);
-                        if k == 1
-                            finalImg = img;
-                            if results.normalizationMax
-                                img = img/max(img,1:2);
-                            end
-                        else
-                            oneMPars = obj.exportPars(k,'mPar');          % get mPars
-                            oneLPars = obj.exportPars(k,'lPar');          % get mPars
-                            img = obj.model{k}.getImage(oneMPars, 'pixelSize',pixelSize,'roiSize',obj.roiSize);
-                            if results.normalizationMax
-                                img = img/max(img,1:2);
-                            end
-
-                            % translate lPars to mPars
-                            [X,Y,Z] = meshgrid(1:imgSize(1),1:imgSize(2),1:imgSize(3)); 
-                            F = griddedInterpolant(img,'cubic', 'nearest');
-
-                            xPos=oneLPars.x;
-                            yPos=oneLPars.y;
-                            zPos=-oneLPars.z;
-                            xrot=oneLPars.xrot;
-                            yrot=oneLPars.yrot;
-                            zrot=oneLPars.zrot;
-
-                            XMean = mean(X(:)); YMean = mean(Y(:)); ZMean = mean(Z(:));
-                            cenX = X-XMean;
-                            cenY = Y-YMean;
-                            cenZ = Z-ZMean;
-                            [cenX, cenZ] = rotcoord(cenX(:),cenZ(:),-yrot*pi/180);
-                            [cenY, cenZ] = rotcoord(cenY(:),cenZ(:),-xrot*pi/180);
-                            [cenX, cenY] = rotcoord(cenX(:),cenY(:),-zrot*pi/180);
-                            valNew = F(cenX+XMean-(xPos)./pixelSize, cenY+YMean-(yPos)./pixelSize, cenZ+ZMean-(zPos)./pixelSize);
-                            ind = sub2ind(imgSize, X(:),Y(:),Z(:));
-                            finalImg(ind) = finalImg(ind)+valNew;
-                        end
-                    end
-                end
-            else
-                for k = 1:obj.numOfModel
-                    oneMPars = obj.exportPars(k,'mPar');          % get mPars
-                    img = obj.model{k}.getImage(oneMPars, 'pixelSize',pixelSize,'roiSize',obj.roiSize);
-                    if results.normalizationMax
-                        img = img/max(img,[],1:2);
-                    end
-                    % translate lPars to mPars
-                    [X,Y] = meshgrid(1:imgSize(1),1:imgSize(2)); 
-
-                    F = griddedInterpolant(img,'cubic', 'nearest');
-
-                    xPos=lPars{k}.x;
-                    yPos=lPars{k}.y;
-                    zrot=lPars{k}.zrot;
-
-                    XMean = mean(X(:)); YMean = mean(Y(:));
-                    cenX = X-XMean;
-                    cenY = Y-YMean;
-                    [cenX, cenY] = rotcoord(cenX(:),cenY(:),-zrot*pi/180);
-                    % the X and Y coordinates need not to be inverted using griddedInterpolant
-                    valNew = F(cenX+XMean-(xPos)./pixelSize, cenY+YMean-(yPos)./pixelSize);
-                    ind = sub2ind(imgSize, X(:),Y(:));
-                    finalImg(ind)=finalImg(ind)+valNew;
-                end
-            end
-
-
-            switch projection
-                case 'xy'
-                    finalImg = squeeze(mean(finalImg,3));
-                case 'xz'
-                    finalImg = squeeze(mean(finalImg,2));
-                case 'yz'
-                    finalImg = squeeze(mean(finalImg,1));
-            end
-
-            if ~isempty(results.axes)
-                ax = results.axes;
-            else
-                fig = figure('Name', 'Fit result');
-                ax = axes(fig);
-            end
-            imagesc(ax, finalImg')
-        end
-        if isequal(results.plotType, 'point')
-                if ~isempty(results.axes)
-                    ax = results.axes;
-                else
-                    fig = figure('Name', 'Fit result');
-                    ax = axes(fig);
-                end
-                for k = 1:obj.numOfModel
-                    hold(ax, 'on')
-                    plot3(ax, reference{k}.x, reference{k}.y, reference{k}.z, ' ok', 'MarkerSize', 4, 'MarkerFaceColor', 'r')
-                end
-        end        
-        % projection for locs
-        if isequal(results.plotType, 'image')
+        if k==1
+            oneMPars = obj.exportPars(k,'mPar');
             if ~results.movModel
-                locs = obj.locsHandler(locs,lPars{k});
-            end
-            switch projection
-                case 'xy'
-                    dim1 = locs.xnm; dim2 = locs.ynm;
-                case 'xz'
-                    dim1 = locs.xnm; dim2 = locs.znm;
-                case 'yz'
-                    dim1 = locs.ynm; dim2 = locs.znm;
-            end
-        end
-
-        if ~isfield(locs,'layer')
-            locs.layer = ones(size(locs.xnm));
-        end
-        layerType = unique(locs.layer);
-        col = {'b','g'};
-
-        if isequal(obj.model{whichModel}.modelType, 'discrete')
-            hold(ax, 'on')
-            for k = length(layerType):-1:1
-                lOneLayer = locs.layer == layerType(k);
-                if isvarname('lLocsUpRing')
-                    plot3(ax, locs.xnm(lLocsUpRing), locs.ynm(lLocsUpRing), locs.znm(lLocsUpRing), ' ow', 'MarkerSize', 8, 'MarkerFaceColor', [0 0 1])
-                    plot3(ax, locs.xnm(~lLocsUpRing), locs.ynm(~lLocsUpRing), locs.znm(~lLocsUpRing), ' ow', 'MarkerSize', 8, 'MarkerFaceColor', [0.5 0.5 1])
-                else
-                    plot3(ax, locs.xnm(lOneLayer), locs.ynm(lOneLayer), locs.znm(lOneLayer), ' ob', 'MarkerSize', 6, 'MarkerFaceColor', col{k})
-                end
+                modelImage{k} = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
+            else %!!! only for the tac figures
+                oneLPars = obj.exportPars(k,'lPar');
+                img = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
+                [X,Y] = meshgrid(1:imgSize(1),1:imgSize(2));
+                F = griddedInterpolant(img,'cubic', 'nearest');
+                xPos=oneLPars.x;
+                yPos=oneLPars.y;
+                zrot=oneLPars.zrot;
+                XMean = mean(X(:)); YMean = mean(Y(:));
+                cenX = X-XMean;
+                cenY = Y-YMean;
+                cenX = cenX-(xPos)./pixelSize;
+                cenY = cenY-(yPos)./pixelSize;
+                [cenX, cenY] = rotcoord(cenX(:),cenY(:),-zrot*pi/180);
+                valNew = F(cenX+XMean + results.shift(2)/pixelSize , cenY+YMean+results.shift(1)/pixelSize);
+                ind = sub2ind(imgSize, X(:),Y(:));
+                finalImg = artBoard;
+                finalImg(ind)=valNew;
+                modelImage{k} = finalImg;
+                
             end
         else
-            hold(ax, 'on')
-            for k = length(layerType):-1:1
-                lOneLayer = locs.layer == layerType(k);
-                if isequal(results.plotType, 'image')
-                    plot(ax, (dim1(lOneLayer)+obj.roiSize/2)/pixelSize, (dim2(lOneLayer)+obj.roiSize/2)/pixelSize, ' ow', 'MarkerSize', 3, 'MarkerFaceColor', col{k})
-                else
-                    plot3(ax, locs.xnm(lOneLayer), locs.ynm(lOneLayer),locs.znm(lOneLayer), ' ob', 'MarkerSize', 6, 'MarkerFaceColor', col{k})
-                end
+            oneMPars = obj.exportPars(k,'mPar');
+            img = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
+            
+            % translate lPar to mPar
+            oneLPars = obj.exportPars(k,'lPar');          % get lPars
+            
+            % get unit grid points
+            if isfield(newLocs,'znm')
+                % for 3D
+                [X,Y,Z] = meshgrid(1:imgSize(1),1:imgSize(2),1:imgSize(3));
+                zPos=oneLPars.z;
+                xrot=oneLPars.xrot;
+                yrot=oneLPars.yrot;
+                
+                ZMean = mean(Z(:));
+                cenZ = Z-ZMean;
+            else
+                % for 2D
+                [X,Y] = meshgrid(1:imgSize(1),1:imgSize(2));
+            end
+            F = griddedInterpolant(img,'cubic', 'nearest');
+            
+            xPos=oneLPars.x;
+            yPos=oneLPars.y;
+            zrot=oneLPars.zrot;
+            
+            XMean = mean(X(:)); YMean = mean(Y(:));
+            cenX = X-XMean;
+            cenY = Y-YMean;
+            
+            
+            if isfield(newLocs,'znm')
+                % for 3D
+                [cenX, cenY, cenZ] = rotcoord3(cenX(:),cenY(:),cenZ(:),deg2rad(xrot),deg2rad(yrot),deg2rad(zrot),'XYZ');
+                valNew = F(cenX+XMean-(xPos)./pixelSize, cenY+YMean-(yPos)./pixelSize, cenZ+ZMean-(zPos)./pixelSize);
+                ind = sub2ind(imgSize, X(:),Y(:),Z(:));
+            else
+                % for 2D
+                [cenX, cenY] = rotcoord(cenX(:),cenY(:),-zrot*pi/180);
+                valNew = F(cenX+XMean-(xPos)./pixelSize + results.shift(2)/pixelSize , cenY+YMean-(yPos)./pixelSize+results.shift(1)/pixelSize);
+                ind = sub2ind(imgSize, X(:),Y(:));
+            end
+            finalImg = artBoard;
+            finalImg(ind) = valNew;
+            modelImage{k} = finalImg;
+        end
+    end
+        For the point type   
+else
+    for k = obj.numOfModel:-1:1
+        if k==1
+            oneMPars = obj.exportPars(k,'mPar');
+            if isempty(results.modelSamplingFactor)
+                modelPoint{k} = obj.model{k}.getPoint(oneMPars);
+            else
+                modelPoint{k} = obj.model{k}.getPoint(oneMPars,'factor',results.modelSamplingFactor);
+            end
+            
+        else
+            oneMPars = obj.exportPars(k,'mPar');
+            if isempty(results.modelSamplingFactor)
+                ref = obj.model{k}.getPoint(oneMPars);
+            else
+                ref = obj.model{k}.getPoint(oneMPars,'factor',results.modelSamplingFactor);
+            end
+            
+            % translate lPar to mPar
+            oneLPars = obj.exportPars(k,'lPar');          % get lPars
+            fn = fieldnames(oneLPars);
+            lFn2rm = ismember(fn,{'xscale','yscale'});
+            fn = fn(~lFn2rm);
+            for l = 1:length(fn)
+                oneLPars.(fn{l}) = -oneLPars.(fn{l});
+            end
+            
+            pseudoLocs.xnm = ref.x;
+            pseudoLocs.ynm = ref.y;
+            if obj.model{1}.dimension == 3
+                pseudoLocs.znm = ref.z;
+            end
+            newPseudoLocs = obj.locsHandler(pseudoLocs, oneLPars,[],'usedformalism','rotationMatrixRev');
+            ref.x = newPseudoLocs.xnm;
+            ref.y = newPseudoLocs.ynm;
+            if obj.model{1}.dimension == 3
+                ref.z = newPseudoLocs.znm;
+            end
+            modelPoint{k} = ref;
+        end
+    end
+end
+
+Render the models
+Generate for each layer an image
+dataCol = {'r','g','b'};
+if isequal(results.plotType,'image')
+%     nameAllLut = mymakelut;
+    img2disp = artBoard(:,:,1);
+    for ch = 1:length(allModelLayers)
+        oneCh = artBoard;
+        indModelOneCh = find(modelLayer == allModelLayers(ch));
+        if isempty(obj.linkedGUI)
+            warning('The GUI object is not linked.')
+            nameLut{ch} = 'cyan';
+        else
+            if obj.numOfLayer==1
+                nameLut{ch} = 'cyan';
+            else
+                nameLut{ch} = obj.linkedGUI.getPar(['layer' num2str(ch) '_lut']).selection;
             end
         end
-    axis(ax, 'equal')
+        for k = 1:length(indModelOneCh)
+            indOneModel = indModelOneCh(k);
+            if ~isempty(obj.fitInfo)
+                % before 200605
+%                 oneImage = modelImage{indOneModel}.*obj.fitInfo.weightModel{indOneModel};
+                disp('!!!200605: changed, check here if warning.')
+                oneImage = modelImage{indOneModel};
+            else
+                oneImage = modelImage{indOneModel};
+            end
+            if k == 1
+                oneCh = artBoard;
+            end
+            oneCh = oneCh+oneImage;
+        end
+        if obj.dataDim == 3
+            switch projection
+                case 'xy'
+                    oneCh = squeeze(mean(oneCh,3));
+                case 'xz'
+                    oneCh = squeeze(mean(oneCh,2));
+                case 'yz'
+                    oneCh = squeeze(mean(oneCh,1));
+            end
+        end
+        if ~isempty(obj.weightLayer)
+            % before 200605
+%               img2disp = img2disp + ind2rgb(ceil((oneCh./max(oneCh,[],1:length(size(oneCh)))).*obj.weightLayer(ch)*255)', mymakelut(nameAllLut{ch})); %%% !!!!!!quick and dirty
+                disp('!!!200605: changed, check here if warning.')
+            img2disp = img2disp + ind2rgb(ceil((oneCh./max(oneCh,[],1:length(size(oneCh)))).*results.color_max(ch))', mymakelut(nameLut{ch})); %%% !!!!!!quick and dirty
+        else
+            img2disp = img2disp + ind2rgb(ceil((oneCh./max(oneCh,[],1:length(size(oneCh)))).*results.color_max(ch))', mymakelut(nameLut{ch}));
+        end
+    end
+    finalImg = img2disp; %%%quick and dirty
+else
+    for ch = 1:length(allModelLayers)
+        layerPoint{ch}.x = [];
+        layerPoint{ch}.y = [];
+        layerPoint{ch}.z = [];
+        layerPoint{ch}.n = [];
+        indModelOneCh = find(modelLayer == allModelLayers(ch));
+        for k = 1:length(indModelOneCh)
+            indOneModel = indModelOneCh(k);
+            onePoint = modelPoint{indOneModel};
+            layerPoint{ch}.x = [layerPoint{ch}.x; onePoint.x];
+            layerPoint{ch}.y = [layerPoint{ch}.y; onePoint.y];
+            if obj.model{1}.dimension == 3
+                layerPoint{ch}.z = [layerPoint{ch}.z; onePoint.z];
+            end
+            layerPoint{ch}.n = [layerPoint{ch}.n; onePoint.n];
+        end
+    end
+end
+Display images
+if isequal(results.plotType,'image')&&~isempty(locs)
+    % project the 3D image
+    if obj.dataDim == 3
+        switch projection
+            case 'xy'
+                dim1 = newLocs.xnm./pixelSize+imgSize(2)/2;
+                dim2 = newLocs.ynm./pixelSize+imgSize(1)/2;
+            case 'xz'
+                dim1 = newLocs.xnm./pixelSize+imgSize(2)/2;
+                dim2 = newLocs.znm./pixelSize+imgSize(3)/2;
+            case 'yz'
+                dim1 = newLocs.ynm./pixelSize+imgSize(1)/2;
+                dim2 = newLocs.znm./pixelSize+imgSize(3)/2;
+        end
+    end
+    % show the image
+    if ~exist('ax', 'var')
+        if ~results.doNotPlot
+            fig = figure;
+            ax = axes(fig);
+        else
+            ax = [];
+        end
+    end
+    if ~results.doNotPlot
+        imagesc(ax, img2disp);
+    end
+    
+    % display the locs channel by channel
+    if results.displayLocs
+        if ~results.doNotPlot
+            for layer = 1:length(allModelLayers)
+                % get the locs too
+                hold(ax, 'on')
+                if ~isempty(locs) && obj.dataDim==2
+                    dim1 = newLocs.xnm./pixelSize+imgSize(2)/2;
+                    dim2 = newLocs.ynm./pixelSize+imgSize(1)/2;
+                end
+                currentLut = mymakelut(nameLut{layer});
+                if obj.numOfLayer==1
+                    oneLut = mymakelut('red hot');
+                    oneColor = oneLut(140,:);
+                    plot(ax, dim1(locs.layer==layer), dim2(locs.layer==layer), ' o', 'MarkerFaceColor', oneColor, 'MarkerEdgeColor','k', 'MarkerSize',2.5);
+                else
+                    plot(ax, dim1(locs.layer==layer), dim2(locs.layer==layer), ' o', 'MarkerFaceColor', currentLut(100,:), 'MarkerEdgeColor','w', 'LineWidth',1, 'MarkerSize',3);
+                end
+                hold(ax,'off')
+            end
+        end
+    end
+else
+    % for point view
+    if ~exist('ax', 'var')
+        if ~results.doNotPlot
+            fig = figure;
+            ax = axes(fig);
+        else
+            ax = [];
+        end
+    end
+    if ~isfield(locs,'znm')&&~isempty(locs)
+        newLocs.znm = zeros(size(newLocs.xnm));
+    end
+    for layer = 1:length(allModelLayers)
+        if isempty(layerPoint{layer}.z )
+            disp('Check here when getting error.')
+            % 200610 modified:
+%             layerPoint{layer}.z = zeros(size(layerPoint{layer}.x));
+            layerPoint{layer} = rmfield(layerPoint{layer}, 'z');
+        end
+        if ~results.doNotPlot
+            hold(ax, 'on')
+            plot3(ax,layerPoint{layer}.x,layerPoint{layer}.y,layerPoint{layer}.z, ' o', 'MarkerFaceColor', dataCol{layer}, 'MarkerEdgeColor','k', 'LineWidth',1.5,'MarkerSize',6)
+            plot3(ax,newLocs.xnm(locs.layer==layer),newLocs.ynm(locs.layer==layer),newLocs.znm(locs.layer==layer), ' o', 'MarkerFaceColor', dataCol{layer}, 'MarkerEdgeColor','w', 'LineWidth',1.5,'MarkerSize',6)
+            hold(ax, 'off')
+        end
+    end
+    % display all others
+    %         newLocs.xnm(~ismember(locs.layer, allModelLayers))
+    finalImg = layerPoint;
+end
+if ~results.doNotPlot
+    axis(ax,'equal')
+end
 end
