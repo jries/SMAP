@@ -70,8 +70,6 @@ classdef SEEvaluationGui< interfaces.SEProcessor
                         % Yu-Le added
                         if startsWith(modules{k}, 'SMLMModelFitGUI')
                             obj.addmodule('LocMoFitGUI', par)
-%                             lastModule = obj.processors{end};
-%                             lastModule.setGuiParameters(pchild,true,setmenulist);
                         else
                             % original
                             addmodule(obj,mh,par);

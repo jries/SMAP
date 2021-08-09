@@ -106,11 +106,11 @@ switch mode
         end
     case 'Data'
         v = zeros([obj.roiSize./2 obj.roiSize./2]);
-        
         % Deal with locs
         for k = 1:max(locsCoord.layer)
+            lLayer = locsCoord.layer==k;
+            locsCoordSub = subsetStruct(locsCoord, lLayer&lSectionLocs);
             if isempty(obj.linkedGUI)
-                lLayer = locsCoord.layer==k;
                 roiks = 2.7;
                 if isempty(obj.getTemp('gausstemplate'))
                     G = creategausstemplate(roiks);
@@ -118,7 +118,7 @@ switch mode
                 else
                     G = obj.getTemp('gausstemplate');
                 end
-                thisImg = getModelImg(locsCoord.xnm(lLayer&lSectionLocs), locsCoord.ynm(lLayer&lSectionLocs), 'roiSize', obj.roiSize, 'pixelSize', pixelSize, 'sigma', locsCoord.locprecnm(lLayer&lSectionLocs),'gausstemplate',G)';
+                thisImg = getModelImg(locsCoordSub.xnm, locsCoordSub.ynm, 'roiSize', obj.roiSize, 'pixelSize', pixelSize, 'sigma', locsCoordSub.locprecnm,'gausstemplate',G)';
                 % this prevents the pure white image from happening when there
                 % is not any locs in the this layer.
                 if sum(thisImg(:))>0
@@ -136,7 +136,7 @@ switch mode
                 p.sr_pos = [0 0 0];
                 p.sr_size = repelem(obj.roiSize./2,2);
                 p.sr_pixrec = pixelSize;
-                imageo = renderSMAP(locsCoord, p, k);
+                imageo = renderSMAP(locsCoordSub, p, k);
                 imageo = drawerSMAP(imageo,p);
                 thisImg = imageo.image;
                 v = v + thisImg;
