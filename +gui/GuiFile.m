@@ -108,7 +108,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             catch err
                 ext='*.*';
                 title='format not specified';
-                err
+                disp(getReport(err, 'extended', 'hyperlinks', 'on'))
             end
             if nargin<5
             [f,pfad]=uigetfile(ext,title,path,'MultiSelect','on');
@@ -122,7 +122,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 catch err
                     obj.status('file type not recognized');
                     warning('file type not recognized');
-                    err
+                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
 %                     return
                 end
 %                 [~,~,ext]=fileparts(f{1});

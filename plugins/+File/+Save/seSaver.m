@@ -17,13 +17,15 @@ classdef seSaver<interfaces.DialogProcessor
             fibrilStatistics = getFieldAsVector(subSites,'evaluation.fibrilStatistics');
             fibrilDynamics = getFieldAsVector(subSites,'evaluation.fibrilDynamics');
             fibrilStraightener = getFieldAsVector(subSites,'evaluation.fibrilStraightener');
-            fnMeasurement = {'deviation','P','intensity','intensity_rescaled'};
+            annotatePeaks = getFieldAsVector(subSites,'evaluation.annotatePeaks');
+            fnMeasurement = {'deviation','P','intensity','intensity_rescaled','P_m','deviation_m'};
             for k = 1:length(fibrilStatistics)
                 singleSites{k}.pos = subSites(k).pos;
+                singleSites{k}.annotation = subSites(k).annotation;
                 singleSites{k}.fibrilStatistics = fibrilStatistics{k};
                 singleSites{k}.fibrilStatistics.kymograph = [];
                 singleSites{k}.fibrilStatistics.GuiParameters = [];
-                for l = 1:4
+                for l = 1:length(fnMeasurement)
                     singleSites{k}.fibrilStatistics.measurement.(fnMeasurement{l}).raw = [];
                     singleSites{k}.fibrilStatistics.measurement.(fnMeasurement{l}).fft = [];
                 end
@@ -31,6 +33,7 @@ classdef seSaver<interfaces.DialogProcessor
                 singleSites{k}.fibrilDynamics.GuiParameters = [];
                 singleSites{k}.fibrilStraightener = fibrilStraightener{k};
                 singleSites{k}.fibrilStraightener.indFibrilLocs = [];
+                singleSites{k}.annotatePeaks = annotatePeaks{k};
             end
             uisave('singleSites', defaultFn)
             obj.status('save done')

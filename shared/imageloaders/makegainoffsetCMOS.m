@@ -17,15 +17,15 @@ function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime
                 && isfield(l, 'pixel_baseline') ...
                 && isfield(l, 'thermal_counts_per_s')
             [offsetmap, varmap] = makeExpDependMap(l, exposuretime_data);
-            gainmap=1./l.gainmap;
+            gainmap=l.gainmap;
         elseif isfield(l, 'offsetmap')
             offsetmap=l.offsetmap;
             varmap=l.varmap;
-            gainmap=1./l.gainmap;
+            gainmap=l.gainmap;
         elseif isfield(l, 'mean')
             offsetmap=l.mean;
             varmap=l.variance;  
-            gainmap=1./l.metadata.pix2phot*ones(size(offsetmap));
+            gainmap=l.metadata.pix2phot*ones(size(offsetmap));
             roi=l.metadata.roi;
         else 
             disp(['no camera calibration found in file ' camfname])

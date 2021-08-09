@@ -125,6 +125,16 @@ function [locs,possites,parameters]=getlabels(p, colour)
 % fields p. :
 % coordinatefile, se_sitefov, numberofsites(x,y), labeling_efficiency, randomxy,
 % randomxyd
+
+if length(p.numberofsites)>1
+    numberofrows=p.numberofsites(2);
+    numberofsites=p.numberofsites(1)*p.numberofsites(2);
+else
+    numberofrows=ceil(32000/p.se_sitefov);
+    numberofsites=p.numberofsites;
+end
+
+
 if ischar(p.coordinatefile)
 paths =  strsplit(p.coordinatefile, '|');
 switch colour
@@ -147,13 +157,23 @@ locfun=[];
 switch ext
     case {'.txt','.csv'}
         plocs=readtable(p.coordinatefile);
-        plocsa=table2array(plocs);
-        locsall.x=plocsa(:,1);
-        locsall.y=plocsa(:,2);
-        if size(plocsa,2)>2
-            locsall.z=plocsa(:,3);
+        if any(strcmp(fieldnames(plocs),'particle')) %already many particles
+            locsall.x=plocs.x;
+            locsall.y=plocs.y;
+            if any(strcmp(fieldnames(plocs),'z')) 
+                locsall.z=plocs.z;
+            end
+            locsall.particle=plocs.particle-min(plocs.particle)+1; %1 based
+            numberofsites=max(locsall.particle);
+        else
+            plocsa=table2array(plocs);
+            locsall.x=plocsa(:,1);
+            locsall.y=plocsa(:,2);
+            if size(plocsa,2)>2
+                locsall.z=plocsa(:,3);
+            end
+            locsall=copyfields(locsall,plocs,{'x','y','z'});
         end
-        locsall=copyfields(locsall,plocs,{'x','y','z'});
     case {'.tif','.png','.jpg','.jpeg'}
 %         locs=getlabelstiff(obj,p);
         image=imread(p.coordinatefile);
@@ -206,14 +226,6 @@ end
 
 distsites=p.se_sitefov;
 
-if length(p.numberofsites)>1
-    numberofrows=p.numberofsites(2);
-    numberofsites=p.numberofsites(1)*p.numberofsites(2);
-else
-    numberofrows=ceil(32000/p.se_sitefov);
-    numberofsites=p.numberofsites;
-end
-
 % numeroflines=ceil(p.numberofsites/numberofrows);
 fieldstosave={'labeling_efficiency','model','blinks','lifetime','photons','background','maxframes','coordinatefile','linkageerror','photonsigma'};
 psave=copyfields([],p,fieldstosave);
@@ -242,7 +254,13 @@ for k=numberofsites:-1:1
         locsh=labelremove(locsd,p.labeling_efficiency);
         phere.model=ph;
     else
-        locsh=labelremove(locsall,p.labeling_efficiency); % give all the coordinates of I dots and the lableling efficiency (P(ref)), and then randomly generating I even probabilities (P(gi)), keep P(gi) if the P(gi) <= P(ref)
+        if isfield(locsall,'particle')
+            indin=locsall.particle==k;
+            locsha=copystructReduce(locsall,indin);
+        else
+            locsha=locsall;
+        end
+        locsh=labelremove(locsha,p.labeling_efficiency); % give all the coordinates of I dots and the lableling efficiency (P(ref)), and then randomly generating I even probabilities (P(gi)), keep P(gi) if the P(gi) <= P(ref)
     end
     if ~isfield(locsh,'z')
         locsh.z=0*locsh.x;
@@ -298,7 +316,11 @@ for k=numberofsites:-1:1
     locs(k).dx_gt=dx*ones(size(locsh.x));
     locs(k).dy_gt=dy*ones(size(locsh.x));
     locs(k).dz_gt=dz*ones(size(locsh.x));
-    locs(k).site=k*ones(size(locsh.x));
+    if isfield(locsh,'particle')
+        locs(k).site=locsh.particle;
+    else
+        locs(k).site=k*ones(size(locsh.x));
+    end
     possites(k).x=xh*distsites;
     possites(k).y=yh*distsites;
     parameters(k)=phere;
@@ -387,12 +409,25 @@ modCoord = fitter.getSimRef('finalROISize',str2num(finalROISize)); % get point t
 parameters.allParsArg = fitter.allParsArg;
 parameters.model = fitter.model;
 % Export
-locs.x = modCoord{1}.x;
-locs.y = modCoord{1}.y;
-if isfield(modCoord{1}, 'z')
-    locs.z = modCoord{1}.z;
+for l = 1:length(modCoord)
+    nLabel(l) = length(modCoord{l}.x);
 end
-locs.channel = ones(size(modCoord{1}.x));
+cumNLabel = [0 cumsum(nLabel)];
+nAllLabel = sum(nLabel);
+locs.x = zeros(nAllLabel,1);
+locs.y = zeros(nAllLabel,1);
+    if isfield(modCoord{l}, 'z')
+        locs.z = zeros(nAllLabel,1);
+    end
+for l = 1:length(modCoord)
+    locs.x(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.x;
+    locs.y(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.y;
+    if isfield(modCoord{1}, 'z')
+        locs.z(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.z;
+    end
+    locs.channel(cumNLabel(l)+1:cumNLabel(l+1)) = ones(size(modCoord{l}.x))*l;
+end
+locs.channel = locs.channel';
 end
 
 function locs=labelremove(locin,p)

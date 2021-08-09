@@ -20,4 +20,6 @@ function newf = flattenTabs(varargin)
         c.Parent = newFtabGrp{k};
         newFtabGrp{k}.Position = [(currentCol-1)/ncol (nrow-currentRow)/nrow 1/ncol 1/nrow];
     end
+    pos = f.Position;
+    newf.Position(3:4) = pos(3:4).*[ncol nrow];
 end

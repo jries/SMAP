@@ -115,11 +115,11 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 if isstruct(obj.children)
                     guichildren=fieldnames(obj.children);
                     for k=1:length(guichildren)
-                        if isvalid(obj.children.(guichildren{k}))
+                        if ~isstruct(obj.children.(guichildren{k})) && isvalid(obj.children.(guichildren{k}))
                             ph=obj.children.(guichildren{k}).getGuiParameters(true,onlyedit);
-                        if ~isempty(ph)
-                            pout.children.(guichildren{k})=ph;
-                        end
+                            if ~isempty(ph)
+                                pout.children.(guichildren{k})=ph;
+                            end
                         end
                     end
                 end
@@ -353,10 +353,11 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         try
                             child.setGuiParameters(pchild,true,setmenulist);
                         catch err
-                            child
-                            err
+                            disp(getReport(err, 'extended', 'hyperlinks', 'on'))
+%                             disp('setGuiParameters for children: error in:')
+                             child
+%                             err
                         end
-                    
                     end
                 end
             end
@@ -425,19 +426,22 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             for k=1:length(fn)
                 try
                 obj.guihandles.(fn{k}).FontSize=obj.guihandles.(fn{k}).FontSize*factor;
-                catch err
+%                 catch err
+%                     disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
                 try
                     if strcmpi(obj.guihandles.(fn{k}).Units,'pixels')
                         obj.guihandles.(fn{k}).Position=obj.guihandles.(fn{k}).Position*factor;
                     end
                 catch err
+%                     disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
                 try
                     if isa(obj.guihandles.(fn{k}),'matlab.ui.control.Table')
                     obj.guihandles.(fn{k}).ColumnWidth=num2cell([obj.guihandles.(fn{k}).ColumnWidth{:}]*factor);
                     end
                 catch err
+%                     disp(getReport(err, 'extended', 'hyperlinks', 'on'))
                 end
             end
             end

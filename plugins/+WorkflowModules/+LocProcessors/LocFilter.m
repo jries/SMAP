@@ -82,11 +82,11 @@ classdef LocFilter<interfaces.WorkflowModule
 %                 end
                 %LL
                 if p.check_LL && isfield(locs,'logLikelihood')
-                    ll=-locs.logLikelihood;
+                    ll=locs.logLikelihood;
                     
-                    val=p.val_LL*p.loc_ROIsize^2;
+                    val=p.val_LL*p.loc_ROIsize^2/2;
 
-                    indinh=ll<=val;
+                    indinh=ll>=val;
                     indin=indin&indinh;
                 end 
                 
@@ -143,7 +143,7 @@ pard.check_psf.Width=1.3;
 pard.check_psf.TooltipString=sprintf('Filter size of fitted PSF before saving.');
 pard.check_psf.Optional=true;
 
-pard.val_psf.object=struct('Style','edit','String',' 80 300');
+pard.val_psf.object=struct('Style','edit','String','80 300');
 pard.val_psf.position=[3,2.3];
 pard.val_psf.Width=.7;
 pard.val_psf.TooltipString=sprintf('maximum size of PSF (nm)');
@@ -156,7 +156,7 @@ pard.check_phot.TooltipString=sprintf('Filter photons before saving.');
 pard.check_phot.Optional=true;
 
 
-pard.val_phot.object=struct('Style','edit','String','[200 inf]');
+pard.val_phot.object=struct('Style','edit','String','200 inf');
 pard.val_phot.position=[4,2.3];
 pard.val_phot.Width=.7;
 pard.val_phot.TooltipString=sprintf('minimum number of photons or vector with minimum and maximum number of photons.');
@@ -169,7 +169,7 @@ pard.check_LL.Width=1.3;
 pard.check_LL.TooltipString=sprintf('Filter log-lieklihood before saving.');
 pard.check_LL.Optional=true;
 
-pard.val_LL.object=struct('Style','edit','String','2');
+pard.val_LL.object=struct('Style','edit','String','-2');
 pard.val_LL.position=[5,2.3];
 pard.val_LL.Width=.7;
 pard.val_LL.TooltipString=sprintf('Cutoff relative to maximum of log-likelihood distribution (typically 1, not much smaller).');

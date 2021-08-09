@@ -9,18 +9,25 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
         function out=run(obj,p)
             se = obj.locData.SE;
             sites = se.sites;
+            cutoffOneRing = 35;
 
             lUsed = getFieldAsVector(sites, 'annotation.use');
             siteOrder = 1:se.numberOfSites;
 
             usedSites = sites(lUsed);
-            fitInfo = getFieldAsVector(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo');
+            fn = fieldnames(obj.SE.processors.eval.children);
+            if ismember('SMLMModelFitGUI_5', fn)
+                whichSMLMModelFitGUI = '5';
+            else
+                whichSMLMModelFitGUI = '3';
+            end
+            fitInfo = getFieldAsVector(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo']);
             lFailed = cellfun(@(x)strcmp(x.guiInfo,'Fit or plot failed.'), fitInfo);
             evalList = se.processors.eval.guihandles.modules.Data(:,2);
             indProcessor = find(strcmp('SMLMModelFitGUI',evalList));
             relativePosLastStep = 2;
             ID = getFieldAsVector(usedSites, 'ID');
-            numOfLocsL1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo.numOfLocsPerLayer', 1);
+            numOfLocsL1 = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.numOfLocsPerLayer'], 1);
             % [~,idxZ] = g.locData.SE.processors.eval.processors{indProcessor-2}.fitter.wherePar('pars.m1.lPar.z');
             % zS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxZ);
             % 
@@ -28,29 +35,56 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             [~,idxRingDist] = se.processors.eval.processors{indProcessor}.fitter.wherePar('pars.m2.lPar.z');
             ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
 
-            [cutoffOneRing, bin_edges] = getOneRingCutoff(ringDistS1);
+%             [cutoffOneRing, bin_edges] = getOneRingCutoff(ringDistS1);
             
             [~,idxZ] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.z');
-            z = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxZ);
+            z = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxZ);
 
             [~,idxRingDist] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.ringDistance');
-            ringDist = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxRingDist);
+            ringDist = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxRingDist);
 
             [~,idxR] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.radius');
-            r = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxR);
+            r = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxR);
 
             [~,idxVar] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.variation');
-            var = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxVar);
+            var = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxVar);
 
             [~,idxAzi] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.azimuthalShift');
-            azi = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxAzi);
+            azi = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxAzi);
             azi = rem(rem(azi,45)+90, 45);
+            
+            [~,idxBG] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m91.offset.weight');
+            bg = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxBG);
+            
+            numOfLocsLayer1 = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.numOfLocsPerLayer'],1);
+            bgDensity = numOfLocsLayer1.*bg./(pi*(p.se_siteroi/2)^2/1000^2);
+            
+            bgDensity_fitter = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.BGDensity'],1);
+            
+            lOneRing = ringDist<=cutoffOneRing;
+            
+            for k = find(lFailed)
+                usedSites(k).annotation.list3.value = 5;
+            end
+
+            for k = find(lOneRing)'
+                % 7: one-ring detected by the z correction
+                % 8: one-ring detected by this plugin only
+                % 9: one-ring detected by both
+                if usedSites(k).annotation.list3.value == 7
+                    usedSites(k).annotation.list3.value = 9;
+                else
+                    usedSites(k).annotation.list3.value = 8;
+                end
+            end
+            list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
+            lGood = list3 == 1;
             
             %% Shift the athimuthal angle periodically 
             medAzi_0 = 0;
             medAzi = 90;
-            lOneRing = ringDist<=cutoffOneRing;
-            azi_new = azi(~(lOneRing|lFailed'));
+            
+            azi_new = azi(lGood);
             while abs(medAzi_0-medAzi)>1e-6
                 medAzi_0 = medAzi;
                 medAzi = median(azi_new);
@@ -61,26 +95,35 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             end
 
             %%
-            for k = 1:length(usedSites)
-                usedSites(k).annotation.list3.value = 1;
-            end
-
-            for k = find(lFailed)
-                usedSites(k).annotation.list3.value = 9;
-            end
-
-            for k = find(lOneRing)'
-                usedSites(k).annotation.list3.value = 8;
-            end
-
+            %% Ring separation
+            axRS=obj.initaxis('Ring separation vs z');
+            f = fit(z(lGood),ringDist(lGood),'poly1','Robust','LAR');
+            h1 = plot(axRS, z(lGood),ringDist(lGood), ' ob');
+            hold(axRS,'on')
+            h2 = plot(axRS, z(~lGood),ringDist(~lGood), ' ok');
+            h3 = plot(f, 'c');
+            hold(axRS,'off')
+            xlabel(axRS, 'z position (nm)')
+            ylabel(axRS, 'Ring separation (nm)')
+            legend([h1 h2 h3],{'Included','Excluded','Linear fit'})
+            
             ax1 = obj.initaxis('Ring separation');
-            par = ringDist(~lOneRing);
+            par = ringDist(lGood);
             binWidth = 3;
             bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
             histogram(ax1, par, bin_Edge)
             title(ax1, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
             xlabel(ax1, 'Distance (nm)')
             ylabel(ax1, 'Count')
+            
+            ax4 = obj.initaxis('Ring separation all');
+            par = ringDist;
+            binWidth = 3;
+            bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
+            histogram(ax4, par, bin_Edge)
+            title(ax4, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
+            xlabel(ax4, 'Distance (nm)')
+            ylabel(ax4, 'Count')
             
             ax2 = obj.initaxis('Ring twist');
             par = azi_new;
@@ -92,13 +135,22 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             ylabel(ax2, 'Count')
             
             ax3 = obj.initaxis('Radius');
-            par = r(~lOneRing);
+            par = r(lGood);
             binWidth = 2;
             bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
             histogram(ax3, par, bin_Edge)
             title(ax3, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
             xlabel(ax3, 'Radius (nm)')
             ylabel(ax3, 'Count')
+            
+            ax4 = obj.initaxis('BGDensity');
+            par = bgDensity(lGood);
+            binWidth = 50;
+            bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
+            histogram(ax4, par, bin_Edge)
+            title(ax4, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
+            xlabel(ax4, 'Density (um^-^3)')
+            ylabel(ax4, 'Count')
             out = [];
             
             if p.showIntActPlot

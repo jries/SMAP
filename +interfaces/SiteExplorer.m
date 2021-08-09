@@ -433,7 +433,12 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
                 else
                     pixrec=obj.locData.files.file(file.ID).info.cam_pixelsize_um*1000;
                 end
-                roi=file.info.roi;
+                if isempty(file.info)
+                    info=obj.locData.files.file(ind).info;
+                else
+                    info=file.info;
+                end
+                roi=info.roi;
                 roi([1 3])=roi([1 3])*pixrec(1);
                 roi([2 4])=roi([2 4])*pixrec(end);
 

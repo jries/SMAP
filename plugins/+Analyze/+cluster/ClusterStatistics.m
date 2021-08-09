@@ -29,14 +29,22 @@ classdef ClusterStatistics<interfaces.DialogProcessor
                if sum(inc)<p.minloc
                    continue
                end
-               xh=double(locs.xnm(inc));yh=double(locs.ynm(inc));zh=double(locs.znm(inc));
+               xh=double(locs.xnm(inc));yh=double(locs.ynm(inc));
                numlocs(cind,1)=sum(inc);
                xpos(cind,1)=mean(xh);
                ypos(cind,1)=mean(yh);
-               zpos(cind,1)=mean(zh);
-               [kc3,volumeCHull(cind,1)]=convhull(xh,yh,zh);
+               
+               if ~isempty(locs.znm)
+                   zh=double(locs.znm(inc));
+                   zpos(cind,1)=mean(zh);
+                   [kc3,volumeCHull(cind,1)]=convhull(xh,yh,zh);
+                   [kb3,volumeB(cind,1)]=boundary(xh,yh,zh);
+               else
+                   volumeCHull(cind,1)=0;
+                   volumeB(cind,1)=0;
+                   zpos(cind,1)=0;
+               end
                [kc2,areaCHull(cind,1)]=convhull(xh,yh);
-               [kb3,volumeB(cind,1)]=boundary(xh,yh,zh);
                [kb2,areaB(cind,1)]=boundary(xh,yh);
                cID(cind,1)=clusterinds(k);
                cind=cind+1;

@@ -26,7 +26,7 @@ end
 
 function pard=guidef(obj)
 
-pard.text.object=struct('Style','text','String','use coordinates from peak finder (e.g. deepSMLM)');
+pard.text.object=struct('Style','text','String','use coordinates from peak finder (e.g. DECODE)');
 pard.text.position=[1,1];
 pard.text.Width=4;
 pard.plugininfo.type='WorkflowModule'; 

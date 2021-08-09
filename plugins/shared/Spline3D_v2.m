@@ -14,9 +14,9 @@ classdef Spline3D_v2<handle
             d_sizex = size(d,1);
             d_sizey = size(d,2);
             d_sizez = size(d,3);
-            obj.max_ix = d_sizex-1;
-            obj.max_iy = d_sizey-1;
-            obj.max_iz = d_sizez-1;
+            obj.max_ix = d_sizex-1+1; % XXXXX JOnas added this. then values are out of range, but entire PSF is calculated.
+            obj.max_iy = d_sizey-1+1;
+            obj.max_iz = d_sizez-1+1;
 %             xys = [];
 %             for i = 1:d_sizex
 %                 yz = [xys Spline2D(d(:,:,i))];
@@ -155,7 +155,9 @@ end
 
 function [ix, x_diff] = roundAndCheck(x, max_x)
 if x<0||x>max_x
-    disp(['value out of range'])
+%     XXXX Jonas
+%   disp(['value out of range']) %currently that happens too often, so no
+%     output displayed
     ix = -1;
     x_diff = -1;
     return

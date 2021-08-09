@@ -1,5 +1,5 @@
-xnm=x
-ynm=y
+xnm=y
+ynm=x
 znm=z
 phot=phot
 frame=frame_ix
@@ -16,5 +16,5 @@ z_cr=z_cr
 x_sig=x_sig
 y_sig=y_sig
 locprecznm=z_sig
-cam_pixelsize_um=120
-factor=120
+cam_pixelsize_um=127
+factor=127

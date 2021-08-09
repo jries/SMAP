@@ -333,7 +333,7 @@ sstack=size(beads(1).stack.image);
  
             
             %quality control: refit all beads
-            if isempty(stackcal_testfit)||stackcal_testfit  %not implemented yet in fitter. Fix later
+            if (isempty(stackcal_testfit)||stackcal_testfit)  && (ismac || ispc|| ~p.isglobalfit)%not implemented yet in fitter. Fix later
                 ax=axes(uitab(p.tabgroup,'Title','validate'));
                 testallrois(:,:,:,:,1)=allrois(:,:,:,beadgood); 
                 corrPSFfit=corrPSF/max(corrPSF(:))*max(testallrois(:)); %bring back to some reasonable photon numbers;
@@ -366,6 +366,7 @@ sstack=size(beads(1).stack.image);
 
             else
                 posbeads=[];
+                testallrois=[];
             end
             
             if isfield(p,'advancedoutput') && p.advancedoutput %test for each bead if PSF fits well.

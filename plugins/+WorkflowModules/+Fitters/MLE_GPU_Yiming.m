@@ -333,6 +333,11 @@ if f
     end
     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
     obj.setPar('cal_3Dfile',[p f]);
+    if isfield(l,'SXY') && length(l.SXY)>1
+        obj.guihandles.selectchannel.Visible='on';
+    else
+        obj.guihandles.selectchannel.Visible='off';
+    end
     
 end
 end
@@ -358,12 +363,15 @@ switch fitpar.fitmode
         elseif isfield(cal,'SXY')
             s=size(cal.SXY);
             Z=1;
-
-            for X=s(1):-1:1
-                for Y=s(2):-1:1
-    %                 zpar{X,Y}=cal.SXY(X,Y,Z).gauss_zfit;
-                    splinefit{X,Y}=cal.SXY(X,Y,Z);
+            if p.selectchannel.Value==1 %spatial calibration
+                for X=s(1):-1:1
+                    for Y=s(2):-1:1
+        %                 zpar{X,Y}=cal.SXY(X,Y,Z).gauss_zfit;
+                        splinefit{X,Y}=cal.SXY(X,Y,Z);
+                    end
                 end
+            else %for example dual cam: manually select the channel
+                splinefit{1,1}=cal.SXY(p.selectchannel.Value-1);
             end
             if ~isempty(splinefit{1})
                 fitpar.dz=splinefit{1}.cspline.dz;
@@ -375,20 +383,20 @@ switch fitpar.fitmode
                 end
                 fitpar.coeffsize=size(coeffh);
             end
-            if numel(cal.SXY)>1
+            if numel(splinefit)>1
                 obj.spatial3Dcal=true;
                 transformation=cal.transformation;
                 obj.setPar('loc_globaltransform3dcal',transformation);
             else
                 obj.spatial3Dcal=false;
             end
-            ssxy=size(cal.SXY);
+            ssxy=size(splinefit);
             obj.spatialXrange={};
             obj.spatialYrange={};
             for xx=1:ssxy(1)
                 for yy=1:ssxy(2)
-                    obj.spatialXrange{xx,yy}=cal.SXY(xx,yy).Xrange;
-                    obj.spatialYrange{xx,yy}=cal.SXY(xx,yy).Yrange;
+                    obj.spatialXrange{xx,yy}=splinefit{xx,yy}.Xrange;
+                    obj.spatialYrange{xx,yy}=splinefit{xx,yy}.Yrange;
                 end
             end
 %             xr=cal.SXY(1,1).Xrangeall;
@@ -526,7 +534,7 @@ function pard=guidef(obj)
 p1(1).value=1; p1(1).on={'PSFx0','tPSFx0'}; 
 p1(1).off={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize',...
     'automirror','fit2D','pixelsizex','pixelsizey','addgaussfit','addgaussfit_mode','addgaussfit_t',...
-    'addgaussfit_xyfrom','zobjectivet','zobjective','dzZt','dzZ','zmaxZt','zmaxZ','zstart','zstartt'};%,'isscmos','selectscmos','scmosfile'};
+    'addgaussfit_xyfrom','zobjectivet','zobjective','dzZt','dzZ','zmaxZt','zmaxZ','zstart','zstartt','selectchannel'};%,'isscmos','selectscmos','scmosfile'};
 p1(2)=p1(1);p1(2).value=2;
 p1(3).value=3;p1(3).off={'PSFx0','tPSFx0','zobjectivet','zobjective','dzZt','dzZ','zmaxZt','zmaxZ'};
 p1(3).on={'loadcal','cal_3Dfile',...
@@ -536,7 +544,7 @@ p1(4)=p1(1);p1(4).value=4;
 p1(5)=p1(3);p1(5).value=5;
 p1(5).on=[p1(5).on {'addgaussfit'}];
 p1(6)=p1(5);p1(6).value=6;
-p1(6).off={'PSFx0','tPSFx0','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','pixelsizex','pixelsizey'};
+p1(6).off={'PSFx0','tPSFx0','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','pixelsizex','pixelsizey','selectchannel'};
 p1(6).on={'loadcal','cal_3Dfile','fit2D','addgaussfit','zobjectivet','zobjective','dzZt','dzZ','zmaxZt','zmaxZ'};
 
 pard.fitmode.object=struct('Style','popupmenu','String',{{'PSF fix','PSF free','3D z','ellipt: PSFx PSFy','Spline','Zernike'}},'Value',2,'Callback',{{@obj.switchvisible,p1,{@fitmode_callback,0,0,obj}}});
@@ -596,15 +604,15 @@ pard.PSFx0.Width=0.75;
 pard.PSFx0.TooltipString=sprintf('start value for PSF, or size of PSF when PSF fixed (in camera pixels)');
 pard.PSFx0.Optional=true;
 
-pard.zstartt.object=struct('Style','text','String','z start (nm)');
-pard.zstartt.position=[2,3.5];
-pard.zstartt.Width=.75;
+pard.zstartt.object=struct('Style','text','String','z0(nm)');
+pard.zstartt.position=[2,4];
+pard.zstartt.Width=.5;
 pard.zstartt.TooltipString=sprintf('z start parameter. Use vector with several values for 2D PSF');
 pard.zstartt.Optional=true;
 
 pard.zstart.object=struct('Style','edit','String','0');
-pard.zstart.position=[2,4.25];
-pard.zstart.Width=.75;
+pard.zstart.position=[2,4.5];
+pard.zstart.Width=.5;
 pard.zstart.TooltipString=pard.zstartt.TooltipString;
 pard.zstart.Optional=true;
 
@@ -613,8 +621,14 @@ pard.loadcal.position=[2,1];
 pard.loadcal.Width=.75;
 pard.cal_3Dfile.object=struct('Style','edit','String','');
 pard.cal_3Dfile.position=[2,1.75];
-pard.cal_3Dfile.Width=1.75;
+pard.cal_3Dfile.Width=1.5;
 pard.cal_3Dfile.TooltipString=sprintf('3D calibration file for astigmtic 3D. \n Generate from bead stacks with plugin: Analyze/sr3D/CalibrateAstig');
+
+
+pard.selectchannel.object=struct('Style','popupmenu','String',{{'spatial','ch1','ch2'}},'Visible','off');
+pard.selectchannel.position=[2,3.25];
+pard.selectchannel.Width=.75;
+
 
 p(1).value=0; p(1).on={}; p(1).off={'refractive_index_mismatch'};
 p(2).value=1; p(2).on={'refractive_index_mismatch'}; p(2).off={};
