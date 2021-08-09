@@ -53,10 +53,10 @@ classdef LocMoFit<matlab.mixin.Copyable
     end
     methods
         function obj = LocMoFit(varargin)
-            % Construct the object of the class 'SMLMModelFit'
+            % Construct the object of the class 'LocMoFit'
             %
             % Usage:
-            %   obj = SMLMModelFit(Name-value)
+            %   obj = LocMoFit(Name-value)
             %
             % Args:
             %   Name-value pairs:
@@ -65,10 +65,10 @@ classdef LocMoFit<matlab.mixin.Copyable
             %       * 'DataDim': 
             %       * 'TestLocs': 
             % Returns:
-            %   obj: an SMLMModelFit object.
+            %   obj: an LocMoFit object.
             %
             % NOTE:
-            %   Please create an :class:`SMLMModelFit` object for each step of
+            %   Please create an :class:`LocMoFit` object for each step of
             %   fitting.
             %
             % See also:
@@ -118,7 +118,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         
         %% model related functions
         function setModel(obj,model,modelId)
-            % Adding one single model to the SMLMModelFit object according to the modelId.
+            % Adding one single model to the LocMoFit object according to the modelId.
             % Initiation of all arguments of the parameters (allParsArg).
             %
             % Usage:
@@ -186,7 +186,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             %   addModel(obj,model)
             %
             % Args:
-            %   obj: an SMLMModelFit object.
+            %   obj: an LocMoFit object.
             %   model: an SMLMModel object or sub-object.
             % TODO:
             %   flag1: obj.initLParSelector for will be available when
@@ -209,7 +209,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             %   changeModel(obj, newModel, modelNumber)
             %
             % Args:
-            %   obj: an SMLMModelFit object.
+            %   obj: an LocMoFit object.
             %   newModel: an SMLMModel object or sub-object being added.
             %   modelNumberRemove: the ID of the model being added.
             
@@ -423,7 +423,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             % 
             % --- Description ---
             % pars: a structral array with parameter names as field names.
-            % obj: an SMLMModelFit object.
+            % obj: an LocMoFit object.
             % modelID: the ID of the model where you want to get parameters.
             % type: either 'lPar', 'mPar' or 'allPar', specifying the type of parameters you want to get.
             
@@ -557,12 +557,12 @@ classdef LocMoFit<matlab.mixin.Copyable
                 indFit = ~obj.allParsArg.fix;
                 fn = obj.allParsArg.name(indLayer&indOs&indFit);
                 if ~isempty(fn)
-                    offset = SMLMModelFit.pars2struct(fn, offset, fitPars, 90+layer, 'AddUp', 0);
+                    offset = LocMoFit.pars2struct(fn, offset, fitPars, 90+layer, 'AddUp', 0);
                     fitPars = fitPars(:,length(fn)+1:end);
                 else
                     fn = obj.allParsArg.name(indLayer&indOs&~indFit);
                     value = obj.allParsArg.value(indLayer&indOs&~indFit);
-                    offset = SMLMModelFit.pars2struct(fn, offset, value', 90+layer, 'AddUp', 0);
+                    offset = LocMoFit.pars2struct(fn, offset, value', 90+layer, 'AddUp', 0);
                 end
             end
         end
@@ -663,7 +663,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             %   modCoord = obj.getAllParId(modelnumber, varargin)
             %
             % Args:
-            %   modelnumber: an SMLMModelFit object.
+            %   modelnumber: an LocMoFit object.
             %   Name-value pairs:
             %       'form': either 'short', 'long', 'auxiliary'
             % Returns:
@@ -932,7 +932,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             %   modCoord = getSimRef(obj)
             %
             % Args:
-            %   obj: an SMLMModelFit object.
+            %   obj: an LocMoFit object.
             %
             % Returns:
             %   modCoord: reference coordinates.
@@ -1252,7 +1252,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             locs = obj.locs;
             model = locsModel(locs);
             model.dimension = 3;
-            ctrlFitter = SMLMModelFit;
+            ctrlFitter = LocMoFit;
             ctrlFitter.dataDim = 3;
             ctrlFitter.addModel(model);
             ctrlFitter.setParArg('m1.lPar.x','fix',true);
@@ -1286,7 +1286,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         function derivedPars = getDerivedPars(obj, varargin)
             % Get derived parameters of all (default) or a specific model.
             % Args:
-            % 	obj: an :class:`SMLMModelFit` object.
+            % 	obj: an :class:`LocMoFit` object.
             % Returns:
             %   
             %
@@ -1316,7 +1316,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             % 
             % --- Description---
             % settings: a list (string array) of the internal settings' name.
-            % obj: an SMLMModelFit object.
+            % obj: an LocMoFit object.
             % modelID: the ID of the model.
             if ~isempty(obj.model{modelID}.modelObj)&&~isempty(obj.model{modelID}.modelObj.internalSettings)
                 settings = fieldnames(obj.model{modelID}.modelObj.internalSettings);
