@@ -23,7 +23,7 @@ LocMoFit is a modeling fitting framework for SMLM data.
    :maxdepth: 2
    :caption: Basics
    
-   ./tutorial/quickstart.md
+   ./basics/quickstart.md
    ./basics/geometricModel.md
    SMAP.md
 
