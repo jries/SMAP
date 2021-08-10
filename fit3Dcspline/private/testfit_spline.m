@@ -35,7 +35,7 @@ t=tic;
             dT(2,2,:)=shiftxy(k,1);           
             coeffh(:,:,:,:,2)=single(coeff{2});
             sharedA = repmat(shared,[1 size(fitstack,3)]);
-            [P,CRLB, LL] =mleFit_LM_global(fitstack,int32(sharedA),iterations,coeffh,single(dT),1,zst);
+            [P,CRLB, LL] =mleFit_LM_global(fitstack,int32(sharedA),iterations,coeffh,single(dT),zst);
             zind=3;
             photind=4;
         else

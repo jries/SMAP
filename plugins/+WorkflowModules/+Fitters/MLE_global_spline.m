@@ -149,6 +149,9 @@ P=results.P;
 EMexcess=fitpar.EMexcessNoise;
 CRLB=results.CRLB;
 LogL=results.LogL;
+color=results.color;
+llsecond=results.llsecond;
+
            CRLB(isnan(CRLB))= 0; %XXXXXXXXX
            LogL(isnan(LogL))= 0; %XXXXXXXXX
            CRLB((CRLB)<0)= 0; %XXXXXXXXX
@@ -267,6 +270,10 @@ for k=1:length(names)
     end
 end
 locs.iterations=P(:,end);
+if ~isempty(color)
+    locs.color=color;
+    locs.LLsecond=llsecond;
+end
 global testloc
 testloc=locs;
 end
@@ -460,12 +467,12 @@ switch fitpar.mode
         %fitmode, varmap
 %         arguments{6}=fitpar.fitmode;
         arguments{6}=fitpar.zstart/fitpar.dz;
-        arguments{7}=fitpar.PhotonRatios;
+        arguments{7}=fitpar.PhotonRatios/fitpar.splinefithere.normf(2);
     otherwise
         disp('fitmode not implemented for global fitting')
 end
 
-[P CRLB LogL]=fitpar.fitfunction(arguments{:});
+[P, CRLB, LogL, color,llsecond]=fitpar.fitfunction(arguments{:});
 
 
 %subtract dT for y
@@ -516,6 +523,8 @@ end
 out.P=P;
 out.CRLB=CRLB;
  out.LogL=LogL;
+ out.color=color;
+ out.llsecond=llsecond;
 end
  
 function out=fitwrapper_4pi(imstack,fitpar,stackinfo,varstack)
@@ -662,6 +671,8 @@ end
 function fitpar=getfitpar(obj)
 %get all necessary parameters for fitting and store them 
 p=obj.getAllParameters;
+
+p.isscmos=false; %re-implement later
 fitpar.iterations=p.iterations;
 fitpar.fitmode=p.fitmode.Value;
 fitpar.roisperfit=p.roisperfit;
@@ -683,7 +694,7 @@ end
 fitpar.link=[p.globaltable.Data{:,1}];
 fitpar.zstart=p.zstart;
 if fitpar.fitmode==3||fitpar.fitmode==5 %calibration file
-    fitpar.issCMOS=p.isscmos;
+     fitpar.issCMOS= p.isscmos;
   
     calfile=p.cal_3Dfile;
     cal=load(calfile);
