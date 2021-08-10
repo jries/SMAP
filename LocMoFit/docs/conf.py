@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('/LocMoFit'))
+sys.path.insert(0, os.path.abspath('../LocMoFit'))
 import sphinx_rtd_theme
 
 
@@ -54,7 +54,7 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 # -- matlab source code ------------------------------------------------------
-matlab_src_dir = '/LocMoFit'
+matlab_src_dir = 'LocMoFit'
 
 primary_domain = 'mat'
 
