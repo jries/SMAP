@@ -54,7 +54,7 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 # -- matlab source code ------------------------------------------------------
-matlab_src_dir = 'LocMoFit'
+matlab_src_dir = '/LocMoFit'
 
 primary_domain = 'mat'
 
