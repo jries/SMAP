@@ -52,6 +52,26 @@ classdef summarizeModFitRobustnessSim<interfaces.DialogProcessor&interfaces.SEPr
 %             [~,idxVar] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.variation');
 %             var = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxVar);
 
+            colID = [7 2];
+            if p.separationHistogram
+                axHist = obj.initaxis('Separation (LE)');
+                allGrp2plot = {'cond2_LE0','cond2_LE4'};
+                hold(axHist,'on')
+                lParameter = strcmp({settings.tabTitle}, 'Separation');
+                error = parStack(lParameter).fit-parStack(lParameter).gt;
+                for l = 1:length(allGrp2plot)
+                    lGrp = strcmp(allGrp2plot{l}, allGrpId);
+                    histogram(axHist,error(lGrp)+50,-10:2.5:85, 'FaceColor',myDiscreteLUT(colID(l)))
+                end
+                hold(axHist,'off')
+                xlabel(axHist,'Ring separation (nm)')
+                ylabel(axHist,'Counts')
+                axHist.LineWidth = 1.5;
+                
+                axScatter = obj.initaxis('Interactive');
+                plotSElink(axScatter,error(lGrp)+50,1:sum(lGrp), ID(lGrp), se, ' ob')
+            end
+            
             try
                 clipboard('copy', stats)
             catch
@@ -183,28 +203,6 @@ function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
                 'Shade_EdgeColor',col{con},...
                 'Shade_LineWidth',1);
 %             h{con} = errorbar(ax, var(cond==con), grpMean(cond==con), grpStd(cond==con));
-%             if strcmp(oneSetting.tabTitle,'Separation')
-%                 fHist = figure;
-%                 axHist = axes(fHist);
-%                 allGrp = unique(grp);
-%                 hold(axHist,'on')
-%                 for l = 1:length(allGrp)
-%                     lGrp = strcmp(allGrp{l}, grp);
-%                     histogram(axHist,error(lGrp)+50,-10:2.5:85, 'FaceColor',col{l})
-%                 end
-%                 hold(axHist,'off')
-%                 xlabel(axHist,'Ring separation (nm)')
-%                 ylabel(axHist,'Counts')
-%                 axHist.LineWidth = 1.5;
-%                 fPan = figure;
-%                 pan = panel(fPan);
-%                 pan.select(axHist)
-%                 pan.units = 'cm';
-%                 pan.fontsize = 12;
-%                 fPan.Units = 'centimeters';
-%                 fPan.Position(3:4) = [6 8];
-%                 exportgraphics(fPan,'Y:\users\Yu-Le\SMLMModelFit_t1\manuscript\figure\figureS1\figure\c210606_sep.pdf','ContentType','vector', 'Resolution', 600)
-%             end
         end
         lineObj = findobj(ax,'type','line');
         patchObj = findobj(ax,'type','Patch');
@@ -260,13 +258,9 @@ end
 
 function pard=guidef(obj)
 
-pard.showIntActPlot.object=struct('String','Display interactive','Style','checkbox');
-pard.showIntActPlot.position=[2,1];
-pard.showIntActPlot.Width=1.5;
-
-pard.showExampleMod.object=struct('String','Display example model','Style','checkbox');
-pard.showExampleMod.position=[3,1];
-pard.showExampleMod.Width=1.5;
+pard.separationHistogram.object=struct('String','Histogram (ringSep)','Style','checkbox');
+pard.separationHistogram.position=[1,1];
+pard.separationHistogram.Width=1.5;
 
 pard.plugininfo.type='ROI_Analyze';
 

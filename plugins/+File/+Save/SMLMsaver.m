@@ -27,8 +27,12 @@ classdef SMLMsaver<interfaces.DialogProcessor
                 of=lastfile;
             end
               
-            
-            [f,path]=uiputfile(of);
+            if isfield(p, 'saveTo')
+                [path,f,ext]=fileparts(p.saveTo);
+                f = [f ext];
+            else
+                [f,path]=uiputfile(of);
+            end
             if f
                 if isempty(strfind(f,'_sml'))
                     f(end-3:end)=[];
