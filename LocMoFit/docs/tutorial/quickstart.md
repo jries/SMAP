@@ -1,0 +1,38 @@
+# Quick start
+
+In this tutorial you will learn how to perform your first model fitting with *LocMoFit*, in SMAP with a GUI. We will fit a 2D ring model to the top-view projection of NPCs. You will need:
+* **SMAP** installed
+* _U2OS_Nup96_BG-AF647_demo_sml.mat_
+* _ring2d.png_
+
+## Preparation
+1. Start **SMAP**.
+2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_. This file contains segmented nuclear pore complexes that you will be analyzing in the following steps.
+
+## Loading LocMoFit
+1. Go to the **[ROIs]** tab.
+2. Go to **[Evaluate]** tab and click **add module**.
+3. In the popup window, select _SMLMModelFitGUI_ and click *ok*.
+
+## Setup
+We will be using an image model here ({doc}`more about model types<../basics/geometricModel>`).
+1. Activate the _SMLMModelFitGUI_ module by clicking on it.
+2. In the right panel, go to **[M1]** -> **[Model]**, click **load model**.
+3. Navigate to the model directory, open _ring2d.png_. Now LocMoFit is ready to fit.
+
+## Fitting
+Fitting a site can be executed by clicking the site in the list of sites in the _ROI manager_ window.
+1. Go to **[ROI]** -> **[Settings]**, click **show ROI manager**. This opens the **ROIManager** in a new window.
+2. Go back to **[Evaluate]**, check **evaluate on** and **display** in the left panel.
+	:::{Note}
+	* The loaded evaluate plugins will be evaluated only when **evaluate on** is checked.
+	* Result windows of the loaded evaluate plugins will be displayed only when **display** is checked.
+	:::
+3. In the _ROI Manager_ window, click on one site in the list of sites and wait for a few seconds. You should see a new window _SMLMModelFitGUI_.
+	:::{Note}
+	The **SMLMModelFitGUI** window allows you to inspect the result right after fitting. The window may look different depending on the model type.
+	:::
+Now you have your first fit done! You can further explore a few sites to get familiar with the interface.
+
+## Next tutorial
+You are in the introductory series. The next tutorial is {doc}`Composite model<./compositeModel>`.
