@@ -60,7 +60,7 @@ if nargin<7 || isempty(varargin{7})
 else
     PhotonRatios=varargin{7};
     shared(4,:)=1; %if we fit with ratios, N needs to be linked
-    iterations=10;
+    iterations=15;
     photonratiofixed=true;
     iterationsin=varargin{3};
 end
@@ -79,12 +79,15 @@ end
 persistent fitter
 if ~photonratiofixed
     allfitters={@GPUmleFit_LM_MultiChannel_11,@CPUmleFit_LM_MultiChannel};
+%     allfitters={@GPUmleFit_LM_MultiChannel_noRestrict,@CPUmleFit_LM_MultiChannel};
     allfittersnames={'GPUmleFit_LM_MultiChannel_11','CPUmleFit_LM_MultiChannel'};
+%     allfittersnames={'GPUmleFit_LM_MultiChannel_noRestrict','CPUmleFit_LM_MultiChannel'};
     if isempty(fitter)
         for k=1:length(allfitters)
             try
     %             allfitters{k}(ones(7,7,1,2,'single'),single([1 1 1 0 0]),varargin{4},zeros(5,2));
                 allfitters{k}(imstack,int32(5),shared,int32(iterations),splinecoeff,single(dT));
+%                 allfitters{k}(imstack,shared,int32(iterations),splinecoeff,single(dT));
                 fitter=k;
                 break
             catch err
@@ -111,7 +114,11 @@ end
 first=true;
 LogLp=ones(size(imstack,3),length(PhotonRatios));
 for phot=1:length(PhotonRatios)
-    dT=ratiochannelshift(channelshift,PhotonRatios(phot));
+    if photonratiofixed
+        dT=ratiochannelshift(channelshift,PhotonRatios(phot));
+    else 
+        dT=channelshift;
+    end
 %     [P,CRLB,LogL]=fitterh(imstack,int32(5),shared,int32(iterations),splinecoeff,single(dT),zstart(1));
 
 
@@ -122,6 +129,7 @@ for phot=1:length(PhotonRatios)
             zstarth=zstart(k);
         end
          [Ph,CRLBh,LogLh]=fitterh(imstack,int32(5),shared,int32(iterations),splinecoeff,single(dT),zstarth);
+%          [Ph,CRLBh,LogLh]=fitterh(imstack,shared,int32(iterations),splinecoeff,single(dT),zstarth);
         if first %first round
             P=Ph;
             CRLB=CRLBh;
