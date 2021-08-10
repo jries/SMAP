@@ -2,13 +2,13 @@ References
 ==========
 This page details all the classes, methods, and functions of the framework.
 
-.. automodule:: @SMLMModelFit
+.. automodule:: @LocMoFit
 
 Fitter
 ======
 This is the handle class definition.
 
-.. autoclass:: SMLMModelFit
+.. autoclass:: LocMoFit
     :show-inheritance:
     :members:
 	
