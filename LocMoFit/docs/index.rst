@@ -20,6 +20,7 @@ Contents
    
 .. toctree::
    :maxdepth: 2
+   :hidden:
    :caption: Basics
    
    ./basics/quickstart.md
@@ -28,6 +29,7 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
    :caption: Tutorial
    
    Composite model <./tutorial/compositeModel.md>
@@ -36,12 +38,14 @@ Contents
    
 .. toctree::
    :maxdepth: 2
+   :hidden:
    :caption: Programming note
    
    ./programming/buildModel.md
    
 .. toctree::
    :maxdepth: 2
+   :hidden:
    :caption: Details
    
    modLibrary
