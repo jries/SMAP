@@ -11,7 +11,10 @@ You can find all things related to LocMoFit here.
 Overview
 ========
 
-LocMoFit is a modeling fitting framework for SMLM data.
+LocMoFit is a model fitting framework for SMLM data.
+
+Content
+========
 
 .. toctree::
    :maxdepth: 2  
@@ -31,7 +34,7 @@ LocMoFit is a modeling fitting framework for SMLM data.
    :maxdepth: 2
    :caption: Tutorial
    
-   ./tutorial/compositeModel.md
+   compositeModel <./tutorial/compositeModel.md>
    ./tutorial/chainSteps.md
    ./tutorial/fourColorNPC.md
    
