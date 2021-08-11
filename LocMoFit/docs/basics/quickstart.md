@@ -40,4 +40,4 @@ Fitting a site can be executed by clicking the site in the list of sites in the 
 Now you have your first fit done! You can further explore a few sites to get familiar with the interface.
 
 ## Next tutorial
-You are in the introductory series. The next tutorial is {doc}`Composite model<./compositeModel>`.
+You are in the introductory series. The next tutorial is {doc}`Composite model`.
