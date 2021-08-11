@@ -4,6 +4,7 @@ In this tutorial you will learn how to perform your first model fitting with *Lo
 * **SMAP** installed. Further information can be found on our [GitHub](https://github.com/jries/SMAP/) site.
 * _U2OS_Nup96_BG-AF647_demo_sml.mat_
 * _ring2d.png_
+
 The two files above can be downloaded [here](https://www.embl.de/download/ries/LocMoFit/).
 
 ## Preparation
