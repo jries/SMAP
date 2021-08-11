@@ -9,6 +9,10 @@ The two files above can be downloaded [here](https://www.embl.de/download/ries/L
 ## Preparation
 1. Start **SMAP**.
 2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_. This file contains segmented nuclear pore complexes that you will be analyzing in the following steps.
+:::{note}
+You can check out all the pre-processing steps from _fitting raw data (raw camera frames)_ to _segmentation of NPCs_ in
+**SMAP_manual_NPC.pdf** that can be downloaded [here](https://www.embl.de/download/ries/Documentation/).
+:::
 
 ## Loading LocMoFit
 1. Go to the **[ROIs]** tab.
