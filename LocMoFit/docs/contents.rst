@@ -19,7 +19,7 @@ Contents
    :maxdepth: 2
    :caption: Tutorial
    
-   compositeModel <./tutorial/compositeModel.md>
+   Composite model <./tutorial/compositeModel.md>
    ./tutorial/chainSteps.md
    ./tutorial/fourColorNPC.md
    
