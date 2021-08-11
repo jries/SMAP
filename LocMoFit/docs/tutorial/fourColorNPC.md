@@ -53,18 +53,18 @@ The filtered and drift corrected superresolution image can be segmented for NPC 
 
 ### Estimation of spatial parameter
 Next we fit a geometric model to single sites. This process searches in the parameter space of the model to match the model to the data. The parameter values that yields the best match are the estimates of the parameters.
-1. Loading the plugin **SMLMModelFitGUI**:
+1. Loading the plugin **LocMoFitGUI**:
 	* Go to **[Evaluate]** tab and click on *add module*.
-	* In the popup window, select _SMLMModelFitGUI_ and click *ok*.
+	* In the popup window, select _LocMoFitGUI_ and click *ok*.
 	* Repeat the previous 2 steps 2 times.
 2. Loading settings for model fitting:
 	* Load corresponding settings to each plugin in the following table:
 
 	| Plugin | Settings |
 	| :------- | :---- |
-	| SMLMModelFitGUI | Step1_SMLMModelFit.mat |
-	| SMLMModelFitGUI_2 | Step2_SMLMModelFit.mat |
-	| SMLMModelFitGUI_3 | Step3_SMLMModelFit.mat |
+	| LocMoFitGUI | Step1_LocMoFit.mat |
+	| LocMoFitGUI_2 | Step2_LocMoFit.mat |
+	| LocMoFitGUI_3 | Step3_LocMoFit.mat |
 
 	* In the left panel, **click** on the corresponding plugin.
 	* In the right panel, go to the **[Settings]** tab.
@@ -84,14 +84,14 @@ Next we fit a geometric model to single sites. This process searches in the para
 7. In the _ROI Manager_, delete all sites with the value 8 or 9 in the third digit of the number at the end of their site names.
 
 ### Generation of the average NPC per dataset
-1. Use another SMLMModelFitGUI entity to perform averaging:
+1. Use another LocMoFitGUI entity to perform averaging:
 	* Go to **[Evaluate]** tab and click on **add module**.
-	* In the popup window, select **SMLMModelFitGUI** and click on ok.
-	* Click on *SMLMModelFitGUI_4* in the left panel.
+	* In the popup window, select **LocMoFitGUI** and click on ok.
+	* Click on *LocMoFitGUI_4* in the left panel.
 	* Go to the **[Settings]** tab in the right panel and click **load**.
-	* In the popup window, open the **Step3_SMLMModelFit.mat** in the folder **/settings**.
+	* In the popup window, open the **Step3_LocMoFit.mat** in the folder **/settings**.
 	* Go to **[convert]** tab in the right panel and click on **Match**.
-	* In the first row, change **this step** to _SMLMModelFitGUI_3_.
+	* In the first row, change **this step** to _LocMoFitGUI_3_.
 	* In the list bellow, uncheck _m1.zrot_ and _m1.azimuthalShift_ in the popup window. Click on **Apply**.
 	* Go to **[M1]** tab in the right panel. Fill the _azimuthal shift_ you noted down in the _value_ column of _azimuthalShift_.
 	* Go to **settings** tab in the right panel, check **Run alignment**
@@ -100,7 +100,7 @@ Next we fit a geometric model to single sites. This process searches in the para
 2. Register all sites to the average:
 	* In the dropdown menu, open **[Process]** -> **[Modify]** -> **DefineMainCoordinates**
 	* Check **xnm**, **ynm**, **znm**, and **field**.
-	* In the first row, select **xnmaligned_SMLMModelFitGUI_4**, **ynmaligned_SMLMModelFitGUI_4**, and **znmaligned_SMLMModelFitGUI_4** from left to right.
+	* In the first row, select **xnmaligned_LocMoFitGUI_4**, **ynmaligned_LocMoFitGUI_4**, and **znmaligned_LocMoFitGUI_4** from left to right.
 	* Click on **RUN**, and wait until **Process.Modify.DefineMainCoordinates finished** show up in the status bar.
 	* Double right click on the window **[Reconstructed superresolution image]**, you will see the average.
 3. Save the average:
