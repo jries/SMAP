@@ -42,7 +42,7 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # Define the the document that contains the root toctree directive
-root_doc = 'contents.rst';
+root_doc = 'contents';
 
 # -- Options for HTML output -------------------------------------------------
 
