@@ -3,7 +3,7 @@ classdef SMLMModelFit<LocMoFit
     % now defined as a subclass of LocMoFit during the transition phase.
     methods
         function obj = SMLMModelFit(varargin)
-            
+            obj@LocMoFit(varargin{:});
         end
     end
 end

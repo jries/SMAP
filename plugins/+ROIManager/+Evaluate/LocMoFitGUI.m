@@ -872,7 +872,7 @@ end
 function load_callback(a,b,obj)
 % get the path of the saved info
 if obj.getPar('initiated')
-    [file,path] = uigetfile('*_SMLMModelFit.mat', 'Select an SMLMModelFit file...', '');
+    [file,path] = uigetfile({'*_SMLMModelFit.mat;*_LocMoFit.mat','LocMoFit settings'}, 'Select an SMLMModelFit file...', '');
     temp = load([path file]);
     obj.setGuiParameters(temp.par);
     obj.fitter = temp.par.fitter;
@@ -887,7 +887,7 @@ end
 % Call back for saving SMLMModelFit settings
 
 function save_callback(a,b,obj)
-[file,path] = uiputfile('*_SMLMModelFit.mat', 'Save as', '');
+[file,path] = uiputfile('*_LocMoFit.mat', 'Save as', '');
 obj.fitter.resetInit;
 gm = obj.getPar('mainGui');
 ge = gm.children.guiSites.children.eval;
