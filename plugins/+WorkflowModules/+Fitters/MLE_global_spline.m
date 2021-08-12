@@ -25,7 +25,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                     obj.fitpar.link=obj.fitpar.link([2 1 4 5 3 6]);
                     obj.fitpar.fitfunction=@mleFit_LM_4Pi;
                 case 'Gauss'
-                     obj.fitpar.fitfunction=@mleFit_LM_global_gauss;
+                     obj.fitpar.fitfunction=@mleFit_LM_global;
                      disp('only implemented for symmetric Gauss: fittype=2');
                 otherwise
                     obj.fitpar.fitfunction=@mleFit_LM_global; %later: include single channel, decide here
@@ -384,7 +384,6 @@ end
 function out=fitwrapper_global(imstack,fitpar,stackinfo,varstack)
 numberOfChannels=2;
 nfits=ceil(size(imstack,3)/numberOfChannels);
-npar=5;
 
 s=size(imstack);
 if length(s)==2 
@@ -394,25 +393,22 @@ if s(3)<numberOfChannels  %sorting: needs at least two
     out=[];
  return
 end
-% fitpar=obj.fitpar;
+
 EMexcess=fitpar.EMexcessNoise;
 if isempty(EMexcess)
     EMexcess=1;
 end
          
-dT=zeros(npar,2,(nfits));
-dT(1,1,:)=stackinfo.dy(1:numberOfChannels:end); %for nonrounding
-dT(2,1,:)=stackinfo.dx(1:numberOfChannels:end);
-
-dT(1,2,:)=stackinfo.dy(2:numberOfChannels:end);
-dT(2,2,:)=stackinfo.dx(2:numberOfChannels:end);
-
-% disp('check MLE_globalspline')
+channelshift=zeros(2,2,(nfits)); %only pass on for x,y
+channelshift(1,1,:)=stackinfo.dy(1:numberOfChannels:end); %for nonrounding
+channelshift(2,1,:)=stackinfo.dx(1:numberOfChannels:end);
+channelshift(1,2,:)=stackinfo.dy(2:numberOfChannels:end);
+channelshift(2,2,:)=stackinfo.dx(2:numberOfChannels:end);
 
 imfit(:,:,:,1)=imstack(:,:,1:numberOfChannels:end);
 if isfield(fitpar,'mirrorud') && fitpar.mirrorud
     imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
-    dT(1,2,:)=-dT(1,2,:);
+    channelshift(1,2,:)=-channelshift(1,2,:);
 elseif isfield(fitpar,'mirror')  %now only mirror channel two!
     mirr=fitpar.mirror{2};
     if length(mirr)>1
@@ -423,13 +419,11 @@ elseif isfield(fitpar,'mirror')  %now only mirror channel two!
             imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
         case 1 %righ-left mirror
             imfit(:,:,:,2)=imstack(:,end:-1:1,2:numberOfChannels:end);
-            dT(2,2,:)=-dT(2,2,:);
+            channelshift(2,2,:)=-channelshift(2,2,:);
         case 2 %up-down mirror
             imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
-            dT(1,2,:)=-dT(1,2,:);
+            channelshift(1,2,:)=-channelshift(1,2,:);
     end
-
-    
 else
     imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
 end
@@ -442,89 +436,55 @@ if fitpar.weightsch(2)~=1
 end
 
 numframes=size(imfit,3); 
-sharedA = repmat(int32(fitpar.link(1:5)'),[1 numframes]);
-out.indused=1:numberOfChannels:numframes*numberOfChannels;   %XXXXXXX check. Wrong? results shoud be only displayed in one channel
+sharedA=fitpar.link(1:5)';
+out.indused=1:numberOfChannels:numframes*numberOfChannels;   
+%imstack, fittype, sharedflag, iterations, spline coefficients, channelshift,
+%cmos varmap, silent,zstart,photratios
 
+arguments{1}=imfit/EMexcess; %imagestack
+arguments{3}=uint32(sharedA);
+arguments{4}=uint32(fitpar.iterations);
+arguments{6}=single(channelshift);
+arguments{7}=[]; %sCMOS varmap
+arguments{8}=0; %silent
+arguments{9}=fitpar.zstart/fitpar.dz;
+arguments{10}=fitpar.PhotonRatios/fitpar.splinefithere.normf(2);
 switch fitpar.mode
     case 'Gauss'
-        arguments{1}=imfit/EMexcess;
-        arguments{2}=uint32(2);
-        arguments{3}=uint32(sharedA);
-        arguments{4}=uint32(fitpar.iterations);
+        arguments{2}=uint32(1);
         arguments{5}=single(fitpar.PSFx0);
-        arguments{6}=single(dT); %XXXXXXXXXX
-        %imstack, sharedflag, iterations, spline coefficients, channelshift,
-        %fitmode, varmap
-%         arguments{6}=fitpar.fitmode;
-%         arguments{7}=fitpar.zstart/fitpar.dz;
     case {'Spline','cspline'}
-        arguments{1}=imfit/EMexcess;
-        arguments{2}=sharedA;
-        arguments{3}=fitpar.iterations;
-        arguments{4}=single(fitpar.splinefithere.coeff);
-        arguments{5}=single(dT); %XXXXXXXXXX
-        %imstack, sharedflag, iterations, spline coefficients, channelshift,
-        %fitmode, varmap
-%         arguments{6}=fitpar.fitmode;
-        arguments{6}=fitpar.zstart/fitpar.dz;
-        arguments{7}=fitpar.PhotonRatios/fitpar.splinefithere.normf(2);
+        arguments{2}=uint32(2);
+        arguments{5}=single(fitpar.splinefithere.coeff);        
     otherwise
         disp('fitmode not implemented for global fitting')
 end
 
 [P, CRLB, LogL, color,llsecond]=fitpar.fitfunction(arguments{:});
 
-
 %subtract dT for y
 if fitpar.link(1)
-    P(:,1)=P(:,1)+squeeze(dT(1,1,:));
+    P(:,1)=P(:,1)+squeeze(channelshift(1,1,:));
     ind2=1;
 else
-    P(:,1)=P(:,1)+squeeze(dT(1,1,:));
-    P(:,2)=P(:,2)+squeeze(dT(1,1,:));
+    P(:,1)=P(:,1)+squeeze(channelshift(1,1,:));
+    P(:,2)=P(:,2)+squeeze(channelshift(1,1,:));
     ind2=2;
 end
 
 %subtract dT for x
 if fitpar.link(2)
-    P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(channelshift(2,1,:));
 else
-    P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
-    P(:,ind2+2)=P(:,ind2+2)+squeeze(dT(2,1,:));
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(channelshift(2,1,:));
+    P(:,ind2+2)=P(:,ind2+2)+squeeze(channelshift(2,1,:));
 end
-
-% [PG,CRLBG, LLG] =  GPUmleFit_LM_MultiChannel_Gauss(d_data,2 (fitmode),uint32(sharedA),iterations,single(PSFstart),single(dT));
-
-
-% [P, CRLB,LogL, res]=CPUmleFit_LM_MultiChannel_R(arguments{:});
-% htot=P(:,8)
-% 
-% arguments{5}=varstack;
-% arguments{6}=1;
-% 
-%     switch fitpar.fitmode
-%         case {1,2,4} %fix
-%             arguments{4}=fitpar.PSFx0;
-%             arguments{1}=single(imstack/EMexcess);
-% %         case 2 %free
-%         case 3 %z
-%             arguments{1}=single(imstack/EMexcess);
-%             arguments{4}=single(fitpar.zparhere);
-% %         case 4 %sx sy
-%         case {5,6} %spline   
-%             if fitpar.mirrorstack
-%                 arguments{1}=single(imstack(:,end:-1:1,:)/EMexcess);
-%             else
-%                 arguments{1}=single(imstack/EMexcess);
-%             end
-%             arguments{4}=single(fitpar.splinefithere.cspline.coeff);
-%     end
 
 out.P=P;
 out.CRLB=CRLB;
- out.LogL=LogL;
- out.color=color;
- out.llsecond=llsecond;
+out.LogL=LogL;
+out.color=color;
+out.llsecond=llsecond;
 end
  
 function out=fitwrapper_4pi(imstack,fitpar,stackinfo,varstack)
@@ -660,11 +620,7 @@ if f
         msgbox('no 3D data recognized. Select other file.');
     end
     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
-     obj.setPar('cal_3Dfile',[p f]);
-%     if isfield(l,'transformation')
-%         obj.setPar('transformationfile',[p f]);
-%     end
-       
+     obj.setPar('cal_3Dfile',[p f]); 
 end
 end
 
