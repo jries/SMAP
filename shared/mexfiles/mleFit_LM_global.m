@@ -84,7 +84,7 @@ allfitters={@GPUmleFit_LM_MultiChannel,@CPUmleFit_LM_MultiChannel};
 if isempty(fitter)
     for k=1:length(allfitters)
         try
-            allfitters{k}(imstack,fittype,shared,iterations,splinecoeff,dT);
+            allfitters{k}(imstack,fittype,shared,iterations,splinecoeff,dT,varmap,0);
             fitter=k;
             break
         catch err

@@ -446,7 +446,7 @@ arguments{3}=uint32(sharedA);
 arguments{4}=uint32(fitpar.iterations);
 arguments{6}=single(channelshift);
 arguments{7}=[]; %sCMOS varmap
-arguments{8}=0; %silent
+arguments{8}=1; %silent
 arguments{9}=fitpar.zstart/fitpar.dz;
 arguments{10}=fitpar.PhotonRatios/fitpar.splinefithere.normf(2);
 switch fitpar.mode
