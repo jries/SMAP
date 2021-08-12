@@ -14,7 +14,7 @@ Menu info.
 If you are new to LocMoFit, you can find out how to get started via **:doc:`Getting statrted`** in the menu on the left. We recommend you to install LocMoFit with SMAP, a modular super-resolution microscopy analysis platform for SMLM data we developed.
 
 .. important::
-   We recommend you to start with our introductory series by following the tutorial in **:doc:`Quick start`**.
+   We recommend you to start with our introductory series by following the tutorial in **:doc:`Quick start</basics/quickstart>`**.
 
 **:doc:`Structure`** gives an overview of what LocMoFit has and the relations between different classes.
 
