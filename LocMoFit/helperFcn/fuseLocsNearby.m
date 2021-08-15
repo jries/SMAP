@@ -1,4 +1,42 @@
 function newLocs = fuseLocsNearby(locs, dist)
+useNew = 1;
+if useNew
+    neighbors = rangesearch([locs.xnm,locs.ynm,locs.znm], [locs.xnm,locs.ynm,locs.znm],dist);
+    numOfNB = cellfun(@length, neighbors);
+    
+    connections = zeros(sum(numOfNB-1)/2,2);
+    currentS = 0;
+    for k = 1:length(neighbors)
+        idx = neighbors{k}>k;
+        nn = sum(idx);
+        if nn>0
+            connections(currentS+1:currentS+nn,1) = k;
+            connections(currentS+1:currentS+nn,2) = neighbors{k}(idx);
+        end
+        currentS = currentS+nn;
+    end
+    
+    grpIdx = zeros(length(neighbors),1);
+    currentGrp = 0;
+    while any(numOfNB>1)
+        currentGrp = currentGrp+1;
+        [~,idxTakeOut] = max(numOfNB);
+        selectedCon = connections(connections(:,1)==idxTakeOut|connections(:,2)==idxTakeOut,:);
+        primaryNB = unique(selectedCon(:));
+        grpIdx(primaryNB) = idxTakeOut;
+        con2rm = ismember(connections,primaryNB);
+        lCon2rm = sum(con2rm,2)>=1;
+        con2rm = connections(lCon2rm,:);
+        nNBRm = histcounts(con2rm(:),1:length(numOfNB)+1);
+        numOfNB = numOfNB - nNBRm';
+        connections(lCon2rm,:)=[];
+    end
+    nLocsFused = accumarray(grpIdx, 1);
+    newLocs.xnm = accumarray(grpIdx, locs.xnm)./nLocsFused;
+    newLocs.ynm = accumarray(grpIdx, locs.ynm)./nLocsFused;
+    newLocs.znm = accumarray(grpIdx, locs.znm)./nLocsFused;
+    newLocs.n = nLocsFused;
+else
     neighbors = rangesearch([locs.xnm,locs.ynm,locs.znm], [locs.xnm,locs.ynm,locs.znm],dist);
     allGroups = {};
     neighborsMatrix = false(length(neighbors));
@@ -38,4 +76,5 @@ function newLocs = fuseLocsNearby(locs, dist)
     for k = 1:length(fn)
         newLocs.(fn{k})(idxRm) = [];
     end
+end
 end
