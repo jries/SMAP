@@ -23,7 +23,7 @@ if useNew
         [~,idxTakeOut] = max(numOfNB);
         selectedCon = connections(connections(:,1)==idxTakeOut|connections(:,2)==idxTakeOut,:);
         primaryNB = unique(selectedCon(:));
-        grpIdx(primaryNB) = idxTakeOut;
+        grpIdx(primaryNB) = currentGrp;
         con2rm = ismember(connections,primaryNB);
         lCon2rm = sum(con2rm,2)>=1;
         con2rm = connections(lCon2rm,:);
@@ -31,11 +31,15 @@ if useNew
         numOfNB = numOfNB - nNBRm';
         connections(lCon2rm,:)=[];
     end
+    currentGrp = currentGrp+1;
+    lZero = grpIdx==0;
+    grpIdx(lZero) = currentGrp:currentGrp-1+sum(lZero);
     nLocsFused = accumarray(grpIdx, 1);
     newLocs.xnm = accumarray(grpIdx, locs.xnm)./nLocsFused;
     newLocs.ynm = accumarray(grpIdx, locs.ynm)./nLocsFused;
     newLocs.znm = accumarray(grpIdx, locs.znm)./nLocsFused;
     newLocs.n = nLocsFused;
+    newLocs.layer = ones(size(newLocs.xnm));
 else
     neighbors = rangesearch([locs.xnm,locs.ynm,locs.znm], [locs.xnm,locs.ynm,locs.znm],dist);
     allGroups = {};
