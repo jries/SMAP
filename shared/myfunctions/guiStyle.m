@@ -1,4 +1,6 @@
 function guiStyle(guihandles, fn, varargin)
+    % This function converts relative positions in the unit of lines
+    % into absolute positions.
     p = inputParser;
     p.addParameter('exclude',[])
     p.addParameter('mode','default')
@@ -52,9 +54,11 @@ function guiStyle(guihandles, fn, varargin)
         edgeLen_hP = h.Parent.Position(3:4);
         pos = h.Position;
         
+%         pos(1) = Xrim + (pos(1)-1)*(Xsep + FieldWidth);
         pos(1) = Xrim + (pos(1)-1)*(Xsep + FieldWidth);
-        pos(2) = edgeLen_hP(2) - (Vrim + pos(2)*(Vsep+FieldHeight));
-        pos(3:4) = [pos(3)*FieldWidth pos(4)*FieldHeight];
+%         pos(2) = edgeLen_hP(2) - (Vrim + (pos(2)-pos(4)+1)*(Vsep+FieldHeight));
+        pos(2) = edgeLen_hP(2) - (Vrim + (pos(2)+pos(4))*(Vsep+FieldHeight));
+        pos(3:4) = [pos(3)*FieldWidth + floor(pos(3)-1)*Xsep pos(4)*FieldHeight + floor(pos(4)-1)*Vsep];
         
         h.Units = 'pixels';
         h.FontSize = fontsize;

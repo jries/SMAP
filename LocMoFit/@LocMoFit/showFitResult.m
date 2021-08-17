@@ -33,6 +33,7 @@ function showFitResult(obj, varargin)
 %     uip = uipanel('Title','Control','FontSize',12);
     pard.uip = uipanel('Parent',ax.Parent,'Title','Control','Position',[.01 .01 .98 .2]);
     
+    % the unit here is 'line'
     pard.playback = uicontrol(pard.uip,...
         'Style','pushbutton',...
         'String','Playback',...
@@ -66,6 +67,7 @@ function showFitResult(obj, varargin)
     obj.saveHandles(struct('showFitResult',ax.Parent));
     obj.saveHandles(pard, 'showFitResult');
 	
+    % convert to absolute positions
     guiStyle(obj.handles, strcat(fieldnames(pard),'_showFitResult'), 'exclude', 'uip_showFitResult');
 end
 

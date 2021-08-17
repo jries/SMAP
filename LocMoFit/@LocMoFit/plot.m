@@ -247,7 +247,7 @@ if isequal(results.plotType,'image')
             if ~isempty(obj.fitInfo)
                 % before 200605
 %                 oneImage = modelImage{indOneModel}.*obj.fitInfo.weightModel{indOneModel};
-                disp('!!!200605: changed, check here if warning.')
+%                 disp('!!!200605: changed, check here if warning.')
                 oneImage = modelImage{indOneModel};
             else
                 oneImage = modelImage{indOneModel};
@@ -270,7 +270,7 @@ if isequal(results.plotType,'image')
         if ~isempty(obj.weightLayer)
             % before 200605
 %               img2disp = img2disp + ind2rgb(ceil((oneCh./max(oneCh,[],1:length(size(oneCh)))).*obj.weightLayer(ch)*255)', mymakelut(nameAllLut{ch})); %%% !!!!!!quick and dirty
-                disp('!!!200605: changed, check here if warning.')
+%               disp('!!!200605: changed, check here if warning.')
             img2disp = img2disp + ind2rgb(ceil((oneCh./max(oneCh,[],1:length(size(oneCh)))).*results.color_max(ch))', mymakelut(nameLut{ch})); %%% !!!!!!quick and dirty
         else
             img2disp = img2disp + ind2rgb(ceil((oneCh./max(oneCh,[],1:length(size(oneCh)))).*results.color_max(ch))', mymakelut(nameLut{ch}));

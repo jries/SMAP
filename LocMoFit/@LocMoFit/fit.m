@@ -9,7 +9,7 @@ function fit(obj, locs, varargin)
 %   obj: a SMLMModelFit object.
 %   locs: a struct with fields of xnm, ynm, znm, locprecnm.
 %   Name-value pairs:
-%       *'locs2': a struct with fields of xnm, ynm, znm, locprecnm. This is the 
+%       *'locs2': a struct with fields of xnm, ynm, znm, locprecnm. This is the
 % second set of locs for particle fusion.
 
 
@@ -66,21 +66,21 @@ if ~isempty(obj.solver.SolverOptions)&&~p.skipFit
     else
         solverOption = optimoptions(obj.solver.SolverName, solverOptions{:});
     end
-%     solverOption.PlotFcns = {@optimplotx};
-
+    %     solverOption.PlotFcns = {@optimplotx};
+    
     % Deal with the plotFcn/outputFcn
     if ~isempty(plotFun)
-    solverOption.PlotFcns = @obj.optimoPlotMod;
+        solverOption.PlotFcns = @obj.optimoPlotMod;
     end
     if ~isempty(outputFcn)
-    solverOption.OutputFcn = @obj.optimOutputPar;
+        solverOption.OutputFcn = @obj.optimOutputPar;
     end
 else
     solverOption = {};
 end
 
 %% Set the init values of the parameters based on the rules
-% The rules are defined by the users to convert other information to the initial 
+% The rules are defined by the users to convert other information to the initial
 % guess, and upper/lower bounds etc.
 if ~p.skipFit
     if ~isempty(obj.converterRules)                                                     % if the converter rules exist
@@ -111,7 +111,7 @@ for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
     lSet2Max = finalUb>maxVal';
     finalLb(lSet2Min)=minVal(lSet2Min);
     finalUb(lSet2Max)=maxVal(lSet2Max);
-
+    
     %% Get locs counts per layer
     allLocsLayers = unique(locs.layer);
     obj.numOfLocsPerLayer = histcounts(locs.layer, 1:max(allLocsLayers)+1);
@@ -148,39 +148,39 @@ for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
     if ~p.skipFit
         switch obj.solver.SolverName
             case 'fminsearchbnd'
-                [parBestFit,LLfit] = solverFun(@(fitPars)objFun(fitPars),...
+                [parBestFit,mLLfit] = solverFun(@(fitPars)objFun(fitPars),...
                     init',...
                     finalLb,...
                     finalUb,...
                     solverOption);
             case 'particleswarm'
-                [parBestFit,LLfit] = solverFun(@(fitPars)objFun(fitPars),...
+                [parBestFit,mLLfit] = solverFun(@(fitPars)objFun(fitPars),...
                     length(lb),...
                     finalLb,...
                     finalUb,...
                     solverOption);
             case 'fmincon'
-            [parBestFit,LLfit] = solverFun(@(fitPars)objFun(fitPars),...
-                init',...
-                [],...
-                [],...
-                [],...
-                [],...
-                finalLb,...
-                finalUb,...
-                [],...
-                solverOption);
+                [parBestFit,mLLfit] = solverFun(@(fitPars)objFun(fitPars),...
+                    init',...
+                    [],...
+                    [],...
+                    [],...
+                    [],...
+                    finalLb,...
+                    finalUb,...
+                    [],...
+                    solverOption);
         end
     else
         parBestFit = obj.allParsArg.value(indFit)';
-        LLfit = -obj.fitInfo.LLfit*sum(ismember(locs.layer,obj.allModelLayer));
+        mLLfit = -obj.fitInfo.LLfit*sum(ismember(locs.layer,obj.allModelLayer));
     end
 end
 obj.currentCascadeStep = 1; % resent the currenct step
 obj.allParsArg.value(indFit) = parBestFit;            % only update the fit parameters
 
 if ~p.skipFit
-%% Compensation of the pixel-size-depedent offsets
+    %% Compensation of the pixel-size-depedent offsets
     switch obj.model{1}.modelType
         % Since all models are relative to model 1, only its xyz need to be
         % corrected.
@@ -190,7 +190,7 @@ if ~p.skipFit
             else
                 parName = {'x','y','z'};
             end
-
+            
             for k = 1:length(parName)
                 [val,ind] = obj.getVariable(['m1.' parName{k}]);
                 if ~obj.allParsArg.fix(ind)
@@ -200,16 +200,24 @@ if ~p.skipFit
         otherwise
             % do nothing
     end
-obj.status = 'finished';
+    obj.status = 'finished';
 end
 
 %% Calculate log-likelihood values
 % save the log liklihood and weighting factors
 % fitInfo is created here
 obj.fitInfo = [];
-obj.fitInfo.LLfit = -LLfit/sum(ismember(locs.layer,obj.allModelLayer));
+numFittedLocs = sum(ismember(locs.layer,obj.allModelLayer));
+obj.fitInfo.LLfit = -mLLfit/numFittedLocs;
 obj.fitInfo.numOfLocsPerLayer = obj.numOfLocsPerLayer;
 obj.fitInfo.BGDensity = obj.getBGDensity;
+obj.fitInfo.AIC = 2*obj.numOfFreePar+2*mLLfit;
+obj.fitInfo.AICc = obj.fitInfo.AIC+2*(obj.numOfFreePar^2+obj.numOfFreePar)/(numFittedLocs-obj.numOfFreePar-1);
+obj.fitInfo.normAICc = obj.fitInfo.AICc/numFittedLocs;
+if isfield(obj.temp, 'optimHistory')
+    obj.fitInfo.optimHistory = obj.getTemp('optimHistory');
+    obj.rmTemp('optimHistory');
+end
 
 %% Calculate control log-likelihood values
 

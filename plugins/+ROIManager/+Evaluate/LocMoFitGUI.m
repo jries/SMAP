@@ -411,6 +411,11 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                             end
                         end
                         
+                        % Create the tab for fitted parameters
+                        axPar = obj.setoutput('Fitted_Par');
+                        uiFittedPar(axPar, fitter);
+                        axPar.Visible = 'Off';                        
+    
                         if keepParsVal
                             fitter.allParsArg = tempAllParsArg; % since the display is only for this site, the original allParsArg should be put back.
                         end

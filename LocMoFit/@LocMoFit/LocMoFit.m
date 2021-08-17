@@ -392,6 +392,12 @@ classdef LocMoFit<matlab.mixin.Copyable
             min = obj.allParsArg.min(indFit);
             max = obj.allParsArg.max(indFit);
         end
+        
+        function k = numOfFreePar(obj)
+            indFit = ~obj.allParsArg.fix;
+            k = sum(indFit);
+        end
+        
         function updatePars(obj,newParsArg)
             fn = fieldnames(newParsArg);
             for k=1:length(newParsArg.name)
@@ -490,7 +496,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             elseif length(parts)==2
                 if ~isempty(regexp(parts{1}, '^m\d*','once'))
                     model = replace(parts{1},'m','');
-                    ('Check here if there is an error related to background.')
+%                     ('Check here if there is an error related to background.')
 %                     if str2num(model)>90
 %                         model = num2str(str2num(model)-90);
 %                     end
