@@ -34,7 +34,7 @@ After inspecting several sites, we are now moving on to fit all sites. Such a ba
 Go to the **[Evaluate]** tab. In the left panel, uncheck **display** and click **redraw all**. You will see the analysis going down the list of sites.
 :::{Note}
 * While running, you should see the message _"redrawall: site [current site] of 100"_ in the status bar.
-* You will know the analysis is done when _"redrawall: completed"_ shows up in the status bar.
+* You will know the analysis is done when _"redrawall: completed"_ shows up in the status bar. This usually takes around 1-2 minutes.
 :::
 
 ## Summary of parameter values

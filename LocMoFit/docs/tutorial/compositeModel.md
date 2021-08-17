@@ -1,24 +1,24 @@
 # Composite model
 
-In this tutorial you will learn how to build a composite model with the GUI. We will build a 3D dual-ring model by combining two times the same ring model. You will need:
+In this tutorial you will learn how to build a composite model with the GUI. We will build a 3D dual-ring model by combining two times the identical ring model. You will need:
 * **SMAP** installed. Further information can be found on our [GitHub](https://github.com/jries/SMAP/) site.
 * _U2OS_Nup96_BG-AF647_demo_sml.mat_
 * _ring3d.mat_
 * _dualRing_model1_fitPar.csv_
 * _dualRing_model2_fitPar.csv_
+
 The four files above can be downloaded [here](https://www.embl.de/download/ries/LocMoFit/).
 
 ## Preparation
 :::{important}
 Skip step 1 and 2 if you continue from {doc}`quick start<./quickstart>`.
+
+Instead, remove the previous loaded **LocMoFitGUI** if you continue from {doc}`quick start<./quickstart>`:
+	1. Go to **[ROIs]** -> **[Evaluate]** and click on the module to remove.
+	2. Click **remove**.
 :::
 1. Start SMAP.
 2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_.
-	:::{important}
-	Remove the previous loaded **LocMoFitGUI** if you continue from {doc}`quick start<./quickstart>`:
-	1. Go to the **[ROIs]** tab -> **[Evaluate]** tab and click on the module to remove.
-	2. Click the **remove** button.
-	:::
 3. Load a new instance of the plugin **LocMoFitGUI** (see {doc}`quick start<./quickstart>` if you forget how to do it).
 
 ## Setup

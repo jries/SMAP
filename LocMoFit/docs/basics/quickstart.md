@@ -34,7 +34,7 @@ Fitting a site can be executed by clicking the site in the list of sites in the 
 	* The loaded evaluate plugins will be evaluated only when **evaluate on** is checked.
 	* Result windows of the loaded evaluate plugins will be displayed only when **display** is checked.
 	:::
-3. In the _ROI Manager_ window, click on one site in the list of sites and wait for a few seconds. You should see a new window _LocMoFitGUI_.
+3. In the _ROI Manager_ window, click on one site in the list of sites and wait for a few seconds. You should see a new window _LocMoFitGUI_, in which the localizations are plotted on the fitted model.
 	:::{Note}
 	The **LocMoFitGUI** window allows you to inspect the result right after fitting. The window may look different depending on the model type.
 	:::
