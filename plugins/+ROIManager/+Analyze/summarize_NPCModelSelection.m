@@ -62,7 +62,7 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
                 curve_normAICc{m}.Color = myDiscreteLUT(colorID(m));
             end
             
-            xlabel(ax_normAICc,'Normalized AICc');
+            xlabel(ax_normAICc,'Normalized AIC_c');
             ylabel(ax_normAICc,'Cumulative probability');
             allLine = findobj(ax_normAICc,'type','line');
             set(allLine,'linewidth',1.5)

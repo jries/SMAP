@@ -18,10 +18,10 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
                 sym(k) = se.sites(k).evaluation.simulatesites.model.model{1}.modelObj.internalSettings.cornerNum;
             end
 
-            LLfit = [];
+            normAICc = [];
             
             for m = 1:5
-                LLfit.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites, ['evaluation.SMLMModelFitGUI_' num2str(m+2) '.fitInfo.LLfit']);
+                normAICc.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites, ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.normAICc']);
             end
             
             
@@ -33,12 +33,12 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
                 axes(ax)
                 hold on
                 for m = 1:5
-                    LLfit_oneModel = LLfit.(['sym',num2str(m+5),'f'])(lOneSym);
-                    cdfplot(LLfit_oneModel)
-                    curve{m} = cdfplot(LLfit_oneModel);
+                    normAICc_oneModel = normAICc.(['sym',num2str(m+5),'f'])(lOneSym);
+                    cdfplot(normAICc_oneModel)
+                    curve{m} = cdfplot(normAICc_oneModel);
                     curve{m}.Color = myDiscreteLUT(colorID(m));
                 end
-                xlabel(ax,'Maximum log-likelihood');
+                xlabel(ax,'Normalized AICC');
                 ylabel(ax,'Cumulative probability');
                 allLine = findobj(ax,'type','line');
                 set(allLine,'linewidth',1.5)
@@ -54,12 +54,12 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
             out = [];
             %% Comparison plot (6f vs 8f)
             axCmp = obj.initaxis('Comparison');
-            pt = [LLfit.('sym8f')(sym == 8);LLfit.('sym6f')(sym == 8)]';
+            pt = [normAICc.('sym8f')(sym == 8);normAICc.('sym6f')(sym == 8)]';
             Idx = rangesearch(pt,pt,0.1);
             count = cellfun(@length, Idx);
-            scatter(axCmp, LLfit.('sym8f')(sym == 8), LLfit.('sym6f')(sym == 8),2, count, 'filled')
+            scatter(axCmp, normAICc.('sym8f')(sym == 8), normAICc.('sym6f')(sym == 8),2, count, 'filled')
             hold(axCmp, 'on')
-            plot(axCmp, [-17 -11],[-17 -11], '-k')
+            plot(axCmp, [25.5 33],[25.5 33], '-k')
             hold(axCmp, 'off')
             xlabel(axCmp, 'Eight-fold symmetry')
             ylabel(axCmp, 'Six-fold symmetry')
@@ -67,11 +67,11 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
             %% Mix (6f and 8f)
             axMix = obj.initaxis('Mix');
             sz = 3;
-            hs8 = scatter(axMix, LLfit.('sym8f')(sym==8), LLfit.('sym6f')(sym==8),sz, myDiscreteLUT(colorID(3), 'type', 'rgb'), 'filled');
+            hs8 = scatter(axMix, normAICc.('sym8f')(sym==8), normAICc.('sym6f')(sym==8),sz, myDiscreteLUT(colorID(3), 'type', 'rgb'), 'filled');
             hold(axMix, 'on')
-            hs6 = scatter(axMix, LLfit.('sym8f')(sym==6), LLfit.('sym6f')(sym==6),sz, myDiscreteLUT(colorID(1), 'type', 'rgb'), 'filled');
+            hs6 = scatter(axMix, normAICc.('sym8f')(sym==6), normAICc.('sym6f')(sym==6),sz, myDiscreteLUT(colorID(1), 'type', 'rgb'), 'filled');
 %             set([hs8 hs6],'MarkerFaceAlpha', 0.3)
-            plot(axMix, [-17 -11],[-17 -11], '-k')
+            plot(axMix, [25.5 33],[25.5 33], '-k')
             hold(axMix, 'off')
             xlabel(axMix, 'Eight-fold symmetry')
             ylabel(axMix, 'Six-fold symmetry')
