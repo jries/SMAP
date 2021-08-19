@@ -44,6 +44,7 @@ for k=1:length(filelist)
     else
         filelisth=filelist{k};
         [imstack, p.roi{k}, p.pixelsize{k},settings3D,p.emgain]=readbeadimages(filelisth,p);
+        imstack=single(imstack);
         p.roi2=p.roi;
         imstack2=imstack; %for simplicity and to avoid code duplication: when only one channel is considered
     end
