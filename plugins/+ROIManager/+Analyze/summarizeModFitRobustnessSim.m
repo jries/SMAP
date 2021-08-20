@@ -14,14 +14,14 @@ classdef summarizeModFitRobustnessSim<interfaces.DialogProcessor&interfaces.SEPr
             siteOrder = 1:se.numberOfSites;
 
             usedSites = sites(lUsed);
-            fitInfo = getFieldAsVector(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo');
+            fitInfo = getFieldAsVector(usedSites, 'evaluation.LocMoFitGUI_3.fitInfo');
             evalList = se.processors.eval.guihandles.modules.Data(:,2);
-            indProcessor = find(strcmp('SMLMModelFitGUI_3',evalList));
+            indProcessor = find(strcmp('LocMoFitGUI_3',evalList));
 %             relativePosLastStep = 2;
             ID = getFieldAsVector(usedSites, 'ID');
-            numOfLocsL1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.fitInfo.numOfLocsPerLayer', 1);
+            numOfLocsL1 = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI_3.fitInfo.numOfLocsPerLayer', 1);
             % [~,idxZ] = g.locData.SE.processors.eval.processors{indProcessor-2}.fitter.wherePar('pars.m1.lPar.z');
-            % zS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxZ);
+            % zS1 = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI.allParsArg.value',idxZ);
             %             
             fitter = se.processors.eval.processors{indProcessor}.fitter;
             
@@ -50,7 +50,7 @@ classdef summarizeModFitRobustnessSim<interfaces.DialogProcessor&interfaces.SEPr
             [~,~,stats] = errorPlot(obj, settings, parStack, allGrpId);
             
 %             [~,idxVar] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.variation');
-%             var = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idxVar);
+%             var = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI_3.allParsArg.value',idxVar);
 
             colID = [7 2];
             if p.separationHistogram
@@ -135,6 +135,7 @@ function settings = savedSettings()
 end
 
 function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
+    generalTable = [];
     for k = 1:length(settings)
         oneSetting = settings(k);
         if size(parStack(k).gt,2)>1
@@ -186,9 +187,9 @@ function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
         
         if nargout>2
             sampleLabels = strcat(testVar, '_', string(var) ,'-', conditionLabels(cond)');
-            stats = strcat(strtrim(string(num2str(grpMean, '%0.2f'))), " ", char(177), " ", strtrim(string(num2str(grpStd, '%0.2f'))));
-            table = [sampleLabels stats];
-            table = sprintf('%s\t%s\n', table');
+            stats = strcat(strtrim(string(num2str(grpMean, '%0.1f'))), " ", char(177), " ", strtrim(string(num2str(grpStd, '%0.1f'))));
+            table = [sampleLabels stats repelem(string(oneSetting.tabTitle), length(stats))' repelem(string(oneSetting.yLabUnit), length(stats))'];
+            generalTable = [generalTable;table];
         end
         
         for con = unique(cond)'
@@ -221,7 +222,7 @@ function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
         ylabel(ax, ['Error (' oneSetting.yLabUnit ')'])
         
     end
-
+    table = sprintf('%s\t%s\t%s\t%s\n', generalTable');
 end
 
 function parStack = extractPar(sites, fitter, settings)
@@ -238,7 +239,7 @@ end
 
 function [val,val_gt] = extractOnePar(sites, fitter, parID, gt_alternative)
     [~,idx] = fitter.wherePar(parID);
-    val = getFieldAsVectorInd(sites, 'evaluation.SMLMModelFitGUI_3.allParsArg.value',idx);
+    val = getFieldAsVectorInd(sites, 'evaluation.LocMoFitGUI_3.allParsArg.value',idx);
     if isempty(gt_alternative)
         val_gt = getFieldAsVectorInd(sites, 'evaluation.simulatesites.model.allParsArg.value',idx);
     else
