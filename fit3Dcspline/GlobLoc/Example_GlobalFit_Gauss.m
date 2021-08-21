@@ -28,9 +28,9 @@ noChannels = 2; %number of channels
 iterations=50;  %iteration time
 sCMOSvarmap = 0;
 silent = 0;
-initSigma = 1.5
+initSigma = 1.5;
 n=1;
-for Npixels = 11:15
+for Npixels = 7:19
     %   Generate a stack of images
     coordsxy1 = Npixels/2 -1 +2*rand([Nfits 2]);
     coordsxy2 = zeros(Nfits,2);
@@ -64,14 +64,23 @@ for Npixels = 11:15
     dTS(:,3:4,:)=dS;
 
     
-    shared = repmat([1;1;1;1;0], [1 Nfits]); % link all parameters, XYZ,Photons and background
+    shared = repmat([1;1;1;1;1], [1 Nfits]); % link all parameters, XYZ,Photons and background
 
     
    
-    
+    d_data = single(d_data);
+    fittype = int32(fittype);
+    shared = int32(shared);
+    iterations = int32(iterations);
+    initSigma = single(initSigma);
+    dTS = single(dTS);
 
     tic
-     [P,CRLB, LL1] =  mleFit_LM_globalfit(d_data,fittype,shared,iterations,initSigma,dTS,sCMOSvarmap,silent);
+%      [P,CRLB, LL1] =  mleFit_LM_globalfit(d_data,fittype,shared,iterations,initSigma,dTS,sCMOSvarmap,silent);
+     
+     [P,CRLB, LL] =  GPUmleFit_LM_MultiChannel(d_data,fittype,shared,iterations,initSigma,dTS);
+
+     
     tGauss=toc;
     
     GPUmleFit_LM_MultiChannel_Gauss(n,1)=Nfits/tGauss;

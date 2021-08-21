@@ -4,29 +4,27 @@ function [P,CRLB,LogL]=mleFit_LM_globalfit(varargin)
 %fitmode, varmap,zstart
 
 % 1. imagestack (single)
-% 2. shared parameters
+% 2. fittype: 1 for 2D Gauss, 2 for spline
+% 3. shared parameters
 
-% optional:
-% 3. iterations (default=50)
-% 4. paramters for fitters:
+% 4. iterations (default=50)
+% 5. paramters for fitters:
 
 %   cspline: cspline coefficients (single)
-%   cspline for 2D PSF: as 5, but two fits to break asymmetry. cspline coefficients (single)
-% 5. shifts dT
-% 6. silent (suppress output if 1)
+%   Gauss :init sigma
+% 6. shifts dT
 % 7. scmoS varmap
-% 8. z start parameter (more than one: return solution with maximum
+% 8. silent (suppress output if 1)
+
+% 9. z start parameter (more than one: return solution with maximum
 %       LIkelihood). Units: distance of stack calibration, center based
 
 
 %Output:
 %P
-%1. X, Y, Photons, Background, Iterations
-%2. X, Y, Photons, Background, PSFxy, Iterations
-%3. X, Y, Photons, Background, Z, Iterations
-%4. X, Y, Photons, Background, PSFx, PSFy, Iterations
-%5. X, Y, Photons, Background, Z, Iterations
-%6. X, Y, Photons, Background, Z, Iterations
+%1. X, Y, Photons, Background, PSFxy, Iterations
+%2. X, Y, Photons, Z, Background, PSFxy, Iterations
+
 %CRLB: cramer-rao lower bounds, as in P
 %LogL: log-likelihood.
 
