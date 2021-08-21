@@ -80,10 +80,12 @@ else
     silent=1;
 end
 
-if nargin>8 && ~isempty(varargin{9})
+if nargin>8 && ~isempty(varargin{9})&& (fittype==2)
     zstart=single(coeffsize(3)/2+varargin{9});
-else
+elseif (fittype==2)
     zstart=repmat(single(coeffsize(3)/2),[Nfits,1]);
+else
+    zstart=0;
 end
 
 
