@@ -29,6 +29,7 @@ classdef SMLMsaver<interfaces.DialogProcessor
               
             if isfield(p, 'saveTo')
                 [path,f,ext]=fileparts(p.saveTo);
+                path = [path filesep];
                 f = [f ext];
             else
                 [f,path]=uiputfile(of);
