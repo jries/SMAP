@@ -146,7 +146,7 @@ switch colour
 end
 
 if startsWith(p.coordinatefile, '--')
-    ext = 'SMLMModelFit';
+    ext = 'LocMoFit';
 else
     [~,~,ext]=fileparts(p.coordinatefile);% Get extension of the specified file
 end
@@ -195,7 +195,7 @@ switch ext
         image=imread(p.coordinatefile);
         img=sum(image,3)/size(image,3); %binarize
         image=double(img)/255;
-	case 'SMLMModelFit'
+	case 'LocMoFit'
         % Added by Yu-Le:
         fitter = p.obj.getPar('fitter');
     otherwise
@@ -238,7 +238,7 @@ for k=numberofsites:-1:1
     if ~isempty(image)
         locsh=locsfromimage(image,p);
     elseif ~isempty(fitter)
-        % added by Yu-Le for SMLMModelFit:
+        % added by Yu-Le for LocMoFit:
         switch p.obj.getPar('modelType')
             case 'Image'
                 locsh=locsfromContFun(p);
@@ -359,7 +359,7 @@ locs.y=(y(keep)-0.5)*p.tif_imagesize;
 end
 
 function locs=locsfromContFun(p)
-% added by Yu-Le for SMLMModelFit:    
+% added by Yu-Le for LocMoFit:    
 if p.tif_numbermode.Value==1
 else
 end
@@ -401,7 +401,7 @@ locs.channel = label.layer(lKept);
 end
 
 function [locs,parameters]=locsfromDiscFun(p)
-% added by Yu-Le for SMLMModelFit:   
+% added by Yu-Le for LocMoFit:   
 fitter = p.obj.getPar('fitter');
 finalROISize = p.obj.getPar('finalROISize');
 fitter.roiSize = p.se_siteroi;

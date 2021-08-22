@@ -1,6 +1,6 @@
-classdef summarizeModFitRobustnessSim<interfaces.DialogProcessor&interfaces.SEProcessor
+classdef summarizeLocprecTitration<interfaces.DialogProcessor&interfaces.SEProcessor
     methods
-        function obj=summarizeModFitRobustnessSim(varargin)        
+        function obj=summarizeLocprecTitration(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
             obj.inputParameters={'se_viewer', 'se_siteroi', 'se_sitefov'};
             obj.showresults=true;
@@ -39,38 +39,27 @@ classdef summarizeModFitRobustnessSim<interfaces.DialogProcessor&interfaces.SEPr
 %             settings(6).parID = 'pars.m1.lPar.variation';
 %             settings(6).tabTitle = 'Linkage error';
             
-            allGrpId = {};
-            for k = 1:length(obj.locData.files.file)
-                [~,oriName] = fileparts(obj.locData.files.file(k).name);
-                oneGrpId = regexp(oriName, '\_(cond\d+\_\D+\d+)\_','tokens');
-                allGrpId(k) = oneGrpId;
+            
+            switch strtrim(p.xAxis.String(p.xAxis.Value,:))
+                case 'photon'
+                    ph = regexp(getFieldAsVector(obj.SE.files,'name'), 'L\d*P(\d)*B0R2L2','tokens');
+                    ph = [ph{:}];
+                    ph = str2double(string(ph));
+                    grp = grpstats(obj.locData.grouploc.locprecnm, ph(obj.locData.grouploc.filenumber),'median');
+
+                    filenumber = getFieldAsVector(obj.SE.sites, 'info.filenumber');
+                    nSites = grpstats(ph(filenumber)',ph(filenumber)','numel');
+                    grp = repelem(grp,nSites);
+                case 'file'
+                    filenumber = getFieldAsVector(obj.SE.sites, 'info.filenumber');
+                    grp = filenumber;
             end
-            allGrpId = repmat(allGrpId,[200 1]);
-            allGrpId = [allGrpId{:}]';
-            [~,~,stats] = errorPlot(obj, settings, parStack, allGrpId);
+            [~,~,stats] = errorPlot(obj, settings, parStack, grp);
             
 %             [~,idxVar] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.variation');
 %             var = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI_3.allParsArg.value',idxVar);
 
             colID = [7 2];
-            if p.separationHistogram
-                axHist = obj.initaxis('Separation (LE)');
-                allGrp2plot = {'cond2_LE0','cond2_LE4'};
-                hold(axHist,'on')
-                lParameter = strcmp({settings.tabTitle}, 'Separation');
-                error = parStack(lParameter).fit-parStack(lParameter).gt;
-                for l = 1:length(allGrp2plot)
-                    lGrp = strcmp(allGrp2plot{l}, allGrpId);
-                    histogram(axHist,error(lGrp)+50,-10:2.5:85, 'FaceColor',myDiscreteLUT(colID(l)))
-                end
-                hold(axHist,'off')
-                xlabel(axHist,'Ring separation (nm)')
-                ylabel(axHist,'Counts')
-                axHist.LineWidth = 1.5;
-                
-                axScatter = obj.initaxis('Interactive');
-                plotSElink(axScatter,error(lGrp)+50,1:sum(lGrp), ID(lGrp), se, ' ob')
-            end
             
             try
                 clipboard('copy', stats)
@@ -146,69 +135,32 @@ function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
             error = oneSetting.processError(error);
         end
         [grpMean, grpStd, grpID] = grpstats(error,grp, {'mean','std','gname'});
-        grpID = regexp(grpID, 'cond(\d+)_(\D+)(\d+)','tokens');
-        cond = cellfun(@(x)str2num(x{1}{1}), grpID);
-        varName = cellfun(@(x)x{1}{2}, grpID, 'UniformOutput', false);
-        var = cellfun(@(x)str2num(x{1}{3}), grpID);
-        
+                
         % check which of BG, RB, and LE
-        [uniVarName,~,ic] = unique(varName);
-        varNameCounts = accumarray(ic,1);
-        [~,maxID] = max(varNameCounts);
-        [~,minID] = min(varNameCounts);
-        testVar = uniVarName{maxID};
-        
-        if strcmp(testVar, 'RB')
-            var(ic==minID) = 2;
-        end
-        
-        [var,varOrder] = sort(var);
-        grpMean = grpMean(varOrder);
-        grpStd = grpStd(varOrder);
-        cond = cond(varOrder);
-        
         ax = obj.initaxis(oneSetting.tabTitle);
         hold(ax,'on')
-        h = {};
-        col = {'#ff8000','#008080','#0804a4' };
+        col = '#ff8000';
         
-        conditionLabels = {'PALM','STORM','PAINT'};
-        switch testVar
-            case 'bg'
-                var = var*10;
-                xlab = 'Background (%)';
-            case 'LE'
-                var = ((1-var*0.1)-0.3)*100;
-                xlab = 'Labeling efficiency (%)';
-            case 'RB'
-                xlab = 'Re-blinks';
-            otherwise
-        end
+        locprenm = str2double(string(grpID));
         
         if nargout>2
-            sampleLabels = strcat(testVar, '_', string(var) ,'-', conditionLabels(cond)');
             stats = strcat(strtrim(string(num2str(grpMean, '%0.1f'))), " ", char(177), " ", strtrim(string(num2str(grpStd, '%0.1f'))));
-            table = [sampleLabels stats repelem(string(oneSetting.tabTitle), length(stats))' repelem(string(oneSetting.yLabUnit), length(stats))'];
+            table = [locprenm stats repelem(string(oneSetting.tabTitle), length(stats))' repelem(string(oneSetting.yLabUnit), length(stats))'];
             generalTable = [generalTable;table];
         end
         
-        for con = unique(cond)'
-            h{con} = errorshade(ax, var(cond==con), grpMean(cond==con), grpStd(cond==con),...
-                'Color',col{con},...
+        errorshade(ax, locprenm, grpMean, grpStd,...
+                'Color',col,...
                 'LineWidth',1.5,...
                 'Marker','o',...
-                'MarkerFaceColor',col{con},...
+                'MarkerFaceColor',col,...
                 'Shade_FaceAlpha',0.25,...
                 'Shade_FaceColor','none',...
                 'Shade_LineStyle','--',...
-                'Shade_EdgeColor',col{con},...
+                'Shade_EdgeColor',col,...
                 'Shade_LineWidth',1);
 %             h{con} = errorbar(ax, var(cond==con), grpMean(cond==con), grpStd(cond==con));
-        end
-        lineObj = findobj(ax,'type','line');
-        patchObj = findobj(ax,'type','Patch');
-        ax.Children = [lineObj; patchObj];
-        legend([h{:}], {'PALM','STORM','PAINT'},'Location','southwest','NumColumns',3)
+
         hold(ax,'off');
 %         range_var = range(var);
 %         ax.XLim = [min(var)-0.1*range_var max(var)+0.1*range_var];
@@ -218,7 +170,7 @@ function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
 %         ax.YLim = [round(min_var-range_var) round(max_var+range_var)];
         ax.YLim = [-oneSetting.oneSideBound oneSetting.oneSideBound];
         title(ax, oneSetting.tabTitle)
-        xlabel(ax, xlab)
+        xlabel(ax, 'Median localization precision (nm)')
         ylabel(ax, ['Error (' oneSetting.yLabUnit ')'])
         
     end
@@ -259,9 +211,9 @@ end
 
 function pard=guidef(obj)
 
-pard.separationHistogram.object=struct('String','Histogram (ringSep)','Style','checkbox');
-pard.separationHistogram.position=[1,1];
-pard.separationHistogram.Width=1.5;
+pard.xAxis.object=struct('Style','popupmenu','String','file|photon');
+pard.xAxis.position=[1,1];
+pard.xAxis.Width=1.5;
 
 pard.plugininfo.type='ROI_Analyze';
 

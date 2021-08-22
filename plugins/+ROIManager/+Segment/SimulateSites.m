@@ -6,7 +6,7 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
     %photophysics of the dye. Simulated structures are added to the
     %RoiManager
     properties
-        lSMLMModelFitGUI_loaded = false;    % whether any SMLMModelFitGUI is loaded.
+        lLocMoFitGUI_loaded = false;    % whether any LocMoFitGUI is loaded.
     end
     methods
         function obj=SimulateSites(varargin)        
@@ -18,9 +18,9 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
         function initGui(obj)
             setvisibility(obj);
             % added by Yu-Le
-            % check through the name of loaded eval plugins and find SMLMModelFit 
+            % check through the name of loaded eval plugins and find LocMoFit 
             if ~isempty(obj.locData.SE.processors.eval.guihandles.modules.Data)
-                lFitterFound = strfind(obj.locData.SE.processors.eval.guihandles.modules.Data(:,2), 'SMLMModelFitGUI');
+                lFitterFound = strfind(obj.locData.SE.processors.eval.guihandles.modules.Data(:,2), 'LocMoFitGUI');
                 lFitterFound = [lFitterFound{:}];
                 lFitterFound = any(lFitterFound);
             else
@@ -136,14 +136,14 @@ function useFitter_callback(a,b,obj)
     selectionTable = uitable(fig);
     nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
     
-    lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    lFitterFound = strfind(nameEvalPlugins, 'LocMoFitGUI');
     for k = 1:length(lFitterFound)
         lFitterFound{k} = ~isempty(lFitterFound{k});
     end
     lFitterFound = [lFitterFound{:}];
     
-    nameSMLMModelFitGUI = nameEvalPlugins(logical(lFitterFound));
-    selectionTable.Data = [num2cell(false(size(nameSMLMModelFitGUI))) nameSMLMModelFitGUI];
+    nameLocMoFitGUI = nameEvalPlugins(logical(lFitterFound));
+    selectionTable.Data = [num2cell(false(size(nameLocMoFitGUI))) nameLocMoFitGUI];
     selectionTable.ColumnEditable = [true false];
     selectionTable.CellEditCallback = {@selectionTable_CECallback};
     selectionTable.Position = [20 50 300 300];
@@ -159,12 +159,12 @@ end
 
 function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     % Added by Yu-Le
-    % set the selected SMLMModelFit as a parameter of SimulateSites.
+    % set the selected LocMoFit as a parameter of SimulateSites.
     selected = selectionTable.Data(:,1);
     idxSelected = find([selected{:}]);
     nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
     
-    lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    lFitterFound = strfind(nameEvalPlugins, 'LocMoFitGUI');
     for k = 1:length(lFitterFound)
         lFitterFound{k} = ~isempty(lFitterFound{k});
     end
@@ -182,7 +182,7 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     obj.setPar('fitter_ori',fitter_ori)
     close(fig);
     obj.guihandles.setModPars_button.Visible='on';
-    obj.guihandles.coordinatefile.String='-- Internal SMLMModelFit';
+    obj.guihandles.coordinatefile.String='-- Internal LocMoFit';
 end
 
 function setModPars_callback(a,b,obj)
@@ -222,7 +222,7 @@ function setModPars_callback(a,b,obj)
     finalROISize.Callback = {@finalROISize_callback,obj};
     
     %% Data
-    % Acquire the SMLMModelFit obj, and then display parameters based on the allParsArg
+    % Acquire the LocMoFit obj, and then display parameters based on the allParsArg
     fitter = obj.getPar('fitter');
 
     parName = fitter.allParsArg.name;
@@ -321,7 +321,7 @@ function setvisibility(obj)
 f=obj.getSingleGuiParameter('coordinatefile');
 % added by Yu-Le
 if startsWith(f,'--')
-    ext = 'SMLMModelFit';
+    ext = 'LocMoFit';
 else
     [p,fh,ext]=fileparts(f);
 end
@@ -359,7 +359,7 @@ switch ext
             txt='on';
             tif='off';            
         end
-    case 'SMLMModelFit'
+    case 'LocMoFit'
         modelType = obj.getPar('modelType');
         if ~isempty(modelType)
             switch modelType
