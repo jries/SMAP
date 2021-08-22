@@ -78,11 +78,13 @@ else
         warning('Photon ratios need to be a vector of numbers, not char.')
     end
     %shared(4,:)=1; %if we fit with ratios, N needs to be linked
-    iterationsin=iterations;
-    iterations=30; %used for testing different colors
+    if fittype>1
+        iterationsin=iterations;
+        iterations=15; %used for testing different colors
+    end
     photonratiofixed=true;
 end
-dT=ratiochannelshift(channelshift,1); %for test and used if no photon ratio given
+dT=ratiochannelshift(channelshift,1,fittype); %for test and used if no photon ratio given
 
 %determine of it runs on GPU, otherwise use CPU as default
 persistent fitter
@@ -110,7 +112,7 @@ first=true;
 LogLp=ones(size(imstack,3),length(PhotonRatios));
 for phot=1:length(PhotonRatios)
     if photonratiofixed
-        dT=ratiochannelshift(channelshift,PhotonRatios(phot));
+        dT=ratiochannelshift(channelshift,PhotonRatios(phot),fittype);
     end
     for k=1:length(zstart)
          zstarth=repmat(zstart(k),1,Nfits);
@@ -135,18 +137,24 @@ for phot=1:length(PhotonRatios)
 end
 
 if photonratiofixed
-    zstarth=P(:,3);
-    dT(4,4,:)=PhotonRatios(color);
+    if fittype >1
+        zstarth=P(:,3);
+        dT(4,4,:)=PhotonRatios(color);
     [P,CRLB,LogL]=fitterh(imstack,fittype,shared,iterationsin,splinecoeff,dT,varmap,silent,zstarth);
+    end
     ml=max(LogLp,[],2);
-    LLsecond=quantile(ml./LogLp,1-1/length(PhotonRatios),2); 
+    LLsecond=quantile(ml./LogLp,1-1/length(PhotonRatios),2);    
 else
     color=[];LLsecond=[];
 end
 end
 
-function  dT=ratiochannelshift(channelshift,PhotonRatio)
-dS1 = [1, 1 ;1, 1 ;1, 1;1, PhotonRatio;1, 1];
+function  dT=ratiochannelshift(channelshift,PhotonRatio,fittype)
+if fittype==1 %Gauss
+    dS1 = [1, 1 ;1, 1 ;1, PhotonRatio;1, 1;1, 1];
+else
+    dS1 = [1, 1 ;1, 1 ;1, 1;1, PhotonRatio;1, 1];
+end
 npar=5;
 Nfits=size(channelshift,3);
 noChannels=size(channelshift,2);

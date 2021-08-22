@@ -47,7 +47,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
             roisize=obj.getPar('loc_ROIsize');
             obj.numberInBlock=round(obj.fitpar.roisperfit*100/roisize^2/12)*12;
             
-            if obj.fitpar.fitmode==5 ||obj.fitpar.fitmode==6              
+            if obj.fitpar.fitmode==2           
                 obj.fitpar.mirrorstack=false; %later: remove completely
                 p=obj.getAllParameters;
                 if p.overwritePixelsize
@@ -779,7 +779,7 @@ p=obj.getGuiParameters;
 fitmode=p.fitmode.Value;
 
 switch fitmode
-    case {1,2}
+    case {1}
         roisize=7;
         iterations=30;
         RowName={'x','y','N','Bg','PSF',' '};
