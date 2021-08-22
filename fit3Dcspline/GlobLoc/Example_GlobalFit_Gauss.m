@@ -78,7 +78,7 @@ for Npixels = 7:19
     tic
 %      [P,CRLB, LL1] =  mleFit_LM_globalfit(d_data,fittype,shared,iterations,initSigma,dTS,sCMOSvarmap,silent);
      
-     [P,CRLB, LL] =  GPUmleFit_LM_MultiChannel(d_data,fittype,shared,iterations,initSigma,dTS);
+     [P,CRLB, LL] =  CPUmleFit_LM_MultiChannel(d_data,fittype,shared,iterations,initSigma,dTS);
 
      
     tGauss=toc;

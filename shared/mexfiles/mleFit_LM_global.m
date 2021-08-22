@@ -59,11 +59,14 @@ if nargin<8 || isempty(varargin{7}) %varmap
 else
     varmap=0;
 end
-
-if nargin<9||isempty(varargin{9}) %zstart
-    zstart=single(coeffsize(3)/2);
+if fittype>1
+    if nargin<9||isempty(varargin{9}) %zstart
+        zstart=single(coeffsize(3)/2);
+    else
+        zstart=single(coeffsize(3)/2+varargin{9});
+    end
 else
-    zstart=single(coeffsize(3)/2+varargin{9});
+    zstart=0;
 end
 
 if nargin<10 || isempty(varargin{10}) %fixed photon ratios
@@ -71,9 +74,12 @@ if nargin<10 || isempty(varargin{10}) %fixed photon ratios
     photonratiofixed=false;
 else
     PhotonRatios=varargin{10};
-    shared(4,:)=1; %if we fit with ratios, N needs to be linked
+    if ischar(PhotonRatios)
+        warning('Photon ratios need to be a vector of numbers, not char.')
+    end
+    %shared(4,:)=1; %if we fit with ratios, N needs to be linked
     iterationsin=iterations;
-    iterations=15; %used for testing different colors
+    iterations=30; %used for testing different colors
     photonratiofixed=true;
 end
 dT=ratiochannelshift(channelshift,1); %for test and used if no photon ratio given

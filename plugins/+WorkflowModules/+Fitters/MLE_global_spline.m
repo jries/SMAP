@@ -191,9 +191,13 @@ switch fitpar.mode
         faccrlb{3}=fitpar.dz*fitpar.refractive_index_mismatch;
         names={'ypix','xpix','znm','phot','bg'};
         namesav={'ypix','xpix','znm','phot'};
-        namesphot={'bg','phot'};
+         sx=1*v1;
+        locs.PSFxpix=sx;
+        locs.PSFypix=sx;
+
 end
 
+namesphot={'bg','phot'};
 % locs.phot=P(:,4)*EMexcess;
 % locs.bg=P(:,5)*EMexcess;
 
@@ -203,10 +207,7 @@ locs.logLikelihood=LogL;%/sum(fitpar.weightsch);
 
 locs.peakfindx=posx;
 locs.peakfindy=posy;
-   
-         sx=1*v1;
-        locs.PSFxpix=sx;
-        locs.PSFypix=sx;
+
 % end
 
 % fac and faccrlb should be of length(channels). Then use for each channel.
@@ -447,15 +448,19 @@ arguments{4}=uint32(fitpar.iterations);
 arguments{6}=single(channelshift);
 arguments{7}=[]; %sCMOS varmap
 arguments{8}=1; %silent
-arguments{9}=fitpar.zstart/fitpar.dz;
-arguments{10}=fitpar.PhotonRatios/fitpar.splinefithere.normf(2);
+
+
 switch fitpar.mode
     case 'Gauss'
         arguments{2}=uint32(1);
         arguments{5}=single(fitpar.PSFx0);
+        arguments{9}=[];
+        arguments{10}=fitpar.PhotonRatios;
     case {'Spline','cspline'}
         arguments{2}=uint32(2);
-        arguments{5}=single(fitpar.splinefithere.coeff);        
+        arguments{5}=single(fitpar.splinefithere.coeff);    
+        arguments{9}=fitpar.zstart/fitpar.dz;
+        arguments{10}=fitpar.PhotonRatios/fitpar.splinefithere.normf(2);
     otherwise
         disp('fitmode not implemented for global fitting')
 end
@@ -649,7 +654,7 @@ for k=1:size(p.globaltable.Data,1)
 end
 fitpar.link=[p.globaltable.Data{:,1}];
 fitpar.zstart=p.zstart;
-if fitpar.fitmode==3||fitpar.fitmode==5 %calibration file
+if fitpar.fitmode==2 %calibration file
      fitpar.issCMOS= p.isscmos;
   
     calfile=p.cal_3Dfile;
@@ -796,13 +801,10 @@ function pard=guidef(obj)
 p1(1).value=1; p1(1).on={'PSFx0','tPSFx0'}; 
 p1(1).off={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize',...
     'fit2D','isscmos','pixelsizex','pixelsizey','selectscmos','scmosfile'};
-p1(2)=p1(1);p1(2).value=2;
-p1(3).value=3;p1(3).off={'PSFx0','tPSFx0'};p1(3).on={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','fit2D','isscmos'};
-p1(4)=p1(1);p1(4).value=4;
-p1(5)=p1(3);p1(5).value=5;
-p1(6)=p1(5);p1(6).value=6;
+p1(2).value=2;p1(2).off={'PSFx0','tPSFx0'};p1(2).on={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','fit2D','isscmos'};
 
-pard.fitmode.object=struct('Style','popupmenu','String',{{'PSF fix','PSF free','3D z','ellipt: PSFx PSFy','Spline'}},'Value',2,'Callback',{{@obj.switchvisible,p1,{@fitmode_callback,0,0,obj}}});
+
+pard.fitmode.object=struct('Style','popupmenu','String',{{'PSF free','Spline'}},'Value',1,'Callback',{{@obj.switchvisible,p1,{@fitmode_callback,0,0,obj}}});
 pard.fitmode.position=[1,1];
 pard.fitmode.Width=1.5;
 pard.fitmode.TooltipString=sprintf('Fit mode. Fit with constant PSF, free PSF, 3D with astigmatism, asymmetric PSF (for calibrating astigmatic 3D)');
