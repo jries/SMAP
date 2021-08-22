@@ -549,7 +549,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.optimizer.Width=1.5;
             pard.optimizer.tab='tab1';
             
-            pard.loadfitting.object=struct('Style','pushbutton','String','load', 'Callback',{{@load_callback,obj}});
+            pard.loadfitting.object=struct('Style','pushbutton','String','load', 'Callback',{{@obj.load_callback}});
             pard.loadfitting.position=[1.5+dy,4.2];
             pard.loadfitting.Width=0.7;
             pard.loadfitting.Height=1;
@@ -786,6 +786,27 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             hConvert.ColumnFormat{3} = optionTarget;
             obj.guihandles.anchorConvert=hConvert;
         end
+        % callback for loading
+        function load_callback(obj,a,b,path2setting)
+            % get the path of the saved info
+            if obj.getPar('initiated')
+                if isempty(path2setting)
+                    [file,path2setting] = uigetfile({'*_SMLMModelFit.mat;*_LocMoFit.mat','LocMoFit settings'}, 'Select an SMLMModelFit file...', '');
+                else
+                    [path2setting,file,ext] = fileparts(path2setting);
+                    file = [file ext];
+                    path2setting = [path2setting filesep];
+                end
+                temp = load([path2setting file]);
+                obj.setGuiParameters(temp.par);
+                obj.fitter = temp.par.fitter;
+                obj.fitter.linkedGUI = obj;
+                obj.fitter.loadListener;
+                for k = 1:obj.fitter.numOfModel
+                    obj.fitter.model{k}.loadListener;
+                end
+            end
+        end
     end
     events
         mParsArgModified
@@ -873,21 +894,7 @@ parsArg = orderfields(parsArg, fn);
 end
 
 %% guidef related
-% callback for loading
-function load_callback(a,b,obj)
-% get the path of the saved info
-if obj.getPar('initiated')
-    [file,path] = uigetfile({'*_SMLMModelFit.mat;*_LocMoFit.mat','LocMoFit settings'}, 'Select an SMLMModelFit file...', '');
-    temp = load([path file]);
-    obj.setGuiParameters(temp.par);
-    obj.fitter = temp.par.fitter;
-    obj.fitter.linkedGUI = obj;
-    obj.fitter.loadListener;
-    for k = 1:obj.fitter.numOfModel
-        obj.fitter.model{k}.loadListener;
-    end
-end
-end
+
 
 % Call back for saving SMLMModelFit settings
 

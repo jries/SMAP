@@ -142,7 +142,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
                 names = cellfun(@(x)x.name, obj.processors, 'UniformOutput', false);
                 removeind = find(strcmp(names, removename));
             end
-            removeind=obj.moduleselection(1);
+%             removeind=obj.moduleselection(1);
             removename=obj.processors{removeind}.name;
             rproc=obj.processors{removeind};
             rhandle=(rproc.handle);
