@@ -45,11 +45,9 @@ classdef summarizeLocprecTitration<interfaces.DialogProcessor&interfaces.SEProce
                     ph = regexp(getFieldAsVector(obj.SE.files,'name'), 'L\d*P(\d)*B0R2L2','tokens');
                     ph = [ph{:}];
                     ph = str2double(string(ph));
-                    grp = grpstats(obj.locData.grouploc.locprecnm, ph(obj.locData.grouploc.filenumber),'median');
-
-                    filenumber = getFieldAsVector(obj.SE.sites, 'info.filenumber');
-                    nSites = grpstats(ph(filenumber)',ph(filenumber)','numel');
-                    grp = repelem(grp,nSites);
+                    [grp,grpName] = grpstats(obj.locData.grouploc.locprecnm, ph(obj.locData.grouploc.filenumber),{'median','gname'});
+                    [~,pos] = ismember(ph,str2double(grpName));
+                    grp = repelem(grp(pos),200);
                 case 'file'
                     filenumber = getFieldAsVector(obj.SE.sites, 'info.filenumber');
                     grp = filenumber;

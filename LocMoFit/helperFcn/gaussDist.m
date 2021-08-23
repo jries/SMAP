@@ -51,9 +51,19 @@ function likelihood = gaussDist(refLocs,y,x,z,ysigmao,xsigmao,zsigmao, varargin)
                     l = termR2<distCutoff^2;
 %                     expDist(l) = exp(-termR2(l)/2)./sumIntensity;
                     expDist(l) = exp(-termR2(l)/2);
-                    
+                    sumDist = sum(expDist,3);
 %                     dim = size(expDist);
 %                     expDist = reshape(expDist, [dim(1) 1 dim(2)]);
+                case 'fast_test'
+                    % 210708: try to use accumarray, but it is not faster
+                    dx = (x - refLocs.x)./xsigma;
+                    dy = (y - refLocs.y)./ysigma;
+                    dz = (z - refLocs.z)./zsigma;
+                    cutR = abs(dx)<=distCutoff|abs(dy)<=distCutoff|abs(dz)<=distCutoff;
+                    [r,c] = find(cutR);
+                    termR2 = dx(cutR).^2 + dy(cutR).^2 + dz(cutR).^2;
+                    svol = ((2*pi)^(-3/2))./(xsigma.*ysigma.*zsigma);
+                    sumDist = accumarray(r,exp(-termR2));
                 case 'ordinary'
                     dx = x./xsigma - refLocs.x./xsigma;
                     dy = y./ysigma - refLocs.y./ysigma;
@@ -61,11 +71,11 @@ function likelihood = gaussDist(refLocs,y,x,z,ysigmao,xsigmao,zsigmao, varargin)
                     termR2 = dx.^2 + dy.^2 + dz.^2;
                     svol = ((2*pi)^(-3/2))./(xsigma.*ysigma.*zsigma);
                     expDist = exp(-termR2/2);
-
+                    sumDist = sum(expDist,3);
         %             (x - refLocs.x).^2+(y - refLocs.y).^2+(z - refLocs.z).^2
         %             likelihood = likelihood';
             end
-            likelihood = svol.*sum(expDist,3);
+            likelihood = svol.*sumDist;
         case 'new'
             %% rotation of SIGMA (covariance matrix)
             % rotMat
