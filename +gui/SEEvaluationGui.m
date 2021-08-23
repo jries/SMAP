@@ -67,7 +67,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
                             mh=mh(1:end-1);
                         end
                         par=p.children.(modules{k});
-                        % Yu-Le added
+                        % Yu-Le added to upgrade SMLMModelFitGUI to LocMoFitGUI
                         if startsWith(modules{k}, 'SMLMModelFitGUI')
                             obj.addmodule('LocMoFitGUI', par)
                         else
