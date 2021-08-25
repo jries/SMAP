@@ -15,7 +15,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             siteOrder = 1:se.numberOfSites;
 
             usedSites = sites(lUsed);
-            fn = fieldnames(obj.SE.processors.eval.children);
+            fn = obj.SE.processors.eval.guihandles.modules.Data(:,2);
             if ismember('LocMoFitGUI_5', fn)
                 whichLocMoFitGUI = '5';
             else
@@ -155,8 +155,8 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             
             if p.showIntActPlot
                 ax4 = obj.initaxis('Interactive'); 
-                plotSElink(ax4,azi_new,numOfLocsL1,ID,se,' ob')
-                xlabel(ax4, ['Twist angle (' char(176) ')'])
+                plotSElink(ax4,ringDist,numOfLocsL1,ID,se,' ob')
+                xlabel(ax4, 'Ring separation (nm)')
                 ylabel(ax4, 'Number of Locs')
             end
             

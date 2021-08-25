@@ -790,7 +790,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         function load_callback(obj,a,b,path2setting)
             % get the path of the saved info
             if obj.getPar('initiated')
-                if isempty(path2setting)
+                if ~exist('path2setting', 'var')
                     [file,path2setting] = uigetfile({'*_SMLMModelFit.mat;*_LocMoFit.mat','LocMoFit settings'}, 'Select an SMLMModelFit file...', '');
                 else
                     [path2setting,file,ext] = fileparts(path2setting);
