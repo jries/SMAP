@@ -137,7 +137,7 @@ function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
         % check which of BG, RB, and LE
         ax = obj.initaxis(oneSetting.tabTitle);
         hold(ax,'on')
-        col = '#ff8000';
+        col = '#000000';
         
         locprenm = str2double(string(grpID));
         

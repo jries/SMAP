@@ -37,6 +37,9 @@ else
 end
 
 %% complete the rule
+if isempty(rule)
+    return
+end
 ruleExprs = regexprep(rule, '(pars\.m\d+\.[ml]Par\.\w+)', ['obj\.converterSource\{' num2str(k) char("\}\.getVariable(\'$1\')")]);          % Parameters
 ruleExprs = regexprep(ruleExprs, '(pars\.m\d+\.offset\.\w+)', ['obj\.converterSource\{' num2str(k) char("\}\.getVariable(\'$1\')")]);      % Offset
 ruleExprs = regexprep(ruleExprs, '(usr\_\w+)\((\d+)\)', 'vectorSubset\($1\,$2\)');                                                      % User defined (vector)

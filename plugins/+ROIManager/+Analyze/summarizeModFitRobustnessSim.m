@@ -56,9 +56,9 @@ classdef summarizeModFitRobustnessSim<interfaces.DialogProcessor&interfaces.SEPr
             colID = [7 2];
             if p.separationHistogram
                 axHist = obj.initaxis('Separation (LE)');
-                allGrp2plot = {'cond2_LE0','cond2_LE4'};
+                allGrp2plot = {'LE0','LE4'};
                 hold(axHist,'on')
-                lParameter = strcmp({settings.tabTitle}, 'Separation');
+                lParameter = startsWith({settings.tabTitle}, 'Separation');
                 error = parStack(lParameter).fit-parStack(lParameter).gt;
                 for l = 1:length(allGrp2plot)
                     lGrp = strcmp(allGrp2plot{l}, allGrpId);
