@@ -73,52 +73,52 @@ classdef summarizeLocprecTitration<interfaces.DialogProcessor&interfaces.SEProce
 end
 function settings = savedSettings()
     settings(1).parID = 'pars.m1.lPar.x';
-    settings(1).tabTitle = 'X';
+    settings(1).tabTitle = 'Position \it x_0';
     settings(1).yLabUnit = 'nm';
-    settings(1).oneSideBound = 20;
+    settings(1).bound = 10;
 
 %     settings(end+1).parID = 'pars.m1.lPar.y';
 %     settings(end).tabTitle = 'Y';
 %     settings(end).yLabUnit = 'nm';
-%     settings(end).oneSideBound = 20;
+%     settings(end).bound = 20;
 
     settings(end+1).parID = 'pars.m1.lPar.z';
-    settings(end).tabTitle = 'Z';
+    settings(end).tabTitle = 'Position \it z_0';
     settings(end).yLabUnit = 'nm';
-    settings(end).oneSideBound = 20;
+    settings(end).bound = 14;
 
     settings(end+1).parID = 'pars.m1.lPar.xrot';
-    settings(end).tabTitle = 'Angle \alpha';
+    settings(end).tabTitle = 'Rotation {\alpha}';
     settings(end).yLabUnit = '\circ';
-    settings(end).oneSideBound = 25;
+    settings(end).bound = 20;
 
     settings(end+1).parID = 'pars.m1.mPar.ringDistance';
-    settings(end).tabTitle = 'Separation';
+    settings(end).tabTitle = 'Separation \it s';
     settings(end).yLabUnit = 'nm';
-    settings(end).oneSideBound = 20;
+    settings(end).bound = 30;
 
     settings(end+1).parID = 'pars.m1.mPar.radius';
-    settings(end).tabTitle = 'Radius';
+    settings(end).tabTitle = 'Radius \it r';
     settings(end).yLabUnit = 'nm';
-    settings(end).oneSideBound = 20;
+    settings(end).bound = 5;
 
     settings(end+1).parID = 'pars.m1.mPar.azimuthalShift';
-    settings(end).tabTitle = 'Twist';
+    settings(end).tabTitle = 'Twist {\theta}';
     settings(end).processFit = @(x) centerAroundGT(x, 8.8);
     settings(end).yLabUnit = '\circ';
-    settings(end).oneSideBound = 22.5;
+    settings(end).bound = 12;
 
     settings(end+1).parID = 'pars.m91.offset.weight';
-    settings(end).tabTitle = 'Background';
+    settings(end).tabTitle = 'Background \it w_b_g';
     settings(end).processError = @(x) x*100;
     settings(end).yLabUnit = '%';
-    settings(end).oneSideBound = 25;
+    settings(end).bound = 15;
     
     settings(end+1).parID = 'pars.m1.lPar.variation';
-    settings(end).tabTitle = 'Linkage error';
+    settings(end).tabTitle = 'Linkage error {\epsilon}';
     settings(end).gt_alternative = 'evaluation.simulatesites.linkageerror';
     settings(end).yLabUnit = 'nm';
-    settings(end).oneSideBound = 10;
+    settings(end).bound = 3;
 end
 
 function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
@@ -137,7 +137,7 @@ function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
         % check which of BG, RB, and LE
         ax = obj.initaxis(oneSetting.tabTitle);
         hold(ax,'on')
-        col = '#ff8000';
+        col = '#000000';
         
         locprenm = str2double(string(grpID));
         
@@ -166,7 +166,7 @@ function [grpMean, grpStd, table] = errorPlot(obj, settings, parStack, grp)
 %         min_var = min(grpMean-0.6*grpStd);
 %         range_var = max_var-min_var;
 %         ax.YLim = [round(min_var-range_var) round(max_var+range_var)];
-        ax.YLim = [-oneSetting.oneSideBound oneSetting.oneSideBound];
+        ax.YLim = [-oneSetting.bound oneSetting.bound];
         title(ax, oneSetting.tabTitle)
         xlabel(ax, 'Median localization precision (nm)')
         ylabel(ax, ['Error (' oneSetting.yLabUnit ')'])

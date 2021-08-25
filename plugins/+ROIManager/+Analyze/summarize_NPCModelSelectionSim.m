@@ -13,10 +13,16 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
             lUsed = getFieldAsVector(sites, 'annotation.use');
             siteOrder = 1:se.numberOfSites;
 
-           
-            for k = se.numberOfSites:-1:1
-                sym(k) = se.sites(k).evaluation.simulatesites.model.model{1}.modelObj.internalSettings.cornerNum;
-            end
+            [~,fName] = fileparts({obj.locData.files.file.name});
+            sym = regexp(fName,'_(\d+)f_', 'tokens');
+            sym = [sym{:}];
+            sym = [sym{:}];
+            sym = str2double(sym);
+            sym = repelem(sym, 200);
+%             for k = se.numberOfSites:-1:1
+% %                 sym(k) = se.sites(k).evaluation.simulatesites.model.model{1}.modelObj.internalSettings.cornerNum;
+%                 sym(k) = se.sites(k).evaluation.simulatesites.model.model{1}.modelObj.internalSettings.cornerNum;
+%             end
 
             normAICc = [];
             

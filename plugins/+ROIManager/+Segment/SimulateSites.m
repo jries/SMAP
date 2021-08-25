@@ -196,30 +196,37 @@ function setModPars_callback(a,b,obj)
         obj.setPar('parameter_handle',fig);
     end
     clf(fig);
-    parArgTable = uitable(fig);
-    convertTable = uitable(fig);
+    guihandles = [];
+    guihandles.parArgTable = uitable(fig);
+    guihandles.parArgTable.Position = [1 2 3 10];
+    
+    guihandles.convertTable = uitable(fig);
+    guihandles.convertTable.Position = [4.2 2 2 10];
     
     figHeight = fig.Position(4);
     oneLine = 20;
     unitWidth = 50;
     
+    
     % Model type
-    typeOption = uicontrol(fig, 'Style','popupmenu','String',{'Point','Image'},'Value',1);
-    typeOption.Position = [unitWidth*0.5 figHeight-oneLine*19 60 oneLine];
-    typeOption.Callback = {@typeOption_callback,obj};
+    guihandles.typeOption = uicontrol(fig, 'Style','popupmenu','String',{'Point','Image'},'Value',1);
+    guihandles.typeOption.Position = [1 12 0.5 1];
+    guihandles.typeOption.Callback = {@typeOption_callback,obj};
+    
     
     % Final ROI size
-    t_FinalROISize = uicontrol(fig, 'Style','text','String','Final ROI size:');
-    t_FinalROISize.Position = [unitWidth*2 figHeight-oneLine*19 100 oneLine];
-    
+    guihandles.t_FinalROISize = uicontrol(fig, 'Style','text','String','Final ROI size:');
+    guihandles.t_FinalROISize.Position = [2 12 1 1];
+        
     finalROISize = obj.getPar('finalROISize');
     if isempty(finalROISize)
         obj.setPar('finalROISize','200')
         finalROISize = '200';
     end
-    finalROISize = uicontrol(fig, 'Style','edit','String',finalROISize);
-    finalROISize.Position = [unitWidth*4 figHeight-oneLine*19 60 oneLine];
-    finalROISize.Callback = {@finalROISize_callback,obj};
+    guihandles.finalROISize = uicontrol(fig, 'Style','edit','String',finalROISize);
+    guihandles.finalROISize.Position = [3 12 0.5 1];
+    guihandles.finalROISize.Callback = {@finalROISize_callback,obj};
+    
     
     %% Data
     % Acquire the LocMoFit obj, and then display parameters based on the allParsArg
@@ -240,36 +247,95 @@ function setModPars_callback(a,b,obj)
     parVal(~parFix)=parRange(~parFix);
     parVal = regexprep(parVal,'^\s+','');
     
-    t_parTable = uicontrol(fig, 'Style','text','String','Parameters for simulation:');
-    t_parTable.Position = [unitWidth*0.5 figHeight-oneLine*1.5 unitWidth*3 oneLine];
+    guihandles.t_parTable = uicontrol(fig, 'Style','text','String','Parameters for simulation:');
+    guihandles.t_parTable.Position = [1 1 2 1];
     
-    t_convertTable = uicontrol(fig, 'Style','text','String','User-defined variables:');
-    t_convertTable.Position = [unitWidth*7 figHeight-oneLine*1.5 unitWidth*3 oneLine];
+    guihandles.t_convertTable = uicontrol(fig, 'Style','text','String','User-defined variables:');
+    guihandles.t_convertTable.Position = [4.2 1 2 1];
     
     % Table properties.
-    parArgTable.Data = [parName parType num2cell(parModel) parVal repmat({''},size(parVal,1),1)];
-    parArgTable.ColumnName = {'Name','Type','Model','Value','Convert'};
-    parArgTable.ColumnEditable = [false false false true true];
-    parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
-    parArgTable.ColumnWidth = {70 40 30 50 100};
-    tableHeight = 300;
-    parArgTable.Position = [unitWidth*0.5 figHeight-oneLine*2-tableHeight unitWidth*6 tableHeight];
+    guihandles.parArgTable.Data = [parName parType num2cell(parModel) parVal repmat({''},size(parVal,1),1)];
+    guihandles.parArgTable.ColumnName = {'Name','Type','Model','Value','Convert'};
+    guihandles.parArgTable.ColumnEditable = [false false false true true];
+    guihandles.parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
+    guihandles.parArgTable.ColumnWidth = {70 40 30 50 100};    
     
-    convertTable.Data = [];
-    convertTable.ColumnName = {'Name','Rule'};
-    convertTable.ColumnEditable = [true true];
-    convertTable.ColumnWidth = {70 100};
-    tableHeight = 300;
-    convertTable.Position = [unitWidth*7 figHeight-oneLine*2-tableHeight unitWidth*4 tableHeight];
+    guihandles.convertTable.Data = [];
+    guihandles.convertTable.ColumnName = {'Name','Rule'};
+    guihandles.convertTable.ColumnEditable = [true true];
+    guihandles.convertTable.ColumnWidth = {70 100};
     
-    addRow = addRowButton(fig,convertTable);
-    addRow.Position = [unitWidth*7 figHeight-oneLine*18 oneLine oneLine];
+    guihandles.addRow = addRowButton(fig,guihandles.convertTable);
+    guihandles.addRow.Position = [4.2 12 0.2 0.8];
     
-    rmRow = rmRowButton(fig,convertTable);
-    rmRow.Position = [unitWidth*7.4 figHeight-oneLine*18 oneLine oneLine];
+    guihandles.rmRow = rmRowButton(fig,guihandles.convertTable);
+    guihandles.rmRow.Position = [4.4 12 0.2 0.8];
     
-    apply = uicontrol(fig, 'Style','pushbutton','String','Apply','Callback',{@applyConvertRules,convertTable,fitter});
-    apply.Position = [unitWidth*7.8 figHeight-oneLine*18 unitWidth oneLine];
+    guihandles.apply = uicontrol(fig, 'Style','pushbutton','String','Apply','Callback',{@applyConvertRules,guihandles.convertTable,fitter});
+    guihandles.apply.Position = [4.6 12 0.5 0.8];
+    
+    %% Editor
+    guihandles.editor = uicontrol(fig, 'Style','pushbutton','String','Editor');
+    guihandles.editor.Position = [3.5 1 0.5 1];
+    guihandles.editor.Callback = {@editor_callback,guihandles.parArgTable};
+
+    %% save and load
+    guihandles.saveParArg = uicontrol(fig, 'Style','pushbutton','String','Save');
+    guihandles.saveParArg.Position = [2.5 1 0.5 1];
+    guihandles.saveParArg.Callback = {@saveParArg_callback,guihandles.parArgTable};
+    
+    guihandles.loadParArg = uicontrol(fig, 'Style','pushbutton','String','Load');
+    guihandles.loadParArg.Position = [3 1 0.5 1];
+    guihandles.loadParArg.Callback = {@loadParArg_callback,guihandles.parArgTable};
+    guiStyle(guihandles, fieldnames(guihandles))
+end
+
+function editor_callback(a,b,parArgTable)
+    fig = figure('Name','Editor');
+    text2show = sprintf(['%s\t%s\t%s\t%s\t%s\n'], string(parArgTable.Data'));
+    guihandles.editor = uicontrol(fig, 'Style','edit','String', text2show);
+    guihandles.editor.Max = 2;
+    guihandles.editor.Position = [1 1 5 12];
+    guihandles.editor.HorizontalAlignment = 'left';
+    
+    guihandles.save = uicontrol(fig, 'Style','pushbutton','String', 'save');
+    guihandles.save.Position = [1 13 1 1];
+    guihandles.save.Callback = {@editorSave_callback,guihandles.editor,parArgTable};
+    guiStyle(guihandles,fieldnames(guihandles));
+end
+
+function saveParArg_callback(a,b,parArgTable)
+    [file,path] = uiputfile('*.txt','Save parameter argument table');
+    writecell(parArgTable.Data, [path file]);
+end
+
+function loadParArg_callback(a,b,parArgTable)
+    [file,path] = uigetfile('*.txt','Load parameter argument table');
+    opts = delimitedTextImportOptions('NumVariables',5);
+    oneTable = readcell([path file],opts);
+    oneTable = string(oneTable);
+    oneTable = cellstr(oneTable);
+    parArgTable.Data = oneTable;
+    
+    
+    callBack = parArgTable.CellEditCallback{1};
+    locMoFitObj = parArgTable.CellEditCallback{2};
+    editable = [4 5];
+    for k = 1:length(editable)
+        for l = 1:size(oneTable,1)
+            holder.Indices(1) = l;
+            holder.Indices(2) = editable(k);
+            holder.NewData = oneTable{l,editable(k)};
+            callBack(parArgTable,holder,locMoFitObj);
+        end
+    end
+end
+
+function editorSave_callback(a,b,editor,parArgTable)
+    t = regexprep(string(editor.String)', '\t$', '\t\r\n');
+    t = textscan(char(t')','%s %s %s %s %s','delimiter',sprintf('\t'));
+    t = [t{:}];
+    parArgTable.Data = t;
 end
 
 function typeOption_callback(a,b,obj)

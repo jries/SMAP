@@ -64,5 +64,8 @@ function guiStyle(guihandles, fn, varargin)
         h.FontSize = fontsize;
         h.Position = pos;
         h.Parent.Units = originalUnits_hP;
+        if isa(h,'matlab.ui.control.UIControl')&&strcmp(h.Style,'text')
+            h.HorizontalAlignment = 'left';
+        end
     end
 end
