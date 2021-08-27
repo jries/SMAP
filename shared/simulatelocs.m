@@ -24,13 +24,17 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
            if ~isfield(p,'photonsigma')
                p.photonsigma=0;
            end
-           if ~isfield(p,'linkageerror')
-               p.linkageerror=0;
+           if ~isfield(p,'linkageerrorfree')
+               p.linkageerrorfree=0;
            end
-           
+           if ~isfield(p,'linkageerrorfix')
+               p.linkageerrorfix=0;
+           end
+
+
            [poslabels,possites,parameters]=getlabels(p, colour);
-           if p.linkageerror>0
-               poslabels=addlinkage(poslabels,p.linkageerror);
+           if p.linkageerrorfix>0
+               poslabels=addlinkage(poslabels,p.linkageerrorfix);
            end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
            
@@ -545,13 +549,17 @@ function locs=locsfromposi(locsi,p)
     
     locprecnm=locprecnm*sqrt(noisexcessfactor);
     
+    %include linkage error from free rotation
+    locpreceffect=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
+    locpreceffectz=sqrt(locprecnm.^2*zfactor^2+p.linkageerrorfree.^2);
+
     locs.phot=single(phot(indin));
     locs.bg=single(locprecnm(indin)*0+p.background);
     locs.locprecnm=single(locprecnm(indin));
 %     locs.frame=double(ceil(rand(numlocs,1)*p.maxframe));
-    locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locprecnm(indin));
-    locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locprecnm(indin));
-    locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locprecnm(indin)*zfactor);
+    locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locpreceffect(indin));
+    locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locpreceffect(indin));
+    locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locpreceffectz(indin));
     locs.locprecznm=single(locprecnm(indin)*zfactor);
     locs.xnm_gt=single(locsi.x(indin));
     locs.ynm_gt=single(locsi.y(indin));
