@@ -22,7 +22,7 @@ function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime
             offsetmap=l.offsetmap;
             varmap=l.varmap;
             gainmap=l.gainmap;
-        elseif isfield(l, 'mean')
+        elseif isfield(l, 'mean') %for calibrateCMOS.m
             offsetmap=l.mean;
             varmap=l.variance;  
             gainmap=l.metadata.pix2phot*ones(size(offsetmap));

@@ -113,7 +113,7 @@ classdef MLE_GPU_Yiming<interfaces.WorkflowFitter
             locs=fit2locs(out,stackinfo,obj.fitpar,imstack);
             
             if obj.fitpar.asymmetry
-             [locs.asymmetry,locs.asymmdiag,locs.asymangle]=asymmetry(imgstack,true);
+             [locs.asymmetry,locs.asymmdiag,locs.asymangle]=asymmetry(imstack,true);
             end
             
             if ~isempty(locs)  

@@ -35,11 +35,13 @@ classdef calibrateCMOS<interfaces.DialogProcessor
               end
               mean=sumim/(count);
               variance=sumim2/(count)-mean.^2;
+              variance=variance*(count/(count-1));
 
                   
           else         %Welfords algorithm
               mean=double(il.getimage(1));
-              M2=mean.^2;
+              M2=zeros(size(mean),'like',mean); %suggestion Jonas from Birmingham
+%               M2=mean.^2;
               count=1;
               for k=2:il.metadata.numberOfFrames+1
                   imageh=double(il.getimage(k));
@@ -56,7 +58,7 @@ classdef calibrateCMOS<interfaces.DialogProcessor
                       t=tic;
                   end
               end
-              variance=M2/count;
+              variance=M2/(count-1);
           end
           outputfile=[pfad  strrep(file,'.tif','_var.mat')];
           metadata=il.metadata;
