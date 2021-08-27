@@ -289,7 +289,8 @@ function autosave_timer(a,b,obj)
 p.mainGui=obj.getPar('mainGui');
 p.saveroi=false;
 if obj.guihandles.autosavecheck.Value
-    savesml(obj.locData,'settings/temp/autosave_sml',p)
+    settingsdir=obj.getPar('SettingsDirectory');
+    savesml(obj.locData,[settingsdir filesep 'temp' filesep 'autosave_sml'],p)
     time=datetime('now');
     disp(['autosave: ' num2str(time.Hour) ':' num2str(time.Minute)])
 end

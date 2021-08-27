@@ -12,7 +12,7 @@ classdef CameraManager< interfaces.GuiModuleInterface %interfaces.GuiParameterIn
         currentstate=1;
         lastcamtableselected=[];
         defaultpath;
-        cameraSettingsFile='settings/cameras.mat';
+        cameraSettingsFile;
     end
     
     methods
@@ -46,6 +46,7 @@ classdef CameraManager< interfaces.GuiModuleInterface %interfaces.GuiParameterIn
                 end
         end
         function makeGui(obj)
+            obj.cameraSettingsFile=obj.getGlobalSetting('cameraSettingsFile');
             makeGui(obj)
         end
         function pard=guidef(obj)

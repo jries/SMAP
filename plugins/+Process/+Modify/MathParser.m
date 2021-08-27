@@ -4,13 +4,14 @@ classdef MathParser<interfaces.DialogProcessor
 %     access.
     properties
         equationhistory
-        historyfile='settings/temp/MathParser.txt';
+        historyfile
     end
     methods
         function obj=MathParser(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
         end
         function initGui(obj)
+            obj.historyfile=[obj.getPar('SettingsDirectory') filesep 'temp' filesep 'MathParser.txt'];
             if exist(obj.historyfile,'file')
                 try
                     obj.equationhistory=readtable(obj.historyfile,'Delimiter',',');
@@ -27,7 +28,6 @@ classdef MathParser<interfaces.DialogProcessor
                 tt=struct('resultfield',{{''}},'equation',{{''}});
                 obj.equationhistory=struct2table(tt);
             end
-            obj.historyfile=[obj.getPar('SettingsDirectory') filesep 'temp' filesep 'MathParser.txt'];
         end
         
         function out=run(obj,p)

@@ -259,7 +259,7 @@ function pard=guidef
 % pard.reflayer.object.TooltipString='layer';
 % pard.reflayer.Width=0.85;
 
-% pard.Tfile.object=struct('Style','edit','String','settings/temp/temp_T.mat');
+% pard.Tfile.object=struct('Style','edit','String','*_T.mat');
 % pard.Tfile.position=[8,1];
 % pard.Tfile.Width=3;
 % pard.Tfile.object.TooltipString='default file for transformation matrix. You can select new file after transformation has been calculated.';

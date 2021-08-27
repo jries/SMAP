@@ -291,7 +291,7 @@ end
 end
 
 function imout=makeSRimge(obj,locDatatemp)
-channelfile=[obj.getPar('maindirectory')  '/settings/workflows/FitTif_Channelsettings.mat'];
+channelfile=[obj.getPar('SettingsDirectory')  '/workflows/FitTif_Channelsettings.mat'];
 pall=load(channelfile);
 p=pall.globalParameters;
 p.lutinv=false;

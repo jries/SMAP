@@ -164,7 +164,7 @@ end
 end
 
 function loadlist_callback(a,b,obj)
-[f p]=uigetfile('settings/*.txt');
+[f p]=uigetfile([obj.getPar('SettingsDirectory') '/*.txt']);
 if f
     loadlist(obj,[p f])
 end

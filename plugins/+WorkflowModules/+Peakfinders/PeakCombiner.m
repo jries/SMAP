@@ -221,7 +221,7 @@ end
 
 
 function pard=guidef(obj)
-pard.Tfile.object=struct('Style','edit','String','settings/temp/temp_T.mat');
+pard.Tfile.object=struct('Style','edit','String','*_T.mat');
 pard.Tfile.position=[1,1];
 pard.Tfile.Width=3;
 
