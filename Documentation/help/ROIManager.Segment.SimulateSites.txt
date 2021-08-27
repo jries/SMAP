@@ -57,8 +57,10 @@ gui:coordinatefile .txt or .csv file with coordinates, .tif or .png file in whic
  returns the position of the lables in form of a structure with the fields .x .y .z
 gui:labeling_efficiency fraction of target molecules that carry a fluorophore
 gui:lifetime average on-time (in frames) of an activated fluorophore
-gui:linkageerror Linkage error: this adds a random displacement from a Normal distribution (nm) to the coordiantes.
-gui:linkageerrort=linkageerror 
+gui:linkageerrorfix Linkage error: Fix: this adds a random displacement from a Normal distribution (nm) to the coordiantes of the fluorophores.
+gui:linkageerrort=linkageerrorfix
+gui:linkageerrorfree Linkage error: Free: this adds a random displacement from a Normal distribution (nm) to the localizations (acts as extra localization uncertainty).
+gui:linkageerrorft=linkageerrorfree
 gui:load_button .txt or .csv file with coordinates, .tif or .png file in which the pixel values are a 
  measure for the concentration of the labels or a matlab function that 
  returns the position of the lables in form of a structure with the fields .x .y .z

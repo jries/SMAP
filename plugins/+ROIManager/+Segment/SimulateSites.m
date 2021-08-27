@@ -385,7 +385,9 @@ obj.guihandles.tif_numbermode.Visible=tif;
 obj.guihandles.tif_imagesizet.Visible=tif;
 obj.guihandles.tif_imagesize.Visible=tif;
 obj.guihandles.linkageerrort.Visible=txt;
-obj.guihandles.linkageerror.Visible=txt;
+obj.guihandles.linkageerrorfix.Visible=txt;
+obj.guihandles.linkageerrorft.Visible=txt;
+obj.guihandles.linkageerrorfree.Visible=txt;
 end
 
 
@@ -435,14 +437,21 @@ pard.labeling_efficiency.Width=.5;
 pard.labeling_efficiency.position=[3,2.5];
 pard.labeling_efficiency.TooltipString=pard.t_labelingefficiency.TooltipString;
 
-pard.linkageerrort.object=struct('String','Linkage error std (nm)','Style','text');
+pard.linkageerrort.object=struct('String','Linkage err fix:','Style','text');
 pard.linkageerrort.position=[3,3];
-pard.linkageerrort.Width=1.5;
+pard.linkageerrort.Width=0.8;
 
-pard.linkageerror.object=struct('String','0','Style','edit');
-pard.linkageerror.Width=.5;
-pard.linkageerror.position=[3,4.5];
+pard.linkageerrorfix.object=struct('String','0','Style','edit');
+pard.linkageerrorfix.Width=.4;
+pard.linkageerrorfix.position=[3,3.8];
 
+pard.linkageerrorft.object=struct('String','free:','Style','text');
+pard.linkageerrorft.position=[3,4.2];
+pard.linkageerrorft.Width=0.4;
+
+pard.linkageerrorfree.object=struct('String','0','Style','edit');
+pard.linkageerrorfree.Width=.4;
+pard.linkageerrorfree.position=[3,4.6];
 
 
 pard.modelt.object=struct('String','Model:','Style','text');
