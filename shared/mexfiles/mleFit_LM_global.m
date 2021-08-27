@@ -55,9 +55,9 @@ else
 end
 
 if nargin<7 || isempty(varargin{7}) %varmap
-    varmap=single(varargin{7});
-else
     varmap=0;
+else
+    varmap=single(varargin{7});
 end
 if fittype>1
     if nargin<9||isempty(varargin{9}) %zstart
