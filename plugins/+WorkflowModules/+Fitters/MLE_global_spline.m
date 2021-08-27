@@ -70,7 +70,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
             if obj.fitpar.fitmode==3
                 X=stackinfo.X;Y=stackinfo.Y;
                 obj.fitpar.zparhere=[obj.fitpar.zpar{X,Y}(:)];
-            elseif obj.fitpar.fitmode==5 || obj.fitpar.fitmode==6
+            elseif obj.fitpar.fitmode==2 
                 X=stackinfo.X;Y=stackinfo.Y;
                 obj.fitpar.splinefithere=[obj.fitpar.splinefit{X,Y}(:)];
             end
