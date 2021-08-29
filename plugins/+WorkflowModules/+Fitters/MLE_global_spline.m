@@ -2,6 +2,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
 %     Global fitter for multiple channels.
     properties
         fitpar
+        varmap
     end
     methods
         function obj=MLE_global_spline(varargin)
@@ -26,10 +27,8 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                     obj.fitpar.fitfunction=@mleFit_LM_4Pi;
                 case 'Gauss'
                      obj.fitpar.fitfunction=@mleFit_LM_global;
-                     disp('only implemented for symmetric Gauss: fittype=2');
                 otherwise
                     obj.fitpar.fitfunction=@mleFit_LM_global; %later: include single channel, decide here
-%                     GPUmleFit_LM_MultiChannel_Gauss
             end
              transform=obj.getPar('loc_globaltransform');
              
@@ -67,15 +66,12 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
         end
 
         function locs=fit(obj,imstack,stackinfo)
-            if obj.fitpar.fitmode==3
-                X=stackinfo.X;Y=stackinfo.Y;
-                obj.fitpar.zparhere=[obj.fitpar.zpar{X,Y}(:)];
-            elseif obj.fitpar.fitmode==5 || obj.fitpar.fitmode==6
+            if  obj.fitpar.fitmode==2
                 X=stackinfo.X;Y=stackinfo.Y;
                 obj.fitpar.splinefithere=[obj.fitpar.splinefit{X,Y}(:)];
             end
-            if obj.fitpar.issCMOS
-                varstack=getvarmap(obj.fitpar.varmap,stackinfo,size(imstack,1));
+            if obj.fitpar.isscmos
+                varstack=getvarmap(obj,stackinfo,size(imstack,1));
             else
                 varstack=0;
             end
@@ -410,6 +406,7 @@ imfit(:,:,:,1)=imstack(:,:,1:numberOfChannels:end);
 if isfield(fitpar,'mirrorud') && fitpar.mirrorud
     imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
     channelshift(1,2,:)=-channelshift(1,2,:);
+    mirr=2;
 elseif isfield(fitpar,'mirror')  %now only mirror channel two!
     mirr=fitpar.mirror{2};
     if length(mirr)>1
@@ -429,11 +426,32 @@ else
     imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
 end
 
+if fitpar.isscmos %mirror varmap if required
+    varfit(:,:,:,1)=varstack(:,:,1:numberOfChannels:end);
+    mirr=fitpar.mirror{2};
+    if length(mirr)>1
+        mirr=mirr(1)+2*mirr(2);
+    end
+    switch mirr
+        case 0 %no mirror
+            varfit(:,:,:,2)=varstack(:,:,2:numberOfChannels:end);
+        case 1 %righ-left mirror
+            varfit(:,:,:,2)=varstack(:,end:-1:1,2:numberOfChannels:end);
+        case 2 %up-down mirror
+            varfit(:,:,:,2)=varstack(end:-1:1,:,2:numberOfChannels:end);
+    end
+else 
+    varfit=[];
+end
+
+
 if fitpar.weightsch(1)~=1
     imfit(:,:,:,1)=imfit(:,:,:,1)*fitpar.weightsch(1);
+    varfit(:,:,:,1)=varfit(:,:,:,1)*fitpar.weightsch(1);
 end
 if fitpar.weightsch(2)~=1
     imfit(:,:,:,2)=imfit(:,:,:,2)*fitpar.weightsch(2);
+    varfit(:,:,:,2)=varfit(:,:,:,2)*fitpar.weightsch(2);
 end
 
 numframes=size(imfit,3); 
@@ -446,7 +464,7 @@ arguments{1}=imfit/EMexcess; %imagestack
 arguments{3}=uint32(sharedA);
 arguments{4}=uint32(fitpar.iterations);
 arguments{6}=single(channelshift);
-arguments{7}=[]; %sCMOS varmap
+arguments{7}=varfit; %sCMOS varmap
 arguments{8}=1; %silent
 
 
@@ -633,11 +651,11 @@ function fitpar=getfitpar(obj)
 %get all necessary parameters for fitting and store them 
 p=obj.getAllParameters;
 
-p.isscmos=false; %re-implement later
+%p.isscmos=false; %re-implement later
 fitpar.iterations=p.iterations;
 fitpar.fitmode=p.fitmode.Value;
 fitpar.roisperfit=p.roisperfit;
-fitpar.issCMOS=false;
+fitpar.isscmos=p.isscmos;
 fitpar.mainchannel=p.mainchannel.Value;
 fitpar.weightsch=p.weightsch;
 fitpar.fixPhot=p.fixPhot;
@@ -655,7 +673,7 @@ end
 fitpar.link=[p.globaltable.Data{:,1}];
 fitpar.zstart=p.zstart;
 if fitpar.fitmode==2 %calibration file
-     fitpar.issCMOS= p.isscmos;
+     fitpar.isscmos= p.isscmos;
   
     calfile=p.cal_3Dfile;
     cal=load(calfile);
@@ -765,12 +783,19 @@ end
 
 end
 
-function varstack=getvarmap(varmap,stackinfo,roisize)
+function varstack=getvarmap(obj,stackinfo,roisize)
+if isempty(obj.varmap)
+    obj.varmap=obj.getPar('cam_varmap');
+    if isempty(obj.varmap)
+        disp('no sCMOS variance map found');
+    end
+end
 numim=length(stackinfo.xpix);
 varstack=zeros(roisize,roisize,numim,'single');
 dn=floor(roisize/2);
 for k=1:numim
-    varstack(:,:,k)=varmap(stackinfo.xpix(k)-dn:stackinfo.xpix(k)+dn,stackinfo.ypix(k)-dn:stackinfo.ypix(k)+dn);
+    varstack(:,:,k)=obj.varmap(stackinfo.ypix(k)-dn:stackinfo.ypix(k)+dn,stackinfo.xpix(k)-dn:stackinfo.xpix(k)+dn);
+    %varstack(:,:,k)=obj.varmap(stackinfo.xpix(k)-dn:stackinfo.xpix(k)+dn,stackinfo.ypix(k)-dn:stackinfo.ypix(k)+dn);
 end
 end
 
@@ -797,11 +822,13 @@ obj.setGuiParameters(struct('iterations',iterations));
 obj.guihandles.globaltable.RowName=RowName;
 end
 
+
+
 function pard=guidef(obj)
 p1(1).value=1; p1(1).on={'PSFx0','tPSFx0'}; 
 p1(1).off={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize',...
-    'fit2D','isscmos','pixelsizex','pixelsizey','selectscmos','scmosfile'};
-p1(2).value=2;p1(2).off={'PSFx0','tPSFx0'};p1(2).on={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','fit2D','isscmos'};
+    'fit2D','pixelsizex','pixelsizey'};
+p1(2).value=2;p1(2).off={'PSFx0','tPSFx0'};p1(2).on={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','fit2D'};
 
 
 pard.fitmode.object=struct('Style','popupmenu','String',{{'PSF free','Spline'}},'Value',1,'Callback',{{@obj.switchvisible,p1,{@fitmode_callback,0,0,obj}}});
@@ -949,9 +976,9 @@ pard.pixelsizey.Optional=true;
 
 % p(1).value=0; p(1).on={}; p(1).off={'selectscmos','scmosfile'};
 % p(2).value=1; p(2).on={'selectscmos','scmosfile'}; p(2).off={};
-% pard.isscmos.object=struct('Style','checkbox','String','sCMOS');%,'Callback',{{@obj.switchvisible,p}});   
-% pard.isscmos.position=[7,1];
-% pard.isscmos.Optional=true;
+pard.isscmos.object=struct('Style','checkbox','String','sCMOS');%,'Callback',{{@obj.switchvisible,p}});   
+pard.isscmos.position=[7,1];
+pard.isscmos.Optional=true;
 % pard.selectscmos.object=struct('Style','pushbutton','String','Load var map','Callback',{{@loadscmos_callback,obj}});   
 % pard.selectscmos.TooltipString='Select sCMOS variance map (in ADU^2) of same size ROI on chip as image stack';
 % pard.selectscmos.position=[7,1.6];
