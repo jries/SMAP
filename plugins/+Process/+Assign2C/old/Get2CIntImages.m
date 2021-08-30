@@ -133,7 +133,7 @@ pard.fitOnBg.position=[5,3.5];
 % pard.size2roi2.position=[3,4.5];
 % pard.size2roi2.Width=0.5;
 
-pard.Tfile.object=struct('Style','edit','String','settings/temp/temp_T.mat');
+pard.Tfile.object=struct('Style','edit','String','*_T.mat');
 pard.Tfile.position=[8,1];
 pard.Tfile.Width=3;
 

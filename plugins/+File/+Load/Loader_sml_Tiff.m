@@ -183,7 +183,7 @@ pard.replacestring.position=[2,4];
 pard.replacestring.TooltipString='replace string.';
 
 
-pard.Tfile.object=struct('Style','edit','String','settings/temp/temp_T.mat');
+pard.Tfile.object=struct('Style','edit','String','*_T.mat');
 pard.Tfile.position=[3,1];
 pard.Tfile.Width=3;
 pard.syncParameters={{'transformationfile','Tfile',{'String'}}};

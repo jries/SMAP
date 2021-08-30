@@ -111,7 +111,7 @@ pard.targetmirror.object.TooltipString='mirror target part';
 % pard.refmirror.position=[4,1];
 % pard.refmirror.object.TooltipString='mirror reference part';
 
-pard.Tfile.object=struct('Style','edit','String','settings/temp/temp_T.mat');
+pard.Tfile.object=struct('Style','edit','String','*_T.mat');
 pard.Tfile.position=[8,1];
 pard.Tfile.Width=3;
 pard.Tfile.object.TooltipString='default file for transformation matrix. You can select new file after transformation has been calculated.';

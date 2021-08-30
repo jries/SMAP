@@ -2,18 +2,13 @@ function d=makeplugincallfile(plugindir)
 if ~isdeployed
     addpath('plugins')
     addpath('plugins/shared');
-%     addpath('settings/workflows');
     
     try
     pold=plugin;
     catch
         pold=[];
     end
-%     outputdir='+plugintemp';
-%     if ~exist(outputdir,'dir')
-%         mkdir(outputdir)
-%         rehash
-%     end
+
     
     strcase={};
     strlist={};

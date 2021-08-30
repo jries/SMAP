@@ -48,16 +48,16 @@ splinecoeff=single(varargin{5});
 channelshift=single(varargin{6});
 coeffsize=size(splinecoeff);
 
-if nargin<7 || isempty(varargin{8}) %silent
+if nargin<8 || isempty(varargin{8}) %silent
     silent=0;
 else
     silent=single(varargin{8});
 end
 
-if nargin<8 || isempty(varargin{7}) %varmap
-    varmap=single(varargin{7});
-else
+if nargin<7 || isempty(varargin{7}) %varmap
     varmap=0;
+else
+    varmap=single(varargin{7});
 end
 if fittype>1
     if nargin<9||isempty(varargin{9}) %zstart

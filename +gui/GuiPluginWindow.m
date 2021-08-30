@@ -106,7 +106,7 @@ end
 
 function menu_callback(callobj,b,obj)
 guimodules=obj.getPar('guimodules');
-% guimodules=readstruct('settings/temp/guimodules.txt',[],true);
+
 switch callobj.Label    
     case 'add'
         name=inputdlg('name of new tab');
@@ -126,7 +126,8 @@ switch callobj.Label
             guimodules.(obj.maindir)=rmfield(guimodules.(obj.maindir),fieldr); 
         end
     case 'add workflow'
-        [file,path]=uigetfile(['settings/workflows/*.mat']);
+        settingsdir=obj.getPar('SettingsDirectory');
+        [file,path]=uigetfile([settingsdir '/workflows/*.mat']);
         if file
             [~,name]=fileparts(file);
             name=name(1:min(end,16));
@@ -167,7 +168,6 @@ switch callobj.Label
         selected.Parent=hnew;
 end
 obj.setPar('guimodules',guimodules);
-%  writestruct('settings/temp/guimodules.txt',guimodules);
 end
 
 function module=makewf(obj,name, file)

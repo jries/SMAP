@@ -31,18 +31,7 @@ classdef Loader_minflux<interfaces.DialogProcessor
                 obj.locData.clear;
             end
         end
-%         function initGui(obj)
-%             obj.loaderpath='settings/csvloaderconversion/';
-%             files=dir([obj.loaderpath '*.txt']);
-%             string={'New format', files(:).name};
-%             obj.guihandles.importdef.String=string;
-% %             obj.guihandles.importdef.Callback=@obj.csvconvert_callback;
-%         end
-%         function csvconvert_callback(obj,object,b)
-%            if object.Value==1
-%                newformat(obj);
-%            end
-%         end
+
     end
 end
 

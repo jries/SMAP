@@ -2,7 +2,7 @@ classdef CameraConverter<interfaces.WorkflowModule
 %     Interprets metadata and converts camera ADUs into photons- Metadata
 %     can be overwritten manually or loaded from a SMAP _sml.mat data file.
     properties
-        calfile='settings/CameraCalibration.xls';
+        calfile;
         loc_cameraSettings=interfaces.metadataSMAP;
         loc_cameraSettingsStructure=struct('EMon',1,'emgain',1,'conversion',1,'offset',400,'cam_pixelsize_um',0.1,...
             'roi',[],'exposure',1,'timediff',0,'comment','','correctionfile','');        
@@ -47,8 +47,7 @@ classdef CameraConverter<interfaces.WorkflowModule
            obj.guihandles.calibrate.Callback={@calibrate_callback,obj};
             obj.outputParameters={'loc_cameraSettings'};
            obj.addSynchronization('loc_fileinfo_set',[],[],@obj.setmetadata)
-            obj.inputParameters={'diffrawframes'};
-           
+            obj.inputParameters={'diffrawframes'};          
         end
         function setmetadata(obj,overwrite)
             if nargin<2

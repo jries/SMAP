@@ -1,6 +1,6 @@
 classdef Loader_csvAndMore<interfaces.DialogProcessor
     properties
-        loaderpath='settings/csvloaderconversion/';
+        loaderpath;
         notfound=false;
     end
     methods
