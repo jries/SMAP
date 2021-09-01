@@ -1,3 +1,7 @@
+% Copyright (c) 2021 Li Lab, Southern University of Science and Technology, Shenzhen & Ries Lab, European Molecular Biology Laboratory, Heidelberg.
+% author: Yiming Li
+% email: liym2019@sustech.edu.cn
+% date: 2021.08.27
 %% Gauss
 
 Nfits=1000    %number of images to fit

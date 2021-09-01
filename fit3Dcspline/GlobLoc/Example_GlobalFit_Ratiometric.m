@@ -1,3 +1,8 @@
+% Copyright (c) 2021 Li Lab, Southern University of Science and Technology, Shenzhen & Ries Lab, European Molecular Biology Laboratory, Heidelberg.
+% author: Yiming Li
+% email: liym2019@sustech.edu.cn
+% date: 2021.08.27
+% Link of example  data: https://oc.embl.de/index.php/s/bs1ADBsc4t6aiVV
 %% Load and make cspline PSF
 cal=load('000_AstigBeads_LP665_m1_1um_20nm_50ms_conv_640_50Percent_Empty_685-70_676-37_singleMode_Z-stack_1_MMStack_Pos0.ome_3dcal.mat');
 PSF1 = cal.SXY(1).PSF{1};

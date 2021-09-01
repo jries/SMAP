@@ -1,3 +1,8 @@
+% Copyright (c) 2021 Li Lab, Southern University of Science and Technology, Shenzhen & Ries Lab, European Molecular Biology Laboratory, Heidelberg.
+% author: Yiming Li
+% email: liym2019@sustech.edu.cn
+% date: 2021.08.27
+% Link of example  data: https://oc.embl.de/index.php/s/bs1ADBsc4t6aiVV
 %% Load and make cspline PSF
 cal=load('BP-combine_3dcal.mat'); % PSF model from SMLM2016 challenge
 
