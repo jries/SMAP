@@ -10,14 +10,13 @@ LocMoFit is a model fitting framework for SMLM data.
 
 Menu info.
 ----------
-:doc:`../basics/quickstart`
 
-If you are new to LocMoFit, you can find out how to get started via **:doc:`Getting statrted`** in the menu on the left. We recommend you to install LocMoFit with SMAP, a modular super-resolution microscopy analysis platform for SMLM data we developed.
+If you are new to LocMoFit, you can find out how to get started via **:ref:`Getting statrted`** in the menu on the left. We recommend you to install LocMoFit with SMAP, a modular super-resolution microscopy analysis platform for SMLM data we developed.
 
 .. important::
-   We recommend you to start with our introductory series by following the tutorial in **:doc:`Quick start </basics/quickstart>`**.
+   We recommend you to start with our introductory series by following the tutorial in **:ref:`Quick start </basics/quickstart>`**.
 
-**:doc:`Structure`** gives an overview of what LocMoFit has and the relations between different classes.
+**:ref:`Structure`** gives an overview of what LocMoFit has and the relations between different classes.
 
 Pages under **BASICS** contain the necessary information for working with LocMoFit.
 
@@ -51,7 +50,6 @@ You can find out other resources LocMoFit provides in pages under **RESOURCE** a
    
    Composite model <./tutorial/compositeModel.md>
    ./tutorial/chainSteps.md
-   ./tutorial/fourColorNPC.md
    
 .. toctree::
    :maxdepth: 2

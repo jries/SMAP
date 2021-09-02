@@ -6,6 +6,8 @@ In this tutorial you will learn how to chain fitting steps with the GUI. We will
 * _NPC3D_step2_ring_LocMoFit.mat_
 * _NPC3D_step3_points_LocMoFit.mat_
 
+The two files above can be downloaded [here](https://www.embl.de/download/ries/LocMoFit/).
+
 :::{important}
 Please first finish the tutorial {doc}`composite model<./compositeModel>`.
 :::
