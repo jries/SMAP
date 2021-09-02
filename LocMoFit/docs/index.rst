@@ -10,6 +10,8 @@ LocMoFit is a model fitting framework for SMLM data.
 
 Menu info.
 ----------
+:ref:`quickstart`.
+:ref:`Quick start`.
 :doc:`../basics/quickstart`
 
 If you are new to LocMoFit, you can find out how to get started via **:doc:`Getting statrted`** in the menu on the left. We recommend you to install LocMoFit with SMAP, a modular super-resolution microscopy analysis platform for SMLM data we developed.
