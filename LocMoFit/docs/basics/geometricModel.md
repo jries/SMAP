@@ -1,6 +1,6 @@
 # Geometric model
 :::{note}
-This page is still quite incomplete. We are working on the content now and will update it soon.
+This page is still incomplete. We are working on the content now and will update it soon.
 :::
 ## Model format
 * Image: _png_ and _mat_ files.

@@ -1,10 +1,12 @@
 Structure
 =========
+:::{note}
+This page is still incomplete. We are working on the content now and will update it soon.
+:::
 
 Geometric model
 ---------------
-
-The user has to provide the geometric model. The template can be found at XXX. Information about the library of models we created can be found at: :doc:`modLibrary`
+The user has to provide a geometric model. We will soon provide template codes for implementing own models. You can also check at: :doc:`modLibrary` for models we created.
 
 Fitter
 ------
@@ -12,3 +14,5 @@ Fitter
 SMLM model
 ----------
 
+Geometric model
+---------------
