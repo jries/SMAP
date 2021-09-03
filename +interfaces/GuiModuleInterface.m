@@ -358,7 +358,6 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                              child
 %                             err
                         end
-                    
                     end
                 end
             end

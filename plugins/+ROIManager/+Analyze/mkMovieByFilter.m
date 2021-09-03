@@ -15,18 +15,35 @@ classdef mkMovieByFilter<interfaces.DialogProcessor&interfaces.SEProcessor
             
             %% init
             se = obj.locData.SE;
-            
+            pixelSize = 0.5;
             lowB = p.sourceRange(1); % the lower boundary
-            framesOfMovie = zeros([obj.getPar('se_sitefov'),obj.getPar('se_sitefov'),3, floor(range(p.sourceRange)/p.stepSize)]); % the stack of frames. n*m*3*numOfFrames, where n*m is the dim of a ROI
+            framesOfMovie = zeros([obj.getPar('se_siteroi')/pixelSize,obj.getPar('se_siteroi')/pixelSize,3, floor((range(p.sourceRange)-ceil(p.windowSize/2))/p.stepSize)]); % the stack of frames. n*m*3*numOfFrames, where n*m is the dim of a ROI
             
+            % Scale bar
+            imgLength = length(framesOfMovie);
+            toTheLeft = imgLength *0.05;
+            scaleBarWidth = imgLength ./3;
+            scaleBarHeight = 10;
+            toThebottom = imgLength *0.05;
+            [X,Y] = meshgrid(toTheLeft:toTheLeft+scaleBarWidth-1,imgLength-toThebottom:imgLength-toThebottom+scaleBarHeight-1);
+
             %% sliding window
-            for k = 1:floor(range(p.sourceRange)/p.stepSize)
+            for k = 1:floor((range(p.sourceRange)-p.windowSize+1)/p.stepSize)
                 nLayer = size(obj.locData.layer,2);
                 for l = 1:nLayer
-                    obj.setPar('selectedField', {'order',lowB, lowB+p.windowSize, 1,1 }, 'layer', l);
+%                     obj.setPar(['layer' num2str(l) '_selectedField'], {'rank_LocMoFitGUI',lowB, lowB+p.windowSize, 1,1 });
+                    obj.setPar(['layer' num2str(l) '_selectedField'], {'rank_SMLMModelFitGUI',lowB, lowB+p.windowSize, 1,1 });
+                    pp = obj.getLayerParameters(l,renderSMAP);
+                    pp.sr_pos = [500 410 0];
+                    pp.sr_size = repelem(obj.getPar('se_siteroi')/2,2);
+                    pp.sr_pixrec = pixelSize;
+                    locs = obj.locData.getloc({'xnm','ynm','locprecnm'},'layer',l,'position',[500 410 300 300]);
+                    imageo = renderSMAP(locs, pp, l);
+                    imageo = drawerSMAP(imageo,pp);
+                    framesOfMovie(:,:,:,k) = framesOfMovie(:,:,:,k) + imageo.image;
+                    
                 end
-                se.currentsite.image = [];
-                framesOfMovie(:,:,:,k)= se.plotsite(se.currentsite, se.processors.preview.guihandles.siteax, se.processors.preview.guihandles.cellax).image;
+                framesOfMovie(Y(:),X(:),:,k) = 1;
                 lowB = lowB+p.stepSize;
             end
             
@@ -39,6 +56,7 @@ classdef mkMovieByFilter<interfaces.DialogProcessor&interfaces.SEProcessor
                 myVideo = VideoWriter([p.folderPath filesep p.videoPath]);
                 myVideo.FrameRate = p.frameRate;  % Default 30
                 myVideo.Quality = 100;    % Default 75
+%                 myVideo.CompressionRatio = 5;
                 open(myVideo);
                 writeVideo(myVideo, m);
                 close(myVideo);

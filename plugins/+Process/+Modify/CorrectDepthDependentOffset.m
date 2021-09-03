@@ -1,7 +1,7 @@
 classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEProcessor
     % CorrectDepthDependentOffset corrects the z coordinates of
     % localizations based on Nup96's ring separation, 50 nm.
-    % This plugin requires SMLMModelFitGUI been run.
+    % This plugin requires LocMoFitGUI been run.
     methods
         function obj=CorrectDepthDependentOffset(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -15,16 +15,16 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             fixTwoRingCutoff = true;    % true for fixing the cutoff at twoRingCutoff; false for calculating the cutoff using getOneRingCutoff().
             twoRingCutoff = 35;
             
-            %% Get info from SMLMModelFit
+            %% Get info from LocMoFit
             se = obj.SE;
             sites = obj.SE.sites;
             
             evalList = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
-            indProcessor = find(strcmp('SMLMModelFitGUI',evalList));
+            indProcessor = find(strcmp('LocMoFitGUI',evalList));
             
             fitter = obj.SE.processors.eval.processors{indProcessor}.fitter;
             [~,idxRingDist] = fitter.wherePar('pars.m2.lPar.z');
-            ringDistS1 = getFieldAsVectorInd(sites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
+            ringDistS1 = getFieldAsVectorInd(sites, 'evaluation.LocMoFitGUI.allParsArg.value',idxRingDist);
             
             idxNan = find(isnan(ringDistS1));
             
@@ -36,13 +36,13 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             
             ID = getFieldAsVector(usedSites, 'ID');
             
-            ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);            
+            ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI.allParsArg.value',idxRingDist);            
             
             [~,idxXrot] = fitter.wherePar('pars.m1.lPar.xrot');
-            xrot = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxXrot);
+            xrot = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI.allParsArg.value',idxXrot);
             
             [~,idxYrot] = fitter.wherePar('pars.m1.lPar.yrot');
-            yrot = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxYrot);
+            yrot = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI.allParsArg.value',idxYrot);
             
             % convert the rotation to the same as in the spherical
             % coordinate system
@@ -57,14 +57,14 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             
             % get z pos of model 1
             [~,idxZ] = fitter.wherePar('pars.m1.lPar.z');
-            zM1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxZ);
+            zM1 = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI.allParsArg.value',idxZ);
             zUpper = zM1+ringDistS1Z;
             lateralDist = sqrt(ringDistS1.^2-ringDistS1Z.^2);
             
             % move the z pos to the mutual center of both rings
             z = zeros(size(zM1));
             for k = length(usedSites):-1:1
-                fitter.allParsArg = usedSites(k).evaluation.SMLMModelFitGUI.allParsArg;
+                fitter.allParsArg = usedSites(k).evaluation.LocMoFitGUI.allParsArg;
                 z(k) = zM1(k)+fitter.rel(fitter.wherePar('pars.m2.lPar.z'),3,3)/2;
             end
             
@@ -303,10 +303,10 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
                         obj.locData.loc.znm_rs_original = locs.znm;
                     end
     %                 for k = 1:length(sites_good)
-    %                    sites_good(k).evaluation.SMLMModelFitGUI.allParsArg.value(idxRingDist) = newRingDist_good(k);
-    %                    sites_good(k).evaluation.SMLMModelFitGUI.allParsArg.value(idxXrot) = rotAng(k,1);
-    %                    sites_good(k).evaluation.SMLMModelFitGUI.allParsArg.value(idxYrot) = rotAng(k,2);
-    %                    sites_good(k).evaluation.SMLMModelFitGUI.allParsArg.value(idxZ) = newZLower_good(k);
+    %                    sites_good(k).evaluation.LocMoFitGUI.allParsArg.value(idxRingDist) = newRingDist_good(k);
+    %                    sites_good(k).evaluation.LocMoFitGUI.allParsArg.value(idxXrot) = rotAng(k,1);
+    %                    sites_good(k).evaluation.LocMoFitGUI.allParsArg.value(idxYrot) = rotAng(k,2);
+    %                    sites_good(k).evaluation.LocMoFitGUI.allParsArg.value(idxZ) = newZLower_good(k);
     %                 end
 
                     for k = 1:length(usedSites)

@@ -15,51 +15,51 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             siteOrder = 1:se.numberOfSites;
 
             usedSites = sites(lUsed);
-            fn = fieldnames(obj.SE.processors.eval.children);
-            if ismember('SMLMModelFitGUI_5', fn)
-                whichSMLMModelFitGUI = '5';
+            fn = obj.SE.processors.eval.guihandles.modules.Data(:,2);
+            if ismember('LocMoFitGUI_5', fn)
+                whichLocMoFitGUI = '5';
             else
-                whichSMLMModelFitGUI = '3';
+                whichLocMoFitGUI = '3';
             end
-            fitInfo = getFieldAsVector(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo']);
+            fitInfo = getFieldAsVector(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo']);
             lFailed = cellfun(@(x)strcmp(x.guiInfo,'Fit or plot failed.'), fitInfo);
             evalList = se.processors.eval.guihandles.modules.Data(:,2);
-            indProcessor = find(strcmp('SMLMModelFitGUI',evalList));
+            indProcessor = find(strcmp('LocMoFitGUI',evalList));
             relativePosLastStep = 2;
             ID = getFieldAsVector(usedSites, 'ID');
-            numOfLocsL1 = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.numOfLocsPerLayer'], 1);
+            numOfLocsL1 = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo.numOfLocsPerLayer'], 1);
             % [~,idxZ] = g.locData.SE.processors.eval.processors{indProcessor-2}.fitter.wherePar('pars.m1.lPar.z');
-            % zS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxZ);
+            % zS1 = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI.allParsArg.value',idxZ);
             % 
             
             [~,idxRingDist] = se.processors.eval.processors{indProcessor}.fitter.wherePar('pars.m2.lPar.z');
-            ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI.allParsArg.value',idxRingDist);
+            ringDistS1 = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI.allParsArg.value',idxRingDist);
 
 %             [cutoffOneRing, bin_edges] = getOneRingCutoff(ringDistS1);
             
             [~,idxZ] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.z');
-            z = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxZ);
+            z = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.allParsArg.value'],idxZ);
 
             [~,idxRingDist] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.ringDistance');
-            ringDist = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxRingDist);
+            ringDist = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.allParsArg.value'],idxRingDist);
 
             [~,idxR] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.radius');
-            r = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxR);
+            r = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.allParsArg.value'],idxR);
 
             [~,idxVar] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.lPar.variation');
-            var = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxVar);
+            var = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.allParsArg.value'],idxVar);
 
             [~,idxAzi] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m1.mPar.azimuthalShift');
-            azi = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxAzi);
+            azi = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.allParsArg.value'],idxAzi);
             azi = rem(rem(azi,45)+90, 45);
             
             [~,idxBG] = se.processors.eval.processors{indProcessor+relativePosLastStep}.fitter.wherePar('pars.m91.offset.weight');
-            bg = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.allParsArg.value'],idxBG);
+            bg = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.allParsArg.value'],idxBG);
             
-            numOfLocsLayer1 = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.numOfLocsPerLayer'],1);
+            numOfLocsLayer1 = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo.numOfLocsPerLayer'],1);
             bgDensity = numOfLocsLayer1.*bg./(pi*(p.se_siteroi/2)^2/1000^2);
             
-            bgDensity_fitter = getFieldAsVectorInd(usedSites, ['evaluation.SMLMModelFitGUI_' whichSMLMModelFitGUI '.fitInfo.BGDensity'],1);
+            bgDensity_fitter = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo.BGDensity'],1);
             
             lOneRing = ringDist<=cutoffOneRing;
             
@@ -155,8 +155,8 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             
             if p.showIntActPlot
                 ax4 = obj.initaxis('Interactive'); 
-                plotSElink(ax4,azi_new,numOfLocsL1,ID,se,' ob')
-                xlabel(ax4, ['Twist angle (' char(176) ')'])
+                plotSElink(ax4,ringDist,numOfLocsL1,ID,se,' ob')
+                xlabel(ax4, 'Ring separation (nm)')
                 ylabel(ax4, 'Number of Locs')
             end
             

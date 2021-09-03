@@ -40,12 +40,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             addmodule(obj,'generalStatistics');
             
             % Yu-Le added
-            flagDirExist = exist('../SMLMModelFit','dir');
-            if flagDirExist==0
-                addpath(genpath('../ries-private'))
-            else
-                addpath(genpath('../SMLMModelFit'))
-            end
+            addpath(genpath('./LocMoFit'))
             obj.makeinfobutton('sw');
         end 
         function evaluate(obj,site)
@@ -72,7 +67,15 @@ classdef SEEvaluationGui< interfaces.SEProcessor
                             mh=mh(1:end-1);
                         end
                         par=p.children.(modules{k});
-                        addmodule(obj,mh,par);
+                        % Yu-Le added to upgrade SMLMModelFitGUI to LocMoFitGUI
+                        if startsWith(modules{k}, 'SMLMModelFitGUI')
+                            obj.addmodule('LocMoFitGUI', par)
+                        else
+                            % original
+                            addmodule(obj,mh,par);
+                            % original end/
+                        end
+                        % Yu-Le added end/
                     end
 
                     %set on / off
@@ -86,6 +89,76 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             end
             
         end
+        function addmodule(obj,modulename,p)
+            dx=2;
+            table=obj.guihandles.modules;
+            obj.guiPar.Vrim=0;
+            sizeparent=get( obj.handle,'Position');
+            d=table.Data;
+            tunits=table.Units;
+            table.Units='pixels';
+            pos=table.Position;
+            table.Units=tunits;
+            modulename2=modulename;
+            ind=2;
+            while sum(sum(strcmpi(d,modulename2)))
+                modulename2=[modulename '_' num2str(ind)];
+                ind=ind+1;
+            end
+            
+            s=size(d);
+            sn=s(1)+1;
+            d{sn,1}=true;
+            d{sn,2}=modulename2;
+            process=plugin('ROIManager','Evaluate',modulename);
+            if isa(process,'interfaces.SEEvaluationProcessor')
+                process.attachPar(obj.P);
+                panel=uipanel(obj.handle,'Units','pixels','Position',[pos(1)+pos(3)+dx,dx,sizeparent(3)-pos(1)-pos(3)-2*dx,sizeparent(4)-2*dx-20],'Visible','off');
+                obj.guihandles.(['processor' num2str(sn)])=panel;
+                obj.children.(modulename2)=process;
+                process.name=modulename2;
+                process.modulename=modulename;
+                process.number=sn;
+                process.handle=panel;
+                % process.guidef;
+                % process.addGuiParameters(obj.guiPar);
+                process.attachLocData(obj.locData);
+                % process.showresults=true;
+                process.makeGui;
+                if nargin>2 && ~isempty(p)%set parameters
+                    process.setGuiParameters(p);
+                end
+                
+                obj.processors{sn}=process;
+                obj.guihandles.modules.Data=d;
+            end
+        end
+        function removemodule(obj, indOrName)
+            if isnumeric(indOrName)
+                removeind = indOrName;
+                removename = obj.processors{removeind}.name;
+            else
+                removename = indOrName;
+                names = cellfun(@(x)x.name, obj.processors, 'UniformOutput', false);
+                removeind = find(strcmp(names, removename));
+            end
+%             removeind=obj.moduleselection(1);
+            removename=obj.processors{removeind}.name;
+            rproc=obj.processors{removeind};
+            rhandle=(rproc.handle);
+            % rename guihandles. This is a hack.
+            for k=removeind:length(obj.processors)-1
+                obj.guihandles.(['processor' num2str(k)])=obj.guihandles.(['processor' num2str(k+1)]);
+            end
+            obj.guihandles=myrmfield(obj.guihandles,['processor' num2str(k+1)]);
+
+            obj.processors(removeind)=[];
+            obj.children=myrmfield(obj.children,removename);
+
+
+            obj.guihandles.modules.Data(removeind,:)=[];
+            delete(rhandle);
+        end
     end
 end
 
@@ -93,76 +166,20 @@ function addmodule_callback(a,b,obj)
 newmodule=listdlg('ListString',obj.pluginnames);
 for k=1:length(newmodule)
     modulename=obj.pluginnames{newmodule(k)};
+    % Yu-Le added
+    if strcmp(modulename, 'SMLMModelFitGUI')
+        modulename = 'LocMoFitGUI';
+    end
     addmodule(obj,modulename)
 end
 end
 
 function removemodule_callback(a,b,obj)
 if ~isempty(obj.moduleselection)
-removeind=obj.moduleselection(1);
-removename=obj.processors{removeind}.name;
-rproc=obj.processors{removeind};
-rhandle=(rproc.handle);
-% rename guihandles. This is a hack.
-for k=removeind:length(obj.processors)-1
-    obj.guihandles.(['processor' num2str(k)])=obj.guihandles.(['processor' num2str(k+1)]);
-end
-obj.guihandles=myrmfield(obj.guihandles,['processor' num2str(k+1)]);
-
-obj.processors(removeind)=[];
-obj.children=myrmfield(obj.children,removename);
-
-
-obj.guihandles.modules.Data(removeind,:)=[];
-delete(rhandle);
+    removeind=obj.moduleselection(1);
+    obj.removemodule(removeind)
 end
 end
-
-function addmodule(obj,modulename,p)
-dx=2;
-table=obj.guihandles.modules;
-obj.guiPar.Vrim=0;
-sizeparent=get( obj.handle,'Position');
-d=table.Data;
-tunits=table.Units;
-table.Units='pixels';
-pos=table.Position;
-table.Units=tunits;
-modulename2=modulename;
-ind=2;
-while sum(sum(strcmpi(d,modulename2)))
-    modulename2=[modulename '_' num2str(ind)];
-    ind=ind+1;
-end
-    
-s=size(d);
-sn=s(1)+1;
-d{sn,1}=true;
-d{sn,2}=modulename2;
-process=plugin('ROIManager','Evaluate',modulename);
-if isa(process,'interfaces.SEEvaluationProcessor')
-process.attachPar(obj.P);
-panel=uipanel(obj.handle,'Units','pixels','Position',[pos(1)+pos(3)+dx,dx,sizeparent(3)-pos(1)-pos(3)-2*dx,sizeparent(4)-2*dx-20],'Visible','off');
-obj.guihandles.(['processor' num2str(sn)])=panel;
-obj.children.(modulename2)=process;
-process.name=modulename2;
-process.modulename=modulename;
-process.number=sn;
-process.handle=panel;
-% process.guidef;
-% process.addGuiParameters(obj.guiPar);
-process.attachLocData(obj.locData);
-% process.showresults=true;
-process.makeGui;
-if nargin>2 && ~isempty(p)%set parameters
-    process.setGuiParameters(p);
-end
-
-obj.processors{sn}=process;
-obj.guihandles.modules.Data=d;
-end
-end
-
 
 function modules_callback(object,data,obj)
 obj.moduleselection=data.Indices;
