@@ -17,7 +17,7 @@ classdef imageloaderSMAP<interfaces.GuiParameterInterface
     methods
        function obj=imageloaderSMAP(varargin)
            obj.metadata=interfaces.metadataSMAP;
-           obj.calibrationFile=[obj.getGlobalSetting('SettingsDirectory') '/cameras.mat'];
+       
            if nargin>2 && ~isempty(varargin{3})
                if isa(varargin{3},'interfaces.ParameterData')
                     obj.P=varargin{3};
@@ -30,7 +30,7 @@ classdef imageloaderSMAP<interfaces.GuiParameterInterface
                 obj.updatemetadata(varargin{2});
                 obj.multiloadermetadata=varargin{2};
            end
-
+           obj.calibrationFile=[obj.getPar('SettingsDirectory') '/cameras.mat'];
             if nargin>0 && ~isempty(varargin{1})
                 obj.open(varargin{1});
             end
