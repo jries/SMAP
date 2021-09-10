@@ -27,9 +27,9 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             [p,f]=fileparts(file);
             obj.metadata.basefile=[p ];
             
-            md=obj.getPar('loc_cameraSettings');
-            if ~isempty(md)&& myisfield(md,'imagemetadata')
-                obj.readoutimgtags=md.imagemetadata;
+            camset=obj.getPar('loc_cameraSettings');
+            if ~isempty(camset)&& myisfield(camset,'imagemetadata')
+                obj.readoutimgtags=camset.imagemetadata;
             end
             if ~isempty(obj.readoutimgtags)
                 obj.imtags{length(obj.readoutimgtags),md.numberOfFrames}='';
