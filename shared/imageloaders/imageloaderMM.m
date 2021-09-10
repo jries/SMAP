@@ -4,6 +4,8 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
     
     properties
         reader
+        readoutimgtags={'ZPositionUm'};
+        imtags
     end
     
     methods
@@ -25,6 +27,14 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             [p,f]=fileparts(file);
             obj.metadata.basefile=[p ];
             
+            md=obj.getPar('loc_cameraSettings');
+            if ~isempty(md)&& myisfield(md,'imagemetadata')
+                obj.readoutimgtags=md.imagemetadata;
+            end
+            if ~isempty(obj.readoutimgtags)
+                obj.imtags{length(obj.readoutimgtags),md.numberOfFrames}='';
+            end
+            
         end
         function image=getimagei(obj,frame)
             image=readstack(obj,frame);
@@ -32,6 +42,7 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
         
         function closei(obj)
             obj.reader.close
+            
 %             clear(obj.reader)
         end
         
@@ -78,8 +89,6 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             
             allmd=vertcat(allmd,alls);
             obj.allmetadatatags=allmd;
-                
-        
         end
         
     end
@@ -149,11 +158,14 @@ end
 
 function image=readstack(obj,imagenumber)
 img=obj.reader.getImage(0,0,imagenumber-1,0);
+imgpos={0,0,imagenumber-1,0};
 if isempty(img)
     img=obj.reader.getImage(0,imagenumber-1,0,0);
+    imgpos={0,imagenumber-1,0,0};
 end
 if isempty(img)
     img=obj.reader.getImage(0,0,0,imagenumber-1);
+    imgpos={0,0,0,imagenumber-1};
 end
 if isempty(img)
     image=[];
@@ -169,6 +181,13 @@ image=img.pix;
          image2(ind)=2^16-uint16(-image(ind));
         image=image2;
     end
+
+if ~isempty(obj.readoutimgtags)
+    imgmeta=obj.reader.getImageTags(imgpos{:});
+    for k=1:length(obj.readoutimgtags)
+        obj.imtags{k,imagenumber}=imgmeta.get(obj.readoutimgtags{k});
+    end
+end
 % else
 %     image=[];
 % end

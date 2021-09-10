@@ -25,6 +25,7 @@ classdef metadataSMAP<handle
         imagefile
         EMmirror=false; %used by Tiff loader workflow
         correctionfile='';
+        imagemetadata=[];
     end
     
     methods
@@ -46,6 +47,7 @@ classdef metadataSMAP<handle
             d.timediff='timediff: difference between frames in ms';
             d.comment='Comment';
             d.correctionfile='file with sCMOS correction maps';
+            d.imagemetadata='frame-specific metadata to read out and export';
         end
         function roi=get.roi(obj)
             if isempty(obj.roi)
