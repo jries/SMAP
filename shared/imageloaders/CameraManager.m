@@ -76,7 +76,7 @@ obj.guihandles.camerafile=uicontrol('Style','edit','String',obj.cameraSettingsFi
 obj.guihandles.loadcamerafile=uicontrol('Style','pushbutton','String','load camera file','Position',[posbutton height-40,buttonwidth,lineheight],'Callback',{@loadcamerafile,obj});
 
 
-obj.guihandles.loadimages=uicontrol('Style','pushbutton','String','Load images','Position',[posbutton height-90,buttonwidth,lineheight],'Callback',{@loadimages,obj});
+obj.guihandles.loadimages=uicontrol('Style','pushbutton','String','Load images','Position',[posbutton height-90,buttonwidth,lineheight],'Callback',{@loadimagesi,obj});
 obj.guihandles.test=uicontrol('Style','pushbutton','String','test','Position',[posbutton height-115,buttonwidth,lineheight],'Callback',{@testcal,obj});
 obj.guihandles.addcam=uicontrol('Style','pushbutton','String','Add camera','Position',[posbutton height-140,buttonwidth,lineheight],'Callback',{@menu_callback,obj,'add'});
 
@@ -345,6 +345,14 @@ if data.Indices(2)==indtag
                 X=num2str(X);
             end
             table.Data{data.Indices(1),7}=X;
+            if data.Indices(1)==15 %imagemetadata
+                oldentry=table.Data{15,3};
+                if ~isempty(oldentry)
+                    oldentry=[oldentry ','];
+                end
+                newentry=[oldentry tag{1}];
+                table.Data{15,3}=newentry;
+            end
         end
         tables2prop(obj);
      end
@@ -403,7 +411,7 @@ waitfor(f)
 end
 
 
-function loadimages(a,b,obj)
+function loadimagesi(a,b,obj)
 ph=obj.defaultpath;
 if ~isempty(ph)
     ph=[fileparts(ph) filesep];
@@ -536,7 +544,7 @@ file=obj.cameraSettingsFile;
 [f,p]=uigetfile(file);
 if f
     obj.cameraSettingsFile=[p f];
-    obj.guihandles.camerafile=[p f];
+    obj.guihandles.camerafile.String=[p f];
     loadcameras(obj);
 end
 
