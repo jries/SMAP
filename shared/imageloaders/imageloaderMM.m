@@ -29,7 +29,12 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             
             camset=obj.getPar('loc_cameraSettings');
             if ~isempty(camset)&& myisfield(camset,'imagemetadata')
-                obj.readoutimgtags=camset.imagemetadata;
+                if iscell(camset.imagemetadata)
+                    obj.readoutimgtags=camset.imagemetadata;
+                else
+                    obj.readoutimgtags=split(camset.imagemetadata,',');
+                end
+                obj.readoutimgtags=strtrim(obj.readoutimgtags);
             end
             if ~isempty(obj.readoutimgtags)
                 obj.imtags{length(obj.readoutimgtags),md.numberOfFrames}='';
