@@ -49,9 +49,17 @@ You can find out other resources LocMoFit provides in pages under **RESOURCE** a
    
    Composite model <./tutorial/compositeModel.md>
    ./tutorial/chainSteps.md
+   ./tutorial/simulations.md
 
 ..
    ./tutorial/fourColorNPC.md
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Application note
+   
+   ./applicationNote/simulations.md
    
 .. toctree::
    :maxdepth: 2
