@@ -7,6 +7,9 @@ In this tutorial you will learn how to simulate SMLM data based on a geometric m
 You have to load the geometric model for generating localizations. Here we use the point model of the nuclear pore complex as an example.
 1. Start SMAP.
 2. Load a new instance of the plugin *LocMoFitGUI* (see {doc}`quick start<../quickstart>` to recap).
+{doc}`quick start<quickstart>`
+{doc}`quick start<./quickstart>`
+{doc}`quick start<../quickstart>`
 3. Then we load the individual models and set up the arguments of the model parameters:
 	* Go to **[M1]** -> **[Model]**, click **load model**. Navigate to the default model directory *'SMAP/LocMoFit/models'* (*SMAP* is the root folder of SMAP), open _NPCPointModel_flexible2.m_.
 	
