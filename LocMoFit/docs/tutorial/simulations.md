@@ -4,11 +4,11 @@ In this tutorial you will learn how to simulate SMLM data based on a geometric m
 * **SMAP** installed. Further information can be found on our [GitHub](https://github.com/jries/SMAP/) site.
 
 ## Preparation
-You have to load the geometric model for generating localizations. Here we use the point model of the nuclear pore complex.
+You have to load the geometric model for generating localizations. Here we use the point model of the nuclear pore complex as an example.
 1. Start SMAP.
-2. Load a new instance of the plugin *LocMoFitGUI* (see {doc}`quick start<./quickstart>` to recap).
+2. Load a new instance of the plugin *LocMoFitGUI* (see {doc}`quick start<../quickstart>` to recap).
 3. Then we load the individual models and set up the arguments of the model parameters:
-	* Go to **[M1]** -> **[Model]**, click **load model**. Navigate to the model directory, open _NPCPointModel_flexible2.m_.
+	* Go to **[M1]** -> **[Model]**, click **load model**. Navigate to the default model directory *'SMAP/LocMoFit/models'* (*SMAP* is the root folder of SMAP), open _NPCPointModel_flexible2.m_.
 	
 ## Setup
 Once the model is loaded, it is ready for the simulation engine.
@@ -20,7 +20,7 @@ Once the model is loaded, it is ready for the simulation engine.
 	* In the new window, define the value for a parameter (can be identified in the columns *Name*, *Type*, and *Model*) in the column *Value*.
 	* Newly inputted values is automatically saved.
 	:::{note}
-	Instead of a constant value, a parameter can be a random variable of a uniform distribution with specified boundaries. To enable this, you just have to input two values, seperated by a space, in the column *value*. For example, *-15 15* define the lower and upper boundaries as -15 and 15 respectively.
+	Instead of a constant value, a parameter can be a random variable of a uniform distribution with specified boundaries. To enable this, you just have to input two values, separated by a space, in the column *value*. For example, *'-15 15'* defines the lower and upper boundaries as -15 and 15 respectively.
 	:::
 	:::{note}
 	You can also associate model parameters. See {doc}`this note<../applicationNote/simulation>` for more information.
