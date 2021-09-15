@@ -5,7 +5,7 @@ classdef CameraConverter<interfaces.WorkflowModule
         calfile;
         loc_cameraSettings=interfaces.metadataSMAP;
         loc_cameraSettingsStructure=struct('EMon',1,'emgain',1,'conversion',1,'offset',400,'cam_pixelsize_um',0.1,...
-            'roi',[],'exposure',1,'timediff',0,'comment','','correctionfile','');        
+            'roi',[],'exposure',1,'timediff',0,'comment','','correctionfile','','imagemetadata','');        
         EMexcessNoise;
         calibrategain=false;
         calibratecounter
@@ -73,7 +73,7 @@ classdef CameraConverter<interfaces.WorkflowModule
                 settings=obj.getPar('loc_fileinfo');
                 fn=fieldnames(settings);
                 if lock
-                    lockedfields={'Width','Height','roi','exposure','emgain','EMon','conversion','offset','cam_pixelsize_um','timediff','comment','correctionfile'};
+                    lockedfields={'Width','Height','roi','exposure','emgain','EMon','conversion','offset','cam_pixelsize_um','timediff','comment','correctionfile','imagemetadata'};
                     fn=setdiff(fn,lockedfields);
                 end
                 for k=1:length(fn)

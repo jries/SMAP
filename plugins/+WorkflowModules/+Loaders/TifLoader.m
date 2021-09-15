@@ -160,6 +160,12 @@ classdef TifLoader<interfaces.WorkflowModule
             
             obj.setPar('tiffloader_loadingtime',tall);
             obj.setPar('tiffloader_fittime',tfitall);
+            if myisfield(imloader,'imtags')
+                imagetags.data=imloader.imtags;
+                imagetags.tags=imloader.readoutimgtags;
+                obj.setPar('loc_imagetags',imagetags)
+            end
+
 %             obj.setPar('tiffloader_averagetiff',cast(allimages/imcounter,'like',image));
             dateof=interfaces.WorkflowData;
             dateof.frame=imloader.currentImageNumber+1;

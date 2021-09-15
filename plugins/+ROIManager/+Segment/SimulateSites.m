@@ -130,6 +130,16 @@ obj.setGuiParameters(struct('coordinatefile',[p f]));
 setvisibility(obj)
 end
 
+function loadpsf_callback(a,b,obj)
+f=obj.getSingleGuiParameter('psf_file'); 
+[f,p]=uigetfile('*_3dcal.mat','Choose bead calibration psf file',f);
+if ~f
+    return
+end
+obj.setGuiParameters(struct('psf_file',[p f]));
+end
+
+
 function useFitter_callback(a,b,obj)
     fig = figure(512);
     clf(fig);
@@ -580,6 +590,22 @@ pard.background.Width=.35;
 pard.background.position=[5,3.5];
 pard.background.TooltipString=sprintf('Background in photons/pixel/frame');
 pard.t5.TooltipString=pard.background.TooltipString;
+
+% PSF model
+p(1).value=0;p(1).on={};p(1).off={'psf_file','load_button_psf'};
+p(2).value=1;p(2).on=p(1).off; p(2).off=p(1).on;
+pard.use_psf.object=struct('String','Experimental PSF:','Style','checkbox','Value',0,'Callback',{{@obj.switchvisible,p}});
+pard.use_psf.position=[6,1];
+pard.use_psf.Width=1.5;
+
+pard.psf_file.object=struct('String','*_3dcal.mat','Style','edit','Visible','off');
+pard.psf_file.position=[6,2.5];
+pard.psf_file.Width=1.5;
+
+pard.load_button_psf.object=struct('String','Load','Style','pushbutton','Callback',{{@loadpsf_callback,obj}},'Visible','off');
+pard.load_button_psf.position=[6,4];
+
+
 
 pard.t6.object=struct('String','Number of sites','Style','text');
 pard.t6.position=[8,1];

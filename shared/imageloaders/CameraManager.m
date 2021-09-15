@@ -76,7 +76,7 @@ obj.guihandles.camerafile=uicontrol('Style','edit','String',obj.cameraSettingsFi
 obj.guihandles.loadcamerafile=uicontrol('Style','pushbutton','String','load camera file','Position',[posbutton height-40,buttonwidth,lineheight],'Callback',{@loadcamerafile,obj});
 
 
-obj.guihandles.loadimages=uicontrol('Style','pushbutton','String','Load images','Position',[posbutton height-90,buttonwidth,lineheight],'Callback',{@loadimages,obj});
+obj.guihandles.loadimages=uicontrol('Style','pushbutton','String','Load images','Position',[posbutton height-90,buttonwidth,lineheight],'Callback',{@loadimagesi,obj});
 obj.guihandles.test=uicontrol('Style','pushbutton','String','test','Position',[posbutton height-115,buttonwidth,lineheight],'Callback',{@testcal,obj});
 obj.guihandles.addcam=uicontrol('Style','pushbutton','String','Add camera','Position',[posbutton height-140,buttonwidth,lineheight],'Callback',{@menu_callback,obj,'add'});
 
@@ -241,6 +241,10 @@ end
 if size(pardat,1)<14
     pardat(14,:)={'correctionfile','fix','none','select',[],'',[]};
 end
+
+if size(pardat,1)<15
+    pardat(15,:)={'imagemetadata','fix','','select',[],'',[]};
+end
 obj.guihandles.partable.Data=pardat;
 
 obj.guihandles.statelist.Value=obj.currentstate;
@@ -275,11 +279,11 @@ end
 
 function t=intpartable
 t=cell(14,7);
-parnames={'EMon','cam_pixelsize_um','conversion','emgain','offset','roi','exposure','timediff','comment','numberOfFrames','Width','Height','roimode','correctionfile'};
-mode={'fix','fix','fix','fix','fix','fix','fix','fix','fix','metadata','metadata','metadata','fix','fix'};
-default={'1','0.1','1','100','100','','1','1','settings not initialized','0','0','0','none',''};
-conversion={'str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2num(X)','str2double(X)','str2double(X)','','str2double(X)','str2double(X)','str2double(X)','',''};
-metafield={'select','select','select','select','select','select','select','select','select','select','select','select','select','select','select'};
+parnames={'EMon','cam_pixelsize_um','conversion','emgain','offset','roi','exposure','timediff','comment','numberOfFrames','Width','Height','roimode','correctionfile','imagemetadata'};
+mode={'fix','fix','fix','fix','fix','fix','fix','fix','fix','metadata','metadata','metadata','fix','fix','fix'};
+default={'1','0.1','1','100','100','','1','1','settings not initialized','0','0','0','none','',''};
+conversion={'str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2double(X)','str2num(X)','str2double(X)','str2double(X)','','str2double(X)','str2double(X)','str2double(X)','','','split(X)'};
+metafield={'select','select','select','select','select','select','select','select','select','select','select','select','select','select','select','select'};
 
 for k=1:size(t,1)
     t{k,1}=parnames{k};
@@ -341,6 +345,14 @@ if data.Indices(2)==indtag
                 X=num2str(X);
             end
             table.Data{data.Indices(1),7}=X;
+            if data.Indices(1)==15 %imagemetadata
+                oldentry=table.Data{15,3};
+                if ~isempty(oldentry)
+                    oldentry=[oldentry ','];
+                end
+                newentry=[oldentry tag{1}];
+                table.Data{15,3}=newentry;
+            end
         end
         tables2prop(obj);
      end
@@ -399,7 +411,7 @@ waitfor(f)
 end
 
 
-function loadimages(a,b,obj)
+function loadimagesi(a,b,obj)
 ph=obj.defaultpath;
 if ~isempty(ph)
     ph=[fileparts(ph) filesep];
@@ -532,7 +544,7 @@ file=obj.cameraSettingsFile;
 [f,p]=uigetfile(file);
 if f
     obj.cameraSettingsFile=[p f];
-    obj.guihandles.camerafile=[p f];
+    obj.guihandles.camerafile.String=[p f];
     loadcameras(obj);
 end
 

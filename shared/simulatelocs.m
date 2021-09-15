@@ -31,6 +31,14 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
                p.linkageerrorfix=0;
            end
 
+           if ~isfield(p,'use_psf')
+               p.use_psf=false;
+           end
+           if p.use_psf
+                p.psfmodel=splinePSF;
+                p.psfmodel.loadmodel(p.psf_file);
+           end
+
 
            [poslabels,possites,parameters]=getlabels(p, colour);
            if p.linkageerrorfix>0
@@ -534,33 +542,55 @@ function locs=locsfromposi(locsi,p)
 %     phot=exprnd(p.photons,numlocs,1);
     noisexcessfactor=(p.EMon+1);
     phot=locsi.phot;
-    
-    a=100;
-    PSF=100;
-    zfactor=3;
-%     sa=PSF+a/12;
     phot(phot<10)=10;
     indin=phot>=10;
     numlocs=sum(indin);
-    %MOrtensen
-%     p.background: photons, b^2=p.background: variance in Mortenson
-    locpthompson=sqrt((PSF^2+a^2/12)./(phot)+8*pi*(PSF^2).^2.* p.background./(phot).^2/a^2);
-    locprecnm=sqrt((PSF^2+a^2/12)./phot.*(16/9+8*pi*(PSF^2+a^2/12)*p.background./phot/a^2));
+
+    % use PSF to calculate CRLB
+    if p.use_psf
+        pixelsize=100; %%%
+        rois=13;
+
+        state=  warning('query','MATLAB:nearlySingularMatrix');
+        warning('off','MATLAB:nearlySingularMatrix')
+        crlb=p.psfmodel.crlb(phot,p.background,locsi.z,rois);
+        warning(state.state,'MATLAB:nearlySingularMatrix')
+        dx2=crlb(:,1).*pixelsize^2;
+        dy2=crlb(:,2).*pixelsize^2;
+        dz2=crlb(:,5);
+        locpreceffectx=sqrt(dx2+p.linkageerrorfree.^2);
+        locpreceffecty=sqrt(dy2+p.linkageerrorfree.^2);
+        locpreceffectz=sqrt(dz2+p.linkageerrorfree.^2);
+        locprecnm=sqrt((dx2+dy2)/2);
+        locprecznm=sqrt(dz2);
+
+    else
+         a=100;
+        PSF=100;
+        zfactor=3;
+            %MOrtensen
+    %     p.background: photons, b^2=p.background: variance in Mortenson
+        locpthompson=sqrt((PSF^2+a^2/12)./(phot)+8*pi*(PSF^2).^2.* p.background./(phot).^2/a^2);
+        locprecnm=sqrt((PSF^2+a^2/12)./phot.*(16/9+8*pi*(PSF^2+a^2/12)*p.background./phot/a^2));
     
-    locprecnm=locprecnm*sqrt(noisexcessfactor);
-    
-    %include linkage error from free rotation
-    locpreceffect=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
-    locpreceffectz=sqrt(locprecnm.^2*zfactor^2+p.linkageerrorfree.^2);
+        locprecnm=locprecnm*sqrt(noisexcessfactor);
+        locprecznm=locprecnm*zfactor;
+        %include linkage error from free rotation
+        locpreceffectx=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
+        locpreceffecty=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
+        locpreceffectz=sqrt(locprecnm.^2*zfactor^2+p.linkageerrorfree.^2);
+    end
+
+
 
     locs.phot=single(phot(indin));
     locs.bg=single(locprecnm(indin)*0+p.background);
     locs.locprecnm=single(locprecnm(indin));
 %     locs.frame=double(ceil(rand(numlocs,1)*p.maxframe));
-    locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locpreceffect(indin));
-    locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locpreceffect(indin));
+    locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locpreceffectx(indin));
+    locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locpreceffecty(indin));
     locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locpreceffectz(indin));
-    locs.locprecznm=single(locprecnm(indin)*zfactor);
+    locs.locprecznm=single(locprecznm(indin));
     locs.xnm_gt=single(locsi.x(indin));
     locs.ynm_gt=single(locsi.y(indin));
     locs.znm_gt=single(locsi.z(indin));
