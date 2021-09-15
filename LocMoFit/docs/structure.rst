@@ -1,8 +1,7 @@
 Structure
 =========
-:::{note}
-This page is still incomplete. We are working on the content now and will update it soon.
-:::
+.. note::
+	This page is still incomplete. We are working on the content now and will update it soon.
 
 Geometric model
 ---------------
