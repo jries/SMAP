@@ -6,6 +6,7 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
         reader
         readoutimgtags={};
         imtags
+        init
     end
     
     methods
@@ -26,25 +27,15 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             md=obj.getmetadata;
             [p,f]=fileparts(file);
             obj.metadata.basefile=[p ];
-            
-            camset=obj.getPar('loc_cameraSettings');
-            if ~isempty(camset)&& myisfield(camset,'imagemetadata') && ~isempty(camset.imagemetadata)
-                if iscell(camset.imagemetadata)
-                    obj.readoutimgtags=camset.imagemetadata;
-                else
-                    obj.readoutimgtags=split(camset.imagemetadata,',');
-                end
-                obj.readoutimgtags=strtrim(obj.readoutimgtags);
-            end
-            if ~isempty(obj.readoutimgtags)
-                obj.imtags{length(obj.readoutimgtags),md.numberOfFrames}='';
-            end
+            initimagetags(obj)
             
         end
         function image=getimagei(obj,frame)
             image=readstack(obj,frame);
         end
-        
+        function prefit(obj)
+            initimagetags(obj)
+        end
         function closei(obj)
             obj.reader.close
             
@@ -189,10 +180,23 @@ image=img.pix;
 
 if ~isempty(obj.readoutimgtags)
     imgmeta=obj.reader.getImageTags(imgpos{:});
+    if obj.init
+         for k=1:length(obj.readoutimgtags)
+                if ischar(imgmeta.get(obj.readoutimgtags{k}))
+                    obj.imtags{length(obj.readoutimgtags),obj.metadata.numberOfFrames}='';
+                else
+                    obj.imtags{length(obj.readoutimgtags),obj.metadata.numberOfFrames}=[];
+                end
+                obj.init=false;
+         end  
+    end   
+    
     for k=1:length(obj.readoutimgtags)
         obj.imtags{k,imagenumber}=imgmeta.get(obj.readoutimgtags{k});
     end
 end
+
+% obj.imtags{:,imagenumber}
 % else
 %     image=[];
 % end
@@ -204,3 +208,18 @@ end
 %    end
 end
 
+function initimagetags(obj)
+        camset=obj.getPar('loc_cameraSettings');
+        obj.imtags={};
+        if ~isempty(camset)&& myisfield(camset,'imagemetadata') && ~isempty(camset.imagemetadata)
+            if iscell(camset.imagemetadata)
+                obj.readoutimgtags=camset.imagemetadata;
+            else
+                obj.readoutimgtags=split(camset.imagemetadata,',');
+            end
+            obj.readoutimgtags=strtrim(obj.readoutimgtags);
+            obj.init=true;
+        end
+
+        
+end

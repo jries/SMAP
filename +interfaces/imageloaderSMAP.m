@@ -261,6 +261,8 @@ classdef imageloaderSMAP<interfaces.GuiParameterInterface
             il.allowmultiplefiles=false;
             il.open(file);
         end
+        function prefit(obj)
+        end
     end
     
 end
