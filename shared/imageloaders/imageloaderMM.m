@@ -181,18 +181,24 @@ image=img.pix;
 if ~isempty(obj.readoutimgtags)
     imgmeta=obj.reader.getImageTags(imgpos{:});
     if obj.init
-         for k=1:length(obj.readoutimgtags)
-                if ischar(imgmeta.get(obj.readoutimgtags{k}))
-                    obj.imtags{length(obj.readoutimgtags),obj.metadata.numberOfFrames}='';
-                else
-                    obj.imtags{length(obj.readoutimgtags),obj.metadata.numberOfFrames}=[];
-                end
+        obj.imtags=zeros(length(obj.readoutimgtags),obj.metadata.numberOfFrames);
+%          for k=1:length(obj.readoutimgtags)
+%                 if ischar(imgmeta.get(obj.readoutimgtags{k}))
+%                     obj.imtags{k}=strings(1,obj.metadata.numberOfFrames);
+%                 else
+%                     obj.imtags{k}=zeros(1,obj.metadata.numberOfFrames);
+%                 end
                 obj.init=false;
-         end  
+%          end  
     end   
     
     for k=1:length(obj.readoutimgtags)
-        obj.imtags{k,imagenumber}=imgmeta.get(obj.readoutimgtags{k});
+        tag=imgmeta.get(obj.readoutimgtags{k});
+        if ischar(tag)
+            obj.imtags(k,imagenumber)=str2double(tag);
+        else
+            obj.imtags(k,imagenumber)=(tag);
+        end
     end
 end
 
@@ -210,7 +216,7 @@ end
 
 function initimagetags(obj)
         camset=obj.getPar('loc_cameraSettings');
-        obj.imtags={};
+%         obj.imtags={};
         if ~isempty(camset)&& myisfield(camset,'imagemetadata') && ~isempty(camset.imagemetadata)
             if iscell(camset.imagemetadata)
                 obj.readoutimgtags=camset.imagemetadata;
@@ -219,7 +225,5 @@ function initimagetags(obj)
             end
             obj.readoutimgtags=strtrim(obj.readoutimgtags);
             obj.init=true;
-        end
-
-        
+        end    
 end
