@@ -4,7 +4,7 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
     
     properties
         reader
-        readoutimgtags={'ZPositionUm'};
+        readoutimgtags={};
         imtags
     end
     
@@ -28,7 +28,7 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             obj.metadata.basefile=[p ];
             
             camset=obj.getPar('loc_cameraSettings');
-            if ~isempty(camset)&& myisfield(camset,'imagemetadata')
+            if ~isempty(camset)&& myisfield(camset,'imagemetadata') && ~isempty(camset.imagemetadata)
                 if iscell(camset.imagemetadata)
                     obj.readoutimgtags=camset.imagemetadata;
                 else
