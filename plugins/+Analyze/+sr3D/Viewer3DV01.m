@@ -776,7 +776,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                 options.comp='lzw';
 
                 imout=uint8(outim*(2^8-1));
-                mysavemovie(imout,savemovie.file,'FrameRate',20)
+                mysavemovie(imout,savemovie.file,'FrameRate',30, 'Quality', 100)
 %                 saveastiff(imout,savemovie.file,options)
             end
             

@@ -65,19 +65,19 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
             count = cellfun(@length, Idx);
             scatter(axCmp, normAICc.('sym8f')(sym == 8), normAICc.('sym6f')(sym == 8),2, count, 'filled')
             hold(axCmp, 'on')
-            plot(axCmp, [25.5 33],[25.5 33], '-k')
+            plot(axCmp, [20 33],[20 33], '-k')
             hold(axCmp, 'off')
             xlabel(axCmp, 'Eight-fold symmetry')
             ylabel(axCmp, 'Six-fold symmetry')
             colorbar(axCmp)
             %% Mix (6f and 8f)
             axMix = obj.initaxis('Mix');
-            sz = 3;
+            sz = 4;
             hs8 = scatter(axMix, normAICc.('sym8f')(sym==8), normAICc.('sym6f')(sym==8),sz, myDiscreteLUT(colorID(3), 'type', 'rgb'), 'filled');
             hold(axMix, 'on')
             hs6 = scatter(axMix, normAICc.('sym8f')(sym==6), normAICc.('sym6f')(sym==6),sz, myDiscreteLUT(colorID(1), 'type', 'rgb'), 'filled');
-%             set([hs8 hs6],'MarkerFaceAlpha', 0.3)
-            plot(axMix, [25.5 33],[25.5 33], '-k')
+            set([hs8 hs6],'MarkerFaceAlpha',0.3)
+            plot(axMix, [20 33],[20 33], '-k')
             hold(axMix, 'off')
             xlabel(axMix, 'Eight-fold symmetry')
             ylabel(axMix, 'Six-fold symmetry')

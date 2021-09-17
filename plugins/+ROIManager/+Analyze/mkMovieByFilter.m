@@ -53,7 +53,7 @@ classdef mkMovieByFilter<interfaces.DialogProcessor&interfaces.SEProcessor
                 if p.preview
                     implay(m,p.frameRate) % will initiate a pop-up asking the user saving or not
                 end
-                myVideo = VideoWriter([p.folderPath filesep p.videoPath]);
+                myVideo = VideoWriter([p.folderPath filesep p.videoPath], 'MPEG-4');
                 myVideo.FrameRate = p.frameRate;  % Default 30
                 myVideo.Quality = 100;    % Default 75
 %                 myVideo.CompressionRatio = 5;

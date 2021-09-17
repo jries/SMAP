@@ -224,7 +224,7 @@ end
 switch p.controlLogLikelihood
     case 'none'
     case 'expected'
-        obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,2);
+        obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
     case 'overfitted'
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
     case 'both'

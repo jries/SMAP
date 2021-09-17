@@ -1198,8 +1198,20 @@ classdef LocMoFit<matlab.mixin.Copyable
             
             if results.expected    
                 % expected LL
-                prob = obj.intensityCal(fitPars,locs);
-                LLfit = sum(prob.*log(prob),2)/sum(prob);
+                gridPos = locs;
+                sizeFields = size(gridPos.xnm);
+                for k = length(obj.locs.xnm):-1:1
+                    gridPos.locprecnm = repmat(obj.locs.locprecnm(k),sizeFields);
+                    gridPos.locprecznm = repmat(obj.locs.locprecznm(k),sizeFields);
+                    prob = obj.intensityCal(fitPars,gridPos);
+                    % go through all the locs
+                    LLfit(k) = sum(prob.*log(prob),2)/sum(prob);
+                end
+                LLfit = mean(LLfit);
+                if 0
+                    prob = obj.intensityCal(fitPars,locs);
+                    LLfit = sum(prob.*log(prob),2)/sum(prob);
+                end
             else
                 prob = obj.intensityCal(fitPars,locs);
                 LLfit = sum(compensationFactor.*log(prob),2);
