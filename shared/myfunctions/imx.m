@@ -118,14 +118,14 @@ methods
 
     %         strm=str;strm(dimrgb)=[];
     
-            dims1=str2double(strrep(strrep(obj.guihandles.hslidert{1}.String,'x','1'),'y','2'));
+            dims1=str2double(strrep(strrep(obj.guihandles.hslidert{1}.String,'x','2'),'y','1'));
             numfh=max(1,size(obj.V,dims1));
             obj.guihandles.hslider{1}.SliderStep=[1/(numfh) 5/(numfh)];
             obj.guihandles.hslider{1}.Max=size(obj.V,dims1);
             obj.setslice(min(obj.guihandles.hslider{1}.Max,obj.guihandles.hslider{1}.Value),1,0);
 
             if length(dim)>3
-                dims2=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','1'),'y','2'));
+                dims2=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','2'),'y','1'));
 %                 dims2=str2double(obj.guihandles.hslidert{2}.String);
                 if size(obj.V,dims2)>1
                     obj.guihandles.hslider{2}.SliderStep=[1/(size(obj.V,dims2)-1) 5/(size(obj.V,dims2)-1)];
@@ -298,10 +298,10 @@ methods
              end
              s=size(obj.V);
              if length(s)>3
-             dim(3)=str2double(strrep(strrep(obj.guihandles.hslidert{1}.String,'x','1'),'y','2'));
+             dim(3)=str2double(strrep(strrep(obj.guihandles.hslidert{1}.String,'x','2'),'y','1'));
              end
              if length(s)>3
-             dim(4)=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','1'),'y','2'));
+             dim(4)=str2double(strrep(strrep(obj.guihandles.hslidert{2}.String,'x','2'),'y','1'));
              end
              dimmissing=setdiff(1:length(s),dim);
              dim=[dim dimmissing];
