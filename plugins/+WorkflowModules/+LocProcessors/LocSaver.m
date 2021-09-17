@@ -341,17 +341,19 @@ for k=1:length(imagetags.tags)
     tab=uitab(tg,'Title',imagetags.tags{k});
     ax=axes('Parent',tab);
     dat=imagetags.data(k,:);
-    if ischar(dat{1})
+    if isstring(dat(1))
         datm=str2double(dat);
     else
-        datm=cell2mat(dat);
+        datm=(dat);
     end
+    frameind=datm~=0;
     frames=(1:length(datm))';
-    plot(ax,frames, datm)
+    plot(ax,frames(frameind), datm(frameind))
     xlabel('frame')
     ylabel(imagetags.tags{k})
     [~, fn]=fileparts(obj.fileinfo.basefile);
     title(fn,'Interpreter','none')
-    xlim([min(frames) max(frames)])
+     xlim([min(frames(frameind)) max(frames(frameind))])
+%     xlim([min(frames) max(frames)])
 end
 end
