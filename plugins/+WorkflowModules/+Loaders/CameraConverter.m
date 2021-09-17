@@ -228,9 +228,9 @@ for k=length(fn):-1:1
     fields{k}=description.(fn{k});
 %     fields{k}=fn{k};
     if myisfield(fi,fn{k})
-        defAns{k}=num2str(fi.(fn{k}));
+        defAns{k}=converttostring(fi.(fn{k}));
     else
-        defAns{k}=num2str(obj.loc_cameraSettings.(fn{k}));
+        defAns{k}=converttostring(obj.loc_cameraSettings.(fn{k}));
     end
 end
 answer=inputdlg(fields,'Acquisition settings',1,defAns);
@@ -367,6 +367,18 @@ function mirrorem_callback(a,b,obj)
 %             end
 %             obj.setPar('loc_fileinfo',fileinf);
 % end
+end
+
+function out=converttostring(in)
+if iscell(in)
+    out=join(in,',');
+    out=out{1};
+elseif ischar(in)
+    out=in;
+else
+    out=num2str(in);
+end
+
 end
 
 function pard=guidef(obj)
