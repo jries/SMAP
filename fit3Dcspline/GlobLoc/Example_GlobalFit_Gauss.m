@@ -2,6 +2,7 @@
 % author: Yiming Li
 % email: liym2019@sustech.edu.cn
 % date: 2021.08.27
+% Tested with CUDA 11.3 and Matlab 2019a
 %% Gauss
 
 Nfits=10000    %number of images to fit

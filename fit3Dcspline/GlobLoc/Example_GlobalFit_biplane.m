@@ -4,6 +4,7 @@
 % date: 2021.08.27
 % Download the calbration data from the followling link first: https://www.embl.de/download/ries/globLoc/
 % BP-combine_3dcal.mat
+% Tested with CUDA 11.3 and Matlab 2019a
 %% Load and make cspline PSF
 cal=load('BP-combine_3dcal.mat'); % PSF model from SMLM2016 challenge
 

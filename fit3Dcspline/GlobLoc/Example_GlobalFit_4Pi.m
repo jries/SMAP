@@ -2,6 +2,7 @@
 % author: Sheng Liu & Yiming Li 
 % email: liym2019@sustech.edu.cn & sheng.liu@embl.de
 % date: 2021.08.27
+% Tested with CUDA 11.3 and Matlab 2019a
 %%
 clearvars;
 resultfolder = 'output\';
