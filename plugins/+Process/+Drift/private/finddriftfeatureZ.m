@@ -53,6 +53,8 @@ xb=mx(1):par.slicewidth:mx(2);
 % disp('find displacement')
 plotaxis=initaxis(par.resultstabgroup,'CC z');
 [ddz,errz]= finddisplacementsZ; %determine displacements
+indb=(abs(ddz)>2000);
+ddz(indb)=0;errz(indb)=10000;
 % 
 % ddx=ddx*pixrec; %convert displacements into nm
 % ddy=ddy*pixrec;
@@ -60,6 +62,7 @@ plotaxis=initaxis(par.resultstabgroup,'CC z');
 %% bin displacements
 [dz,sdzc]=bindisplacementfit(ddz,errz); %determine displacement for each time point
 % [dy,sdyc]=bindisplacementfit(ddy,erry);
+
 
 % dx0h=[0; dx];
 % dy0h=[0; dy];
@@ -79,7 +82,7 @@ end
 %interpolate displacemnt for all frames
 cfit1=(0:length(dz)-1)*binframes+binframes/2+firstframe; %positions of time points
 ctrue=(1:par.maxframeall)'; %positions of frames
-if 0%length(dz)>9
+if length(dz)>9
     [~,sdz,inlier,outlier]=robustMean(ddzplot,2,15);%std for each time point, used for interpolation
 %     [~,sdy]=robustMean(ddyplot,2,15);
     sdzm=robustMean(sdz)/2;
@@ -87,17 +90,19 @@ if 0%length(dz)>9
 
     sdzm=robustMean(sdz);
 
-    indgz=sdz<10*sdzm;
+
 %     if length(indgz)<9
 %         indgz=true(size(dz));
 %     end
 else
-    sdz=std(ddzplot,0,2); %std for each time point, used for interpolation
+    sdzm=std(ddzplot,0,2); %std for each time point, used for interpolation
+   
 
 %     indgz=true(size(dz));
 end
 
-   indgz=true(size(dz));
+indgz=sdz<10*sdzm;
+%    indgz=true(size(dz));
 
 
 % sdx(sdx>5*sdxm)=inf;
