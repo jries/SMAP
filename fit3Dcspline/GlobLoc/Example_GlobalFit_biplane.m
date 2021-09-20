@@ -2,7 +2,8 @@
 % author: Yiming Li
 % email: liym2019@sustech.edu.cn
 % date: 2021.08.27
-% Link of example  data: https://oc.embl.de/index.php/s/bs1ADBsc4t6aiVV
+% Download the calbration data from the followling link first: https://www.embl.de/download/ries/globLoc/
+% BP-combine_3dcal.mat
 %% Load and make cspline PSF
 cal=load('BP-combine_3dcal.mat'); % PSF model from SMLM2016 challenge
 

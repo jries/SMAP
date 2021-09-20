@@ -4,12 +4,12 @@
 % date: 2021.08.27
 %% Gauss
 
-Nfits=1000    %number of images to fit
+Nfits=10000    %number of images to fit
 bg=20;           %background fluorescence in photons/pixel/frame
 Nphotons1=2500;   %expected photons/frame
 Nphotons2 =2500;
 bg1 = 20;
-bg2 = 20
+bg2 = 20;
 % Npixels=9;      %linear size of fit region in pixels. 
 PSFsigma1=1.2; 
 PSFsigma2=1.5;%PSF sigma in pixels
@@ -82,20 +82,21 @@ for Npixels = 7:19
     tic
 %      [P,CRLB, LL1] =  mleFit_LM_globalfit(d_data,fittype,shared,iterations,initSigma,dTS,sCMOSvarmap,silent);
      
-     [P,CRLB, LL] =  CPUmleFit_LM_MultiChannel(d_data,fittype,shared,iterations,initSigma,dTS);
-
+     [P,CRLB, LL] =  GPUmleFit_LM_MultiChannel(d_data,fittype,shared,iterations,initSigma,dTS,0,1);
+%      [P,CRLB, LL] =  CPUmleFit_LM_MultiChannel(d_data,fittype,shared,iterations,initSigma,dTS,0,1);
      
     tGauss=toc;
     
     GPUmleFit_LM_MultiChannel_Gauss(n,1)=Nfits/tGauss;
     GPUmleFit_LM_MultiChannel_Gauss(n,2)=Npixels;
-    
+    disp(['Actual Gaussian fits per second in GPU:' num2str(Nfits/tGauss) ' for ROI ' num2str(Npixels) ' pixels'])
 %     CPUmleFit_LM_MultiChannel_Gauss(n,1)=Nfits/tGauss;
 %     CPUmleFit_LM_MultiChannel_Gauss(n,2)=Npixels;
+%     disp(['Actual Gaussian fits per second in CPU:' num2str(Nfits/tGauss) ' for ROI ' num2str(Npixels) ' pixels'])
     
     
     clear d_data
-    n = n+1
+    n = n+1;
     
 end
 
