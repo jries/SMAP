@@ -9,6 +9,7 @@ classdef LocSaver<interfaces.WorkflowModule
         fileinfo
         locDatatemp;
         deltaframes;
+        
 %         index;
 %         numsaved
 %         frames;
@@ -73,6 +74,13 @@ classdef LocSaver<interfaces.WorkflowModule
             pard.diffrawframes.Width=0.5;
             pard.diffrawframes.Optional=true;
             
+
+            pard.displayimagetags.object=struct('Style','checkbox','String','display image tags','Value',1);
+            pard.displayimagetags.position=[5,1];
+            pard.displayimagetags.Width=2;
+            pard.displayimagetags.Optional=true;
+            
+
             pard.outputParameters={'diffrawframes'};
             pard.syncParameters={{'loc_outputfilename','outputfile',{'String','Value'}},{'savefit',[],{'String','Value'},@obj.savefit_callback}};
             
@@ -198,6 +206,7 @@ classdef LocSaver<interfaces.WorkflowModule
                 fitpar.loadtifftime=obj.getPar('tiffloader_loadingtime');
                 fitpar.processfittime=obj.getPar('tiffloader_fittime');
                 fitpar.loc_globaltransform=obj.getPar('loc_globaltransform');
+%                 fitpar.imagetags=obj.getPar('loc_imagetags');
                 obj.setPar('savefit',struct('fitparameters',fitpar)); obj.savefit_callback;
                 try
                 disp([num2str(length(obj.locDatatemp.loc.xnm)) ' localizations in ' num2str(fitpar.fittime) ' seconds.']);
@@ -225,7 +234,8 @@ classdef LocSaver<interfaces.WorkflowModule
                     obj.locDatatemp.files.file.transformation=transformation;
                 end
                 obj.locDatatemp.files.file.savefit=obj.savefit;
-                
+                obj.locDatatemp.files.file.imagetags=obj.getPar('loc_imagetags');
+                displayimagetags(obj,obj.locDatatemp.files.file.imagetags)
                 if ~contains(filename,'nosave')
                 try
                      obj.locDatatemp.savelocs(filename,[],struct('fitparameters',fitpar));
@@ -291,7 +301,7 @@ end
 end
 
 function imout=makeSRimge(obj,locDatatemp)
-channelfile=[obj.getPar('maindirectory')  '/settings/workflows/FitTif_Channelsettings.mat'];
+channelfile=[obj.getPar('SettingsDirectory')  '/workflows/FitTif_Channelsettings.mat'];
 pall=load(channelfile);
 p=pall.globalParameters;
 p.lutinv=false;
@@ -321,3 +331,29 @@ obj.setGuiParameters(struct('outputfile',[p f]));
 
 end
 
+function displayimagetags(obj,imagetags)
+if ~obj.getSingleGuiParameter('displayimagetags')
+    return
+end
+f=figure;
+tg=uitabgroup(f);
+for k=1:length(imagetags.tags)
+    tab=uitab(tg,'Title',imagetags.tags{k});
+    ax=axes('Parent',tab);
+    dat=imagetags.data(k,:);
+    if isstring(dat(1))
+        datm=str2double(dat);
+    else
+        datm=(dat);
+    end
+    frameind=datm~=0;
+    frames=(1:length(datm))';
+    plot(ax,frames(frameind), datm(frameind))
+    xlabel('frame')
+    ylabel(imagetags.tags{k})
+    [~, fn]=fileparts(obj.fileinfo.basefile);
+    title(fn,'Interpreter','none')
+     xlim([min(frames(frameind)) max(frames(frameind))])
+%     xlim([min(frames) max(frames)])
+end
+end

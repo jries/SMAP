@@ -452,7 +452,7 @@ end
 
 function copyalllayer_callback(object,data,obj)
 
-excludefields={'ch_filelist','channels','layercheck'};
+excludefields={'ch_filelist','channels','layercheck','lut','lutinv','rendermode','render_colormode','filelistfilter'};
 phere=getChannelParameters(obj);
 phere=rmfield(phere,excludefields);
 thislayer=obj.layer;

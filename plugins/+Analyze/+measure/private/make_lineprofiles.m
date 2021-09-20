@@ -98,7 +98,7 @@ for layer=1:length(p.sr_layerson)
     ylabel(ax2,'counts')
     
     fwhm=getFWHM(profy,n);
-    t1{end+1}=['FWHM: ' 9 num2str(fwhm,3)];
+%     t1{end+1}=['FWHM: ' 9 num2str(fwhm,3)];
     
     sigma=median(locprecnm);
     [fitp,fitprof,fittxt]=fitgeneralprofile(profy,n,p,sigma);
@@ -119,7 +119,7 @@ for layer=1:length(p.sr_layerson)
     
     
     fwhm=getFWHM(profx,n);
-    t2{end+1}=['FWHM: ' 9 num2str(fwhm)];
+%     t2{end+1}=['FWHM: ' 9 num2str(fwhm)];
      [fitp,fitprof,fittxt]=fitgeneralprofile(profx,n,p,sigma);
     plot(ax3,n,fitprof,'k--')
     t2(end+1:end+length(fittxt))=fittxt;
@@ -135,7 +135,7 @@ for layer=1:length(p.sr_layerson)
     xlabel(ax4,'z (nm)')
     ylabel(ax4,'counts')
     fwhm=getFWHM(profz,n);
-    t3{end+1}=['FWHM: ' 9  num2str(fwhm)];
+%     t3{end+1}=['FWHM: ' 9  num2str(fwhm)];
     [fitp,fitprof,fittxt]=fitgeneralprofile(profz,n,p,fwhm/2.6);
     plot(ax4,n,fitprof,'k--')
     t3(end+1:end+length(fittxt))=fittxt;

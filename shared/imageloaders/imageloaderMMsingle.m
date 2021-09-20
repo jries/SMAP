@@ -3,7 +3,6 @@ classdef imageloaderMMsingle<interfaces.imageloaderSMAP
     %   Detailed explanation goes here
     
     properties
-%         calfile='settings/CameraCalibration.xls';
         separate
         separatefiles
     end

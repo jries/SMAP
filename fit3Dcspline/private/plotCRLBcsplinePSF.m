@@ -18,5 +18,4 @@ legend('x','y','z','location','north')
 title(ax,'localization precision for N=5000, bg=50')
 xlabel(ax,'z (nm)')
 ylabel(ax,'sqrt(CRLB) in nm')
-% grid;set(gca, 'YLim', [3 20])
 end

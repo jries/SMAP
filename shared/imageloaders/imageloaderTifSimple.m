@@ -3,7 +3,7 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
     %   Detailed explanation goes here
     
     properties
-%         reader
+         reader
     end
     
     methods
@@ -14,15 +14,20 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
         
 %             obj.reader = javaObjectEDT('org.micromanager.acquisition.TaggedImageStorageMultipageTiff',fileparts(file), false, [], false, false, true);
             obj.file=file;
+            warning('off','imageio:tiffmexutils:libtiffWarning');
+            obj.reader=Tiff(obj.file);
 %             obj.reader=bfGetReader(file);
             md=obj.getmetadata;
 %             [p,f]=fileparts(file);
             obj.metadata.basefile=file;
             
+            
         end
         function image=getimagei(obj,frame)
             try
-            image=imread(obj.file,'Index',frame);
+                obj.reader.setDirectory(frame);
+                image=obj.reader.read;
+%                 image=imread(obj.file,'Index',frame);
             catch
                 image=[];
             end
@@ -30,6 +35,7 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
         end
         
         function closei(obj)
+            obj.reader.close;
 %             obj.reader.close
 %             clear(obj.reader)
         end
@@ -48,26 +54,24 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
         
         function allmd=getmetadatatagsi(obj)
             allmd={'Format','SimpleTif'};
-            imtest=imread(obj.file,'Index',1);
+            %try to read out essential tiff meta data
+%             allmd(end+1,:)={'Width info',obj.reader.getTag("ImageWidth")};
+%             allmd(end+1,:)={'Height info',obj.reader.getTag("ImageLength")};
+%             allmd(end+1,:)={'FileName',obj.file};
+
+            obj.reader.setDirectory(1);
+            imtest=obj.reader.read;
             allmd(end+1,:)={'Width info',size(imtest,2)};
             allmd(end+1,:)={'Height info',size(imtest,1)};
             allmd(end+1,:)={'FileName',obj.file};
-            warning('off','imageio:tiffmexutils:libtiffWarning');
-            ttt=Tiff(obj.file);
+%             warning('off','imageio:tiffmexutils:libtiffWarning');
+%             ttt=Tiff(obj.file);
             numf=1;
             try
-            desc=ttt.getTag('ImageDescription');
+                desc=ttt.getTag('ImageDescription');
             catch err
                 disp('no description found')
-                desc='';
-                %manually find frames
-                
-                ttt.setDirectory(numf)
-                while ~ttt.lastDirectory
-                    numf=numf+1;
-                    ttt.setDirectory(numf);
-                end
-                    
+                desc='';               
             end
            
             ind=strfind(desc,'images=');
@@ -81,15 +85,22 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
                 end
             end
             if numf==1 %might not have worked
+                
                 disp('could not determine number of images. Directly evaluate file, might take time.');
-                warning('off','MATLAB:imagesci:tiffmexutils:libtiffWarning');
-                while ~ttt.lastDirectory
-                    ttt.nextDirectory
-                end
-                numf=ttt.currentDirectory;
+                numf=getTifframes(obj.reader);
+%                 warning('off','MATLAB:imagesci:tiffmexutils:libtiffWarning');
+%                 try
+%                     while ~obj.reader.lastDirectory
+%                         obj.reader.nextDirectory
+%                     end
+%                 catch err
+% %                     disp('could not determine number of images')
+%                 end
+%                 numf=obj.reader.currentDirectory;
             end
-            ttt.close;
+%             ttt.close;
             allmd(end+1,:)={'Frames',numf};
+            allmd(end+1,:)={'frames direct',numf};
             obj.allmetadatatags=allmd;
                 
         
@@ -99,4 +110,37 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
     
 end
 
+function numf=getTifframes(reader)
+try
+    reader.setDirectory(2^16);
+catch err
+end
+numf=reader.currentDirectory-1;
 
+% if nargin<2
+%     df=1;
+% end
+% currentdir=reader.currentDirectory;
+% try
+%     while ~reader.lastDirectory
+% %         if df>1
+%             reader.setDirectory(reader.currentDirectory+df);
+%             newdir=reader.currentDirectory;
+%             if newdir<currentdir
+%                 break
+%             end
+%             currentdir=newdir;
+% %         else
+% %             reader.nextDirectory
+% %         end
+%     end
+% catch err
+%     err
+% %                     disp('could not determine number of images')
+% end
+% numf=reader.currentDirectory;
+% if df>1
+%     numf=getTifframes(reader,ceil(df/10));
+% end
+
+end

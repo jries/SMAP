@@ -27,8 +27,13 @@ classdef SMLMsaver<interfaces.DialogProcessor
                 of=lastfile;
             end
               
-            
-            [f,path]=uiputfile(of);
+            if isfield(p, 'saveTo')
+                [path,f,ext]=fileparts(p.saveTo);
+                path = [path filesep];
+                f = [f ext];
+            else
+                [f,path]=uiputfile(of);
+            end
             if f
                 if isempty(strfind(f,'_sml'))
                     f(end-3:end)=[];
@@ -83,7 +88,7 @@ pard.dataselect.object.TooltipString='save only selected file';
 pard.saveSepFile.object=struct('Style','checkbox','Visible','on','String','All individually','Value',0);
 pard.saveSepFile.position=[3,1.2];
 pard.saveSepFile.Width=2;
-pard.saveSepFile.object.TooltipString='save all files individually';
+pard.saveSepFile.object.TooltipString='Save all files individually. Hint: "__[suffix]" saves all files in the same folder; "own__[suffix]" saves all files their own folder';
 
 pard.selectfields.object=struct('Style','pushbutton','String','Fields to save','Callback',{{@outputfields_callback,obj}});
 pard.selectfields.object.TooltipString='Select which fields to save. Use preview before.';

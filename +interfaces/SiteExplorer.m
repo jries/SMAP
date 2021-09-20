@@ -433,7 +433,12 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
                 else
                     pixrec=obj.locData.files.file(file.ID).info.cam_pixelsize_um*1000;
                 end
-                roi=file.info.roi;
+                if isempty(file.info)
+                    info=obj.locData.files.file(ind).info;
+                else
+                    info=file.info;
+                end
+                roi=info.roi;
                 roi([1 3])=roi([1 3])*pixrec(1);
                 roi([2 4])=roi([2 4])*pixrec(end);
 
@@ -532,9 +537,13 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
                         [x2,y2]=rotcoorddeg(xi,yi,pr.rotationanglez);
                         [y3,z3]=rotcoorddeg(y2,zi,pr.polarangle);
                         
+                        dx2=locz.locprecnm;
+                        [dy3,dz3]=rotcoorddeg(locz.locprecnm,locz.locprecznm*0,pr.polarangle);
+                        [dy4,dz4]=rotcoorddeg(0*locz.locprecnm,locz.locprecznm,pr.polarangle);
+                        
 %                         locz.x=locz.xnm;locz.y=locz.znm;
                         
-                        locz.sx=locz.locprecnm;locz.sy=locz.locprecznm;
+%                         locz.sx=locz.locprecnm;locz.sy=locz.locprecznm;
                         
                         prz.normalizeFoV=[];
                         prz.sr_pos=[0,0,0];
@@ -545,8 +554,10 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
 %                         end
                         prz.sr_size(2)=prz.sr_size(3);
                         locz.x=x2;locz.y=z3;
+                        locz.sx=dx2; locz.sy=sqrt(dz3.^2+dz4.^2);
                         rawimagez=renderSMAP(locz,prz,k);
                         locz.x=x2;locz.y=y3;
+                        locz.sx=dx2;locz.sy=sqrt(dy3.^2+dy4.^2);
                         rawimagezxy=renderSMAP(locz,prz,k);
                         layersz(k).images.finalImages=drawerSMAP(rawimagez,prz);
                         layerszxy(k).images.finalImages=drawerSMAP(rawimagezxy,prz);

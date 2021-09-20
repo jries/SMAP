@@ -93,7 +93,7 @@ pard.targetmirror.position=[4,1];
 pard.refmirror.object=struct('Style','popupmenu','String','no mirror|left-right|up-down');
 pard.refmirror.position=[4,2];
 
-pard.savefile.object=struct('Style','edit','String','settings/temp/temp_T.mat');
+pard.savefile.object=struct('Style','edit','String','*_T.mat');
 pard.savefile.position=[8,1];
 pard.savefile.Width=3;
 

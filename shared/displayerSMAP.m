@@ -2,7 +2,7 @@ function [imout,sr_imagehandle]=displayerSMAP(layers,p)
 % Combines rendered images from different channels and adds scale and color bars.
 if nargin==0
     %input parameters
-    imout={'sr_plotcomposite','sr_layerson','sr_axes','sr_sizeRecPix','roihandle','sr_pixrec','rotationangle','sr_pos','sr_size','sr_layersseparate','layernames','sr_plotlayernames','sr_plotscalebar','sr_colorbarthickness'};
+    imout={'sr_plotcomposite','sr_layerson','sr_axes','sr_sizeRecPix','roihandle','sr_pixrec','rotationangle','sr_pos','sr_size','sr_layersseparate','layernames','sr_plotlayernames','sr_plotscalebar','sr_colorbarthickness','sr_lutwhite'};
     return          
 end
 
@@ -55,7 +55,7 @@ for k=1:length(layers)
               txtN=[txtN 'N'  num2str(k) '=' shortnumber(fi.numberOfLocs) ', '];
          end
          if layersnext
-             if fi.istiff
+             if fi.istiff && exist('imall','var')
                  if ~all(size(imall)==size(fi.image))%s&&~layersnext
                     simh=size(imall); 
                     fi.image=imresize(fi.image,simh(1:2));
@@ -160,6 +160,10 @@ for k=1:(length(layers))
     end
 end
     
+if isfield(p,'sr_lutwhite') && ~isempty(p.sr_lutwhite) && p.sr_lutwhite
+    imfinal=invertwhite(imfinal,0.0);
+end
+
     if isfield(p,'sr_axes')&&~isempty(p.sr_axes)&&ishandle(p.sr_axes)&&~isempty(rangexplot)&&~isempty(rangeyplot)
         sr_imagehandle=image(rangexplot/1000,rangeyplot/1000,imfinal,'Parent',p.sr_axes,'Pickable','none','HitTest','off');
 %                     plotovim=1;

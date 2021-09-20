@@ -6,7 +6,7 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
     %photophysics of the dye. Simulated structures are added to the
     %RoiManager
     properties
-        lSMLMModelFitGUI_loaded = false;    % whether any SMLMModelFitGUI is loaded.
+        lLocMoFitGUI_loaded = false;    % whether any LocMoFitGUI is loaded.
     end
     methods
         function obj=SimulateSites(varargin)        
@@ -18,9 +18,9 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
         function initGui(obj)
             setvisibility(obj);
             % added by Yu-Le
-            % check through the name of loaded eval plugins and find SMLMModelFit 
+            % check through the name of loaded eval plugins and find LocMoFit 
             if ~isempty(obj.locData.SE.processors.eval.guihandles.modules.Data)
-                lFitterFound = strfind(obj.locData.SE.processors.eval.guihandles.modules.Data(:,2), 'SMLMModelFitGUI');
+                lFitterFound = strfind(obj.locData.SE.processors.eval.guihandles.modules.Data(:,2), 'LocMoFitGUI');
                 lFitterFound = [lFitterFound{:}];
                 lFitterFound = any(lFitterFound);
             else
@@ -130,20 +130,30 @@ obj.setGuiParameters(struct('coordinatefile',[p f]));
 setvisibility(obj)
 end
 
+function loadpsf_callback(a,b,obj)
+f=obj.getSingleGuiParameter('psf_file'); 
+[f,p]=uigetfile('*_3dcal.mat','Choose bead calibration psf file',f);
+if ~f
+    return
+end
+obj.setGuiParameters(struct('psf_file',[p f]));
+end
+
+
 function useFitter_callback(a,b,obj)
     fig = figure(512);
     clf(fig);
     selectionTable = uitable(fig);
     nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
     
-    lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    lFitterFound = strfind(nameEvalPlugins, 'LocMoFitGUI');
     for k = 1:length(lFitterFound)
         lFitterFound{k} = ~isempty(lFitterFound{k});
     end
     lFitterFound = [lFitterFound{:}];
     
-    nameSMLMModelFitGUI = nameEvalPlugins(logical(lFitterFound));
-    selectionTable.Data = [num2cell(false(size(nameSMLMModelFitGUI))) nameSMLMModelFitGUI];
+    nameLocMoFitGUI = nameEvalPlugins(logical(lFitterFound));
+    selectionTable.Data = [num2cell(false(size(nameLocMoFitGUI))) nameLocMoFitGUI];
     selectionTable.ColumnEditable = [true false];
     selectionTable.CellEditCallback = {@selectionTable_CECallback};
     selectionTable.Position = [20 50 300 300];
@@ -159,12 +169,12 @@ end
 
 function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     % Added by Yu-Le
-    % set the selected SMLMModelFit as a parameter of SimulateSites.
+    % set the selected LocMoFit as a parameter of SimulateSites.
     selected = selectionTable.Data(:,1);
     idxSelected = find([selected{:}]);
     nameEvalPlugins = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
     
-    lFitterFound = strfind(nameEvalPlugins, 'SMLMModelFitGUI');
+    lFitterFound = strfind(nameEvalPlugins, 'LocMoFitGUI');
     for k = 1:length(lFitterFound)
         lFitterFound{k} = ~isempty(lFitterFound{k});
     end
@@ -175,12 +185,14 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     fitter = copy(fitter_ori);  % copy the fitter object to not overwrite it
     fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
     fitter.rmConvertRules;
-    fitter.addPar({1,{'sim'},{'numOfMol'},0, inf,0,1,{''},0,inf}) % add this parameter to control the number of molecules.
+    for l = 1:length(fitter.allModelLayer)
+        fitter.addPar({90+fitter.allModelLayer(l),{'sim'},{'numOfMol'},0, inf,0,1,{''},0,inf}) % add this parameter to control the number of molecules.
+    end
     obj.setPar('fitter',fitter)
     obj.setPar('fitter_ori',fitter_ori)
     close(fig);
     obj.guihandles.setModPars_button.Visible='on';
-    obj.guihandles.coordinatefile.String='-- Internal SMLMModelFit';
+    obj.guihandles.coordinatefile.String='-- Internal LocMoFit';
 end
 
 function setModPars_callback(a,b,obj)
@@ -188,30 +200,46 @@ function setModPars_callback(a,b,obj)
     % Use the function of allParsArg to set the range for simulation.
     
     %% GUI
-    fig = figure(513);
+    fig = obj.getPar('parameter_handle');
+    if isempty(fig)||~isgraphics(fig)
+        fig = figure('Name','Model parameters');
+        obj.setPar('parameter_handle',fig);
+    end
     clf(fig);
-    parArgTable = uitable(fig);
+    guihandles = [];
+    guihandles.parArgTable = uitable(fig);
+    guihandles.parArgTable.Position = [1 2 3 10];
+    
+    guihandles.convertTable = uitable(fig);
+    guihandles.convertTable.Position = [4.2 2 2 10];
+    
+    figHeight = fig.Position(4);
+    oneLine = 20;
+    unitWidth = 50;
+    
     
     % Model type
-    typeOption = uicontrol('Style','popupmenu','String',{'Point','Image'},'Value',1);
-    typeOption.Position = [20 20 60 30];
-    typeOption.Callback = {@typeOption_callback,obj};
+    guihandles.typeOption = uicontrol(fig, 'Style','popupmenu','String',{'Point','Image'},'Value',1);
+    guihandles.typeOption.Position = [1 12 0.5 1];
+    guihandles.typeOption.Callback = {@typeOption_callback,obj};
+    
     
     % Final ROI size
-    t_FinalROISize = uicontrol('Style','text','String','Final ROI size:');
-    t_FinalROISize.Position = [100 20 100 30];
-    
+    guihandles.t_FinalROISize = uicontrol(fig, 'Style','text','String','Final ROI size:');
+    guihandles.t_FinalROISize.Position = [2 12 1 1];
+        
     finalROISize = obj.getPar('finalROISize');
     if isempty(finalROISize)
         obj.setPar('finalROISize','200')
         finalROISize = '200';
     end
-    finalROISize = uicontrol('Style','edit','String',finalROISize);
-    finalROISize.Position = [200 20 60 30];
-    finalROISize.Callback = {@finalROISize_callback,obj};
+    guihandles.finalROISize = uicontrol(fig, 'Style','edit','String',finalROISize);
+    guihandles.finalROISize.Position = [3 12 0.5 1];
+    guihandles.finalROISize.Callback = {@finalROISize_callback,obj};
+    
     
     %% Data
-    % Acquire the SMLMModelFit obj, and then display parameters based on the allParsArg
+    % Acquire the LocMoFit obj, and then display parameters based on the allParsArg
     fitter = obj.getPar('fitter');
 
     parName = fitter.allParsArg.name;
@@ -229,13 +257,95 @@ function setModPars_callback(a,b,obj)
     parVal(~parFix)=parRange(~parFix);
     parVal = regexprep(parVal,'^\s+','');
     
+    guihandles.t_parTable = uicontrol(fig, 'Style','text','String','Parameters for simulation:');
+    guihandles.t_parTable.Position = [1 1 2 1];
+    
+    guihandles.t_convertTable = uicontrol(fig, 'Style','text','String','User-defined variables:');
+    guihandles.t_convertTable.Position = [4.2 1 2 1];
+    
     % Table properties.
-    parArgTable.Data = [parName parType num2cell(parModel) parVal repmat({''},size(parVal,1),1)];
-    parArgTable.ColumnName = {'Name','Type','Model','Value','Convert'};
-    parArgTable.ColumnEditable = [false false false true true];
-    parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
-    parArgTable.ColumnWidth = {70 50 40 50 100};
-    parArgTable.Position = [20 50 350 300];
+    guihandles.parArgTable.Data = [parName parType num2cell(parModel) parVal repmat({''},size(parVal,1),1)];
+    guihandles.parArgTable.ColumnName = {'Name','Type','Model','Value','Convert'};
+    guihandles.parArgTable.ColumnEditable = [false false false true true];
+    guihandles.parArgTable.CellEditCallback = {@parArgTable_CellEditCallback, fitter};
+    guihandles.parArgTable.ColumnWidth = {70 40 30 50 100};    
+    
+    guihandles.convertTable.Data = [];
+    guihandles.convertTable.ColumnName = {'Name','Rule'};
+    guihandles.convertTable.ColumnEditable = [true true];
+    guihandles.convertTable.ColumnWidth = {70 100};
+    
+    guihandles.addRow = addRowButton(fig,guihandles.convertTable);
+    guihandles.addRow.Position = [4.2 12 0.2 0.8];
+    
+    guihandles.rmRow = rmRowButton(fig,guihandles.convertTable);
+    guihandles.rmRow.Position = [4.4 12 0.2 0.8];
+    
+    guihandles.apply = uicontrol(fig, 'Style','pushbutton','String','Apply','Callback',{@applyConvertRules,guihandles.convertTable,fitter});
+    guihandles.apply.Position = [4.6 12 0.5 0.8];
+    
+    %% Editor
+    guihandles.editor = uicontrol(fig, 'Style','pushbutton','String','Editor');
+    guihandles.editor.Position = [3.5 1 0.5 1];
+    guihandles.editor.Callback = {@editor_callback,guihandles.parArgTable};
+
+    %% save and load
+    guihandles.saveParArg = uicontrol(fig, 'Style','pushbutton','String','Save');
+    guihandles.saveParArg.Position = [2.5 1 0.5 1];
+    guihandles.saveParArg.Callback = {@saveParArg_callback,guihandles.parArgTable};
+    
+    guihandles.loadParArg = uicontrol(fig, 'Style','pushbutton','String','Load');
+    guihandles.loadParArg.Position = [3 1 0.5 1];
+    guihandles.loadParArg.Callback = {@loadParArg_callback,guihandles.parArgTable};
+    guiStyle(guihandles, fieldnames(guihandles))
+end
+
+function editor_callback(a,b,parArgTable)
+    fig = figure('Name','Editor');
+    text2show = sprintf(['%s\t%s\t%s\t%s\t%s\n'], string(parArgTable.Data'));
+    guihandles.editor = uicontrol(fig, 'Style','edit','String', text2show);
+    guihandles.editor.Max = 2;
+    guihandles.editor.Position = [1 1 5 12];
+    guihandles.editor.HorizontalAlignment = 'left';
+    
+    guihandles.save = uicontrol(fig, 'Style','pushbutton','String', 'save');
+    guihandles.save.Position = [1 13 1 1];
+    guihandles.save.Callback = {@editorSave_callback,guihandles.editor,parArgTable};
+    guiStyle(guihandles,fieldnames(guihandles));
+end
+
+function saveParArg_callback(a,b,parArgTable)
+    [file,path] = uiputfile('*.txt','Save parameter argument table');
+    writecell(parArgTable.Data, [path file]);
+end
+
+function loadParArg_callback(a,b,parArgTable)
+    [file,path] = uigetfile('*.txt','Load parameter argument table');
+    opts = delimitedTextImportOptions('NumVariables',5);
+    oneTable = readcell([path file],opts);
+    oneTable = string(oneTable);
+    oneTable = cellstr(oneTable);
+    parArgTable.Data = oneTable;
+    
+    
+    callBack = parArgTable.CellEditCallback{1};
+    locMoFitObj = parArgTable.CellEditCallback{2};
+    editable = [4 5];
+    for k = 1:length(editable)
+        for l = 1:size(oneTable,1)
+            holder.Indices(1) = l;
+            holder.Indices(2) = editable(k);
+            holder.NewData = oneTable{l,editable(k)};
+            callBack(parArgTable,holder,locMoFitObj);
+        end
+    end
+end
+
+function editorSave_callback(a,b,editor,parArgTable)
+    t = regexprep(string(editor.String)', '\t$', '\t\r\n');
+    t = textscan(char(t')','%s %s %s %s %s','delimiter',sprintf('\t'));
+    t = [t{:}];
+    parArgTable.Data = t;
 end
 
 function typeOption_callback(a,b,obj)
@@ -244,7 +354,7 @@ function typeOption_callback(a,b,obj)
 end
 
 function finalROISize_callback(a,b,obj)
-    obj.setPar('finalROISize_callback',a.String);
+    obj.setPar('finalROISize',a.String);
 end
 
 function parArgTable_CellEditCallback(a,b,obj)
@@ -276,11 +386,18 @@ function parArgTable_CellEditCallback(a,b,obj)
     end
 end
 
+function applyConvertRules(a,b,hTable,obj)
+    data = hTable.Data;
+    for r = 1:size(data,1)
+        obj.converter([],data{r,2},['usr_' data{r,1}])
+    end
+end
+
 function setvisibility(obj)
 f=obj.getSingleGuiParameter('coordinatefile');
 % added by Yu-Le
 if startsWith(f,'--')
-    ext = 'SMLMModelFit';
+    ext = 'LocMoFit';
 else
     [p,fh,ext]=fileparts(f);
 end
@@ -318,7 +435,7 @@ switch ext
             txt='on';
             tif='off';            
         end
-    case 'SMLMModelFit'
+    case 'LocMoFit'
         modelType = obj.getPar('modelType');
         if ~isempty(modelType)
             switch modelType
@@ -344,7 +461,9 @@ obj.guihandles.tif_numbermode.Visible=tif;
 obj.guihandles.tif_imagesizet.Visible=tif;
 obj.guihandles.tif_imagesize.Visible=tif;
 obj.guihandles.linkageerrort.Visible=txt;
-obj.guihandles.linkageerror.Visible=txt;
+obj.guihandles.linkageerrorfix.Visible=txt;
+obj.guihandles.linkageerrorft.Visible=txt;
+obj.guihandles.linkageerrorfree.Visible=txt;
 end
 
 
@@ -394,14 +513,21 @@ pard.labeling_efficiency.Width=.5;
 pard.labeling_efficiency.position=[3,2.5];
 pard.labeling_efficiency.TooltipString=pard.t_labelingefficiency.TooltipString;
 
-pard.linkageerrort.object=struct('String','Linkage error std (nm)','Style','text');
+pard.linkageerrort.object=struct('String','Linkage err fix:','Style','text');
 pard.linkageerrort.position=[3,3];
-pard.linkageerrort.Width=1.5;
+pard.linkageerrort.Width=0.8;
 
-pard.linkageerror.object=struct('String','0','Style','edit');
-pard.linkageerror.Width=.5;
-pard.linkageerror.position=[3,4.5];
+pard.linkageerrorfix.object=struct('String','0','Style','edit');
+pard.linkageerrorfix.Width=.4;
+pard.linkageerrorfix.position=[3,3.8];
 
+pard.linkageerrorft.object=struct('String','free:','Style','text');
+pard.linkageerrorft.position=[3,4.2];
+pard.linkageerrorft.Width=0.4;
+
+pard.linkageerrorfree.object=struct('String','0','Style','edit');
+pard.linkageerrorfree.Width=.4;
+pard.linkageerrorfree.position=[3,4.6];
 
 
 pard.modelt.object=struct('String','Model:','Style','text');
@@ -464,6 +590,22 @@ pard.background.Width=.35;
 pard.background.position=[5,3.5];
 pard.background.TooltipString=sprintf('Background in photons/pixel/frame');
 pard.t5.TooltipString=pard.background.TooltipString;
+
+% PSF model
+p(1).value=0;p(1).on={};p(1).off={'psf_file','load_button_psf'};
+p(2).value=1;p(2).on=p(1).off; p(2).off=p(1).on;
+pard.use_psf.object=struct('String','Experimental PSF:','Style','checkbox','Value',0,'Callback',{{@obj.switchvisible,p}});
+pard.use_psf.position=[6,1];
+pard.use_psf.Width=1.5;
+
+pard.psf_file.object=struct('String','*_3dcal.mat','Style','edit','Visible','off');
+pard.psf_file.position=[6,2.5];
+pard.psf_file.Width=1.5;
+
+pard.load_button_psf.object=struct('String','Load','Style','pushbutton','Callback',{{@loadpsf_callback,obj}},'Visible','off');
+pard.load_button_psf.position=[6,4];
+
+
 
 pard.t6.object=struct('String','Number of sites','Style','text');
 pard.t6.position=[8,1];

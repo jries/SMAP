@@ -47,7 +47,10 @@ classdef RoiCutterWF<interfaces.WorkflowModule
                 outputdat=dato;
                 return;
             end
-            
+            %test scmos: pass on varmap as image:
+            %image=obj.getPar('cam_varmap'); %Passed!
+
+
             kernelSize=obj.loc_ROIsize;
             dn=ceil((kernelSize-1)/2);
             sim=size(image);

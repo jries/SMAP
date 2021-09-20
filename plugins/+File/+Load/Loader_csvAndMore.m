@@ -1,6 +1,6 @@
 classdef Loader_csvAndMore<interfaces.DialogProcessor
     properties
-        loaderpath='settings/csvloaderconversion/';
+        loaderpath;
         notfound=false;
     end
     methods
@@ -36,7 +36,8 @@ classdef Loader_csvAndMore<interfaces.DialogProcessor
             end
         end
         function initGui(obj)
-            obj.loaderpath='settings/csvloaderconversion/';
+            sd=obj.getPar('SettingsDirectory');
+            obj.loaderpath=[sd filesep 'csvloaderconversion' filesep];
             files=dir([obj.loaderpath '*.txt']);
             string={'New format', files(:).name};
             obj.guihandles.importdef.String=string;
@@ -153,7 +154,7 @@ switch ext
         tab=readtable(file);
     case '.mat'
         tab=load(file);
-    case '.hdf5'
+    case {'.hdf5','.h5'}
         info=h5info(file);
         if length(info.Datasets)>1
             answ=listdlg('ListString',{info.Datasets(:).Name});
@@ -396,7 +397,7 @@ end
 
 function pard=guidef
 info.name='Import CSV/MAT/HDF5';
-info.extensions={'*.csv;*.xls;*.mat;*.hdf5;*.txt','*.*'};
+info.extensions={'*.csv;*.xls;*.mat;*.hdf5;*.h5;*.txt','*.*'};
 info.dialogtitle='select any .csv .mat or .hdf5 file';
 pard.plugininfo=info;  
 pard.plugininfo.type='LoaderPlugin';

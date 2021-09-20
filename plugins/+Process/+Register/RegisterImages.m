@@ -133,7 +133,7 @@ pard.dataselect.object.TooltipString='choose localization file data set';
 pard.syncParameters={{'filelist_short','dataselect',{'String'}}};
 
 
-pard.Tfile.object=struct('Style','edit','String','settings/temp/temp_T.mat');
+pard.Tfile.object=struct('Style','edit','String','*_T.mat');
 pard.Tfile.position=[8,1];
 pard.Tfile.Width=3;
 

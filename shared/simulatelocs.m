@@ -24,13 +24,25 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
            if ~isfield(p,'photonsigma')
                p.photonsigma=0;
            end
-           if ~isfield(p,'linkageerror')
-               p.linkageerror=0;
+           if ~isfield(p,'linkageerrorfree')
+               p.linkageerrorfree=0;
            end
-           
+           if ~isfield(p,'linkageerrorfix')
+               p.linkageerrorfix=0;
+           end
+
+           if ~isfield(p,'use_psf')
+               p.use_psf=false;
+           end
+           if p.use_psf
+                p.psfmodel=splinePSF;
+                p.psfmodel.loadmodel(p.psf_file);
+           end
+
+
            [poslabels,possites,parameters]=getlabels(p, colour);
-           if p.linkageerror>0
-               poslabels=addlinkage(poslabels,p.linkageerror);
+           if p.linkageerrorfix>0
+               poslabels=addlinkage(poslabels,p.linkageerrorfix);
            end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
            
@@ -125,6 +137,16 @@ function [locs,possites,parameters]=getlabels(p, colour)
 % fields p. :
 % coordinatefile, se_sitefov, numberofsites(x,y), labeling_efficiency, randomxy,
 % randomxyd
+
+if length(p.numberofsites)>1
+    numberofrows=p.numberofsites(2);
+    numberofsites=p.numberofsites(1)*p.numberofsites(2);
+else
+    numberofrows=ceil(32000/p.se_sitefov);
+    numberofsites=p.numberofsites;
+end
+
+
 if ischar(p.coordinatefile)
 paths =  strsplit(p.coordinatefile, '|');
 switch colour
@@ -136,7 +158,7 @@ switch colour
 end
 
 if startsWith(p.coordinatefile, '--')
-    ext = 'SMLMModelFit';
+    ext = 'LocMoFit';
 else
     [~,~,ext]=fileparts(p.coordinatefile);% Get extension of the specified file
 end
@@ -147,13 +169,23 @@ locfun=[];
 switch ext
     case {'.txt','.csv'}
         plocs=readtable(p.coordinatefile);
-        plocsa=table2array(plocs);
-        locsall.x=plocsa(:,1);
-        locsall.y=plocsa(:,2);
-        if size(plocsa,2)>2
-            locsall.z=plocsa(:,3);
+        if any(strcmp(fieldnames(plocs),'particle')) %already many particles
+            locsall.x=plocs.x;
+            locsall.y=plocs.y;
+            if any(strcmp(fieldnames(plocs),'z')) 
+                locsall.z=plocs.z;
+            end
+            locsall.particle=plocs.particle-min(plocs.particle)+1; %1 based
+            numberofsites=max(locsall.particle);
+        else
+            plocsa=table2array(plocs);
+            locsall.x=plocsa(:,1);
+            locsall.y=plocsa(:,2);
+            if size(plocsa,2)>2
+                locsall.z=plocsa(:,3);
+            end
+            locsall=copyfields(locsall,plocs,{'x','y','z'});
         end
-        locsall=copyfields(locsall,plocs,{'x','y','z'});
     case {'.tif','.png','.jpg','.jpeg'}
 %         locs=getlabelstiff(obj,p);
         image=imread(p.coordinatefile);
@@ -175,7 +207,7 @@ switch ext
         image=imread(p.coordinatefile);
         img=sum(image,3)/size(image,3); %binarize
         image=double(img)/255;
-	case 'SMLMModelFit'
+	case 'LocMoFit'
         % Added by Yu-Le:
         fitter = p.obj.getPar('fitter');
     otherwise
@@ -206,14 +238,6 @@ end
 
 distsites=p.se_sitefov;
 
-if length(p.numberofsites)>1
-    numberofrows=p.numberofsites(2);
-    numberofsites=p.numberofsites(1)*p.numberofsites(2);
-else
-    numberofrows=ceil(32000/p.se_sitefov);
-    numberofsites=p.numberofsites;
-end
-
 % numeroflines=ceil(p.numberofsites/numberofrows);
 fieldstosave={'labeling_efficiency','model','blinks','lifetime','photons','background','maxframes','coordinatefile','linkageerror','photonsigma'};
 psave=copyfields([],p,fieldstosave);
@@ -226,7 +250,7 @@ for k=numberofsites:-1:1
     if ~isempty(image)
         locsh=locsfromimage(image,p);
     elseif ~isempty(fitter)
-        % added by Yu-Le for SMLMModelFit:
+        % added by Yu-Le for LocMoFit:
         switch p.obj.getPar('modelType')
             case 'Image'
                 locsh=locsfromContFun(p);
@@ -242,7 +266,13 @@ for k=numberofsites:-1:1
         locsh=labelremove(locsd,p.labeling_efficiency);
         phere.model=ph;
     else
-        locsh=labelremove(locsall,p.labeling_efficiency); % give all the coordinates of I dots and the lableling efficiency (P(ref)), and then randomly generating I even probabilities (P(gi)), keep P(gi) if the P(gi) <= P(ref)
+        if isfield(locsall,'particle')
+            indin=locsall.particle==k;
+            locsha=copystructReduce(locsall,indin);
+        else
+            locsha=locsall;
+        end
+        locsh=labelremove(locsha,p.labeling_efficiency); % give all the coordinates of I dots and the lableling efficiency (P(ref)), and then randomly generating I even probabilities (P(gi)), keep P(gi) if the P(gi) <= P(ref)
     end
     if ~isfield(locsh,'z')
         locsh.z=0*locsh.x;
@@ -298,7 +328,11 @@ for k=numberofsites:-1:1
     locs(k).dx_gt=dx*ones(size(locsh.x));
     locs(k).dy_gt=dy*ones(size(locsh.x));
     locs(k).dz_gt=dz*ones(size(locsh.x));
-    locs(k).site=k*ones(size(locsh.x));
+    if isfield(locsh,'particle')
+        locs(k).site=locsh.particle;
+    else
+        locs(k).site=k*ones(size(locsh.x));
+    end
     possites(k).x=xh*distsites;
     possites(k).y=yh*distsites;
     parameters(k)=phere;
@@ -337,7 +371,7 @@ locs.y=(y(keep)-0.5)*p.tif_imagesize;
 end
 
 function locs=locsfromContFun(p)
-% added by Yu-Le for SMLMModelFit:    
+% added by Yu-Le for LocMoFit:    
 if p.tif_numbermode.Value==1
 else
 end
@@ -379,7 +413,7 @@ locs.channel = label.layer(lKept);
 end
 
 function [locs,parameters]=locsfromDiscFun(p)
-% added by Yu-Le for SMLMModelFit:   
+% added by Yu-Le for LocMoFit:   
 fitter = p.obj.getPar('fitter');
 finalROISize = p.obj.getPar('finalROISize');
 fitter.roiSize = p.se_siteroi;
@@ -387,12 +421,25 @@ modCoord = fitter.getSimRef('finalROISize',str2num(finalROISize)); % get point t
 parameters.allParsArg = fitter.allParsArg;
 parameters.model = fitter.model;
 % Export
-locs.x = modCoord{1}.x;
-locs.y = modCoord{1}.y;
-if isfield(modCoord{1}, 'z')
-    locs.z = modCoord{1}.z;
+for l = 1:length(modCoord)
+    nLabel(l) = length(modCoord{l}.x);
 end
-locs.channel = ones(size(modCoord{1}.x));
+cumNLabel = [0 cumsum(nLabel)];
+nAllLabel = sum(nLabel);
+locs.x = zeros(nAllLabel,1);
+locs.y = zeros(nAllLabel,1);
+    if isfield(modCoord{l}, 'z')
+        locs.z = zeros(nAllLabel,1);
+    end
+for l = 1:length(modCoord)
+    locs.x(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.x;
+    locs.y(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.y;
+    if isfield(modCoord{1}, 'z')
+        locs.z(cumNLabel(l)+1:cumNLabel(l+1)) = modCoord{l}.z;
+    end
+    locs.channel(cumNLabel(l)+1:cumNLabel(l+1)) = ones(size(modCoord{l}.x))*l;
+end
+locs.channel = locs.channel';
 end
 
 function locs=labelremove(locin,p)
@@ -495,29 +542,55 @@ function locs=locsfromposi(locsi,p)
 %     phot=exprnd(p.photons,numlocs,1);
     noisexcessfactor=(p.EMon+1);
     phot=locsi.phot;
-    
-    a=100;
-    PSF=100;
-    zfactor=3;
-%     sa=PSF+a/12;
     phot(phot<10)=10;
     indin=phot>=10;
     numlocs=sum(indin);
-    %MOrtensen
-%     p.background: photons, b^2=p.background: variance in Mortenson
-    locpthompson=sqrt((PSF^2+a^2/12)./(phot)+8*pi*(PSF^2).^2.* p.background./(phot).^2/a^2);
-    locprecnm=sqrt((PSF^2+a^2/12)./phot.*(16/9+8*pi*(PSF^2+a^2/12)*p.background./phot/a^2));
+
+    % use PSF to calculate CRLB
+    if p.use_psf
+        pixelsize=100; %%%
+        rois=13;
+
+        state=  warning('query','MATLAB:nearlySingularMatrix');
+        warning('off','MATLAB:nearlySingularMatrix')
+        crlb=p.psfmodel.crlb(phot,p.background,locsi.z,rois);
+        warning(state.state,'MATLAB:nearlySingularMatrix')
+        dx2=crlb(:,1).*pixelsize^2;
+        dy2=crlb(:,2).*pixelsize^2;
+        dz2=crlb(:,5);
+        locpreceffectx=sqrt(dx2+p.linkageerrorfree.^2);
+        locpreceffecty=sqrt(dy2+p.linkageerrorfree.^2);
+        locpreceffectz=sqrt(dz2+p.linkageerrorfree.^2);
+        locprecnm=sqrt((dx2+dy2)/2);
+        locprecznm=sqrt(dz2);
+
+    else
+         a=100;
+        PSF=100;
+        zfactor=3;
+            %MOrtensen
+    %     p.background: photons, b^2=p.background: variance in Mortenson
+        locpthompson=sqrt((PSF^2+a^2/12)./(phot)+8*pi*(PSF^2).^2.* p.background./(phot).^2/a^2);
+        locprecnm=sqrt((PSF^2+a^2/12)./phot.*(16/9+8*pi*(PSF^2+a^2/12)*p.background./phot/a^2));
     
-    locprecnm=locprecnm*sqrt(noisexcessfactor);
-    
+        locprecnm=locprecnm*sqrt(noisexcessfactor);
+        locprecznm=locprecnm*zfactor;
+        %include linkage error from free rotation
+        locpreceffectx=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
+        locpreceffecty=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
+        locpreceffectz=sqrt(locprecnm.^2*zfactor^2+p.linkageerrorfree.^2);
+    end
+
+
+
     locs.phot=single(phot(indin));
     locs.bg=single(locprecnm(indin)*0+p.background);
     locs.locprecnm=single(locprecnm(indin));
 %     locs.frame=double(ceil(rand(numlocs,1)*p.maxframe));
-    locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locprecnm(indin));
-    locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locprecnm(indin));
-    locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locprecnm(indin)*zfactor);
-    locs.locprecznm=single(locprecnm(indin)*zfactor);
+    locs.xnm=single(locsi.x(indin)+randn(numlocs,1).*locpreceffectx(indin));
+    locs.ynm=single(locsi.y(indin)+randn(numlocs,1).*locpreceffecty(indin));
+    locs.znm=single(locsi.z(indin)+randn(numlocs,1).*locpreceffectz(indin));
+    locs.locprecznm=single(locprecznm(indin));
     locs.xnm_gt=single(locsi.x(indin));
     locs.ynm_gt=single(locsi.y(indin));
     locs.znm_gt=single(locsi.z(indin));

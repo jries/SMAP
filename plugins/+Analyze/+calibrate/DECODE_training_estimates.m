@@ -1,46 +1,61 @@
 classdef DECODE_training_estimates<interfaces.DialogProcessor
-%     Saves a training file for deepSMLM
+%     Saves a training file for DECODE
     properties
-        yamldefault='settings/cameras/DECODE_default.yaml';
+        yamldefault='DECODE_default.yaml';
         yamlfile
         yamlpar
         jsontypes
+        decodeprocess
+        tensorboardprocess
     end
     methods
-        function obj=DECODE_training_estimates(varargin)    
+        function obj=DECODE_training_estimates(varargin)  
             obj@interfaces.DialogProcessor(varargin{:}) ;
+            obj.showresults=false;
         end
-        
         function out=run(obj,p)
-           out=[];
-           disp('no function. Use save yaml in the GUI.')
-           return
-           %set defaults
-            outdir=finalizejson(obj);
-            js=obj.jsonstruct;
-           %make directory
-           status=mkdir(outdir);
-           %copy 3dcal and set 3dcal path relative
-           status2=copyfile(js.InOut.calibration_file,outdir);
-           %save jsonfile
-           
-           fileout=[outdir filesep 'model_' js.SMAP.name '.json'];
-           if status && status2
-                savejsonfile(obj,fileout)
+           pdecode=obj.getGlobalSetting('DECODE_path');
+           if ~exist(pdecode,'dir')
+               warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
+               return
            end
+           out=[];
+           [~,fname]=fileparts(obj.locData.files.file(1).name);
+           fnameo=[obj.yamlpar.InOut.experiment_out filesep 'DECODE_train_' fname '.yaml'];
+           finalizejson(obj);
+           saveyaml(obj,fnameo);
+%            https://github.com/brian-lau/MatlabProcessManager
+           pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' fnameo ];
+           pm=processManager('command',pcall,'autoStart',false,'workingDir',obj.yamlpar.InOut.experiment_out);
+           pm.printStdout=false ;
+           pm.printStderr=true;
+           pm.wrap=1000;
+           pm.pollInterval=10;
+           pm.start()
+           obj.decodeprocess=pm;
+
+           pcalltb=[pdecode '/bin/tensorboard --samples_per_plugin images=100 --port=6007 --logdir=runs' ];
+           ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
+           obj.tensorboardprocess=ptb;
+           obj.guihandles.stoplearning.Visible='on';
+           obj.guihandles.tensorboard.Visible='on';
         end
         function pard=guidef(obj)
             pard=guidef(obj);
         end
         function initGui(obj)
+
             initGui@interfaces.DialogProcessor(obj);
-            obj.yamlfile=obj.yamldefault;
+                obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
+        
+            yamldefault=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep obj.yamldefault];
+            obj.yamlfile=yamldefault;
             tt=uitable(obj.handle);
             tt.Position=obj.guihandles.partablepos.Position;
             tt.Position(4)=tt.Position(4)*7;
             obj.guihandles.parttable=tt;
-            obj.yamlpar=ReadYaml(obj.yamldefault);
-            obj.yamlfile=obj.yamldefault;
+            obj.yamlpar=ReadYaml(yamldefault);
+            obj.yamlfile=yamldefault;
             makejsontable(obj);
         end
 
@@ -52,6 +67,7 @@ use.SMAP={'set_emitters_per_um2','zrange_nm'};
 use.InOut={'calibration_file','experiment_out'};
 use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform'};
 use.Camera={'em_gain','e_per_adu','baseline','read_sigma','spur_noise','px_size'};
+use.Hardware={'device','device_simulation'};
 fnu=fieldnames(use);
 
 js=obj.yamlpar;
@@ -91,6 +107,7 @@ end
 % what is a file?
 jtype.SMAP.watchFolder='d';
 jtype.InOut.calibration_file='3d';
+jtype.InOut.experiment_out='d';
 obj.jsontypes=jtype;
 
 ta=obj.guihandles.parttable;
@@ -239,18 +256,25 @@ function usecurrent_callback(a,b,obj)
     
     js.Simulation.lifetime_avg=stat.lifetime.mu-1;
     js.Simulation.intensity_mu_sig= [1,0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
-    bgminmax=quantile(locsu.bg,[0.05, 0.95]);
+    bgminmax=quantile(locsu.bg,[0.01, 0.95]);
     dbg=bgminmax(2)-bgminmax(1);
-    bgrange=bgminmax+ [-1, 1]*dbg*0.2;
-    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.005));
+    bgrange=bgminmax+ [-1, 1]*dbg*0.3;
+    bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.0005)*0.9);
     js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
 
     
     fi=obj.locData.files.file(1).info;
     js.Camera.em_gain=fi.emgain*fi.EMon;
     js.Camera.e_per_adu=fi.conversion;
-    js.Camera.px_size=fi.cam_pixelsize_um*1000;
+    js.Camera.px_size=fi.cam_pixelsize_um([2 1])*1000;
     js.Camera.baseline=fi.offset;
+    if js.Camera.em_gain>0 
+        js.Camera.read_sigma=74.4;
+        disp('read noise set to 74.4 e- for EM gain')
+    else
+        js.Camera.read_sigma=1.5;
+        disp('read noise set to 1.5 e- for sCMOS or non-EM camera')   
+    end
     
     if isa(hroi,'imroi') && isvalid(hroi)
         m=hroi.createMask;
@@ -271,9 +295,9 @@ function usecurrent_callback(a,b,obj)
     if isempty(js.InOut.calibration_file)
         js.InOut.calibration_file=get3dcalfile(obj);
     end
-    if ~isempty(js.InOut.calibration_file)
-        js.InOut.experiment_out=fileparts(js.InOut.calibration_file);
-    end
+%     if ~isempty(js.InOut.calibration_file)
+%         js.InOut.experiment_out=fileparts(js.InOut.calibration_file);
+%     end
     obj.yamlpar=js;  
     setz(obj);
     makejsontable(obj)
@@ -338,18 +362,39 @@ function setz(obj)
      zminmax=[-750, 750];
      
  else
-     z=quantile(locs.znm,[0.05,0.95]); 
+     z=quantile(locs.znm,[0.01,0.99]); 
      dz=z(2)-z(1);
-     zminmax=z+dz*0.25;
+     zminmax=z+[-1 1]*dz*0.2;
  end
  calf=obj.yamlpar.InOut.calibration_file;
  if ~isempty(calf)
+     if ~exist(calf,'file')
+         disp('please load PSF calibration file')
+         [fn,pn]=uigetfile(calf,'load PSF calibration file');
+         calf=[pn fn];
+     end
     l=load(calf);
+    obj.yamlpar.InOut.calibration_file=calf;
+    if isempty(obj.yamlpar.InOut.experiment_out)
+        obj.yamlpar.InOut.experiment_out=fileparts(calf);
+    end
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
     zminmax(2)=min(zminmax(2),zr);
     obj.yamlpar.SMAP.zrange_nm=zminmax;
  end
+end
+
+function stoplearning_callback(a,b,obj)
+    obj.tensorboardprocess.stop;
+    obj.decodeprocess.stop;
+    obj.guihandles.stoplearning.Visible='off';
+    obj.guihandles.tensorboard.Visible='off';
+end
+
+function tensorboard_callback(a,b,obj)
+page='http://localhost:6007';
+web(page,'-browser')
 end
 
 function pard=guidef(obj)
@@ -360,6 +405,13 @@ pard.usecurrent.object=struct('Style','pushbutton','String','Use parameters from
 pard.usecurrent.position=[1,1];
 pard.usecurrent.Width=2;
 
+pard.tensorboard.object=struct('Style','pushbutton','String','Tensorboard','Callback',{{@tensorboard_callback,obj}},'Visible','off');
+pard.tensorboard.position=[1,3];
+pard.tensorboard.Width=1;
+
+pard.stoplearning.object=struct('Style','pushbutton','String','Stop training','Callback',{{@stoplearning_callback,obj}},'Visible','off');
+pard.stoplearning.position=[1,4];
+pard.stoplearning.Width=1;
 
 pard.loadjson.object=struct('Style','pushbutton','String','Load yaml','Callback',{{@load_callback,obj,'.yaml'}});
 pard.loadjson.position=[9,1];

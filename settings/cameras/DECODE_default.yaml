@@ -30,3 +30,6 @@ Simulation:
       - 10000.0 
       - 3000.0
   lifetime_avg: 2.0  # lifetime average of the emitters
+Hardware:
+    device: cuda:0
+    device_simulation: cuda:0

@@ -197,7 +197,7 @@ end
 
 function menu_callback(callobj,b,obj)
 guimodules=obj.getPar('guimodules');
-% guimodules=readstruct('settings/temp/guimodules.txt',[],true);
+
 switch callobj.Label
     case 'add plugin'
         plugins=obj.getPar('menu_plugins');
@@ -223,7 +223,8 @@ switch callobj.Label
 %         guimodules.(pluginname{1}).(pluginname{2}).(pluginname{3})=pluginname;
 %         save(obj.guipluginpath,'guimodules')
     case 'add workflow'
-        [file,path]=uigetfile(['settings/workflows/*.mat']);
+        settingsdir=obj.getPar('SettingsDirectory');
+        [file,path]=uigetfile([settingsdir '/workflows/*.mat']);
         if ~file
             return
         end
@@ -276,28 +277,7 @@ switch callobj.Label
         classname=obj.plugins.allclassnames{selection};
         guimodules.(obj.maindir{1}).(obj.maindir{2}).(classname).name=newname;
         obj.setprocessorlist;
-%     case 'reset: use all plugins'
-%         answ=questdlg('Delete all settings for pluginlist? Effect takes place after restarting the application');
-%         
-%         if strcmp(answ,'Yes')
-%             obj.setGlobalSetting('guiPluginConfigFile','');
-%         end
-%             delete('settings/temp/guimodules.txt')
-%             return
-%         end
-%     case 'load plugin structure'
-%         fs='settings/*.txt';
-%         [f,path]=uigetfile(fs,'load gui plugin structure file');
-%         if f
-%             guimodules=readstruct([path f],[],1);
-%             msgbox('please restart SMAP')
-%         end
-%     case 'save plugin structure'
-%         fs='settings/guiplugins.txt';
-%         [f,path]=uiputfile(fs,'save gui plugin structure file');
-%         if f
-%              writestruct([path f],guimodules);
-%         end
+
         
     case 'detach'
         f=figure('MenuBar','none','Toolbar','none');
@@ -311,7 +291,7 @@ allclasses=obj.plugins.allclassnames;
 for k=1:length(allclasses)
     guimodules.(obj.maindir{1}).(obj.maindir{2}).(allclasses{k}).position=k;
 end
-%  writestruct('settings/temp/guimodules.txt',guimodules);
+
  obj.setPar('guimodules',guimodules);
 end
 

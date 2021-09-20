@@ -12,7 +12,6 @@ if ispc
 else
     fijipath='/Applications/Fiji.app/scripts';
 end
-% obj.createGlobalSetting('SettingsDirectory','Directories','settings directory:',struct('Style','dir','String',['settings']))   
 obj.createGlobalSetting('DataDirectory','Directories','Default data directory:',struct('Style','dir','String',pwd))
 
 obj.createGlobalSetting('MMpath','Directories','The directory of Micro-Manager in which ij.jar is found:',struct('Style','dir','String','MMpath'))   
@@ -21,8 +20,8 @@ obj.createGlobalSetting('bioformatspath','Directories','The directory of bioform
 
 structure=struct('Style','checkbox','String','Ask for Auto Check on','Value',0);
 obj.createGlobalSetting('SE_autosavecheck','ROIManager','Ask for autosave on when starting ROI manager',structure);
-%  obj.createGlobalSetting('saveas73','File','.mat format. -v7.3: slow and larger files, but ompatibel with >2GB',...
-%     struct('Style','checkbox','String','Always use -v7.3','Value',0));
+ obj.createGlobalSetting('saveas7','File','Always save as v7 (only < 2GB). Might result in smaller file size.',...
+    struct('Style','checkbox','String','Always use -v7','Value',0));
 obj.createGlobalSetting('useDefaultCam','File','Use default camera if not recognized or ask?',struct('Style','checkbox','String','always use default','Value',1))  
 obj.setPar('useDefaultCam',obj.getGlobalSetting('useDefaultCam'));
 obj.createGlobalSetting('cameraSettingsFile','File','CameraManager: File to save camera settings ',struct('Style','file','String','settings/cameras.mat'))  

@@ -63,7 +63,7 @@ classdef TifLoader<interfaces.WorkflowModule
             obj.imloader.waittime=p.onlineanalysiswaittime;
             obj.imloader.setImageNumber(p.framestart-1);
             obj.numberOfFrames=obj.imloader.metadata.numberOfFrames;
-
+             
             if p.onlineanalysis
                 obj.framestop=inf;
             else
@@ -96,6 +96,7 @@ classdef TifLoader<interfaces.WorkflowModule
                 file=data.data;
                 obj.addFile(file)
             end
+            obj.imloader.prefit;
             id=1;
 
             imloader=obj.imloader;
@@ -160,6 +161,12 @@ classdef TifLoader<interfaces.WorkflowModule
             
             obj.setPar('tiffloader_loadingtime',tall);
             obj.setPar('tiffloader_fittime',tfitall);
+            if myisfield(imloader,'imtags')
+                imagetags.data=imloader.imtags;
+                imagetags.tags=imloader.readoutimgtags;
+                obj.setPar('loc_imagetags',imagetags)
+            end
+
 %             obj.setPar('tiffloader_averagetiff',cast(allimages/imcounter,'like',image));
             dateof=interfaces.WorkflowData;
             dateof.frame=imloader.currentImageNumber+1;
@@ -303,6 +310,9 @@ end
 
 function changeloader(a,b,obj)
 file=obj.getSingleGuiParameter('tiffile');
+if isempty(file) ||strcmp(file,' ')
+    return
+end
 try
 addFile(obj,file)
 catch err
@@ -310,6 +320,9 @@ catch err
     err
 end  
 outfile=[obj.getPar('loc_fileinfo').basefile];
+if isempty(outfile)
+    return
+end
 [path, file]=fileparts(outfile);
 obj.setPar('loc_outputfilename',[path filesep file  '_sml.mat'])
 end

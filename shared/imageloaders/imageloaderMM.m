@@ -4,6 +4,9 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
     
     properties
         reader
+        readoutimgtags={};
+        imtags
+        init
     end
     
     methods
@@ -15,20 +18,27 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             try
                 obj.reader.close;
             end
+            if ~exist(file,'file')
+                return
+            end
             obj.reader = javaObjectEDT('org.micromanager.acquisition.TaggedImageStorageMultipageTiff',fileparts(file), false, [], false, false, true);
             obj.file=file;
 %             obj.reader=bfGetReader(file);
             md=obj.getmetadata;
             [p,f]=fileparts(file);
             obj.metadata.basefile=[p ];
+            initimagetags(obj)
             
         end
         function image=getimagei(obj,frame)
             image=readstack(obj,frame);
         end
-        
+        function prefit(obj)
+            initimagetags(obj)
+        end
         function closei(obj)
             obj.reader.close
+            
 %             clear(obj.reader)
         end
         
@@ -75,8 +85,6 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             
             allmd=vertcat(allmd,alls);
             obj.allmetadatatags=allmd;
-                
-        
         end
         
     end
@@ -146,11 +154,14 @@ end
 
 function image=readstack(obj,imagenumber)
 img=obj.reader.getImage(0,0,imagenumber-1,0);
+imgpos={0,0,imagenumber-1,0};
 if isempty(img)
     img=obj.reader.getImage(0,imagenumber-1,0,0);
+    imgpos={0,imagenumber-1,0,0};
 end
 if isempty(img)
     img=obj.reader.getImage(0,0,0,imagenumber-1);
+    imgpos={0,0,0,imagenumber-1};
 end
 if isempty(img)
     image=[];
@@ -166,6 +177,32 @@ image=img.pix;
          image2(ind)=2^16-uint16(-image(ind));
         image=image2;
     end
+
+if ~isempty(obj.readoutimgtags)
+    imgmeta=obj.reader.getImageTags(imgpos{:});
+    if obj.init
+        obj.imtags=zeros(length(obj.readoutimgtags),obj.metadata.numberOfFrames);
+%          for k=1:length(obj.readoutimgtags)
+%                 if ischar(imgmeta.get(obj.readoutimgtags{k}))
+%                     obj.imtags{k}=strings(1,obj.metadata.numberOfFrames);
+%                 else
+%                     obj.imtags{k}=zeros(1,obj.metadata.numberOfFrames);
+%                 end
+                obj.init=false;
+%          end  
+    end   
+    
+    for k=1:length(obj.readoutimgtags)
+        tag=imgmeta.get(obj.readoutimgtags{k});
+        if ischar(tag)
+            obj.imtags(k,imagenumber)=str2double(tag);
+        else
+            obj.imtags(k,imagenumber)=(tag);
+        end
+    end
+end
+
+% obj.imtags{:,imagenumber}
 % else
 %     image=[];
 % end
@@ -177,3 +214,16 @@ image=img.pix;
 %    end
 end
 
+function initimagetags(obj)
+        camset=obj.getPar('loc_cameraSettings');
+%         obj.imtags={};
+        if ~isempty(camset)&& myisfield(camset,'imagemetadata') && ~isempty(camset.imagemetadata)
+            if iscell(camset.imagemetadata)
+                obj.readoutimgtags=camset.imagemetadata;
+            else
+                obj.readoutimgtags=split(camset.imagemetadata,',');
+            end
+            obj.readoutimgtags=strtrim(obj.readoutimgtags);
+            obj.init=true;
+        end    
+end

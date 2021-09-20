@@ -41,7 +41,7 @@ end
    try
         [io]=imloader(varargin{:});
    catch err
-       err
+       disp(getReport(err, 'extended', 'hyperlinks', 'on'))
        disp('simple tiff loader loader')
        imloader=@imageloaderTifSimple;
        io=imloader(varargin{:});

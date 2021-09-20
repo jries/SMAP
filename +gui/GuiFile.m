@@ -108,7 +108,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             catch err
                 ext='*.*';
                 title='format not specified';
-                err
+                disp(getReport(err, 'extended', 'hyperlinks', 'on'))
             end
             if nargin<5
             [f,pfad]=uigetfile(ext,title,path,'MultiSelect','on');
@@ -122,7 +122,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 catch err
                     obj.status('file type not recognized');
                     warning('file type not recognized');
-                    err
+                    disp(getReport(err, 'extended', 'hyperlinks', 'on'))
 %                     return
                 end
 %                 [~,~,ext]=fileparts(f{1});
@@ -289,7 +289,8 @@ function autosave_timer(a,b,obj)
 p.mainGui=obj.getPar('mainGui');
 p.saveroi=false;
 if obj.guihandles.autosavecheck.Value
-    savesml(obj.locData,'settings/temp/autosave_sml',p)
+    settingsdir=obj.getPar('SettingsDirectory');
+    savesml(obj.locData,[settingsdir filesep 'temp' filesep 'autosave_sml'],p)
     time=datetime('now');
     disp(['autosave: ' num2str(time.Hour) ':' num2str(time.Minute)])
 end

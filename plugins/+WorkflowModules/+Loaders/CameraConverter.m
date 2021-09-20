@@ -2,10 +2,10 @@ classdef CameraConverter<interfaces.WorkflowModule
 %     Interprets metadata and converts camera ADUs into photons- Metadata
 %     can be overwritten manually or loaded from a SMAP _sml.mat data file.
     properties
-        calfile='settings/CameraCalibration.xls';
+        calfile;
         loc_cameraSettings=interfaces.metadataSMAP;
         loc_cameraSettingsStructure=struct('EMon',1,'emgain',1,'conversion',1,'offset',400,'cam_pixelsize_um',0.1,...
-            'roi',[],'exposure',1,'timediff',0,'comment','','correctionfile','');        
+            'roi',[],'exposure',1,'timediff',0,'comment','','correctionfile','','imagemetadata','');        
         EMexcessNoise;
         calibrategain=false;
         calibratecounter
@@ -47,8 +47,7 @@ classdef CameraConverter<interfaces.WorkflowModule
            obj.guihandles.calibrate.Callback={@calibrate_callback,obj};
             obj.outputParameters={'loc_cameraSettings'};
            obj.addSynchronization('loc_fileinfo_set',[],[],@obj.setmetadata)
-            obj.inputParameters={'diffrawframes'};
-           
+            obj.inputParameters={'diffrawframes'};          
         end
         function setmetadata(obj,overwrite)
             if nargin<2
@@ -74,7 +73,7 @@ classdef CameraConverter<interfaces.WorkflowModule
                 settings=obj.getPar('loc_fileinfo');
                 fn=fieldnames(settings);
                 if lock
-                    lockedfields={'Width','Height','roi','exposure','emgain','EMon','conversion','offset','cam_pixelsize_um','timediff','comment','correctionfile'};
+                    lockedfields={'Width','Height','roi','exposure','emgain','EMon','conversion','offset','cam_pixelsize_um','timediff','comment','correctionfile','imagemetadata'};
                     fn=setdiff(fn,lockedfields);
                 end
                 for k=1:length(fn)
@@ -159,13 +158,13 @@ classdef CameraConverter<interfaces.WorkflowModule
            if p.emmirror && obj.loc_cameraSettings.EMon  
                     imgp=imgp(:,end:-1:1);
            end
-           if isempty(obj.offsetmapuse)
-                loadcamcalibrationfile(obj,p,imgp);
-           end
+
            if p.correctcamera %apply offset and brightfield correction
                % scmosroi 
-
-               imphot=(single(imgp)-obj.offsetmapuse)./obj.gainuse;   
+               if isempty(obj.offsetmapuse)
+                    loadcamcalibrationfile(obj,p,imgp);
+               end
+               imphot=(single(imgp)-obj.offsetmapuse)*obj.gainuse;   
 %                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
 %                    ./obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
            else
@@ -229,9 +228,9 @@ for k=length(fn):-1:1
     fields{k}=description.(fn{k});
 %     fields{k}=fn{k};
     if myisfield(fi,fn{k})
-        defAns{k}=num2str(fi.(fn{k}));
+        defAns{k}=converttostring(fi.(fn{k}));
     else
-        defAns{k}=num2str(obj.loc_cameraSettings.(fn{k}));
+        defAns{k}=converttostring(obj.loc_cameraSettings.(fn{k}));
     end
 end
 answer=inputdlg(fields,'Acquisition settings',1,defAns);
@@ -312,11 +311,18 @@ function loadcamcalibrationfile(obj,p,imgp)
        if any(size(obj.gainmap)<roi(1:2)+roi(3:4)) %gainmap too small
            roi(1:2)=0;
        end
-       gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
-       obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+%        roi(1)=roi(1)+5 %test
+%        gainhere=(obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)));
+%        obj.offsetmapuse=obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+%        obj.gainuse=median(gainhere(:));
+%        varmap=obj.varmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+        
+%        This seems to work together with the calibrateCMOS.m plugin
+       gainhere=(obj.gainmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3)));
+       obj.offsetmapuse=obj.offsetmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3));
        obj.gainuse=median(gainhere(:));
-
-       varmap=obj.varmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4));
+       varmap=obj.varmap(roi(2)+1:roi(2)+roi(4),roi(1)+1:roi(1)+roi(3));
+       
         obj.setPar('cam_varmap',varmap);
     
     else
@@ -361,6 +367,18 @@ function mirrorem_callback(a,b,obj)
 %             end
 %             obj.setPar('loc_fileinfo',fileinf);
 % end
+end
+
+function out=converttostring(in)
+if iscell(in)
+    out=join(in,',');
+    out=out{1};
+elseif ischar(in)
+    out=in;
+else
+    out=num2str(in);
+end
+
 end
 
 function pard=guidef(obj)

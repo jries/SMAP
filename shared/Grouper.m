@@ -22,6 +22,9 @@ classdef Grouper< interfaces.LocDataInterface
           % locprecs count, then it should not matter much which we take or
           % if we just take 1/sqrt(N). For performance: keep only one
           % weighting. E.g. locprecnm or N
+          obj.combinemodes.channel='mean';  
+          obj.combinemodes.color='mean';
+            obj.combinemodes.LLsecond='min';
             obj.combinemodes.xnm='mean';
             obj.combinemodes.ynm='mean';
             obj.combinemodes.znm='mean';

@@ -208,7 +208,7 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
             while obj.guihandles.stop.Value==0
                 checksml=p.omitsml;
 %                 profile on
-                imf=findunprocessed(p.filelist.selection,p,obj.dirsprocessed,checksml)
+                imf=findunprocessed(p.filelist.selection,p,obj.dirsprocessed,checksml);
 %                 profile viewer
 %                 imf=findimageindir(p.filelist.selection,p);
 %                 unprocessed=setdiff(imf,obj.filesprocessed);
@@ -240,7 +240,7 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
             loadergui=wf.module(wf.startmodule);
             loader=loadergui.loaders{loadergui.getGuiParameters.loaderlist.Value};
             tiffile=loader.getGuiParameters.tiffile;
-            loader.addFile(tiffile);
+            loader.addFile(tiffile,true);
 %             tiffile=wf.module(wf.startmodule).getGuiParameters.tiffile;
 %             wf.module(wf.startmodule).addFile(tiffile);
             wf.run;  
@@ -255,7 +255,7 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
             wf.attachLocData(ld);
             wf.makeGui;
             wf.load(p.mainbatchfile,[],true,true);
-            wf.module(wf.startmodule).addFile(tiffile);
+            wf.module(wf.startmodule).addFile(tiffile,true);
             wf.module(wf.startmodule).setoutputfilename;
             disp(mytextsplit(wf.description));
             wf.run;

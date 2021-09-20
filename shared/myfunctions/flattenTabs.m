@@ -14,10 +14,12 @@ function newf = flattenTabs(varargin)
     newf = figure;
     
     for k = nTabs:-1:1
-        [currentCol, currentRow] = ind2sub([nrow ncol],k);
+        [currentRow,currentCol] = ind2sub([nrow ncol],k);
         newFtabGrp{k} = uitabgroup(newf);
         c = copy(tabGrp.Children(k));
         c.Parent = newFtabGrp{k};
         newFtabGrp{k}.Position = [(currentCol-1)/ncol (nrow-currentRow)/nrow 1/ncol 1/nrow];
     end
+    pos = f.Position;
+    newf.Position(3:4) = pos(3:4).*[ncol nrow];
 end

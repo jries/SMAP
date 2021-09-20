@@ -25,8 +25,6 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             settingsdir=obj.getPar('SettingsDirectory');
             f=obj.figure;
             f.Visible='on';
-%             wffile='settings/workflows/get2CIntensityImagesWF_group.mat';
-%             wffile='settings/workflows/get2CIntensityImagesWF2';
             if p.evalref && p.evaltarget && ( isempty(p.tiffileref) || strcmp(p.tiffileref,p.tiffiletarget))  %both channels on one chip
                 wffile=[settingsdir filesep 'workflows' filesep 'get2CIntensityImagesWF3_reftarget'];
                 samechip=true;
@@ -75,6 +73,7 @@ classdef Get2CIntImages2cam<interfaces.DialogProcessor
             else
                 % now first to ref, then do target. Later: if files are same:
                 % do at the same time to save time...
+                wf.module('IntLoc2posN').samechip=false;
                 if p.evaltarget
                     obj.setPar('intensity_channel','t')
                     wf.module('TifLoader').addFile(p.tiffiletarget,true);   

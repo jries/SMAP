@@ -227,7 +227,7 @@ obj.rois{channel}.Position=src.Position;
 end
 
 function drawhistogram(obj,ax,n1,n2,islog)
-mx=(max(quantile(n1,.99995), quantile(n2,.99995)));
+mx=(max(quantile(n1,.99995), quantile(n2,.99995)))*1.1;
 % m0=(min(quantile(n1,.005), quantile(n2,.005)));
 
 dp=0.02;

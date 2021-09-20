@@ -2,6 +2,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
 %     Global fitter for multiple channels.
     properties
         fitpar
+        varmap
     end
     methods
         function obj=MLE_global_spline(varargin)
@@ -25,11 +26,9 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                     obj.fitpar.link=obj.fitpar.link([2 1 4 5 3 6]);
                     obj.fitpar.fitfunction=@mleFit_LM_4Pi;
                 case 'Gauss'
-                     obj.fitpar.fitfunction=@mleFit_LM_global_gauss;
-                     disp('only implemented for symmetric Gauss: fittype=2');
+                     obj.fitpar.fitfunction=@mleFit_LM_global;
                 otherwise
                     obj.fitpar.fitfunction=@mleFit_LM_global; %later: include single channel, decide here
-%                     GPUmleFit_LM_MultiChannel_Gauss
             end
              transform=obj.getPar('loc_globaltransform');
              
@@ -47,7 +46,7 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
             roisize=obj.getPar('loc_ROIsize');
             obj.numberInBlock=round(obj.fitpar.roisperfit*100/roisize^2/12)*12;
             
-            if obj.fitpar.fitmode==5 ||obj.fitpar.fitmode==6              
+            if obj.fitpar.fitmode==2           
                 obj.fitpar.mirrorstack=false; %later: remove completely
                 p=obj.getAllParameters;
                 if p.overwritePixelsize
@@ -67,15 +66,12 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
         end
 
         function locs=fit(obj,imstack,stackinfo)
-            if obj.fitpar.fitmode==3
-                X=stackinfo.X;Y=stackinfo.Y;
-                obj.fitpar.zparhere=[obj.fitpar.zpar{X,Y}(:)];
-            elseif obj.fitpar.fitmode==5 || obj.fitpar.fitmode==6
+            if  obj.fitpar.fitmode==2
                 X=stackinfo.X;Y=stackinfo.Y;
                 obj.fitpar.splinefithere=[obj.fitpar.splinefit{X,Y}(:)];
             end
-            if obj.fitpar.issCMOS
-                varstack=getvarmap(obj.fitpar.varmap,stackinfo,size(imstack,1));
+            if obj.fitpar.isscmos
+                varstack=getvarmap(obj,stackinfo,size(imstack,1));
             else
                 varstack=0;
             end
@@ -114,17 +110,17 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
     end
 end
 
-function loadscmos_callback(a,b,obj)
-fs=obj.getSingleGuiParameter('scmosfile');
-if isempty(fs)
-    fs='*.*';
-end
-[file,pfad]=uigetfile(fs);
-if file
-    obj.setGuiParameters(struct('scmosfile',[pfad file]))
-end
-
-end
+% function loadscmos_callback(a,b,obj)
+% fs=obj.getSingleGuiParameter('scmosfile');
+% if isempty(fs)
+%     fs='*.*';
+% end
+% [file,pfad]=uigetfile(fs);
+% if file
+%     obj.setGuiParameters(struct('scmosfile',[pfad file]))
+% end
+% 
+% end
 
 
 function locs=fit2locs_global(results,stackinfo,fitpar,image)
@@ -149,6 +145,9 @@ P=results.P;
 EMexcess=fitpar.EMexcessNoise;
 CRLB=results.CRLB;
 LogL=results.LogL;
+color=results.color;
+llsecond=results.llsecond;
+
            CRLB(isnan(CRLB))= 0; %XXXXXXXXX
            LogL(isnan(LogL))= 0; %XXXXXXXXX
            CRLB((CRLB)<0)= 0; %XXXXXXXXX
@@ -188,9 +187,13 @@ switch fitpar.mode
         faccrlb{3}=fitpar.dz*fitpar.refractive_index_mismatch;
         names={'ypix','xpix','znm','phot','bg'};
         namesav={'ypix','xpix','znm','phot'};
-        namesphot={'bg','phot'};
+         sx=1*v1;
+        locs.PSFxpix=sx;
+        locs.PSFypix=sx;
+
 end
 
+namesphot={'bg','phot'};
 % locs.phot=P(:,4)*EMexcess;
 % locs.bg=P(:,5)*EMexcess;
 
@@ -200,10 +203,7 @@ locs.logLikelihood=LogL;%/sum(fitpar.weightsch);
 
 locs.peakfindx=posx;
 locs.peakfindy=posy;
-   
-         sx=1*v1;
-        locs.PSFxpix=sx;
-        locs.PSFypix=sx;
+
 % end
 
 % fac and faccrlb should be of length(channels). Then use for each channel.
@@ -267,6 +267,10 @@ for k=1:length(names)
     end
 end
 locs.iterations=P(:,end);
+if ~isempty(color)
+    locs.color=color;
+    locs.LLsecond=llsecond;
+end
 global testloc
 testloc=locs;
 end
@@ -377,8 +381,6 @@ end
 function out=fitwrapper_global(imstack,fitpar,stackinfo,varstack)
 numberOfChannels=2;
 nfits=ceil(size(imstack,3)/numberOfChannels);
-npar=5;
-
 
 s=size(imstack);
 if length(s)==2 
@@ -388,25 +390,23 @@ if s(3)<numberOfChannels  %sorting: needs at least two
     out=[];
  return
 end
-% fitpar=obj.fitpar;
+
 EMexcess=fitpar.EMexcessNoise;
 if isempty(EMexcess)
     EMexcess=1;
 end
          
-dT=zeros(npar,2,(nfits));
-dT(1,1,:)=stackinfo.dy(1:numberOfChannels:end); %for nonrounding
-dT(2,1,:)=stackinfo.dx(1:numberOfChannels:end);
-
-dT(1,2,:)=stackinfo.dy(2:numberOfChannels:end);
-dT(2,2,:)=stackinfo.dx(2:numberOfChannels:end);
-
-disp('check MLE_globalspline')
+channelshift=zeros(2,2,(nfits)); %only pass on for x,y
+channelshift(1,1,:)=stackinfo.dy(1:numberOfChannels:end); %for nonrounding
+channelshift(2,1,:)=stackinfo.dx(1:numberOfChannels:end);
+channelshift(1,2,:)=stackinfo.dy(2:numberOfChannels:end);
+channelshift(2,2,:)=stackinfo.dx(2:numberOfChannels:end);
 
 imfit(:,:,:,1)=imstack(:,:,1:numberOfChannels:end);
 if isfield(fitpar,'mirrorud') && fitpar.mirrorud
     imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
-    dT(1,2,:)=-dT(1,2,:);
+    channelshift(1,2,:)=-channelshift(1,2,:);
+    mirr=2;
 elseif isfield(fitpar,'mirror')  %now only mirror channel two!
     mirr=fitpar.mirror{2};
     if length(mirr)>1
@@ -417,105 +417,97 @@ elseif isfield(fitpar,'mirror')  %now only mirror channel two!
             imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
         case 1 %righ-left mirror
             imfit(:,:,:,2)=imstack(:,end:-1:1,2:numberOfChannels:end);
-            dT(2,2,:)=-dT(2,2,:);
+            channelshift(2,2,:)=-channelshift(2,2,:);
         case 2 %up-down mirror
             imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
-            dT(1,2,:)=-dT(1,2,:);
+            channelshift(1,2,:)=-channelshift(1,2,:);
     end
-
-    
 else
     imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
 end
 
+if fitpar.isscmos %mirror varmap if required
+    varfit(:,:,:,1)=varstack(:,:,1:numberOfChannels:end);
+    mirr=fitpar.mirror{2};
+    if length(mirr)>1
+        mirr=mirr(1)+2*mirr(2);
+    end
+    switch mirr
+        case 0 %no mirror
+            varfit(:,:,:,2)=varstack(:,:,2:numberOfChannels:end);
+        case 1 %righ-left mirror
+            varfit(:,:,:,2)=varstack(:,end:-1:1,2:numberOfChannels:end);
+        case 2 %up-down mirror
+            varfit(:,:,:,2)=varstack(end:-1:1,:,2:numberOfChannels:end);
+    end
+else 
+    varfit=[];
+end
+
+
 if fitpar.weightsch(1)~=1
     imfit(:,:,:,1)=imfit(:,:,:,1)*fitpar.weightsch(1);
+    varfit(:,:,:,1)=varfit(:,:,:,1)*fitpar.weightsch(1);
 end
 if fitpar.weightsch(2)~=1
     imfit(:,:,:,2)=imfit(:,:,:,2)*fitpar.weightsch(2);
+    varfit(:,:,:,2)=varfit(:,:,:,2)*fitpar.weightsch(2);
 end
 
 numframes=size(imfit,3); 
-sharedA = repmat(int32(fitpar.link(1:5)'),[1 numframes]);
-out.indused=1:numberOfChannels:numframes*numberOfChannels;   %XXXXXXX check. Wrong? results shoud be only displayed in one channel
+sharedA=fitpar.link(1:5)';
+out.indused=1:numberOfChannels:numframes*numberOfChannels;   
+%imstack, fittype, sharedflag, iterations, spline coefficients, channelshift,
+%cmos varmap, silent,zstart,photratios
+
+arguments{1}=imfit/EMexcess; %imagestack
+arguments{3}=uint32(sharedA);
+arguments{4}=uint32(fitpar.iterations);
+arguments{6}=single(channelshift);
+arguments{7}=varfit; %sCMOS varmap
+arguments{8}=1; %silent
+
 
 switch fitpar.mode
     case 'Gauss'
-        arguments{1}=imfit/EMexcess;
-        arguments{2}=uint32(2);
-        arguments{3}=uint32(sharedA);
-        arguments{4}=uint32(fitpar.iterations);
+        arguments{2}=uint32(1);
         arguments{5}=single(fitpar.PSFx0);
-        arguments{6}=single(dT); %XXXXXXXXXX
-        %imstack, sharedflag, iterations, spline coefficients, channelshift,
-        %fitmode, varmap
-%         arguments{6}=fitpar.fitmode;
-%         arguments{7}=fitpar.zstart/fitpar.dz;
+        arguments{9}=[];
+        arguments{10}=fitpar.PhotonRatios;
     case {'Spline','cspline'}
-        arguments{1}=imfit/EMexcess;
-        arguments{2}=sharedA;
-        arguments{3}=fitpar.iterations;
-        arguments{4}=single(fitpar.splinefithere.coeff);
-        arguments{5}=single(dT); %XXXXXXXXXX
-        %imstack, sharedflag, iterations, spline coefficients, channelshift,
-        %fitmode, varmap
-%         arguments{6}=fitpar.fitmode;
-        arguments{6}=fitpar.zstart/fitpar.dz;
+        arguments{2}=uint32(2);
+        arguments{5}=single(fitpar.splinefithere.coeff);    
+        arguments{9}=fitpar.zstart/fitpar.dz;
+        arguments{10}=fitpar.PhotonRatios/fitpar.splinefithere.normf(2);
     otherwise
         disp('fitmode not implemented for global fitting')
 end
 
-[P CRLB LogL]=fitpar.fitfunction(arguments{:});
-
+[P, CRLB, LogL, color,llsecond]=fitpar.fitfunction(arguments{:});
 
 %subtract dT for y
 if fitpar.link(1)
-    P(:,1)=P(:,1)+squeeze(dT(1,1,:));
+    P(:,1)=P(:,1)+squeeze(channelshift(1,1,:));
     ind2=1;
 else
-    P(:,1)=P(:,1)+squeeze(dT(1,1,:));
-    P(:,2)=P(:,2)+squeeze(dT(1,1,:));
+    P(:,1)=P(:,1)+squeeze(channelshift(1,1,:));
+    P(:,2)=P(:,2)+squeeze(channelshift(1,1,:));
     ind2=2;
 end
 
 %subtract dT for x
 if fitpar.link(2)
-    P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(channelshift(2,1,:));
 else
-    P(:,ind2+1)=P(:,ind2+1)+squeeze(dT(2,1,:));
-    P(:,ind2+2)=P(:,ind2+2)+squeeze(dT(2,1,:));
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(channelshift(2,1,:));
+    P(:,ind2+2)=P(:,ind2+2)+squeeze(channelshift(2,1,:));
 end
-
-% [PG,CRLBG, LLG] =  GPUmleFit_LM_MultiChannel_Gauss(d_data,2 (fitmode),uint32(sharedA),iterations,single(PSFstart),single(dT));
-
-
-% [P, CRLB,LogL, res]=CPUmleFit_LM_MultiChannel_R(arguments{:});
-% htot=P(:,8)
-% 
-% arguments{5}=varstack;
-% arguments{6}=1;
-% 
-%     switch fitpar.fitmode
-%         case {1,2,4} %fix
-%             arguments{4}=fitpar.PSFx0;
-%             arguments{1}=single(imstack/EMexcess);
-% %         case 2 %free
-%         case 3 %z
-%             arguments{1}=single(imstack/EMexcess);
-%             arguments{4}=single(fitpar.zparhere);
-% %         case 4 %sx sy
-%         case {5,6} %spline   
-%             if fitpar.mirrorstack
-%                 arguments{1}=single(imstack(:,end:-1:1,:)/EMexcess);
-%             else
-%                 arguments{1}=single(imstack/EMexcess);
-%             end
-%             arguments{4}=single(fitpar.splinefithere.cspline.coeff);
-%     end
 
 out.P=P;
 out.CRLB=CRLB;
- out.LogL=LogL;
+out.LogL=LogL;
+out.color=color;
+out.llsecond=llsecond;
 end
  
 function out=fitwrapper_4pi(imstack,fitpar,stackinfo,varstack)
@@ -651,22 +643,27 @@ if f
         msgbox('no 3D data recognized. Select other file.');
     end
     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
-     obj.setPar('cal_3Dfile',[p f]);
-%     if isfield(l,'transformation')
-%         obj.setPar('transformationfile',[p f]);
-%     end
-       
+     obj.setPar('cal_3Dfile',[p f]); 
 end
 end
 
 function fitpar=getfitpar(obj)
+%get all necessary parameters for fitting and store them 
 p=obj.getAllParameters;
+
+%p.isscmos=false; %re-implement later
 fitpar.iterations=p.iterations;
 fitpar.fitmode=p.fitmode.Value;
 fitpar.roisperfit=p.roisperfit;
-fitpar.issCMOS=false;
+fitpar.isscmos=p.isscmos;
 fitpar.mainchannel=p.mainchannel.Value;
 fitpar.weightsch=p.weightsch;
+fitpar.fixPhot=p.fixPhot;
+if fitpar.fixPhot
+    fitpar.PhotonRatios=p.PhotonRatios;
+else
+    fitpar.PhotonRatios=[];
+end
 if length(fitpar.weightsch)==1
     fitpar.weightsch(2)=1;
 end
@@ -675,13 +672,9 @@ for k=1:size(p.globaltable.Data,1)
 end
 fitpar.link=[p.globaltable.Data{:,1}];
 fitpar.zstart=p.zstart;
-if fitpar.fitmode==3||fitpar.fitmode==5
-    fitpar.issCMOS=p.isscmos;
-%     fitpar.PSF2D=p.fit2D;
-%     if p.fit2D
-%         fitpar.fitmode=6;
-%     end
-    
+if fitpar.fitmode==2 %calibration file
+     fitpar.isscmos= p.isscmos;
+  
     calfile=p.cal_3Dfile;
     cal=load(calfile);
 
@@ -697,20 +690,15 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         end
         s=size(SS);
         Z=1;
-%         if p.useObjPos
-%             zr=cal.SXY(1).Zrangeall;
-%             zr(1)=[];zr(end)=inf;
-%             Z=find(p.objPos<=zr,1,'first');
-%         end
+
         for X=s(1):-1:1
             for Y=s(2):-1:1
-%                     if isfield(cal.SXY(X,Y,Z),'gauss_zfit')
-                zpar{X,Y}=SS(X,Y,Z).gauss_zfit;
-%                     else
-%                         zpar{X,Y}=[];
-%                     end
-                %global:combine splines
-%                 cs=cal.SXY(X,Y,Z).cspline_all;
+                    if isfield(cal.SXY(X,Y,Z),'gauss_zfit')
+                        zpar{X,Y}=SS(X,Y,Z).gauss_zfit;
+                    else
+                        zpar{X,Y}=[];
+                    end
+
                 cs=SS(X,Y,Z).cspline;
                 if iscell(cs.coeff)
                     coeff(:,:,:,:,1)=cs.coeff{1};
@@ -720,8 +708,6 @@ if fitpar.fitmode==3||fitpar.fitmode==5
                 splinefit{X,Y}=cs;
                 obj.spatialXrange{X,Y}=SS(X,Y).Xrange;
                 obj.spatialYrange{X,Y}=SS(X,Y).Yrange;
-                
-
             end
         end
         if ~isempty(splinefit{1})
@@ -736,12 +722,7 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         else
             obj.spatial3Dcal=false;
         end
-%         xr=SS(1,1).Xrangeall;
-%         xr(1)=-inf;xr(end)=inf;
-%         yr=SS(1,1).Yrangeall;
-%         yr(1)=-inf;yr(end)=inf;
-%         obj.spatialXrange=xr;
-%         obj.spatialYrange=yr;
+
         fitpar.EMon=SS(1).EMon;
         fitpar.mode='cspline';
     elseif isfield(cal,'cspline')
@@ -779,27 +760,6 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         else 
             varmap=[];
         end
-%         [~,~,ext]=fileparts(p.scmosfile);
-%         switch ext
-%             case '.tif'
-%                 varmaph=imread(p.scmosfile);
-%             case '.mat'
-%                 varmaph=load(p.scmosfile);
-%                 if isstruct(varmaph)
-%                     fn=fieldnames(varmaph);
-%                     varmaph=varmaph.(fn{1});
-%                 end
-%             otherwise
-%                 disp('could not load variance map. No sCMOS noise model used.')
-%                 p.isscmos=false;
-%                 fitpar.issCMOS=false;
-%                 varstack=0;
-%                 varmaph=[];
-%         end
-%         if ~isempty(varmaph)
-%             roi=p.loc_cameraSettings.roi;
-%             varmap=varmaph(max(1,roi(1)):roi(3),max(1,roi(2)):roi(4));
-%         end
     else 
         varmap=[];
     end
@@ -810,15 +770,6 @@ if fitpar.fitmode==3||fitpar.fitmode==5
         fitpar.refractive_index_mismatch=1;
     end
 
-
-% elseif fitpar.fitmode==5
-%     calfile=p.cal_3Dfile;
-%     cal=load(calfile);
-%     fitpar.splinecoefficients=single(cal.cspline.coeff);
-%     fitpar.z0=cal.z0;
-%     fitpar.dz=cal.dz; 
-%     fitpar.refractive_index_mismatch=p.refractive_index_mismatch;
-%     fitpar.objPos=p.objPos;
     
 else
     fitpar.mode='Gauss';
@@ -832,33 +783,28 @@ end
 
 end
 
-function varstack=getvarmap(varmap,stackinfo,roisize)
+function varstack=getvarmap(obj,stackinfo,roisize)
+if isempty(obj.varmap)
+    obj.varmap=obj.getPar('cam_varmap');
+    if isempty(obj.varmap)
+        disp('no sCMOS variance map found');
+    end
+end
 numim=length(stackinfo.xpix);
 varstack=zeros(roisize,roisize,numim,'single');
 dn=floor(roisize/2);
 for k=1:numim
-%     stackinfo.x(k)
-%     stackinfo.y(k)
-    varstack(:,:,k)=varmap(stackinfo.xpix(k)-dn:stackinfo.xpix(k)+dn,stackinfo.ypix(k)-dn:stackinfo.ypix(k)+dn);
+    varstack(:,:,k)=obj.varmap(stackinfo.ypix(k)-dn:stackinfo.ypix(k)+dn,stackinfo.xpix(k)-dn:stackinfo.xpix(k)+dn);
+    %varstack(:,:,k)=obj.varmap(stackinfo.xpix(k)-dn:stackinfo.xpix(k)+dn,stackinfo.ypix(k)-dn:stackinfo.ypix(k)+dn);
 end
 end
 
 function fitmode_callback(a,b,obj)
 p=obj.getGuiParameters;
 fitmode=p.fitmode.Value;
-% fitz={'loadcal','cal_3Dfile','trefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','pixelsizex','pixelsizey','automirror','fit2D','isscmos','selectscmos','scmosfile'};
-% fitxy={'PSFx0','tPSFx0'};
-% switch fitmode
-%     case {3,5}
-%         ton=fitz;
-%         toff=fitxy;
-%     otherwise
-%         toff=fitz;
-%         ton=fitxy;
-% end
 
 switch fitmode
-    case {1,2}
+    case {1}
         roisize=7;
         iterations=30;
         RowName={'x','y','N','Bg','PSF',' '};
@@ -871,22 +817,21 @@ end
 
 obj.setPar('loc_ROIsize',roisize);
 
-% obj.fieldvisibility('on',ton,'off',toff);
+
 obj.setGuiParameters(struct('iterations',iterations));
 obj.guihandles.globaltable.RowName=RowName;
 end
 
+
+
 function pard=guidef(obj)
 p1(1).value=1; p1(1).on={'PSFx0','tPSFx0'}; 
 p1(1).off={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize',...
-    'fit2D','isscmos','pixelsizex','pixelsizey','selectscmos','scmosfile'};
-p1(2)=p1(1);p1(2).value=2;
-p1(3).value=3;p1(3).off={'PSFx0','tPSFx0'};p1(3).on={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','fit2D','isscmos'};
-p1(4)=p1(1);p1(4).value=4;
-p1(5)=p1(3);p1(5).value=5;
-p1(6)=p1(5);p1(6).value=6;
+    'fit2D','pixelsizex','pixelsizey'};
+p1(2).value=2;p1(2).off={'PSFx0','tPSFx0'};p1(2).on={'loadcal','cal_3Dfile','userefractive_index_mismatch','refractive_index_mismatch','overwritePixelsize','fit2D'};
 
-pard.fitmode.object=struct('Style','popupmenu','String',{{'PSF fix','PSF free','3D z','ellipt: PSFx PSFy','Spline'}},'Value',2,'Callback',{{@obj.switchvisible,p1,{@fitmode_callback,0,0,obj}}});
+
+pard.fitmode.object=struct('Style','popupmenu','String',{{'PSF free','Spline'}},'Value',1,'Callback',{{@obj.switchvisible,p1,{@fitmode_callback,0,0,obj}}});
 pard.fitmode.position=[1,1];
 pard.fitmode.Width=1.5;
 pard.fitmode.TooltipString=sprintf('Fit mode. Fit with constant PSF, free PSF, 3D with astigmatism, asymmetric PSF (for calibrating astigmatic 3D)');
@@ -1046,9 +991,22 @@ pard.isscmos.Optional=true;
 %     pard.scmosfile.Width=.5;
     
 pard.asymmetry.object=struct('Style','checkbox','String','get asymmetry');   
-pard.asymmetry.position=[5,1];
+pard.asymmetry.position=[7,3];
 pard.asymmetry.Optional=true;
     
+
+p(1).value=0; p(1).on={}; p(1).off={'PhotonRatios'};
+p(2).value=1; p(2).on={'PhotonRatios'}; p(2).off={};
+
+pard.fixPhot.object=struct('Style','checkbox','String','Multi color: fix ratio to: ','Callback',{{@obj.switchvisible,p}});   
+pard.fixPhot.position=[6,1];
+pard.fixPhot.Optional=true;
+pard.fixPhot.Width=1.5;
+
+pard.PhotonRatios.object=struct('Style','edit','String','1 1');%,'Callback',{{@obj.switchvisible,p}});   
+pard.PhotonRatios.position=[6,2.5];
+pard.PhotonRatios.Optional=true;
+pard.PhotonRatios.Width=1.5;
 
 
 pard.syncParameters={{'cal_3Dfile','',{'String'}}};
