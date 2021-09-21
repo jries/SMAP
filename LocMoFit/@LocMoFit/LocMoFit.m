@@ -18,7 +18,8 @@ classdef LocMoFit<matlab.mixin.Copyable
         roiSize = 300;          % The size of region of interest in unit of nm.
         imgExtension = 0;       % The extention of image size than the roi size.
         dataDim = 3;            % The dimension of the data.
-        allModelLayer           % The layer for the corresponding model.
+        allModelLayer           % The unique numbers of layers used by models.
+        modelLayer              % The layer for the corresponding model.
         sigmaCascade = 1;       % The sigma factor for each step of the sequential cascade fit.
         modelVerCascade = 1;    % For locs model only. Allow the user to specify different versions of the same model for different cascade steps.
         refPoint_spacing = 0.75;% The spacing bwteen sampled ref points. In the unit of sigma.
@@ -104,6 +105,9 @@ classdef LocMoFit<matlab.mixin.Copyable
         converter(obj, source, rule, target)
         [totalIntensity,wk,LLctrl] = intensityCal(obj, fitPars, locs)
         [ax,finalImg] = plot(obj,locs,varargin)
+        modPoint = getModPoint(obj, modelSamplingFactor)
+        layerPoint = getLayerPoint(obj, modSamplingF)
+        modPoint = transModPoint(obj, modPoint)
         fit(obj, locs, varargin)
         convertNow(obj, locs)
         stop = plotFreeRot(obj, varargin)
@@ -286,25 +290,25 @@ classdef LocMoFit<matlab.mixin.Copyable
         %% for layers
         function updateLayer(obj)
             % Manage layer-dependent offsets.
-            currentLayerInUse= unique(getFieldAsVector(obj.model,'layer')); % the layers where models belongs to
+            obj.modelLayer = getFieldAsVector(obj.model,'layer'); % the layers where models belong to
             oldLayerInUse = obj.allModelLayer;
-            obj.allModelLayer = currentLayerInUse;
+            obj.allModelLayer = unique(obj.modelLayer);
             
             % Remove layers not in use.
             for k = 1:length(oldLayerInUse)
-                lLayerRm = ~ismember(oldLayerInUse(k),currentLayerInUse);
+                lLayerRm = ~ismember(oldLayerInUse(k),obj.allModelLayer);
                 if lLayerRm
                     obj.rmPar(['m9' num2str(oldLayerInUse(k)) '.offset.weight'])
                 end
             end
             
             % Add new layers.
-            indNewLayer = find(~ismember(currentLayerInUse, oldLayerInUse));
+            indNewLayer = find(~ismember(obj.allModelLayer, oldLayerInUse));
             if ~isempty(indNewLayer)
                 offset = defaultOffset(obj, {'weight'});
                 fnO = fieldnames(offset);
                 for k = 1:length(indNewLayer)
-                    modelNumber = 9*10 + currentLayerInUse(indNewLayer(k));
+                    modelNumber = 9*10 + obj.allModelLayer(indNewLayer(k));
                     obj.initLParSelector(modelNumber, true);
                     obj.allParsArg.model = [obj.allParsArg.model; repelem(modelNumber,length(offset.name),1)];
                     obj.allParsArg.type = [obj.allParsArg.type; repelem({'offset'},length(offset.name),1)];
@@ -757,7 +761,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             % Now this is just a placeholder
         	interalLPars = lPars;
         end
-        function interalOffset = convert2InteralOffset(obj, offset)
+        function internalOffset = convert2InteralOffset(obj, offset)
             % This function converts any valid offset to the interanl
             % offset (weight)
             for l = 1:obj.numOfLayer
@@ -765,9 +769,9 @@ classdef LocMoFit<matlab.mixin.Copyable
                 fn = fieldnames(oneOffset);
                 for k = length(fn):-1:1
                     if strcmp(fn,'density')
-                        interalOffset{90+l}.weight = (oneOffset.density*(pi*(obj.roiSize/1000)^2))/obj.numOfLocsPerLayer(l);
+                        internalOffset{90+l}.weight = obj.getBG('weight', l);
                     else
-                        interalOffset{90+l} = oneOffset;
+                        internalOffset{90+l} = oneOffset;
                     end
                 end
             end
@@ -778,19 +782,75 @@ classdef LocMoFit<matlab.mixin.Copyable
             % this unit is locs/um^2
             numOfLayer = obj.numOfLayer;
             for l = numOfLayer:-1:1
+                density(l) = obj.getBG('density', l);
+            end
+        end
+        
+        function BG = getBG(obj, queriedForm, layer)
+            l = layer;
+            numOfLayer = obj.numOfLayer;
+            if strcmp(queriedForm,'density')
+                % density here is defined as the projected density.
+                % this unit is locs/um^2
                 optionValue = obj.advanceSetting.(['m9' num2str(l) '_background']).value;
                 if strcmp(optionValue,'weight')
                     weight = obj.getVariable(['m9' num2str(l) '.weight']);
                     numOfBGLocs = weight*obj.numOfLocsPerLayer(l);
-                    density(l) = numOfBGLocs/(pi*(0.5*obj.roiSize/1000)^2);
+                    BG = numOfBGLocs/(pi*(0.5*obj.roiSize/1000)^2);
                 else
-                    density(l) = obj.getVariable(['m9' num2str(l) '.density']);
+                    BG = obj.getVariable(['m9' num2str(l) '.density']);
                 end
+            elseif strcmp(queriedForm,'weight')
+                optionValue = obj.advanceSetting.(['m9' num2str(l) '_background']).value;
+                if strcmp(optionValue,'weight')
+                    BG = obj.getVariable(['m9' num2str(l) '.weight']);
+                else
+                    density = obj.getVariable(['m9' num2str(l) '.density']);
+                    numOfBGLocs = density*(pi*(0.5*obj.roiSize/1000)^2);
+                    BG = numOfBGLocs./obj.numOfLocsPerLayer(l);
+                end
+            else
+                error(strjoin(["'" queriedForm "' is not a valid option. Use either 'density', 'weight'"], ''))
+            end
+        end
+        
+%         function form = getBGForm(obj, modelnumber)
+%             % This function check the form or the background for a layer
+%             %
+%             % Usage:
+%             %   obj.getBGForm(modelnumber)
+%             %
+%             % Args:
+%             %   modelnumber: a integer indicating the layer. E.g., m9X for
+%             %   the Xth layer.
+%             %
+%             % Returns:
+%             %   form: a char of either 'density' or 'weight'.
+%             
+%             obj.getAllParId
+%         end
+        
+        function getLocsInfo(obj)
+            %% Get locs counts per layer
+            locs = obj.locs;
+            allLocsLayers = unique(locs.layer);
+            obj.numOfLocsPerLayer = histcounts(locs.layer, 1:max(allLocsLayers)+1);
+            obj.representiveLocprec = grpstats(locs.locprecnm, locs.layer, 'median');
+            numOfUsedLocs = sum(obj.numOfLocsPerLayer(obj.allModelLayer));
+            obj.weightLayer = zeros(size(obj.numOfLocsPerLayer));
+            if obj.useCompensation == true
+                numOfLocs_maxLayer = max(obj.numOfLocsPerLayer(obj.allModelLayer));
+                obj.compensationFactor = numOfLocs_maxLayer./obj.numOfLocsPerLayer;
+                obj.weightLayer(obj.allModelLayer) = 1/length(obj.allModelLayer);
+            else
+                obj.compensationFactor(obj.allModelLayer) = 1;
+                obj.weightLayer(obj.allModelLayer) = obj.numOfLocsPerLayer(obj.allModelLayer)/numOfUsedLocs;
             end
         end
         
         function lParSelector(obj, parameterType, parameterForm)
             % Defines the form of parameters to be used
+            % It reacts when a certain form of lPar is selected.
             parameterType = strsplit(parameterType, '_');
             targetModel = parameterType{1};
             targetModel = str2num(targetModel(2:end));
@@ -811,6 +871,7 @@ classdef LocMoFit<matlab.mixin.Copyable
                         lParArg.model = repelem(targetModel,nPar);
                         lParArg.type = repelem({'offset'},nPar);
                         lParArg.label = repelem({''},nPar);
+                        lParArg.value = obj.getBG(parameterForm,targetModel-90);
                         obj.rmPar(lPar2rm)
                         obj.addPar(lParArg)
                     else
@@ -824,6 +885,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             % Initiates the form of parameters to be used
             if isBackground
             	default = defaultLParSelection('background');
+                
             else
                 default = defaultLParSelection('orientation');
             end
@@ -831,6 +893,8 @@ classdef LocMoFit<matlab.mixin.Copyable
             for k = 1:length(fn)
                 default.(fn{k}).name = ['m' num2str(modelnumber) '_' default.(fn{k}).name];
                 default = renameStructField(default,fn{k},['m' num2str(modelnumber) '_' fn{k}]);
+                % Check the form of the background: density or weight?
+%                 obj.getBGForm(modelnumber);
             end
             obj.addAdvanceSettings(default);
         end
@@ -916,6 +980,15 @@ classdef LocMoFit<matlab.mixin.Copyable
         %% For simlulation
         function assignParsVal(obj)
             % In the given range, assign values to the parameters randomly.
+            %
+            % Usage:
+            %   obj.assignParsVal
+            %
+            % Args:
+            %   obj: an LocMoFit object.
+            %
+            % Returns:
+            %   Parameter values saved in obj.allParsArg.
             lSampling = ~obj.allParsArg.fix;
             rangeSampling = obj.allParsArg.ub(lSampling)-obj.allParsArg.lb(lSampling);
             randVal = rand([sum(lSampling) 1]);
@@ -935,21 +1008,24 @@ classdef LocMoFit<matlab.mixin.Copyable
             % Get simulation reference based on the allArgVal.
             %
             % Usage:
-            %   modCoord = getSimRef(obj)
+            %   modCoord = obj.getSimRef(Name-value)
             %
             % Args:
             %   obj: an LocMoFit object.
-            %
+            %   Name-value pairs:
+            %       * 'finalROISize': the final ROI size for fitting. the 
+            %       ROI size for simulations is usually larger than this
+            %       value to make sure the background fills everywhere.
+            %   
             % Returns:
             %   modCoord: reference coordinates.
+            %
             p = inputParser;
             p.addParameter('finalROISize',obj.roiSize)
             p.parse(varargin{:})
             
             finalROISize = p.Results.finalROISize;
-            
-            forTest = 0;
-            
+                        
             % In the given range, assign values to the parameters randomly.
             obj.assignParsVal;
             
@@ -964,32 +1040,20 @@ classdef LocMoFit<matlab.mixin.Copyable
                 obj.model{k}.sigma = 5;
             end
             
-            [~,modCoord] = obj.plot([],'plotType','point','modelSamplingFactor',0.75, 'doNotPlot', true);
+            %% Get the origainl model
+            modCoord = obj.getLayerPoint(0.75);
             
             for k = 1:obj.numOfModel
                 obj.model{k}.sigma = sigma{k};
                 obj.model{k}.sigmaSet = sigmaSet{k};
             end
             
-            for l = 1:length(obj.allModelLayer)
-                % l stands for layer.
-                % Variation is now controled by SMAP as linkage error
-                
-                %% Transform the model
-                modCoord_.xnm = modCoord{l}.x; modCoord_.ynm = modCoord{l}.y;
-                if isfield(modCoord{l}, 'z')
-                    modCoord_.znm = modCoord{l}.z;
-                end
-                for m = 1:l
-                    lPar = obj.exportPars(m,'lPar');
-                    modCoord_ = obj.locsHandler(modCoord_, lPar,0,'usedformalism', 'rotationMatrixRev','order_transform','RT');
-                end
-                modCoord{l}.x = modCoord_.xnm; modCoord{l}.y = modCoord_.ynm;
-                if isfield(modCoord{l}, 'z')
-                    modCoord{l}.z = modCoord_.znm;
-                end
-                
+            modCoord = transModPoint(obj, modCoord);
+            
+            for l = 1:length(obj.allModelLayer)                
                 if any(modCoord{l}.n>1)
+                    % locs.n scales to the number of labels at
+                    % corresponding positions
                     repeatLabel = round(modCoord{l}.n./min(modCoord{l}.n));
                     labelID = 1:length(modCoord{l}.n);
                     allLabels = repelem(labelID, repeatLabel);
@@ -1072,43 +1136,85 @@ classdef LocMoFit<matlab.mixin.Copyable
                     numAll = numOfLabels*(pExp_Offset)/(1-pExp_Offset)+numOfLabels;
                     
                     roiSize = obj.roiSize;
-                    switch obj.dataDim
-                        case 3
-                            % cilinderical
-                            finalVol = pi*(finalROISize/2)^2*finalROISize;
-                            % cubic
-                            simVol = roiSize^3;
-                            ratio = simVol/finalVol;
-                            numAll = round(numAll*ratio);
-                        case 2
-                            % circular
-                            finalVol = pi*(finalROISize/2)^2;
-                            % square
-                            simVol = roiSize^2;
-                            ratio = simVol/finalVol;
-                            numAll = round(numAll*ratio);
-                    end
-                    
-
-                    pObs_Offset = rand([numAll 1]);
-                    lKept = pExp_Offset>pObs_Offset;
-                    numOfLabels_offset = sum(lKept);
- 
-                    
-                    x_offset = rand([numOfLabels_offset 1]);
-                    y_offset = rand([numOfLabels_offset 1]);
-                    modCoord{l}.x = [modCoord{l}.x; x_offset*roiSize-roiSize/2];
-                    modCoord{l}.y = [modCoord{l}.y; y_offset*roiSize-roiSize/2];
+                    [x,y,z] = getBGLocs(numAll, roiSize, finalROISize, pExp_Offset, obj.dataDim);
+                    modCoord{l}.x = [modCoord{l}.x; x];
+                    modCoord{l}.y = [modCoord{l}.y; y];
                 end
-                if isfield(modCoord{l}, 'z')
+                if ~isempty(z)
                     % for 3D model
-                    z_offset = rand([numOfLabels_offset 1]);
-                    modCoord{l}.z = [modCoord{l}.z; z_offset*roiSize-roiSize/2];
+                    modCoord{l}.z = [modCoord{l}.z; z];
                 end
             end
         end
-        
-        
+        function distribution = getLLExpDist(obj, n)
+            % Get the labels of the model.
+            if ~strcmp(obj.model{1}.modelType,'image')
+                for k = 1:obj.numOfModel
+                    sigma{k} = obj.model{k}.sigma;
+                    sigmaSet{k} = obj.model{k}.sigmaSet;
+                    obj.model{k}.sigmaSet = [];
+                    obj.model{k}.sigma = 5;
+                end
+                
+                %% Get the origainl model
+                modCoord = obj.getLayerPoint(0.75);
+                modCoord = transModPoint(obj, modCoord);
+                
+                for k = 1:obj.numOfModel
+                    obj.model{k}.sigma = sigma{k};
+                    obj.model{k}.sigmaSet = sigmaSet{k};
+                end
+                
+                for l = 1:obj.numOfModel
+                    nLocs = sum(obj.locs.layer==l);
+                    bgWeight = obj.exportPars(91,'offset');
+                    var = obj.getVariable('m1.lPar.variation');
+                    nModCoord = length(modCoord{l}.x);
+                    for nn = n:-1:1
+                        propNonBG = rand([nLocs 1]);
+                        lNonBG = propNonBG>bgWeight.weight;
+                        nLoc_model = sum(lNonBG);
+                        locprecnm = obj.locs.locprecnm(lNonBG);
+                        locprecznm = obj.locs.locprecznm(lNonBG);
+                        locprecnm_ = sqrt(locprecnm.^2+var^2);
+                        locprecznm_ = sqrt(locprecznm.^2+var^2);
+                        
+                        idxModCoord = randi(nModCoord, [nLoc_model 1]);
+                        rsModCoord.xnm = modCoord{l}.x(idxModCoord)+randn([nLoc_model 1]).*locprecnm_;
+                        rsModCoord.ynm = modCoord{l}.y(idxModCoord)+randn([nLoc_model 1]).*locprecnm_;
+                        rsModCoord.znm = modCoord{l}.z(idxModCoord)+randn([nLoc_model 1]).*locprecznm_;
+%                         rsModCoord.xnm = modCoord{l}.x(idxModCoord);
+%                         rsModCoord.ynm = modCoord{l}.y(idxModCoord);
+%                         rsModCoord.znm = modCoord{l}.z(idxModCoord);
+                        rsModCoord.locprecnm = locprecnm;
+                        rsModCoord.locprecznm = locprecznm;
+                        
+                        if sum(~lNonBG)>0
+                            locprecnm_BG = obj.locs.locprecnm(~lNonBG);
+                            locprecznm_BG = obj.locs.locprecznm(~lNonBG);
+                            
+                            roiSize = obj.roiSize;
+                            finalROISize = obj.roiSize;
+                            [x,y,z] = getBGLocs(length(locprecnm_BG), roiSize, finalROISize, 1, obj.dataDim);
+                            rsModCoord.xnm = [rsModCoord.xnm; x];
+                            rsModCoord.ynm = [rsModCoord.ynm; y];
+                            
+                            if ~isempty(z)
+                                rsModCoord.znm = [rsModCoord.znm; z];
+                            end
+                            rsModCoord.locprecnm = [rsModCoord.locprecnm; locprecnm_BG];
+                            rsModCoord.locprecznm = [rsModCoord.locprecznm; locprecznm_BG];
+                        end
+                        
+                        rsModCoord.layer = ones([nLocs 1]);
+                        distribution(nn) = obj.loglikelihoodFun([],[],rsModCoord)/nLocs;
+                    end
+                    
+                end
+            else
+                distribution = [];
+            end
+        end
         function setModelSetting(obj, modelInd, option, value)
             obj.model{modelInd}.(option) = value;
         end
@@ -1175,6 +1281,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             obj.currentFitPars = fitPars;
             p = inputParser;
             p.addParameter('expected',false);
+            p.addParameter('dx',1);
             p.parse(varargin{:});
             results = p.Results;
             
@@ -1262,7 +1369,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             
             gridPos.locprecnm = repmat(results.representiveLocprec,originalSize);
             gridPos.locprecznm = repmat(results.representiveLocprecz,originalSize);
-            ELL = obj.loglikelihoodFun(fitPars, compensationFactor, gridPos, 'expected', true);
+            ELL = obj.loglikelihoodFun(fitPars, compensationFactor, gridPos, 'expected', true, 'dx', dx);
         end
         
         function OFLL = getOFLL(obj,compensationFactor)
@@ -1401,11 +1508,9 @@ classdef LocMoFit<matlab.mixin.Copyable
             % Structral changes leading to running failular have to be
             % fixed here.
             
-            % earlier
-            uEarlier(obj)
-            
-            % 210603
+            u210919(obj)
             u210630(obj)
+            uEarlier(obj)
         end
     end
     methods(Access = protected)
@@ -1538,6 +1643,12 @@ function uFuture(obj)
                 obj.initLParSelector(m, false)
             end
         end
+    end
+end
+
+function u210919(obj)
+    if isempty(obj.modelLayer)
+        obj.modelLayer = getFieldAsVector(obj.model,'layer');
     end
 end
 function uEarlier(obj)

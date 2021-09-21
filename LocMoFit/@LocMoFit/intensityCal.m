@@ -81,7 +81,7 @@ for k = 1:obj.numOfModel
         onlyLocpre = true;
     end
     
-    newLocs = obj.locsHandler(locs, lPars{k}, k, 'onlyLocpre', onlyLocpre);  
+    newLocs = obj.locsHandler(locs, lPars{k}, k, 'onlyLocpre', onlyLocpre);
     
     if k == 1
         obj.setTemp('locsM1', newLocs);

@@ -250,7 +250,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                         end
                     end
                 end
-                
+
                 %% Alignment (for averaging)
                 if inp.useAlignment
                     % check the locs have been aligned or not
