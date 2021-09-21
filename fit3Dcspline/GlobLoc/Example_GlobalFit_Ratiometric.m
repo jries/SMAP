@@ -4,8 +4,9 @@
 % date: 2021.08.27
 % Download the calbration data for the followling link first: https://www.embl.de/download/ries/globLoc/
 %000_AstigBeads_LP665_m1_1um_20nm_50ms_conv_640_50Percent_Empty_685-70_676-37_singleMode_Z-stack_1_MMStack_Pos0.ome_3dcal.mat
-% Tested with CUDA 11.3 and Matlab 2019a
+% Tested with CUDA 11.3 (Express installation) and Matlab 2019a
 %% Load and make cspline PSF
+clearvars
 cal=load('000_AstigBeads_LP665_m1_1um_20nm_50ms_conv_640_50Percent_Empty_685-70_676-37_singleMode_Z-stack_1_MMStack_Pos0.ome_3dcal.mat');
 PSF1 = cal.SXY(1).PSF{1};
 rangex = 4:30;
