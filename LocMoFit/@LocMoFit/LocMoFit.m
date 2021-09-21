@@ -32,7 +32,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         weightLayer = 1;       % The weights of layers.
         fitterInfo
         status = 'finished';   % can be 'initial', 'iterative' or 'finished'
-        advanceSetting
+        advanceSetting          % Advanced settings are defined here.
     end
     properties (Transient)
         linkedGUI               % If GUI is used, it will be saved here.
@@ -1406,6 +1406,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             
             % 210603
             u210630(obj)
+            u210917(obj)
         end
     end
     methods(Access = protected)
@@ -1498,6 +1499,10 @@ function out = defaultAdvanceSettings
     out.gaussDistCutoff.option = {};
     out.gaussDistCutoff.value = 3.5;
     out.gaussDistCutoff.name = 'Gauss distance offset';
+    
+    out.confidenceInterval.option = {'on','off'};
+    out.confidenceInterval.value = 'off';
+    out.confidenceInterval.name = 'Confidence interval';
 end
 
 function [out,allOptions] = defaultLParSelection(parameterType)
@@ -1526,7 +1531,7 @@ function [out,allOptions] = defaultLParSelection(parameterType)
 end
 
 %% For version check and update
-function uFuture(obj)
+function u210917(obj)
     fn = fieldnames(obj.advanceSetting);
     numOfModel = obj.numOfModel;
     allOptions = defaultXXX(obj, {'weight','density'}); % yet to be implemented
@@ -1540,12 +1545,6 @@ function uFuture(obj)
         end
     end
 end
-function uEarlier(obj)
-    if isempty(obj.advanceSetting)
-        obj.initAdvanceSetting;
-    end
-end
-
 function u210630(obj)
     fn = fieldnames(obj.advanceSetting);
     layers = unique(obj.allModelLayer);
@@ -1558,6 +1557,13 @@ function u210630(obj)
         end
     end
 end
+function uEarlier(obj)
+    if isempty(obj.advanceSetting)
+        obj.initAdvanceSetting;
+    end
+end
+
+
 % 
 % 
 % hold(subax1, 'on')
