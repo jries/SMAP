@@ -112,20 +112,8 @@ for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
     finalLb(lSet2Min)=minVal(lSet2Min);
     finalUb(lSet2Max)=maxVal(lSet2Max);
     
-    %% Get locs counts per layer
-    allLocsLayers = unique(locs.layer);
-    obj.numOfLocsPerLayer = histcounts(locs.layer, 1:max(allLocsLayers)+1);
-    obj.representiveLocprec = grpstats(locs.locprecnm, locs.layer, 'median');
-    numOfUsedLocs = sum(obj.numOfLocsPerLayer(obj.allModelLayer));
-    obj.weightLayer = zeros(size(obj.numOfLocsPerLayer));
-    if obj.useCompensation == true
-        numOfLocs_maxLayer = max(obj.numOfLocsPerLayer(obj.allModelLayer));
-        obj.compensationFactor = numOfLocs_maxLayer./obj.numOfLocsPerLayer;
-        obj.weightLayer(obj.allModelLayer) = 1/length(obj.allModelLayer);
-    else
-        obj.compensationFactor(obj.allModelLayer) = 1;
-        obj.weightLayer(obj.allModelLayer) = obj.numOfLocsPerLayer(obj.allModelLayer)/numOfUsedLocs;
-    end
+    %% Get locs info
+    obj.getLocsInfo
     
     %% Get compensationFactor
     % This factor compensate the number of locs between different channels
@@ -134,7 +122,6 @@ for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
         compensationFactor(locs.layer==k) = obj.compensationFactor(k);
     end
     compensationFactor(~ismember(locs.layer, obj.allModelLayer)) = [];
-    
     %% Run the optimization
     
     switch obj.objFunType
@@ -232,6 +219,13 @@ switch p.controlLogLikelihood
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
 end
 
+if 1
+    obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
+    obj.fitInfo.LLExpMean = mean(obj.fitInfo.LLExpDist);
+    obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
+else
+    obj.fitInfo.LLExpDist = [];
+end
 
 if strcmp(p.confidenceInterval, 'on')
     % hessian related values

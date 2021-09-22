@@ -23,12 +23,27 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
                 LLfit.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.LLfit']);
                 AICc.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.AICc']);
                 normAICc.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.normAICc']);
+                LLExp.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.LLExp']);
+                numOfLocsPerLayer.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.numOfLocsPerLayer']);
+                LLExpMean.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.LLExpMean']);
+                LLExpStd.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.LLExpStd']);
             end
+            LLExp_gt.(['sym8f']) = getFieldAsVector(sites(lUsed), ['evaluation.gtLLExp.LLExp_gt']);
+            LL_gt.(['sym8f']) = getFieldAsVector(sites(lUsed), ['evaluation.gtLLExp.LL_gt']);
             
             ax = obj.initaxis('Raw LL');
             ax_normAICc = obj.initaxis('normAICc');
+            ax_normLL = obj.initaxis('normLL');
             axCmp = obj.initaxis('Comparison');
             axCmp_normAICc = obj.initaxis('Comparison_normAICc');
+            axCmp_normLL = obj.initaxis('Comparison_normLL');
+            ax_zscoreLL = obj.initaxis('zscoreLL');
+            axCmp_zscoreLL = obj.initaxis('Comparison_zscoreLL');
+            axCmp_LLExpTvsS = obj.initaxis('Comparison_LL_TvsS');
+            axCmp_fit2gt = obj.initaxis('Comparison_fit2gt');
+            axCmp_exp2data = obj.initaxis('Comparison_exp2data');
+            axCmp_LL_gt2fit = obj.initaxis('Comparison_gt2fit');
+
 %             colorID = [1 3 8 2 6];
             colorID = [2 8 1 6 3];
             %% LLfit: CDF
@@ -42,7 +57,7 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             end
             
            
-            xlabel(ax,'Maximum Log-likelihood');
+            xlabel(ax,'Maximum log-likelihood');
             ylabel(ax,'Cumulative probability');
             allLine = findobj(ax,'type','line');
             set(allLine,'linewidth',1.5)
@@ -72,6 +87,47 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             hold off
             out = [];
             
+            %% normLL: CDF
+            axes(ax_normLL)
+            hold on
+%             palette= getPyPlot_cMap('tab10', 8,[],'"C:\Users\ries\AppData\Local\Programs\Python\Python37\python.exe"');
+            for m = 1:5
+                normLL.(['sym',num2str(m+5),'f']) = LLfit.(['sym',num2str(m+5),'f'])-LLExp.(['sym',num2str(m+5),'f']);
+                normLL_oneModel = normLL.(['sym',num2str(m+5),'f']);
+                curve_normLL{m} = cdfplot(normLL_oneModel);
+                curve_normLL{m}.Color = myDiscreteLUT(colorID(m));
+            end
+            
+            xlabel(ax_normLL,'Normalized maximum log-likelihood');
+            ylabel(ax_normLL,'Cumulative probability');
+            allLine = findobj(ax_normLL,'type','line');
+            set(allLine,'linewidth',1.5)
+            title(ax_normLL,[]);
+            grid(ax_normLL, 'off')
+            legend({'6-fold','7-fold','8-fold','9-fold','10-fold'})
+            hold off
+            out = [];
+            %% zscore: CDF
+            axes(ax_zscoreLL)
+            hold on
+%             palette= getPyPlot_cMap('tab10', 8,[],'"C:\Users\ries\AppData\Local\Programs\Python\Python37\python.exe"');
+            for m = 1:5
+                zscoreLL.(['sym',num2str(m+5),'f']) = (LLfit.(['sym',num2str(m+5),'f'])-LLExpMean.(['sym',num2str(m+5),'f']))./LLExpStd.(['sym',num2str(m+5),'f']);
+                zscoreLL_oneModel = zscoreLL.(['sym',num2str(m+5),'f']);
+                curve_zscoreLL{m} = cdfplot(zscoreLL_oneModel);
+                curve_zscoreLL{m}.Color = myDiscreteLUT(colorID(m));
+            end
+            
+            xlabel(ax_zscoreLL,'Z score');
+            ylabel(ax_zscoreLL,'Cumulative probability');
+            allLine = findobj(ax_zscoreLL,'type','line');
+            set(allLine,'linewidth',1.5)
+            title(ax_zscoreLL,[]);
+            grid(ax_zscoreLL, 'off')
+            legend({'6-fold','7-fold','8-fold','9-fold','10-fold'})
+            hold off
+            out = [];
+            
             %% LLFit: Comparison plot (6f vs 8f)
             pt = [LLfit.('sym8f');LLfit.('sym6f')]';
             Idx = rangesearch(pt,pt,0.1);
@@ -95,6 +151,63 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             xlabel(axCmp_normAICc, 'Eight-fold symmetry')
             ylabel(axCmp_normAICc, 'Six-fold symmetry')
             colorbar(axCmp_normAICc)
+            
+            %% NormLL: Comparison plot (6f vs 8f)
+            pt = [normLL.('sym8f');normLL.('sym6f')]';
+            Idx = rangesearch(pt,pt,0.1);
+            count = cellfun(@length, Idx);
+            scatter(axCmp_normLL, normLL.('sym8f'), normLL.('sym6f'),2, count, 'filled')
+            hold(axCmp_normLL, 'on')
+            plot(axCmp_normLL, [-0.2 0.2],[-0.2 0.2], '-k')
+            hold(axCmp_normLL, 'off')
+            xlabel(axCmp_normLL, 'Eight-fold symmetry')
+            ylabel(axCmp_normLL, 'Six-fold symmetry')
+            colorbar(axCmp_normLL)
+            
+            %% zscore: Comparison plot (6f vs 8f)
+            pt = [normLL.('sym8f');normLL.('sym6f')]';
+            Idx = rangesearch(pt,pt,0.1);
+            count = cellfun(@length, Idx);
+            scatter(axCmp_zscoreLL, zscoreLL.('sym8f'), zscoreLL.('sym6f'),2, count, 'filled')
+            hold(axCmp_zscoreLL, 'on')
+            plot(axCmp_zscoreLL, [-2 2],[-2 2], '-k')
+            hold(axCmp_zscoreLL, 'off')
+            xlabel(axCmp_zscoreLL, 'Eight-fold symmetry')
+            ylabel(axCmp_zscoreLL, 'Six-fold symmetry')
+            colorbar(axCmp_zscoreLL)
+            
+            %% LLExp: Comparison plot (theoretical vs simulated)
+            scatter(axCmp_LLExpTvsS, LLExp.('sym8f'), LLExpMean.('sym8f'),5, 'filled')
+            hold(axCmp_LLExpTvsS, 'on')
+            plot(axCmp_LLExpTvsS, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            hold(axCmp_LLExpTvsS, 'off')
+            xlabel(axCmp_LLExpTvsS, 'Theoretical LLFit')
+            ylabel(axCmp_LLExpTvsS, 'Sampled LLFit')
+            
+            %% LLExp: Comparison plot (fit2gt)
+            scatter(axCmp_fit2gt, LLExp.('sym8f'), LLExp_gt.('sym8f'),5, 'filled')
+            hold(axCmp_fit2gt, 'on')
+            plot(axCmp_fit2gt, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            hold(axCmp_fit2gt, 'off')
+            xlabel(axCmp_fit2gt, 'Expected LL_{fit}')
+            ylabel(axCmp_fit2gt, 'Expected LL_{gt}')
+            
+            %% Comparison plot (fit_exp2data)
+            scatter(axCmp_exp2data, LLfit.('sym8f'), LLExp.('sym8f'),5, 'filled')
+            hold(axCmp_exp2data, 'on')
+            plot(axCmp_exp2data, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            hold(axCmp_exp2data, 'off')
+            xlabel(axCmp_exp2data, 'LL_{fit}')
+            ylabel(axCmp_exp2data, 'Expected LL_{fit}')
+            
+            %% LL: Comparison plot (gt2fit)
+            scatter(axCmp_LL_gt2fit, LLfit.('sym8f'), LL_gt.('sym8f'),5, 'filled')
+            hold(axCmp_LL_gt2fit, 'on')
+            plot(axCmp_LL_gt2fit, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            hold(axCmp_LL_gt2fit, 'off')
+            xlabel(axCmp_LL_gt2fit, 'LL_{fit}')
+            ylabel(axCmp_LL_gt2fit, 'LL_{GT}')
+            
         end
         function pard=guidef(obj)
             pard=guidef(obj);
