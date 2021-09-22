@@ -19,14 +19,16 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             AICc = [];
             normAICc = [];
             
-            for m = 1:5
-                LLfit.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.LLfit']);
-                AICc.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.AICc']);
-                normAICc.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.normAICc']);
-                LLExp.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.LLExp']);
-                numOfLocsPerLayer.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.numOfLocsPerLayer']);
-                LLExpMean.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.LLExpMean']);
-                LLExpStd.(['sym',num2str(m+5),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(m+2) '.fitInfo.LLExpStd']);
+            for m = 1:length(p.ID_LocMoFit)
+                currentSym = p.symmetry(m);
+                currentLocMoFitGUI = p.ID_LocMoFit(m);
+                LLfit.(['sym',num2str(currentSym),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(currentLocMoFitGUI) '.fitInfo.LLfit']);
+                AICc.(['sym',num2str(currentSym),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(currentLocMoFitGUI) '.fitInfo.AICc']);
+                normAICc.(['sym',num2str(currentSym),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(currentLocMoFitGUI) '.fitInfo.normAICc']);
+                LLExp.(['sym',num2str(currentSym),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(currentLocMoFitGUI) '.fitInfo.LLExp']);
+                numOfLocsPerLayer.(['sym',num2str(currentSym),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(currentLocMoFitGUI) '.fitInfo.numOfLocsPerLayer']);
+                LLExpMean.(['sym',num2str(currentSym),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(currentLocMoFitGUI) '.fitInfo.LLExpMean']);
+                LLExpStd.(['sym',num2str(currentSym),'f']) = getFieldAsVector(sites(lUsed), ['evaluation.LocMoFitGUI_' num2str(currentLocMoFitGUI) '.fitInfo.LLExpStd']);
             end
             LLExp_gt.(['sym8f']) = getFieldAsVector(sites(lUsed), ['evaluation.gtLLExp.LLExp_gt']);
             LL_gt.(['sym8f']) = getFieldAsVector(sites(lUsed), ['evaluation.gtLLExp.LL_gt']);
@@ -50,20 +52,25 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             axes(ax)
             hold on
 %             palette= getPyPlot_cMap('tab10', 8,[],'"C:\Users\ries\AppData\Local\Programs\Python\Python37\python.exe"');
-            for m = 1:5
-                LLfit_oneModel = LLfit.(['sym',num2str(m+5),'f']);
+            for m = 1:length(p.ID_LocMoFit)
+                currentSym = p.symmetry(m);
+                currentLocMoFitGUI = p.ID_LocMoFit(m);
+                LLfit_oneModel = LLfit.(['sym',num2str(currentSym),'f']);
                 curve{m} = cdfplot(LLfit_oneModel);
                 curve{m}.Color = myDiscreteLUT(colorID(m));
             end
             
-           
+            for m = length(p.ID_LocMoFit):-1:1
+                currentSym = p.symmetry(m);
+                legendText{m} = [num2str(currentSym) '-fold'];
+            end
             xlabel(ax,'Maximum log-likelihood');
             ylabel(ax,'Cumulative probability');
             allLine = findobj(ax,'type','line');
             set(allLine,'linewidth',1.5)
             title(ax,[]);
             grid(ax, 'off')
-            legend({'6-fold','7-fold','8-fold','9-fold','10-fold'})
+            legend(legendText)
             hold off
             out = []; 
             
@@ -71,8 +78,10 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             axes(ax_normAICc)
             hold on
 %             palette= getPyPlot_cMap('tab10', 8,[],'"C:\Users\ries\AppData\Local\Programs\Python\Python37\python.exe"');
-            for m = 1:5
-                normAICc_oneModel = normAICc.(['sym',num2str(m+5),'f']);
+            for m = 1:length(p.ID_LocMoFit)
+                currentSym = p.symmetry(m);
+                currentLocMoFitGUI = p.ID_LocMoFit(m);
+                normAICc_oneModel = normAICc.(['sym',num2str(currentSym),'f']);
                 curve_normAICc{m} = cdfplot(normAICc_oneModel);
                 curve_normAICc{m}.Color = myDiscreteLUT(colorID(m));
             end
@@ -83,7 +92,7 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             set(allLine,'linewidth',1.5)
             title(ax_normAICc,[]);
             grid(ax_normAICc, 'off')
-            legend({'6-fold','7-fold','8-fold','9-fold','10-fold'})
+            legend(legendText)
             hold off
             out = [];
             
@@ -91,9 +100,11 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             axes(ax_normLL)
             hold on
 %             palette= getPyPlot_cMap('tab10', 8,[],'"C:\Users\ries\AppData\Local\Programs\Python\Python37\python.exe"');
-            for m = 1:5
-                normLL.(['sym',num2str(m+5),'f']) = LLfit.(['sym',num2str(m+5),'f'])-LLExp.(['sym',num2str(m+5),'f']);
-                normLL_oneModel = normLL.(['sym',num2str(m+5),'f']);
+            for m = 1:length(p.ID_LocMoFit)
+                currentSym = p.symmetry(m);
+                currentLocMoFitGUI = p.ID_LocMoFit(m);
+                normLL.(['sym',num2str(currentSym),'f']) = LLfit.(['sym',num2str(currentSym),'f'])-LLExp.(['sym',num2str(currentSym),'f']);
+                normLL_oneModel = normLL.(['sym',num2str(currentSym),'f']);
                 curve_normLL{m} = cdfplot(normLL_oneModel);
                 curve_normLL{m}.Color = myDiscreteLUT(colorID(m));
             end
@@ -104,16 +115,18 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             set(allLine,'linewidth',1.5)
             title(ax_normLL,[]);
             grid(ax_normLL, 'off')
-            legend({'6-fold','7-fold','8-fold','9-fold','10-fold'})
+            legend(legendText)
             hold off
             out = [];
             %% zscore: CDF
             axes(ax_zscoreLL)
             hold on
 %             palette= getPyPlot_cMap('tab10', 8,[],'"C:\Users\ries\AppData\Local\Programs\Python\Python37\python.exe"');
-            for m = 1:5
-                zscoreLL.(['sym',num2str(m+5),'f']) = (LLfit.(['sym',num2str(m+5),'f'])-LLExpMean.(['sym',num2str(m+5),'f']))./LLExpStd.(['sym',num2str(m+5),'f']);
-                zscoreLL_oneModel = zscoreLL.(['sym',num2str(m+5),'f']);
+            for m = 1:length(p.ID_LocMoFit)
+                currentSym = p.symmetry(m);
+                currentLocMoFitGUI = p.ID_LocMoFit(m);
+                zscoreLL.(['sym',num2str(currentSym),'f']) = (LLfit.(['sym',num2str(currentSym),'f'])-LLExpMean.(['sym',num2str(currentSym),'f']))./LLExpStd.(['sym',num2str(currentSym),'f']);
+                zscoreLL_oneModel = zscoreLL.(['sym',num2str(currentSym),'f']);
                 curve_zscoreLL{m} = cdfplot(zscoreLL_oneModel);
                 curve_zscoreLL{m}.Color = myDiscreteLUT(colorID(m));
             end
@@ -124,7 +137,7 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             set(allLine,'linewidth',1.5)
             title(ax_zscoreLL,[]);
             grid(ax_zscoreLL, 'off')
-            legend({'6-fold','7-fold','8-fold','9-fold','10-fold'})
+            legend(legendText)
             hold off
             out = [];
             
@@ -230,7 +243,19 @@ end
 
 
 function pard=guidef(obj)
+pard.t1.object=struct('Style','text','String','ID (LocMoFitGUI)');
+pard.t1.position=[1,1];
+pard.t1.Width=2;
+pard.ID_LocMoFit.object=struct('Style','edit','String','3 4 5 6 7');
+pard.ID_LocMoFit.position=[1,3];
+pard.ID_LocMoFit.Width=2;
 
+pard.t2.object=struct('Style','text','String','Symmetry');
+pard.t2.position=[2,1];
+pard.t2.Width=2;
+pard.symmetry.object=struct('Style','edit','String','6 7 8 9 10');
+pard.symmetry.position=[2,3];
+pard.symmetry.Width=2;
 pard.plugininfo.type='ROI_Analyze';
-
+pard.plugininfo.description='This plugin shows the summary of the model selection.';
 end

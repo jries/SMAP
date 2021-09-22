@@ -212,20 +212,18 @@ switch p.controlLogLikelihood
     case 'none'
     case 'expected'
         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
+        obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
+        obj.fitInfo.LLExpMean = mean(obj.fitInfo.LLExpDist);
+        obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
     case 'overfitted'
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
     case 'both'
         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,2);
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
+    otherwise
+        obj.fitInfo.LLExpDist = [];
 end
 
-if 1
-    obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
-    obj.fitInfo.LLExpMean = mean(obj.fitInfo.LLExpDist);
-    obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
-else
-    obj.fitInfo.LLExpDist = [];
-end
 
 if 0
     % hessian related values

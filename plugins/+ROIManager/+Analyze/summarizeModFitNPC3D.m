@@ -16,11 +16,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
 
             usedSites = sites(lUsed);
             fn = obj.SE.processors.eval.guihandles.modules.Data(:,2);
-            if ismember('LocMoFitGUI_5', fn)
-                whichLocMoFitGUI = '5';
-            else
-                whichLocMoFitGUI = '3';
-            end
+            whichLocMoFitGUI = num2str(p.whichLocMoFitGUI);
             fitInfo = getFieldAsVector(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo']);
             lFailed = cellfun(@(x)strcmp(x.guiInfo,'Fit or plot failed.'), fitInfo);
             evalList = se.processors.eval.guihandles.modules.Data(:,2);
@@ -213,6 +209,12 @@ pard.showExampleMod.object=struct('String','Display example model','Style','chec
 pard.showExampleMod.position=[3,1];
 pard.showExampleMod.Width=1.5;
 
+pard.t1.object=struct('Style','text','String','LocMoFitGUI_');
+pard.t1.position=[4,1];
+pard.t1.Width=1;
+pard.whichLocMoFitGUI.object=struct('Style','edit','String','3');
+pard.whichLocMoFitGUI.position=[4,2];
+pard.whichLocMoFitGUI.Width=1;
 pard.plugininfo.type='ROI_Analyze';
 
 end
