@@ -28,6 +28,16 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             col_source = p.anchorConvert.Data(:,1);
             col_source = replace(col_source, 'SMLMModelFitGUI', 'LocMoFitGUI');
             p.anchorConvert.Data(:,1) = col_source;
+            
+            % Check the model type are consistent between the GUI and obj.
+            m = 1;
+            while isfield(p, ['modelType_' num2str(m)])
+                ID = ['modelType_' num2str(m)];
+                p.(ID).String = obj.guihandles.(ID).String;
+                p.(ID).Value = obj.guihandles.(ID).Value;
+                p.(ID).selection = p.(ID).String{p.(ID).Value};
+                m = m+1;
+            end
             setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);
         end
         

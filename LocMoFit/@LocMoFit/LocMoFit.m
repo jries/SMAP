@@ -1390,6 +1390,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             % fixed here.
             
             % earlier
+            uModelTypeOptoins(obj)
             uEarlier(obj)
             
             % 210603
@@ -1543,6 +1544,31 @@ function u210630(obj)
         allOptions_l = strcat('m', num2str(90+l), '_', allOptions);
         if ~any(ismember(allOptions_l,fn))
             obj.initLParSelector(90+l, true)
+        end
+    end
+end
+
+function uModelTypeOptoins(obj)
+    for m = 1:obj.numOfModel
+        oneModelObj = obj.model{m}.modelObj;
+        modelTypeOption = oneModelObj.modelTypeOption;
+        if isempty(modelTypeOption)
+            modClass = class(oneModelObj);
+            modObjContainer = eval(modClass);
+            defaultModelTypeOption = modObjContainer.modelTypeOption;
+            oneModelObj.modelTypeOption = defaultModelTypeOption;
+            currentModType = oneModelObj.modelType;
+            if ~strcmp(currentModType, defaultModelTypeOption)
+                if strcmp(currentModType,'discrete')&&any(strcmp('discretized', defaultModelTypeOption))
+                    oneModelObj.modelType = 'discretized';
+                    oldModType = obj.model{m}.modelType;
+                    obj.model{m}.modelType = 'discretized';
+                    warning(['Model ' num2str(m) ': its model type was changed from [' oldModType '] to [discretized] due to an update. If this is not expected, check the model type carefully.'])
+                else
+                    warning(['Model ' num2str(m) ': ambiguous model type. Check whether the model type is outdated or not and consider to update it.'])
+                end
+            end
+            oneModelObj.modelTypeOption = modObjContainer.modelTypeOption;
         end
     end
 end
