@@ -225,7 +225,7 @@ switch p.controlLogLikelihood
 end
 
 
-if 0
+if strcmp(p.confidenceInterval, 'on')
     % hessian related values
     parID = obj.getAllParId();
     par_std = sqrt(hessdiag(@(fitPars)objFun(fitPars), parBestFit));
