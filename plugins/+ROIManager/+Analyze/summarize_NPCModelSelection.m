@@ -45,7 +45,7 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             axCmp_fit2gt = obj.initaxis('Comparison_fit2gt');
             axCmp_exp2data = obj.initaxis('Comparison_exp2data');
             axCmp_LL_gt2fit = obj.initaxis('Comparison_gt2fit');
-
+            axCmp_exp2data_6f = obj.initaxis('Comparison_exp2data_6f');
 %             colorID = [1 3 8 2 6];
             colorID = [2 8 1 6 3];
             %% LLfit: CDF
@@ -220,6 +220,14 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             hold(axCmp_LL_gt2fit, 'off')
             xlabel(axCmp_LL_gt2fit, 'LL_{fit}')
             ylabel(axCmp_LL_gt2fit, 'LL_{GT}')
+            
+            %% Comparison plot (fit_exp2data_6f)
+            scatter(axCmp_exp2data_6f, LLfit.('sym6f'), LLExp.('sym6f'),5, 'filled')
+            hold(axCmp_exp2data_6f, 'on')
+            plot(axCmp_exp2data_6f, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            hold(axCmp_exp2data_6f, 'off')
+            xlabel(axCmp_exp2data_6f, 'LL_{fit}')
+            ylabel(axCmp_exp2data_6f, 'Expected LL_{fit}')
             
         end
         function pard=guidef(obj)
