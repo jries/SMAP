@@ -1,5 +1,5 @@
 classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcessor
-% Export the results of the SMLMModelFitGUI
+% Export the results of the LocMoFitGUI
     properties
         fit_manager
         variableTable_handle
@@ -19,7 +19,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
                 %Settings               
             
             obj.loadData
-            obj.setPar('SMLMModelFit_saveResult',obj)
+            obj.setPar('LocMoFit_saveResult',obj)
         end
         
         function out=run(obj,p)
@@ -49,7 +49,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
         end
         
         function loadData(obj,p)
-            %% This function loads data including SMLMModelFitter and sites.
+            %% This function loads data including LocMoFitter and sites.
             % basic info.
             se = obj.locData.SE;
             sites = se.sites;
@@ -59,13 +59,13 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             roiSize = se.P.par.se_siteroi.content;
             
             listOfModules = se.processors.eval.guihandles.modules.Data(:,2);
-            lModuleToSave = startsWith(listOfModules, 'SMLMModelFitGUI');
+            lModuleToSave = startsWith(listOfModules, 'LocMoFitGUI');
             nameModuleToSave = listOfModules(lModuleToSave);
             
             firstSite = sites(1);
             if isfield(firstSite.evaluation, 'generalStatistics')
                 nameModuleToSave = [{'generalStatistics'}; nameModuleToSave];
-                pre = 1;    % number of the modules before the SMLMModelFit.
+                pre = 1;    % number of the modules before the LocMoFit.
             else
                 pre = 0;
             end
@@ -90,17 +90,17 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             
             
             % Fit info.
-            SMLMModelFitGUI_obj = se.processors.eval.processors(lModuleToSave);
+            LocMoFitGUI_obj = se.processors.eval.processors(lModuleToSave);
             for l = 1:length(nameModuleToSave)-pre
-                output.SMLMModelFit.(nameModuleToSave{pre+l}) = SMLMModelFitGUI_obj{l}.fitter;
+                output.LocMoFit.(nameModuleToSave{pre+l}) = LocMoFitGUI_obj{l}.fitter;
             end
             
             % Export
             objName = class(obj);
             objName = split(objName, '.');
             
-            warning('Here for now use CME3D_manager to replace SMLMModelFit_manager.')
-            obj.fit_manager = CME3D_manager(output.sites, output.SMLMModelFit);
+            warning('Here for now use CME3D_manager to replace LocMoFit_manager.')
+            obj.fit_manager = CME3D_manager(output.sites, output.LocMoFit);
             obj.fit_manager.parentObj = obj;
             
             % copy the plot setting from the exsiting fitManager
@@ -165,8 +165,8 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
         
         function names = getFitterNames(obj)
             namesAllEval = fieldnames(obj.locData.SE.processors.eval.children);
-            allSMLMModelFitGUI = startsWith(namesAllEval,'SMLMModelFitGUI');
-            names = namesAllEval(allSMLMModelFitGUI);
+            allLocMoFitGUI = startsWith(namesAllEval,'LocMoFitGUI');
+            names = namesAllEval(allLocMoFitGUI);
         end
         
         function registerSites_callBack(obj,a,b)
@@ -185,12 +185,12 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             sites = obj.SE.sites;
             if any([p.onlyPositive p.withoutClouds])
                 fn = fieldnames(obj.locData.SE.processors.eval.children);
-                lFitterGUI = strcmp('SMLMModelFitGUI_2',fn);
+                lFitterGUI = strcmp('LocMoFitGUI_2',fn);
                 fitter = obj.locData.SE.processors.eval.processors{lFitterGUI}.fitter;
                 [~,idxCurvature] = fitter.getVariable('m1.curvature');
 %                 idx = 
                 for k = obj.SE.numberOfSites:-1:1
-                    path = ['sites(k).evaluation.SMLMModelFitGUI_2' idxCurvature];
+                    path = ['sites(k).evaluation.LocMoFitGUI_2' idxCurvature];
                     curvature(k) = eval(path);
                 end
             end
@@ -220,7 +220,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
 
             sortROIs.guihandles.direction2.Value = 1;
             sortROIs.guihandles.sortprop2.Value = 4;
-            sortROIs.guihandles.sortedit2.String = 'evaluation.SMLMModelFitGUI_2.allParsArg.value(13)';
+            sortROIs.guihandles.sortedit2.String = 'evaluation.LocMoFitGUI_2.allParsArg.value(13)';
 
             % disable all other sorts
             sortROIs.guihandles.sortedit3.String = '';
@@ -238,10 +238,10 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
         
         function module = dynamicRec_callBack(obj,a,b)
             % hack an evaluate plug-in in order to use the obj.getLocs(...)
-            module=plugin('ROIManager','Analyze','SMLMModelFit_dynamicRec_mCME');
+            module=plugin('ROIManager','Analyze','LocMoFit_dynamicRec_mCME');
             p.Vrim=100;
 
-            module.handle=figure('MenuBar','none','Toolbar','none','Name','SMLMModelFit_dynamicRec_mCME');
+            module.handle=figure('MenuBar','none','Toolbar','none','Name','LocMoFit_dynamicRec_mCME');
             module.attachPar(obj.P);
             module.attachLocData(obj.locData);
 
@@ -251,7 +251,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
 
             module.linkedManager = obj.fit_manager;
         %     fdcal=figure(233);
-        %     dcal=plugin('ROIManager','Analyze','SMLMModelFit_dynamicRec_mCME',fdcal,obj.P);
+        %     dcal=plugin('ROIManager','Analyze','LocMoFit_dynamicRec_mCME',fdcal,obj.P);
         %     dcal.attachLocData(obj.SE.locData);
         %     dcal.makeGui;
 
@@ -272,12 +272,12 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
                     boundCurvature(2) = 0.015;
                 end
                 % site filtering on sites
-                lFiter = obj.fit_manager.filter('SMLMModelFitGUI_2.m1.curvature', boundCurvature);
+                lFiter = obj.fit_manager.filter('LocMoFitGUI_2.m1.curvature', boundCurvature);
                 lFiter = lFiter&obj.fit_manager.useSites;
                 obj.fit_manager.usedSites = lFiter;
                 
                 % get the number of neg. curvature sites
-                lFiter = obj.fit_manager.filter('SMLMModelFitGUI_2.m1.curvature', [-inf 0]);
+                lFiter = obj.fit_manager.filter('LocMoFitGUI_2.m1.curvature', [-inf 0]);
                 lFiter = lFiter&obj.fit_manager.useSites;
                 numOfNegCur = sum(lFiter);
                 
@@ -360,7 +360,7 @@ pard.parsTable.Height=10;
 
 % pard.syncParameters={{'roimanager_processors','parsTable',{'Data'}}};
 
-pard.plugininfo.description='Manage and export results of SMLMModelFitGUI.';
+pard.plugininfo.description='Manage and export results of LocMoFitGUI.';
 pard.plugininfo.type='ROI_Analyze';
 end
 
@@ -380,7 +380,7 @@ function recSettings_callBack(a,b,obj)
     fig = figure;
     set(fig,'Tag', 'recSettings', 'Name', 'Settings - Dyanmic reconstruction')
     hOld = uicontrol(fig,'Position',[50 100 100 200]); 
-    fitter = obj.fit_manager.data.fitter.SMLMModelFitGUI_2;
+    fitter = obj.fit_manager.data.fitter.LocMoFitGUI_2;
     fitter.createConvertTable(hOld, 'hTable');
     
     uicontrol(fig,'Position',[50 70 25 25], 'Style', 'pushbutton','String','+','Callback',{@fitter.addRow, 'hTable'}); 
