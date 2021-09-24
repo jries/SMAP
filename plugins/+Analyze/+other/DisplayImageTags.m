@@ -19,18 +19,19 @@ classdef DisplayImageTags<interfaces.DialogProcessor&interfaces.SEProcessor
 %                     tab=uitab(tg,'Title',imagetags.tags{k});
 %                     ax=axes('Parent',tab);
                     dat=imagetags.data(k,:);
-                    if ischar(dat{1})
-                        datm=str2double(dat);
-                    else
-                        datm=cell2mat(dat);
-                    end
-                    frames=(1:length(datm))';
-                    plot(ax,frames, datm)
+%                     if ischar(dat{1})
+%                         datm=str2double(dat);
+%                     else
+%                         datm=cell2mat(dat);
+%                     end
+                    frames=(1:length(dat))';
+                    frameind=dat~=0;
+                    plot(ax,frames(frameind), dat(frameind))
                     xlabel('frame')
                     ylabel(imagetags.tags{k})
                     [~, fn]=fileparts(files(f).name);
                     title(fn,'Interpreter','none')
-                    xlim([min(frames) max(frames)])
+                    xlim([min(frames(frameind)) max(frames(frameind))])
                 end
             end
         end

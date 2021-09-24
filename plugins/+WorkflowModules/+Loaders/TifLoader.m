@@ -63,7 +63,7 @@ classdef TifLoader<interfaces.WorkflowModule
             obj.imloader.waittime=p.onlineanalysiswaittime;
             obj.imloader.setImageNumber(p.framestart-1);
             obj.numberOfFrames=obj.imloader.metadata.numberOfFrames;
-
+             
             if p.onlineanalysis
                 obj.framestop=inf;
             else
@@ -96,6 +96,7 @@ classdef TifLoader<interfaces.WorkflowModule
                 file=data.data;
                 obj.addFile(file)
             end
+            obj.imloader.prefit;
             id=1;
 
             imloader=obj.imloader;

@@ -1508,6 +1508,8 @@ classdef LocMoFit<matlab.mixin.Copyable
             % This function is for necessary updates
             % Structral changes leading to running failular have to be
             % fixed here.
+
+            uModelTypeOptoins(obj)
             uEarlier(obj)
             u210630(obj)
 %             u210917(obj)
@@ -1669,6 +1671,7 @@ function u210630(obj)
         end
     end
 end
+<<<<<<< HEAD
 function uEarlier(obj)
     if isempty(obj.advanceSetting)
         obj.initAdvanceSetting;
@@ -1676,6 +1679,33 @@ function uEarlier(obj)
 end
 
 
+=======
+
+function uModelTypeOptoins(obj)
+    for m = 1:obj.numOfModel
+        oneModelObj = obj.model{m}.modelObj;
+        modelTypeOption = oneModelObj.modelTypeOption;
+        if isempty(modelTypeOption)
+            modClass = class(oneModelObj);
+            modObjContainer = eval(modClass);
+            defaultModelTypeOption = modObjContainer.modelTypeOption;
+            oneModelObj.modelTypeOption = defaultModelTypeOption;
+            currentModType = oneModelObj.modelType;
+            if ~strcmp(currentModType, defaultModelTypeOption)
+                if strcmp(currentModType,'discrete')&&any(strcmp('discretized', defaultModelTypeOption))
+                    oneModelObj.modelType = 'discretized';
+                    oldModType = obj.model{m}.modelType;
+                    obj.model{m}.modelType = 'discretized';
+                    warning(['Model ' num2str(m) ': its model type was changed from [' oldModType '] to [discretized] due to an update. If this is not expected, check the model type carefully.'])
+                else
+                    warning(['Model ' num2str(m) ': ambiguous model type. Check whether the model type is outdated or not and consider to update it.'])
+                end
+            end
+            oneModelObj.modelTypeOption = modObjContainer.modelTypeOption;
+        end
+    end
+end
+>>>>>>> develop
 % 
 % 
 % hold(subax1, 'on')

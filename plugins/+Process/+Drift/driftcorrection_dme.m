@@ -317,6 +317,7 @@ pard.zrange.Width=0.9;
 
 pard.crlbconst.object=struct('String','use median CRLB','Style','checkbox','Visible','on');
 pard.crlbconst.position=[4,1];
+pard.crlbconst.Width=1.5;
 % pard.crlbconst.Optional=true;
 
 pard.usegpu.object=struct('String','use GPU','Style','checkbox','Visible','on','Value',1);

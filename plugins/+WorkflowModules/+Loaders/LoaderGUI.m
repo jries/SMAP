@@ -33,8 +33,8 @@ classdef LoaderGUI<interfaces.WorkflowModule
             output=[];
             obj.currentloader.run(data,p);
         end
-        function  addFile(obj,file)
-             obj.currentloader.addFile(file);
+        function  addFile(obj,file,varargin)
+             obj.currentloader.addFile(file,varargin{:});
         end
         function setoutputfilename(obj)
             obj.currentloader.setoutputfilename;

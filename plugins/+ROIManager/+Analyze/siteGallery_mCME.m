@@ -23,7 +23,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             dcal.makeGui;
             
             % [to-do] allow selection
-            fitterGUI_name = 'SMLMModelFitGUI_2';
+            fitterGUI_name = 'LocMoFitGUI_2';
             eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             idxFitterGUI = strcmp(fitterGUI_name,eval);
             fitter = copy(se.processors.eval.processors{idxFitterGUI}.fitter);
@@ -32,7 +32,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             % check the model name (to differentiate mCME and NPC)
             fn = fieldnames(obj.locData.SE.processors.eval.children);
-            idx = strcmp(fn, 'SMLMModelFitGUI_2');
+            idx = strcmp(fn, 'LocMoFitGUI_2');
             modelName = class(obj.locData.SE.processors.eval.processors{idx}.fitter.model{1}.modelObj);
                     
             % parameters
@@ -176,7 +176,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                     end
                     
                     if ~strcmp(modelName, 'NPCPointModel_flexible2')
-                        theta = subSites(siteInd).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
+                        theta = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
                         text(panSite(1).axis,20,20,['\theta=',num2str(theta,'%.1f')],'Color',[1 1 1],'VerticalAlignment','baseline')
                     end
                 end
@@ -489,7 +489,7 @@ pard.fSize.Width=1;
 % pard.t2.Width=1;
 % 
 % eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
-% lFitter = startsWith(eval,'SMLMModelFitGUI');
+% lFitter = startsWith(eval,'LocMoFitGUI');
 % options = eval(lFitter);
 % 
 % pard.fitter.object=struct('String',{options},'value',1,'Style','popupmenu');
@@ -513,7 +513,7 @@ function set2_callback(a,b,obj)
     sites = se.sites;
     realCloseAngle = [];
     for k = se.numberOfSites:-1:1
-        realCloseAngle(k) = sites(k).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
+        realCloseAngle(k) = sites(k).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
     end
     ID = getFieldAsVector(sites,'ID');
     use = getFieldAsVector(sites,'annotation.use');

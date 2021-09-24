@@ -158,12 +158,12 @@ classdef CameraConverter<interfaces.WorkflowModule
            if p.emmirror && obj.loc_cameraSettings.EMon  
                     imgp=imgp(:,end:-1:1);
            end
-           if isempty(obj.offsetmapuse)
-                loadcamcalibrationfile(obj,p,imgp);
-           end
+
            if p.correctcamera %apply offset and brightfield correction
                % scmosroi 
-
+               if isempty(obj.offsetmapuse)
+                    loadcamcalibrationfile(obj,p,imgp);
+               end
                imphot=(single(imgp)-obj.offsetmapuse)*obj.gainuse;   
 %                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
 %                    ./obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
@@ -228,9 +228,9 @@ for k=length(fn):-1:1
     fields{k}=description.(fn{k});
 %     fields{k}=fn{k};
     if myisfield(fi,fn{k})
-        defAns{k}=num2str(fi.(fn{k}));
+        defAns{k}=converttostring(fi.(fn{k}));
     else
-        defAns{k}=num2str(obj.loc_cameraSettings.(fn{k}));
+        defAns{k}=converttostring(obj.loc_cameraSettings.(fn{k}));
     end
 end
 answer=inputdlg(fields,'Acquisition settings',1,defAns);
@@ -367,6 +367,18 @@ function mirrorem_callback(a,b,obj)
 %             end
 %             obj.setPar('loc_fileinfo',fileinf);
 % end
+end
+
+function out=converttostring(in)
+if iscell(in)
+    out=join(in,',');
+    out=out{1};
+elseif ischar(in)
+    out=in;
+else
+    out=num2str(in);
+end
+
 end
 
 function pard=guidef(obj)
