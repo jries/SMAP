@@ -120,6 +120,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         stop = optimOutputPar(obj,x,optimValues,state,varargin)
         showFitResult(obj,varargin);
         
+        d = distance2RefPoint(obj, refPoint,varargin)
         %% model related functions
         function setModel(obj,model,modelId)
             % Adding one single model to the LocMoFit object according to the modelId.
@@ -613,7 +614,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             for k = 1:length(fn)
                 if ~isempty(ind)
                     if ~isempty(results.(fn{k}))||lRm
-                        if isequal(fn{k}, 'label')
+                        if isequal(fn{k}, 'label')&&~isempty(obj.allParsArg.(fn{k}){ind})
                             obj.allParsArg.(fn{k}){ind} = ['__' results.(fn{k})]; % put 2 underscore before the label to identify that it is a label
                         else
                             obj.allParsArg.(fn{k})(ind) = results.(fn{k});
@@ -670,7 +671,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             % Show all parId when modelnumber is not specified.
             %
             % Usage:
-            %   modCoord = obj.getAllParId(modelnumber, varargin)
+            %   [parId,subParsArgTemp] = obj.getAllParId(modelnumber, varargin)
             %
             % Args:
             %   modelnumber: an LocMoFit object.
@@ -1507,11 +1508,10 @@ classdef LocMoFit<matlab.mixin.Copyable
             % This function is for necessary updates
             % Structral changes leading to running failular have to be
             % fixed here.
-            
-            u210919(obj)
-            u210630(obj)
-            u210917(obj)
             uEarlier(obj)
+            u210630(obj)
+%             u210917(obj)
+%             u210919(obj)            
         end
     end
     methods(Access = protected)
@@ -1654,11 +1654,6 @@ end
 function u210919(obj)
     if isempty(obj.modelLayer)
         obj.modelLayer = getFieldAsVector(obj.model,'layer');
-    end
-end
-function uEarlier(obj)
-    if isempty(obj.advanceSetting)
-        obj.initAdvanceSetting;
     end
 end
 

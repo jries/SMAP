@@ -18,6 +18,7 @@ obj.locs = locs;
 p = inputParser;
 p.addParameter('locs2', [])
 p.addParameter('controlLogLikelihood', obj.getAdvanceSetting('controlLogLikelihood'))
+p.addParameter('confidenceInterval', obj.getAdvanceSetting('confidenceInterval'))
 p.addParameter('skipFit', false)
 p.parse(varargin{:})
 p = p.Results;
@@ -210,18 +211,18 @@ end
 
 switch p.controlLogLikelihood
     case 'none'
+        obj.fitInfo.LLExpDist = [];
     case 'expected'
-        obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
+%         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
         obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
-        obj.fitInfo.LLExpMean = mean(obj.fitInfo.LLExpDist);
+        obj.fitInfo.LLExp = mean(obj.fitInfo.LLExpDist);
         obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
+        obj.fitInfo.LLZScore = (obj.fitInfo.LLfit-obj.fitInfo.LLExp)./obj.fitInfo.LLExpStd;
     case 'overfitted'
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
     case 'both'
         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,2);
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
-    otherwise
-        obj.fitInfo.LLExpDist = [];
 end
 
 

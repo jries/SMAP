@@ -237,7 +237,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                             fitter.externalInfo = obj.locData.SE.currentsite.evaluation.(obj.name).externalInfo;
                         end
                         fitter.fit(locs,'skipFit', true);
-                        out.allParsArg = fitter.fitInfo;
+                        out.fitInfo = fitter.fitInfo;
                         out.allParsArg = fitter.allParsArg;
                     else
                         % preview

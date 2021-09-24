@@ -241,6 +241,9 @@ if isequal(results.plotType,'image')
     end
     finalImg = img2disp; %%%quick and dirty
 else
+    if isempty(obj.modelLayer)
+        obj.updateLayer
+    end
     layerPoint = obj.getLayerPoint(results.modelSamplingFactor);
 end
 %% Display images
