@@ -269,7 +269,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             if file~=0
                 boundCurvature = [0 inf]; % must exclude sites with neg. curvature
                 if p.withoutClouds
-                    boundCurvature(2) = 0.015;
+                    boundCurvature(2) = 0.016;
                 end
                 % site filtering on sites
                 lFiter = obj.fit_manager.filter('LocMoFitGUI_2.m1.curvature', boundCurvature);
