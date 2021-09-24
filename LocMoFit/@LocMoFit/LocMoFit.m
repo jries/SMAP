@@ -1671,15 +1671,12 @@ function u210630(obj)
         end
     end
 end
-<<<<<<< HEAD
+
 function uEarlier(obj)
     if isempty(obj.advanceSetting)
         obj.initAdvanceSetting;
     end
 end
-
-
-=======
 
 function uModelTypeOptoins(obj)
     for m = 1:obj.numOfModel
@@ -1705,7 +1702,6 @@ function uModelTypeOptoins(obj)
         end
     end
 end
->>>>>>> develop
 % 
 % 
 % hold(subax1, 'on')
