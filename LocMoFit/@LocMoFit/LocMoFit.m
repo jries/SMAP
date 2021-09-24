@@ -911,6 +911,18 @@ classdef LocMoFit<matlab.mixin.Copyable
             obj.addAdvanceSettings(default);
         end
         
+        function updateAdvancedSetting(obj)
+            default = defaultAdvanceSettings();
+            fn = fieldnames(default);
+            for k = 1:length(fn)
+                value = obj.getAdvanceSetting(fn{k});
+                if isempty(value)
+                    % Only add the setting when it doesn't exist
+                    obj.addAdvanceSettings(struct(fn{k},default.(fn{k})));
+                end
+            end
+        end
+        
         function addAdvanceSettings(obj, settings)
             fn = fieldnames(settings);
             for k = 1:length(fn)
@@ -925,14 +937,18 @@ classdef LocMoFit<matlab.mixin.Copyable
         
         function out = getAdvanceSetting(obj, settingName,field)
             try
+                if isfield(obj.advanceSetting, settingName)
                 switch nargin 
                     case 2
                         out = obj.advanceSetting.(settingName).value;
                     case 3
                         out = obj.advanceSetting.(settingName).(field);
                     otherwise
-                        warning('Wrong number of input argument(s).')
+                        warning("The property 'advanceSetting' might be wrong or missing.")
                         return
+                end
+                else
+                    out = [];
                 end
             catch
                 warning("The property 'advanceSetting' might be wrong or missing.")
@@ -1508,10 +1524,10 @@ classdef LocMoFit<matlab.mixin.Copyable
             % This function is for necessary updates
             % Structral changes leading to running failular have to be
             % fixed here.
-
             uModelTypeOptoins(obj)
             uEarlier(obj)
             u210630(obj)
+            obj.updateAdvancedSetting
 %             u210917(obj)
 %             u210919(obj)            
         end
@@ -1681,24 +1697,26 @@ end
 function uModelTypeOptoins(obj)
     for m = 1:obj.numOfModel
         oneModelObj = obj.model{m}.modelObj;
-        modelTypeOption = oneModelObj.modelTypeOption;
-        if isempty(modelTypeOption)
-            modClass = class(oneModelObj);
-            modObjContainer = eval(modClass);
-            defaultModelTypeOption = modObjContainer.modelTypeOption;
-            oneModelObj.modelTypeOption = defaultModelTypeOption;
-            currentModType = oneModelObj.modelType;
-            if ~strcmp(currentModType, defaultModelTypeOption)
-                if strcmp(currentModType,'discrete')&&any(strcmp('discretized', defaultModelTypeOption))
-                    oneModelObj.modelType = 'discretized';
-                    oldModType = obj.model{m}.modelType;
-                    obj.model{m}.modelType = 'discretized';
-                    warning(['Model ' num2str(m) ': its model type was changed from [' oldModType '] to [discretized] due to an update. If this is not expected, check the model type carefully.'])
-                else
-                    warning(['Model ' num2str(m) ': ambiguous model type. Check whether the model type is outdated or not and consider to update it.'])
+        if ~isempty(oneModelObj)
+            modelTypeOption = oneModelObj.modelTypeOption;
+            if isempty(modelTypeOption)
+                modClass = class(oneModelObj);
+                modObjContainer = eval(modClass);
+                defaultModelTypeOption = modObjContainer.modelTypeOption;
+                oneModelObj.modelTypeOption = defaultModelTypeOption;
+                currentModType = oneModelObj.modelType;
+                if ~strcmp(currentModType, defaultModelTypeOption)
+                    if strcmp(currentModType,'discrete')&&any(strcmp('discretized', defaultModelTypeOption))
+                        oneModelObj.modelType = 'discretized';
+                        oldModType = obj.model{m}.modelType;
+                        obj.model{m}.modelType = 'discretized';
+                        warning(['Model ' num2str(m) ': its model type was changed from [' oldModType '] to [discretized] due to an update. If this is not expected, check the model type carefully.'])
+                    else
+                        warning(['Model ' num2str(m) ': ambiguous model type. Check whether the model type is outdated or not and consider to update it.'])
+                    end
                 end
+                oneModelObj.modelTypeOption = modObjContainer.modelTypeOption;
             end
-            oneModelObj.modelTypeOption = modObjContainer.modelTypeOption;
         end
     end
 end
