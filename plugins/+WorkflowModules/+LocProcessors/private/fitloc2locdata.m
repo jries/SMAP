@@ -140,5 +140,7 @@ if isfield(locs,'logLikelihood')
 end
 
 locdat.filenumber=uint8(0*locdat.xnm+obj.filenumber);
-locdat.channel=0*locdat.xnm;
+if ~isfield(locdat,'channel')
+    locdat.channel=0*locdat.xnm;
+end
 end
