@@ -49,29 +49,34 @@ classdef assignDist<interfaces.SEEvaluationProcessor
             
             thetaFit = locMoFitter.getVariable('m1.closeAngle');
             lb = deg2rad(-thetaFit);
-            lAbove = elevation>lb;
+            lAbove = elevation>lb-deg2rad(10);
             
-            ax = obj.setoutput('Residue');
-            axP = obj.setoutput('Polar');
-            scatter(ax,d(lShow).*cos(elevation(lShow)), locs.znm(lShow), [], dd(lShow));
-            axis(ax,'equal')
+            
+            
             [elevation_sorted, ind] = sort(elevation(lShow&lAbove));
             
             dd_shown = dd(lShow&lAbove);
-            medDD = movmedian(dd_shown(ind),deg2rad(20), 'SamplePoints', elevation_sorted);
-            plot(axP,elevation(lShow),dd(lShow), ' .', 'MarkerSize', 5);
-            hold(axP, 'on')
-            plot(axP, elevation_sorted, medDD, '-', 'LineWidth',2)
-            hold(axP, 'off')
             
+            if obj.getPar('se_display')
+                ax = obj.setoutput('Residue');
+                scatter(ax,d(lShow).*cos(elevation(lShow)), locs.znm(lShow), [], dd(lShow));
+                axis(ax,'equal')
+                axP = obj.setoutput('Polar');
+                plot(axP,elevation(lShow),dd(lShow), ' .', 'MarkerSize', 5);
+                hold(axP, 'on')
+                medDD = movmedian(dd_shown(ind),deg2rad(30), 'SamplePoints', double(elevation_sorted)+(1:length(elevation_sorted))'*eps);
+                plot(axP, elevation_sorted, medDD, '-', 'LineWidth',2)
+                hold(axP, 'off')
+            end
             
 %             
 %             fullRange = range([r+eps lb-eps]);
 %             locs_znm = locs.znm(lShow);
 %             dd_show = dd(lShow);
             
-            out.distance2ref = d;
-            out.score = dd;
+            out.dd = dd(lShow);
+%             out.distance2ref = d;
+            out.ele = elevation(lShow);
         end
         function pard=guidef(obj)
             pard=guidef;
