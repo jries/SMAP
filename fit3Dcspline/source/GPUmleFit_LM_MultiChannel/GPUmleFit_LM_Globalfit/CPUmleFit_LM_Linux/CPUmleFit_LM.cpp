@@ -704,8 +704,8 @@ void kernel_splineMLEFit_z_EMCCD_multi(const int subregion, const float *d_data,
 						switch (i){
 						case 0:
 						case 1:
-							newThetaAll[n]=max(newThetaAll[n],(float(sz)-1)/2-sz/4.0);
-							newThetaAll[n] = min(newThetaAll[n],(float(sz)-1)/2+sz/4.0);
+							/*newThetaAll[n]=max(newThetaAll[n],(float(sz)-1)/2-sz/4.0);
+							newThetaAll[n] = min(newThetaAll[n],(float(sz)-1)/2+sz/4.0);*/
 							/*								test = 1;*/
 							break;
 						case 2:
@@ -731,11 +731,8 @@ void kernel_splineMLEFit_z_EMCCD_multi(const int subregion, const float *d_data,
 							switch (i){
 							case 0:
 							case 1:
-								/*newThetaAll[n]=max(newThetaAll[n],(float(sz)-1)/2-sz/4.0);
-								newThetaAll[n] = min(newThetaAll[n],(float(sz)-1)/2+sz/4.0);*/
-
-								newThetaAll[n+j]=max(newThetaAll[n+j],(float(sz)-1)/2-sz/4.0);
-								newThetaAll[n+j] = min(newThetaAll[n+j],(float(sz)-1)/2+sz/4.0);
+								/*newThetaAll[n+j]=max(newThetaAll[n+j],(float(sz)-1)/2-sz/4.0);
+								newThetaAll[n+j] = min(newThetaAll[n+j],(float(sz)-1)/2+sz/4.0);*/
 
 
 								break;
@@ -1652,8 +1649,8 @@ void kernel_splineMLEFit_z_sCMOS_multi(const int subregion, const float* d_data,
 						switch (i) {
 						case 0:
 						case 1:
-							newThetaAll[n] = max(newThetaAll[n], (float(sz) - 1) / 2 - sz / 4.0);
-							newThetaAll[n] = min(newThetaAll[n], (float(sz) - 1) / 2 + sz / 4.0);
+							/*newThetaAll[n] = max(newThetaAll[n], (float(sz) - 1) / 2 - sz / 4.0);
+							newThetaAll[n] = min(newThetaAll[n], (float(sz) - 1) / 2 + sz / 4.0);*/
 							/*								test = 1;*/
 							break;
 						case 2:
@@ -1679,11 +1676,8 @@ void kernel_splineMLEFit_z_sCMOS_multi(const int subregion, const float* d_data,
 							switch (i) {
 							case 0:
 							case 1:
-								/*newThetaAll[n]=max(newThetaAll[n],(float(sz)-1)/2-sz/4.0);
-								newThetaAll[n] = min(newThetaAll[n],(float(sz)-1)/2+sz/4.0);*/
-
-								newThetaAll[n + j] = max(newThetaAll[n + j], (float(sz) - 1) / 2 - sz / 4.0);
-								newThetaAll[n + j] = min(newThetaAll[n + j], (float(sz) - 1) / 2 + sz / 4.0);
+								/*newThetaAll[n + j] = max(newThetaAll[n + j], (float(sz) - 1) / 2 - sz / 4.0);
+								newThetaAll[n + j] = min(newThetaAll[n + j], (float(sz) - 1) / 2 + sz / 4.0);*/
 
 
 								break;
