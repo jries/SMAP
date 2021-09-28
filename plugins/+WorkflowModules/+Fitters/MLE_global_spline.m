@@ -269,6 +269,7 @@ end
 locs.iterations=P(:,end);
 if ~isempty(color)
     locs.color=color;
+    locs.channel=color;
     locs.LLsecond=llsecond;
 end
 global testloc
