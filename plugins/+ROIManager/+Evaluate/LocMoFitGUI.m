@@ -423,6 +423,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                         
                         % Create the tab for fitted parameters
                         axPar = obj.setoutput('Fitted_Par');
+                        
+                        % Clean the tab (remove existed uitable and so)
+                        delete(findobj(axPar.Parent.Children, '-not','type', 'axes'))
                         uiFittedPar(axPar, fitter);
                         axPar.Visible = 'Off';                        
     

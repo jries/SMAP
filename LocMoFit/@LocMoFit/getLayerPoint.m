@@ -3,8 +3,8 @@ modPoint = obj.getModPoint(modSamplingF);
 for ch = 1:length(obj.allModelLayer)
     layerPoint{ch}.x = [];
     layerPoint{ch}.y = [];
-    layerPoint{ch}.z = [];
     layerPoint{ch}.n = [];
+    layerPoint{ch}.z = [];
     indModelOneCh = find(obj.modelLayer == obj.allModelLayer(ch));
     for k = 1:length(indModelOneCh)
         indOneModel = indModelOneCh(k);
@@ -13,6 +13,8 @@ for ch = 1:length(obj.allModelLayer)
         layerPoint{ch}.y = [layerPoint{ch}.y; onePoint.y];
         if obj.model{1}.dimension == 3
             layerPoint{ch}.z = [layerPoint{ch}.z; onePoint.z];
+        else
+            layerPoint{ch} = rmfield(layerPoint{ch},'z');
         end
         layerPoint{ch}.n = [layerPoint{ch}.n; onePoint.n];
     end

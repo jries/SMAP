@@ -38,7 +38,8 @@ if disable.Value == 0
     subViz4 = nexttile(t);
     
     % Point visualization of the fit
-    for j = 1:obj.numOfModel
+    for j = obj.numOfModel:-1:1
+        variation_ori(j) = obj.getVariable(['m' num2str(j) '.lPar.variation']);
         obj.setParArg(['m' num2str(j) '.lPar.variation'], 'value',0);
     end
     [~,modViz] = obj.plot(locs,'plotType','point', 'doNotPlot', true); % get point type visualization
@@ -55,6 +56,9 @@ if disable.Value == 0
     axis(subViz3,'equal')
     set(subViz4,'YDir','normal')
     axis(subViz4,'equal')
+    for j = obj.numOfModel:-1:1
+        obj.setParArg(['m' num2str(j) '.lPar.variation'], 'value',variation_ori(j));
+    end
 end
 end
 

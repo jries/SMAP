@@ -10,7 +10,7 @@ for k = obj.numOfModel:-1:1
         
     else
         oneMPars = obj.exportPars(k,'mPar');
-        if isempty(results.modelSamplingFactor)
+        if isempty(modSamplingF)
             ref = obj.model{k}.getPoint(oneMPars);
         else
             ref = obj.model{k}.getPoint(oneMPars,'factor',modSamplingF);

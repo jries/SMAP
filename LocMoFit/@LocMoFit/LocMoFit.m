@@ -905,6 +905,13 @@ classdef LocMoFit<matlab.mixin.Copyable
             obj.converterRules.target = {};
             obj.converterRules.rule = {};
         end
+        
+        function rmOneConvertRule(obj, targets)
+            indRm = ismember(obj.converterRules.target,targets);
+            obj.converterRules.target(indRm) = [];
+            obj.converterRules.rule(indRm) = [];
+        end
+        
         %% advanced settings
         function initAdvanceSetting(obj)
             default = defaultAdvanceSettings();
@@ -1082,6 +1089,7 @@ classdef LocMoFit<matlab.mixin.Copyable
                         label_kept = allLabels(indKept);
                         modCoord{l}.x = modCoord{l}.x(label_kept);
                         modCoord{l}.y = modCoord{l}.y(label_kept);
+                        modCoord{l}.n = modCoord{l}.n(label_kept);
                         if obj.dimension == 3
                             modCoord{l}.z = modCoord{l}.z(label_kept);
                         end
@@ -1095,6 +1103,7 @@ classdef LocMoFit<matlab.mixin.Copyable
                         indKept = randi(length(modCoord{l}.x), numOfMol,1);
                         modCoord{l}.x = modCoord{l}.x(indKept);
                         modCoord{l}.y = modCoord{l}.y(indKept);
+                        modCoord{l}.n = modCoord{l}.n(indKept);
                         if obj.dimension == 3
                             modCoord{l}.z = modCoord{l}.z(indKept);
                         end
@@ -1136,6 +1145,8 @@ classdef LocMoFit<matlab.mixin.Copyable
                     
                     modCoord{l}.x = [modCoord{l}.x; x_offset.*roiSize/2];
                     modCoord{l}.y = [modCoord{l}.y; y_offset.*roiSize/2];
+                    n = ones(size(x));
+                    modCoord{l}.n = [modCoord{l}.n; n];
                 else
                     % cilinderical ROI in the cubic
                     % scale up to ROI size of the simulation
@@ -1154,8 +1165,10 @@ classdef LocMoFit<matlab.mixin.Copyable
                     
                     roiSize = obj.roiSize;
                     [x,y,z] = getBGLocs(numAll, roiSize, finalROISize, pExp_Offset, obj.dataDim);
+                    n = ones(size(x));
                     modCoord{l}.x = [modCoord{l}.x; x];
                     modCoord{l}.y = [modCoord{l}.y; y];
+                    modCoord{l}.n = [modCoord{l}.n; n];
                 end
                 if ~isempty(z)
                     % for 3D model
@@ -1338,6 +1351,9 @@ classdef LocMoFit<matlab.mixin.Copyable
                 end
             else
                 prob = obj.intensityCal(fitPars,locs);
+                if isempty(prob)
+                    'hey'
+                end
                 LLfit = sum(compensationFactor.*log(prob),2);
             end
             if strcmp(obj.status, 'initial')

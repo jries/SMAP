@@ -292,11 +292,11 @@ function setModPars_callback(a,b,obj)
     %% save and load
     guihandles.saveParArg = uicontrol(fig, 'Style','pushbutton','String','Save');
     guihandles.saveParArg.Position = [2.5 1 0.5 1];
-    guihandles.saveParArg.Callback = {@saveParArg_callback,guihandles.parArgTable};
+    guihandles.saveParArg.Callback = {@saveParArg_callback,{guihandles.parArgTable,guihandles.convertTable}};
     
     guihandles.loadParArg = uicontrol(fig, 'Style','pushbutton','String','Load');
     guihandles.loadParArg.Position = [3 1 0.5 1];
-    guihandles.loadParArg.Callback = {@loadParArg_callback,guihandles.parArgTable};
+    guihandles.loadParArg.Callback = {@loadParArg_callback,{guihandles.parArgTable,guihandles.convertTable}};
     guiStyle(guihandles, fieldnames(guihandles))
 end
 
@@ -314,28 +314,40 @@ function editor_callback(a,b,parArgTable)
     guiStyle(guihandles,fieldnames(guihandles));
 end
 
-function saveParArg_callback(a,b,parArgTable)
+function saveParArg_callback(a,b,tables)
+    parArgTable = tables{1};
+    convertTable = tables{2};
+    szConvertTable = size(convertTable.Data);
+    blank = repmat({''},[szConvertTable(1) 3]);
     [file,path] = uiputfile('*.txt','Save parameter argument table');
-    writecell(parArgTable.Data, [path file]);
+    writecell([parArgTable.Data;[convertTable.Data blank]], [path file]);
 end
 
-function loadParArg_callback(a,b,parArgTable)
+function loadParArg_callback(a,b,tables)
+    parArgTable = tables{1};
+    convertTable = tables{2};
+    
     [file,path] = uigetfile('*.txt','Load parameter argument table');
     opts = delimitedTextImportOptions('NumVariables',5);
     oneTable = readcell([path file],opts);
     oneTable = string(oneTable);
     oneTable = cellstr(oneTable);
-    parArgTable.Data = oneTable;
     
+    % Use the model column to separate the par and convert tables
+    model = oneTable(:,3);
+    col_convertTable = cellfun(@isempty,model);
+    
+    parArgTable.Data = oneTable(~col_convertTable,:);
+    convertTable.Data = oneTable(col_convertTable,1:2);
     
     callBack = parArgTable.CellEditCallback{1};
     locMoFitObj = parArgTable.CellEditCallback{2};
     editable = [4 5];
     for k = 1:length(editable)
-        for l = 1:size(oneTable,1)
+        for l = 1:size(parArgTable.Data,1)
             holder.Indices(1) = l;
             holder.Indices(2) = editable(k);
-            holder.NewData = oneTable{l,editable(k)};
+            holder.NewData = parArgTable.Data{l,editable(k)};
             callBack(parArgTable,holder,locMoFitObj);
         end
     end
@@ -382,14 +394,28 @@ function parArgTable_CellEditCallback(a,b,obj)
         case 5
             % column 5: convert
             parId = ['m' num2str(obj.allParsArg.model(indEdited)), '.',obj.allParsArg.type{indEdited}, '.', obj.allParsArg.name{indEdited}];
-            obj.converter(obj, b.NewData, parId);
+            if isempty(b.NewData)
+                obj.rmOneConvertRule(parId);
+            else
+                obj.converter(obj, b.NewData, parId);
+            end
     end
 end
 
 function applyConvertRules(a,b,hTable,obj)
     data = hTable.Data;
+    
+    % Remove user defined targets that are not in the current table
+    indUsr = startsWith(obj.converterRules.target,'usr_');
+    allTarget2set = data(:,1);
+    allTarget2set = join([cellstr(repmat('usr_',size(allTarget2set))) allTarget2set],'');
+    indNot = ~ismember(obj.converterRules.target, allTarget2set);
+    indRm = indUsr&indNot;
+    obj.rmOneConvertRule(obj.converterRules.target(indRm))
+    
+    % Assign convert rules
     for r = 1:size(data,1)
-        obj.converter([],data{r,2},['usr_' data{r,1}])
+        obj.converter([],data{r,2},allTarget2set{r})
     end
 end
 

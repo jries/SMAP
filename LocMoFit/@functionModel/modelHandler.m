@@ -45,9 +45,10 @@ if ~any([isequal(obj.modelType, 'continuous') isequal(obj.modelType, 'background
             y = y';
             refLocs.x = x'+lPars{k}.x;
             refLocs.y = y'+lPars{k}.y;
+            refLocs.n = repelem(refLocs.n,1, size(lPars{k}.y,2));
         end
-        lInRoi = refLocs.x.^2+refLocs.y.^2 <=(obj.ParentObject.roiSize/2)^2;
-        refLocs.x = refLocs.x(lInRoi); refLocs.y = refLocs.y(lInRoi); refLocs.n = refLocs.n(lInRoi);
+%         lInRoi = refLocs.x.^2+refLocs.y.^2 <=(obj.ParentObject.roiSize/2)^2;
+%         refLocs.x = refLocs.x(lInRoi); refLocs.y = refLocs.y(lInRoi); refLocs.n = refLocs.n(lInRoi);
     end
     
     % Deal with the gaussDistCutoff for the fast-mode gaussDist
