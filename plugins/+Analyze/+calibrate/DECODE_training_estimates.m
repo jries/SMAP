@@ -291,7 +291,13 @@ function usecurrent_callback(a,b,obj)
     disp(['emitters in 40x40 per frame: ' num2str(emitters)]);
     js.SMAP.density=density;
     [expdir,js.SMAP.name]=fileparts(obj.locData.files.file(1).name);
-    
+    if ismac
+        js.Hardware.device='cpu';
+        js.Hardware.device_simulation='cpu';
+    else
+        js.Hardware.device='cuda:0';
+        js.Hardware.device_simulation='cuda:0';
+    end
     if isempty(js.InOut.calibration_file)
         js.InOut.calibration_file=get3dcalfile(obj);
     end
