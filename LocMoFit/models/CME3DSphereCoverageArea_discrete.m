@@ -14,7 +14,7 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
             obj.max = [5e+5 90];
             
             % Define other properties here:
-            obj.modelType = 'discrete';
+            obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized', 'continuous'};
             obj.dimension = 3;
         end

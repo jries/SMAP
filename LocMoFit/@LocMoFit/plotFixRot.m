@@ -42,7 +42,7 @@ if disable.Value == 0
         variation_ori(j) = obj.getVariable(['m' num2str(j) '.lPar.variation']);
         obj.setParArg(['m' num2str(j) '.lPar.variation'], 'value',0);
     end
-    [~,modViz] = obj.plot(locs,'plotType','point', 'doNotPlot', true); % get point type visualization
+    modViz = obj.getModPoint(0.3); % get point type visualization
     locsViz = obj.locsHandler(locs,obj.exportPars(1,'lPar'),1);
     obj.rotCoordNMkImg(subViz1, modViz, locsViz, [0 -90], 2, 'Data', 30, results.lutLocs)
     obj.rotCoordNMkImg(subViz2, modViz, locsViz, [45 -90], 2, 'Data', 30, results.lutLocs)
