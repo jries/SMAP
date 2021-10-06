@@ -70,9 +70,13 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
 
 
                %tensorboard
-               pdecode=fileparts(obj.yamlpar.Connect.local_decode_path)
-               pcalltb=[pdecode '/tensorboard --samples_per_plugin images=100 --port=6008 --logdir=runs' ];
-               ptb=processManager('command',pcalltb,'workingDir',[fileparts(yamlpath) filesep]);
+               tbfile=savetbsh(obj.yamlpar)
+
+%                system(tbfile)
+
+%                pdecode=fileparts(obj.yamlpar.Connect.local_decode_path)
+%                pcalltb=[pdecode '/tensorboard --samples_per_plugin images=100 --port=6008 --logdir=runs' ];
+               ptb=processManager('command',tbfile,'workingDir',[fileparts(yamlpath) ]);
                
                [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
                 gpus=parsegpustat(gpustat)
@@ -149,7 +153,18 @@ shfile=fullfile(js.Connect.local_network_storage,expout,'starttraining.sh');
 remoteyaml=fullfile(js.Connect.remote_network_storage, expout, yamlname);
 command=['ssh ' js.Connect.remote_workstation ' ''nohup ' ...
     js.Connect.remote_decode_path ' -m decode.neuralfitter.train.live_engine -p ' ...
-    remoteyaml ' > foo.out 2> foo.err < /dev/null &'' '];
+    remoteyaml ' -l ' fileparts(remoteyaml) filesep 'runs > foo.out 2> foo.err < /dev/null &'' '];
+fid=fopen(shfile,'w');
+fprintf(fid,command);
+fclose(fid);
+
+end
+
+function shfile=savetbsh(js)
+shfile=fullfile(js.Connect.local_network_storage,js.InOut.experiment_out,'starttensorboard.sh');
+pdecode=fileparts(js.Connect.local_decode_path);
+command=[pdecode '/tensorboard --samples_per_plugin images=100 --port=6008 --logdir=' js.Connect.local_network_storage js.InOut.experiment_out  'runs'];
+
 fid=fopen(shfile,'w');
 fprintf(fid,command);
 fclose(fid);
