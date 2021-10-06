@@ -1,7 +1,7 @@
 classdef DECODE_training_estimates<interfaces.DialogProcessor
 %     Saves a training file for DECODE
     properties
-        yamldefault='DECODE_default.yaml';
+        yamldefault='DECODE_local.yaml';
         yamlfile
         yamlpar
         jsontypes
@@ -14,6 +14,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
             obj.showresults=false;
         end
         function out=run(obj,p)
+     
            pdecode=obj.getGlobalSetting('DECODE_path');
            if ~exist(pdecode,'dir')
                warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
@@ -88,6 +89,10 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                 obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
         
             yamldefault=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep obj.yamldefault];
+            if ~exist(yamldefault,'file')
+                yamlold=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep 'DECODE_default.yaml'];
+                copyfile(yamlold, yamldefault)
+            end
             obj.yamlfile=yamldefault;
             tt=uitable(obj.handle);
             tt.Position=obj.guihandles.partablepos.Position;
