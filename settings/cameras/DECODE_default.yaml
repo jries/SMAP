@@ -33,3 +33,19 @@ Simulation:
 Hardware:
     device: cuda:0
     device_simulation: cuda:0
+SMAP:
+    set_emitters_per_um2: 'HD'
+    zrange_nm:
+        - 0.0 
+        - 0.0
+Connect:
+    remote_workstation:
+        'riesgroup@pc-ries25'
+    remote_decode_path:
+        '/home/riesgroup/xconda3/envs/decode_v010/bin/python'
+    local_decode_path:
+        '/Users/jonasries/opt/anaconda3/envs/decode_env/bin/python'
+    local_network_storage:
+        '/Volumes/t2ries/DECODE/'
+    remote_network_storage:
+        '/mnt/t2ries/DECODE/'
