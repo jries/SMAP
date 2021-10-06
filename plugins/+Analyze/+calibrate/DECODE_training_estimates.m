@@ -37,9 +37,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
     
                pcalltb=[pdecode '/bin/tensorboard --samples_per_plugin images=100 --port=6007 --logdir=runs' ];
                ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
-               obj.tensorboardprocess=ptb;
-               obj.guihandles.stoplearning.Visible='on';
-               obj.guihandles.tensorboard.Visible='on';
+   
            else %train on workstation
                %make output directory
                outdir=[obj.yamlpar.Connect.local_network_storage  obj.yamlpar.InOut.experiment_out];
@@ -58,38 +56,28 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                [~,fname]=fileparts(obj.locData.files.file(1).name);
                yamlname=['DECODE_train_' fname '.yaml'];
                yamlpath=[obj.yamlpar.Connect.local_network_storage obj.yamlpar.InOut.experiment_out  yamlname];
-               
-%                yamlparsave=obj.yamlpar; %before experiment_out overwritten. Maye remove later
-               
-               
+               % gpu
+               [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
+               [gpus,gpurec]=parsegpustat(gpustat);
+               yamlp.Hardware.device=['cuda:' num2str(gpurec)];
+               yamlp.Hardware.device_simulation=['cuda:' num2str(gpurec)];
+
                yamlp.InOut.experiment_out=fullfile(obj.yamlpar.Connect.remote_network_storage, obj.yamlpar.InOut.experiment_out);
                saveyaml(yamlp,yamlpath);
               
                shfile=savesh(yamlp,yamlname,obj.yamlpar.InOut.experiment_out);
-               system([shfile])
-
+               system([shfile]);
 
                %tensorboard
-               tbfile=savetbsh(obj.yamlpar)
-
-%                system(tbfile)
-
-%                pdecode=fileparts(obj.yamlpar.Connect.local_decode_path)
-%                pcalltb=[pdecode '/tensorboard --samples_per_plugin images=100 --port=6008 --logdir=runs' ];
+               tbfile=savetbsh(obj.yamlpar);
                ptb=processManager('command',tbfile,'workingDir',[fileparts(yamlpath) ]);
-               
+               pause(1)
                [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
-                gpus=parsegpustat(gpustat)
-%                results=ssh2_simple_command('pc-ries25','riesgroup','superres','nvidia-smi')
-%                pcall1=['ssh ' obj.yamlpar.SMAP.remote_workstation]; 
-%                ptb(1)=processManager('command',pcall1,'workingDir',obj.yamlpar.InOut.experiment_out,'autoStart',false);
-%                pcall2=['/home/riesgroup/xconda3/envs/decode_env' '/bin/python -m decode.neuralfitter.train.live_engine -p ' fnameo ];
-%                ptb(2)=processManager('command',pcall2,'workingDir',obj.yamlpar.InOut.experiment_out,'autoStart',false);
-%                sshc=ssh2_config('pc-ries25','riesgroup','superres')
-%                sshc=ssh2_command(sshc,pcall2,1)
-%                ptb.start
+               [gpus,gpurec]=parsegpustat(gpustat);
            end
-
+           obj.tensorboardprocess=ptb;
+           obj.guihandles.stoplearning.Visible='on';
+           obj.guihandles.tensorboard.Visible='on';
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -527,13 +515,23 @@ end
 
 function stoplearning_callback(a,b,obj)
     obj.tensorboardprocess.stop;
-    obj.decodeprocess.stop;
+    [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
+    [gpus,gpurec]=parsegpustat(gpustat);
+    for k=1:length(gpus.pid)
+        command=['ssh ' obj.yamlpar.Connect.remote_workstation ' ''kill ' num2str(gpus.pid(k).PID) ''''];
+        system(command);
+    end
+    
     obj.guihandles.stoplearning.Visible='off';
     obj.guihandles.tensorboard.Visible='off';
+    try
+    obj.decodeprocess.stop;
+    catch err
+    end
 end
 
 function tensorboard_callback(a,b,obj)
-page='http://localhost:6007';
+page='http://localhost:6008';
 web(page,'-browser')
 end
 
