@@ -15,13 +15,15 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         end
         function out=run(obj,p)
      
-           pdecode=obj.getGlobalSetting('DECODE_path');
-           if ~exist(pdecode,'dir')
-               warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
-               return
-           end
+%            pdecode=obj.getGlobalSetting('DECODE_path');
+%            if ~exist(pdecode,'dir')
+%                warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
+%                return
+%            end
            out=[];
+       
            if p.trainlocal
+               pdecode=obj.yamlpar.Connect.local_decode_path;
                [~,fname]=fileparts(obj.locData.files.file(1).name);
                yamlpath=[obj.yamlpar.InOut.experiment_out filesep 'DECODE_train_' fname '.yaml'];
                finalizejson(obj);
@@ -69,7 +71,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                shfile=savesh(yamlp,yamlname,obj.yamlpar.InOut.experiment_out);
                system([shfile]);
 
-               %tensorboard
+               %tensorboard XXXX move to tensorboard button
                tbfile=savetbsh(obj.yamlpar);
                ptb=processManager('command',tbfile,'workingDir',[fileparts(yamlpath) ]);
                pause(1)
@@ -86,7 +88,9 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         function initGui(obj)
 
             initGui@interfaces.DialogProcessor(obj);
-                obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
+            obj.deleteGlobalSetting('DECODE_path')
+%                 obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
+         
         
             yamldefault=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep obj.yamldefault];
             if ~exist(yamldefault,'file')
@@ -153,14 +157,14 @@ fclose(fid);
 
 end
 
-function shfile=savetbsh(js)
+function command=savetbsh(js)
 shfile=fullfile(js.Connect.local_network_storage,js.InOut.experiment_out,'starttensorboard.sh');
 pdecode=fileparts(js.Connect.local_decode_path);
 command=[pdecode '/tensorboard --samples_per_plugin images=100 --port=6008 --logdir=' js.Connect.local_network_storage js.InOut.experiment_out  'runs'];
 
-fid=fopen(shfile,'w');
-fprintf(fid,command);
-fclose(fid);
+% fid=fopen(shfile,'w');
+% fprintf(fid,command);
+% fclose(fid);
 
 end
 
@@ -360,7 +364,7 @@ function usecurrent_callback(a,b,obj)
         return
     end
     locsu=obj.locData.getloc(fields,'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
-    f=figure;
+    f=figure('Visible','off');
     stat=make_statistics2({locs});
     close(f)
     
