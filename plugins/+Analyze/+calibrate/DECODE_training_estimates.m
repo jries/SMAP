@@ -7,6 +7,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         jsontypes
         decodeprocess
         tensorboardprocess
+        decodepid
     end
     methods
         function obj=DECODE_training_estimates(varargin)  
@@ -40,8 +41,8 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
     
                pcalltb=[pdecode '/bin/tensorboard --samples_per_plugin images=100 --port=6007 --logdir=runs' ];
                ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
-   
-           else %train on workstation
+               obj.tensorboardprocess=ptb;
+           elseif 0 %train on workstation old
                %make output directory
                outdir=[obj.yamlpar.Connect.local_network_storage  obj.yamlpar.InOut.experiment_out];
                if ~exist(outdir,'dir')
@@ -77,8 +78,45 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                pause(1)
                [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
                [gpus,gpurec]=parsegpustat(gpustat);
+           else %workstation via HTTP
+               %make output directory
+               outdir=[obj.yamlpar.Connect.local_network_storage  'experiments' filesep obj.yamlpar.InOut.experiment_out];
+               if ~exist(outdir,'dir')
+                   mkdir(outdir)
+               end
+               %copy files
+               finalizejson(obj);
+               yamlp=obj.yamlpar;
+               calfile=obj.yamlpar.InOut.calibration_file;
+               copyfile(calfile,outdir);
+               [~,fout,fext]=fileparts(calfile);
+               %change yaml parameters
+               server=obj.yamlpar.Connect.remote_workstation;
+               status=webread([server '/status']);
+               status.watch_dir=[status.watch_dir filesep];
+               yamlp.InOut.calibration_file=fullfile(status.watch_dir, obj.yamlpar.InOut.experiment_out,[fout fext]);
+               %save yaml
+               [~,fname]=fileparts(obj.locData.files.file(1).name);
+               yamlname=['DECODE_train_' fname '.yaml'];
+               yamlpath=[outdir yamlname];
+               yamlpath_remote=[obj.yamlpar.InOut.experiment_out  yamlname];
+               % gpu
+               gpustat=webread([server '/status_gpus']);
+               [gpus,gpurec]=parsegpustathttp(gpustat);
+               yamlp.Hardware.device=gpurec;
+               yamlp.Hardware.device_simulation=gpurec;
+
+               yamlp.InOut.experiment_out=fullfile(status.watch_dir, obj.yamlpar.InOut.experiment_out);
+               saveyaml(yamlp,yamlpath);
+
+               url = 'http://pc-ries25:8000/submit';
+               options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
+               pid = webread(url, 'path_param', yamlpath_remote, options);
+               l=length(obj.decodepid);
+               obj.decodepid(l+1).pid=pid;
+               obj.decodepid(l+1).date=now;
            end
-           obj.tensorboardprocess=ptb;
+
            obj.guihandles.stoplearning.Visible='on';
            obj.guihandles.tensorboard.Visible='on';
         end
@@ -92,7 +130,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
 %                 obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
          
         
-            yamldefault=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep obj.yamldefault];
+            yamldefault=[obj.getPar('SettingsDirectory') filesep 'temp' filesep obj.yamldefault];
             if ~exist(yamldefault,'file')
                 yamlold=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep 'DECODE_default.yaml'];
                 copyfile(yamlold, yamldefault)
@@ -110,40 +148,52 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
     end
 end
 
-function [gpus,gpurec]=parsegpustat(gpustat)
-indpl=strfind(gpustat,'+');
-gpustat=gpustat(indpl(1):end);
-fl=80;
-line=[9 13];
-linp=(line-1)*fl;
-for k=1:length(line)
-lh=gpustat(linp(k):linp(k)+fl);
-ind1=strfind(lh,'|');
-ind2=strfind(lh,'MiB');
-gpus.mem(k)=str2double(lh(ind1(2)+1:ind2(1)-1));
-ind3=strfind(lh,'%');
-gpus.activity(k)=str2double(lh(ind1(end-1)+1:ind3(end)-1));
-end
-indpid=1;
-
-for k=0:length(gpustat)/fl-1
-    lh=gpustat(k*fl+1:(k+1)*fl);
-    if strfind(lh,'decode')
-        gpus.pid(indpid).GPU=str2double(lh(2:9));
-        gpus.pid(indpid).PID=str2double(lh(18:30));
-        gpus.pid(indpid).mem=str2double(lh(68:74));
-        indpid=indpid+1;
-    end
+function [gpus,gpurec]=parsegpustathttp(gpustat)
+fn=fieldnames(gpustat);
+for k=1:length(fn)
+    gpus.mem(k)=gpustat.(fn{k}).memory_total-gpustat.(fn{k}).memory_util;
+    gpus.load(k)=gpustat.(fn{k}).load;
+    gpus.name{k}=strrep(fn{k},'_',':');
 end
 
-if indpid==2
-    gpuused=gpus.pid.GPU;
-    gpurec=1-gpuused;
-else
-    [m,indm]=min(gpus.mem);
-    gpurec=indm-1;
+[mmax, ind]=max(gpus.mem);
+gpurec=gpus.name{ind};
 end
-end
+
+% function [gpus,gpurec]=parsegpustat(gpustat)
+% indpl=strfind(gpustat,'+');
+% gpustat=gpustat(indpl(1):end);
+% fl=80;
+% line=[9 13];
+% linp=(line-1)*fl;
+% for k=1:length(line)
+% lh=gpustat(linp(k):linp(k)+fl);
+% ind1=strfind(lh,'|');
+% ind2=strfind(lh,'MiB');
+% gpus.mem(k)=str2double(lh(ind1(2)+1:ind2(1)-1));
+% ind3=strfind(lh,'%');
+% gpus.activity(k)=str2double(lh(ind1(end-1)+1:ind3(end)-1));
+% end
+% indpid=1;
+% 
+% for k=0:length(gpustat)/fl-1
+%     lh=gpustat(k*fl+1:(k+1)*fl);
+%     if strfind(lh,'decode')
+%         gpus.pid(indpid).GPU=str2double(lh(2:9));
+%         gpus.pid(indpid).PID=str2double(lh(18:30));
+%         gpus.pid(indpid).mem=str2double(lh(68:74));
+%         indpid=indpid+1;
+%     end
+% end
+% 
+% if indpid==2
+%     gpuused=gpus.pid.GPU;
+%     gpurec=1-gpuused;
+% else
+%     [m,indm]=min(gpus.mem);
+%     gpurec=indm-1;
+% end
+% end
 
 function shfile=savesh(js,yamlname,expout)
 shfile=fullfile(js.Connect.local_network_storage,expout,'starttraining.sh');
@@ -174,7 +224,7 @@ use.InOut={'calibration_file','experiment_out'};
 use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform'};
 use.Camera={'em_gain','e_per_adu','baseline','read_sigma','spur_noise','px_size'};
 use.Hardware={'device','device_simulation'};
-use.Connect={'remote_workstation','remote_decode_path','local_decode_path','local_network_storage','remote_network_storage'};
+use.Connect={'remote_workstation','local_decode_path','local_network_storage'};
 fnu=fieldnames(use);
 js=obj.yamlpar;
 if ~isfield(js, 'SMAP')
@@ -523,6 +573,31 @@ function setz(obj)
 end
 
 function stoplearning_callback(a,b,obj)
+if ~isempty(obj.decodepid) %remote training
+    if length(obj.decodepid)>1
+        for k=1:length(obj.decodepid)
+            ls{k}=[num2str(obj.decodepid(k).pid) ':' datestr(obj.decodepid(k).date)];
+        end
+        ind=listdlg('PromptString',  "Select process to end",'ListString',ls);
+    else
+        ind=1;
+    end
+    url = 'http://pc-ries25:8000/kill';
+    options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
+    for k=1:length(ind)    
+        try
+            webread(url, 'pid', obj.decodepid(ind(k)).pid, options);
+             obj.decodepid(ind)=[];
+        catch err
+            err
+        end
+    end
+   
+    if isempty(obj.decodepid)
+        obj.guihandles.stoplearning.Visible='off';
+%         obj.guihandles.tensorboard.Visible='off';
+    end
+else
     obj.tensorboardprocess.stop;
     [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
     [gpus,gpurec]=parsegpustat(gpustat);
@@ -538,9 +613,14 @@ function stoplearning_callback(a,b,obj)
     catch err
     end
 end
+end
 
 function tensorboard_callback(a,b,obj)
-page='http://localhost:6008';
+if ~isempty(obj.decodepid) %remote training
+   page='http://pc-ries25:8001/#scalars';
+else
+    page='http://localhost:6008';
+end
 web(page,'-browser')
 end
 
@@ -552,7 +632,7 @@ pard.usecurrent.object=struct('Style','pushbutton','String','Use parameters from
 pard.usecurrent.position=[1,1];
 pard.usecurrent.Width=2;
 
-pard.tensorboard.object=struct('Style','pushbutton','String','Tensorboard','Callback',{{@tensorboard_callback,obj}},'Visible','off');
+pard.tensorboard.object=struct('Style','pushbutton','String','Tensorboard','Callback',{{@tensorboard_callback,obj}},'Visible','on');
 pard.tensorboard.position=[1,3];
 pard.tensorboard.Width=1;
 
