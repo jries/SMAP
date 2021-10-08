@@ -111,7 +111,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         fit(obj, locs, varargin)
         convertNow(obj, locs)
         stop = plotFreeRot(obj, varargin)
-        plotFixRot(obj, varargin)
+        fig = plotFixRot(obj, varargin)
         locs = locsHandler(obj, locs, lParsVal,modelID,varargin)
         ax = rotCoordNMkImg(obj, varargin)
         [lPars, mPars,fitPars] = inputPar2struct(obj, k, fitPars, lPars, mPars, offset)

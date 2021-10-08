@@ -41,42 +41,27 @@ classdef assignDist<interfaces.SEEvaluationProcessor
             locs = locMoFitter.locsHandler(locs, lPar);
             zOffset = obj.site.evaluation.LocMoFitGUI_2.fitInfo.modelPar_internal{1}.zOffset;
             locs.znm = locs.znm+zOffset;
-            [azimuth,elevation,d] = cart2sph(locs.xnm,locs.ynm,locs.znm);
-            
             r = abs(obj.site.evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.radius);
-            dd = d-r;
-            lShow = dd<50;
-            
             thetaFit = locMoFitter.getVariable('m1.closeAngle');
-            lb = deg2rad(-thetaFit);
-            lAbove = elevation>lb-deg2rad(10);
-            
-            
-            
-            [elevation_sorted, ind] = sort(elevation(lShow&lAbove));
-            
-            dd_shown = dd(lShow&lAbove);
-            
             if obj.getPar('se_display')
-                ax = obj.setoutput('Residue');
-                scatter(ax,d(lShow).*cos(elevation(lShow)), locs.znm(lShow), [], dd(lShow));
-                axis(ax,'equal')
                 axP = obj.setoutput('Polar');
-                plot(axP,elevation(lShow),dd(lShow), ' .', 'MarkerSize', 5);
-                hold(axP, 'on')
-                medDD = movmedian(dd_shown(ind),deg2rad(30), 'SamplePoints', double(elevation_sorted)+(1:length(elevation_sorted))'*eps);
-                plot(axP, elevation_sorted, medDD, '-', 'LineWidth',2)
-                hold(axP, 'off')
-            end
-            
+                [revEle_deg, dd] = radialProfile3D(axP,locs.xnm,locs.ynm,locs.znm, 'coverage_ele', [-thetaFit 90], 'refRadius',r,...
+                    'pointSize',2,...
+                'radialWinSize',30,...
+                'densityScale',8);
+            else
+                [azimuth,elevation,d] = cart2sph(locs.xnm,locs.ynm,locs.znm);
+                dd = d-r;
+                revEle_deg = 90-rad2deg(elevation);
+            end           
 %             
 %             fullRange = range([r+eps lb-eps]);
 %             locs_znm = locs.znm(lShow);
 %             dd_show = dd(lShow);
             
-            out.dd = dd(lShow);
+            out.dd = dd;
 %             out.distance2ref = d;
-            out.ele = elevation(lShow);
+            out.ele = revEle_deg;
         end
         function pard=guidef(obj)
             pard=guidef;

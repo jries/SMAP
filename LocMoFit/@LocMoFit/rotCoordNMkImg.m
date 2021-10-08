@@ -146,7 +146,7 @@ switch mode
         axis(ax,'equal')
         
         % Here generate the outline of the model withi the given range of the slice
-        for k = 1:obj.numOfModel
+        for k = 1:obj.numOfLayer
             [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
             if rotVizAlt(2)<0
                 lSectionMod = modCoord{k}.z >= -5 & modCoord{k}.z <= 5;

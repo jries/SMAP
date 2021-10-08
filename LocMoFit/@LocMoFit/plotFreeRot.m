@@ -8,7 +8,7 @@ function plotFreeRot(obj, varargin)
             ax = varargin{1};
             if isa(ax.Parent,'matlab.ui.container.Tab')
                 t = tiledlayout(ax.Parent,1,2);
-            else
+            elseif isa(ax.Parent, 'matlab.graphics.layout.TiledChartLayout')
                 t = tiledlayout(ax.Parent.Parent,1,2);
             end
             locs = varargin{2};
@@ -103,6 +103,7 @@ end
 function locsViz = pointViz(ax, locs, obj)
     cla(ax)
     [~,modViz] = obj.plot(ax, locs,'plotType','point','modelSamplingFactor',0.3); % get point type visualization
+%     modViz = obj.getLayerPoint(0.75); % get point type visualization
     axes(ax)
     legend({'Model','Data'})
     lPars = obj.exportPars(1,'lPar');
