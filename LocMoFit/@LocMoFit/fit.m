@@ -89,6 +89,8 @@ if ~p.skipFit
     end
 end
 
+obj.defineRotPar;
+
 for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
     obj.currentCascadeStep = sc;
     [lb, ub, init, minVal, maxVal] = obj.prepFit;                                   % get settings for fit parameters
@@ -225,74 +227,88 @@ switch p.controlLogLikelihood
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
 end
 
-
-if strcmp(p.confidenceInterval, 'on')
-    % hessian related values
-%     [x,fval,exitflag,output,grad,H] = fminunc(@(fitPars)objFun(fitPars),parBestFit);
-    parID = obj.getAllParId();
-    method = 2;
-    np = length(parBestFit);
-    switch method
-        case 1
-            H = hessian(@(fitPars)objFun(fitPars), parBestFit);
-            invH = inv(H);
-            par_std = sqrt(diag(invH));
-        case 2
-            H = hessian(@(fitPars)objFun(fitPars), parBestFit);
-            invH = inv(H);
-            par_std_int = abs(sqrt(diag(invH)));
-            
-            kkkkk = 0;
-            par_std = 1+i;
-            while kkkkk<10&&~isreal(par_std)
-                f = @(fitPars)objFun(fitPars);
-%                 par = parBestFit+rand(10999,length(parBestFit))*2e-2-1e-2;
-                par = parBestFit+rand(999,length(parBestFit)).*2.*par_std_int'-par_std_int';
-
-                
-                LLL = [];
-                for kkk = size(par,1):-1:1
-                    LLL(kkk+1) = f(par(kkk,:));
-                end
-                LLL(1) = f(parBestFit);
-    %             reg = MultiPolyRegress([par;parBestFit],LLL',[2 2 2 2 2 2 2 2 2]);
-%                 ppp = zeros([np^2 np]);
-%                 for iii = 1:length(parBestFit)
-%                     for jjj = 1:length(parBestFit)
-% 
-%                     end
-%                 end
-                allComb = permn([1 2 0], np);
-                ind = sum(allComb,2)==2;
-                allComb = allComb(ind,:);
-                model = polyfitn([parBestFit;par]-parBestFit,(LLL-LLL(1))',allComb);
-                H = zeros(np);
-                for kkk = 1:length(allComb)
-                    ind = find(allComb(kkk,:));
-                    if length(ind)==1
-                        H(ind,ind) = model.Coefficients(kkk);
-                    else
-                        H(ind(1),ind(2)) = model.Coefficients(kkk)./2;
-                        H(ind(2),ind(1)) = model.Coefficients(kkk)./2;
-                    end
-                end
+try
+    if strcmp(p.confidenceInterval, 'on')
+        % hessian related values
+        % 	[x,fval,exitflag,output,grad,H] = fminunc(@(fitPars)objFun(fitPars),parBestFit);
+        parID = obj.getAllParId();
+        method = 2;
+        np = length(parBestFit);
+        switch method
+            case 1
+                H = hessian(@(fitPars)objFun(fitPars), parBestFit);
                 invH = inv(H);
                 par_std = sqrt(diag(invH));
-                kkkkk = kkkkk+1;
-            end
+            case 2
+                
+                H = hessian(@(fitPars)objFun(fitPars), parBestFit);
+                invH = inv(H);
+                par_std_int = abs(sqrt(diag(invH)));
+                
+                kkkkk = 0;
+                par_std = 1+i;
+                while kkkkk<10&&~isreal(par_std)
+                    f = @(fitPars)objFun(fitPars);
+                    %                 par = parBestFit+rand(10999,length(parBestFit))*2e-2-1e-2;
+                    par = parBestFit+rand(1000,length(parBestFit)).*2.*par_std_int'-par_std_int';
+                    
+                    
+                    LLL = [];
+                    for kkk = size(par,1):-1:1
+                        LLL(kkk) = f(par(kkk,:));
+                    end
+                    %                 LLL(1) = f(parBestFit);
+                    %                 par = [parBestFit;par];
+                    %             reg = MultiPolyRegress([par;parBestFit],LLL',[2 2 2 2 2 2 2 2 2]);
+                    %                 ppp = zeros([np^2 np]);
+                    %                 for iii = 1:length(parBestFit)
+                    %                     for jjj = 1:length(parBestFit)
+                    %
+                    %                     end
+                    %                 end
+                    allComb = permn([1 2 0], np);
+                    ind = sum(allComb,2)==2;
+                    allComb = allComb(ind,:);
+                    allComb = [allComb; zeros(1,size(allComb,2))];
+                    model = polyfitn(par-parBestFit,LLL,allComb);
+                    H = zeros(np);
+                    for kkk = 1:length(allComb)
+                        ind = find(allComb(kkk,:));
+                        if length(ind)==1
+                            H(ind,ind) = model.Coefficients(kkk);
+                        elseif length(ind)==2
+                            H(ind(1),ind(2)) = model.Coefficients(kkk)./2;
+                            H(ind(2),ind(1)) = model.Coefficients(kkk)./2;
+                        end
+                    end
+                    
+                    for kkk = 1:1000
+                        LLPoly(kkk) = (par(kkk,:)-parBestFit)*H*(par(kkk,:)-parBestFit)';
+                    end
+                    
+                    invH = inv(H);
+                    par_std = sqrt(diag(invH));
+                    kkkkk = kkkkk+1;
+                end
+                
+        end
+        %     [x,fval,exitflag,output,grad,H] = fminunc(@(fitPars)objFun(fitPars),parBestFit);
+        %     H = NumHessian(@(fitPars)objFun(fitPars), parBestFit');
+        %     H = ihessian(@(fitPars)objFun(fitPars), parBestFit');
+        %     H = hessiancsd(@(fitPars)objFun(fitPars), parBestFit);
+        %     par_std = sqrt(hessdiag(@(fitPars)objFun(fitPars), parBestFit));
+        CI_ub = parBestFit+1.96*par_std';
+        CI_lb = parBestFit-1.96*par_std';
+        obj.fitInfo.CI.parameter = parID(indFit)';
+        obj.fitInfo.CI.interval = [CI_ub; CI_lb];
+        obj.fitInfo.CI.std = par_std';
+        
+        
     end
-%     [x,fval,exitflag,output,grad,H] = fminunc(@(fitPars)objFun(fitPars),parBestFit);
-%     H = NumHessian(@(fitPars)objFun(fitPars), parBestFit');
-%     H = ihessian(@(fitPars)objFun(fitPars), parBestFit');
-%     H = hessiancsd(@(fitPars)objFun(fitPars), parBestFit);
-%     par_std = sqrt(hessdiag(@(fitPars)objFun(fitPars), parBestFit));
-    CI_ub = parBestFit+1.96*par_std';
-    CI_lb = parBestFit-1.96*par_std';
-    obj.fitInfo.CI.parameter = parID(indFit)';
-    obj.fitInfo.CI.interval = [CI_ub; CI_lb];
-    obj.fitInfo.CI.std = par_std';
-
-    
+catch ME
+    warning(['Site ' num2str(obj.linkedGUI.site.indList) ': cannot estimate the hessian matrix properly.'])
+    disp(getReport(ME, 'extended', 'hyperlinks', 'on'))
+    obj.fitInfo.CI = [];
 end
 for k=obj.numOfLayer:-1:1
     obj.fitInfo.numOfLocsPerLayer_BGFree(k) = obj.fitInfo.numOfLocsPerLayer(k) * (1-obj.getVariable(['pars.m9' num2str(k) '.offset.weight']));

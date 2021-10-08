@@ -385,6 +385,10 @@ classdef LocMoFit<matlab.mixin.Copyable
             end
         end
         
+        function defineRotPar(obj)
+            
+        end
+        
         function [lb,ub,value, min, max] = prepFit(obj)
             % Reshape arguments of fit pars: lb, ub, init(value), and min/max
             
