@@ -115,6 +115,10 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                l=length(obj.decodepid);
                obj.decodepid(l+1).pid=pid;
                obj.decodepid(l+1).date=now;
+
+%                http://pc-ries25:8000/docs#/default/status_status_get
+%               nvidia-smi
+%                 htop
            end
 
            obj.guihandles.stoplearning.Visible='on';
