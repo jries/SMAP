@@ -180,7 +180,11 @@ end
 %assign to corneres
 % find rotation
 step=2*pi/corners;
-mdtc=cyclicaverage(locs.theta(inr),step,1./locs.dtheta(inr).^2);
+weights=double(1./locs.dtheta(inr).^2);
+ml=min(locs.dtheta(inr & locs.dtheta>0));
+weights(isinf(weights))=1/ml^2;
+
+mdtc=cyclicaverage(locs.theta(inr),step,weights);
 if mdtc>pi/16
     mdtc=mdtc-step;
 end
@@ -194,7 +198,7 @@ thh=double(locs.theta(inr));
 %weighted fit
 fitfun=@(x,xdata)mod(x-xdata,pi/4);
 y=pi/8;
-weights=double(1./locs.dtheta(inr));
+% weights=double(1./locs.dtheta(inr));
 costfun=@(A) weights.*(fitfun(A,thh)-y);
 options=optimoptions('lsqnonlin','Display','off');
 fitpl=lsqnonlin(costfun,double(mdtc)+pi/8,[],[],options);
