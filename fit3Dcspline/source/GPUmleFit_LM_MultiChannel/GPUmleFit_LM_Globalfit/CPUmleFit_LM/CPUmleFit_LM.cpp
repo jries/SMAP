@@ -704,8 +704,8 @@ void kernel_splineMLEFit_z_EMCCD_multi(const int subregion, const float *d_data,
 						switch (i){
 						case 0:
 						case 1:
-							newThetaAll[n]=max(newThetaAll[n],(float(sz)-1)/2-sz/4.0);
-							newThetaAll[n] = min(newThetaAll[n],(float(sz)-1)/2+sz/4.0);
+							/*newThetaAll[n]=max(newThetaAll[n],(float(sz)-1)/2-sz/4.0);
+							newThetaAll[n] = min(newThetaAll[n],(float(sz)-1)/2+sz/4.0);*/
 							/*								test = 1;*/
 							break;
 						case 2:
@@ -731,11 +731,9 @@ void kernel_splineMLEFit_z_EMCCD_multi(const int subregion, const float *d_data,
 							switch (i){
 							case 0:
 							case 1:
-								/*newThetaAll[n]=max(newThetaAll[n],(float(sz)-1)/2-sz/4.0);
-								newThetaAll[n] = min(newThetaAll[n],(float(sz)-1)/2+sz/4.0);*/
 
-								newThetaAll[n+j]=max(newThetaAll[n+j],(float(sz)-1)/2-sz/4.0);
-								newThetaAll[n+j] = min(newThetaAll[n+j],(float(sz)-1)/2+sz/4.0);
+								/*newThetaAll[n+j]=max(newThetaAll[n+j],(float(sz)-1)/2-sz/4.0);
+								newThetaAll[n+j] = min(newThetaAll[n+j],(float(sz)-1)/2+sz/4.0);*/
 
 
 								break;
@@ -1390,7 +1388,7 @@ void kernel_MLEFit_sigma_sCMOS_multi(const int subregion, const float* d_data, c
 
 }
 //**********************************************************************************************************************************
-//multichannel fit
+//multichannel fit sCMOS fit
 void kernel_splineMLEFit_z_sCMOS_multi(const int subregion, const float* d_data, const float* d_coeff, const float* d_dTAll, const int spline_xsize, const int spline_ysize, const int spline_zsize, const int sz, const int iterations, const int NV, const int noChannels, float* d_Parameters, float* d_CRLBs, float* d_LogLikelihood, float *initZ, const int Nfits, const int* d_shared, const float* d_varim) {
 	float M[25 * Max_No_Channel * Max_No_Channel] = { 0 }, Diag[5 * Max_No_Channel] = { 0 }, Minv[25 * Max_No_Channel * Max_No_Channel] = { 0 };
 	//int tx = threadIdx.x;
@@ -1652,8 +1650,8 @@ void kernel_splineMLEFit_z_sCMOS_multi(const int subregion, const float* d_data,
 						switch (i) {
 						case 0:
 						case 1:
-							newThetaAll[n] = max(newThetaAll[n], (float(sz) - 1) / 2 - sz / 4.0);
-							newThetaAll[n] = min(newThetaAll[n], (float(sz) - 1) / 2 + sz / 4.0);
+							/*newThetaAll[n] = max(newThetaAll[n], (float(sz) - 1) / 2 - sz / 4.0);
+							newThetaAll[n] = min(newThetaAll[n], (float(sz) - 1) / 2 + sz / 4.0);*/
 							/*								test = 1;*/
 							break;
 						case 2:
@@ -1679,11 +1677,8 @@ void kernel_splineMLEFit_z_sCMOS_multi(const int subregion, const float* d_data,
 							switch (i) {
 							case 0:
 							case 1:
-								/*newThetaAll[n]=max(newThetaAll[n],(float(sz)-1)/2-sz/4.0);
-								newThetaAll[n] = min(newThetaAll[n],(float(sz)-1)/2+sz/4.0);*/
-
-								newThetaAll[n + j] = max(newThetaAll[n + j], (float(sz) - 1) / 2 - sz / 4.0);
-								newThetaAll[n + j] = min(newThetaAll[n + j], (float(sz) - 1) / 2 + sz / 4.0);
+								/*newThetaAll[n + j] = max(newThetaAll[n + j], (float(sz) - 1) / 2 - sz / 4.0);
+								newThetaAll[n + j] = min(newThetaAll[n + j], (float(sz) - 1) / 2 + sz / 4.0);*/
 
 
 								break;

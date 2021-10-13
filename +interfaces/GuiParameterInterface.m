@@ -402,7 +402,14 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
             obj.P.loadGlobalSettings(file);
             SMAP_globalsettings=obj.P.globalSettings;
         end
-
+        function deleteGlobalSetting(obj,field) %when not needed any more, replace createGlobalSetting by this command to remove it from the parameter structure.
+            global SMAP_globalsettings
+            if myisfield(obj.P.globalSettings,field)
+                obj.P.globalSettings=myrmfield(obj.P.globalSettings,field);
+                SMAP_globalsettings=obj.P.globalSettings;
+                obj.saveGlobalSettings;
+            end
+        end
     end
     
     methods (Access=private)      
