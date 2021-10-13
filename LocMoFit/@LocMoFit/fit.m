@@ -256,6 +256,10 @@ try
                     LLL = [];
                     for kkk = size(par,1):-1:1
                         LLL(kkk) = f(par(kkk,:));
+                        while ~isreal(LLL(kkk))
+                            par(kkk,:) = parBestFit+rand(1,length(parBestFit)).*2.*par_std_int'-par_std_int';
+                            LLL(kkk) = f(par(kkk,:));
+                        end
                     end
                     %                 LLL(1) = f(parBestFit);
                     %                 par = [parBestFit;par];
@@ -287,6 +291,8 @@ try
                     end
                     
                     invH = inv(H);
+                    indBad = diag(H)<0;
+                    par_std_int(indBad) = par_std_int(indBad)./2;
                     par_std = sqrt(diag(invH));
                     kkkkk = kkkkk+1;
                 end
@@ -302,7 +308,7 @@ try
         obj.fitInfo.CI.parameter = parID(indFit)';
         obj.fitInfo.CI.interval = [CI_ub; CI_lb];
         obj.fitInfo.CI.std = par_std';
-        
+        obj.fitInfo.CI.adjR2 = model.AdjustedR2;
         
     end
 catch ME

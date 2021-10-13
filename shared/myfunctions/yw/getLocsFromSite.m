@@ -12,9 +12,11 @@ function locs = getLocsFromSite(g, siteID, rmFilter, center2Ori)
     dcal.makeGui;
     dcal.site=sites(idxSite(k));
     dcal.site.image = se.plotsite(sites(k));
-    [locs,indlocOne] = dcal.getLocs({'xnmrot','ynmrot','znm','locprecnm', 'locprecznm','channel'},'size',roiSize,'grouping', 'grouped'); % per ROI info.
-    fn = fieldnames(locs);
-    lEmpty = structfun(@isempty, locs);
-    locs = rmfield(locs, fn(lEmpty));
-    close(fdcal)
+    for k = 1:2
+        [locs{k},indlocOne] = dcal.getLocs({'xnmrot','ynmrot','znm','locprecnm', 'locprecznm','channel'},'layer',k,'size',roiSize,'grouping', 'grouped'); % per ROI info.
+    end
+%     fn = fieldnames(locs);
+%     lEmpty = structfun(@isempty, locs);
+%     locs = rmfield(locs, fn(lEmpty));
+%     close(fdcal)
 end
