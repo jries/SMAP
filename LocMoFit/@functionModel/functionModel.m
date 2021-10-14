@@ -3,13 +3,13 @@ classdef functionModel<SMLMModel
     % geometric model in the form of a function.
     % :class:`functionModel` handles the function differently based on its
     % `modelType`. The `modelType` is per geometric model and defined in
-    % `modelType` of the :class: geometricModel.
+    % `modelType` of the :class:`geometricModel.geometricModel`.
     % 
     % Last update:
     %   14.10.2021
     %
     % See also:
-    %   :class:`SMLMModel`, :class:`LocMoFit`, :class:`geometricModel`
+    %   :class:`SMLMModel`, :class:`LocMoFit.LocMoFit`, :class:`geometricModel`
     
     properties
         pixelSize = 5;          % Pixel size of the model
