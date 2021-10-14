@@ -1,23 +1,48 @@
 function likelihood = gaussDist(refLocs,y,x,z,ysigmao,xsigmao,zsigmao, varargin)
+    % :func:`gaussDist` computes the likelihood values based on
+    % localizations [x y z] and the model points in refLocs.
+    % 
+    % Usage:
+    %   likelihood = gaussDist(refLocs, y, x, z, ysigmao, xsigmao, zsigmao, Name-value)
+    %
+    % Args:
+    %   refLocs: a struct with required fields of x, y, z, and n.
+    %   x, y, z: coordinates of localiztions.
+    %   ysigmao, xsigmao, zsigmao: origainl factors of localization precisions. 
+    %   Name-value pairs:
+    %       * 'sigFactor': a scalar of the factor of localization
+    %       precisions.
+    %       * 'rotMat': a matrix of the rotation matrix.
+    %       * 'rotMode': a string for the mode of rotations. Either 'old'
+    %       (default) or 'new'.
+    %       * 'distMode': a string for the mode of distance computing.
+    %       Either 'fast', 'fast_test', or 'ordinary' (default).
+    %       * 'distCutoff': a scalar of the disctance cutoff. Any distance
+    %       larger than this value will have a likelihood of 0.
+    %
+    % Returns:
+    %   likelihood: a k-by-p matrix of likelihood value for k localizations against p sets of parameters.
+    %
+    % Last edit:
+    %   14.10.2021
+    %
+    % See also:
+    %   :func:`gaussDist2`
+    
     p = inputParser;
     addParameter(p, 'sigFactor',1);
     addParameter(p, 'rotMat',[]);
     addParameter(p, 'rotMode','old');
     addParameter(p, 'distMode','ordinary');
     addParameter(p, 'distCutoff',3.5);
-    addParameter(p, 'sumIntensity',[]);
     
     parse(p, varargin{:})
     % For one dimension: exp(-((x-mu/sigma)^2)/2)/(2*pi)^(1/2)*sigma
     f = p.Results.sigFactor;          % scale factor of the 3 sigma
     rotMat = p.Results.rotMat;        % rotation matrix
-    distMode = p.Results.distMode; 
+    distMode = p.Results.distMode;
     rotMode = p.Results.rotMode;
     distCutoff = p.Results.distCutoff;
-    sumIntensity = p.Results.sumIntensity;
-    if isempty(sumIntensity)
-        sumIntensity = 1-(1-mvncdf(repelem(((p.distCutoff^2)/3)^(1/2),1,3),[0 0 0],diag([1 1 1])))*2;
-    end
     
     switch rotMode
         case 'old'
@@ -29,9 +54,11 @@ function likelihood = gaussDist(refLocs,y,x,z,ysigmao,xsigmao,zsigmao, varargin)
             template.x = templateAll;
             template.y = templateAll;
             template.z = templateAll;
+            template.n = templateAll;
             template.x(1,:,:)=refLocs.x';
             template.y(1,:,:)=refLocs.y';
             template.z(1,:,:)=refLocs.z';
+            template.n(1,:,:)=refLocs.n'.*ones(size(refLocs.x,2),1);
             refLocs = template;
             
             switch distMode
@@ -50,7 +77,7 @@ function likelihood = gaussDist(refLocs,y,x,z,ysigmao,xsigmao,zsigmao, varargin)
                     expDist = zeros(size(termR2));
                     l = termR2<distCutoff^2;
 %                     expDist(l) = exp(-termR2(l)/2)./sumIntensity;
-                    expDist(l) = exp(-termR2(l)/2);
+                    expDist(l) =  template.n.*exp(-termR2(l)/2);
                     sumDist = sum(expDist,3);
 %                     dim = size(expDist);
 %                     expDist = reshape(expDist, [dim(1) 1 dim(2)]);
@@ -63,14 +90,15 @@ function likelihood = gaussDist(refLocs,y,x,z,ysigmao,xsigmao,zsigmao, varargin)
                     [r,c] = find(cutR);
                     termR2 = dx(cutR).^2 + dy(cutR).^2 + dz(cutR).^2;
                     svol = ((2*pi)^(-3/2))./(xsigma.*ysigma.*zsigma);
-                    sumDist = accumarray(r,exp(-termR2));
+                    sumDist = accumarray(r, template.n.*exp(-termR2));
                 case 'ordinary'
                     dx = x./xsigma - refLocs.x./xsigma;
                     dy = y./ysigma - refLocs.y./ysigma;
                     dz = z./zsigma - refLocs.z./zsigma;
                     termR2 = dx.^2 + dy.^2 + dz.^2;
+%                     svol = ((2*pi)^(-3/2))./(xsigma.*ysigma.*zsigma);
                     svol = ((2*pi)^(-3/2))./(xsigma.*ysigma.*zsigma);
-                    expDist = exp(-termR2/2);
+                    expDist = template.n.*exp(-termR2/2);
                     sumDist = sum(expDist,3);
         %             (x - refLocs.x).^2+(y - refLocs.y).^2+(z - refLocs.z).^2
         %             likelihood = likelihood';
