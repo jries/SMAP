@@ -175,7 +175,7 @@ end
 locs.xnm = x;
 locs.ynm = y;
 %% Variation
-if isfield(locs,'locprecnm')&&lParsVal.variation>0
+if isfield(locs,'locprecnm')&&any(lParsVal.variation>0)
     locs.locprecnm = sqrt(locs.locprecnm.^2+lParsVal.variation.^2);
     if isfield(locs,'locprecznm')
         locs.locprecznm = sqrt(locs.locprecznm.^2+lParsVal.variation.^2);
