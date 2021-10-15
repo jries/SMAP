@@ -45,7 +45,9 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
                poslabels=addlinkage(poslabels,p.linkageerrorfix);
            end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
-           
+           if p.linkageerrorfree>0
+               posreappear=addlinkage(posreappear,p.linkageerrorfree);
+           end           
            posphot=getphotons(posreappear,p.photons,p.lifetime,p.photonsigma);
            
            locs=locsfrompos(posphot,p);
@@ -558,9 +560,9 @@ function locs=locsfromposi(locsi,p)
         dx2=crlb(:,1).*pixelsize^2;
         dy2=crlb(:,2).*pixelsize^2;
         dz2=crlb(:,5);
-        locpreceffectx=sqrt(dx2+p.linkageerrorfree.^2);
-        locpreceffecty=sqrt(dy2+p.linkageerrorfree.^2);
-        locpreceffectz=sqrt(dz2+p.linkageerrorfree.^2);
+        locpreceffectx=sqrt(dx2);
+        locpreceffecty=sqrt(dy2);
+        locpreceffectz=sqrt(dz2);
         locprecnm=sqrt((dx2+dy2)/2);
         locprecznm=sqrt(dz2);
 
@@ -576,9 +578,9 @@ function locs=locsfromposi(locsi,p)
         locprecnm=locprecnm*sqrt(noisexcessfactor);
         locprecznm=locprecnm*zfactor;
         %include linkage error from free rotation
-        locpreceffectx=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
-        locpreceffecty=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
-        locpreceffectz=sqrt(locprecnm.^2*zfactor^2+p.linkageerrorfree.^2);
+        locpreceffectx=sqrt(locprecnm.^2);
+        locpreceffecty=sqrt(locprecnm.^2);
+        locpreceffectz=sqrt(locprecnm.^2*zfactor^2);
     end
 
 

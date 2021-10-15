@@ -72,6 +72,9 @@ function oneFrame=render3DFrame(locs,f,varargin)
                 'XTickLabel', arrayfun(@num2str , (ax.XTick-median(ax.XTick)).*p.pxSize,'UniformOutput',false),...
                 'YTickLabel', arrayfun(@num2str , ax.YTick.*p.pxSize,'UniformOutput',false),...
                 'ZTickLabel', arrayfun(@num2str , (ax.ZTick-median(ax.ZTick)).*p.pxSize,'UniformOutput',false))
+            xlabel(ax, 'x (nm)')
+            ylabel(ax, 'y (nm)')
+            zlabel(ax, 'z (nm)')
             drawnow
             oneFrame = getframe(f);
 %             oneFrame = oneFrame.cdata;

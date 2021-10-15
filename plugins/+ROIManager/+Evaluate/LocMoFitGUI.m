@@ -25,9 +25,11 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.fitter.updateVersion;
             initTabWhenLoading(obj);
             % For upgrade from SMLMModelFit to LocMoFit
-            col_source = p.anchorConvert.Data(:,1);
-            col_source = replace(col_source, 'SMLMModelFitGUI', 'LocMoFitGUI');
-            p.anchorConvert.Data(:,1) = col_source;
+            if ~isempty(p.anchorConvert.Data)
+                col_source = p.anchorConvert.Data(:,1);
+                col_source = replace(col_source, 'SMLMModelFitGUI', 'LocMoFitGUI');
+                p.anchorConvert.Data(:,1) = col_source;
+            end
             
             % Check the model type are consistent between the GUI and obj.
             m = 1;
@@ -423,6 +425,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                         
                         % Create the tab for fitted parameters
                         axPar = obj.setoutput('Fitted_Par');
+                        
+                        % Clean the tab (remove existed uitable and so)
+                        delete(findobj(axPar.Parent.Children, '-not','type', 'axes'))
                         uiFittedPar(axPar, fitter);
                         axPar.Visible = 'Off';                        
     

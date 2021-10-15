@@ -146,8 +146,10 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             Idx = rangesearch(pt,pt,0.1);
             count = cellfun(@length, Idx);
             scatter(axCmp, LLfit.('sym8f'), LLfit.('sym6f'),2, count, 'filled')
+            ub = max([LLfit.('sym8f') LLfit.('sym6f')]);
+            lb = min([LLfit.('sym8f') LLfit.('sym6f')]);
             hold(axCmp, 'on')
-            plot(axCmp, [-17 -11],[-17 -11], '-k')
+            plot(axCmp, [lb ub],[lb ub], '-k')
             hold(axCmp, 'off')
             xlabel(axCmp, 'Eight-fold symmetry')
             ylabel(axCmp, 'Six-fold symmetry')
@@ -158,8 +160,10 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             Idx = rangesearch(pt,pt,0.1);
             count = cellfun(@length, Idx);
             scatter(axCmp_normAICc, normAICc.('sym8f'), normAICc.('sym6f'),2, count, 'filled')
+            ub = max([normAICc.('sym8f') normAICc.('sym6f')]);
+            lb = min([normAICc.('sym8f') normAICc.('sym6f')]);
             hold(axCmp_normAICc, 'on')
-            plot(axCmp_normAICc, [25 31],[25 31], '-k')
+            plot(axCmp_normAICc, [lb ub],[lb ub], '-k')
             hold(axCmp_normAICc, 'off')
             xlabel(axCmp_normAICc, 'Eight-fold symmetry')
             ylabel(axCmp_normAICc, 'Six-fold symmetry')
@@ -170,8 +174,10 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             Idx = rangesearch(pt,pt,0.1);
             count = cellfun(@length, Idx);
             scatter(axCmp_normLL, normLL.('sym8f'), normLL.('sym6f'),2, count, 'filled')
+            ub = max([normLL.('sym8f') normLL.('sym6f')]);
+            lb = min([normLL.('sym8f') normLL.('sym6f')]);
             hold(axCmp_normLL, 'on')
-            plot(axCmp_normLL, [-0.2 0.2],[-0.2 0.2], '-k')
+            plot(axCmp_normLL, [lb ub],[lb ub], '-k')
             hold(axCmp_normLL, 'off')
             xlabel(axCmp_normLL, 'Eight-fold symmetry')
             ylabel(axCmp_normLL, 'Six-fold symmetry')
@@ -182,8 +188,10 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             Idx = rangesearch(pt,pt,0.1);
             count = cellfun(@length, Idx);
             scatter(axCmp_zscoreLL, zscoreLL.('sym8f'), zscoreLL.('sym6f'),2, count, 'filled')
+            ub = max([zscoreLL.('sym8f') zscoreLL.('sym6f')]);
+            lb = min([zscoreLL.('sym8f') zscoreLL.('sym6f')]);
             hold(axCmp_zscoreLL, 'on')
-            plot(axCmp_zscoreLL, [-2 2],[-2 2], '-k')
+            plot(axCmp_zscoreLL, [lb ub],[lb ub], '-k')
             hold(axCmp_zscoreLL, 'off')
             xlabel(axCmp_zscoreLL, 'Eight-fold symmetry')
             ylabel(axCmp_zscoreLL, 'Six-fold symmetry')
@@ -191,40 +199,50 @@ classdef summarize_NPCModelSelection<interfaces.DialogProcessor&interfaces.SEPro
             
             %% LLExp: Comparison plot (theoretical vs simulated)
             scatter(axCmp_LLExpTvsS, LLExp.('sym8f'), LLExpMean.('sym8f'),5, 'filled')
+            ub = max([LLExp.('sym8f') LLExpMean.('sym8f')]);
+            lb = min([LLExp.('sym8f') LLExpMean.('sym8f')]);
             hold(axCmp_LLExpTvsS, 'on')
-            plot(axCmp_LLExpTvsS, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            plot(axCmp_LLExpTvsS, [lb ub],[lb ub], '-k')
             hold(axCmp_LLExpTvsS, 'off')
-            xlabel(axCmp_LLExpTvsS, 'Theoretical LLFit')
-            ylabel(axCmp_LLExpTvsS, 'Sampled LLFit')
+            xlabel(axCmp_LLExpTvsS, 'Theoretical expected LL_{fit}')
+            ylabel(axCmp_LLExpTvsS, 'Sampled expected LL_{fit}')
             
             %% LLExp: Comparison plot (fit2gt)
             scatter(axCmp_fit2gt, LLExp.('sym8f'), LLExp_gt.('sym8f'),5, 'filled')
+            ub = max([LLExp.('sym8f') LLExp_gt.('sym8f')]);
+            lb = min([LLExp.('sym8f') LLExp_gt.('sym8f')]);
             hold(axCmp_fit2gt, 'on')
-            plot(axCmp_fit2gt, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            plot(axCmp_fit2gt, [lb ub],[lb ub], '-k')
             hold(axCmp_fit2gt, 'off')
             xlabel(axCmp_fit2gt, 'Expected LL_{fit}')
             ylabel(axCmp_fit2gt, 'Expected LL_{gt}')
             
             %% Comparison plot (fit_exp2data)
             scatter(axCmp_exp2data, LLfit.('sym8f'), LLExp.('sym8f'),5, 'filled')
+            ub = max([LLfit.('sym8f') LLExp.('sym8f')]);
+            lb = min([LLfit.('sym8f') LLExp.('sym8f')]);
             hold(axCmp_exp2data, 'on')
-            plot(axCmp_exp2data, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            plot(axCmp_exp2data, [lb ub],[lb ub], '-k')
             hold(axCmp_exp2data, 'off')
             xlabel(axCmp_exp2data, 'LL_{fit}')
             ylabel(axCmp_exp2data, 'Expected LL_{fit}')
             
             %% LL: Comparison plot (gt2fit)
             scatter(axCmp_LL_gt2fit, LLfit.('sym8f'), LL_gt.('sym8f'),5, 'filled')
+            ub = max([LLfit.('sym8f') LL_gt.('sym8f')]);
+            lb = min([LLfit.('sym8f') LL_gt.('sym8f')]);
             hold(axCmp_LL_gt2fit, 'on')
-            plot(axCmp_LL_gt2fit, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            plot(axCmp_LL_gt2fit, [lb ub],[lb ub], '-k')
             hold(axCmp_LL_gt2fit, 'off')
             xlabel(axCmp_LL_gt2fit, 'LL_{fit}')
             ylabel(axCmp_LL_gt2fit, 'LL_{GT}')
             
             %% Comparison plot (fit_exp2data_6f)
             scatter(axCmp_exp2data_6f, LLfit.('sym6f'), LLExp.('sym6f'),5, 'filled')
+            ub = max([LLfit.('sym6f') LLExp.('sym6f')]);
+            lb = min([LLfit.('sym6f') LLExp.('sym6f')]);
             hold(axCmp_exp2data_6f, 'on')
-            plot(axCmp_exp2data_6f, [-14.5 -11.5],[-14.5 -11.5], '-k')
+            plot(axCmp_exp2data_6f, [lb ub],[lb ub], '-k')
             hold(axCmp_exp2data_6f, 'off')
             xlabel(axCmp_exp2data_6f, 'LL_{fit}')
             ylabel(axCmp_exp2data_6f, 'Expected LL_{fit}')

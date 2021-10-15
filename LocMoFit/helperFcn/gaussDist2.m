@@ -1,4 +1,30 @@
 function likelihood = gaussDist2(refLocs,y,x,ysigmao,xsigmao,varargin)
+% :func:`gaussDist2` computes the likelihood values based on
+% localizations [x y] and the model points in refLocs. :func:`gaussDist2`
+% is the 2D version of :func:`gaussDist`.
+% 
+% Usage:
+%   likelihood = gaussDist(refLocs, y, x, ysigmao, xsigmao, Name-value)
+%
+% Args:
+%   refLocs: a struct with required fields of x, y, and n.
+%   x, y: coordinates of localiztions.
+%   ysigmao, xsigmao: origainl factors of localization precisions. 
+%   Name-value pairs:
+%       * 'sigFactor': a scalar of the factor of localization
+%
+% Returns:
+%   likelihood: a k-by-p matrix of likelihood value for k localizations against p sets of parameters.
+%
+% Note:
+%   This function has much less options becasue of the simpler 2D rotation.
+%
+% Last edit:
+%   14.10.2021
+%
+% See also:
+%   :func:`gaussDist`
+
     p = inputParser;
     addParameter(p, 'sigFactor',1);
     parse(p, varargin{:})
