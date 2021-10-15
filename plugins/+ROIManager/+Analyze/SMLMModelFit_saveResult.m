@@ -238,10 +238,10 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
         
         function module = dynamicRec_callBack(obj,a,b)
             % hack an evaluate plug-in in order to use the obj.getLocs(...)
-            module=plugin('ROIManager','Analyze','LocMoFit_dynamicRec_mCME');
+            module=plugin('ROIManager','Analyze','SMLMModelFit_dynamicRec_mCME');
             p.Vrim=100;
 
-            module.handle=figure('MenuBar','none','Toolbar','none','Name','LocMoFit_dynamicRec_mCME');
+            module.handle=figure('MenuBar','none','Toolbar','none','Name','SMLMModelFit_dynamicRec_mCME');
             module.attachPar(obj.P);
             module.attachLocData(obj.locData);
 
