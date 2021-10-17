@@ -18,7 +18,8 @@ plabel=fithist(hr,nb,p);
 % title(plabel)
 end
 function pf=fithist(hi,n,p)
-
+hi2(:,1)=hi;
+hi=hi2;
 shi=sum(hi);
 % hi=hi/shi;
 
@@ -34,7 +35,7 @@ x=n(range)';
 fun=@(fitpar,xdata) sqrt(fitpar(1)*clusterfromlabeling(xdata,corners,rings,fitpar(2)));
 startp=[shi .4];
 options=optimoptions('lsqcurvefit','Display','off');
-fitp=lsqcurvefit(fun,startp,x,sqrt(hi(range))',[0 0],[inf 1],options);
+fitp=lsqcurvefit(fun,startp,x,sqrt(hi(range)),[0 0],[inf 1],options);
 % 
 % ft=fittype('sqrt(a*clusterfromlabeling(x,corners,rings,p))','problem',{'corners','rings'});
 % f=fit(x,sqrt(hi(range))',ft,'problem',{corners, rings},'Lower',[0 0.01],'Upper',[inf .99],'Start',[shi .4]);
