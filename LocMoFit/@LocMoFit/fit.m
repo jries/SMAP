@@ -285,8 +285,8 @@ try
                 % Model vs data plot for a visual inspection
                 for k_sampling = 1:numOfSampling
                     allLL_qf(k_sampling) = (par(k_sampling,:)-parBestFit)*H*(par(k_sampling,:)-parBestFit)';
-                    k = 8; figure; plot(par(:,k),allLL_qf+model.Coefficients(end), ' .'); hold on; plot(par(:,k),allLL, ' .'); hold off
                 end
+                k = 8; figure; plot(par(:,k),allLL_qf+model.Coefficients(end), ' .'); hold on; plot(par(:,k),allLL, ' .'); hold off
             end
             
             % Calculations of the parameter stds. Quite often the sampling
