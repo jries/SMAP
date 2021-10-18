@@ -774,7 +774,7 @@ classdef LocMoFit<matlab.mixin.Copyable
                 fn = fieldnames(oneOffset);
                 for k = length(fn):-1:1
                     if strcmp(fn,'density')
-                        internalOffset{90+l}.weight = obj.getBG('weight', l);
+                        internalOffset{90+l}.weight = obj.convertBG('weight', l, oneOffset.density);
                     else
                         internalOffset{90+l} = oneOffset;
                     end
@@ -792,25 +792,30 @@ classdef LocMoFit<matlab.mixin.Copyable
         end
         
         function BG = getBG(obj, queriedForm, layer)
+            optionValue = obj.advanceSetting.(['m9' num2str(layer) '_background']).value;
+            val = obj.getVariable(['m9' num2str(layer) '.' optionValue]);
+            BG = obj.convertBG(queriedForm, layer, val);
+        end
+        
+        function BG = convertBG(obj, queriedForm, layer, val)
             l = layer;
-            numOfLayer = obj.numOfLayer;
             if strcmp(queriedForm,'density')
                 % density here is defined as the projected density.
                 % this unit is locs/um^2
                 optionValue = obj.advanceSetting.(['m9' num2str(l) '_background']).value;
                 if strcmp(optionValue,'weight')
-                    weight = obj.getVariable(['m9' num2str(l) '.weight']);
+                    weight = val;
                     numOfBGLocs = weight*obj.numOfLocsPerLayer(l);
                     BG = numOfBGLocs/(pi*(0.5*obj.roiSize/1000)^2);
                 else
-                    BG = obj.getVariable(['m9' num2str(l) '.density']);
+                    BG = val;
                 end
             elseif strcmp(queriedForm,'weight')
                 optionValue = obj.advanceSetting.(['m9' num2str(l) '_background']).value;
                 if strcmp(optionValue,'weight')
-                    BG = obj.getVariable(['m9' num2str(l) '.weight']);
+                    BG = val;
                 else
-                    density = obj.getVariable(['m9' num2str(l) '.density']);
+                    density = val;
                     numOfBGLocs = density*(pi*(0.5*obj.roiSize/1000)^2);
                     BG = numOfBGLocs./obj.numOfLocsPerLayer(l);
                 end
