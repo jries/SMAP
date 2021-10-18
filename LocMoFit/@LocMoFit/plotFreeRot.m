@@ -89,7 +89,8 @@ function plotFreeRot(obj, varargin)
         zlabel(ax, 'Aligned Z (nm)')
         hold(subViz, 'on');
         plot(subViz,  locsViz.xnm+obj.roiSize/2,locsViz.ynm+obj.roiSize/2,' or', 'MarkerEdgeColor','w','MarkerFaceColor','r')
-        set(subViz,'YDir','normal')
+        set(subViz,'YDir','reverse')
+        set(ax,'YDir','reverse')
         hold(subViz,'off')
         rotate_callBack([],[],obj,results,bg, section);          % update the image visulization
 

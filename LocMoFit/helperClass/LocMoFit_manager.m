@@ -1,15 +1,18 @@
 classdef LocMoFit_manager < handle
     % :class:`LocMoFit_manager` a mamager of LocMoFit objects.
     %
-    % Prop
+    % Prop:
     %   plotSettings: a struct with plot names defined as fieldnames. Each
     %   files is a cell with two elements of variable IDs.
+    %   filteringRule: 
     properties
         data                % an SEsites array
         currentData = 1;
         lUseOnly = true;
         usedSites           % define which sites to include here
+        grpRule
         plotSettings = [];
+        filteringRule
         variableTableCol = [];
         alignSettings       % Converter for alignment.
         handles             % Place to save graphic handles
@@ -27,6 +30,10 @@ classdef LocMoFit_manager < handle
         IDSites
         fileNumberSites
         
+        filtering
+        
+        grp
+        
         numOfCh
         NLayer2
         
@@ -39,6 +46,7 @@ classdef LocMoFit_manager < handle
             obj.data(1).fitter = fitter;
         end
         function [val, ID] = getVariable(obj, fitterAndID)
+            % Only get varibles of use sites
             [val, ID] = getVariable_allSites(obj, fitterAndID);
             if ~isempty(obj.usedSites)
                 val = val(obj.usedSites);
@@ -81,28 +89,49 @@ classdef LocMoFit_manager < handle
             % histogram for 1D data
             % integrated scatter plot for 2D data
             fn = fieldnames(obj.plotSettings);
+            lKept = obj.filtering;
             for k = 1:length(fn)
                 onePlot = obj.plotSettings.(fn{k});
                 if length(onePlot) == 2
                     xData = obj.getVariable(onePlot{1});
                     yData = obj.getVariable(onePlot{2});
+                    xData = xData(lKept);
+                    yData = yData(lKept);
+                    grp = obj.grp(obj.useSites);
+                    grp = grp(lKept);
                     fig = figure;
                     t = tiledlayout(fig, 3,3);
                     ax = nexttile(1,[2 2]);
                     ax_2 = nexttile(7,[1 2]);
                     ax_3 = nexttile(3,[2 1]);
+                    
+                    allPoints = [xData; yData*2000]';
+                    
+                    grpId = unique(grp);
+                    density = zeros(size(grp));
+                    for l = 1:length(grpId)
+                        density(grp==grpId(l)) = ...
+                            countneighbours_versatile(allPoints(grp==grpId(l),:),...
+                            allPoints(grp==grpId(l),:),5,0);
+                    end
                     if isempty(obj.parentObj)
-                        plot(ax, xData, yData, ' ko');
+                        grpScatter(ax, xData, yData, grp,3,-density, 'filled');
                     else
-                        plot(ax, xData, yData, ' ko');
+                        grpScatter(ax, xData, yData, grp,3,-density, 'filled');
 %                         plotSElink(ax, xData, yData, obj.IDSites(obj.useSites), obj.parentObj.SE,' ko');
                     end
+                    
                     % x-axis
                     histogram(ax_2, xData);
                     ax_2.YDir = 'reverse';
                     xlabel(ax_2, setIDFormat(onePlot{1}, 'meaning'))
                     % y-axis
                     histogram(ax_3, yData);
+                    
+                    % assigning identifiers
+                    ax.Tag = 'scatter';
+                    ax_2.Tag = 'xHist';
+                    ax_3.Tag = 'yHist';
 %                     ax_3.YDir = 'reverse';
                     ax_3.View = [90 -90];
                     ax_2.XLim = ax.XLim;
@@ -110,10 +139,11 @@ classdef LocMoFit_manager < handle
                     xlabel(ax_3, setIDFormat(onePlot{2}, 'meaning'))
                     ax_3.XAxisLocation = 'top';
                     
-                    tabName = [setIDFormat(onePlot{1}, 'short') '__' setIDFormat(onePlot{2}, 'short')];
-                    hList.(tabName) = t;
+%                     tabName = [setIDFormat(onePlot{1}, 'short') '__' setIDFormat(onePlot{2}, 'short')];
+                    hList.(fn{k}) = t;
                 elseif length(onePlot) == 1
                     data = obj.getVariable(onePlot{1});
+                    data = data(lKept);
                     fig = figure;
                     hList.(fn{k}) = axes(fig);
                     histogram(hList.(fn{k}),data,20);
@@ -128,7 +158,7 @@ classdef LocMoFit_manager < handle
             parIDs = varargin(1:2:end);
             parFilter = varargin(2:2:end);
             for k = 1:length(parIDs)
-                val = obj.getVariable_allSites(parIDs{k});
+                val = obj.getVariable(parIDs{k});
                 if k == 1
                     lFilter = ones(size(val));
                 end
@@ -138,6 +168,57 @@ classdef LocMoFit_manager < handle
             lFilter = lFilter&lOneFilter;
         end
         
+        function addFiltering(obj, varargin)
+            % Use pair parameters like obj.addFilter('parID',[0 inf])
+            if isempty(obj.filteringRule)
+                obj.filteringRule = {};
+            end
+            parIDs = varargin(1:2:end);
+            parFilter = varargin(2:2:end);
+            if ~isempty(obj.filteringRule)
+                [indExist, locInList] = ismember(parIDs, obj.filteringRule(:,1));
+            else
+                indExist = 0;
+                locInList = 0;
+            end
+            
+            if any(indExist)
+                obj.filteringRule(locInList,:) = [parIDs(indExist) parFilter(indExist)];
+            end
+            
+            if any(~indExist)
+                n = sum(~indExist);
+                obj.filteringRule(end+1:end+n,:) = [parIDs(~indExist) parFilter(~indExist)];
+            end
+%             obj.filteringRule{} = parIDs
+        end
+        
+        function addGrpRule(obj, varargin)
+            % Usage:
+            %   obj.addFilter(grp, rule)            
+            if isempty(obj.grpRule)
+                obj.grpRule = {};
+            end
+            allGrp = varargin(1:2:end);
+            allCond = varargin(2:2:end);
+            if ~isempty(obj.grpRule)
+                [indExist, locInList] = ismember(allGrp, obj.grpRule(:,1));
+            else
+                indExist = 0;
+                locInList = 0;
+            end
+            
+            if any(indExist)
+                obj.grpRule(locInList,:) = [allGrp(indExist) allCond(indExist)];
+            end
+            
+            if any(~indExist)
+                n = sum(~indExist);
+                obj.grpRule(end+1:end+n,:) = [allGrp(~indExist) allCond(~indExist)];
+            end
+%             obj.filteringRule{} = parIDs
+        end
+                
         function batchFit(obj)
         end
         
@@ -178,6 +259,24 @@ classdef LocMoFit_manager < handle
             end
         end
         
+        function lFilter = get.filtering(obj)
+            lFilter = obj.filter(obj.filteringRule{:});
+        end
+        
+        function grp = get.grp(obj)
+            grp = zeros(obj.numOfSites,1);
+            if ~isempty(obj.grpRule)
+                grpInd = [obj.grpRule{:,1}];
+                for k = 1:size(grpInd,1)
+                    grpId = obj.grpRule{k,1};
+                    rule = obj.grpRule{k,2};
+                    ruleExprs = regexprep(rule, '(LocMoFitGUI(_\d+)?\.m\d+\.\w+)', ['obj\.' char("getVariable_allSites(\'$1\')")]);          % Parameters
+                    grp(eval(ruleExprs)) = grpId;
+                end
+            end
+%             grp = 
+        end
+               
         function variableTable = get.variableTable(obj)
             usedSites = logical(obj.useSites);
             variableTable = obj.IDSites(usedSites)';
