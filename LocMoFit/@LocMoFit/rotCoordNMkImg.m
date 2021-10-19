@@ -1,6 +1,20 @@
-function ax = rotCoordNMkImg(obj, varargin)
-% input arguments: ax, modCoord, locsCoord, rotVizAlt, pixelSize, mode,
-% section, lut
+function [ax, v] = rotCoordNMkImg(obj, varargin)
+% 
+% Usage:
+%   rotCoordNMkImg(obj, ax, modCoord, locsCoord, rotVizAlt, pixelSize, mode,
+% section, lut)
+%
+% Args:
+%   ax:
+%   modCoord:
+%   locsCoord:
+%   rotVizAlt: a vecotr of [az el], where az stands for azimuth and
+%   elevation angles.
+%   pixelSize:
+%   mode:
+%   section:
+%   lut:
+
 if isa(varargin{1},'matlab.graphics.axis.Axes')
     ax = varargin{1};
     modCoord = varargin{2};
@@ -106,7 +120,7 @@ switch mode
             end
         end
     case 'Data'
-        v = zeros([obj.roiSize./2 obj.roiSize./2]);
+        v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
         % Deal with locs
         for k = 1:max(locsCoord.layer)
             lLayer = locsCoord.layer==k;
@@ -133,6 +147,7 @@ switch mode
                 thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut(lut{k}));
                 v = v + thisImg;
             else
+                % use the SMAP render when available
                 p = obj.linkedGUI.getLayerParameters(k,renderSMAP);
                 p.sr_pos = [0 0 0];
                 p.sr_size = repelem(obj.roiSize./2,2);
@@ -147,42 +162,44 @@ switch mode
         axis(ax,'equal')
         
         % Here generate the outline of the model withi the given range of the slice
-        for k = 1:obj.numOfLayer
-            [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
-            if rotVizAlt(2)<0
-                lSectionMod = modCoord{k}.z >= -5 & modCoord{k}.z <= 5;
-                modVizX = modCoord{k}.x(lSectionMod);
-                modVizY = modCoord{k}.y(lSectionMod);
-            else
-                modVizX = modCoord{k}.x;
-                modVizY = modCoord{k}.y;
-            end
-            
-            %% Get the outline of the model projecion
-            % The sorted index idx of the points assiged as the outline is
-            % created first for a closed boundary. If the the longest edge
-            % are edgeRatioTh-time longer than the second, the edge will be
-            % removed to create the open.
-            edgeRatioTh = 1.2;
-            idx = boundary(double(modVizX), double(modVizY),0);
-            if ~isempty(idx)
-                D = sqrt(diff(modVizX(idx)).^2 + diff(modVizY(idx)).^2);
-                [B,I] = sort(D, 'descend');
-                if B(1)/B(2)>edgeRatioTh
-                    idx = [idx(I(1)+1:end); idx(1:I(1))];
-                    idx = unique(idx,'stable');
+        if ~isempty(modCoord)
+            for k = 1:obj.numOfLayer
+                
+                [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
+                if rotVizAlt(2)<0
+                    lSectionMod = modCoord{k}.z >= -5 & modCoord{k}.z <= 5;
+                    modVizX = modCoord{k}.x(lSectionMod);
+                    modVizY = modCoord{k}.y(lSectionMod);
+                else
+                    modVizX = modCoord{k}.x;
+                    modVizY = modCoord{k}.y;
                 end
-            else
-                idx = 1:length(modVizX);
+                
+                %% Get the outline of the model projecion
+                % The sorted index idx of the points assiged as the outline is
+                % created first for a closed boundary. If the the longest edge
+                % are edgeRatioTh-time longer than the second, the edge will be
+                % removed to create the open.
+                edgeRatioTh = 1.2;
+                idx = boundary(double(modVizX), double(modVizY),0);
+                if ~isempty(idx)
+                    D = sqrt(diff(modVizX(idx)).^2 + diff(modVizY(idx)).^2);
+                    [B,I] = sort(D, 'descend');
+                    if B(1)/B(2)>edgeRatioTh
+                        idx = [idx(I(1)+1:end); idx(1:I(1))];
+                        idx = unique(idx,'stable');
+                    end
+                else
+                    idx = 1:length(modVizX);
+                end
+                
+                oneLut = mymakelut(obj.model{k}.displayLut);
+                oneColor = oneLut(150,:);
+                
+                hold(ax, 'on');
+                plot(ax,  (modVizX(idx)+obj.roiSize/pixelSize)./2,+(modVizY(idx)+obj.roiSize/pixelSize)./2,'- r', 'Color','w','LineWidth',5)
+                hold(ax,'off')
             end
-            
-            oneLut = mymakelut(obj.model{k}.displayLut);
-            oneColor = oneLut(150,:);
-            
-            hold(ax, 'on');
-            plot(ax,  (modVizX(idx)+obj.roiSize/2)./2,+(modVizY(idx)+obj.roiSize/2)./2,'- r', 'Color','w','LineWidth',5)
-            hold(ax,'off')
-            
             
         end
 end
