@@ -8,7 +8,7 @@ function plotFreeRot(obj, varargin)
             ax = varargin{1};
             if isa(ax.Parent,'matlab.ui.container.Tab')
                 t = tiledlayout(ax.Parent,1,2);
-            else
+            elseif isa(ax.Parent, 'matlab.graphics.layout.TiledChartLayout')
                 t = tiledlayout(ax.Parent.Parent,1,2);
             end
             locs = varargin{2};
@@ -89,7 +89,8 @@ function plotFreeRot(obj, varargin)
         zlabel(ax, 'Aligned Z (nm)')
         hold(subViz, 'on');
         plot(subViz,  locsViz.xnm+obj.roiSize/2,locsViz.ynm+obj.roiSize/2,' or', 'MarkerEdgeColor','w','MarkerFaceColor','r')
-        set(subViz,'YDir','normal')
+        set(subViz,'YDir','reverse')
+        set(ax,'YDir','reverse')
         hold(subViz,'off')
         rotate_callBack([],[],obj,results,bg, section);          % update the image visulization
 
@@ -103,11 +104,24 @@ end
 function locsViz = pointViz(ax, locs, obj)
     cla(ax)
     [~,modViz] = obj.plot(ax, locs,'plotType','point','modelSamplingFactor',0.3); % get point type visualization
+%     modViz = obj.getLayerPoint(0.75); % get point type visualization
     axes(ax)
     legend({'Model','Data'})
     lPars = obj.exportPars(1,'lPar');
     lPars.variation = 0;
-    locsViz = obj.locsHandler(locs,lPars,1);
+    moveModel = 1;
+    if moveModel
+        modViz_locFormat.xnm = modViz{1}.x;
+        modViz_locFormat.ynm = modViz{1}.y;
+        modViz_locFormat.znm = modViz{1}.z;
+        modViz_locFormat = obj.locsHandler(modViz_locFormat,lPars,1, 'order_transform','RT');
+        modViz{1}.x = modViz_locFormat.xnm;
+        modViz{1}.y = modViz_locFormat.ynm;
+        modViz{1}.z = modViz_locFormat.znm;
+        locsViz = locs;
+    else
+        locsViz = obj.locsHandler(locs,lPars,1);
+    end
     obj.setTemp('locsViz', locsViz);
     obj.setTemp('modViz', modViz);
 end

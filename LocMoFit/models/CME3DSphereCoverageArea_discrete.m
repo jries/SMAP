@@ -14,7 +14,7 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
             obj.max = [5e+5 90];
             
             % Define other properties here:
-            obj.modelType = 'discrete';
+            obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized', 'continuous'};
             obj.dimension = 3;
         end
@@ -129,6 +129,12 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
             signRadius = sign(derivedPars.radius);
             radiusOneSideFree = derivedPars.radius-signRadius*pars.variation;
             derivedPars.areaOneSideFree = radiusOneSideFree.^2*(2.*pi.*(1-cos(deg2rad(90+pars.closeAngle))));
+            
+            if ~isempty(obj.ParentObject)&&~isempty(obj.ParentObject.ParentObject)
+                locMoFitter = obj.ParentObject.ParentObject;
+                modID = obj.ParentObject.ID;
+                derivedPars.basePos = locMoFitter.getVariable(['m' num2str(modID) '.zOffset'])+derivedPars.radius*sin(deg2rad(derivedPars.realCloseAngle))';
+            end
         end
     end
 end

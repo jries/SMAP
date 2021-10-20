@@ -98,6 +98,8 @@ end
 if any(imgSize == 0)
     imgSize = repelem((obj.roiSize+2*obj.imgExtension), modelDim)./pixelSize;
 end
+
+%% Get each model
 %         For the image type
 if isequal(results.plotType,'image')
     % for an image model, use the method 'plot()' of image model class
@@ -180,51 +182,12 @@ if isequal(results.plotType,'image')
             modelImage{k} = finalImg;
         end
     end
-%         For the point type   
 else
-    for k = obj.numOfModel:-1:1
-        if k==1
-            oneMPars = obj.exportPars(k,'mPar');
-            if isempty(results.modelSamplingFactor)
-                modelPoint{k} = obj.model{k}.getPoint(oneMPars);
-            else
-                modelPoint{k} = obj.model{k}.getPoint(oneMPars,'factor',results.modelSamplingFactor);
-            end
-            
-        else
-            oneMPars = obj.exportPars(k,'mPar');
-            if isempty(results.modelSamplingFactor)
-                ref = obj.model{k}.getPoint(oneMPars);
-            else
-                ref = obj.model{k}.getPoint(oneMPars,'factor',results.modelSamplingFactor);
-            end
-            
-            % translate lPar to mPar
-            oneLPars = obj.exportPars(k,'lPar');          % get lPars
-            fn = fieldnames(oneLPars);
-            lFn2rm = ismember(fn,{'xscale','yscale'});
-            fn = fn(~lFn2rm);
-            for l = 1:length(fn)
-                oneLPars.(fn{l}) = -oneLPars.(fn{l});
-            end
-            
-            pseudoLocs.xnm = ref.x;
-            pseudoLocs.ynm = ref.y;
-            if obj.model{1}.dimension == 3
-                pseudoLocs.znm = ref.z;
-            end
-            newPseudoLocs = obj.locsHandler(pseudoLocs, oneLPars,[],'usedformalism','rotationMatrixRev');
-            ref.x = newPseudoLocs.xnm;
-            ref.y = newPseudoLocs.ynm;
-            if obj.model{1}.dimension == 3
-                ref.z = newPseudoLocs.znm;
-            end
-            modelPoint{k} = ref;
-        end
-    end
+    % For the point type
+%     modPoint = obj.getModPoint(results.modelSamplingFactor);
 end
 %% Render the models
-% Generate for each layer an image
+% From models to layers: generate for each layer an image
 dataCol = {'r','g','b'};
 if isequal(results.plotType,'image')
 %     nameAllLut = mymakelut;
@@ -278,23 +241,10 @@ if isequal(results.plotType,'image')
     end
     finalImg = img2disp; %%%quick and dirty
 else
-    for ch = 1:length(allModelLayers)
-        layerPoint{ch}.x = [];
-        layerPoint{ch}.y = [];
-        layerPoint{ch}.z = [];
-        layerPoint{ch}.n = [];
-        indModelOneCh = find(modelLayer == allModelLayers(ch));
-        for k = 1:length(indModelOneCh)
-            indOneModel = indModelOneCh(k);
-            onePoint = modelPoint{indOneModel};
-            layerPoint{ch}.x = [layerPoint{ch}.x; onePoint.x];
-            layerPoint{ch}.y = [layerPoint{ch}.y; onePoint.y];
-            if obj.model{1}.dimension == 3
-                layerPoint{ch}.z = [layerPoint{ch}.z; onePoint.z];
-            end
-            layerPoint{ch}.n = [layerPoint{ch}.n; onePoint.n];
-        end
+    if isempty(obj.modelLayer)
+        obj.updateLayer
     end
+    layerPoint = obj.getLayerPoint(results.modelSamplingFactor);
 end
 %% Display images
 if isequal(results.plotType,'image')&&~isempty(locs)

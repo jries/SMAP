@@ -8,6 +8,7 @@ classdef onePoint<geometricModel
             obj.lb = [];
             obj.ub = [];
             obj.modelType = 'discrete';
+            obj.modelTypeOption = {'discrete'};
             obj.dimension = 3;
             obj.min = [];
             obj.max = [];

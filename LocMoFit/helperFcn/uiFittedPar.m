@@ -32,4 +32,7 @@ end
 header = FP.Properties.VariableNames;
 hGui_par.fittedPar.ColumnName = header;
 hGui_par.fittedPar.Data = table2cell(FP);
+
+
+
 end

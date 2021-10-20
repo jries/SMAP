@@ -11,15 +11,15 @@ The four files above can be downloaded [here](https://www.embl.de/download/ries/
 
 ## Preparation
 :::{important}
-Skip step 1 and 2 if you continue from {doc}`quick start<./quickstart>`.
+Skip step 1 and 2 if you continue from {doc}`quick start<../basics/quickstart>`.
 
-Instead, remove the previous loaded **LocMoFitGUI** if you continue from {doc}`quick start<./quickstart>`:
+Instead, remove the previous loaded **LocMoFitGUI** if you continue from {doc}`quick start<../basics/quickstart>`:
 	1. Go to **[ROIs]** -> **[Evaluate]** and click on the module to remove.
 	2. Click **remove**.
 :::
 1. Start SMAP.
 2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_.
-3. Load a new instance of the plugin **LocMoFitGUI** (see {doc}`quick start<./quickstart>` if you forget how to do it).
+3. Load a new instance of the plugin **LocMoFitGUI** (see {doc}`quick start<../basics/quickstart>` if you forget how to do it).
 
 ## Setup
 We will combine two identical rings (in the image format) in 3D to form a 3D dual-ring model ({doc}`more about model types<../basics/geometricModel>`).

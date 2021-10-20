@@ -18,6 +18,7 @@ obj.locs = locs;
 p = inputParser;
 p.addParameter('locs2', [])
 p.addParameter('controlLogLikelihood', obj.getAdvanceSetting('controlLogLikelihood'))
+p.addParameter('confidenceInterval', obj.getAdvanceSetting('confidenceInterval'))
 p.addParameter('skipFit', false)
 p.parse(varargin{:})
 p = p.Results;
@@ -88,6 +89,8 @@ if ~p.skipFit
     end
 end
 
+obj.defineRotPar;
+
 for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
     obj.currentCascadeStep = sc;
     [lb, ub, init, minVal, maxVal] = obj.prepFit;                                   % get settings for fit parameters
@@ -112,20 +115,8 @@ for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
     finalLb(lSet2Min)=minVal(lSet2Min);
     finalUb(lSet2Max)=maxVal(lSet2Max);
     
-    %% Get locs counts per layer
-    allLocsLayers = unique(locs.layer);
-    obj.numOfLocsPerLayer = histcounts(locs.layer, 1:max(allLocsLayers)+1);
-    obj.representiveLocprec = grpstats(locs.locprecnm, locs.layer, 'median');
-    numOfUsedLocs = sum(obj.numOfLocsPerLayer(obj.allModelLayer));
-    obj.weightLayer = zeros(size(obj.numOfLocsPerLayer));
-    if obj.useCompensation == true
-        numOfLocs_maxLayer = max(obj.numOfLocsPerLayer(obj.allModelLayer));
-        obj.compensationFactor = numOfLocs_maxLayer./obj.numOfLocsPerLayer;
-        obj.weightLayer(obj.allModelLayer) = 1/length(obj.allModelLayer);
-    else
-        obj.compensationFactor(obj.allModelLayer) = 1;
-        obj.weightLayer(obj.allModelLayer) = obj.numOfLocsPerLayer(obj.allModelLayer)/numOfUsedLocs;
-    end
+    %% Get locs info
+    obj.getLocsInfo
     
     %% Get compensationFactor
     % This factor compensate the number of locs between different channels
@@ -134,7 +125,6 @@ for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
         compensationFactor(locs.layer==k) = obj.compensationFactor(k);
     end
     compensationFactor(~ismember(locs.layer, obj.allModelLayer)) = [];
-    
     %% Run the optimization
     
     switch obj.objFunType
@@ -220,11 +210,15 @@ if isfield(obj.temp, 'optimHistory')
 end
 
 %% Calculate control log-likelihood values
-
 switch p.controlLogLikelihood
     case 'none'
+        obj.fitInfo.LLExpDist = [];
     case 'expected'
-        obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,2);
+%         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
+        obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
+        obj.fitInfo.LLExp = mean(obj.fitInfo.LLExpDist);
+        obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
+        obj.fitInfo.LLZScore = (obj.fitInfo.LLfit-obj.fitInfo.LLExp)./obj.fitInfo.LLExpStd;
     case 'overfitted'
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
     case 'both'
@@ -232,15 +226,94 @@ switch p.controlLogLikelihood
         obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
 end
 
-
-if 0
-    % hessian related values
-    parID = obj.getAllParId();
-    par_std = sqrt(hessdiag(@(fitPars)objFun(fitPars), parBestFit));
-    CI_ub = parBestFit+1.96*par_std;
-    CI_lb = parBestFit-1.96*par_std;
-    obj.fitInfo.CI.parameter = parID(indFit)';
-    obj.fitInfo.CI.interval = [CI_ub; CI_lb];
+%% Variations of parameters
+try
+    if strcmp(p.confidenceInterval, 'on')
+        %% Numerical Hessian matrix
+        % This is for a rough estimation of the parameter ranges
+        H = hessian(@(fitPars)objFun(fitPars), parBestFit);
+        invH = inv(H);
+        par_std_int = abs(sqrt(diag(invH)));
+        
+        %% Approximate the log-likelihood function with a quadratic form
+        % Here the quadratic form is defined as LL = x'Hx+a.
+        % H is the hessian matrix that we want to estimate. x is a
+        % np-element vector of parameter values (centered to the best
+        % parameters), where 'np' is the number of fitted parameters. LL is
+        % a scalar of the corresponding log-likelihood value.
+        
+        numOfPar = length(parBestFit);
+        iter = 0;
+        par_std = 1i; % set par_std as a imaginary number
+        
+        % Fit the quadratic form to [numOfSampling] points around the best
+        % parameters.
+        while iter<10&&~isreal(par_std)
+            numOfSampling = 1000;
+            par = parBestFit+...
+                rand(numOfSampling,length(parBestFit)).*...
+                2.*par_std_int'-par_std_int';
+            allLL = [];
+            
+            for k_LL = size(par,1):-1:1
+                allLL(k_LL) = objFun(par(k_LL,:));
+                while ~isreal(allLL(k_LL))
+                    % repeat until no imaginary LL caseud by out-of-domain
+                    % sampling.
+                    par(k_LL,:) = parBestFit+rand(1,length(parBestFit)).*...
+                        2.*par_std_int'-par_std_int';
+                    allLL(k_LL) = objFun(par(k_LL,:));
+                end
+            end
+            
+            % Fitting
+            quaTerms = getQuadraticTerms(numOfPar);
+            model = polyfitn(par-parBestFit,allLL,quaTerms);
+            H = zeros(numOfPar);
+            for k_term = 1:length(quaTerms)
+                ind = find(quaTerms(k_term,:));
+                if length(ind)==1
+                    H(ind,ind) = model.Coefficients(k_term);
+                elseif length(ind)==2
+                    H(ind(1),ind(2)) = model.Coefficients(k_term)./2;
+                    H(ind(2),ind(1)) = model.Coefficients(k_term)./2;
+                end
+            end
+            
+            
+            if false
+                % Model vs data plot for a visual inspection
+                for k_sampling = 1:numOfSampling
+                    allLL_qf(k_sampling) = (par(k_sampling,:)-parBestFit)*H*(par(k_sampling,:)-parBestFit)';
+                end
+                k = 8; figure; plot(par(:,k),allLL_qf+model.Coefficients(end), ' .'); hold on; plot(par(:,k),allLL, ' .'); hold off
+            end
+            
+            % Calculations of the parameter stds. Quite often the sampling
+            % windowis are too small to have a convex parameter-to-LL
+            % function. In this case, the windows are expanded [winExpand]
+            % times.
+            winExpand = 1.5;
+            invH = inv(H);
+            indBad = diag(invH)<0;
+            par_std_int(indBad) = par_std_int(indBad).*winExpand;
+            par_std = sqrt(diag(invH));
+            iter = iter+1;
+        end
+        
+        % Output results
+        parID = obj.getAllParId();
+        CI_ub = parBestFit+1.96*par_std';
+        CI_lb = parBestFit-1.96*par_std';
+        obj.fitInfo.CI.parameter = parID(indFit)';
+        obj.fitInfo.CI.interval = [CI_ub; CI_lb];
+        obj.fitInfo.CI.std = par_std';
+        obj.fitInfo.CI.adjR2 = model.AdjustedR2;
+    end
+catch ME
+    warning(['Site ' num2str(obj.linkedGUI.site.indList) ': cannot estimate the hessian matrix properly.'])
+    disp(getReport(ME, 'extended', 'hyperlinks', 'on'))
+    obj.fitInfo.CI = [];
 end
 for k=obj.numOfLayer:-1:1
     obj.fitInfo.numOfLocsPerLayer_BGFree(k) = obj.fitInfo.numOfLocsPerLayer(k) * (1-obj.getVariable(['pars.m9' num2str(k) '.offset.weight']));
@@ -252,4 +325,11 @@ for k = 1:obj.numOfModel
         obj.fitInfo.modelPar_internal{k} = modelPar_internal;
     end
 end
+end
+
+function quaTerms = getQuadraticTerms(numOfPar)
+    allTerms = permn([1 2 0], numOfPar);
+    ind = sum(allTerms,2)==2;
+    allTerms = allTerms(ind,:);
+    quaTerms = [allTerms; zeros(1,size(allTerms,2))];
 end
