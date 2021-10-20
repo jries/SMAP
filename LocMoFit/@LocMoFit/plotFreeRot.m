@@ -108,7 +108,19 @@ function locsViz = pointViz(ax, locs, obj)
     legend({'Model','Data'})
     lPars = obj.exportPars(1,'lPar');
     lPars.variation = 0;
-    locsViz = obj.locsHandler(locs,lPars,1);
+    moveModel = 1;
+    if moveModel
+        modViz_locFormat.xnm = modViz{1}.x;
+        modViz_locFormat.ynm = modViz{1}.y;
+        modViz_locFormat.znm = modViz{1}.z;
+        modViz_locFormat = obj.locsHandler(modViz_locFormat,lPars,1, 'order_transform','RT');
+        modViz{1}.x = modViz_locFormat.xnm;
+        modViz{1}.y = modViz_locFormat.ynm;
+        modViz{1}.z = modViz_locFormat.znm;
+        locsViz = locs;
+    else
+        locsViz = obj.locsHandler(locs,lPars,1);
+    end
     obj.setTemp('locsViz', locsViz);
     obj.setTemp('modViz', modViz);
 end

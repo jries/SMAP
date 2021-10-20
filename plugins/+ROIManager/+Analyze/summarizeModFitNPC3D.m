@@ -9,7 +9,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
         function out=run(obj,p)
             se = obj.locData.SE;
             sites = se.sites;
-            cutoffOneRing = 35;
+            cutoffOneRing = [35 70];
 
             lUsed = getFieldAsVector(sites, 'annotation.use');
             siteOrder = 1:se.numberOfSites;
@@ -57,7 +57,8 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             
             bgDensity_fitter = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo.BGDensity'],1);
             
-            lOneRing = ringDist<=cutoffOneRing;
+            lOneRing = ringDist<=cutoffOneRing(1);
+            largRingSep = ringDist>=cutoffOneRing(2);
             
             for k = find(lFailed)
                 usedSites(k).annotation.list3.value = 5;
@@ -72,6 +73,9 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
                 else
                     usedSites(k).annotation.list3.value = 8;
                 end
+            end
+            for k = find(largRingSep)'
+                usedSites(k).annotation.list3.value = 4;
             end
             list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
             lGood = list3 == 1;
