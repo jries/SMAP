@@ -1,12 +1,13 @@
 classdef DECODE_training_estimates<interfaces.DialogProcessor
 %     Saves a training file for DECODE
     properties
-        yamldefault='DECODE_default.yaml';
+        yamldefault='DECODE_local.yaml';
         yamlfile
         yamlpar
         jsontypes
         decodeprocess
         tensorboardprocess
+        decodepid
     end
     methods
         function obj=DECODE_training_estimates(varargin)  
@@ -14,29 +15,112 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
             obj.showresults=false;
         end
         function out=run(obj,p)
-           pdecode=obj.getGlobalSetting('DECODE_path');
-           if ~exist(pdecode,'dir')
-               warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
-               return
-           end
+     
+%            pdecode=obj.getGlobalSetting('DECODE_path');
+%            if ~exist(pdecode,'dir')
+%                warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
+%                return
+%            end
            out=[];
-           [~,fname]=fileparts(obj.locData.files.file(1).name);
-           fnameo=[obj.yamlpar.InOut.experiment_out filesep 'DECODE_train_' fname '.yaml'];
-           finalizejson(obj);
-           saveyaml(obj,fnameo);
-%            https://github.com/brian-lau/MatlabProcessManager
-           pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' fnameo ];
-           pm=processManager('command',pcall,'autoStart',false,'workingDir',obj.yamlpar.InOut.experiment_out);
-           pm.printStdout=false ;
-           pm.printStderr=true;
-           pm.wrap=1000;
-           pm.pollInterval=10;
-           pm.start()
-           obj.decodeprocess=pm;
+       
+           if p.trainlocal
+               pdecode=obj.yamlpar.Connect.local_decode_path;
+               [~,fname]=fileparts(obj.locData.files.file(1).name);
+               yamlpath=[obj.yamlpar.InOut.experiment_out filesep 'DECODE_train_' fname '.yaml'];
+               finalizejson(obj);
+               saveyaml(obj,yamlpath);
+    %            https://github.com/brian-lau/MatlabProcessManager
+               pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' yamlpath ];
+               pm=processManager('command',pcall,'autoStart',false,'workingDir',obj.yamlpar.InOut.experiment_out);
+               pm.printStdout=false ;
+               pm.printStderr=true;
+               pm.wrap=1000;
+               pm.pollInterval=10;
+               pm.start()
+               obj.decodeprocess=pm;
+    
+               pcalltb=[pdecode '/bin/tensorboard --samples_per_plugin images=100 --port=6007 --logdir=runs' ];
+               ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
+               obj.tensorboardprocess=ptb;
+           elseif 0 %train on workstation old
+               %make output directory
+               outdir=[obj.yamlpar.Connect.local_network_storage  obj.yamlpar.InOut.experiment_out];
+               if ~exist(outdir,'dir')
+                   mkdir(outdir)
+               end
+               %copy files
+               finalizejson(obj);
+               yamlp=obj.yamlpar;
+               calfile=obj.yamlpar.InOut.calibration_file;
+               copyfile(calfile,outdir);
+               [~,fout,fext]=fileparts(calfile);
+               %change yaml parameters
+               yamlp.InOut.calibration_file=fullfile(obj.yamlpar.Connect.remote_network_storage, obj.yamlpar.InOut.experiment_out,[fout fext]);
+               %save yaml
+               [~,fname]=fileparts(obj.locData.files.file(1).name);
+               yamlname=['DECODE_train_' fname '.yaml'];
+               yamlpath=[obj.yamlpar.Connect.local_network_storage obj.yamlpar.InOut.experiment_out  yamlname];
+               % gpu
+               [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
+               [gpus,gpurec]=parsegpustat(gpustat);
+               yamlp.Hardware.device=['cuda:' num2str(gpurec)];
+               yamlp.Hardware.device_simulation=['cuda:' num2str(gpurec)];
 
-           pcalltb=[pdecode '/bin/tensorboard --samples_per_plugin images=100 --port=6007 --logdir=runs' ];
-           ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
-           obj.tensorboardprocess=ptb;
+               yamlp.InOut.experiment_out=fullfile(obj.yamlpar.Connect.remote_network_storage, obj.yamlpar.InOut.experiment_out);
+               saveyaml(yamlp,yamlpath);
+              
+               shfile=savesh(yamlp,yamlname,obj.yamlpar.InOut.experiment_out);
+               system([shfile]);
+
+               %tensorboard XXXX move to tensorboard button
+               tbfile=savetbsh(obj.yamlpar);
+               ptb=processManager('command',tbfile,'workingDir',[fileparts(yamlpath) ]);
+               pause(1)
+               [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
+               [gpus,gpurec]=parsegpustat(gpustat);
+           else %workstation via HTTP
+               %make output directory
+               outdir=[obj.yamlpar.Connect.local_network_storage  'experiments' filesep obj.yamlpar.InOut.experiment_out];
+               if ~exist(outdir,'dir')
+                   mkdir(outdir)
+               end
+               %copy files
+               finalizejson(obj);
+               yamlp=obj.yamlpar;
+               calfile=obj.yamlpar.InOut.calibration_file;
+               copyfile(calfile,outdir);
+               [~,fout,fext]=fileparts(calfile);
+               %change yaml parameters
+               server=obj.yamlpar.Connect.remote_workstation;
+               status=webread([server '/status']);
+               status.watch_dir=[status.watch_dir filesep];
+               yamlp.InOut.calibration_file=fullfile(status.watch_dir, obj.yamlpar.InOut.experiment_out,[fout fext]);
+               %save yaml
+               [~,fname]=fileparts(obj.locData.files.file(1).name);
+               yamlname=['DECODE_train_' fname '.yaml'];
+               yamlpath=[outdir yamlname];
+               yamlpath_remote=[obj.yamlpar.InOut.experiment_out  yamlname];
+               % gpu
+               gpustat=webread([server '/status_gpus']);
+               [gpus,gpurec]=parsegpustathttp(gpustat);
+               yamlp.Hardware.device=gpurec;
+               yamlp.Hardware.device_simulation=gpurec;
+
+               yamlp.InOut.experiment_out=fullfile(status.watch_dir, obj.yamlpar.InOut.experiment_out);
+               saveyaml(yamlp,yamlpath);
+
+               url = 'http://pc-ries25:8000/submit';
+               options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
+               pid = webread(url, 'path_param', yamlpath_remote, options);
+               l=length(obj.decodepid);
+               obj.decodepid(l+1).pid=pid;
+               obj.decodepid(l+1).date=now;
+
+%                http://pc-ries25:8000/docs#/default/status_status_get
+%               nvidia-smi
+%                 htop
+           end
+
            obj.guihandles.stoplearning.Visible='on';
            obj.guihandles.tensorboard.Visible='on';
         end
@@ -46,9 +130,15 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         function initGui(obj)
 
             initGui@interfaces.DialogProcessor(obj);
-                obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
+            obj.deleteGlobalSetting('DECODE_path')
+%                 obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
+         
         
-            yamldefault=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep obj.yamldefault];
+            yamldefault=[obj.getPar('SettingsDirectory') filesep 'temp' filesep obj.yamldefault];
+            if ~exist(yamldefault,'file')
+                yamlold=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep 'DECODE_default.yaml'];
+                copyfile(yamlold, yamldefault)
+            end
             obj.yamlfile=yamldefault;
             tt=uitable(obj.handle);
             tt.Position=obj.guihandles.partablepos.Position;
@@ -62,18 +152,97 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
     end
 end
 
+function [gpus,gpurec]=parsegpustathttp(gpustat)
+fn=fieldnames(gpustat);
+for k=1:length(fn)
+    gpus.mem(k)=gpustat.(fn{k}).memory_total-gpustat.(fn{k}).memory_util;
+    gpus.load(k)=gpustat.(fn{k}).load;
+    gpus.name{k}=strrep(fn{k},'_',':');
+end
+
+[mmax, ind]=max(gpus.mem);
+gpurec=gpus.name{ind};
+end
+
+% function [gpus,gpurec]=parsegpustat(gpustat)
+% indpl=strfind(gpustat,'+');
+% gpustat=gpustat(indpl(1):end);
+% fl=80;
+% line=[9 13];
+% linp=(line-1)*fl;
+% for k=1:length(line)
+% lh=gpustat(linp(k):linp(k)+fl);
+% ind1=strfind(lh,'|');
+% ind2=strfind(lh,'MiB');
+% gpus.mem(k)=str2double(lh(ind1(2)+1:ind2(1)-1));
+% ind3=strfind(lh,'%');
+% gpus.activity(k)=str2double(lh(ind1(end-1)+1:ind3(end)-1));
+% end
+% indpid=1;
+% 
+% for k=0:length(gpustat)/fl-1
+%     lh=gpustat(k*fl+1:(k+1)*fl);
+%     if strfind(lh,'decode')
+%         gpus.pid(indpid).GPU=str2double(lh(2:9));
+%         gpus.pid(indpid).PID=str2double(lh(18:30));
+%         gpus.pid(indpid).mem=str2double(lh(68:74));
+%         indpid=indpid+1;
+%     end
+% end
+% 
+% if indpid==2
+%     gpuused=gpus.pid.GPU;
+%     gpurec=1-gpuused;
+% else
+%     [m,indm]=min(gpus.mem);
+%     gpurec=indm-1;
+% end
+% end
+
+function shfile=savesh(js,yamlname,expout)
+shfile=fullfile(js.Connect.local_network_storage,expout,'starttraining.sh');
+remoteyaml=fullfile(js.Connect.remote_network_storage, expout, yamlname);
+command=['ssh ' js.Connect.remote_workstation ' ''nohup ' ...
+    js.Connect.remote_decode_path ' -m decode.neuralfitter.train.live_engine -p ' ...
+    remoteyaml ' -l ' fileparts(remoteyaml) filesep 'runs > foo.out 2> foo.err < /dev/null &'' '];
+fid=fopen(shfile,'w');
+fprintf(fid,command);
+fclose(fid);
+
+end
+
+function command=savetbsh(js)
+shfile=fullfile(js.Connect.local_network_storage,js.InOut.experiment_out,'starttensorboard.sh');
+pdecode=fileparts(js.Connect.local_decode_path);
+command=[pdecode '/tensorboard --samples_per_plugin images=100 --port=6008 --logdir=' js.Connect.local_network_storage js.InOut.experiment_out  'runs'];
+
+% fid=fopen(shfile,'w');
+% fprintf(fid,command);
+% fclose(fid);
+
+end
+
 function makejsontable(obj)
 use.SMAP={'set_emitters_per_um2','zrange_nm'};
 use.InOut={'calibration_file','experiment_out'};
 use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform'};
 use.Camera={'em_gain','e_per_adu','baseline','read_sigma','spur_noise','px_size'};
 use.Hardware={'device','device_simulation'};
+use.Connect={'remote_workstation','local_decode_path','local_network_storage'};
 fnu=fieldnames(use);
-
 js=obj.yamlpar;
 if ~isfield(js, 'SMAP')
     js.SMAP.set_emitters_per_um2='HD';
     js.SMAP.zrange_nm=[-0 0];
+%     js.SMAP.remote_workstation='riesgroup@pc-ries25';
+%     js.SMAP.remote_decode_path='';
+
+%     js.SMAP.network_storage=['/Volumes/t2ries/DECODE/' datestr(now,'yymmdd')];
+end
+if ~isfield(js, 'Connect')
+    js.Connect.remote_workstation='';
+    js.Connect.remote_decode_path='';
+    js.Connect.local_decode_path='';
 end
 
 ind=1;
@@ -238,6 +407,7 @@ end
 
 end
 function usecurrent_callback(a,b,obj)
+    p=obj.getGuiParameters;
     table2json(obj)
     js=obj.yamlpar;
     
@@ -248,7 +418,7 @@ function usecurrent_callback(a,b,obj)
         return
     end
     locsu=obj.locData.getloc(fields,'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
-    f=figure;
+    f=figure('Visible','off');
     stat=make_statistics2({locs});
     close(f)
     
@@ -291,17 +461,38 @@ function usecurrent_callback(a,b,obj)
     disp(['emitters in 40x40 per frame: ' num2str(emitters)]);
     js.SMAP.density=density;
     [expdir,js.SMAP.name]=fileparts(obj.locData.files.file(1).name);
-    
     if isempty(js.InOut.calibration_file)
         js.InOut.calibration_file=get3dcalfile(obj);
     end
+
 %     if ~isempty(js.InOut.calibration_file)
 %         js.InOut.experiment_out=fileparts(js.InOut.calibration_file);
 %     end
     obj.yamlpar=js;  
     setz(obj);
+    setnettrainingpath(0,0,obj)
+    
+end
+
+function setnettrainingpath(a,b,obj)
+    p=obj.getGuiParameters;
+    js=obj.yamlpar;
+    js.Hardware.device='cuda:0';
+    js.Hardware.device_simulation='cuda:0';
+    if p.trainlocal
+        if ismac 
+            js.Hardware.device='cpu';
+            js.Hardware.device_simulation='cpu';
+        end
+    else
+        [~,calname]=fileparts(js.InOut.calibration_file);
+        dates=datestr(now,'yymmdd');
+        js.InOut.experiment_out=[dates '_' calname '/'];
+    end
+    obj.yamlpar=js;  
     makejsontable(obj)
 end
+
 function savejson_callback(a,b,obj,isdefault)
 finalizejson(obj);
 if isdefault
@@ -321,8 +512,8 @@ end
 saveyaml(obj,fout)
 end
 
-function saveyaml(obj,fout)
-yout=rmfield(obj.yamlpar,'SMAP');
+function saveyaml(yamlpar,fout)
+yout=rmfield(yamlpar,'SMAP');
 WriteYaml(fout, yout)
 end
 
@@ -386,14 +577,54 @@ function setz(obj)
 end
 
 function stoplearning_callback(a,b,obj)
+if ~isempty(obj.decodepid) %remote training
+    if length(obj.decodepid)>1
+        for k=1:length(obj.decodepid)
+            ls{k}=[num2str(obj.decodepid(k).pid) ':' datestr(obj.decodepid(k).date)];
+        end
+        ind=listdlg('PromptString',  "Select process to end",'ListString',ls);
+    else
+        ind=1;
+    end
+    url = 'http://pc-ries25:8000/kill';
+    options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
+    for k=1:length(ind)    
+        try
+            webread(url, 'pid', obj.decodepid(ind(k)).pid, options);
+             obj.decodepid(ind)=[];
+        catch err
+            err
+        end
+    end
+   
+    if isempty(obj.decodepid)
+        obj.guihandles.stoplearning.Visible='off';
+%         obj.guihandles.tensorboard.Visible='off';
+    end
+else
     obj.tensorboardprocess.stop;
-    obj.decodeprocess.stop;
+    [err,gpustat]=system(['ssh ' obj.yamlpar.Connect.remote_workstation ' ''nvidia-smi '' ']);
+    [gpus,gpurec]=parsegpustat(gpustat);
+    for k=1:length(gpus.pid)
+        command=['ssh ' obj.yamlpar.Connect.remote_workstation ' ''kill ' num2str(gpus.pid(k).PID) ''''];
+        system(command);
+    end
+    
     obj.guihandles.stoplearning.Visible='off';
     obj.guihandles.tensorboard.Visible='off';
+    try
+    obj.decodeprocess.stop;
+    catch err
+    end
+end
 end
 
 function tensorboard_callback(a,b,obj)
-page='http://localhost:6007';
+if ~isempty(obj.decodepid) %remote training
+   page='http://pc-ries25:8001/#scalars';
+else
+    page='http://localhost:6008';
+end
 web(page,'-browser')
 end
 
@@ -405,7 +636,7 @@ pard.usecurrent.object=struct('Style','pushbutton','String','Use parameters from
 pard.usecurrent.position=[1,1];
 pard.usecurrent.Width=2;
 
-pard.tensorboard.object=struct('Style','pushbutton','String','Tensorboard','Callback',{{@tensorboard_callback,obj}},'Visible','off');
+pard.tensorboard.object=struct('Style','pushbutton','String','Tensorboard','Callback',{{@tensorboard_callback,obj}},'Visible','on');
 pard.tensorboard.position=[1,3];
 pard.tensorboard.Width=1;
 
@@ -438,4 +669,7 @@ pard.partablepos.object=struct('Style','text','String',' ');
 pard.partablepos.position=[8,1];
 pard.partablepos.Width=4;
 
+pard.trainlocal.object=struct('Style','checkbox','String','train locally');
+pard.trainlocal.position=[10,1];
+pard.trainlocal.Width=1;
 end

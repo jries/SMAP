@@ -67,7 +67,7 @@ if ~any([isequal(obj.modelType, 'continuous') isequal(obj.modelType, 'background
     
     if obj.dimension == 3
         % for 3D
-        intensityVal = gaussDist(refLocs,locs.ynm, locs.xnm, locs.znm, sigmaSet+sigmaFactor(2),sigmaSet+sigmaFactor(2),sigmaZSet, 'sigFactor', sigmaFactor(1), 'distMode',p.gaussDistMode,'distCutoff',p.gaussDistCutoff, 'sumIntensity',sumGaussIntensity)./size(refLocs.x,1);
+        intensityVal = gaussDist(refLocs,locs.ynm, locs.xnm, locs.znm, sigmaSet+sigmaFactor(2),sigmaSet+sigmaFactor(2),sigmaZSet, 'sigFactor', sigmaFactor(1), 'distMode',p.gaussDistMode,'distCutoff',p.gaussDistCutoff)./sum(refLocs.n,1);
         likelihoodBoun = 0;
     else
         % for 2D

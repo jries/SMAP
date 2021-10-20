@@ -235,6 +235,7 @@ classdef LocSaver<interfaces.WorkflowModule
                 end
                 obj.locDatatemp.files.file.savefit=obj.savefit;
                 obj.locDatatemp.files.file.imagetags=obj.getPar('loc_imagetags');
+                
                 displayimagetags(obj,obj.locDatatemp.files.file.imagetags)
                 if ~contains(filename,'nosave')
                 try
@@ -332,7 +333,7 @@ obj.setGuiParameters(struct('outputfile',[p f]));
 end
 
 function displayimagetags(obj,imagetags)
-if ~obj.getSingleGuiParameter('displayimagetags')
+if ~obj.getSingleGuiParameter('displayimagetags') || isempty(imagetags)
     return
 end
 f=figure;
