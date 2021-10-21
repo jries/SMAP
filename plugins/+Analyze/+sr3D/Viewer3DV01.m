@@ -771,13 +771,17 @@ classdef Viewer3DV01<interfaces.DialogProcessor
 %                 pause(0.01)
             end
             if ~isempty(savemovie)
-                options.color=true;
-                options.message=true;
-                options.comp='lzw';
 
                 imout=uint8(outim*(2^8-1));
-                mysavemovie(imout,savemovie.file,'FrameRate',30, 'Quality', 100)
-%                 saveastiff(imout,savemovie.file,options)
+                switch p.savemoviemode.selection
+                    case 'tif'
+                        options.color=true;
+                        options.message=true;
+                        options.comp='lzw';
+                        saveastiff(imout,savemovie.file,options)
+                    case 'mp4'
+                         mysavemovie(imout,savemovie.file,'FrameRate',30, 'Quality', 100)
+                end           
             end
             
             obj.recpar={};
