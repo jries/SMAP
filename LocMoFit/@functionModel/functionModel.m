@@ -170,6 +170,7 @@ classdef functionModel<SMLMModel
             p.addParameter('roiSize',220);
             p.addParameter('pixelSize',2);
             p.addParameter('sigma',15);
+            p.addParameter('lPars',[]);
             p.addParameter('axes',[]);
             p.addParameter('azi_light',45);
             p.addParameter('ele_light',60);
@@ -183,14 +184,14 @@ classdef functionModel<SMLMModel
             
             % get the anchor points of the model
 %             sigma = results.sigma/pixelSize;
-            img = obj.getImage(mPars,'pixelSize',p.pixelSize);
+            img = obj.getImage(mPars,'pixelSize',p.pixelSize, 'lPars', p.lPars);
             if isempty(p.axes)
                 fig = figure;
                 ax = axes(fig);
             else
                 ax = p.axes;
             end
-            inp = rmfield(p,{'Projection','roiSize','pixelSize','sigma','axes'});
+            inp = rmfield(p,{'Projection','roiSize','pixelSize','sigma','axes','lPars'});
             inp=[fieldnames(inp).'; struct2cell(inp).'];
             inp = inp(:).';
             patchPlot(ax,img, inp{:})
@@ -241,6 +242,7 @@ classdef functionModel<SMLMModel
             end
             p.addParameter('useLocprecnm', ~obj.fixSigma);
             p.addParameter('sigma', []);
+            p.addParameter('lPars', []);
             parse(p,varargin{:});
             results = p.Results;
             pixelSize = results.pixelSize;
@@ -270,6 +272,9 @@ classdef functionModel<SMLMModel
                     sigma = (obj.pseudoModel.locprecnm+obj.sigmaFactor(2))./pixelSize;
                 end
                 modelCoord = obj.getPoint(mPars);
+                if ~isempty(results.lPars)
+                    modelCoord = obj.ParentObject.transModPoint(modelCoord,'lPars',results.lPars);
+                end
                 switch projection
                     case 'none'
                     case 'xy'

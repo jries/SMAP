@@ -9,7 +9,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
         function out=run(obj,p)
             se = obj.locData.SE;
             sites = se.sites;
-            cutoffOneRing = [35 70];
+            cutoffOneRing = [35 100];
 
             lUsed = getFieldAsVector(sites, 'annotation.use');
             siteOrder = 1:se.numberOfSites;
@@ -79,7 +79,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             end
             list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
             lGood = list3 == 1;
-            
+            disp(['numOfSites = ' num2str(sum(lGood))])
             %% Shift the athimuthal angle periodically 
             medAzi_0 = 0;
             medAzi = 90;

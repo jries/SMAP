@@ -133,7 +133,7 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
             if ~isempty(obj.ParentObject)&&~isempty(obj.ParentObject.ParentObject)
                 locMoFitter = obj.ParentObject.ParentObject;
                 modID = obj.ParentObject.ID;
-                derivedPars.basePos = locMoFitter.getVariable(['m' num2str(modID) '.zOffset'])+derivedPars.radius*sin(deg2rad(derivedPars.realCloseAngle))';
+                derivedPars.basePos = derivedPars.radius*sin(deg2rad(derivedPars.realCloseAngle))';
             end
         end
     end
