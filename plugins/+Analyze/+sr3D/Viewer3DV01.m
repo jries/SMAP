@@ -663,7 +663,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             if nargin<4
                 savemovie=[];
             end
-            global SMAP_stopnow
+            global SMAP_stopnow frameratemp4
             bh=obj.guihandles.rotateb;
             if bh.Value
                 bh.FontWeight='bold';
@@ -780,7 +780,12 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                         options.comp='lzw';
                         saveastiff(imout,savemovie.file,options)
                     case 'mp4'
-                         mysavemovie(imout,savemovie.file,'FrameRate',30, 'Quality', 100)
+                        if isempty(frameratemp4)
+                            fr=30;
+                        else
+                            fr=frameratemp4;
+                        end
+                        mysavemovie(imout,savemovie.file,'FrameRate',fr, 'Quality', 100)
                 end           
             end
             
