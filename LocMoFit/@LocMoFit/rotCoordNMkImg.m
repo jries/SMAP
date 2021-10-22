@@ -1,4 +1,4 @@
-function [ax, v] = rotCoordNMkImg(obj, varargin)
+function [ax, v, info] = rotCoordNMkImg(obj, varargin)
 % 
 % Usage:
 %   rotCoordNMkImg(obj, ax, modCoord, locsCoord, rotVizAlt, pixelSize, mode,
@@ -24,6 +24,7 @@ if isa(varargin{1},'matlab.graphics.axis.Axes')
     mode = varargin{6};
     section = varargin{7};
     lut = varargin{8};
+    varargin = varargin(9:end);
 else
     fig = figure;
     ax = axes(fig);
@@ -34,7 +35,16 @@ else
     mode = varargin{5};
     section = varargin{6};
     lut = varargin{7};
+    varargin = varargin(8:end);
 end
+
+p = inputParser;
+p.addParameter('rotMov',false);
+p.addParameter('imax',nan);
+p.parse(varargin{:});
+p = p.Results;
+
+info = [];
 
 % Rotate coordiantes and make an image
 forRevY = -1; % this factor was introduced to make the reverse YDir also applies
@@ -148,12 +158,27 @@ switch mode
                 v = v + thisImg;
             else
                 % use the SMAP render when available
-                p = obj.linkedGUI.getLayerParameters(k,renderSMAP);
-                p.sr_pos = [0 0 0];
-                p.sr_size = repelem(obj.roiSize./2,2);
-                p.sr_pixrec = pixelSize;
-                imageo = renderSMAP(locsCoordSub, p, k);
-                imageo = drawerSMAP(imageo,p);
+                p_render = obj.linkedGUI.getLayerParameters(k,renderSMAP);
+                p_render.sr_pos = [0 0 0];
+                p_render.sr_size = repelem(obj.roiSize./2,2);
+                p_render.sr_pixrec = pixelSize;
+                if p.rotMov
+                    p_render.imaxtoggle = 1;
+                    imageo = renderSMAP(locsCoordSub, p_render, k);
+                    imageo = drawerSMAP(imageo,p_render);
+                    imax = imageo.imax*1.8;
+                    p_render.imaxtoggle = 0;
+                    p_render.imax_min = imax;
+                    imageo = renderSMAP(locsCoordSub, p_render, k);
+                    imageo = drawerSMAP(imageo,p_render);
+                    info.imax = imax;
+                else
+                    if ~isnan(p.imax)
+                        p_render.imax_min = p.imax;
+                    end
+                    imageo = renderSMAP(locsCoordSub, p_render, k);
+                    imageo = drawerSMAP(imageo,p_render);
+                end
                 thisImg = imageo.image;
                 v = v + thisImg;
             end

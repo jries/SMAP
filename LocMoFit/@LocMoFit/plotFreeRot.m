@@ -109,7 +109,7 @@ function locsViz = pointViz(ax, locs, obj)
     legend({'Model','Data'})
     lPars = obj.exportPars(1,'lPar');
     lPars.variation = 0;
-    moveModel = 1;
+    moveModel = 0;
     if moveModel
         modViz_locFormat.xnm = modViz{1}.x;
         modViz_locFormat.ynm = modViz{1}.y;

@@ -1,11 +1,11 @@
-classdef CME3DSphereCoverageArea_discrete<geometricModel
-    % Describing endocytic coat proteins as molecules covering a part of
-    % sphere with an angle indicating the closed part.
+classdef discreteModel<geometricModel
+    % Change the name discreteModel to the name of your model.
     methods
-        function obj = CME3DSphereCoverageArea_discrete(varargin)
+        function obj = discreteModel(varargin)
             obj@geometricModel(varargin{:});
-            % Define the default argument values here in the constructor.
-            obj.name = {'surfaceArea', 'closeAngle'};
+            % Define the default argument values for the parameters here
+            % in the constructor.
+            obj.name = {'parameter1', 'parameter2'};
             obj.fix = [0 0] ;
             obj.value = [0.5e+5 0];
             obj.lb = [-inf 0];
@@ -39,6 +39,10 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
             %% Evenly distribute points using a Fibonacci sphere
             % the sampling number should be propotional to surface area
 %            aaa(end+1) = ;
+
+
+            [x,y,z,n] = parametricModel();
+
             if isempty(obj.ParentObject.locsPrecFactor)
                 locsPrecFactor = 1;
             else
@@ -129,12 +133,6 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
             signRadius = sign(derivedPars.radius);
             radiusOneSideFree = derivedPars.radius-signRadius*pars.variation;
             derivedPars.areaOneSideFree = radiusOneSideFree.^2*(2.*pi.*(1-cos(deg2rad(90+pars.closeAngle))));
-            
-            if ~isempty(obj.ParentObject)&&~isempty(obj.ParentObject.ParentObject)
-                locMoFitter = obj.ParentObject.ParentObject;
-                modID = obj.ParentObject.ID;
-                derivedPars.basePos = derivedPars.radius*sin(deg2rad(derivedPars.realCloseAngle))';
-            end
         end
     end
 end
