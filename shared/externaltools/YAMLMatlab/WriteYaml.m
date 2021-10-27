@@ -79,7 +79,11 @@ function result = scan_numeric(r)
     if isempty(r)
         result = java.util.ArrayList();
     else
-        result = java.lang.Double(r);
+        if isinteger(r)
+            result = java.lang.Long(r);
+        else
+            result = java.lang.Double(r);
+        end
     end
 end
 
