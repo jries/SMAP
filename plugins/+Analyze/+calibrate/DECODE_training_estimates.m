@@ -80,7 +80,8 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                [gpus,gpurec]=parsegpustat(gpustat);
            else %workstation via HTTP
                %make output directory
-               outdir=[obj.yamlpar.Connect.local_network_storage  'experiments' filesep obj.yamlpar.InOut.experiment_out];
+%                outdir=[obj.yamlpar.Connect.local_network_storage  'training' filesep obj.yamlpar.InOut.experiment_out];
+               outdir=[ obj.yamlpar.InOut.experiment_out];
                if ~exist(outdir,'dir')
                    mkdir(outdir)
                end
@@ -562,8 +563,9 @@ function setz(obj)
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
     zminmax(2)=min(zminmax(2),zr);
-    obj.yamlpar.SMAP.zrange_nm=zminmax;
+    
  end
+ obj.yamlpar.SMAP.zrange_nm=zminmax;
 end
 
 function stoplearning_callback(a,b,obj)
