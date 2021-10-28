@@ -331,7 +331,7 @@ pard.onlyPositive.object=struct('Style','checkbox','Value',0,'String','Only curv
 pard.onlyPositive.position=[9,3.7];
 pard.onlyPositive.Width=1;
 
-pard.withoutClouds.object=struct('Style','checkbox','Value',0,'String','No clouds');
+pard.withoutClouds.object=struct('Style','checkbox','Value',1,'String','No clouds');
 pard.withoutClouds.position=[10,3.7];
 pard.withoutClouds.Width=1;
 
