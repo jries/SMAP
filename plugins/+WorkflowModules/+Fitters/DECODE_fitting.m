@@ -96,10 +96,15 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 file=fileinfo.imagefile;
             end
             if setinfo
-                [~,fn]=fileparts(file);
-                [~,dir]=fileparts(fileparts(file));
-                decodenetwork=obj.getGlobalSetting('DECODE_network_data');
-                obj.setGuiParameters(struct('outputpath',[decodenetwork filesep 'fits' filesep dir filesep fn '.h5']))
+                if contains(file,'/decode/fits')
+                    outfile=strrep(file,'.tif','.h5');
+                else
+                    [~,fn]=fileparts(file);
+                    [~,dir]=fileparts(fileparts(file));
+                    decodenetwork=obj.getGlobalSetting('DECODE_network_data');
+                    outfile=[decodenetwork filesep 'fits' filesep dir filesep fn '.h5'];
+                end
+                obj.setGuiParameters(struct('outputpath',outfile))
                 %later: selection if h5 or csv
             end
             %update output file
