@@ -175,6 +175,7 @@ switch mode
                 else
                     if ~isnan(p.imax)
                         p_render.imax_min = p.imax;
+                        p_render.imaxtoggle = 0;
                     end
                     imageo = renderSMAP(locsCoordSub, p_render, k);
                     imageo = drawerSMAP(imageo,p_render);

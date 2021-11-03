@@ -71,12 +71,6 @@ classdef rotSymCMERec<interfaces.DialogProcessor&interfaces.SEProcessor
                 end
             end
             
-%             if k == 1
-%                 oneImg = imageo.image;
-%             else
-%                 oneImg = oneImg + imageo.image;
-%             end
-%             oneImg = oneImg;
             fig = figure('name','RotSym');
             pan = panel(fig);
             pan.pack('v',[1 4/5]./sum([1 4/5]))
