@@ -1,6 +1,6 @@
 classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
     properties
-        fig = [];
+        fig = gobjects(1);
     end
     methods
         function obj=siteGallery_mCME(varargin)        
