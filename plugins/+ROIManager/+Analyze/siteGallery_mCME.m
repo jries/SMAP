@@ -416,7 +416,7 @@ for k = 1:numOfUsedLabels
             oneLabel = ['\itR\rm = '  num2str(val, '%.0f') ' nm'];
         case 'area'
             val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.realSurfaceArea;
-            oneLabel = ['\itA\rm = '  num2str(val, '%.1E') ' nm^2'];
+            oneLabel = ['\itA\rm = '  num2str(val, '%.0f') ' nm^2'];
     end
     if k == 1
         siteLabel = oneLabel;
