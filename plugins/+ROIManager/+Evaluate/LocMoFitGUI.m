@@ -1373,7 +1373,6 @@ function modType_callback(a, b, obj, modelNumber)
 % Usually only obj.modelType has to be changed unless it is changing
 % between image and funciton types.
 fitter = obj.fitter;
-fitter.model{modelNumber}.modelType = a.String{a.Value};
 switch a.String{a.Value}
     case 'image'
         if strcmp(fitter.model{modelNumber}.modelType, 'image')
@@ -1404,6 +1403,7 @@ switch a.String{a.Value}
             fitter.changeModel(funModel,modelNumber);
             obj.sourceModel{modelNumber} = [];
         else
+            fitter.model{modelNumber}.modelType = a.String{a.Value};
         end
 end
 enableSettings(obj,num2str(modelNumber),fitter);
