@@ -85,7 +85,9 @@ classdef CameraConverter<interfaces.WorkflowModule
             
             obj.setPar('loc_cameraSettings',obj.loc_cameraSettings);
             obj.setPar('EMon',obj.loc_cameraSettings.EMon);
+            mirrorem_callback(0,0,obj)
             obj.updatefileinfo;
+
 %             if obj.loc_cameraSettings.EMon
 %             	obj.EMexcessNoise=2;
 %             else
@@ -126,7 +128,7 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.rawaveragecounter=1;
             obj.rawaverage=[];
             obj.offsetmapuse=[];
-            
+            mirrorem_callback(0,0,obj);
             obj.setPar('cam_varmap',[]);
                
             

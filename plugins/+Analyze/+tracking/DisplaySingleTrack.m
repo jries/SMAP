@@ -132,6 +132,7 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
             if p.makemovie
                 ts=min(time):p.frametime:max(time);
                 f=figure(99);
+                f.Position(1)=1;f.Position(3)=1280;
                 ax=gca;
 
                 delete(ax.Children)
