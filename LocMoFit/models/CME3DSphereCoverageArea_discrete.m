@@ -1,6 +1,9 @@
 classdef CME3DSphereCoverageArea_discrete<geometricModel
     % Describing endocytic coat proteins as molecules covering a part of
     % sphere with an angle indicating the closed part.
+    %
+    % Last update:
+    %   08.11.2021
     methods
         function obj = CME3DSphereCoverageArea_discrete(varargin)
             obj@geometricModel(varargin{:});
@@ -108,7 +111,11 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
         end
         
         function derivedPars = getDerivedPars(obj, pars)
+            % Get extra parameters derived from the fit parameters.
+            %
             % Exports a empty variable when no derived parameters.
+            % Last update:
+            %   08.11.2021
             derivedPars.realSurfaceArea = pars.surfaceArea.*1e+4;
             derivedPars.curvature = 1./sqrt(derivedPars.realSurfaceArea./(2.*pi.*(1-cos(deg2rad(90+pars.closeAngle)))));
             if pars.closeAngle < -90
@@ -118,6 +125,7 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
                 derivedPars.realCloseAngle = pars.closeAngle;
             end
             derivedPars.radius = 1/derivedPars.curvature;
+            
             if derivedPars.realCloseAngle <= 0
                 derivedPars.projectionArea = pi*(derivedPars.radius*cos(deg2rad(-derivedPars.realCloseAngle)))^2;
             else
@@ -130,6 +138,9 @@ classdef CME3DSphereCoverageArea_discrete<geometricModel
             radiusOneSideFree = derivedPars.radius-signRadius*pars.variation;
             derivedPars.areaOneSideFree = radiusOneSideFree.^2*(2.*pi.*(1-cos(deg2rad(90+pars.closeAngle))));
             
+            %% Final version used in publication
+            derivedPars.closingAngle_pub = abs(pars.closeAngle+90);
+            derivedPars.openRadius = abs(derivedPars.radius*sin(deg2rad(180-derivedPars.closingAngle_pub)));
             if ~isempty(obj.ParentObject)&&~isempty(obj.ParentObject.ParentObject)
                 locMoFitter = obj.ParentObject.ParentObject;
                 modID = obj.ParentObject.ID;
