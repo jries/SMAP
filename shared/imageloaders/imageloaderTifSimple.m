@@ -64,6 +64,7 @@ classdef imageloaderTifSimple<interfaces.imageloaderSMAP
             allmd(end+1,:)={'Width info',size(imtest,2)};
             allmd(end+1,:)={'Height info',size(imtest,1)};
             allmd(end+1,:)={'FileName',obj.file};
+            allmd(end+1,:)={'Roi direct',num2str([0 0 size(imtest,2) size(imtest,1)])};
 %             warning('off','imageio:tiffmexutils:libtiffWarning');
 %             ttt=Tiff(obj.file);
             numf=1;
