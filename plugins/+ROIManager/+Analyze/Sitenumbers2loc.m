@@ -18,6 +18,7 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
             ld=obj.locData.loc;
             sitenumbers=0*ld.xnm;
             cellnumbers=0*ld.xnm;
+            siteorder=0*ld.xnm;
             roisize=obj.getPar('se_siteroi');
             fovsize=obj.getPar('se_sitefov');
             for k=1:length(sites)
@@ -37,10 +38,18 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
 % figure(88);plot(l.xnm,l.ynm,'.')
                 indh=ind & (obj.locData.loc.filenumber==sites(k).info.filenumber);
                 sitenumbers(indh)=sites(k).ID;
+                siteorder(indh)=k;
                 cellnumbers(indh)=sites(k).info.cell;
             end
-            obj.locData.setloc('sitenumbers',sitenumbers);
-            obj.locData.setloc('cellnumbers',cellnumbers);
+            if p.lSiteNumber
+                obj.locData.setloc('sitenumbers',sitenumbers);
+            end
+            if p.lCellNumber
+                obj.locData.setloc('cellnumbers',cellnumbers);
+            end
+            if p.lSiteOrder
+                obj.locData.setloc('siteorder',siteorder);
+            end
             obj.locData.regroup;
           
         end
@@ -63,6 +72,17 @@ pard.roimode.object=struct('String',{{'site FoV','ROI square','ROI round'}},'Sty
 pard.roimode.position=[2,1];
 pard.roimode.Width=1;
 
+pard.lSiteNumber.object=struct('String','site number (ID)','value',1,'Style','checkbox');
+pard.lSiteNumber.position=[3,1];
+pard.lSiteNumber.Width=1;
+
+pard.lSiteOrder.object=struct('String','site order','value',0, 'Style','checkbox');
+pard.lSiteOrder.position=[3,2];
+pard.lSiteOrder.Width=1;
+
+pard.lCellNumber.object=struct('String','cell number','value',1,'Style','checkbox');
+pard.lCellNumber.position=[3,3];
+pard.lCellNumber.Width=1;
 
 pard.plugininfo.description='Adds two field to the localization data containing the site number and the cell number, respectively.';
 pard.plugininfo.type='ROI_Analyze';
