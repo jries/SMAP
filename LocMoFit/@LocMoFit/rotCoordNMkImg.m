@@ -166,7 +166,9 @@ switch mode
                     p_render.imaxtoggle = 1;
                     imageo = renderSMAP(locsCoordSub, p_render, k);
                     imageo = drawerSMAP(imageo,p_render);
-                    imax = imageo.imax*1.8;
+%                     factor = 1.8;
+                    factor = 1.2;
+                    imax = imageo.imax*factor;
                     p_render.imaxtoggle = 0;
                     p_render.imax_min = imax;
                     imageo = renderSMAP(locsCoordSub, p_render, k);
