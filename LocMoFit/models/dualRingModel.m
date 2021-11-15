@@ -1,9 +1,11 @@
-classdef NPCPointModel_flexible2<geometricModel
-    
-    % log
-    %   - 201229: change the sign of the ring twist
+classdef dualRingModel<geometricModel
+    % :class:`dualRingModel` is the dual ring model used in the LocMoFit
+    % manuscript for describing Nup96-labeled NPCs.
+    %
+    % Log:
+    %   201229: change the sign of the ring twist
     methods
-        function obj = NPCPointModel_flexible2(varargin)
+        function obj = dualRingModel(varargin)
             obj@geometricModel(varargin{:});
             % Define parameters that can be altered during fitting here:
             obj.name = {'ringDistance', 'azimuthalShift', 'radius', 'cornerDegree'}; % parameter names
