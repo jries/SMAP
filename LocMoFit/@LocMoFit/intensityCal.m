@@ -230,9 +230,9 @@ offset = obj.convert2InteralOffset(oldOffset);
 for ch = 1:obj.numOfLayer
     %                 totalIntensity(locs.layer==layer,:) = (((1-offset{90+layer}.weight).*totalIntensity(locs.layer==layer,:) + offset{90+layer}.weight.*offsetUnit))*obj.weightLayer(layer);
 %     totalIntensity(locs.layer==layer,:) = (((1-offset{90+layer}.weight).*totalIntensity(locs.layer==layer,:) + (offset{90+layer}.weight.*offsetUnit).^obj.model{k}.weight))*0.5;
-    totalIntensity(locs.layer==layer,:) = (((1-offset{90+layer}.weight).*totalIntensity(locs.layer==layer,:) + (offset{90+layer}.weight.*offsetUnit)))*obj.weightLayer(layer);
+    totalIntensity(locs.layer==ch,:) = (((1-offset{90+ch}.weight).*totalIntensity(locs.layer==ch,:) + (offset{90+ch}.weight.*offsetUnit)))*obj.weightLayer(ch);
     % calculate the control
-    LLctrl(layer) = log(offsetUnit.*obj.weightLayer(layer))*sum(locs.layer==layer);
+    LLctrl(ch) = log(offsetUnit.*obj.weightLayer(ch))*sum(locs.layer==ch);
 end
 LLctrl = sum(LLctrl)/sum(ismember(locs.layer,obj.allModelLayer));
 % channel not used
