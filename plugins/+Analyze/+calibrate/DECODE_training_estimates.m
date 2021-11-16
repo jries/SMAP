@@ -44,15 +44,15 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                obj.tensorboardprocess=ptb;
            elseif 0 %train on workstation old
                %make output directory
-               outdir=[obj.yamlpar.Connect.local_network_storage  obj.yamlpar.InOut.experiment_out];
-               if ~exist(outdir,'dir')
-                   mkdir(outdir)
+               outdirlocal=[obj.yamlpar.Connect.local_network_storage  obj.yamlpar.InOut.experiment_out];
+               if ~exist(outdirlocal,'dir')
+                   mkdir(outdirlocal)
                end
                %copy files
                finalizejson(obj);
                yamlp=obj.yamlpar;
                calfile=obj.yamlpar.InOut.calibration_file;
-               copyfile(calfile,outdir);
+
                [~,fout,fext]=fileparts(calfile);
                %change yaml parameters
                yamlp.InOut.calibration_file=fullfile(obj.yamlpar.Connect.remote_network_storage, obj.yamlpar.InOut.experiment_out,[fout fext]);
@@ -81,36 +81,45 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
            else %workstation via HTTP
                %make output directory
 %                outdir=[obj.yamlpar.Connect.local_network_storage  'training' filesep obj.yamlpar.InOut.experiment_out];
-               outdir=[ obj.yamlpar.InOut.experiment_out];
-               if ~exist(outdir,'dir')
-                   mkdir(outdir)
+               outdirlocal=[ obj.yamlpar.InOut.experiment_out '/']; %later initialize with decode/experiment path. set when settign 3dcal.
+               if ~exist(outdirlocal,'dir')
+                   mkdir(outdirlocal);
                end
                %copy files
                finalizejson(obj);
                yamlp=obj.yamlpar;
                calfile=obj.yamlpar.InOut.calibration_file;
-               copyfile(calfile,outdir);
-               [~,fout,fext]=fileparts(calfile);
+               [pc,fout,fext]=fileparts(calfile);
+               if ~exist([outdirlocal  fout fext],'file')
+                   sadfdsa
+                copyfile(calfile,outdirlocal);
+               end
+               %copyfile(calfile,outdir);
+               %[~,fout,fext]=fileparts(calfile);
                %change yaml parameters
                server=obj.yamlpar.Connect.remote_workstation;
                status=webread([server '/status']);
                status.watch_dir=[status.watch_dir filesep];
-               yamlp.InOut.calibration_file=fullfile(status.watch_dir, obj.yamlpar.InOut.experiment_out,[fout fext]);
+               decodenetwork=obj.getGlobalSetting('DECODE_network_data');
+               pstart=length(decodenetwork);
+               outpath=obj.yamlpar.InOut.experiment_out(pstart+2:end); %the output path with respect to decode base directory
+               yamlp.InOut.calibration_file=fullfile(outpath,[fout fext]);
                %save yaml
                [~,fname]=fileparts(obj.locData.files.file(1).name);
                yamlname=['DECODE_train_' fname '.yaml'];
-               yamlpath=[outdir yamlname];
-               yamlpath_remote=[obj.yamlpar.InOut.experiment_out  yamlname];
+               yamlpath=[outdirlocal yamlname];
+               yamlpath_remote=[outpath '/' yamlname];
                % gpu
                gpustat=webread([server '/status_gpus']);
                [gpus,gpurec]=parsegpustathttp(gpustat);
                yamlp.Hardware.device=gpurec;
                yamlp.Hardware.device_simulation=gpurec;
 
-               yamlp.InOut.experiment_out=fullfile(status.watch_dir, obj.yamlpar.InOut.experiment_out);
+               yamlp.InOut.experiment_out=fullfile(outpath);
                saveyaml(yamlp,yamlpath);
 
-               url = 'http://pc-ries25:8000/submit';
+               %url = 'http://pc-ries25:8000/submit';
+               url=[yamlp.Connect.remote_workstation '/submit_training'];
                options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
                pid = webread(url, 'path_param', yamlpath_remote, options);
                l=length(obj.decodepid);
@@ -134,7 +143,8 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
             obj.deleteGlobalSetting('DECODE_path')
 %                 obj.createGlobalSetting('DECODE_path','Plugins','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
          
-        
+            obj.createGlobalSetting('DECODE_network_data','Plugins','network directory for DECODE training and fitting',struct('Style','dir','String',' '))
+                 
             yamldefault=[obj.getPar('SettingsDirectory') filesep 'temp' filesep obj.yamldefault];
             if ~exist(yamldefault,'file')
                 yamlold=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep 'DECODE_default.yaml'];
@@ -505,7 +515,7 @@ end
 
 function saveyaml(yamlpar,fout)
 yout=rmfield(yamlpar,'SMAP');
-WriteYaml(fout, yout)
+WriteYaml(fout, yout);
 end
 
 % function savejsonfile(obj,fout)

@@ -1,5 +1,5 @@
 %convert2mp4
-framerate=5;
+framerate=15;
 
 %%
 global pf
