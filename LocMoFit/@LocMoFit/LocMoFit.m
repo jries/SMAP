@@ -20,7 +20,6 @@ classdef LocMoFit<matlab.mixin.Copyable
         dataDim = 3;            % The dimension of the data.
         allModelLayer           % The unique numbers of layers used by models.
         modelLayer              % The layer for the corresponding model.
-        sigmaCascade = 1;       % The sigma factor for each step of the sequential cascade fit.
         modelVerCascade = 1;    % For locs model only. Allow the user to specify different versions of the same model for different cascade steps.
         refPoint_spacing = 0.75;% The spacing bwteen sampled ref points. In the unit of sigma.
         numOfLocsPerLayer       % The numbers of localizations per layer.
@@ -47,6 +46,9 @@ classdef LocMoFit<matlab.mixin.Copyable
         numOfModel              % The number of models used in this fitting step.
         numOfLayer              % The number of layers.
         roiAreaVol              % The area/volume of the roi;
+        sigmaCascade            % The sigma factor for each step of the sequential cascade fit.
+    end
+    properties
     end
     properties (Hidden)
         supportedSolver = {'fmincon', 'fminsearchbnd','particleswarm'};
@@ -935,6 +937,10 @@ classdef LocMoFit<matlab.mixin.Copyable
                 if isempty(value)
                     % Only add the setting when it doesn't exist
                     obj.addAdvanceSettings(struct(fn{k},default.(fn{k})));
+                else
+                    obj.rmAdvanceSetting(fn{k});
+                    obj.addAdvanceSettings(struct(fn{k},default.(fn{k})));
+                    obj.setAdvanceSetting(fn{k}, value);
                 end
             end
         end
@@ -949,6 +955,10 @@ classdef LocMoFit<matlab.mixin.Copyable
         
         function setAdvanceSetting(obj, par, value)
             obj.advanceSetting.(par).value = value;
+        end
+        
+        function rmAdvanceSetting(obj, par)
+            obj.advanceSetting.(par) = [];
         end
         
         function out = getAdvanceSetting(obj, settingName,field)
@@ -1529,6 +1539,15 @@ classdef LocMoFit<matlab.mixin.Copyable
             end
         end
         
+        function val = get.sigmaCascade(obj)
+            val = obj.getAdvanceSetting('cascade');
+        end
+        
+        function set.sigmaCascade(obj,val)
+            obj.setAdvanceSetting('cascade', val)
+            disp('obj.sigmaCascade has been replaced by obj.advanceSetting.cascade.')
+        end
+        
         function set.advanceSetting(obj, val)
             oldVal = obj.advanceSetting;
             fn = fieldnames(val);
@@ -1639,18 +1658,32 @@ function out = defaultAdvanceSettings
     out.controlLogLikelihood.option = {'none','expected','overfitted','both'};
     out.controlLogLikelihood.value = 'none';
     out.controlLogLikelihood.name = 'Control log-likelihood';
+    out.controlLogLikelihood.description = 'Specify the type of control log-likelihood to export.';
 
     out.gaussDistMode.option = {'ordinary', 'fast'};
     out.gaussDistMode.value = 'ordinary';
     out.gaussDistMode.name = 'Gauss distance';
+    out.gaussDistMode.description = 'Specify the type of Gauss distance calculated during the optimization.';
     
     out.gaussDistCutoff.option = {};
     out.gaussDistCutoff.value = 3.5;
     out.gaussDistCutoff.name = 'Gauss distance offset';
+    out.gaussDistCutoff.description = 'Specify the maximal effective distance. Any larger distance results in 0 likelihood.';
     
     out.confidenceInterval.option = {'on','off'};
     out.confidenceInterval.value = 'off';
     out.confidenceInterval.name = 'Confidence interval';
+    
+    out.cascade.option = {};
+    out.cascade.value = 1;
+    out.cascade.name = 'Cascade';
+    out.cascade.description = 'Specify the factor of the relative parameter range and the offset of Gaussian sigma for cascade iterative optimization.';
+    
+    out.layerNorm.option = {'on','off'};
+    out.layerNorm.value = 'on';
+    out.layerNorm.name = 'Layer normalization';
+    out.cascade.description = 'This only applies multi-color fitting.';
+    
 end
 
 function [out,allOptions] = defaultLParSelection(parameterType)
