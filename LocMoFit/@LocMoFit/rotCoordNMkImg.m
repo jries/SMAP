@@ -55,7 +55,7 @@ lSectionLocs = locsCoord.znm >= -section & locsCoord.znm <= section;
 % selected.
 switch mode
     case 'Model'
-        v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
+        v = zeros(ceil([obj.roiSize./pixelSize obj.roiSize./pixelSize]));
         % Go through all models (layer-based)
         roiks = 2.7;
         if isempty(obj.getTemp('gausstemplate'))
@@ -67,7 +67,7 @@ switch mode
         
         for k = 1:obj.numOfModel
            
-            [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
+            [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,forRevY.*modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
             if obj.model{k}.fixSigma
                 thisImg = getModelImg(modCoord{k}.x, modCoord{k}.y, 'roiSize', obj.roiSize, 'pixelSize', pixelSize, 'sigma', obj.model{k}.sigma, 'gausstemplate',G,'norm',modCoord{k}.n)';
             else
@@ -113,7 +113,7 @@ switch mode
         oneItems = items{k};
         for l = 1:length(oneItems)
             oneItem = oneItems(l);
-            [oneItem.XData,oneItem.YData,oneItem.ZData] = rotAzEl(oneItem.XData,oneItem.YData,oneItem.ZData, rotVizAlt(1), -rotVizAlt(2));
+            [oneItem.XData,oneItem.YData,oneItem.ZData] = rotAzEl(oneItem.XData,forRevY.*oneItem.YData,oneItem.ZData, rotVizAlt(1), -rotVizAlt(2));
             oneItem.XData = (oneItem.XData+obj.roiSize/2+pixelSize)./pixelSize;
             oneItem.YData = (oneItem.YData+obj.roiSize/2+pixelSize)./pixelSize;
             oneItem.ZData = (oneItem.ZData+obj.roiSize/2+pixelSize)./pixelSize;

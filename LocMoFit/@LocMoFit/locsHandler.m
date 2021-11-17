@@ -53,10 +53,10 @@ end
 
 switch p.Results.order_transform
     case 'TR'
-        allActions = {'translation','rotation'};
+        allActions = {'translation','scaling','rotation'};
         sign = -1;
     case 'RT'
-        allActions = {'rotation','translation'};
+        allActions = {'rotation','scaling','translation'};
         sign = 1;
 end
 
@@ -72,6 +72,13 @@ switch action
         y = y+sign*lParsVal.y;
         if obj.dataDim == 3
             z = z+sign*lParsVal.z;
+        end
+% Scaling
+    case 'scaling'
+        x = x*lParsVal.xscale^sign;
+        y = y*sign*lParsVal.yscale^sign;
+        if obj.dataDim == 3
+            z = z*sign*lParsVal.zscale^sign;
         end
 % Rotation
     case 'rotation'

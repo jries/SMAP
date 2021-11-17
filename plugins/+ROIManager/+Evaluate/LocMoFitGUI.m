@@ -464,6 +464,8 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 obj.guiPar.Vpos=3;
                 obj.guiPar.FieldHeight=20;
             end
+            
+            %% ParArg table related things
             % field names in the parsArg table
             fnParsArg={'name','value','fix','lb','ub','type','min','max','label'};
             lFnParsArgEdit = logical([0 1 1 1 1 0 1 1 1]);
@@ -710,10 +712,12 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         function parId = loadParTable(obj, htable, fitter, modelnumber)
             % get parId and update the GUIParTable
             [parId,subParsArgTemp] = fitter.getAllParId(modelnumber, 'form', 'long');
+            columnWidth = getCurrentColumnWidth(htable);
             htable.Data = struct2Data(subParsArgTemp);
             htable.CellEditCallback = {@parSetting_callback,obj, modelnumber};
             htable.ColumnEditable = obj.lFnParsArgEdit;
-            htable.ColumnWidth = obj.fnParsArgColWidth;
+            htable.ColumnWidth = columnWidth;
+            obj.fnParsArgColWidth = columnWidth;
         end
         
         %%
@@ -1008,7 +1012,7 @@ end
 
 function setting_alignment_callback(a,b,obj)
 fig = figure(514);
-fig.Name = 'Alignment settings';
+fig.Name = 'Transformation settings';
 fig.Position(3:4) = [400 360];
 guihandles.uit = uitable(fig);
 guihandles.uit = createConvertTable(guihandles.uit, fig);
