@@ -91,7 +91,7 @@ end
 
 obj.defineRotPar;
 
-for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
+for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
     obj.currentCascadeStep = sc;
     [lb, ub, init, minVal, maxVal] = obj.prepFit;                                   % get settings for fit parameters
     if sc > 1
@@ -120,9 +120,16 @@ for sc = 1:length(obj.sigmaCascade) % This is for the sigma cascading
     
     %% Get compensationFactor
     % This factor compensate the number of locs between different channels
-    compensationFactor = zeros(size(locs.layer))';
-    for k = 1:obj.numOfLayer
-        compensationFactor(locs.layer==k) = obj.compensationFactor(k);
+    switch obj.getAdvanceSetting('layerNorm')
+        case 'on'
+            compensationFactor = zeros(size(locs.layer))';
+            for k = 1:obj.numOfLayer
+                compensationFactor(locs.layer==k) = obj.compensationFactor(k);
+            end
+        case 'off'
+            for k = 1:obj.numOfLayer
+                compensationFactor(locs.layer==k) = 1;
+            end
     end
     compensationFactor(~ismember(locs.layer, obj.allModelLayer)) = [];
     %% Run the optimization

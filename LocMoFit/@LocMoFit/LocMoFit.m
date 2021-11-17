@@ -626,6 +626,8 @@ classdef LocMoFit<matlab.mixin.Copyable
                             obj.allParsArg.(fn{k})(ind) = results.(fn{k});
                         end
                     end
+                else
+                    warning(['ID "' parId '" is not identifiable. No any parameter argument was updated.'])
                 end
             end
         end
@@ -1370,9 +1372,6 @@ classdef LocMoFit<matlab.mixin.Copyable
                 end
             else
                 prob = obj.intensityCal(fitPars,locs);
-                if isempty(prob)
-                    'hey'
-                end
                 LLfit = sum(compensationFactor.*log(prob),2);
             end
             if strcmp(obj.status, 'initial')

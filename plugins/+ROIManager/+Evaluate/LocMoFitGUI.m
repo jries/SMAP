@@ -574,9 +574,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.setting_advanced.tab='tab1';
             pard.setting_advanced.TooltipString='Advanced settings.';
             
-            pard.noFit.object=struct('Style','checkbox','String','Skip fit','Value',0);
+            pard.noFit.object=struct('Style','checkbox','String','Review only','Value',0);
             pard.noFit.position=[3.5+dy,3.5];
-            pard.noFit.Width=0.8;
+            pard.noFit.Width=1.3;
             pard.noFit.Height=1;
             pard.noFit.tab='tab1';
                        

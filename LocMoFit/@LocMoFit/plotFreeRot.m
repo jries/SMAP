@@ -39,13 +39,21 @@ function plotFreeRot(obj, varargin)
         % Control panel
         uip = uipanel('Parent',ax.Parent.Parent,'Position',[.01 .01 .98 .2]);
         bg = uibuttongroup('Parent',uip,'Position',[.8 .01 .2 .98]);
-        uicontrol(bg ,'Style','text','String','Pixelated','Position',[1 42 60 20]);
+        uicontrol(bg ,'Style','text','String','Image soure','Position',[1 42 70 20]);
+        guihandles = [];
         data_sel = uicontrol(bg ,'Style','radiobutton','String','Data','Position',[1 21 60 20],'Callback',{@edit_callBack, obj,'target2Render','string'});
         model_sel = uicontrol(bg ,'Style','radiobutton','String','Model','Position',[1 1 60 20],'Callback',{@edit_callBack, obj,'target2Render','string'});
 
-        section = uicontrol(uip ,'Style','edit','String',50,'Position',[1 26 60 25],'Callback',{@edit_callBack, obj,'section','string'});
-        playback = uicontrol(uip ,'Style','pushbutton','String','Playback','Position',[200 26 60 25],'Callback',{@playback_callBack,obj,ax,locs,results,bg, section});
-        timeLine = uicontrol(uip ,'Style','slider','Position',[260 26 120 25],'Callback',{@timeLine_callBack,obj,ax,locs, results,bg, section});
+        guihandles.t_section = uicontrol(uip ,'Style','text','String','Cross-section y +/-','Position',[1 0 1.5 1]);
+        guihandles.section = uicontrol(uip ,'Style','edit','String',50,'Position',[2.1 0 0.4 1],'Callback',{@edit_callBack, obj,'section','string'});
+        guihandles.t_playback = uicontrol(uip ,'Style','text','String','Optimization playback','Position',[2.6 1 1.2 1]);
+        if (~isfield(obj.fitInfo,'optimHistory'))||isempty(obj.fitInfo.optimHistory)
+            lEnable = 'off';
+        else
+            lEnable = 'on';
+        end
+        guihandles.playback = uicontrol(uip ,'Style','pushbutton','String','|>','Position',[3.8 1 0.3 1],'Callback',{@playback_callBack,obj,ax,locs,results,bg, guihandles.section},'Enable',lEnable);
+        guihandles.timeLine = uicontrol(uip ,'Style','slider','Position',[4.1 1 0.9 1],'Callback',{@timeLine_callBack,obj,ax,locs, results,bg, guihandles.section},'Enable',lEnable);
         
         if isfield(obj.display.plotFreeRot, 'target2Render')
             switch obj.display.plotFreeRot.target2Render
@@ -61,7 +69,7 @@ function plotFreeRot(obj, varargin)
         end
 
         if isfield(obj.display.plotFreeRot, 'section')
-            section.String = obj.display.plotFreeRot.section;
+            guihandles.section.String = obj.display.plotFreeRot.section;
         end
 
         % Point visualization of the fit
@@ -82,7 +90,7 @@ function plotFreeRot(obj, varargin)
         obj.setTemp('subViz', subViz);
         obj.setTemp('axViz', ax);
         
-        h.ActionPostCallback = {@rotate_callBack, obj, results, bg, section};
+        h.ActionPostCallback = {@rotate_callBack, obj, results, bg, guihandles.section};
         axis(subViz,'equal')
         xlabel(ax, 'Aligned X (nm)')
         ylabel(ax, 'Aligned Y (nm)')
@@ -92,11 +100,13 @@ function plotFreeRot(obj, varargin)
         set(subViz,'YDir','reverse')
         set(ax,'YDir','reverse')
         hold(subViz,'off')
-        rotate_callBack([],[],obj,results,bg, section);          % update the image visulization
+        rotate_callBack([],[],obj,results,bg, guihandles.section);          % update the image visulization
 
         % Buttons for the rotation
-        uicontrol(uip ,'Style','pushbutton','String','>','Position',[1 1 60 25],'Callback',{@azimuthalRot_callBack, ax, 5, obj,results,bg, section});
-        uicontrol(uip ,'Style','pushbutton','String','>>','Position',[30 1 60 25],'Callback',{@azimuthalRot_callBack, ax, 20, obj,results,bg, section});
+        guihandles.t_zrot = uicontrol(uip ,'Style','text','String','Rotation about z','Position',[1 1 1 1]);
+        guihandles.zrot_slow = uicontrol(uip ,'Style','pushbutton','String','>','Position',[1.9 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 5, obj,results,bg, guihandles.section});
+        guihandles.zrot_fast = uicontrol(uip ,'Style','pushbutton','String','>>','Position',[2.2 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 20, obj,results,bg, guihandles.section});
+        guiStyle(guihandles, fieldnames(guihandles));
      end
 end
 %% 
