@@ -147,7 +147,7 @@ classdef LocMoFit<matlab.mixin.Copyable
                         return
                     case 3
                         obj.dataDim = 2;
-                        warning('You are adding a 2D model for fitting 3D data. Switching to 2D fit.')
+                        disp('You are adding a 2D model for fitting 3D data. Switching to 2D fit.')
                 end
             end
             

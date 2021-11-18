@@ -37,7 +37,11 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 ID = ['modelType_' num2str(m)];
                 p.(ID).String = obj.guihandles.(ID).String;
                 p.(ID).Value = obj.guihandles.(ID).Value;
-                p.(ID).selection = p.(ID).String{p.(ID).Value};
+                if iscell(p.(ID).String)
+                    p.(ID).selection = p.(ID).String{p.(ID).Value};
+                else
+                    p.(ID).selection = p.(ID).String;
+                end
                 m = m+1;
             end
             setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);
@@ -100,7 +104,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                         %% Set the model settings
                         for k=obj.numMod:-1:1
                             kStr = num2str(k);
-                            fitter.model{k}.weight = inp.(['weight_fit_' kStr]); % kStr corresponds to the model order
+%                             fitter.model{k}.weight = inp.(['weight_fit_' kStr]); % kStr corresponds to the model order
                             %             fitter.model{k}.layer = inp.(['layer_' kStr]); % this now
                             %             will be updated right after editing
                             if ~strcmp(fitter.model{k}.modelType,'image')
@@ -370,8 +374,8 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                             fitter.showFitResult(vis, locs);
                         else
                             if ~strcmp(fitter.model{1}.modelType,'image')
-                                viz2 = obj.setoutput('FixRot');
                                 viz1 = obj.setoutput('FreeRot');
+                                viz2 = obj.setoutput('FixRot');                                
                                 viz1Parent = viz1.Parent;
                                 delete(viz1Parent.Children)
                                 viz1 = axes(viz1Parent);
@@ -687,6 +691,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.(['settingstable_' num2str(number)]).Position(3:4)=obj.guihandles.(['settingstable_' num2str(number)]).Position(3:4)-tabh;
             obj.guihandles.(['settingstable_' num2str(number)]).ColumnEditable = true;
             obj.guihandles.(['settingstable_' num2str(number)]).RowName = [];
+            obj.guihandles.(['settingstable_' num2str(number)]).CellSelectionCallback = {@settingTable_cellSelectionCallback, obj, num2str(number)};
             
             % Buttons for adding removing a row of setting
             obj.guihandles.(['addInternalSetting_' num2str(number)])=uicontrol(hsettings,'Style','pushbutton','String','+');
@@ -717,7 +722,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             htable.CellEditCallback = {@parSetting_callback,obj, modelnumber};
             htable.ColumnEditable = obj.lFnParsArgEdit;
             htable.ColumnWidth = columnWidth;
-            obj.fnParsArgColWidth = columnWidth;
+            if strcmp(columnWidth, 'auto')
+                obj.fnParsArgColWidth = columnWidth;
+            end
         end
         
         %%
@@ -1129,18 +1136,6 @@ pard.pixelsizefit.tab=['tabmodel_' num2str(number)];
 pard.pixelsizefit.Tooltip = 'The smaller the more precise.';
 pard.pixelsizefit.Enable = 'off';
 
-pard.weight_fitt.object=struct('Style','text','String','Weight');
-pard.weight_fitt.position=[8+dy,1];
-pard.weight_fitt.Width=1;
-pard.weight_fitt.tab=['tabmodel_' num2str(number)];
-pard.weight_fitt.Tooltip = 'The weight of this model in the fitting.';
-
-pard.weight_fit.object=struct('Style','edit','String','1','Callback',{{@modelSettingsEdited_callback,obj}});
-pard.weight_fit.position=[8+dy,3.5];
-pard.weight_fit.Width=1;
-pard.weight_fit.tab=['tabmodel_' num2str(number)];
-pard.weight_fit.Enable = 'off';
-
 pard.sigma_fitt.object=struct('Style','text','String','Sigma of Gaussian filtering');
 pard.sigma_fitt.position=[6+dy,1];
 pard.sigma_fitt.Width=2;
@@ -1204,7 +1199,7 @@ if isempty(currentLoadedModel)
     fnold=obj.guihandles.(['modelname_' modelnumber]).String;
     [f,p]=uigetfile(filter,'Select a geometric model',fnold);
     if ~f %no model selected: return
-        disp('Please choose your model.')
+        disp('Cancelled by the user. No model loaded.')
         return
     end
     obj.guihandles.(['modelname_' modelnumber]).String=[p f];
@@ -1285,7 +1280,6 @@ enableSettings(obj,modelnumber,fitter);
 modelnumberStr = modelnumber;
 modelnumber = str2double(modelnumber);
 % Load model's info to the GUI.
-obj.guihandles.(['weight_fit_' modelnumberStr]).String = fitter.model{modelnumber}.weight;
 obj.guihandles.(['layer_' modelnumberStr]).Value = fitter.model{modelnumber}.layer;
 if ismember(fitter.model{modelnumber}.modelType,{'discrete','continuous'})
     obj.guihandles.(['sigma_fit_' modelnumberStr]).String = fitter.model{modelnumber}.sigma;
@@ -1327,14 +1321,12 @@ if isequal(modelType, 'image')
     % for image models
     obj.guihandles.(['layer_' modelnumber]).Enable = 'on';
     obj.guihandles.(['pixelsizefit_' modelnumber]).Enable = 'on';
-    obj.guihandles.(['weight_fit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'off';
     obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'off';
 elseif isequal(modelType, 'continuous')||isequal(modelType, 'background')
     % for continuous models
     obj.guihandles.(['layer_' modelnumber]).Enable = 'on';
     obj.guihandles.(['pixelsizefit_' modelnumber]).Enable = 'on';
-    obj.guihandles.(['weight_fit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'off';
 else
@@ -1342,7 +1334,6 @@ else
     obj.guihandles.(['layer_' modelnumber]).Enable = 'on';
     obj.guihandles.(['pixelsizefit_' modelnumber]).Enable = 'off';
     obj.guihandles.(['pixelsizefit_' modelnumber]).String = 1;
-    obj.guihandles.(['weight_fit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'off';
     obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'on';
     
@@ -1443,6 +1434,14 @@ else
 end
 obj.guihandles.(['settingstable_' num2str(modelnumber)]).Data = data;
 obj.setPar(['selectedRow_internalSetting_' obj.name '_' num2str(modelnumber)],indices(1));
+end
+
+% Callback for settingTable
+function settingTable_cellSelectionCallback(a,b,obj, modelnumber)
+indices = b.Indices;
+if ~isempty(indices)
+    obj.setPar(['selectedRow_internalSetting_' obj.name '_' num2str(modelnumber)],indices(1));
+end
 end
 
 % Callback for internal settings

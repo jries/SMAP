@@ -76,9 +76,9 @@ switch action
 % Scaling
     case 'scaling'
         x = x*lParsVal.xscale^sign;
-        y = y*sign*lParsVal.yscale^sign;
+        y = y*lParsVal.yscale^sign;
         if obj.dataDim == 3
-            z = z*sign*lParsVal.zscale^sign;
+            z = z*lParsVal.zscale^sign;
         end
 % Rotation
     case 'rotation'
