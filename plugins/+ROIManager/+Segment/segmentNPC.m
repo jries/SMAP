@@ -58,9 +58,9 @@ getmask=p.getmask;
 %segment with free roi
 % if saveon==1
 if getmask
-    figure(24)
+    figure(24);
     file=se.files(se.indexFromID(se.files,se.currentfile.ID));
-    imagesc(file.image.image)
+    imagesc(file.image.image);
     colormap  hot
     h = imfreehand;
     bw=createMask(h);
@@ -161,19 +161,19 @@ for cn=1:length(cells)
 xsite=xsite(indgood);
 ysite=ysite(indgood);
 
-    obj.initaxis('images')
-    subplot(1,2,1)
+    obj.initaxis('images');
+    subplot(1,2,1);
     srimp=srim;
     maxi=myquantilefast(srimp,.998);
     srimp(srimp>maxi)=maxi;
-    imagesc(srimp)
+    imagesc(srimp);
     hold on
-    plot(maximaout(indgood,2),maximaout(indgood,1),'m+')
+    plot(maximaout(indgood,2),maximaout(indgood,1),'m+');
     hold off
-        subplot(1,2,2)
-    imagesc(srimf)
+        subplot(1,2,2);
+    imagesc(srimf);
     hold on
-    plot(maximaout(indgood,2),maximaout(indgood,1),'m+')
+    plot(maximaout(indgood,2),maximaout(indgood,1),'m+');
     hold off
     colorbar
     
