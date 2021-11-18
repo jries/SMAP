@@ -162,9 +162,9 @@ function rotate_callBack(a,b,obj, results,bg, section,t_section)
     switch bg.SelectedObject.String
         % either show the data or the model as an image
         case 'Model'
-            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, pixelSize, 'Model', str2double(section.String)./t_section.value, results.lutLocs);
+            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, pixelSize, 'Model', str2double(section.String)./t_section.Value, results.lutLocs);
         case 'Data'
-            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, 2, 'Data', str2double(section.String)./t_section.value, results.lutLocs);
+            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, 2, 'Data', str2double(section.String)./t_section.Value, results.lutLocs);
     end
     title(subViz,'2D Projection of the left panel')
     set(subViz,'YDir','normal')
