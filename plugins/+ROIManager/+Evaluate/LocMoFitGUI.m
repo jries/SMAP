@@ -717,14 +717,10 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         function parId = loadParTable(obj, htable, fitter, modelnumber)
             % get parId and update the GUIParTable
             [parId,subParsArgTemp] = fitter.getAllParId(modelnumber, 'form', 'long');
-            columnWidth = getCurrentColumnWidth(htable);
             htable.Data = struct2Data(subParsArgTemp);
             htable.CellEditCallback = {@parSetting_callback,obj, modelnumber};
             htable.ColumnEditable = obj.lFnParsArgEdit;
-            htable.ColumnWidth = columnWidth;
-            if strcmp(columnWidth, 'auto')
-                obj.fnParsArgColWidth = columnWidth;
-            end
+            htable.ColumnWidth = obj.fnParsArgColWidth;
         end
         
         %%
@@ -1045,22 +1041,17 @@ end
 
 function addNewRuleAlign_callback(a,b,fig,obj)
 htable = findobj(fig, 'Type', 'uitable');
-columnWidth = getCurrentColumnWidth(htable);
 htable.Data = [htable.Data; {[],[],[]}];
-htable.ColumnWidth = columnWidth;
-obj.alignSettings = htable.Data;
 end
 
 function rmRuleAlign_callback(a,b,fig,obj)
 htable = findobj(fig, 'Type', 'uitable');
-columnWidth = getCurrentColumnWidth(htable);
 data = htable.Data;
 temp = findobj(fig,'Type','uicontrol','-and','String','selectedRowConvert');
 try
     selectedRow = temp.Value;
     data(selectedRow,:) = [];
     htable.Data = data;
-    htable.ColumnWidth = columnWidth;
     obj.alignSettings = htable.Data;
 catch
     display('Please select a row first.')
