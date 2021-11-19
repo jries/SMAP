@@ -424,13 +424,13 @@ for k = 1:numOfUsedLabels
         case 'ID'
             oneLabel = ['Site ' num2str(siteInd)];
         case 'theta'
-            val = subSites(siteInd).evaluation.LocMoFitGUI_2.allParsArg.value(13)+90;
+            val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.closingAngle_pub;
             oneLabel = ['\theta = '  num2str(val, '%.1f') char(176)];
         case 'curvature'
             val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.curvature;
             oneLabel = ['\it1/R\rm = '  num2str(val, '%.1e') ' nm^{-1}'];
         case 'radius'
-            val = abs(subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.radius);
+            val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.radius;
             oneLabel = ['\itR\rm = '  num2str(val, '%.0f') ' nm'];
         case 'area'
             val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.realSurfaceArea;
