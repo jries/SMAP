@@ -5,6 +5,23 @@ classdef LocMoFit<matlab.mixin.Copyable
     %
     % If you would like to perform multi-step fitting, please create one
     % SMLMModelFit object for each step.
+    %
+    % Copy right:
+    %   Yu-Le Wu, 2021
+    %
+    % License:
+    %   GPLv3
+    %
+    % Version:
+    %	1.0.0
+    %
+    % Pleas cite:
+    %   preprintWu, Y.-L. et al. Maximum-likelihood model fitting for
+    %   quantitative analysis of SMLM data. 2021.08.30.456756. bioRxiv
+    %   (2021) doi:10.1101/2021.08.30.456756.
+    % 
+    % Last update:
+    %	19.11.2021
     properties
         dimension               % ??? The dimension of the data.
         allParsArg              % All arguments of the parameters.
