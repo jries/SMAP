@@ -1,7 +1,6 @@
 classdef arc2D<geometricModel
-    
-    % log
-    %   - 
+    % Last update:
+    %   19.11.2021
     methods
         function obj = arc2D(varargin)
             obj@geometricModel(varargin{:});
@@ -22,23 +21,24 @@ classdef arc2D<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
-        % Sample coordinates of the model as reference.
-        % --- Syntax ---
-        % [model, p]= reference(obj, par, dx)
-        % --- Arguments ---
-        % -- Input --
-        % obj:
-        % par: a structure object. Its fieldnames should be the names of
-        % parameters, and their correspoinding content should be the
-        % parameter values.
-        % dx: sampling rate.
-        % -- Output --
-        % model: a structure object. Its fieldnames should be x, y, z, and
-        % n, indicating the xyz position amplitude n of the sampled model
-        % points.
-        % p: additional information of the model.
-        
-        % parameters:
+        % This funtion samples coordinates of the model as reference.
+        %
+        % Usage:
+        %   [model, p]= reference(obj, par, dx)
+        %
+        % Args:
+        %   * 'obj': an object of subclass of :class:`geometricModel`.
+        %   * 'par': a structure object. Its fieldnames should be the names
+        %   of parameters, and their correspoinding content should be the
+        %   parameter values.
+        %   * 'dx': sampling rate.
+        %
+        % Returns:
+        %   * 'model': a structure object. Its fieldnames should be x, y,
+        %   z, and n, indicating the xyz position amplitude n of the
+        %   sampled model points.
+        %   * 'p': additional information of the model.
+
         r = par.radius;
         theta = par.theta;
 
