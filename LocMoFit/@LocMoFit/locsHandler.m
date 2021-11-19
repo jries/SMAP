@@ -63,7 +63,7 @@ end
 %% Loop through twice: one for translation, on for rotation. The order of
 % these two depends on the cellstr allActions.
 l = 1;
-while l <= 2
+while l <= length(allActions)
     action = allActions{l};
 switch action
 % Translation
@@ -73,14 +73,14 @@ switch action
         if obj.dataDim == 3
             z = z+sign*lParsVal.z;
         end
-% Scaling
+%Scaling
     case 'scaling'
         x = x.*(lParsVal.xscale.^sign);
         y = y.*(lParsVal.yscale.^sign);
         if obj.dataDim == 3
             z = z.*(lParsVal.zscale.^sign);
         end
-% Rotation
+%Rotation
     case 'rotation'
         usedformalism = p.Results.usedformalism;
         if obj.dataDim == 2
