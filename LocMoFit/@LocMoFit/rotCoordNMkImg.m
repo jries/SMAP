@@ -47,7 +47,7 @@ p = p.Results;
 info = [];
 
 % Rotate coordiantes and make an image
-forRevY = -1; % this factor was introduced to make the reverse YDir also applies
+forRevY = 1; % this factor was introduced to make the reverse YDir also applies
 [locsCoord.xnm,locsCoord.ynm,locsCoord.znm] = rotAzEl(locsCoord.xnm,forRevY.*locsCoord.ynm,locsCoord.znm, rotVizAlt(1), -rotVizAlt(2));
 lSectionLocs = locsCoord.znm >= -section & locsCoord.znm <= section;
 

@@ -83,6 +83,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             end
             
             nPage = ceil(numOfPickedSites./nSitePage);
+            obj.setPar('nPage',nPage)
             nSiteLastPage = rem(numOfPickedSites,nSitePage);
             if ~isempty(obj.fig)
                 delete(obj.fig);
@@ -132,6 +133,8 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                 else
                     nSiteThisPage = nSitePage;
                 end
+                
+                 
                 for k = 1:nSiteThisPage
                     if ~strcmp(modelName, 'NPCPointModel_flexible2')
                         plotDirection = 'down';
@@ -211,11 +214,21 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                         close(tempFig);
                     end
                 end
+                
+                %% Export each page
+                if p.realTimeSave
+                    update_callback([],[],obj,np);
+                    drawnow
+                    saveOnePage(obj,np);
+                end
+                
                 if np ~= nPage
                     f.Visible = 'off';
                 else
                     obj.setPar('currentPage', np)
                 end
+                
+                
             end
             update_callback([],[],obj);
             out = [];
@@ -239,7 +252,7 @@ function ax = makePlot(fitter, modViz, locsViz, view, section)
     end
 end
 
-function update_callback(a,b,obj)
+function update_callback(a,b,obj, oneNp)
     global pan pantext
     se = obj.locData.SE;
     p = obj.getAllParameters;
@@ -284,8 +297,13 @@ function update_callback(a,b,obj)
     
     nSitePage = prod(dim);
     nSiteLastPage = rem(numOfPickedSites,nSitePage);
-    nPage = length(pan);
-    for np = 1:nPage
+    nPage = obj.getPar('nPage');
+    if exist('oneNp','var')
+       npRange = oneNp;
+    else
+       npRange = 1:nPage;
+    end
+    for np = npRange
         if np == nPage
             if nSiteLastPage==0
                 lastID = nSitePage*(np);
@@ -563,6 +581,19 @@ pard.saveAll.object=struct('String','Save all','Style','pushbutton','callback',{
 pard.saveAll.position=[rowUpdate+2.5,3.5];
 pard.saveAll.Width=1;
 
+pard.realTimeSave.object=struct('String','','Style','checkbox','value',1);
+pard.realTimeSave.position=[rowUpdate+3.5,3.5];
+pard.realTimeSave.Width=0.3;
+pard.realTimeSave.Tooltip='Check this box if you want to save a page once it is done.';
+
+pard.saveTo.object=struct('String','Save to','Style','pushbutton','callback',{{@saveTo_callback,obj}});
+pard.saveTo.position=[rowUpdate+3.5,3.7];
+pard.saveTo.Width=0.5;
+
+pard.saveToPath.object=struct('String','','Style','edit');
+pard.saveToPath.position=[rowUpdate+3.5,4.2];
+pard.saveToPath.Width=0.8;
+
 pard.t_crop.object=struct('String','Crop','Style','text');
 pard.t_crop.position=[rowUpdate,1];
 pard.t_crop.Width=1;
@@ -597,12 +628,12 @@ pard.t_label.Width=1.5;
 pard.t_label.Tooltip='The order of the types of labels. 0 for disable. "1 2 0 0 3" for ID/theta/area.';
 
 pard.labelOrder.object=struct('String','1 2 0 0 3','Style','edit');
-pard.labelOrder.position=[rowUpdate+4,2.5];
-pard.labelOrder.Width=1;
+pard.labelOrder.position=[rowUpdate+4,2.3];
+pard.labelOrder.Width=0.8;
 pard.labelOrder.Tooltip='The order of the types of labels. 0 for disable. "1 2 0 0 3" for ID/theta/area.';
 
 pard.labelOn.object=struct('String','','Style','checkbox','value',1);
-pard.labelOn.position=[rowUpdate+4,3.5];
+pard.labelOn.position=[rowUpdate+4,3.1];
 pard.labelOn.Width=0.3;
 
 pard.fSize.object=struct('String','','Style','edit');
@@ -683,4 +714,21 @@ function saveFigs(a,b,obj)
     for k = 1:length(pan)
         exportgraphics(pan{k}.figure,[path fName '_' num2str(k) fExt],'ContentType','vector', 'Resolution', 600)
     end
+end
+
+function saveOnePage(obj,k)
+    global pan
+    p = obj.getGuiParameters;
+    [path,fName,fExt] = fileparts(p.saveToPath);
+    if isempty(fExt)
+        fExt = '.png';
+    end
+    exportgraphics(pan{k}.figure,[path filesep fName '_' num2str(k) fExt],'ContentType','vector', 'Resolution', 600)
+end
+
+function saveTo_callback(a,b,obj)
+    [file,path] = uiputfile({'*.pdf;*.png'},'Save all figures to...');
+    [~,fName,fExt] = fileparts(file);
+    p.saveToPath = [path fName];
+    obj.setGuiParameters(p)
 end

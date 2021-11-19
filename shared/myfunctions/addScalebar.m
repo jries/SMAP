@@ -1,4 +1,9 @@
-function h = addScalebar(ax,corner,margin,len)
+function h = addScalebar(ax,corner,margin,len,varargin)
+    p = inputParser;
+    p.addParameter('linewidth', 2)
+    p.parse(varargin{:})
+    p = p.Results;
+    
     xlim = ax.XLim;
     ylim = ax.YLim;
     
@@ -33,7 +38,7 @@ function h = addScalebar(ax,corner,margin,len)
            
     end
     hold(ax, 'on')
-    h = plot(ax, x, y, '-w', 'linewidth',2);
+    h = plot(ax, x, y, '-w', 'linewidth',p.linewidth);
     set(h, 'Tag', 'scale bar')
     hold(ax, 'off')
 end
