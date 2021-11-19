@@ -39,7 +39,7 @@ We will combine two identical rings (in the image format) in 3D to form a 3D dua
 	| --------- | ---------------- | ----------- | ----------- |
 	| this step | median(locs.xnm) | m1.lPar.x   |             |
 	| this step | median(locs.ynm) | m1.lPar.y   |             |
-	| this step | median(locs.znm)+40 | m1.lPar.z   |             |
+	| this step | median(locs.znm)-40 | m1.lPar.z   |             |
 	:::{note}
 	Here we assign the median (xnm, ynm, and znm refer to the values on the respective coordinate axis, in nanometer) position of localizations (locs) as the initial guess for the center position of the model (e.g., m1.lPar.x means the x position of model 1).
 	:::
