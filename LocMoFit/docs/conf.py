@@ -20,8 +20,10 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'LocMoFit'
-copyright = '2021, Yu-Le Wu'
-author = 'Yu-Le Wu'
+version = '1.0.0'
+release = '1.0.0'
+copyright = '2021, Ries group, EMBL Heidelberg'
+author = 'Wu et al.'
 
 
 # -- General configuration ---------------------------------------------------
