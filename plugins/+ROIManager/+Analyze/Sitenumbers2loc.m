@@ -37,9 +37,36 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
 %                 indh=find(indfile);
 % figure(88);plot(l.xnm,l.ynm,'.')
                 indh=ind & (obj.locData.loc.filenumber==sites(k).info.filenumber);
-                sitenumbers(indh)=sites(k).ID;
-                siteorder(indh)=k;
-                cellnumbers(indh)=sites(k).info.cell;
+                % look for overlapping sites, then use closest 
+                assignedind=(sitenumbers>0) & indh;  %later populate manually if too slow
+                
+                if any(assignedind)
+                    newindall=find(indh);
+                    oldsites=sitenumbers(assignedind);
+                    usid=unique(oldsites);
+                    posnh=sites(k).pos;
+                    for kh=1:length(usid)
+                        idh=obj.locData.SE.indexFromID(obj.locData.SE.sites,usid(kh));
+                        posoldh=sites(idh).pos;
+                       
+                        dold=(l.xnm-posoldh(1)).^2+(l.ynm-posoldh(2)).^2;
+                        dnew=(l.xnm-posnh(1)).^2+(l.ynm-posnh(2)).^2;
+                        indold=dold<dnew;
+                        newindall(indold)=0;
+                    end
+                    newindall(newindall==0)=[];
+                    sitenumbers(newindall)=sites(k).ID;
+                    siteorder(newindall)=k;
+                    cellnumbers(newindall)=sites(k).info.cell;
+                else
+                    sitenumbers(indh)=sites(k).ID;
+                    siteorder(indh)=k;
+                    cellnumbers(indh)=sites(k).info.cell;
+                end
+
+
+                
+
             end
             if p.lSiteNumber
                 obj.locData.setloc('sitenumbers',sitenumbers);
@@ -68,7 +95,7 @@ pard.t1.object=struct('String','Write site and cell numbers to locData.loc','Sty
 pard.t1.position=[1,1];
 pard.t1.Width=4;
 
-pard.roimode.object=struct('String',{{'site FoV','ROI square','ROI round'}},'Style','popupmenu');
+pard.roimode.object=struct('String',{{'site FoV','ROI square','ROI round'}},'Style','popupmenu','Value',3);
 pard.roimode.position=[2,1];
 pard.roimode.Width=1;
 
