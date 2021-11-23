@@ -333,7 +333,7 @@ obj.setGuiParameters(struct('outputfile',[p f]));
 end
 
 function displayimagetags(obj,imagetags)
-if ~obj.getSingleGuiParameter('displayimagetags') || isempty(imagetags)
+if ~obj.getSingleGuiParameter('displayimagetags') || isempty(imagetags) || ~isfield(imagetags,'tags')
     return
 end
 f=figure;
