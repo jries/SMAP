@@ -35,7 +35,7 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
             legend(axx,'data','','std','','robust std','','detrend std','')
             xlabel(axx,'time (ms)')
             ylabel(axx,'x (nm)')
-               title(axy,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) robust = ' num2str(sxrobust,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.'])
+               title(axx,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) robust = ' num2str(sxrobust,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.'])
 
 
             axy=obj.initaxis('y');
