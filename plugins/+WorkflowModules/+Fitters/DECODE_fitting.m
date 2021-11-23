@@ -20,16 +20,10 @@ classdef DECODE_fitting<interfaces.WorkflowModule
         end
         function run(obj,data,p)
             cam_settings=obj.getPar('loc_cameraSettings');
-          
-            % if not on output  path: copy tiff files
-            % if not on output path: copy model and model yaml
-
-
             server=p.server;
             gpustat=webread([server '/status_gpus']);
             [gpus,gpurec]=parsegpustathttp(gpustat);   
             wrapyaml.Hardware.device=gpurec;
-
             wrapyaml.Hardware.worker=(uint16(4));
 
             % frames for server 
@@ -53,7 +47,6 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             wrapyaml.Model.path=model_path;
             wrapyaml.Model.param_path=[fileparts(model_path) '/param_run.yaml'];
             
-            
             outdir=p.outputpath(1:pstart);
             if ~strcmp(outdir,decodenetwork) %not the same: later copy here
                 disp('output need to be on the decode network storage for data')
@@ -64,7 +57,6 @@ classdef DECODE_fitting<interfaces.WorkflowModule
 
             % overwrite Camera parameters in this file: offset mirror,
             % gain,...
-
             if cam_settings.EMmirror
                   mirrorax=int16(-1);
             else
@@ -84,33 +76,27 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             % make wrapper yaml
             WriteYaml(yamlwrappathlocal, wrapyaml);
             % call decode fitter
-
             url = [p.server '/submit_fit'];
             options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
             pid = webread(url, 'path_fit_meta', yamlwrappathremote, options);
             obj.decodepid=pid;
-
+            
+            %update staus
             logfile=[workingdirlocal '/out.log' ];
-            pause(1); %for out.log to be written
-
-
             fittingstat=webread([server '/status_processes']);
-            fid=fopen(logfile);        
             while strcmp(fittingstat.fit.(['x' num2str(pid)]),'running')
                 pause(2)
-                ltemp=0;
-                while ltemp ~= -1
-                    ltemp=fgetl(fid);
-                    if ltemp ~= -1 
-                        line=ltemp;
-                    end
-                end
+                alllines=readlines(logfile);
+                line=alllines(end);
                 obj.status(line)
                 drawnow
                 fittingstat=webread([server '/status_processes']);
             end
-            fclose(fid);
-
+            % read h5, 
+            % %add ROI, 
+            % %change pixelsize, 
+            % %RI mismatch, 
+            % %save as _sml.mat
         end
         function addFile(obj,file,setinfo)   %for batch processing?
             if isempty(file)
