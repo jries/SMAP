@@ -330,7 +330,7 @@ uicontrol('Parent',ax6.Parent,'style','text','String',slf,'Units','normalized','
 end
 end
 v=getFieldAsVector(locs,'locprecznm');
-if zexist && ~isempty(v{1})
+if zexist && ~isempty(v{1}) && ~isempty(ax7)
     
     hz=plothist(v,.99,[],0,ax7,modetxt);
     slp={'locprecznm'};
