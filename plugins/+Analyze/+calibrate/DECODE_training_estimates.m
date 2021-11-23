@@ -81,7 +81,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
            else %workstation via HTTP
                %make output directory
 %                outdir=[obj.yamlpar.Connect.local_network_storage  'training' filesep obj.yamlpar.InOut.experiment_out];
-               outdirlocal=[ obj.yamlpar.InOut.experiment_out '/']; %later initialize with decode/experiment path. set when settign 3dcal.
+               outdirlocal=[obj.yamlpar.Connect.local_network_storage 'training' '/' obj.yamlpar.InOut.experiment_out ]; %later initialize with decode/experiment path. set when settign 3dcal.
                if ~exist(outdirlocal,'dir')
                    mkdir(outdirlocal);
                end
@@ -91,7 +91,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                calfile=obj.yamlpar.InOut.calibration_file;
                [pc,fout,fext]=fileparts(calfile);
                if ~exist([outdirlocal  fout fext],'file')
-                   sadfdsa
+%                    sadfdsa
                 copyfile(calfile,outdirlocal);
                end
                %copyfile(calfile,outdir);
@@ -101,14 +101,14 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                status=webread([server '/status']);
                status.watch_dir=[status.watch_dir filesep];
                decodenetwork=obj.getGlobalSetting('DECODE_network_data');
-               pstart=length(decodenetwork);
-               outpath=obj.yamlpar.InOut.experiment_out(pstart+2:end); %the output path with respect to decode base directory
+         
+               outpath=['training/' obj.yamlpar.InOut.experiment_out]; 
                yamlp.InOut.calibration_file=fullfile(outpath,[fout fext]);
                %save yaml
                [~,fname]=fileparts(obj.locData.files.file(1).name);
                yamlname=['DECODE_train_' fname '.yaml'];
                yamlpath=[outdirlocal yamlname];
-               yamlpath_remote=[outpath '/' yamlname];
+               yamlpath_remote=[outpath yamlname];
                % gpu
                gpustat=webread([server '/status_gpus']);
                [gpus,gpurec]=parsegpustathttp(gpustat);
@@ -364,7 +364,7 @@ if ischar(type) && (strcmp(type,'3d')  || strcmp(type,'d')) && selection.Indices
         obj.yamlpar.InOut.calibration_file=[path file];
         setz(obj);
         if isempty(obj.yamlpar.InOut.experiment_out)
-            obj.yamlpar.InOut.experiment_out=path;
+            setnettrainingpath(a,b,obj);
         end
         makejsontable(obj)
     end
@@ -486,9 +486,11 @@ function setnettrainingpath(a,b,obj)
             js.Hardware.device_simulation='cpu';
         end
     else
-        [~,calname]=fileparts(js.InOut.calibration_file);
-        dates=datestr(now,'yymmdd');
-        js.InOut.experiment_out=[dates '_' calname '/'];
+        if ~isempty(js.InOut.calibration_file)
+            [~,calname]=fileparts(js.InOut.calibration_file);
+            dates=datestr(now,'yymmdd');
+            js.InOut.experiment_out=[dates '_' calname '/'];
+        end
     end
     obj.yamlpar=js;  
     makejsontable(obj)

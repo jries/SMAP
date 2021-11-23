@@ -88,6 +88,28 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             url = [p.server '/submit_fit'];
             options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
             pid = webread(url, 'path_fit_meta', yamlwrappathremote, options);
+            obj.decodepid=pid;
+
+            logfile=[workingdirlocal '/out.log' ];
+            pause(1); %for out.log to be written
+
+
+            fittingstat=webread([server '/status_processes']);
+            fid=fopen(logfile);        
+            while strcmp(fittingstat.fit.(['x' num2str(pid)]),'running')
+                pause(2)
+                ltemp=0;
+                while ltemp ~= -1
+                    ltemp=fgetl(fid);
+                    if ltemp ~= -1 
+                        line=ltemp;
+                    end
+                end
+                obj.status(line)
+                drawnow
+                fittingstat=webread([server '/status_processes']);
+            end
+            fclose(fid);
 
         end
         function addFile(obj,file,setinfo)   %for batch processing?
