@@ -12,13 +12,22 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
         end
         
         function out=run(obj,p)      
-            locs=obj.locData.getloc({'xnm','ynm','time','numberInGroup','filenumber'},'layer',find(obj.getPar('sr_layerson')),'Position','roi');
+            locs=obj.locData.getloc({'xnm','ynm','time','numberInGroup','filenumber','efo','cfr','eco','ecc','efc','id'},'layer',find(obj.getPar('sr_layerson')),'Position','roi');
             filelist=obj.getPar('filelist_short');
             filename=filelist.String{mode(locs.filenumber)};
             dt=diff(locs.time);
             dtmin=min(dt);
             dtmedian=median(dt);
             dtmean=mean(dt);
+            efo=median(locs.efo);
+            cfr=median(locs.cfr);
+            eco=median(locs.eco);
+            ecc=median(locs.ecc);
+            efc=median(locs.efc);
+            nlocs=length(locs.time);
+            ontime=max(locs.time)-min(locs.time);
+
+            ltime=locs.time-min(locs.time);
 
             sigmax=std(locs.xnm);sigmay=std(locs.ynm);
             sxdetrend=std(diff(locs.xnm))/sqrt(2);sydetrend=std(diff(locs.ynm))/sqrt(2);
@@ -28,10 +37,10 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
                  ff='%2.1f';
             axx=obj.initaxis('x');
             mx=mean(locs.xnm);
-            plot(axx,locs.time,locs.xnm-mx,locs.time,0*locs.time,'k', ...
-                locs.time,0*locs.time+sigmax,'c',locs.time,0*locs.time-sigmax,'r',...
-                locs.time,0*locs.time+sxrobust,'r',locs.time,0*locs.time-sxrobust,'c',...
-                locs.time,0*locs.time+sxdetrend,'m',locs.time,0*locs.time-sxdetrend,'m')
+            plot(axx,ltime,locs.xnm-mx,ltime,0*locs.time,'k', ...
+                ltime,0*ltime+sigmax,'c',ltime,0*ltime-sigmax,'r',...
+                ltime,0*locs.time+sxrobust,'r',ltime,0*locs.time-sxrobust,'c',...
+                ltime,0*locs.time+sxdetrend,'m',ltime,0*locs.time-sxdetrend,'m')
             legend(axx,'data','','std','','robust std','','detrend std','')
             xlabel(axx,'time (ms)')
             ylabel(axx,'x (nm)')
@@ -39,10 +48,10 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
 
 
             axy=obj.initaxis('y');
-            plot(axy,locs.time,locs.ynm-mean(locs.ynm),locs.time,0*locs.time,'k', ...
-                locs.time,0*locs.time+sigmay,'c',locs.time,0*locs.time-sigmay,'r',...
-                locs.time,0*locs.time+syrobust,'r',locs.time,0*locs.time-syrobust,'c',...
-                locs.time,0*locs.time+sydetrend,'m',locs.time,0*locs.time-sydetrend,'m')
+            plot(axy,ltime,locs.ynm-mean(locs.ynm),ltime,0*locs.time,'k', ...
+                ltime,0*locs.time+sigmay,'c',ltime,0*locs.time-sigmay,'r',...
+                ltime,0*locs.time+syrobust,'r',ltime,0*locs.time-syrobust,'c',...
+                ltime,0*locs.time+sydetrend,'m',ltime,0*locs.time-sydetrend,'m')
             legend(axy,'data','','std','','robust std','','detrend std','')
             xlabel(axy,'time (ms)')
             ylabel(axy,'y (nm)')
@@ -54,13 +63,43 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
             histogram(axt,dt,0:dtmin*0.1:quantile(dt,0.995))
             xlabel(axt,'dt (ms)')
             ylabel(axt,'frequency')
-       
             title(axt,['dtmin = ' num2str(dtmin,ff) ' ms, dtmedian = ' num2str(dtmedian,ff) ' ms, dtmean = ' num2str(dtmean,ff) ' ms.'])
- 
-            header=sprintf('filename \t dtmin \t dtmedian \t dtmean \t sigmax \t sigmay \t sigmaxrobust \t sigmayrobust \t sigmaxdetrend \t sigmaydetrend' );
+            
+            axdt=obj.initaxis('dt');
+            plot(axdt,ltime(2:end),dt)
+            xlabel(axdt,'time (ms)')
+            ylabel(axdt,'dt (ms)')
+
+            if ~isempty(locs.efo)
+                axe=obj.initaxis('efo');
+                plot(axe,ltime,locs.efo)
+                xlabel(axe,'time (ms)')
+                ylabel(axe,'efo')
+            end
+            if ~isempty(locs.cfr)
+                axc=obj.initaxis('cfr');
+                plot(axc,ltime,locs.cfr)
+                xlabel(axc,'time (ms)')
+                ylabel(axc,'cfr')
+            end
+            if ~isempty(locs.eco)
+                axec=obj.initaxis('eco');
+                plot(axec,ltime,locs.eco)
+                xlabel(axec,'time (ms)')
+                ylabel(axec,'eco')
+            end
+            if ~isempty(locs.ecc)
+                axcc=obj.initaxis('ecc');
+                plot(axcc,ltime,locs.ecc)
+                xlabel(axcc,'time (ms)')
+                ylabel(axcc,'ecc')
+            end
+
+            header=sprintf('nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmax robust \t sigmay robust \t sigmax detrend \t sigmay detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t filename' );
             disp(header)
-            results=sprintf([filename '\t' num2str(dtmin)  '\t' num2str(dtmedian) '\t' num2str(dtmean) '\t' num2str(sigmax) ...
-                 '\t' num2str(sigmay)  '\t' num2str(sxrobust)  '\t' num2str(syrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend)]  );
+            results=sprintf([num2str(nlocs)  '\t' num2str(ontime)  '\t' num2str(dtmin)  '\t' num2str(dtmedian) '\t' num2str(dtmean) '\t' num2str(sigmax) ...
+                 '\t' num2str(sigmay)  '\t' num2str(sxrobust)  '\t' num2str(syrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend) '\t' num2str(efo) '\t' ...
+                 num2str(cfr) '\t' num2str(eco) '\t' num2str(ecc) '\t' num2str(efc) '\t' filename]  );
             out.clipboard=results;
 
         end
