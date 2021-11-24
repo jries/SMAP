@@ -94,9 +94,11 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             end
             % read h5, 
             % %add ROI, 
+            % setPer('fitinfo') all training and fitting yaml parameters,
+            % adjust LocSaver to save those as well
             % %change pixelsize, 
             % %RI mismatch, 
-            % %save as _sml.mat
+            % %save as _sml.mat. Use loc saver plugin?
         end
         function addFile(obj,file,setinfo)   %for batch processing?
             if isempty(file)
