@@ -19,10 +19,10 @@ function plotFreeRot(obj, varargin)
             fig = figure;
             t = tiledlayout(fig,1,2);
     end
-    
+    t.Position = [0.1300 0.2100 0.7750 0.7150];
     ax = nexttile(t);           % handle to the scatter plot
     subViz = nexttile(t);       % handle to the image
-    disable = uicontrol(ax.Parent.Parent ,'Style','checkbox','String','Disable','Value',1,'Position',[10 360 70 30],'Callback',{@edit_callBack, obj,'disable','value'});
+    disable = uicontrol(ax.Parent.Parent ,'Style','checkbox','String','Disable','Value',0,'Position',[10 360 70 30],'Callback',{@edit_callBack, obj,'disable','value'});
     if isfield(obj.display, 'plotFreeRot') && isfield(obj.display.plotFreeRot, 'disable')
         disable.Value = obj.display.plotFreeRot.disable;
     end
@@ -37,15 +37,33 @@ function plotFreeRot(obj, varargin)
         results = p.Results;
         
         % Control panel
-        uip = uipanel('Parent',ax.Parent.Parent,'Position',[.01 .01 .98 .2]);
+        uip = uipanel('Title','Control','Parent',ax.Parent.Parent,'Position',[.01 .01 .98 .2]);
         bg = uibuttongroup('Parent',uip,'Position',[.8 .01 .2 .98]);
-        uicontrol(bg ,'Style','text','String','Pixelated','Position',[1 42 60 20]);
+        uicontrol(bg ,'Style','text','String','Image soure','Position',[1 42 70 20]);
+        guihandles = [];
         data_sel = uicontrol(bg ,'Style','radiobutton','String','Data','Position',[1 21 60 20],'Callback',{@edit_callBack, obj,'target2Render','string'});
         model_sel = uicontrol(bg ,'Style','radiobutton','String','Model','Position',[1 1 60 20],'Callback',{@edit_callBack, obj,'target2Render','string'});
 
-        section = uicontrol(uip ,'Style','edit','String',50,'Position',[1 26 60 25],'Callback',{@edit_callBack, obj,'section','string'});
-        playback = uicontrol(uip ,'Style','pushbutton','String','Playback','Position',[200 26 60 25],'Callback',{@playback_callBack,obj,ax,locs,results,bg, section});
-        timeLine = uicontrol(uip ,'Style','slider','Position',[260 26 120 25],'Callback',{@timeLine_callBack,obj,ax,locs, results,bg, section});
+        guihandles.t_section = uicontrol(uip ,...
+            'Style','checkbox',...
+            'String','Cross-section y +/-',...
+            'value',0,...
+            'Position',[1 0 1.5 1],...
+            'Callback',{@edit_callBack, obj,'t_section','value'});
+        guihandles.section = uicontrol(uip ,...
+            'Style','edit',...
+            'String',50,...
+            'Position',[2.2 0 0.4 1],...
+            'Callback',{@edit_callBack, obj,'section','string'});
+        
+        guihandles.t_playback = uicontrol(uip ,'Style','text','String','Optimization playback','Position',[2.6 1 1.2 1]);
+        if (~isfield(obj.fitInfo,'optimHistory'))||isempty(obj.fitInfo.optimHistory)
+            lEnable = 'off';
+        else
+            lEnable = 'on';
+        end
+        guihandles.playback = uicontrol(uip ,'Style','pushbutton','String','|>','Position',[3.8 1 0.3 1],'Callback',{@playback_callBack,obj,ax,locs,results,bg, guihandles.section},'Enable',lEnable);
+        guihandles.timeLine = uicontrol(uip ,'Style','slider','Position',[4.1 1 0.9 1],'Callback',{@timeLine_callBack,obj,ax,locs, results,bg, guihandles.section},'Enable',lEnable);
         
         if isfield(obj.display.plotFreeRot, 'target2Render')
             switch obj.display.plotFreeRot.target2Render
@@ -61,9 +79,13 @@ function plotFreeRot(obj, varargin)
         end
 
         if isfield(obj.display.plotFreeRot, 'section')
-            section.String = obj.display.plotFreeRot.section;
+            guihandles.section.String = obj.display.plotFreeRot.section;
         end
 
+        if isfield(obj.display.plotFreeRot, 't_section')
+            guihandles.t_section.Value = obj.display.plotFreeRot.t_section;
+        end
+        
         % Point visualization of the fit
         h = rotate3d(ax);
         h.Enable = 'on';
@@ -82,27 +104,29 @@ function plotFreeRot(obj, varargin)
         obj.setTemp('subViz', subViz);
         obj.setTemp('axViz', ax);
         
-        h.ActionPostCallback = {@rotate_callBack, obj, results, bg, section};
+        h.ActionPostCallback = {@rotate_callBack, obj, results, bg, guihandles.section, guihandles.t_section};
         axis(subViz,'equal')
         xlabel(ax, 'Aligned X (nm)')
         ylabel(ax, 'Aligned Y (nm)')
         zlabel(ax, 'Aligned Z (nm)')
         hold(subViz, 'on');
         plot(subViz,  locsViz.xnm+obj.roiSize/2,locsViz.ynm+obj.roiSize/2,' or', 'MarkerEdgeColor','w','MarkerFaceColor','r')
-        set(subViz,'YDir','reverse')
-        set(ax,'YDir','reverse')
+        
         hold(subViz,'off')
-        rotate_callBack([],[],obj,results,bg, section);          % update the image visulization
+        rotate_callBack([],[],obj,results,bg, guihandles.section, guihandles.t_section);          % update the image visulization
 
         % Buttons for the rotation
-        uicontrol(uip ,'Style','pushbutton','String','>','Position',[1 1 60 25],'Callback',{@azimuthalRot_callBack, ax, 5, obj,results,bg, section});
-        uicontrol(uip ,'Style','pushbutton','String','>>','Position',[30 1 60 25],'Callback',{@azimuthalRot_callBack, ax, 20, obj,results,bg, section});
+        guihandles.t_zrot = uicontrol(uip ,'Style','text','String','Rotation about z','Position',[1 1 1 1]);
+        guihandles.zrot_slow = uicontrol(uip ,'Style','pushbutton','String','>','Position',[1.9 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 5, obj,results,bg, guihandles.section});
+        guihandles.zrot_fast = uicontrol(uip ,'Style','pushbutton','String','>>','Position',[2.2 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 20, obj,results,bg, guihandles.section});
+        guiStyle(guihandles, fieldnames(guihandles));
      end
 end
 %% 
 % 
 function locsViz = pointViz(ax, locs, obj)
     cla(ax)
+    locs.ynm = -locs.ynm;
     [~,modViz] = obj.plot(ax, locs,'plotType','point','modelSamplingFactor',0.3); % get point type visualization
 %     modViz = obj.getLayerPoint(0.75); % get point type visualization
     axes(ax)
@@ -125,7 +149,7 @@ function locsViz = pointViz(ax, locs, obj)
     obj.setTemp('locsViz', locsViz);
     obj.setTemp('modViz', modViz);
 end
-function rotate_callBack(a,b,obj, results,bg, section)
+function rotate_callBack(a,b,obj, results,bg, section,t_section)
     pixelSize = obj.model{1}.pixelSize;
     pointImg_rotDiff = [0 -90];
     subViz = obj.getTemp('subViz');
@@ -138,12 +162,12 @@ function rotate_callBack(a,b,obj, results,bg, section)
     switch bg.SelectedObject.String
         % either show the data or the model as an image
         case 'Model'
-            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, pixelSize, 'Model', str2double(section.String), results.lutLocs);
+            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, pixelSize, 'Model', str2double(section.String)./t_section.Value, results.lutLocs);
         case 'Data'
-            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, 2, 'Data', str2double(section.String), results.lutLocs);
+            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, 2, 'Data', str2double(section.String)./t_section.Value, results.lutLocs);
     end
-    set(subViz,'YDir','normal')
     title(subViz,'2D Projection of the left panel')
+    set(subViz,'YDir','normal')
 end
 
 function playback_callBack(a,b,obj,ax,locs, results,bg, section)

@@ -194,23 +194,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
                     curvature(k) = eval(path);
                 end
             end
-            
-            if p.onlyPositive
-                for k = obj.SE.numberOfSites:-1:1
-                    if sites(k).annotation.use == 1&&curvature(k)<0
-                        sites(k).annotation.use = false;
-                    end
-                end
-            end
-            
-            if p.withoutClouds
-                for k = obj.SE.numberOfSites:-1:1
-                    if sites(k).annotation.use == 1&&curvature(k)>0.016
-                        sites(k).annotation.use = false;
-                    end
-                end
-            end
-            
+                        
             % enable the first two sorts
             g = obj.getPar('mainGui');
             sortROIs = g.children.guiSites.children.Helper.children.SortROIs;
@@ -267,9 +251,9 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
             [file,path] = uiputfile('*.tif', 'Save as', '');
 
             if file~=0
-                boundCurvature = [-inf inf]; % must exclude sites with neg. curvature
+                boundCurvature = [-inf inf]; % take all sites
                 if p.withoutClouds
-                    boundCurvature(2) = 0.016;
+                    boundCurvature(2) = p.cloudsThreshold;
                 end
                 % site filtering on sites
                 lFiter = obj.fit_manager.filter('LocMoFitGUI_2.m1.curvature', boundCurvature);
@@ -279,7 +263,7 @@ classdef SMLMModelFit_saveResult<interfaces.DialogProcessor&interfaces.SEProcess
                 % get the number of neg. curvature sites
                 lFiter = obj.fit_manager.filter('LocMoFitGUI_2.m1.curvature', [-inf 0]);
                 lFiter = lFiter&obj.fit_manager.useSites;
-                numOfNegCur = sum(lFiter);
+                numOfNegCur = sum(lFiter); % this for calculating the peusdotime
                 
                 obj.fit_manager.mkMovie('saveTo', [path file],'numberOfSitesWithNegCur',numOfNegCur);
             else
@@ -317,13 +301,7 @@ pard.plotUseOnly.Width=0.7;
 % pard.tPlotUseOnly.position=[1,3.7];
 % pard.tPlotUseOnly.Width=1;
 
-pard.onlyPositive.object=struct('Style','checkbox','Value',0,'String','Only curvature>0');
-pard.onlyPositive.position=[1,4.2];
-pard.onlyPositive.Width=1;
 
-pard.withoutClouds.object=struct('Style','checkbox','Value',0,'String','No clouds');
-pard.withoutClouds.position=[2,4.2];
-pard.withoutClouds.Width=1;
 
 pard.registerSites.object=struct('Style','pushbutton','String','Register sites','Callback', {{@obj.registerSites_callBack}});
 pard.registerSites.position=[3,3.7];
@@ -348,6 +326,18 @@ pard.winSize.Width=0.5;
 pard.t_stepSize.object=struct('Style','text','String','Step size');
 pard.t_stepSize.position=[8,3.7];
 pard.t_stepSize.Width=0.7;
+
+pard.onlyPositive.object=struct('Style','checkbox','Value',0,'String','Only curvature>0');
+pard.onlyPositive.position=[9,3.7];
+pard.onlyPositive.Width=1;
+
+pard.withoutClouds.object=struct('Style','checkbox','Value',1,'String','No clouds');
+pard.withoutClouds.position=[10,3.7];
+pard.withoutClouds.Width=1;
+
+pard.cloudsThreshold.object=struct('Style','edit','String',0.016);
+pard.cloudsThreshold.position=[10,4.3];
+pard.cloudsThreshold.Width=0.5;
 
 pard.stepSize.object=struct('Style','edit','String','30');
 pard.stepSize.position=[8,4.4];

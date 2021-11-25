@@ -1,0 +1,18 @@
+
+all.file=settings/workflows/fit_DECODE.mat
+all.FieldHeight=25;
+
+tab.hframe.name=Input Image
+tab.hfit.name=Fitter
+
+
+TifLoader.Vpos=1;
+TifLoader.handle=hframe;
+CameraConverter.Vpos=6.5;
+CameraConverter.handle=hframe;
+            
+DECODE_fitting.Vpos=1;
+DECODE_fitting.handle=hfit;
+
+LocSaver.Vpos=5;
+LocSaver.handle=hfit;

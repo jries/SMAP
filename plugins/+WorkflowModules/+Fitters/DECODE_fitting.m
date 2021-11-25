@@ -16,7 +16,14 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             pard=guidef(obj);
         end
         function prerun(obj,p)
-           
+            if p.overwritePixelsize
+                obj.setPar('overwrite_pixelsize',[p.pixelsizex p.pixelsizey])
+                cs=obj.getPar('loc_cameraSettings');
+                cs.cam_pixelsize_um=[p.pixelsizex p.pixelsizey];
+                obj.setPar('loc_cameraSettings',cs);
+            else
+                obj.setPar('overwrite_pixelsize',[])
+            end
         end
         function run(obj,data,p)
             cam_settings=obj.getPar('loc_cameraSettings');
@@ -68,6 +75,8 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             wrapyaml.Camera.em_gain=cam_settings.emgain*cam_settings.EMon;
             if p.overwritePixelsize
                 wrapyaml.Camera.px_size=[p.pixelsizex p.pixelsizey]*1000; %check XXXXX! could be swapped
+            else
+                wrapyaml.Camera.px_size=cam_settings.cam_pixelsize_um*1000;
             end
             [workingdirlocal, outname]=fileparts(p.outputpath);
             yamlwrappathlocal=[workingdirlocal '/' outname '_fitwrap.yaml'];
@@ -80,23 +89,50 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
             pid = webread(url, 'path_fit_meta', yamlwrappathremote, options);
             obj.decodepid=pid;
-            
+            obj.status('DECODE fitting started'); drawnow;
+
             %update staus
             logfile=[workingdirlocal '/out.log' ];
             fittingstat=webread([server '/status_processes']);
-            while strcmp(fittingstat.fit.(['x' num2str(pid)]),'running')
+            while strcmp(fittingstat.fit.(['x' num2str(pid)]),'running') || contains(fittingstat.fit.(['x' num2str(pid)]),'sleep')
                 pause(2)
-                alllines=readlines(logfile);
-                line=alllines(end);
-                obj.status(line)
-                drawnow
+                if exist(logfile,'file')
+                    alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
+                    if isempty(alllines)
+                        continue
+                    end
+                    line=alllines(end);
+                    if ~isempty(line)
+                        obj.status(line);
+                        drawnow
+                    end
+                end
                 fittingstat=webread([server '/status_processes']);
             end
-            % read h5, 
-            % %add ROI, 
-            % %change pixelsize, 
-            % %RI mismatch, 
-            % %save as _sml.mat
+            fileh5=strrep(frameshere,'.tif','.h5'); % read h5
+            [locs,info]=decodeh5ToLoc(fileh5);
+
+            locs.xpix=locs.xnm/info.pix2nm(1)+1;
+            locs.ypix=locs.ynm/info.pix2nm(2)+2; %check ROI XXXXX
+            locs.xpixerr=locs.xnmerr/info.pix2nm(1);
+            locs.ypixerr=locs.ynmerr/info.pix2nm(2);
+
+            if p.userefractive_index_mismatch %RI mismatch,
+                locs.znm=locs.znm *p.refractive_index_mismatch;
+                locs.locprecznm=locs.locprecznm *p.refractive_index_mismatch;
+            end
+            %check sign of z and pixel size. Look for offset compared to
+            %fitting.
+           
+            obj.setPar('loc_fitinfo',wrapyaml) % setPer('fitinfo') all training and fitting yaml parameters,
+            output=interfaces.WorkflowData;
+            output.eof=true;
+            output.data=locs;
+            output.ID=1;
+            output.frame=1;
+            obj.output(output);
+            % later: preview and restricted frames!
+
         end
         function addFile(obj,file,setinfo)   %for batch processing?
             if isempty(file)

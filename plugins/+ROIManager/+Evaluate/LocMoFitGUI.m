@@ -37,7 +37,11 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 ID = ['modelType_' num2str(m)];
                 p.(ID).String = obj.guihandles.(ID).String;
                 p.(ID).Value = obj.guihandles.(ID).Value;
-                p.(ID).selection = p.(ID).String{p.(ID).Value};
+                if iscell(p.(ID).String)
+                    p.(ID).selection = p.(ID).String{p.(ID).Value};
+                else
+                    p.(ID).selection = p.(ID).String;
+                end
                 m = m+1;
             end
             setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);
@@ -100,7 +104,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                         %% Set the model settings
                         for k=obj.numMod:-1:1
                             kStr = num2str(k);
-                            fitter.model{k}.weight = inp.(['weight_fit_' kStr]); % kStr corresponds to the model order
+%                             fitter.model{k}.weight = inp.(['weight_fit_' kStr]); % kStr corresponds to the model order
                             %             fitter.model{k}.layer = inp.(['layer_' kStr]); % this now
                             %             will be updated right after editing
                             if ~strcmp(fitter.model{k}.modelType,'image')
@@ -113,17 +117,6 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                         obj.setPar(['logicalParTableEdited_' obj.name], false);
                     end
                     fitter.roiSize = obj.P.par.se_siteroi.content;
-                    if ischar(inp.cascade)
-                        f = regexp(inp.cascade, '\((.*)\)','split');
-                        f = regexp(regexprep(cellstr(f{1}), '^\s+', ''), '\s+', 'split');
-                        f = str2double(vertcat(f{:}));
-                        o = regexp(inp.cascade, '\((.*)\)','tokens');
-                        o = regexp(regexprep(cellstr(o{1}), '^\s+', ''), '\s+', 'split');
-                        o = str2double(vertcat(o{:}));
-                        fitter.sigmaCascade = [f;o];
-                    else
-                        fitter.sigmaCascade = inp.cascade;
-                    end
                     
                     % Converter
                     hConvert=obj.guihandles.anchorConvert; %handle of table
@@ -381,8 +374,8 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                             fitter.showFitResult(vis, locs);
                         else
                             if ~strcmp(fitter.model{1}.modelType,'image')
-                                viz2 = obj.setoutput('FixRot');
                                 viz1 = obj.setoutput('FreeRot');
+                                viz2 = obj.setoutput('FixRot');                                
                                 viz1Parent = viz1.Parent;
                                 delete(viz1Parent.Children)
                                 viz1 = axes(viz1Parent);
@@ -475,6 +468,8 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 obj.guiPar.Vpos=3;
                 obj.guiPar.FieldHeight=20;
             end
+            
+            %% ParArg table related things
             % field names in the parsArg table
             fnParsArg={'name','value','fix','lb','ub','type','min','max','label'};
             lFnParsArgEdit = logical([0 1 1 1 1 0 1 1 1]);
@@ -565,53 +560,45 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.optimizer.tab='tab1';
             
             pard.loadfitting.object=struct('Style','pushbutton','String','load', 'Callback',{{@obj.load_callback}});
-            pard.loadfitting.position=[1.5+dy,4.2];
-            pard.loadfitting.Width=0.7;
-            pard.loadfitting.Height=1;
+            pard.loadfitting.position=[1+dy,3.8];
+            pard.loadfitting.Width=0.6;
+            pard.loadfitting.Height=0.7;
             pard.loadfitting.tab='tab1';
+            pard.loadfitting.TooltipString='Load previously saved settings.';
             
             pard.savefitting.object=struct('Style','pushbutton','String','save', 'Callback',{{@save_callback,obj}});
-            pard.savefitting.position=[2.5+dy,4.2];
-            pard.savefitting.Width=0.7;
-            pard.savefitting.Height=1;
+            pard.savefitting.position=[1+dy,4.4];
+            pard.savefitting.Width=0.6;
+            pard.savefitting.Height=0.7;
             pard.savefitting.tab='tab1';
+            pard.savefitting.TooltipString='Save the current settings.';
             
-            pard.noFit.object=struct('Style','checkbox','String','Re-use results','Value',0);
+            pard.setting_advanced.object=struct('Style','pushbutton','String','Advanced','Callback',{{@setting_advanced_callback,obj}});
+            pard.setting_advanced.position=[1.8+dy,3.8];
+            pard.setting_advanced.Width=1.2;
+            pard.setting_advanced.Height=0.7;
+            pard.setting_advanced.tab='tab1';
+            pard.setting_advanced.TooltipString='Advanced settings.';
+            
+            pard.noFit.object=struct('Style','checkbox','String','Review only','Value',0);
             pard.noFit.position=[3.5+dy,3.5];
-            pard.noFit.Width=1.5;
+            pard.noFit.Width=1.3;
             pard.noFit.Height=1;
             pard.noFit.tab='tab1';
-            
-            pard.setting_advanced.object=struct('Style','pushbutton','String','...','Callback',{{@setting_advanced_callback,obj}});
-            pard.setting_advanced.position=[3.3+dy,4.7];
-            pard.setting_advanced.Width=0.25;
-            pard.setting_advanced.Height=0.5;
-            pard.setting_advanced.tab='tab1';
-            
-            pard.useAlignment.object=struct('Style','checkbox','String','Run alignment','Value',0);
+                       
+            pard.useAlignment.object=struct('Style','checkbox','String','Transform','Value',0);
             pard.useAlignment.position=[4.5+dy,3.5];
             pard.useAlignment.Width=1.5;
             pard.useAlignment.Height=1;
             pard.useAlignment.tab='tab1';
+            pard.useAlignment.TooltipString = 'Perform the transformation of the site based on the model.';
             
             pard.setting_alignment.object=struct('Style','pushbutton','String','...','Callback',{{@setting_alignment_callback,obj}});
             pard.setting_alignment.position=[4.3+dy,4.7];
             pard.setting_alignment.Width=0.25;
             pard.setting_alignment.Height=0.5;
             pard.setting_alignment.tab='tab1';
-            
-            pard.t_cascade.object=struct('Style','text','String','Cascade');
-            pard.t_cascade.position=[5.5+dy,3.5];
-            pard.t_cascade.Width=1;
-            pard.t_cascade.Height=1;
-            pard.t_cascade.tab='tab1';
-            
-            pard.cascade.object=struct('Style','edit','String','1');
-            pard.cascade.position=[5.5+dy,4.2];
-            pard.cascade.Width=0.7;
-            pard.cascade.Height=1;
-            pard.cascade.tab='tab1';
-            
+                                  
             pard.optimizerpar.object=struct('Style','text','String','');
             pard.optimizerpar.position=[4.5+dy,1];
             pard.optimizerpar.Width=2.5;
@@ -630,9 +617,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.rmRowOptimizer.Height=0.4;
             pard.rmRowOptimizer.tab='tab1';
             
-            pard.t_layerSetting.object=struct('Style','text','String','Offset:');
+            pard.t_layerSetting.object=struct('Style','text','String','Layer background:');
             pard.t_layerSetting.position=[6+dy,1];
-            pard.t_layerSetting.Width=1;
+            pard.t_layerSetting.Width=1.5;
             pard.t_layerSetting.tab='tab1';
             
             pard.layerSetting.object=struct('Style','text','String','');
@@ -704,6 +691,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.(['settingstable_' num2str(number)]).Position(3:4)=obj.guihandles.(['settingstable_' num2str(number)]).Position(3:4)-tabh;
             obj.guihandles.(['settingstable_' num2str(number)]).ColumnEditable = true;
             obj.guihandles.(['settingstable_' num2str(number)]).RowName = [];
+            obj.guihandles.(['settingstable_' num2str(number)]).CellSelectionCallback = {@settingTable_cellSelectionCallback, obj, num2str(number)};
             
             % Buttons for adding removing a row of setting
             obj.guihandles.(['addInternalSetting_' num2str(number)])=uicontrol(hsettings,'Style','pushbutton','String','+');
@@ -960,41 +948,48 @@ end
 
 function setting_advanced_callback(a,b,obj)
 fig = figure('Name','Advance setting');
-fig.Position(3:4) = [300 200];
-
 advanceSetting = obj.fitter.advanceSetting;
 fn = fieldnames(advanceSetting);
-for k = 1:length(fn)
+nrow = length(fn);
+fig.Position(3:4) = [320 nrow*22+60];
+guihandles = [];
+for k = 1:nrow
     option = advanceSetting.(fn{k}).option;
     value = advanceSetting.(fn{k}).value;
     name = advanceSetting.(fn{k}).name;
+    t = ['uit_' num2str(k)];
+    ui = ['ui_' num2str(k)];
+    lineHeight = 0.73;
     if islogical(value)
-        uit = uicontrol(fig,'Style','checkbox','String',name,'Value',value);
-        uit.Position = [0 150-20*(k-1) 150 20];
+        guihandles.(t) = uicontrol(fig,'Style','checkbox','String',name,'Value',value);
+        guihandles.(t).Position = [1.2 (k-1)*lineHeight 1.5 0.9];
     else
         if length(option)>1
             idxVal = find(strcmp(value,option));
-            uit = uicontrol(fig,'Style','text','String',name);
-            uit.Position = [0 150-20*(k-1) 150 20];
-            ui1 = uicontrol(fig,'Style','popupmenu','Value',idxVal,'String',option);
-            ui1.Position = [150 150-20*(k-1) 100 20];
+            guihandles.(t) = uicontrol(fig,'Style','text','String',name);
+            guihandles.(t).Position = [1.2 (k-1)*lineHeight 1.5 0.9];
+            guihandles.(ui) = uicontrol(fig,'Style','popupmenu','Value',idxVal,'String',option);
+            guihandles.(ui).Position = [2.7 (k-1)*lineHeight 1 0.9];
         else
-            uit = uicontrol(fig,'Style','text','String',name);
-            uit.Position = [0 150-20*(k-1) 150 20];
-            ui1 = uicontrol(fig,'Style','edit','String',num2str(value));
-            ui1.Position = [150 150-20*(k-1) 100 20];
+            guihandles.(t) = uicontrol(fig,'Style','text','String',name);
+            guihandles.(t).Position = [1.2 (k-1)*lineHeight 1.5 0.9];
+            guihandles.(ui) = uicontrol(fig,'Style','edit','String',num2str(value));
+            guihandles.(ui).Max = 2;
+            guihandles.(ui).Position = [2.7 (k-1)*lineHeight 1 0.9];
         end
     end
     
     if islogical(value)
-        obj.guihandles.([tag 't_' fn{k}]) = uit;
+        obj.guihandles.([tag 't_' fn{k}]) = guihandles.(t);
     end
     
-    obj.guihandles.(fn{k}) = ui1;
+    obj.guihandles.(fn{k}) = guihandles.(ui);
 end
 
-ui1 = uicontrol(fig,'Style','pushbutton','String','Save','Callback',{@saveAdvanceSettings_callback, fig, obj});
-ui1.Position = [200 20 100 20];
+guihandles.save = uicontrol(fig,'Style','pushbutton','String','Save','Callback',{@saveAdvanceSettings_callback, fig, obj});
+guihandles.save.Position = [3.2 k*lineHeight+0.3 0.5 0.9];
+
+guiStyle(guihandles, fieldnames(guihandles),'FieldHeight',20);
 end
 
 function saveAdvanceSettings_callback(a,b,fig,obj)
@@ -1020,37 +1015,48 @@ end
 
 function setting_alignment_callback(a,b,obj)
 fig = figure(514);
-uit = uitable(fig);
-uit = createConvertTable(uit, fig);
-uit.CellEditCallback = {@alignSettingEdit_callback,3,obj};
+fig.Name = 'Transformation settings';
+fig.Position(3:4) = [400 360];
+guihandles.uit = uitable(fig);
+guihandles.uit = createConvertTable(guihandles.uit, fig);
+guihandles.uit.CellEditCallback = {@alignSettingEdit_callback,3,obj};
 
 % Update the convert tab.
 parId = {'post_x', 'post_y', 'post_z', 'post_scale', 'post_zrot'};
-optionTarget = unique([uit.ColumnFormat{2} parId]);
-uit.ColumnFormat{2} = optionTarget;
-uit.Data = obj.alignSettings;
-button_add = uicontrol('Style','pushbutton','String','+','Callback',{@addNewRuleAlign_callback,fig});
-button_add.Position=[0 -25 25 25] + [uit.Position(1:2) 0 0];
+optionTarget = unique([guihandles.uit.ColumnFormat{2} parId]);
+guihandles.uit.ColumnFormat{2} = optionTarget;
+guihandles.uit.Data = obj.alignSettings;
+guihandles.uit.ColumnWidth = {100 100 100};
 
-button_rm = uicontrol('Style','pushbutton','String','-','Callback',{@rmRuleAlign_callback,fig});
-button_rm.Position=[25 -25 25 25] + [uit.Position(1:2) 0 0];
+
+
+guihandles.button_add = uicontrol('Style','pushbutton','String','+','Callback',{@addNewRuleAlign_callback,fig,obj});
+guihandles.button_add.Position = [1 10 0.3 0.8];
+
+guihandles.button_rm = uicontrol('Style','pushbutton','String','-','Callback',{@rmRuleAlign_callback,fig,obj});
+guihandles.button_rm.Position = [1.3 10 0.3 0.8];
+guihandles.uit.Position = [1 0 3.7 10];
+guiStyle(guihandles, fieldnames(guihandles));
 end
 
-function addNewRuleAlign_callback(a,b,fig)
+function addNewRuleAlign_callback(a,b,fig,obj)
 htable = findobj(fig, 'Type', 'uitable');
 htable.Data = [htable.Data; {[],[],[]}];
 end
 
-function rmRuleAlign_callback(a,b,fig)
+function rmRuleAlign_callback(a,b,fig,obj)
 htable = findobj(fig, 'Type', 'uitable');
 data = htable.Data;
 temp = findobj(fig,'Type','uicontrol','-and','String','selectedRowConvert');
-selectedRow = temp.Value;
 try
+    selectedRow = temp.Value;
     data(selectedRow,:) = [];
+    htable.Data = data;
+    obj.alignSettings = htable.Data;
 catch
+    display('Please select a row first.')
 end
-htable.Data = data;
+
 end
 
 function alignSettingEdit_callback(a,b,k,obj)
@@ -1121,18 +1127,6 @@ pard.pixelsizefit.tab=['tabmodel_' num2str(number)];
 pard.pixelsizefit.Tooltip = 'The smaller the more precise.';
 pard.pixelsizefit.Enable = 'off';
 
-pard.weight_fitt.object=struct('Style','text','String','Weight');
-pard.weight_fitt.position=[8+dy,1];
-pard.weight_fitt.Width=1;
-pard.weight_fitt.tab=['tabmodel_' num2str(number)];
-pard.weight_fitt.Tooltip = 'The weight of this model in the fitting.';
-
-pard.weight_fit.object=struct('Style','edit','String','1','Callback',{{@modelSettingsEdited_callback,obj}});
-pard.weight_fit.position=[8+dy,3.5];
-pard.weight_fit.Width=1;
-pard.weight_fit.tab=['tabmodel_' num2str(number)];
-pard.weight_fit.Enable = 'off';
-
 pard.sigma_fitt.object=struct('Style','text','String','Sigma of Gaussian filtering');
 pard.sigma_fitt.position=[6+dy,1];
 pard.sigma_fitt.Width=2;
@@ -1196,7 +1190,7 @@ if isempty(currentLoadedModel)
     fnold=obj.guihandles.(['modelname_' modelnumber]).String;
     [f,p]=uigetfile(filter,'Select a geometric model',fnold);
     if ~f %no model selected: return
-        disp('Please choose your model.')
+        disp('Cancelled by the user. No model loaded.')
         return
     end
     obj.guihandles.(['modelname_' modelnumber]).String=[p f];
@@ -1277,7 +1271,6 @@ enableSettings(obj,modelnumber,fitter);
 modelnumberStr = modelnumber;
 modelnumber = str2double(modelnumber);
 % Load model's info to the GUI.
-obj.guihandles.(['weight_fit_' modelnumberStr]).String = fitter.model{modelnumber}.weight;
 obj.guihandles.(['layer_' modelnumberStr]).Value = fitter.model{modelnumber}.layer;
 if ismember(fitter.model{modelnumber}.modelType,{'discrete','continuous'})
     obj.guihandles.(['sigma_fit_' modelnumberStr]).String = fitter.model{modelnumber}.sigma;
@@ -1319,14 +1312,12 @@ if isequal(modelType, 'image')
     % for image models
     obj.guihandles.(['layer_' modelnumber]).Enable = 'on';
     obj.guihandles.(['pixelsizefit_' modelnumber]).Enable = 'on';
-    obj.guihandles.(['weight_fit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'off';
     obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'off';
 elseif isequal(modelType, 'continuous')||isequal(modelType, 'background')
     % for continuous models
     obj.guihandles.(['layer_' modelnumber]).Enable = 'on';
     obj.guihandles.(['pixelsizefit_' modelnumber]).Enable = 'on';
-    obj.guihandles.(['weight_fit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'off';
 else
@@ -1334,7 +1325,6 @@ else
     obj.guihandles.(['layer_' modelnumber]).Enable = 'on';
     obj.guihandles.(['pixelsizefit_' modelnumber]).Enable = 'off';
     obj.guihandles.(['pixelsizefit_' modelnumber]).String = 1;
-    obj.guihandles.(['weight_fit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'off';
     obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'on';
     
@@ -1373,7 +1363,6 @@ function modType_callback(a, b, obj, modelNumber)
 % Usually only obj.modelType has to be changed unless it is changing
 % between image and funciton types.
 fitter = obj.fitter;
-fitter.model{modelNumber}.modelType = a.String{a.Value};
 switch a.String{a.Value}
     case 'image'
         if strcmp(fitter.model{modelNumber}.modelType, 'image')
@@ -1404,6 +1393,7 @@ switch a.String{a.Value}
             fitter.changeModel(funModel,modelNumber);
             obj.sourceModel{modelNumber} = [];
         else
+            fitter.model{modelNumber}.modelType = a.String{a.Value};
         end
 end
 enableSettings(obj,num2str(modelNumber),fitter);
@@ -1435,6 +1425,14 @@ else
 end
 obj.guihandles.(['settingstable_' num2str(modelnumber)]).Data = data;
 obj.setPar(['selectedRow_internalSetting_' obj.name '_' num2str(modelnumber)],indices(1));
+end
+
+% Callback for settingTable
+function settingTable_cellSelectionCallback(a,b,obj, modelnumber)
+indices = b.Indices;
+if ~isempty(indices)
+    obj.setPar(['selectedRow_internalSetting_' obj.name '_' num2str(modelnumber)],indices(1));
+end
 end
 
 % Callback for internal settings

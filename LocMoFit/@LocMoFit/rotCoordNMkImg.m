@@ -47,7 +47,7 @@ p = p.Results;
 info = [];
 
 % Rotate coordiantes and make an image
-forRevY = -1; % this factor was introduced to make the reverse YDir also applies
+forRevY = 1; % this factor was introduced to make the reverse YDir also applies
 [locsCoord.xnm,locsCoord.ynm,locsCoord.znm] = rotAzEl(locsCoord.xnm,forRevY.*locsCoord.ynm,locsCoord.znm, rotVizAlt(1), -rotVizAlt(2));
 lSectionLocs = locsCoord.znm >= -section & locsCoord.znm <= section;
 
@@ -55,7 +55,7 @@ lSectionLocs = locsCoord.znm >= -section & locsCoord.znm <= section;
 % selected.
 switch mode
     case 'Model'
-        v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
+        v = zeros(ceil([obj.roiSize./pixelSize obj.roiSize./pixelSize]));
         % Go through all models (layer-based)
         roiks = 2.7;
         if isempty(obj.getTemp('gausstemplate'))
@@ -67,7 +67,7 @@ switch mode
         
         for k = 1:obj.numOfModel
            
-            [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
+            [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,forRevY.*modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
             if obj.model{k}.fixSigma
                 thisImg = getModelImg(modCoord{k}.x, modCoord{k}.y, 'roiSize', obj.roiSize, 'pixelSize', pixelSize, 'sigma', obj.model{k}.sigma, 'gausstemplate',G,'norm',modCoord{k}.n)';
             else
@@ -113,7 +113,7 @@ switch mode
         oneItems = items{k};
         for l = 1:length(oneItems)
             oneItem = oneItems(l);
-            [oneItem.XData,oneItem.YData,oneItem.ZData] = rotAzEl(oneItem.XData,oneItem.YData,oneItem.ZData, rotVizAlt(1), -rotVizAlt(2));
+            [oneItem.XData,oneItem.YData,oneItem.ZData] = rotAzEl(oneItem.XData,forRevY.*oneItem.YData,oneItem.ZData, rotVizAlt(1), -rotVizAlt(2));
             oneItem.XData = (oneItem.XData+obj.roiSize/2+pixelSize)./pixelSize;
             oneItem.YData = (oneItem.YData+obj.roiSize/2+pixelSize)./pixelSize;
             oneItem.ZData = (oneItem.ZData+obj.roiSize/2+pixelSize)./pixelSize;
@@ -166,7 +166,9 @@ switch mode
                     p_render.imaxtoggle = 1;
                     imageo = renderSMAP(locsCoordSub, p_render, k);
                     imageo = drawerSMAP(imageo,p_render);
-                    imax = imageo.imax*1.8;
+%                     factor = 1.8;
+                    factor = 1.2;
+                    imax = imageo.imax*factor;
                     p_render.imaxtoggle = 0;
                     p_render.imax_min = imax;
                     imageo = renderSMAP(locsCoordSub, p_render, k);
@@ -175,6 +177,7 @@ switch mode
                 else
                     if ~isnan(p.imax)
                         p_render.imax_min = p.imax;
+                        p_render.imaxtoggle = 0;
                     end
                     imageo = renderSMAP(locsCoordSub, p_render, k);
                     imageo = drawerSMAP(imageo,p_render);

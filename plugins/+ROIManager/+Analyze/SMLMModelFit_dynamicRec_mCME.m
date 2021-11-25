@@ -20,13 +20,22 @@ classdef SMLMModelFit_dynamicRec_mCME<interfaces.DialogProcessor&interfaces.SEPr
         end
         
         function out=run(obj,p)
-            % ask user to specify the file name
-            % Todo: the UpdateFcn only accept one set of x y data now. This
-            % overwrites the info about earlier plots. This has to be
-            % fixed.
-            obj.linkedManager.parentObj.loadData;
-            obj.linkedManager.handles.linkedDynamicRec = obj;
-            obj.linkedManager.dynamicRec;
+            fit_manager = obj.linkedManager;
+            
+            fit_manager.parentObj.loadData;
+            fit_manager.handles.linkedDynamicRec = obj;
+            
+            % filter the sites based on the different parameters
+            boundCurvature = [-inf inf]; % take all sites
+            if p.withoutClouds
+                boundCurvature(2) = p.cloudsThreshold;
+            end
+            if p.noNeg
+                boundCurvature(1) = 0;
+            end
+            % site filtering on sites
+            fit_manager.addFiltering('LocMoFitGUI_2.m1.curvature', boundCurvature)
+            fit_manager.dynamicRec;
             obj.locData.regroup;
             obj.locData.filter;
             out = [];
@@ -72,7 +81,7 @@ pard.t_spatialTrimXY.object=struct('Style','text','String','Bin crop [X Y]');
 pard.t_spatialTrimXY.position=[3,1];
 pard.t_spatialTrimXY.Width=1;
 
-pard.spatialTrimXY.object=struct('Style','edit','String', '50 50');
+pard.spatialTrimXY.object=struct('Style','edit','String', '75 75');
 pard.spatialTrimXY.position=[3,2];
 pard.spatialTrimXY.Width=0.5;
 
@@ -83,6 +92,18 @@ pard.t_masterAvgR.Width=1;
 pard.masterAvgR.object=struct('Style','edit','String', '150');
 pard.masterAvgR.position=[4,2];
 pard.masterAvgR.Width=0.5;
+
+pard.noNeg.object=struct('Style','checkbox','Value',0,'String','Only curvature>0');
+pard.noNeg.position=[1,3];
+pard.noNeg.Width=1;
+
+pard.withoutClouds.object=struct('Style','checkbox','Value',1,'String','No clouds');
+pard.withoutClouds.position=[2,3];
+pard.withoutClouds.Width=1;
+
+pard.cloudsThreshold.object=struct('Style','edit','String',0.016);
+pard.cloudsThreshold.position=[2,3.6];
+pard.cloudsThreshold.Width=0.5;
 
 pard.convertTable.object=struct('Style','text','String','table pos');
 pard.convertTable.position=[12,1];

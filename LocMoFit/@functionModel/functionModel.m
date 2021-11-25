@@ -9,7 +9,7 @@ classdef functionModel<SMLMModel
     %   14.10.2021
     %
     % See also:
-    %   :autoclass:`SMLMModel`, :class:`LocMoFit`, :class:`geometricModel`
+    %   :class:`SMLMModel`, :class:`LocMoFit`, :class:`geometricModel`
     
     properties
         pixelSize = 5;          % Pixel size of the model

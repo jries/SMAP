@@ -154,11 +154,14 @@ classdef LocMoFit_manager < handle
         
         function lFilter = filter(obj, varargin)
             % Use pair parameters like filter('parID',[0 inf])
-            
+            % It gets filter for all sites.
             parIDs = varargin(1:2:end);
             parFilter = varargin(2:2:end);
             for k = 1:length(parIDs)
-                val = obj.getVariable(parIDs{k});
+                % Don't change this to obj.getVariable. This function is
+                % designed to applied to all sites including the ones
+                % marked as not used in the roi manager.
+                val = obj.getVariable_allSites(parIDs{k});
                 if k == 1
                     lFilter = ones(size(val));
                 end
@@ -470,28 +473,29 @@ classdef LocMoFit_manager < handle
             p.addParameter('binRadius', 300);
             p.addParameter('scalingFactor', 1);
             p.addParameter('firstBin', false);
+            p.addParameter('siteID',0)
             p.parse(varargin{:});
             results = p.Results;
             
             parentObj = obj.parentObj;
             %% alignment           
-            if isempty(obj.idxCurrentSite)
-                error('No ID of the current site specified.')
-                return
-            end
+%             if isempty(obj.idxCurrentSite)
+%                 error('No ID of the current site specified.')
+%                 return
+%             end
             locData = parentObj.locData;
-            if length(obj.idxCurrentSite)==2
-                locData.filter({'rank_masterAvg'},[],'minmax', obj.idxCurrentSite);
-                % Here I use 'size' instead of 'position' because the filtering
-                % is not based on the main xnm and ynm but rather xnmaligned_masterAvg','ynmaligned_masterAvg'
-                [newlocs,indNewLocs] = locData.getloc({'xnmaligned_masterAvg','ynmaligned_masterAvg', 'znmaligned_masterAvg','layer'},'grouping', 'ungrouped', 'layer',find(locData.getPar('sr_layerson')),'removeFilter',{'filenumber'}); % per ROI info.
-            else
-                [newlocs,indNewLocs] = locData.getloc({'xnmaligned_masterAvg','ynmaligned_masterAvg', 'znmaligned_masterAvg','layer','rank_masterAvg'},'grouping', 'ungrouped', 'layer',find(locData.getPar('sr_layerson')),'removeFilter',{'filenumber','rank_masterAvg'}); % per ROI info.
-                lLocs = ismember(newlocs.rank_masterAvg,obj.idxCurrentSite);
-                newlocs = subsetStruct(newlocs,lLocs);
-            end
+%             if length(obj.idxCurrentSite)==2
+%                 locData.filter({'rank_masterAvg'},[],'minmax', obj.idxCurrentSite);
+%                 % Here I use 'size' instead of 'position' because the filtering
+%                 % is not based on the main xnm and ynm but rather xnmaligned_masterAvg','ynmaligned_masterAvg'
+%                 [newlocs,indNewLocs] = locData.getloc({'xnmaligned_masterAvg','ynmaligned_masterAvg', 'znmaligned_masterAvg','layer'},'grouping', 'ungrouped', 'layer',find(locData.getPar('sr_layerson')),'removeFilter',{'filenumber'}); % per ROI info.
+%             else
+            [newlocs,indNewLocs] = locData.getloc({'xnmaligned_masterAvg','ynmaligned_masterAvg', 'znmaligned_masterAvg','layer','rank_masterAvg'},'grouping', 'ungrouped', 'layer',find(locData.getPar('sr_layerson')),'removeFilter',{'filenumber','rank_masterAvg'}); % per ROI info.
+            lLocs = ismember(newlocs.rank_masterAvg,results.siteID);
+            newlocs = subsetStruct(newlocs,lLocs);
             
-            
+            idxNewLocs = find(indNewLocs);
+            idxNewLocs = idxNewLocs(lLocs);
             % convert
             % load allParsArg of the specific site
 
@@ -503,20 +507,18 @@ classdef LocMoFit_manager < handle
             newlocs.xnm = newlocs.xnmaligned_masterAvg-1000;
             newlocs.ynm = newlocs.ynmaligned_masterAvg;
             newlocs.znm = newlocs.znmaligned_masterAvg;
+            
+            % Transform the sites
             newlocs = fitter.locsRegister(newlocs, [], 1);
-
-            % save to the fields
-            idxNewLocs = find(indNewLocs);
             
             % Trim locs
             indKept = abs(newlocs.xnm)<(roiSize/2 - results.spatialTrimXY(1));
             indKept = indKept&abs(newlocs.ynm)<(roiSize/2 - results.spatialTrimXY(2));
-            fn = fieldnames(newlocs);
-            for k = 1:length(fn)
-                newlocs.(fn{k}) = newlocs.(fn{k})(indKept);
-            end
-            newlocs.xnm = newlocs.xnm+results.spatialOffset+results.distFromOrigin;
+            
+            newlocs = subsetStruct(newlocs,indKept);
             idxNewLocs = idxNewLocs(indKept);
+            
+            newlocs.xnm = newlocs.xnm+results.spatialOffset+results.distFromOrigin;
         end
         
         function saveToField(obj, filedName, idxLocs, locs)

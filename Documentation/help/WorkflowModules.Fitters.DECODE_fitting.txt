@@ -1,0 +1,18 @@
+https://docs.google.com/document/d/1zZsNOxeyDhq648sbIokfvKTjk72S-LmnFuktQqMwvfk/edit
+
+gui:Parameters:
+gui:loadcal 
+gui:model_path DECODE model
+gui:outputpath DECODE output
+gui:overwritePixelsize 
+gui:pixelsizex 
+gui:pixelsizey 
+gui:refractive_index_mismatch Correction factor to take into account the different refracrive indices of immersion oil and buffer. 
+ This leads to smaller distances inside the sample compared to bead calibration. 
+ Bead calibration: in piezo positions (nm). 
+ This factor transforms z positions to real-space z positions. 
+ For high-NA oil objectives: typical 0.72 (range 0.7-1).
+gui:select_output 
+gui:server 
+gui:servert 
+gui:userefractive_index_mismatch 

@@ -12,7 +12,9 @@ classdef CME3D_manager < SMLMModelFit_manager
             
             parentObj = obj.parentObj;
             p = obj.handles.linkedDynamicRec.getAllParameters;
-            lastSite = sum(obj.useSites);
+            lGood = obj.filtering&obj.useSites;
+            rank_site = find(lGood);
+            numOfSite_filtered = sum(lGood);
             
             settings = obj.dynamicRec_settings(p);
             
@@ -27,19 +29,20 @@ classdef CME3D_manager < SMLMModelFit_manager
             end
             
             % Bin the data based on their close angle
-            radius = obj.getVariable('LocMoFitGUI_2.m1.radius');
-            zOffset = obj.getVariable('LocMoFitGUI_2.m1.zOffset');
-            theta = obj.getVariable('LocMoFitGUI_2.m1.closeAngle');
-            closeAng = obj.getVariable('LocMoFitGUI_2.m1.realCloseAngle');
+            radius = obj.getVariable_allSites('LocMoFitGUI_2.m1.radius');
+            zOffset = obj.getVariable_allSites('LocMoFitGUI_2.m1.zOffset');
+            theta = obj.getVariable_allSites('LocMoFitGUI_2.m1.closeAngle');
+            closeAng = obj.getVariable_allSites('LocMoFitGUI_2.m1.realCloseAngle');
 %             linkageError = obj.getVariable('LocMoFitGUI_2.m1.variation');
-            binSize = floor(lastSite/settings.binNumber);
-            lastSite = binSize*settings.binNumber;
+            binSize = floor(numOfSite_filtered/settings.binNumber);
+            lastSiteInBins = binSize*settings.binNumber;
+            rank_sitesInBin = rank_site(1:lastSiteInBins);
             %% Binning
 %             obj.numOfSites binNumber
-            rsRadius = reshape(radius(1:lastSite), binSize,[]);
-            rsTheta = reshape(theta(1:lastSite), binSize,[]);
-            rsZOffset = reshape(zOffset(1:lastSite), binSize,[]);
-            rsCloseAng = reshape(closeAng(1:lastSite), binSize,[]);
+            rsRadius = reshape(radius(rank_sitesInBin), binSize,[]);
+            rsTheta = reshape(theta(rank_sitesInBin), binSize,[]);
+            rsZOffset = reshape(zOffset(rank_sitesInBin), binSize,[]);
+            rsCloseAng = reshape(closeAng(rank_sitesInBin), binSize,[]);
 %             rsLinkageError = reshape(linkageError(1:lastSite), binSize,[]);
             binZOffset = median(rsZOffset,1);
             binTheta = median(rsTheta,1);
@@ -58,20 +61,25 @@ classdef CME3D_manager < SMLMModelFit_manager
             parentObj.locData.loc.(['ynmaligned_' 'masterAvgMod']) = zeros(size(parentObj.locData.loc.xnm));
             parentObj.locData.loc.(['znmaligned_' 'masterAvgMod']) = zeros(size(parentObj.locData.loc.xnm));
             
-            for k = 1:settings.binNumber
-                obj.idxCurrentSite = [(k-1)*binSize+0.1 k*binSize];
+            for k = 2:settings.binNumber
+                siteID_oneBin = rank_sitesInBin((k-1)*binSize+1:k*binSize);
                 currentBin = k;
-                [idxNewLocs, locs] = obj.modifyMaster('spatialOffset', currentBin * settings.distBetweenBins+1000, 'spatialTrimXY', settings.spatialTrimXY, 'binRadius', binRadius(k), 'scalingFactor', scalingFactor(k), 'binCloseAng', binCloseAng(k));
+                [idxNewLocs, locs] = obj.modifyMaster('spatialOffset', currentBin * settings.distBetweenBins+1000,...
+                    'spatialTrimXY', settings.spatialTrimXY,...
+                    'binRadius', binRadius(k),...
+                    'scalingFactor', scalingFactor(k),...
+                    'binCloseAng', binCloseAng(k),...
+                    'siteID', siteID_oneBin);
                 obj.saveToField('masterAvgMod', idxNewLocs, locs);
             end
             fitter.converterRules = oldRules;
             
-            % Register the first bin again without re-scaling
+            % Register the first bin without re-scaling
             et = 0;
             for k = 1:binSize
-                obj.idxCurrentSite = k;
+                obj.idxCurrentSite = rank_sitesInBin(k);
                 tic
-                obj.registerSites('firstBin', true,'spatialOffset', settings.distBetweenBins+1000);
+                obj.registerSites('firstBin', true,'spatialOffset', settings.distBetweenBins+1000, 'spatialTrimXY', settings.spatialTrimXY);
                 et = et+toc;
                 if et >10
                     parentObj.status(['Register sites: Site ' num2str(k) ' of the ' num2str(binSize) ' sites done.']);
