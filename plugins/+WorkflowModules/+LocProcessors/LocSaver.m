@@ -206,6 +206,7 @@ classdef LocSaver<interfaces.WorkflowModule
                 fitpar.loadtifftime=obj.getPar('tiffloader_loadingtime');
                 fitpar.processfittime=obj.getPar('tiffloader_fittime');
                 fitpar.loc_globaltransform=obj.getPar('loc_globaltransform');
+                fitpar.fitinfo=obj.getPar('loc_fitinfo');
 %                 fitpar.imagetags=obj.getPar('loc_imagetags');
                 obj.setPar('savefit',struct('fitparameters',fitpar)); obj.savefit_callback;
                 try
