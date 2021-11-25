@@ -25,7 +25,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 obj.setPar('overwrite_pixelsize',[])
             end
         end
-        function output=run(obj,data,p)
+        function run(obj,data,p)
             cam_settings=obj.getPar('loc_cameraSettings');
             server=p.server;
             gpustat=webread([server '/status_gpus']);
@@ -75,6 +75,8 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             wrapyaml.Camera.em_gain=cam_settings.emgain*cam_settings.EMon;
             if p.overwritePixelsize
                 wrapyaml.Camera.px_size=[p.pixelsizex p.pixelsizey]*1000; %check XXXXX! could be swapped
+            else
+                wrapyaml.Camera.px_size=cam_settings.cam_pixelsize_um*1000;
             end
             [workingdirlocal, outname]=fileparts(p.outputpath);
             yamlwrappathlocal=[workingdirlocal '/' outname '_fitwrap.yaml'];
@@ -95,7 +97,10 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             while strcmp(fittingstat.fit.(['x' num2str(pid)]),'running') || contains(fittingstat.fit.(['x' num2str(pid)]),'sleep')
                 pause(2)
                 if exist(logfile,'file')
-                    alllines=readlines(logfile);
+                    alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
+                    if isempty(alllines)
+                        continue
+                    end
                     line=alllines(end);
                     if ~isempty(line)
                         obj.status(line);
@@ -107,8 +112,8 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             fileh5=strrep(frameshere,'.tif','.h5'); % read h5
             [locs,info]=decodeh5ToLoc(fileh5);
 
-            locs.xpix=locs.xnm/info.pix2nm(1);
-            locs.ypix=locs.ynm/info.pix2nm(2); %check ROI XXXXX
+            locs.xpix=locs.xnm/info.pix2nm(1)+1;
+            locs.ypix=locs.ynm/info.pix2nm(2)+2; %check ROI XXXXX
             locs.xpixerr=locs.xnmerr/info.pix2nm(1);
             locs.ypixerr=locs.ynmerr/info.pix2nm(2);
 
@@ -125,6 +130,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             output.data=locs;
             output.ID=1;
             output.frame=1;
+            obj.output(output);
             % later: preview and restricted frames!
 
         end

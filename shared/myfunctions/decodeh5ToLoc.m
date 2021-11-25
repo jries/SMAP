@@ -22,7 +22,7 @@ loc.znm=single(locs.z);
 loc.phot=single(locs.phot);
 loc.frame=double(locs.frame_ix+1);
 loc.prob=single(locs.prob);
-loc.LLrel=single(locs.prob);
+loc.LLrel=single(locs.prob)-1; %to fit in the -inf to zero range...
 
 % loc.filenumber=zd+1;
 loc.channel=zd;
