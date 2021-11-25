@@ -222,7 +222,7 @@ function setModPars_callback(a,b,obj)
     guihandles.typeOption = uicontrol(fig, 'Style','popupmenu','String',{'Point','Image'},'Value',1);
     guihandles.typeOption.Position = [1 12 0.5 1];
     guihandles.typeOption.Callback = {@typeOption_callback,obj};
-    
+    typeOption_callback(guihandles.typeOption,[],obj);
     
     % Final ROI size
     guihandles.t_FinalROISize = uicontrol(fig, 'Style','text','String','Final ROI size:');
