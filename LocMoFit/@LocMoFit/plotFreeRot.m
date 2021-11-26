@@ -126,7 +126,6 @@ end
 % 
 function locsViz = pointViz(ax, locs, obj)
     cla(ax)
-    locs.ynm = -locs.ynm;
     [~,modViz] = obj.plot(ax, locs,'plotType','point','modelSamplingFactor',0.3); % get point type visualization
 %     modViz = obj.getLayerPoint(0.75); % get point type visualization
     axes(ax)
@@ -146,6 +145,7 @@ function locsViz = pointViz(ax, locs, obj)
     else
         locsViz = obj.locsHandler(locs,lPars,1);
     end
+    locs.ynm = -locs.ynm;
     obj.setTemp('locsViz', locsViz);
     obj.setTemp('modViz', modViz);
 end
