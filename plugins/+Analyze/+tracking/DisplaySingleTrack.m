@@ -114,21 +114,21 @@ classdef DisplaySingleTrack<interfaces.DialogProcessor
 
             end
             stairs(axx,tv,mv,'k')
-            
+       
             
             dmv=diff(mv);
             for k=1:length(dmv)
                 text(axx,tv(k+1),mean(mv(k:k+1)),num2str(dmv(k),'%2.0f'))
             end
             histogram(ax,dmv,min(dmv)-5:5:max(dmv)+5)
-            
+            catch err
+                disp('Signal processing Toolbox needed')
+            end              
             ax=obj.initaxis('x-y');
             plot(ax,x,y,'.-')
             
             obj.initaxis('x','keep');
-            catch err
-                disp('Signal processing Toolbox needed')
-            end
+
             if p.makemovie
                 ts=min(time):p.frametime:max(time);
                 f=figure(99);
