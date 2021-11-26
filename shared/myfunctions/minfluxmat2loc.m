@@ -55,4 +55,5 @@ end
 extfinal=jt.ext(:,end,:);
 L=median(extfinal(:))*1e9;
 loc.locprecnm(:,1)=L./2./sqrt(2*loc.phot);
+loc.LLrel=loc.cfr;
 end

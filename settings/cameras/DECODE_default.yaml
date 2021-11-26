@@ -38,10 +38,3 @@ SMAP:
     zrange_nm:
         - 0.0 
         - 0.0
-Connect:
-    remote_workstation:
-        'http://pc-ries25:8000'
-    local_decode_path:
-        '/Users/jonasries/opt/anaconda3/envs/decode_env/bin/python'
-    local_network_storage:
-        '/Volumes/t2ries/DECODE/'
