@@ -81,6 +81,28 @@ switch mode
                 thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut(obj.model{k}.displayLut));
             end
             v = v + thisImg;
+            
+            % Deal with additional info from the model
+            items = obj.getThings2Plot;
+            oneItems = items{k};
+            for l = 1:length(oneItems)
+                oneItem = oneItems(l);
+                [oneItem.XData,oneItem.YData,oneItem.ZData] = rotAzEl(oneItem.XData,forRevY.*oneItem.YData,oneItem.ZData, rotVizAlt(1), -rotVizAlt(2));
+                oneItem.XData = (oneItem.XData+obj.roiSize/2+pixelSize)./pixelSize;
+                oneItem.YData = (oneItem.YData+obj.roiSize/2+pixelSize)./pixelSize;
+                oneItem.ZData = (oneItem.ZData+obj.roiSize/2+pixelSize)./pixelSize;
+
+                oneItem = rmfield(oneItem,'ZData');
+                fn = fieldnames(oneItem);
+                hold(ax, 'on');
+                h = plot(ax,oneItem.XData,oneItem.YData);
+                hold(ax,'off')
+                for f = 1:length(fn)
+                    if ~any(strcmp(fn{f},{'YData','XData'}))
+                        set(h,fn{f},oneItem.(fn{f}));
+                    end
+                end
+            end
         end
         hold on
         imagesc(ax, v);
@@ -108,27 +130,7 @@ switch mode
             hold(ax,'off')
         end
         
-        % Deal with additional info
-        items = obj.getThings2Plot;
-        oneItems = items{k};
-        for l = 1:length(oneItems)
-            oneItem = oneItems(l);
-            [oneItem.XData,oneItem.YData,oneItem.ZData] = rotAzEl(oneItem.XData,forRevY.*oneItem.YData,oneItem.ZData, rotVizAlt(1), -rotVizAlt(2));
-            oneItem.XData = (oneItem.XData+obj.roiSize/2+pixelSize)./pixelSize;
-            oneItem.YData = (oneItem.YData+obj.roiSize/2+pixelSize)./pixelSize;
-            oneItem.ZData = (oneItem.ZData+obj.roiSize/2+pixelSize)./pixelSize;
-            
-            oneItem = rmfield(oneItem,'ZData');
-            fn = fieldnames(oneItem);
-            hold(ax, 'on');
-            h = plot(ax,oneItem.XData,oneItem.YData);
-            hold(ax,'off')
-            for f = 1:length(fn)
-                if ~any(strcmp(fn{f},{'YData','XData'}))
-                    set(h,fn{f},oneItem.(fn{f}));
-                end
-            end
-        end
+        
     case 'Data'
         v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
         % Deal with locs
