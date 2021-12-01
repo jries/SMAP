@@ -85,6 +85,7 @@ classdef TifLoader<interfaces.WorkflowModule
             end
             obj.timerfitstart=tic;   
             obj.setPar('savefit',0) %delete, reset
+            obj.setPar('loc_multifile',p.ismultifile);
         end
         function run(obj,data,p)
             global SMAP_stopnow
@@ -260,9 +261,9 @@ function loadtif_callback(a,b,obj)
 p=obj.getGuiParameters;
 
 if p.ismultifile %later: check filename (e.g. _q1 _q2 etc). Also make sure quadrants are not mixed /rearranged
-    if iscell(p.tiffile)
-        p.tiffile=p.tiffile{1};
-    end
+%     if iscell(p.tiffile)
+%         p.tiffile=p.tiffile{1};
+%     end
     sf=selectManyFiles(fileparts(p.tiffile));
     filelisth=obj.guihandles.tiffile.String;
     if ~iscell(filelisth)
@@ -271,6 +272,11 @@ if p.ismultifile %later: check filename (e.g. _q1 _q2 etc). Also make sure quadr
     sf.guihandles.filelist.String=filelisth;
     waitfor(sf.handle);
     f=sf.filelist;
+%     try
+%         f=strsplit(f{1},';');
+%     catch err
+%         err
+%     end
 else
     try
         fe=bfGetFileExtensions;

@@ -201,6 +201,9 @@ classdef imageloaderSMAP<interfaces.GuiParameterInterface
         metao=obj.metadata;
         end
         function open(obj,file)
+           if contains(file,';')
+               file=strsplit(file{1},';');
+           end
             if iscell(file) %multiple channels in multiple files
                 obj.ismultichannel=true;
                 for k=1:length(file)
