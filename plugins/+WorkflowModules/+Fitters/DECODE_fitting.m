@@ -98,6 +98,15 @@ classdef DECODE_fitting<interfaces.WorkflowModule
 
             %start fitting
             if strcmpi(p.runwhere.selection,'local')
+                pdecode=obj.getGlobalSetting('DECODE_path');
+                pcall=[pdecode '/bin/python -m decode.neuralfitter.inference.inference --fit_meta_path ' yamlwrappathlocal];
+                gitdecodepath='../DECODE';
+                pm=processManager('command',pcall,'autoStart',false,'workingDir',gitdecodepath);
+                pm.printStdout=false ;
+                pm.printStderr=true;
+                pm.wrap=1000;
+                pm.pollInterval=10;
+                pm.start()
             else %server
                 % call decode fitter
                 url = [obj.getGlobalSetting('DECODE_server') '/submit_fit'];
