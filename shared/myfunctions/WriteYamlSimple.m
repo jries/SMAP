@@ -1,7 +1,7 @@
-function txt=WriteYamlSimple(sin, file)
+function txt=WriteYamlSimple(file,sin)
     txt=struct2yaml(sin,'');
     txto=txt(2:end);
-fid = fopen(file, 'wt');
+fid = fopen(file, 'w');
 fprintf(fid, '%s\n', txto);
 fclose(fid);
 end
@@ -21,7 +21,7 @@ if isstruct(p)||isobject(p)
         end
     end
 else
-    if iscell(p)
+    if iscell(p) || (isnumeric(p) && length(p)>1)
         s=cells2string(p, [prefix(3:end) '  ']);
         txt(end+1:end+length(s))=s;
 %         to=p{1};
@@ -39,48 +39,56 @@ else
 %         end
 %         p=to;
     else
-        txt(1,1)=string(p);
+        txt(1,1)=makestring(p);
     end
-%     if isnumeric(p)||islogical(p)
-%         p=num2str(p);
-%     end
-%     if ~isempty(p)
-%         tx=p(1,:);
-%         if ischar(tx)
-%             txt=string([prefix ': ' tx]);
-%         end
-%     else
-%         txt=string([prefix ': ']);
-%     end
 
 end
-%     txt=txt(2:end);
+
 end
 
 function s=cells2string(p, prefix)
 s="";
 for k=1:length(p)
+    if iscell(p)
+        pk=p{k};
+    else
+        pk=p(k);
+    end
 %     prefixh=prefix;
 %     if k>1
 %         prefixh(3)=' ';
 %     end
-prefix1=prefix;prefix1(end-1)='-';
-    if iscell(p{k})
+    prefix1=prefix;prefix1(end-1)='-';
+    if iscell(pk)
 %         sh=cells2string(p{k},[prefixh '- ']);
-        sh=cells2string(p{k},'  ');
+        sh=cells2string(pk,'  ');
         
         s(end+1,1)=string(prefix1)+sh(1);
         for ks=2:length(sh)
             s(end+1,1)=string(prefix)+sh(ks);
         end
     else
-        ph=string(p{k});
-        if isempty(ph)
-            ph="null";
+        ps=makestring(pk);
+        if isempty(ps)
+            ps="null";
         end
-        s(end+1,1)= string(prefix1)+ ph;
+        s(end+1,1)= string(prefix1)+ ps;
     end
 
 end
 s=s(2:end,1);
+end
+
+function sout=makestring(in)
+if isempty(in)
+    sout="null";
+elseif isfloat(in)
+    sout=string(num2str(in,'%2.5f'));
+elseif ischar(in)
+    sout=string(in);
+else
+    in
+    sout=string(in);
+end
+
 end

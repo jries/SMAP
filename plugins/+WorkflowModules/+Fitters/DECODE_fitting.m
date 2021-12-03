@@ -38,7 +38,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 model_path=p.model_path;
                 emitter_path=p.outputpath;
             else %server
-                server=p.server;
+                server=obj.getGlobalSetting('DECODE_server');
                 gpustat=webread([server '/status_gpus']);
                 [gpus,gpurec]=parsegpustathttp(gpustat);  
                             % frames for server 
@@ -94,7 +94,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             end
             yamlwrappathlocal=[workingdirlocal '/' outname '_fitwrap.yaml'];
             % make wrapper yaml
-            WriteYaml(yamlwrappathlocal, wrapyaml);
+            WriteYamlSimple(yamlwrappathlocal, wrapyaml);
 
             %start fitting
             if strcmpi(p.runwhere.selection,'local')

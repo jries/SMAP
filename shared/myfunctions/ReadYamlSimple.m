@@ -117,6 +117,9 @@ end
 
 function strout=removejunk(strin)
 strout=strtrim(strin);
+if isempty(strout)
+    return
+end
 if strout(1)==''''
     strout(1)=[];
 end 

@@ -117,7 +117,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
             tt.Position=obj.guihandles.partablepos.Position;
             tt.Position(4)=tt.Position(4)*7;
             obj.guihandles.parttable=tt;
-            obj.yamlpar=ReadYaml(yamldefault);
+            obj.yamlpar=ReadYamlSimple(yamldefault);
             obj.yamlfile=yamldefault;
             makejsontable(obj);
         end
@@ -427,7 +427,7 @@ end
 
 function saveyaml(yamlpar,fout)
 yout=rmfield(yamlpar,'SMAP');
-WriteYaml(fout, yout);
+WriteYamlSimple(fout, yout);
 end
 
 function finalizejson(obj)
@@ -439,8 +439,8 @@ list={'LD','HD','UHD'};
 emit=[15 25 50];
 density=find(strcmp(js.SMAP.set_emitters_per_um2,list));
 js.Simulation.emitter_av=emit(density);
-js.Simulation.emitter_extent{3,1}=round(js.SMAP.zrange_nm(1));
-js.Simulation.emitter_extent{3,2}=round(js.SMAP.zrange_nm(2));
+js.Simulation.emitter_extent{3}{1}=round(js.SMAP.zrange_nm(1));
+js.Simulation.emitter_extent{3}{2}=round(js.SMAP.zrange_nm(2));
 js.InOut.calibration_file=strrep(js.InOut.calibration_file,'\','/');
 js.InOut.experiment_out=strrep(js.InOut.experiment_out,'\','/');
 
