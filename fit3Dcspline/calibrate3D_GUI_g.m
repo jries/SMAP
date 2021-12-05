@@ -139,7 +139,7 @@ classdef calibrate3D_GUI_g<handle
  
             obj.guihandles.cutoffrelt=uicontrol('style','text','String','Relative cutoff','Position',[xpos1+2.5*xw,top-12*vsep,xw*1.,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha);
             obj.guihandles.cutoffrel=uicontrol('style','edit','String','1','Position',[xpos1+3.5*xw,top-12*vsep,xw*0.5,fieldheight],'FontSize',fontsize);
-            obj.guihandles.cutoffrel.TooltipString=sprintf('Sometimes, the automatically determined cutoff does not work. If beads are not found, increase this value, if too many beads are found, decrease it.');
+            obj.guihandles.cutoffrel.TooltipString=sprintf('Sometimes, the automatically determined cutoff does not work. If beads are not found, decrease this value, if too many beads are found, increase it.');
             obj.guihandles.cutoffrelt.TooltipString=obj.guihandles.cutoffrel.TooltipString;
             
             obj.guihandles.mindistancet=uicontrol('style','text','String','Minimum distance (pixels)','Position',[xpos1,top-13*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha);

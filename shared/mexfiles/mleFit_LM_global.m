@@ -96,6 +96,7 @@ if isempty(fitter)
             fitter=k;
             break
         catch err
+            err
             % fitter did not work
         end
     end
