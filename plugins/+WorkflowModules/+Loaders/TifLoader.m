@@ -86,16 +86,20 @@ classdef TifLoader<interfaces.WorkflowModule
             obj.timerfitstart=tic;   
             obj.setPar('savefit',0) %delete, reset
             obj.setPar('loc_multifile',p.ismultifile);
+            obj.setPar('loc_frames_fit',[obj.framestart obj.framestop]);
         end
-        function run(obj,data,p)
+        function output=run(obj,data,p)
+            output=[];
             global SMAP_stopnow
             if SMAP_stopnow
                 disp('STOP button pressed. To localize, unpress')
             end
             
             if nargin>1&& ~isempty(data)&&~isempty(data.data) %optional input channel
-                file=data.data;
-                obj.addFile(file)
+                if ischar(data.data) && exist(data.data,'file')
+                    file=data.data;
+                    obj.addFile(file)
+                end
             end
             obj.imloader.prefit;
             id=1;

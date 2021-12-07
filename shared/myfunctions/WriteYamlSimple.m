@@ -83,11 +83,15 @@ function sout=makestring(in)
 if isempty(in)
     sout="null";
 elseif isfloat(in)
-    sout=string(num2str(in,'%2.5f'));
+    if round(in) ~= in
+        sout=string(num2str(in,'%2.1f'));
+    else
+        sout=string(in);
+    end
 elseif ischar(in)
     sout=string(in);
 else
-    in
+%     in
     sout=string(in);
 end
 

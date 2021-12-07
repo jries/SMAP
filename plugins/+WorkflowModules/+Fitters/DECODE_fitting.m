@@ -4,6 +4,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
         decodepid
         workingdir
         yamldefault='DECODE_local.yaml';
+        imagefile
     end
     methods
         function obj=DECODE_fitting(varargin)
@@ -25,9 +26,11 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 obj.setPar('overwrite_pixelsize',[])
             end
         end
-        function run(obj,data,p)
+        function outreturn=run(obj,data,p)
+            outreturn=[];
             cam_settings=obj.getPar('loc_cameraSettings');
             [workingdirlocal, outname]=fileparts(p.outputpath);
+            frameshere=cam_settings.imagefile;
             if strcmpi(p.runwhere.selection,'local')
                 if ismac
                     gpurec='cpu';
@@ -44,7 +47,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                             % frames for server 
                 decodenetwork=obj.getGlobalSetting('DECODE_network_data');
                 pstart=length(decodenetwork);
-                frameshere=cam_settings.imagefile;
+% %                 frameshere=cam_settings.imagefile;
                 framesdir=frameshere(1:pstart);
                 if ~strcmp(framesdir,decodenetwork) %not the same: later copy here
                     disp('images need to be on the decode network storage for data')
@@ -92,6 +95,28 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             else
                 wrapyaml.Camera.px_size=cam_settings.cam_pixelsize_um*1000;
             end
+
+            %frames
+            if obj.getPar('loc_preview')
+                f1=max(0,obj.getPar('loc_previewframe')-2);
+                f2=f1+2; 
+                framerange=[f1 f2];
+                starttext='Preview started, this can take a while (10s of seconds)';
+            else
+                frames=obj.getPar('loc_frames_fit');
+                if frames(2)>=cam_settings.numberOfFrames 
+                    if frames(1)==1
+                        framerange=[];
+                    else
+                        framerange=[0 cam_settings.numberOfFrames];
+                    end
+                else
+                    framerange=frames-1;
+                end
+                starttext='DECODE fitting started';
+            end
+            wrapyaml.Frames.range=uint32(framerange);
+
             yamlwrappathlocal=[workingdirlocal '/' outname '_fitwrap.yaml'];
             % make wrapper yaml
             WriteYamlSimple(yamlwrappathlocal, wrapyaml);
@@ -99,21 +124,47 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             %start fitting
             if strcmpi(p.runwhere.selection,'local')
                 pdecode=obj.getGlobalSetting('DECODE_path');
-                pcall=[pdecode '/bin/python -m decode.neuralfitter.inference.inference --fit_meta_path ' yamlwrappathlocal];
-                gitdecodepath='../DECODE';
+%                 pcall='conda activate decode_env';
+%                 pcall{2}=[pdecode 'python decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
+                 pcall=[pdecode '/bin/python -m decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
+                gitdecodepath=[fileparts(pwd) filesep 'DECODE'];
                 pm=processManager('command',pcall,'autoStart',false,'workingDir',gitdecodepath);
                 pm.printStdout=false ;
-                pm.printStderr=true;
+                pm.printStderr=false;
+                pm.keepStdout=true;
+                pm.keepStderr=true;
+                pm.verbose=false;
                 pm.wrap=1000;
-                pm.pollInterval=10;
+                pm.pollInterval=1;
                 pm.start()
+                obj.decodepid=pm;
+                obj.status(starttext); drawnow;
+                stderrindex=1;
+                stdoutindex=1;
+                while pm.running()
+                    
+                    stderr=pm.stderr;
+                    if length(stderr)>=stderrindex
+%                         disp(stderr(stderrindex:end))
+                        stderrindex=length(stderr)+1;
+                        obj.status(stderr{end});drawnow;
+                    end
+                    stdout=pm.stdout;
+                    if length(stdout)>=stdoutindex
+                        obj.status(stdout{end});drawnow;
+                        stdoutindex=length(stdout)+1;
+                    end     
+                    pause(1)
+                end
+%                 pm.block;
             else %server
                 % call decode fitter
+                obj.status(starttext); drawnow;
                 url = [obj.getGlobalSetting('DECODE_server') '/submit_fit'];
                 options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
                 pid = webread(url, 'path_fit_meta', yamlwrappathremote, options);
                 obj.decodepid=pid;
-                obj.status('DECODE fitting started'); drawnow;
+                
                 %update staus
                 logfile=[workingdirlocal '/out.log' ];
                 fittingstat=webread([server '/status_processes']);
@@ -133,6 +184,9 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                     fittingstat=webread([server '/status_processes']);
                 end
             end
+
+
+            
             fileh5=strrep(frameshere,'.tif','.h5'); % read h5
             [locs,info]=decodeh5ToLoc(fileh5);
 
@@ -147,16 +201,23 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             end
             %check sign of z and pixel size. Look for offset compared to
             %fitting.
-           
+
             obj.setPar('loc_fitinfo',wrapyaml) % setPer('fitinfo') all training and fitting yaml parameters,
             output=interfaces.WorkflowData;
             output.eof=true;
             output.data=locs;
             output.ID=1;
             output.frame=1;
-            obj.output(output);
-            % later: preview and restricted frames!
-
+            if obj.getPar('loc_preview')
+                output.frame=framerange(1);
+                obj.setPar('preview_locs',locs);
+                obj.setPar('preview_peakfind',locs);
+                obj.output(output,2);
+                obj.status('Preview done.')             
+            else
+                obj.output(output);
+                obj.status('DECODE fitting done.')
+            end
         end
         function addFile(obj,file,setinfo)   %for batch processing?
             if isempty(file)
@@ -164,7 +225,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 file=fileinfo.imagefile;
             end
             if setinfo
-                if contains(file,'/decode/fits')
+                if obj.getSingleGuiParameter('runwhere').Value==2 || contains(file,'/decode/fits')
                     outfile=strrep(file,'.tif','.h5');
                 else
                     [~,fn]=fileparts(file);
@@ -173,6 +234,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                     outfile=[decodenetwork filesep 'fits' filesep dir filesep fn '.h5'];
                 end
                 obj.setGuiParameters(struct('outputpath',outfile))
+                obj.imagefile=file;
                 %later: selection if h5 or csv
             end
             %update output file
@@ -228,13 +290,28 @@ end
 
 
 function selectoutput(a,b,obj)
-outputp=obj.getSingleGuiParameter('outputpath');
-if ~exist(outputp,"dir")
-    outputp=obj.getGlobalSetting('DECODE_network_data');
+p=obj.getAllParameters;
+outputp=p.outputpath;
+if ~isempty(obj.imagefile)
+    [plocal,flocal]=fileparts(obj.imagefile);
+    flocal=strrep(flocal,'.tif','.h5');
+else
+    flocal='fit.h5';
 end
-dir=uigetdir([outputp filesep]);
+
+if isempty(outputp) || ~exist(fileparts(outputp),'dir')
+    if p.runwhere.Value==2 %local
+        
+        outputp=plocal;
+    else
+        outputp=obj.getGlobalSetting('DECODE_network_data');
+    end
+    outputp=[outputp filesep flocal];
+end
+
+[file,pfad]=uiputfile(outputp);
 if ~isempty(dir)
-    obj.setGuiParameters(struct('outputpath',dir))
+    obj.setGuiParameters(struct('outputpath',[pfad file]))
 end
 end
 
