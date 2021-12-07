@@ -11,7 +11,6 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             obj@interfaces.WorkflowModule(varargin{:})
             obj.inputChannels=1; 
             obj.isstartmodule=true;
-%              
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -120,7 +119,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             yamlwrappathlocal=[workingdirlocal '/' outname '_fitwrap.yaml'];
             % make wrapper yaml
             WriteYamlSimple(yamlwrappathlocal, wrapyaml);
-
+            fileh5=strrep(frameshere,'.tif','.h5'); % read h5
             %start fitting
             if strcmpi(p.runwhere.selection,'local')
                 pdecode=obj.getGlobalSetting('DECODE_path');
@@ -128,35 +127,58 @@ classdef DECODE_fitting<interfaces.WorkflowModule
 %                 pcall{2}=[pdecode 'python decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
                  pcall=[pdecode '/bin/python -m decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
                 gitdecodepath=[fileparts(pwd) filesep 'DECODE'];
-                pm=processManager('command',pcall,'autoStart',false,'workingDir',gitdecodepath);
-                pm.printStdout=false ;
-                pm.printStderr=false;
-                pm.keepStdout=true;
-                pm.keepStderr=true;
-                pm.verbose=false;
-                pm.wrap=1000;
-                pm.pollInterval=1;
-                pm.start()
-                obj.decodepid=pm;
-                obj.status(starttext); drawnow;
-                stderrindex=1;
-                stdoutindex=1;
-                while pm.running()
-                    
-                    stderr=pm.stderr;
-                    if length(stderr)>=stderrindex
-%                         disp(stderr(stderrindex:end))
-                        stderrindex=length(stderr)+1;
-                        obj.status(stderr{end});drawnow;
+                logfile=[workingdirlocal '/' outname '_log.txt'];
+
+                cpath=pwd;
+                cd('../DECODE');
+                [status,cmdout]=system([pcall '&>' logfile ' &']);
+                cd(cpath);
+%                 fi=dir(logfile);
+%                 changed=fi.datenum;
+                starttime=now;
+                line="";
+                while 1
+                    pause(2)
+                    if exist(logfile,'file')
+                        alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
+                        if isempty(alllines)
+                            continue
+                        end
+                        line=alllines(end);
+                        if ~isempty(line)
+                            obj.status(line);
+                            drawnow
+                        end
+                        
                     end
-                    stdout=pm.stdout;
-                    if length(stdout)>=stdoutindex
-                        obj.status(stdout{end});drawnow;
-                        stdoutindex=length(stdout)+1;
-                    end     
-                    pause(1)
-                end
-%                 pm.block;
+
+                    %determine when to stop
+                    if contains(line,"Fit done and emitters saved") 
+                        disp('logfile contains line: fitting done')
+                        break
+                    end
+                    
+                    if exist(fileh5,'file') 
+                        fi=dir(fileh5);
+                        if fi.datenum>starttime
+                            disp('h5 written')
+                            break
+                        end
+                    end
+
+%                     fi=dir(logfile);
+%                     changednew=fi.datenum;
+%                     if changednew == changed
+% %                         pause(20)
+%                         fi=dir(logfile);
+%                         changednew=fi.datenum;    
+%                         if changednew == changed
+%                             disp('logfile did not change')
+% %                             break
+%                         end
+%                     end
+%                     changed=changednew;
+                end   
             else %server
                 % call decode fitter
                 obj.status(starttext); drawnow;
@@ -184,12 +206,8 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                     fittingstat=webread([server '/status_processes']);
                 end
             end
-
-
-            
-            fileh5=strrep(frameshere,'.tif','.h5'); % read h5
+           
             [locs,info]=decodeh5ToLoc(fileh5);
-
             locs.xpix=locs.xnm/info.pix2nm(1)+1;
             locs.ypix=locs.ynm/info.pix2nm(2)+2; %check ROI XXXXX
             locs.xpixerr=locs.xnmerr/info.pix2nm(1);
@@ -254,16 +272,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             obj.createGlobalSetting('DECODE_path','DECODE','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
             obj.createGlobalSetting('DECODE_network_data','DECODE','network directory for DECODE training and fitting',struct('Style','dir','String',' '))
             obj.createGlobalSetting('DECODE_server','DECODE','network directory for DECODE training and fitting',struct('Style','edit','String','http://pc-ries25:8000'))
-            
-%             yamldefault=[obj.getPar('SettingsDirectory') filesep 'temp' filesep obj.yamldefault];
-%             if ~exist(yamldefault,'file')
-%                 yamlold=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep 'DECODE_default.yaml'];
-%                 copyfile(yamlold, yamldefault)
-%             end
-%             ypar=ReadYaml(yamldefault);
-%             obj.setGuiParameters(struct('server',ypar.Connect.remote_workstation));
-        end
-            
+        end            
     end
 end
 
@@ -282,9 +291,6 @@ if f
         warndlg('param_run.yaml expected in model_0.pt path')
     end 
     obj.workingdir=fileparts(fileparts(p));
-%     if isempty(obj.getSingleGuiParameter('outputpath'))
-%         obj.setGuiParameters(struct('outputpath',obj.workingdir))
-%     end
 end
 end
 
