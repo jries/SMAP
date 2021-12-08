@@ -122,17 +122,29 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             fileh5=strrep(frameshere,'.tif','.h5'); % read h5
             %start fitting
             if strcmpi(p.runwhere.selection,'local')
+                command=['python -m decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
                 pdecode=obj.getGlobalSetting('DECODE_path');
+                decodepath=[fileparts(pwd) filesep 'DECODE'];
+                logfile=[workingdirlocal '/' outname '_log.txt'];
+                 [obj.decodepid,status, results]=systemcallpython(pdecode,command,decodepath,logfile);
+                 
 %                 pcall='conda activate decode_env';
 %                 pcall{2}=[pdecode 'python decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
-                 pcall=[pdecode '/bin/python -m decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
-                gitdecodepath=[fileparts(pwd) filesep 'DECODE'];
-                logfile=[workingdirlocal '/' outname '_log.txt'];
+%                 if ispc
+%                    [p1,env]=(fileparts(pdecode));
+%                    condapath=fileparts(p1);
+%                    
+%                      pcall=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" & python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
+%                 else
+%                     pcall=[pdecode '/bin/python -m decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
+%                 end
+%                 gitdecodepath=[fileparts(pwd) filesep 'DECODE'];
+                
 
-                cpath=pwd;
-                cd('../DECODE');
-                [status,cmdout]=system([pcall '&>' logfile ' &']);
-                cd(cpath);
+%                 cpath=pwd;
+%                 cd('../DECODE');
+%                 [status,cmdout]=system([pcall '&>' logfile ' &']);
+%                 cd(cpath);
 %                 fi=dir(logfile);
 %                 changed=fi.datenum;
                 starttime=now;
@@ -303,6 +315,7 @@ if ~isempty(obj.imagefile)
     flocal=strrep(flocal,'.tif','.h5');
 else
     flocal='fit.h5';
+    plocal='';
 end
 
 if isempty(outputp) || ~exist(fileparts(outputp),'dir')

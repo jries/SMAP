@@ -8,6 +8,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         decodeprocess
         tensorboardprocess
         decodepid
+        fitlocal
     end
     methods
         function obj=DECODE_training_estimates(varargin)  
@@ -17,6 +18,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         function out=run(obj,p)
            out=[];       
            if p.trainlocal
+               obj.fitlocal=true;
                pdecode=strrep([obj.getGlobalSetting('DECODE_path') ],'\','/');
                if ~exist(pdecode,'dir')
                    warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
@@ -30,35 +32,42 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                end
                finalizejson(obj);
                saveyaml(obj.yamlpar,yamlpath);
+
+               command=['python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
+               decodepath=[fileparts(pwd) filesep 'DECODE'];
+               [pid,status, results]=systemcallpython(pdecode,command,decodepath);
+               tfcommand=['tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
+               [pidtb,status, results]=systemcallpython(pdecode,tfcommand,decodepath);
     %            https://github.com/brian-lau/MatlabProcessManager
-               decodepath='../DECODE';
-               if ispc
-                   [p1,env]=(fileparts(pdecode));
-                   condapath=fileparts(p1);
-                   decodepath=[fileparts(pwd) filesep 'DECODE'];
-                   pcall=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" & python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
-                   pcalltb=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" &tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
-               else
-                   pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
-                   pcalltb=[ 'tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
-               end
-               pcallf=strrep(strrep(pcall,'/',filesep),'\',filesep);
-               pcallftb=strrep(strrep(pcalltb,'/',filesep),'\',filesep);
-               system([pcallf ' &'])
-               system([pcallftb ' &'])
+%                decodepath='../DECODE';
+%                if ispc
+%                    [p1,env]=(fileparts(pdecode));
+%                    condapath=fileparts(p1);
+%                    decodepath=[fileparts(pwd) filesep 'DECODE'];
+%                    pcall=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" & python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
+%                    pcalltb=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" &tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
+%                else
+%                    pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
+%                    pcalltb=[ 'tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
+%                end
+%                pcallf=strrep(strrep(pcall,'/',filesep),'\',filesep);
+%                pcallftb=strrep(strrep(pcalltb,'/',filesep),'\',filesep);
+%                system([pcallf ' &'])
+%                system([pcallftb ' &'])
 %                pm=processManager('command',pcall,'autoStart',false,'workingDir',decodepath);
 %                pm.printStdout=false ;
 %                pm.printStderr=true;
 %                pm.wrap=1000;
 %                pm.pollInterval=10;
 %                pm.start()
-%                obj.decodeprocess=pm;
+               obj.decodeprocess=pid;
 %     
 %                
 %                ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
-%                obj.tensorboardprocess=ptb;
+               obj.tensorboardprocess=pidtb;
 
            else %workstation via HTTP
+               obj.fitlocal=false;
                %make output directory
 %                outdir=[obj.yamlpar.Connect.local_network_storage  'training' filesep obj.yamlpar.InOut.experiment_out];
                local_network_storage=[obj.getGlobalSetting('DECODE_network_data') '/'];
@@ -479,7 +488,7 @@ function setz(obj)
     l=load(calf);
     obj.yamlpar.InOut.calibration_file=calf;
     if isempty(obj.yamlpar.InOut.experiment_out)
-        obj.yamlpar.InOut.experiment_out=fileparts(calf);
+        obj.yamlpar.InOut.experiment_out=fileparts(calf);c
     end
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
@@ -490,6 +499,15 @@ function setz(obj)
 end
 
 function stoplearning_callback(a,b,obj)
+if obj.fitlocal
+    pid = obj.decodeprocess;
+    if ispc
+        cmd = sprintf('taskkill /F /PID %d', pid);
+    else
+        cmd = sprintf('kill %d', pid);
+    end
+    system(cmd)
+else
 if ~isempty(obj.decodepid) %remote training
     if length(obj.decodepid)>1
         for k=1:length(obj.decodepid)
@@ -528,6 +546,7 @@ else
     catch err
         err
     end
+end
 end
 end
 
