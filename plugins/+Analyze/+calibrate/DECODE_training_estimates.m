@@ -17,7 +17,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         function out=run(obj,p)
            out=[];       
            if p.trainlocal
-               pdecode=[obj.getGlobalSetting('DECODE_path') ];
+               pdecode=strrep([obj.getGlobalSetting('DECODE_path') ],'\','/');
                if ~exist(pdecode,'dir')
                    warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
                    return
@@ -32,18 +32,31 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                saveyaml(obj.yamlpar,yamlpath);
     %            https://github.com/brian-lau/MatlabProcessManager
                decodepath='../DECODE';
-               pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
-               pm=processManager('command',pcall,'autoStart',false,'workingDir',decodepath);
-               pm.printStdout=false ;
-               pm.printStderr=true;
-               pm.wrap=1000;
-               pm.pollInterval=10;
-               pm.start()
-               obj.decodeprocess=pm;
-    
-               pcalltb=[pdecode '/bin/tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
-               ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
-               obj.tensorboardprocess=ptb;
+               if ispc
+                   [p1,env]=(fileparts(pdecode));
+                   condapath=fileparts(p1);
+                   decodepath=[fileparts(pwd) filesep 'DECODE'];
+                   pcall=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" & python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
+                   pcalltb=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" &tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
+               else
+                   pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
+                   pcalltb=[ 'tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
+               end
+               pcallf=strrep(strrep(pcall,'/',filesep),'\',filesep);
+               pcallftb=strrep(strrep(pcalltb,'/',filesep),'\',filesep);
+               system([pcallf ' &'])
+               system([pcallftb ' &'])
+%                pm=processManager('command',pcall,'autoStart',false,'workingDir',decodepath);
+%                pm.printStdout=false ;
+%                pm.printStderr=true;
+%                pm.wrap=1000;
+%                pm.pollInterval=10;
+%                pm.start()
+%                obj.decodeprocess=pm;
+%     
+%                
+%                ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
+%                obj.tensorboardprocess=ptb;
 
            else %workstation via HTTP
                %make output directory
