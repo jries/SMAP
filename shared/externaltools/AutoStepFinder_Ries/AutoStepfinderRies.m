@@ -160,7 +160,9 @@ function results=autostepfinder_mainloop(Data,initval)
     [FinalSteps, FinalFit]=BuildFinalfit(IndexAxis,Data,full_split_log,initval);                 
      results=SaveAndPlot(   initval,'dummyname',[],...
                             IndexAxis, Data, FinalFit,...
-                            S_Curves, FinalSteps,N_found_steps_per_round);     
+                            S_Curves, FinalSteps,N_found_steps_per_round); 
+     results.FinalSteps=FinalSteps;
+     results.FinalFit=FinalFit;
      end        
 
 
