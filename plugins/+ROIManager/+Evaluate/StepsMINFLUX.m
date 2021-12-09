@@ -59,23 +59,36 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
             p.fitmean=contains(p.fitmode.selection,'mean');
             steps=AutoStepfinderRies(xr(indtime),p);
 
+
+
             inds=[1 ;steps.properties.IndexStep ];
             mv=[steps.properties.LevelBefore(1) ;steps.properties.LevelAfter];
-            tv=timeplot(indtime);
-            tv=tv(inds);
-           
-            stairs(ax2,tv,mv,'r')
+            tv=timeplot(indtime);          
+            
 
+            if p.splitmerge
+                if isempty(p.splitmergestep)
+                    stepsize=median(steps.properties.StepSize);
+                else 
+                    stepsize=p.splitmergestep;
+                end
+                [indstep,stepvalue]=splitmergefit(xr(indtime),stepsize,p,steps);
+                %stairs(ax2,tv(indstep),stepvalue,'r')
+                inds=indstep;
+                mv=stepvalue;
+            end
+            stairs(ax2,tv(inds),mv,'r')
 
             dmv=diff(mv);
             for k=1:length(dmv)
-                text(ax2,tv(k+1),mean(mv(k:k+1)),num2str(dmv(k),'%2.0f'),'FontSize',11,'Color','magenta')
+                text(ax2,tv(indstep(k+1)),mean(mv(k:k+1)),num2str(dmv(k),'%2.0f'),'FontSize',11,'Color','magenta')
             end
             obj.axstep=ax2;
 
             ax3=obj.setoutput('stephist');
-            stepsize=steps.properties.StepSize;
-            histogram(ax3,stepsize,min(stepsize):1:max(stepsize));
+            %stepsize=steps.properties.StepSize;
+            stepsize=dmv;
+            histogram(ax3,stepsize,min(stepsize):.5:max(stepsize));
             out.steps=steps;
 
             %step time
@@ -170,6 +183,10 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                 xlabel(axcc,'time (ms)')
                 ylabel(axcc,'ecc')
             end
+            
+
+
+            
 
 %             header=sprintf('nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmax robust \t sigmay robust \t sigmax detrend \t sigmay detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t filename' );
 %             disp(header)
@@ -178,89 +195,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
 %                  num2str(cfr) '\t' num2str(eco) '\t' num2str(ecc) '\t' num2str(efc) '\t' filename]  );
 %             out.clipboard=results;
             out.cluster=[];
-
-        return
-        modality=p.modality.selection;
-        obj.axis=obj.setoutput('profile');
-        fs=obj.site.evaluation.fibrilStatistics.measurement;
-
-        switch modality
-            case 'deviation'
-                dev=fs.deviation.value;
-                dsmooth=fs.deviation.value_smo;
-            case 'polarization'
-                dev=fs.P.value;
-                dsmooth=fs.P.value_smo;
-        end
-        if isfield(fs,'P')
-            indKeptCurve = fs.P.indKeptCurve;
-        else
-            indKeptCurve = true(length(dev),1);
-        end
-        posx=(1:length(dev))'*10;
-        hold(obj.axis,'off');
-        plot(obj.axis,posx(indKeptCurve),dev(indKeptCurve),'-')
-        hold(obj.axis,'on');
-        plot(obj.axis,posx(indKeptCurve),dsmooth(indKeptCurve),'r-','LineWidth',3);
-        if isfield(obj.site.evaluation,obj.name)
-            out=obj.site.evaluation.(obj.name);
-        else
-            out.(modality).Position=[];
-        end
-        if isfield(obj.site.evaluation,obj.name) && isfield(obj.site.evaluation.(obj.name),modality) && ~isempty(obj.site.evaluation.(obj.name).(modality).Position)
-            obj.roihandle=images.roi.Polyline(obj.axis,'Position',obj.site.evaluation.(obj.name).(modality).Position);
-            out=obj.site.evaluation.(obj.name);
-            addlistener(obj.roihandle,'ROIMoved',@(src,evt) obj.updateposition(src,evt));
-            addlistener(obj.roihandle,'VertexAdded',@(src,evt) obj.updateposition(src,evt));
-            addlistener(obj.roihandle,'VertexDeleted',@(src,evt) obj.updateposition(src,evt));
-            obj.plotdistances;
-        end
-
         end
      
-        function pard=guidef(obj)
-            pard=guidef(obj);
-        end
-        function select_callback(obj,a,b)
-            if ~isempty(obj.roihandle)&&isvalid(obj.roihandle)
-                delete(obj.roihandle);
-            end
-            obj.roihandle=drawpolyline;
-%             obj.site.evaluation.(obj.name).Position=obj.roihandle.Position;
-            addlistener(obj.roihandle,'ROIMoved',@(src,evt) obj.updateposition(src,evt));
-            addlistener(obj.roihandle,'VertexAdded',@(src,evt) obj.updateposition(src,evt));
-            addlistener(obj.roihandle,'VertexDeleted',@(src,evt) obj.updateposition(src,evt));
-            updateposition(obj,a,b)
-        end
-        function updateposition(obj,a,b)
-            if obj.getSingleGuiParameter('equaldistance')
-                pos=obj.roihandle.Position;
-                pos(:,1)=linspace(pos(1,1),pos(end,1),size(pos,1));
-                obj.roihandle.Position=pos;
-            end
-            modality=obj.getSingleGuiParameter('modality').selection;
-            obj.site.evaluation.(obj.name).(modality).Position=obj.roihandle.Position;
-            obj.plotdistances;
-        end
-        function plotdistances(obj)
-            modality=obj.getSingleGuiParameter('modality').selection;
-            pos=obj.site.evaluation.(obj.name).(modality).Position;
-            
-            period2=mean(diff(pos(:,1)));
-            form='%2.2f';
-            period=(pos(end,1)-pos(1,1))/(size(pos,1)-1);
-            
-            title(obj.axis,['Period: ' num2str(period,form)])
-            
-            obj.site.evaluation.(obj.name).(modality).Period=period;
-            
-        end
-%         function fit_callback(obj,a,b)
-%             pos=obj.site.evaluation.(obj.name).Position;
-%             period=mean(diff(pos(:,1)));
-%             
-%             
-%         end
     end
 
 end
@@ -269,6 +205,112 @@ end
 function selectrange(a,b,obj)
 obj.site.evaluation.(obj.name).range=obj.axstep.XLim;
 obj.run(obj.getAllParameters);
+end
+
+function [istepfit,svalfit]=splitmergefit(x,stepsize,p,steps)
+if contains(p.fitmode.selection,'mean')
+    mfun=@mean;
+else
+    mfun=@median;
+end
+
+istep=[1 ; steps.properties.IndexStep];
+sval=[steps.properties.LevelBefore; steps.properties.LevelAfter(end)];
+    svalfit=sval;
+    istepfit=istep;
+for s=1:3
+    [istepfit, svalfit]=mergesplit(istepfit,svalfit,stepsize);
+    % recalculate sval based on x and istep2
+
+    for k=1:10
+        istepfit=moveind(x,svalfit,istepfit);
+        svalfit=stepvalue(x,istepfit,mfun);
+    end
+    
+end
+
+% move istep2 by 1 (2,3...) if closer to current step
+
+
+figure(88);hold off
+plot(x);
+hold on;
+stairs(istep,sval)
+%stairs(istep2,sval2);
+stairs(istepfit,svalfit);
+%iterate
+
+% iterate over mergesplit
+end
+
+function sval=stepvalue(x,istep,fun)
+istep=[istep ;length(x)+1];
+for k=length(istep)-1:-1:1
+    sval(k)=fun(x(istep(k):istep(k+1)-1));
+end
+end
+
+function istep=moveind(x,sval,istep)
+%step=[istep; length(x)];
+d=3;
+for k=2:length(istep)-1
+    ih=istep(k);
+    ind=find(abs(x(ih-d:ih-1)-sval(k))<abs(x(ih-d:ih-1)-sval(k-1)));
+    if ~isempty(ind)
+        istep(k)=istep(k)-d-1+min(ind);
+    else
+    ind=find(abs(x(ih+1:ih+d)-sval(k))>abs(x(ih+1:ih+d)-sval(k-1)));
+    if ~isempty(ind)
+       istep(k)=istep(k)+max(ind);
+    end
+    end
+
+%      if abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1))
+%          istep(k)=istep(k)-1;
+%      elseif abs(x(ih+1)-sval(k))<abs(x(ih+1)-sval(k+1))
+%          istep(k)=istep(k)+1;
+%      end
+end
+%istep=istep(1:end-1);
+end
+
+function [istep, sval]=mergesplit(istep,sval,stepsize)
+%figure(88);hold off;
+%stairs(istep,sval); 
+stepv=diff(sval);
+step2=stepv(1:end-1)+stepv(2:end);
+sstep=find(abs(step2)<stepsize*1.4 & abs(stepv(1:end-1))<stepsize*.7);
+k=1;
+sstepc=sstep;
+while k<length(sstepc)
+    ind=find(sstepc==sstepc(k)+1);
+    if ~isempty(ind)
+        sstepc(ind)=[];
+        %k=k+1;
+    end
+    k=k+1;
+end
+%sstep=abs(diff(sval))<stepsize*0.6;
+%smallstep=find(diff(sstep).*sstep(1:end-1));
+%indout=(smallstep);
+istep(sstepc+2)=round((istep(sstepc+1)+istep(sstepc+2))/2);
+istep(sstepc+1)=[];
+%sval(sstep+2)=sval(sstep+3);
+sval(sstepc+1)=[];
+
+%stairs(istep,sval);
+
+bigstep=find(abs(diff(sval))>stepsize*1.4)+1; %later pass on min / max step size
+
+for k=1:length(bigstep)
+    istep=[istep(1:bigstep(k)) ;istep(bigstep(k)) ;istep(bigstep(k)+1:end)];
+    sval=[sval(1:bigstep(k)-1) ;(sval(bigstep(k)-1)+sval(bigstep(k)))/2 ;sval(bigstep(k):end)];
+    
+    istep(bigstep(k))=istep(bigstep(k))-1;
+    istep(bigstep(k)+1)=istep(bigstep(k)+1)+1;
+    bigstep=bigstep+1;
+end
+%stairs(istep,sval);
 end
 
 function pard=guidef(obj)
@@ -287,9 +329,17 @@ pard.fitmode.Width=1.5;
 
 pard.currentrange.object=struct('String','Current Range','Style','pushbutton','Callback',{{@selectrange,obj}});
 pard.currentrange.position=[2,1];
-
+pard.currentrange.Width=2;
 %auto-fit
-
+p(1).value=0; p(1).on={}; p(1).off={'splitmerget','splitmergestep'};
+p(2).value=1; p(2).on=p(1).off; p(2).off={};
+pard.splitmerge.object=struct('Value',1,'String','Split and merge','Style','checkbox','Callback',{{@obj.switchvisible,p}});
+pard.splitmerge.position=[3,1];
+pard.splitmerge.Width=2;
+pard.splitmerget.object=struct('String','step','Style','text');
+pard.splitmerget.position=[3,3];
+pard.splitmergestep.object=struct('String','','Style','edit');
+pard.splitmergestep.position=[3,4];
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};
