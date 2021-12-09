@@ -240,6 +240,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                     decodenetwork=obj.getGlobalSetting('DECODE_network_data');
                     outfile=[decodenetwork filesep 'fits' filesep dir filesep fn '.h5'];
                 end
+                obj.setPar('loc_outputfilename',strrep(outfile,'.h5','_sml.mat'));
                 obj.setGuiParameters(struct('outputpath',outfile))
                 obj.imagefile=file;
                 %later: selection if h5 or csv
@@ -308,6 +309,7 @@ end
 [file,pfad]=uiputfile(outputp);
 if ~isempty(dir)
     obj.setGuiParameters(struct('outputpath',[pfad file]))
+    obj.setPar('loc_outputfilename',strrep([pfad file],'.h5','_sml.mat'));
 end
 end
 
