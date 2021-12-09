@@ -38,32 +38,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                [pid,status, results]=systemcallpython(pdecode,command,decodepath);
                tfcommand=['tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
                [pidtb,status, results]=systemcallpython(pdecode,tfcommand,decodepath);
-    %            https://github.com/brian-lau/MatlabProcessManager
-%                decodepath='../DECODE';
-%                if ispc
-%                    [p1,env]=(fileparts(pdecode));
-%                    condapath=fileparts(p1);
-%                    decodepath=[fileparts(pwd) filesep 'DECODE'];
-%                    pcall=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" & python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
-%                    pcalltb=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" &tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
-%                else
-%                    pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
-%                    pcalltb=[ 'tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
-%                end
-%                pcallf=strrep(strrep(pcall,'/',filesep),'\',filesep);
-%                pcallftb=strrep(strrep(pcalltb,'/',filesep),'\',filesep);
-%                system([pcallf ' &'])
-%                system([pcallftb ' &'])
-%                pm=processManager('command',pcall,'autoStart',false,'workingDir',decodepath);
-%                pm.printStdout=false ;
-%                pm.printStderr=true;
-%                pm.wrap=1000;
-%                pm.pollInterval=10;
-%                pm.start()
                obj.decodeprocess=pid;
-%     
-%                
-%                ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
                obj.tensorboardprocess=pidtb;
 
            else %workstation via HTTP

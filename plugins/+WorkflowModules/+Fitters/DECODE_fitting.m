@@ -126,32 +126,16 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 pdecode=obj.getGlobalSetting('DECODE_path');
                 decodepath=[fileparts(pwd) filesep 'DECODE'];
                 logfile=[workingdirlocal '/' outname '_log.txt'];
-                 [obj.decodepid,status, results]=systemcallpython(pdecode,command,decodepath,logfile);
-                 
-%                 pcall='conda activate decode_env';
-%                 pcall{2}=[pdecode 'python decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
-%                 if ispc
-%                    [p1,env]=(fileparts(pdecode));
-%                    condapath=fileparts(p1);
-%                    
-%                      pcall=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' decodepath '" & python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
-%                 else
-%                     pcall=[pdecode '/bin/python -m decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
-%                 end
-%                 gitdecodepath=[fileparts(pwd) filesep 'DECODE'];
-                
-
-%                 cpath=pwd;
-%                 cd('../DECODE');
-%                 [status,cmdout]=system([pcall '&>' logfile ' &']);
-%                 cd(cpath);
-%                 fi=dir(logfile);
-%                 changed=fi.datenum;
+                [obj.decodepid,status, results]=systemcallpython(pdecode,command,decodepath,logfile);
+                if status~=0
+                    disp('fitting did not work')
+                    return
+                end
                 starttime=now;
                 line="";
                 while 1
                     pause(2)
-                    if exist(logfile,'file')
+                    if exist(logfile,'file') && dir(logfile).datenum>starttime
                         alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
                         if isempty(alllines)
                             continue
@@ -161,35 +145,28 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                             obj.status(line);
                             drawnow
                         end
-                        
+                    elseif now-starttime>60
+                        break        
                     end
-
                     %determine when to stop
                     if contains(line,"Fit done and emitters saved") 
                         disp('logfile contains line: fitting done')
                         break
                     end
-                    
-                    if exist(fileh5,'file') 
-                        fi=dir(fileh5);
-                        if fi.datenum>starttime
-                            disp('h5 written')
-                            break
-                        end
-                    end
-
-%                     fi=dir(logfile);
-%                     changednew=fi.datenum;
-%                     if changednew == changed
-% %                         pause(20)
-%                         fi=dir(logfile);
-%                         changednew=fi.datenum;    
-%                         if changednew == changed
-%                             disp('logfile did not change')
-% %                             break
+%                     if exist(fileh5,'file') 
+%                         fi=dir(fileh5);
+%                         if fi.datenum>starttime
+%                             obj.status('writing .h5'); drawnow;
+%                             told=fi.datenum;
+%                             pause(1)
+%                             while dir(fileh5).datenum>told
+%                                 told=dir(fileh5).datenum;
+%                                 pause(1)
+%                             end
+%                             disp('h5 written')
+%                             break
 %                         end
 %                     end
-%                     changed=changednew;
                 end   
             else %server
                 % call decode fitter
