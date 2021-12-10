@@ -133,8 +133,9 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 end
                 starttime=now;
                 line="";
+                pause(1)
                 while 1
-                    pause(2)
+                    pause(1)
                     if exist(logfile,'file') && dir(logfile).datenum>starttime
                         alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
                         if isempty(alllines)
@@ -165,8 +166,9 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 %update staus
                 logfile=[workingdirlocal '/out.log' ];
                 fittingstat=webread([server '/status_processes']);
+                pause(1)
                 while strcmp(fittingstat.fit.(['x' num2str(pid)]),'running') || contains(fittingstat.fit.(['x' num2str(pid)]),'sleep')
-                    pause(2)
+                    pause(1)
                     if exist(logfile,'file')
                         alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
                         if isempty(alllines)
