@@ -63,7 +63,7 @@ function plotFreeRot(obj, varargin)
             lEnable = 'on';
         end
         guihandles.playback = uicontrol(uip ,'Style','pushbutton','String','|>','Position',[3.8 1 0.3 1],'Callback',{@playback_callBack,obj,ax,locs,results,bg, guihandles.section},'Enable',lEnable);
-        guihandles.timeLine = uicontrol(uip ,'Style','slider','Position',[4.1 1 0.9 1],'Callback',{@timeLine_callBack,obj,ax,locs, results,bg, guihandles.section},'Enable',lEnable);
+        guihandles.timeLine = uicontrol(uip ,'Style','slider','Position',[4.1 1 0.9 1],'Callback',{@timeLine_callBack,obj,ax,locs, results,bg, guihandles.section, guihandles.section},'Enable',lEnable);
         
         if isfield(obj.display.plotFreeRot, 'target2Render')
             switch obj.display.plotFreeRot.target2Render
@@ -126,7 +126,6 @@ end
 % 
 function locsViz = pointViz(ax, locs, obj)
     cla(ax)
-    locs.ynm = -locs.ynm;
     [~,modViz] = obj.plot(ax, locs,'plotType','point','modelSamplingFactor',0.3); % get point type visualization
 %     modViz = obj.getLayerPoint(0.75); % get point type visualization
     axes(ax)
@@ -146,6 +145,7 @@ function locsViz = pointViz(ax, locs, obj)
     else
         locsViz = obj.locsHandler(locs,lPars,1);
     end
+    locs.ynm = -locs.ynm;
     obj.setTemp('locsViz', locsViz);
     obj.setTemp('modViz', modViz);
 end
@@ -170,35 +170,35 @@ function rotate_callBack(a,b,obj, results,bg, section,t_section)
     set(subViz,'YDir','normal')
 end
 
-function playback_callBack(a,b,obj,ax,locs, results,bg, section)
+function playback_callBack(a,b,obj,ax,locs, results,bg, section, t_section)
     optimHistory = obj.fitInfo.optimHistory;
     numOfIter = size(optimHistory,1);
     for k = 1:numOfIter
-        snapshot(obj,ax,locs, k, optimHistory, results,bg, section);
+        snapshot(obj,ax,locs, k, optimHistory, results,bg, section, t_section);
     end
 end
 
-function timeLine_callBack(a,b,obj,ax,locs, results,bg, section)
+function timeLine_callBack(a,b,obj,ax,locs, results,bg, section, t_section)
     optimHistory = obj.fitInfo.optimHistory;
     numOfIter = size(optimHistory,1);
     idx = round(numOfIter*a.Value);
-    snapshot(obj,ax,locs, idx, optimHistory, results,bg, section)
+    snapshot(obj,ax,locs, idx, optimHistory, results,bg, section, t_section)
 end
 
-function snapshot(obj,ax,locs, idx, optimHistory, results,bg, section)
+function snapshot(obj,ax,locs, idx, optimHistory, results,bg, section, t_section)
 lFix = obj.allParsArg.fix;
 obj.allParsArg.value(~lFix) = optimHistory(idx,:);
 %         w = waitforbuttonpress;
 pointViz(ax, locs, obj);
-rotate_callBack([],[],obj, results,bg, section);
+rotate_callBack([],[],obj, results,bg, section, t_section);
 drawnow
 end
 %% 
 % 
-function azimuthalRot_callBack(a,b,ax,dRot,obj,results,bg, section)
+function azimuthalRot_callBack(a,b,ax,dRot,obj,results,bg, section, t_section)
     rotVizAlt = get(ax, 'View');
     set(ax, 'View', rotVizAlt+[dRot 0]);
-    rotate_callBack([],[],obj,results,bg, section);
+    rotate_callBack([],[],obj,results,bg, section, t_section);
 end
 
 function edit_callBack(a,b,obj, fn,field)

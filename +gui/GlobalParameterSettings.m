@@ -51,7 +51,10 @@ classdef GlobalParameterSettings < interfaces.GuiModuleInterface
                     obj.guihandles.(os)=b;
                 else
                     obj.guihandles.(os)=uicontrol('Parent',obj.guihandles.(cs),'Units','normalized','Style',phere.object.Style,...
-                        'FontSize',obj.guiPar.fontsize,'String',phere.object.String,'Position',poshere,'Value',phere.object.Value);
+                        'FontSize',obj.guiPar.fontsize,'String',phere.object.String,'Position',poshere);
+                    if isfield(phere.object,'Value')
+                        obj.guihandles.(os).Value=phere.object.Value;
+                    end
                    
                     %any other controlo
                 end

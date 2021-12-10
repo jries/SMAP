@@ -85,16 +85,21 @@ classdef TifLoader<interfaces.WorkflowModule
             end
             obj.timerfitstart=tic;   
             obj.setPar('savefit',0) %delete, reset
+            obj.setPar('loc_multifile',p.ismultifile);
+            obj.setPar('loc_frames_fit',[obj.framestart obj.framestop]);
         end
-        function run(obj,data,p)
+        function output=run(obj,data,p)
+            output=[];
             global SMAP_stopnow
             if SMAP_stopnow
                 disp('STOP button pressed. To localize, unpress')
             end
             
             if nargin>1&& ~isempty(data)&&~isempty(data.data) %optional input channel
-                file=data.data;
-                obj.addFile(file)
+                if ischar(data.data) && exist(data.data,'file')
+                    file=data.data;
+                    obj.addFile(file)
+                end
             end
             obj.imloader.prefit;
             id=1;
@@ -260,9 +265,9 @@ function loadtif_callback(a,b,obj)
 p=obj.getGuiParameters;
 
 if p.ismultifile %later: check filename (e.g. _q1 _q2 etc). Also make sure quadrants are not mixed /rearranged
-    if iscell(p.tiffile)
-        p.tiffile=p.tiffile{1};
-    end
+%     if iscell(p.tiffile)
+%         p.tiffile=p.tiffile{1};
+%     end
     sf=selectManyFiles(fileparts(p.tiffile));
     filelisth=obj.guihandles.tiffile.String;
     if ~iscell(filelisth)
@@ -271,6 +276,11 @@ if p.ismultifile %later: check filename (e.g. _q1 _q2 etc). Also make sure quadr
     sf.guihandles.filelist.String=filelisth;
     waitfor(sf.handle);
     f=sf.filelist;
+%     try
+%         f=strsplit(f{1},';');
+%     catch err
+%         err
+%     end
 else
     try
         fe=bfGetFileExtensions;

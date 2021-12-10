@@ -4,7 +4,7 @@ all.FieldHeight=25;
 
 tab.hframe.name=Input Image
 tab.hfit.name=Fitter
-
+tab.hloc.name=Localizations
 
 TifLoader.Vpos=1;
 TifLoader.handle=hframe;
@@ -14,5 +14,8 @@ CameraConverter.handle=hframe;
 DECODE_fitting.Vpos=1;
 DECODE_fitting.handle=hfit;
 
-LocSaver.Vpos=5;
-LocSaver.handle=hfit;
+LocSaver.Vpos=1;
+LocSaver.handle=hloc;
+
+PlotLocsPreview.Vpos=6;
+PlotLocsPreview.handle=hfit;
