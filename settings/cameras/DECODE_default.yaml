@@ -38,3 +38,4 @@ SMAP:
     zrange_nm:
         - 0.0 
         - 0.0
+    tensorboardport: 6007

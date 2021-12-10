@@ -32,14 +32,18 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                end
                finalizejson(obj);
                saveyaml(obj.yamlpar,yamlpath);
+               logdir=[fileparts(obj.yamlpar.InOut.experiment_out) filesep 'log'];
 
-               command=['python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
+               command=['python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' logdir];
                decodepath=[fileparts(pwd) filesep 'DECODE'];
                [pid,status, results]=systemcallpython(pdecode,command,decodepath);
-               tfcommand=['tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
+               port=num2str(obj.yamlpar.SMAP.tensorboardport);
+               tfcommand=['tensorboard --samples_per_plugin images=100 --port=' port ' --logdir=' logdir];
+               getpids('tensorboard.exe','kill');
                [pidtb,status, results]=systemcallpython(pdecode,tfcommand,decodepath);
                obj.decodeprocess=pid;
-               obj.tensorboardprocess=pidtb;
+               obj.tensorboardprocess.pid=pidtb;
+               obj.tensorboardprocess.port=port;
 
            else %workstation via HTTP
                obj.fitlocal=false;
@@ -53,6 +57,8 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                %copy files
                finalizejson(obj);
                yamlp=obj.yamlpar;
+
+
                calfile=obj.yamlpar.InOut.calibration_file;
                [pc,fout,fext]=fileparts(calfile);
                if ~exist([outdirlocal  fout fext],'file')
@@ -65,7 +71,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                status.watch_dir=[status.watch_dir filesep];
          
                outpath=['training/' obj.yamlpar.InOut.experiment_out]; 
-               yamlp.InOut.calibration_file=fullfile(outpath,[fout fext]);
+               yamlp.InOut.calibration_file=strrep(fullfile(outpath,[fout fext]),'\','/');
                %save yaml
                [~,fname]=fileparts(obj.locData.files.file(1).name);
                yamlname=['DECODE_train_' fname '.yaml'];
@@ -77,7 +83,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                yamlp.Hardware.device=gpurec;
                yamlp.Hardware.device_simulation=gpurec;
 
-               yamlp.InOut.experiment_out=fullfile(outpath);
+               yamlp.InOut.experiment_out=strrep(fullfile(outpath),'\','/');
                saveyaml(yamlp,yamlpath);
 
                url=[server '/submit_training'];
@@ -141,7 +147,7 @@ end
 % end
 
 function makejsontable(obj)
-use.SMAP={'set_emitters_per_um2','zrange_nm'};
+use.SMAP={'set_emitters_per_um2','zrange_nm','tensorboardport'};
 use.InOut={'calibration_file','experiment_out'};
 use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform'};
 use.Camera={'em_gain','e_per_adu','baseline','read_sigma','spur_noise','px_size'};
@@ -332,8 +338,11 @@ function usecurrent_callback(a,b,obj)
     stat=make_statistics2({locs});
     close(f)
 
-    js.Simulation.lifetime_avg=max(1,stat.lifetime.mu-1);
+    js.Simulation.lifetime_avg=max(1,stat.lifetime.mu-1);      
     js.Simulation.intensity_mu_sig= [1,0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
+    if stat.lifetime.mu<0.8 %if most fluorophores in1 frame only, but we simulate with longer on-time, increase brightness
+        js.Simulation.intensity_mu_sig=js.Simulation.intensity_mu_sig*1.3;
+    end
     bgminmax=quantile(locsu.bg,[0.01, 0.95]);
     dbg=bgminmax(2)-bgminmax(1);
     bgrange=bgminmax+ [-1, 1]*dbg*0.3;
@@ -463,7 +472,7 @@ function setz(obj)
     l=load(calf);
     obj.yamlpar.InOut.calibration_file=calf;
     if isempty(obj.yamlpar.InOut.experiment_out)
-        obj.yamlpar.InOut.experiment_out=fileparts(calf);c
+        obj.yamlpar.InOut.experiment_out=fileparts(calf);
     end
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
@@ -526,10 +535,10 @@ end
 end
 
 function tensorboard_callback(a,b,obj)
-if ~isempty(obj.decodepid) %remote training
+if ~obj.fitlocal %remote training
    page='http://pc-ries25:8001/#scalars';
 else
-    page='http://localhost:6007';
+    page=['http://localhost:' obj.tensorboardprocess.port];
 end
 web(page,'-browser')
 end

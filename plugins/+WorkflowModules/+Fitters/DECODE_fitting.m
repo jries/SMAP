@@ -67,7 +67,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                     return
                 end  
                 emitter_path=[p.outputpath(pstart+2:end)];
-                yamlwrappathremote=[fileparts(emitter_path) '/' outname '_fitwrap.yaml'];
+                yamlwrappathremote=strrep([fileparts(emitter_path) '/' outname '_fitwrap.yaml'],'\','/');
             end
 
             %for both
@@ -116,7 +116,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             end
             wrapyaml.Frames.range=uint32(framerange);
 
-            yamlwrappathlocal=[workingdirlocal '/' outname '_fitwrap.yaml'];
+            yamlwrappathlocal=[workingdirlocal filesep outname '_fitwrap.yaml'];
             % make wrapper yaml
             WriteYamlSimple(yamlwrappathlocal, wrapyaml);
             fileh5=strrep(frameshere,'.tif','.h5'); % read h5
@@ -153,20 +153,6 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                         disp('logfile contains line: fitting done')
                         break
                     end
-%                     if exist(fileh5,'file') 
-%                         fi=dir(fileh5);
-%                         if fi.datenum>starttime
-%                             obj.status('writing .h5'); drawnow;
-%                             told=fi.datenum;
-%                             pause(1)
-%                             while dir(fileh5).datenum>told
-%                                 told=dir(fileh5).datenum;
-%                                 pause(1)
-%                             end
-%                             disp('h5 written')
-%                             break
-%                         end
-%                     end
                 end   
             else %server
                 % call decode fitter
@@ -232,7 +218,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 file=fileinfo.imagefile;
             end
             if setinfo
-                if obj.getSingleGuiParameter('runwhere').Value==2 || contains(file,'/decode/fits')
+                if obj.getSingleGuiParameter('runwhere').Value==2 || contains(file,'decode/fits') || contains(file,'decode\fits')
                     outfile=strrep(file,'.tif','.h5');
                 else
                     [~,fn]=fileparts(file);
@@ -245,12 +231,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 obj.imagefile=file;
                 %later: selection if h5 or csv
             end
-            %update output file
-        %     obj.workingdir=fileparts(fileparts(p));
-        %     if isempty(obj.getSingleGuiParameter('outputpath'))
-        %         
-        %     end
-            %output on channel 2 data.data=filename
+
         end
         function setoutputfilename(obj)
             %can be dummy but called from batch processor
