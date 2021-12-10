@@ -34,11 +34,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                xr=-xr;
            end
 
-           axxy=obj.setoutput('xy');
-           plot(axxy, xr, yr)
-           axis(axxy,'equal')
-           xlabel(axxy,'x (nm)')
-           ylabel(axxy,'y (nm)')
+ 
 
            ax2=obj.setoutput('steps');
            timeplot=time-min(time);
@@ -67,17 +63,47 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
             
 
             if p.splitmerge
+                stairs(ax2,tv(inds),mv,'m')
                 if isempty(p.splitmergestep)
                     stepsize=median(steps.properties.StepSize);
                 else 
                     stepsize=p.splitmergestep;
                 end
-                [indstep,stepvalue]=splitmergefit(xr(indtime),stepsize,p,steps);
+                [indstep,stepvalue,posy]=splitmergefit(xr(indtime),stepsize,p,steps,yr(indtime));
                 %stairs(ax2,tv(indstep),stepvalue,'r')
                 inds=indstep;
                 mv=stepvalue;
             end
-            stairs(ax2,tv(inds),mv,'r')
+            stairs(ax2,[tv(inds) ;tv(end)],[mv ;mv(end)],'r')
+
+
+            out.steps.indstep=indstep;
+            out.steps.steptime=tv(indstep);
+            out.steps.stepvalue=stepvalue;
+            out.steps.stepsize=diff(stepvalue);
+            out.steps.possteps.x=stepvalue;
+            out.steps.possteps.y=posy;
+            out.steps.possteps.time=tv(indstep);
+
+          goff=median(mod(stepvalue,16),'omitnan');
+          axxy=obj.setoutput('xy');
+            hold(axxy,'off')
+           plot(axxy, xr-goff, yr)
+           axis(axxy,'equal')
+           xlabel(axxy,'x (nm)')
+           ylabel(axxy,'y (nm)')
+            hold(axxy,'on')
+            scatter(axxy,stepvalue-goff,posy,'k')
+            grid(axxy,'on')
+            axm=-16:-16:axxy.XLim(1);
+            axxy.XTick=[axm(end:-1:1) 0:16:axxy.XLim(2)];
+            axxy.YTick=round((axxy.YLim(1):6:axxy.YLim(2))/6)*6;
+
+%             axxy.XTick=goff:16:max(axxy.XTick);
+            
+%             out.steps.meanpos  calculate mean postions of step in x, y
+
+            
 
             dmv=diff(mv);
             for k=1:length(dmv)
@@ -89,13 +115,13 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
             %stepsize=steps.properties.StepSize;
             stepsize=dmv;
             histogram(ax3,stepsize,min(stepsize):.5:max(stepsize));
-            out.steps=steps;
+            out.stepfinder=steps;
 
             %step time
-            steptime=diff(tv);
-            out.steptime=steptime;
+            steptime=diff(tv(inds));
+            out.steps.dwelltime=steptime;
             axstept=obj.setoutput('steptime');
-            dt=round(mean(steptime)/3);
+            dt=max(0.1,round(mean(steptime)/5));
             histogram(axstept,steptime,0:dt:max(steptime))
             title(axstept,"mean step time = "+ num2str(mean(steptime),'%2.1f') + " ms");
             % from cluster MINFLUX
@@ -194,9 +220,11 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
 %                  '\t' num2str(sigmay)  '\t' num2str(sxrobust)  '\t' num2str(syrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend) '\t' num2str(efo) '\t' ...
 %                  num2str(cfr) '\t' num2str(eco) '\t' num2str(ecc) '\t' num2str(efc) '\t' filename]  );
 %             out.clipboard=results;
-            out.cluster=[];
+%             out.cluster=[];
         end
-     
+        function pard=guidef(obj)
+            pard=guidef(obj);
+        end     
     end
 
 end
@@ -207,7 +235,7 @@ obj.site.evaluation.(obj.name).range=obj.axstep.XLim;
 obj.run(obj.getAllParameters);
 end
 
-function [istepfit,svalfit]=splitmergefit(x,stepsize,p,steps)
+function [istepfit,svalfit,svalfity]=splitmergefit(x,stepsize,p,steps,y)
 if contains(p.fitmode.selection,'mean')
     mfun=@mean;
 else
@@ -229,24 +257,17 @@ for s=1:3
     
 end
 
-% move istep2 by 1 (2,3...) if closer to current step
-
-
-figure(88);hold off
-plot(x);
-hold on;
-stairs(istep,sval)
-%stairs(istep2,sval2);
-stairs(istepfit,svalfit);
-%iterate
-
-% iterate over mergesplit
+if nargin>3 %y passed on
+    svalfity=stepvalue(y,istepfit,mfun);
+else 
+    svalfity=[];
+end
 end
 
 function sval=stepvalue(x,istep,fun)
 istep=[istep ;length(x)+1];
 for k=length(istep)-1:-1:1
-    sval(k)=fun(x(istep(k):istep(k+1)-1));
+    sval(k,1)=fun(x(istep(k):istep(k+1)-1));
 end
 end
 
@@ -255,7 +276,11 @@ function istep=moveind(x,sval,istep)
 d=3;
 for k=2:length(istep)-1
     ih=istep(k);
-    ind=find(abs(x(ih-d:ih-1)-sval(k))<abs(x(ih-d:ih-1)-sval(k-1)));
+    if ih>d+1
+        ind=find(abs(x(ih-d:ih-1)-sval(k))<abs(x(ih-d:ih-1)-sval(k-1)));
+    else
+        ind=[];
+    end
     if ~isempty(ind)
         istep(k)=istep(k)-d-1+min(ind);
     else
