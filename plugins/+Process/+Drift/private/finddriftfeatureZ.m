@@ -95,8 +95,8 @@ if length(dz)>9
 %         indgz=true(size(dz));
 %     end
 else
-    sdzm=std(ddzplot,0,2); %std for each time point, used for interpolation
-   
+    sdz=std(ddzplot,0,2); %std for each time point, used for interpolation
+    sdzm=mean(sdz);
 
 %     indgz=true(size(dz));
 end
