@@ -16,8 +16,10 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                 out.range=[];
            end
            locs=obj.getLocs({'xnm','ynm','groupindex','tid'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2);
-           id=mode(locs.tid);
-           index=obj.locData.loc.tid==id;
+           id=mode(locs.groupindex);
+           index=obj.locData.loc.groupindex==id;
+%            id=mode(locs.tid);
+%            index=obj.locData.loc.tid==id;
            x=obj.locData.loc.xnm(index);
            y=obj.locData.loc.ynm(index);
            time=obj.locData.loc.time(index);
