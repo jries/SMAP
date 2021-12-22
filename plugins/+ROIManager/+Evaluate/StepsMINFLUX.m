@@ -156,8 +156,12 @@ plotsteps(obj)
 end
 
 function plotsteps(obj)
+try
 dcm_obj = datacursormode(obj.axstep.Parent.Parent.Parent);
 info=dcm_obj.getCursorInfo;
+catch err
+    info=[];
+end
 ax2=obj.setoutput('steps_x');
 hold(ax2,'off')
 plot(ax2,obj.coord.timeplot,obj.coord.xr,'HitTest','off');
@@ -212,7 +216,10 @@ title(axxy,['std(y) = ' num2str(sigmay,ff) ' nm, std(x) detrend = ' num2str(syde
 axsy=obj.setoutput('steps_y');
 plot(axsy,obj.coord.timeplot,obj.coord.yr)
 axsy.YTick=round((axxy.YLim(1):6:axxy.YLim(2))/6)*6;
+try
 axsy.XTick=obj.steps.steptime;
+catch
+end
 axsy.XTickLabel=round(obj.steps.steptime);
 grid(axsy)
 
