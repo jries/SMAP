@@ -1,6 +1,6 @@
 # GUI overview
 ## Main GUI
-![LocMoFit GUI in SMAP](../images/overview.png)
+![LocMoFit GUI in SMAP](../images/overview.PNG)
 
 LocMoFit is integrated into SMAP. You can follow the steps to access to LocMoFit in SMAP:
 1. Go to the **[ROIs]** tab.
