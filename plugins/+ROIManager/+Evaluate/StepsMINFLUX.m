@@ -7,6 +7,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         steps
         coord
         range
+        index
     end
     methods
         function obj=StepsMINFLUX(varargin)        
@@ -33,6 +34,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
            id=mode(locs.(fid));
            index=obj.locData.loc.(fid)==id;
+           obj.index=index;
             
            %get coordinates
            x=obj.locData.loc.xnm(index);
@@ -59,71 +61,107 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            caluclatestepparameters(obj, obj.steps.indstep);
            plotsteps(obj)
 
+           out.statall=caluclatestatistics(obj,index);
+           out.stattrack=caluclatestatistics(obj,index,obj.coord.indtime);
 
-            filelist=obj.getPar('filelist_short');
-            out.filename=filelist.String{mode(locs.filenumber)};
-            dt=diff(time);
-            dtmin=min(dt);
-            dtmedian=median(dt);
-            dtmean=mean(dt);
-          
-
-            x=obj.locData.loc.xnm(index);
-
-            out.stats.efo=median(obj.locData.loc.efo(index));
-            out.stats.cfr=median(obj.locData.loc.cfr(index));
-            out.stats.eco=median(obj.locData.loc.eco(index));
-            out.stats.ecc=median(obj.locData.loc.ecc(index));
-            out.stats.efc=median(obj.locData.loc.efc(index));
-            out.stats.nlocs=length((index));
-            out.stats.ontime=max(time)-min(time);
-
-            ltime=time-min(time);
-            ff='%2.1f';
-            axt=obj.setoutput('time');
-            histogram(axt,dt,dtmin/2:dtmin:quantile(dt,0.995))
-            hold(axt,'on')
-            histogram(axt,dt,0:dtmin*0.1:quantile(dt,0.995))
-            xlabel(axt,'dt (ms)')
-            ylabel(axt,'frequency')
-            title(axt,['dtmin = ' num2str(dtmin,ff) ' ms, dtmedian = ' num2str(dtmedian,ff) ' ms, dtmean = ' num2str(dtmean,ff) ' ms.'])
-            
-            axdt=obj.setoutput('dt');
-            plot(axdt,ltime(2:end),dt)
-            xlabel(axdt,'time (ms)')
-            ylabel(axdt,'dt (ms)')
-
-            if ~isempty(obj.locData.loc.efo)
-                axe=obj.setoutput('efo');
-                plot(axe,ltime,obj.locData.loc.efo(index))
-                xlabel(axe,'time (ms)')
-                ylabel(axe,'efo')
-            end
-            if ~isempty(obj.locData.loc.cfr)
-                axc=obj.setoutput('cfr');
-                plot(axc,ltime,obj.locData.loc.cfr(index))
-                xlabel(axc,'time (ms)')
-                ylabel(axc,'cfr')
-            end
-            if ~isempty(obj.locData.loc.eco)
-                axec=obj.setoutput('eco');
-                plot(axec,ltime,obj.locData.loc.eco(index))
-                xlabel(axec,'time (ms)')
-                ylabel(axec,'eco')
-            end
-            if ~isempty(obj.locData.loc.ecc)
-                axcc=obj.setoutput('ecc');
-                plot(axcc,ltime,obj.locData.loc.ecc(index))
-                xlabel(axcc,'time (ms)')
-                ylabel(axcc,'ecc')
-            end
-            
+           filelist=obj.getPar('filelist_short');
+           out.filename=filelist.String{mode(locs.filenumber)};
+           plotstatistics(obj)
         end
         function pard=guidef(obj)
             pard=guidef(obj);
         end     
     end
 
+end
+
+function plotstatistics(obj)
+index=obj.index;
+time=obj.locData.loc.time(index);
+dt=diff(time);
+dtmin=min(dt);
+dtmedian=median(dt);
+dtmean=mean(dt);
+ltime=time-min(time);
+ff='%2.1f';
+axt=obj.setoutput('time');
+hold(axt,'off')
+histogram(axt,dt,dtmin/2:dtmin:quantile(dt,0.995))
+hold(axt,'on')
+histogram(axt,dt,0:dtmin*0.1:quantile(dt,0.995))
+xlabel(axt,'dt (ms)')
+ylabel(axt,'frequency')
+title(axt,['dtmin = ' num2str(dtmin,ff) ' ms, dtmedian = ' num2str(dtmedian,ff) ' ms, dtmean = ' num2str(dtmean,ff) ' ms.'])
+
+axdt=obj.setoutput('dt');
+hold(axdt,'off')
+plot(axdt,ltime(2:end),dt)
+if ~isempty(obj.range)
+    hold(axdt,'on')
+    yr=[min(dt) max(dt)];
+    plot(axdt,obj.range(1)*[1 1],yr,'k--','HitTest','off')
+    plot(axdt,obj.range(2)*[1 1],yr,'k--','HitTest','off')
+end
+
+xlabel(axdt,'time (ms)')
+ylabel(axdt,'dt (ms)')
+
+
+plotsimple(obj,'efo')
+plotsimple(obj,'cfr')
+plotsimple(obj,'eco')
+plotsimple(obj,'ecc')
+
+end
+
+function plotsimple(obj,field)
+if ~isempty(obj.locData.loc.(field))
+    time=obj.locData.loc.time(obj.index);
+    ltime=time-min(time);
+    axe=obj.setoutput(field);
+    yval=obj.locData.loc.(field)(obj.index);
+    hold(axe,'off')
+    plot(axe,ltime,yval)
+    hold(axe,'on')
+    if ~isempty(obj.range)
+        yr=[min(yval) max(yval)];
+        plot(axe,obj.range(1)*[1 1],yr,'k--','HitTest','off')
+        plot(axe,obj.range(2)*[1 1],yr,'k--','HitTest','off')
+    end
+    xlabel(axe,'time (ms)')
+    ylabel(axe,field)
+    vall=obj.site.evaluation.(obj.name).statall.(field);
+    vt=obj.site.evaluation.(obj.name).stattrack.(field);
+    title(axe,[field ': ' num2str(vall,'%2.3g') ', ' num2str(vt,'%2.3g') ' (track)'])
+
+end
+end
+
+function out=caluclatestatistics(obj,indexin,indind)
+if islogical(indexin)
+    indexin=find(indexin);
+end
+if nargin<=2
+    indind=true(size(indexin));
+end
+index=indexin(indind);
+time=obj.locData.loc.time(index);
+
+dt=diff(time);
+out.dtmin=min(dt);
+out.dtmedian=median(dt);
+out.dtmean=mean(dt);
+
+out.efo=median(obj.locData.loc.efo(index));
+out.cfr=median(obj.locData.loc.cfr(index));
+out.eco=median(obj.locData.loc.eco(index));
+out.ecc=median(obj.locData.loc.ecc(index));
+out.efc=median(obj.locData.loc.efc(index));
+out.nlocs=length((index));
+out.tracktime=max(time)-min(time);
+xh=obj.coord.xr(indind);
+out.tracklength=xh(end)-xh(1);
+out.velocity=out.tracklength/out.tracktime;
 end
 
 function refit(a,b,obj,what)
@@ -145,13 +183,14 @@ if what==1
         if isempty(stepsize)
             stepsize=median(steps.properties.StepSize);
         end
-        [indstep,stepvalue,posy]=splitmergefit(obj.coord.xr(indtime),stepsize,p,steps,obj.coord.yr(indtime));
+        [indstep,stepvalue]=splitmergefit(obj.coord.xr(indtime),stepsize,p,steps);
     end
 else %refine
      [svalfit, indstep]=fitstepind(obj.coord.xr(indtime),obj.steps.indstep,str2func(p.fitmode.selection));
 end
 
 caluclatestepparameters(obj,indstep);
+
 plotsteps(obj)
 end
 
@@ -236,9 +275,10 @@ end
 function selectrange(a,b,obj)
 obj.range=obj.axstep.XLim;
 refit(a,b,obj,1)
+ plotstatistics(obj)
 end
 
-function [istepfit,svalfit,svalfity]=splitmergefit(x,stepsize,p,steps,y)
+function [istepfit,svalfit]=splitmergefit(x,stepsize,p,steps)
 if contains(p.fitmode.selection,'mean')
     mfun=@mean;
 else
@@ -249,26 +289,27 @@ istep=[1 ; steps.properties.IndexStep];
 sval=[steps.properties.LevelBefore; steps.properties.LevelAfter(end)];
     svalfit=sval;
     istepfit=istep;
-for s=1:3
+for s=1:10
     [istepfit, svalfit]=mergesplit(istepfit,svalfit,stepsize);
     % recalculate sval based on x and istep2
     [svalfit, istepfit]=fitstepind(x,istepfit,mfun);
    
 end
-
-if nargin>3 %y passed on
-    svalfity=stepvalue(y,istepfit,mfun);
-else 
-    svalfity=[];
-end
+% 
+% if nargin>3 %y passed on
+%     svalfity=stepvalue(y,istepfit,mfun);
+% else 
+%     svalfity=[];
+% end
 end
 
 function [svalfit, istepfit]=fitstepind(x,istepfit,mfun)
-    for k=1:100
+    for k=1:10
         svalfit=stepvalue(x,istepfit,mfun);
         istepfitold=istepfit;
         istepfit=moveind(x,svalfit,istepfit);   
         if all(istepfit==istepfitold)
+            k
             break
         end
     end
@@ -283,23 +324,50 @@ end
 
 function istep=moveind(x,sval,istep)
 istep=[istep; length(x)];
-d=2;
-dmin=0;
-dplus=0;
+% d=2;
+
+% smin=0;splus=0;
 for k=2:length(istep)-1
+    dmin=0;
+    dplus=0;
+    smin=inf;splus=inf;
     ih=istep(k);
-        ind=find(abs(x(max(1,ih-d):ih-1)-sval(k))<abs(x(max(1,ih-d):ih-1)-sval(k-1)));
-        if ~isempty(ind)
-            dmin=-d-1+min(ind);
-        end
-        lx=length(x);
-        ind=find(abs(x(ih+1:min(lx,ih+d))-sval(k))>abs(x(ih+1:min(lx,ih+d))-sval(k-1)));
-        if ~isempty(ind)
-           dplus=max(ind);
-        end
-     if abs(dmin)>abs(dplus)
+    if abs(x(ih)-sval(k))<abs(x(ih)-sval(k-1)) %ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1))
+        smin=abs(x(ih)-sval(k));
+        dmin=-1;
+    elseif ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1)) %ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1))
+        dmin=-2;
+        smin=abs(x(ih-1)-sval(k));
+
+% %         smin=abs(x(ih-1)-sval(k))-abs(x(ih-1)-sval(k-1));
+%     elseif ih>2 && abs(mean(x(ih-2:ih-1)-sval(k)))<abs(mean(x(ih-2:ih-1)-sval(k-1)))
+%         dmin=-2;
+%         smin=abs(mean(x(ih-2:ih-1)-sval(k)))-abs(mean(x(ih-2:ih-1)-sval(k-1)));
+    end
+    if ih<length(x) && abs(x(ih+1)-sval(k-1))<abs(x(ih+1)-sval(k))% ih<length(x) && abs(x(ih)-sval(k))<abs(x(ih)-sval(k-1))
+        dplus=1;
+        splus=abs(x(ih+1)-sval(k-1));
+        
+    elseif ih<length(x)-1 && abs(x(ih+2)-sval(k-1))<abs(x(ih+2)-sval(k))
+        splus=abs(x(ih+2)-sval(k-1));
+        dplus=2;
+%         splus=abs(x(ih)-sval(k))-abs(x(ih)-sval(k-1));
+%     elseif ih<length(x)-1 && abs(mean(x(ih:ih+1)-sval(k)))<abs(mean(x(ih:ih+1)-sval(k-1)))
+%         dplus=2;
+%         splus=abs(mean(x(ih+1:ih+2)-sval(k)))-abs(mean(x(ih+1:ih+2)-sval(k-1)));
+    end
+%         ind=find(abs(x(max(1,ih-d):ih-1)-sval(k))<abs(x(max(1,ih-d):ih-1)-sval(k-1)));
+%         if ~isempty(ind)
+%             dmin=-d-1+min(ind);
+%         end
+%         lx=length(x);
+%         ind=find(abs(x(ih+1:min(lx,ih+d))-sval(k))>abs(x(ih+1:min(lx,ih+d))-sval(k-1)));
+%         if ~isempty(ind)
+%            dplus=max(ind);
+%         end
+     if smin<splus
          istep(k)=max(istep(k)+dmin, istep(k-1)+1);
-     else
+     else 
          istep(k)=min(istep(k)+dplus,istep(k+1)-1);
      end
 end
@@ -393,11 +461,15 @@ steps.stepsize=diff(stepv);
 steps.possteps.x=stepv;
 steps.possteps.y=stepvalue(y,stepindex,mfun);
 steps.possteps.time=tv(stepindex);
-steps.dwelltime=diff(obj.steps.steptime);
+steps.dwelltime=diff(steps.steptime);
+if isfield(obj.site.evaluation,obj.name)
+    out=obj.site.evaluation.(obj.name);
+end
 
-out=obj.site.evaluation.(obj.name);
 out.steps=steps;
 obj.steps=steps;
+out.statall=caluclatestatistics(obj,obj.index);
+out.stattrack=caluclatestatistics(obj,obj.index,obj.coord.indtime);
 out.range=obj.range;
 obj.site.evaluation.(obj.name)=out;
 end
