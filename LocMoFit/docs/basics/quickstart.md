@@ -23,7 +23,8 @@ You can check out all the pre-processing steps from _fitting raw data (raw camer
 ## Setup
 We will be using an image model here ({doc}`more about model types<../basics/geometricModel>`).
 1. Activate the _LocMoFitGUI_ module by clicking on it. Your SMAP window should look like this now:
-   ![LocMoFit GUI in SMAP](../images/overview.png)
+   ![LocMoFit GUI in SMAP](../images/overview.PNG)
+
 2. In the right panel, go to **[M1]** -> **[Model]**, click **load model**.
 3. Navigate to the model directory, open _ring2d.png_. Now LocMoFit is ready to fit.
 
