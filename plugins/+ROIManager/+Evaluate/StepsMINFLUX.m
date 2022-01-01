@@ -250,7 +250,7 @@ ff='%2.1f';
 sigmax=std(obj.coord.xr);sigmay=std(obj.coord.yr);
 sxdetrend=std(diff(obj.coord.xr))/sqrt(2);sydetrend=std(diff(obj.coord.yr))/sqrt(2);
 [~, sxrobust]=robustMean(obj.coord.xr); [~, syrobust]=robustMean(obj.coord.yr);
-title(axxy,['std(y) = ' num2str(sigmay,ff) ' nm, std(x) detrend = ' num2str(sydetrend,ff) ' nm.'])
+title(axxy,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.' ' std(y) = ' num2str(sigmay,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
 
 axsy=obj.setoutput('steps_y');
 plot(axsy,obj.coord.timeplot,obj.coord.yr)
@@ -366,7 +366,7 @@ for k=2:length(istep)-1
 %            dplus=max(ind);
 %         end
      if smin<splus
-         istep(k)=max(istep(k)+dmin, istep(k-1)+1);
+         istep(k)=max(1,max(istep(k)+dmin, istep(k-1)+1));
      else 
          istep(k)=min(istep(k)+dplus,istep(k+1)-1);
      end
@@ -474,6 +474,73 @@ out.range=obj.range;
 obj.site.evaluation.(obj.name)=out;
 end
 
+function makemovie(a,b,obj)
+time=obj.coord.timeplot;
+frametime=obj.getSingleGuiParameter('frametime');
+if isempty(frametime)
+    frametime=mode(diff(time));
+end
+
+x=obj.coord.xr;
+y=obj.coord.yr;
+ts=min(time):frametime:max(time);
+f=figure(99);
+f.Position(1)=1;f.Position(3)=1280;
+ax=gca;
+
+delete(ax.Children)
+
+axis(ax,'equal');
+
+xlim(ax,[min(x)-10 max(x)+10])
+ylim(ax,[min(y)-10 max(y)+10])
+hold(ax,'on')
+plot(ax,[min(x)-5 min(x)+10-5], [min(y)-5 min(y)-5],'k','LineWidth',3)
+ax.XTick=[];
+ax.YTick=[];
+for k=1:length(ts)
+    indh=time<=ts(k);
+    xh=x(indh);
+    yh=y(indh);
+    th=time(indh);
+%                     hold(ax,'off')
+    hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
+    hold(ax,'on')
+    hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
+    
+
+    tpassed=ts(k)-ts(1);
+    ht=text(ax,double(min(x)),double(max(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
+        
+    indc=obj.steps.steptime<ts(k);
+    cx=obj.steps.possteps.x(indc);
+    cy=obj.steps.possteps.y(indc);
+%     if ~isempty(cx)
+        hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
+%     end
+    hl=plot(ax,xh,yh,'k','LineWidth',1);
+    drawnow
+    Fr(k)=getframe(ax);
+    delete(hd)
+    delete(hl)
+    delete(ht)
+    delete(hb)
+    delete(hc)
+end
+smlfile=obj.getPar('lastSMLFile');
+if ~isempty(smlfile)
+    pfad=fileparts(smlfile);
+else
+    pfad=fileparts(obj.locData.files.file(1).name);
+end
+
+[file,pfad]=uiputfile([pfad filesep '*.mp4']);
+if file
+    mysavemovie(Fr,[pfad  file],'FrameRate',20)
+end
+
+                  
+end
 
 function pard=guidef(obj)
 pard.linkt.object=struct('String','Link','Style','text');
@@ -531,6 +598,16 @@ pard.left.Width=0.5;
 pard.right.object=struct('String','->','Style','pushbutton','Callback',{{@splitmerge,obj,4}});
 pard.right.position=[4,4.5];
 pard.right.Width=0.5;
+
+
+pard.makemovie.object=struct('String','Make Movie','Style','pushbutton','Callback',{{@makemovie,obj}});
+pard.makemovie.position=[6,1];
+pard.makemovie.Width=1.5;
+
+pard.frametimet.object=struct('String','frametime','Style','text');
+pard.frametimet.position=[6,3];
+pard.frametime.object=struct('String','1','Style','edit');
+pard.frametime.position=[6,4];
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};

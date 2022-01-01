@@ -218,7 +218,7 @@ pard.filtermode.position=[1,2.5];
 % pard.stepsize.object=struct('String','0','Style','edit');
 % pard.stepsize.position=[2,2];
 
-p(1).value=0; p(1).on={}; p(1).off={'frametimet','frametimet'};
+p(1).value=0; p(1).on={}; p(1).off={'frametimet','frametime'};
 p(2).value=1; p(2).on=p(1).off; p(2).off={};
 pard.makemovie.object=struct('String','Make movie','Style','checkbox','Callback',{{@obj.switchvisible,p}});
 pard.makemovie.position=[2,1];
