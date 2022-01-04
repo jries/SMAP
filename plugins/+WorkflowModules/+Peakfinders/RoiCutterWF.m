@@ -32,9 +32,12 @@ classdef RoiCutterWF<interfaces.WorkflowModule
         function outputdat=run(obj,data,p)
             outputdat=[];
             image=data{1}.data;%get;
-            if ~isempty(image)     
+            if isempty(image)  
+                outputdat=data{1};
+                return
+            end
             maxima=data{2}.data;%get;
-            if isempty(maxima.xpix)
+            if isempty(maxima(1).xpix)
 %                 if obj.preview
 %                     obj.status('no localizations found');drawnow
 %                     error ('no localizations found')
@@ -64,36 +67,39 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             %XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             end
             
-            cutoutimages=zeros(kernelSize,kernelSize,length(maxima.xpix),'single');
-            ind=0;
-            maxima.xpix=round(maxima.xpix);
-            maxima.ypix=round(maxima.ypix);
-            goodind=~(maxima.ypix<=dn|maxima.ypix>sim(1)-dn|maxima.xpix<=dn|maxima.xpix>sim(2)-dn);
-            outside=(maxima.ypix<=1|maxima.ypix>sim(1)-1|maxima.xpix<=1|maxima.xpix>sim(2)-1);
+            cutoutimages=zeros(kernelSize,kernelSize,length(maxima(1).xpix),length(maxima),'single');
+%             ind=0;
 
 
-            for k=1:length(maxima.xpix)
-                 ind=ind+1;
-                if goodind(k)
-                    cutoutimages(:,:,ind)=image(maxima.ypix(k)-dn:maxima.ypix(k)+dn,maxima.xpix(k)-dn:maxima.xpix(k)+dn); %coordinates exchanged.
-                elseif outside(k)
-                    maxima.ypix(k)=max(dn+1,min(maxima.ypix(k),sim(1)-dn));
-                    maxima.xpix(k)=max(dn+1,min(maxima.xpix(k),sim(2)-dn));  
-                    cutoutimages(:,:,ind)=zeros(2*dn+1,'single');
-                else
-                    maxima.ypix(k)=max(dn+1,min(maxima.ypix(k),sim(1)-dn));
-                    maxima.xpix(k)=max(dn+1,min(maxima.xpix(k),sim(2)-dn));
-                    cutoutimages(:,:,ind)=image(maxima.ypix(k)-dn:maxima.ypix(k)+dn,maxima.xpix(k)-dn:maxima.xpix(k)+dn); %coordinates exchanged.
-%                     cutoutimages(:,:,ind)=zeros(kernelSize,kernelSize,1,'single');
-                end  
-            end 
+            for ch=1:length(maxima)
+                maxima(ch).xpix=round(maxima(ch).xpix);
+                maxima(ch).ypix=round(maxima(ch).ypix);
+                goodind=~(maxima(ch).ypix<=dn|maxima(ch).ypix>sim(1)-dn|maxima(ch).xpix<=dn|maxima(ch).xpix>sim(2)-dn);
+                outside=(maxima(ch).ypix<=1|maxima(ch).ypix>sim(1)-1|maxima(ch).xpix<=1|maxima(ch).xpix>sim(2)-1);
+%                 ind=0;
+                for k=1:length(maxima(ch).xpix)
+%                      ind=ind+1;
+                    if goodind(k)
+                        cutoutimages(:,:,k,ch)=image(maxima(ch).ypix(k)-dn:maxima(ch).ypix(k)+dn,maxima(ch).xpix(k)-dn:maxima(ch).xpix(k)+dn,1,ch); %coordinates exchanged.
+                    elseif outside(k)
+                        maxima(ch).ypix(k)=max(dn+1,min(maxima(ch).ypix(k),sim(1)-dn));
+                        maxima(ch).xpix(k)=max(dn+1,min(maxima(ch).xpix(k),sim(2)-dn));  
+                        cutoutimages(:,:,k,ch)=zeros(2*dn+1,'single');
+                    else
+                        maxima(ch).ypix(k)=max(dn+1,min(maxima(ch).ypix(k),sim(1)-dn));
+                        maxima(ch).xpix(k)=max(dn+1,min(maxima(ch).xpix(k),sim(2)-dn));
+                        cutoutimages(:,:,k,ch)=image(maxima(ch).ypix(k)-dn:maxima(ch).ypix(k)+dn,maxima(ch).xpix(k)-dn:maxima(ch).xpix(k)+dn,1,ch); %coordinates exchanged.
+    %                     cutoutimages(:,:,ind)=zeros(kernelSize,kernelSize,1,'single');
+                    end  
+                end 
+            end
             info=maxima;
             frameh=data{1}.frame;
-            info.frame=maxima.xpix*0+frameh;
+            info(1).frame=maxima(1).xpix*0+frameh;
            
 
             outs.info=info;
-            outs.img=cutoutimages(:,:,1:ind);
+            outs.img=cutoutimages(:,:,1:ind,:);
             dato=data{1};%.copy;
             dato.data=outs;%set(outs);
             outputdat=dato;
@@ -118,13 +124,13 @@ classdef RoiCutterWF<interfaces.WorkflowModule
 %                     plotrect(ax,pos,col);
 %                 end
 %             end 
-            else
+%             else
 %                 if obj.preview && ~obj.disppreview
 %                     obj.status('image could not be loaded');drawnow
 %                     error('no image loaded')
 %                 end
-                outputdat=data{1};
-            end
+%                 outputdat=data{1};
+%             end
         end
     end
 end

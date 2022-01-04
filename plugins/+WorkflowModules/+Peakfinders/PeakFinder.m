@@ -37,35 +37,16 @@ classdef PeakFinder<interfaces.WorkflowModule
         function dato=run(obj,data,p)
             image=data.data;%get;
             if ~isempty(image)
-                if all(size(obj.roimask)== size(image))
-                    image(~obj.roimask)=-1;
+                if all(size(obj.roimask)== size(image,1:2))
+                    image=image.*obj.roimask - ~obj.roimask;
+%                     image(~obj.roimask)=-1;
                 end
-%             switch p.peakfindmethod.Value
-%                 case 1 %maximum
-                    maxima=maximumfindcall(image); %find maxima
-                    maxima(:,[1 2])=maxima(:,[2 1]);
-                    dynamicf=1;
-%                 case 2 %NMS
-%                 maxima=NMS2DBlockCcall(image,p.NMS_kernel_size); %find maxima
-%                 dynamicf=3/p.NMS_kernel_size;
-%             end
-                switch p.cutoffmode.Value
-                    case 1
-                        cutoff=getdynamiccutoff(maxima,obj.dynamicfactor*dynamicf);
-                    case {2,3} 
-                        cutoff=obj.absolutecutoff;
+                for k=size(image,3):-1:1
+                    for l=size(image,4):-1:1
+                        maxout(k,l)=getmaxima(obj,image(:,:,k,l),p,data.frame);
+                    end
                 end
-    %             cutoff
-                maxind= (maxima(:,3)>cutoff);
 
-                if p.use_mindistance
-                    maxima=maxima(maxind,:);
-                    maxind=~tooclose(maxima(:,1),maxima(:,2),p.mindistance); % p.mindistance) & ~tooclose(,p.mindistance);
-                end
-                maxout.ypix=maxima(maxind,1);
-                maxout.xpix=maxima(maxind,2);
-                maxout.phot=maxima(maxind,3);
-                maxout.frame=0*maxout.xpix+data.frame;
                 dato=data;         
                 dato.data=(maxout); 
                 if obj.preview
@@ -78,6 +59,30 @@ classdef PeakFinder<interfaces.WorkflowModule
             end
         end
     end
+end
+
+function maxout=getmaxima(obj,image,p,frame)
+maxima=maximumfindcall(image); %find maxima
+maxima(:,[1 2])=maxima(:,[2 1]);
+dynamicf=1;
+
+switch p.cutoffmode.Value
+    case 1
+        cutoff=getdynamiccutoff(maxima,obj.dynamicfactor*dynamicf);
+    case {2,3} 
+        cutoff=obj.absolutecutoff;
+end
+
+maxind= (maxima(:,3)>cutoff);
+
+if p.use_mindistance
+    maxima=maxima(maxind,:);
+    maxind=~tooclose(maxima(:,1),maxima(:,2),p.mindistance); % p.mindistance) & ~tooclose(,p.mindistance);
+end
+maxout.ypix=maxima(maxind,1);
+maxout.xpix=maxima(maxind,2);
+maxout.phot=maxima(maxind,3);
+maxout.frame=0*maxout.xpix+frame;
 end
 
 function val = prob2photon(p,PSFx0,filtersize,excess)

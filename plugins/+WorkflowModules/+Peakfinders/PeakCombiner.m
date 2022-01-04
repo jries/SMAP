@@ -24,6 +24,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 obj.transform=l.SXY(1).cspline.global.transformation;
             elseif isfield(l,'saveloc')
                 obj.transform=l.saveloc.file.transformation;
+            elseif isfield(l,'T')
+                obj.transform=double(cat(3,eye(3,3),permute(l.T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
             else
                 errordlg(['no transformation found in' p.Tfile])
             end
@@ -163,29 +165,10 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 ct(:,2,:)=ct(:,2,:)-roi(2);
                 %test dc XXXXX
                 ctt=ct;
-%                 offsettest=ones(size(ccombined,1),1);
-%                 ctt(:,1,2)=ctt(:,1,2)+offsettest*0;
-%             
             
                 ctr=round(ctt);
                 dc=ct-ctr;
-%                 dc(:,:,2)=dc(:,:,2)-dc(:,:,1);
-%                 dc(:,:,1)=dc(:,:,1)*0;
 
-                
-%                 cout=[];
-%                 dcout=[];
-%                 indout=[];
-%                 cref=[];
-                %sort alternating. This is inline with dual-channel
-                
-%                 for k=1:transform.channels
-%                     cout=vertcat(cout,ctr(:,:,k));
-%                     dcout=vertcat(dcout,dc(:,:,k));
-%                     indout=vertcat(indout,(1:size(ctr,1))');
-%                     cref=vertcat(cr,cr);
-%                     
-%                 end
 
                 cout=permute(ctr,[2 3 1]);
                 dcout=permute(dc,[2 3 1]);
@@ -201,7 +184,80 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 maxout.dy=squeeze(dyh(:));
                 dato=data;
                 dato.data=maxout;
+            elseif isnumeric(obj.transform) %new 4Pi
+
+                xpix=(maxima(1).xpix+roi(1)); %still x,y inconsistency! solve
+                ypix=(maxima(1).ypix+roi(2)); %put on camera chip
+                cref=[xpix,ypix,ones(size(xpix))];
+                
+                Nc=(maxima(1).phot);
+                ccombined=cref;
+                ct(:,:,1)=cref(:,1:2);
+                for k=2:length(maxima)    
+                    Nt=maxima(k).phot;
+                    T=obj.transform(:,:,k);
+                    Tinv=inv(T);
+                    cN=[maxima(k).xpix+roi(1),maxima(k).ypix+roi(2),ones(size(maxima(k).ypix))];
+                    ctarget=(Tinv*cN')';
+
+%                     if p.framecorrection
+%                         ctarget=transform.transformToReferenceFramecorrection(k,cpix(indch,:)-multioffsetpix,data.frame);
+%                     else
+%                         ctarget=transform.transformToReference(k,cpix(indch,:)-multioffsetpix);
+%                     end
+                    
+                    [iA,iB,uiA,uiB]=matchlocs(ccombined(:,1),ccombined(:,2),ctarget(:,1),ctarget(:,2),[0 0],6);
+                    if isempty(iA)
+                        cnew=[];
+                    else
+                        cnew=(ccombined(iA,:).*Nc(iA)+ctarget(iB,:).*Nt(iB))./(Nc(iA)+Nt(iB));
+                    end
+                    ccombined=vertcat(ccombined(uiA,:),ctarget(uiB,:),cnew);
+                    Nc=vertcat(Nc(uiA),Nt(uiB),(Nc(iA)+Nt(iB)));
+%                     ctar=(T*ccombined')';
+%                     ct(end+1:end+size(ctar,1),:,k)=ctar(:,1:2);
+                end
+
+                for k=length(maxima):-1:1
+                    T=obj.transform(:,:,k);
+                    ct=(T*ccombined')';
+                    ct(:,1)=ct(:,1)-roi(1); %bring back to ROI on camera
+                    ct(:,2)=ct(:,2)-roi(2);
+                    ctt=ct(:,1:2);
+                    ctr=round(ctt);
+                    dc=ct(:,1:2)-ctr;
+
+                    maxout(k).xpix=ct(:,1);
+                    maxout(k).ypix=ct(:,2);
+    
+                    maxout(k).ID=k;
+                    maxout(k).dx=dc(:,1);
+                    maxout(k).dy=dc(:,2);
+                end
+           
+
+% %                 ct(:,:,2)=ct(:,:,2);
+%                 ct(:,1,:)=ct(:,1,:)-roi(1); %bring back to ROI on camera
+%                 ct(:,2,:)=ct(:,2,:)-roi(2);
+%                 %test dc XXXXX
+%                 ctt=ct;
+%             
+%                 ctr=round(ctt);
+%                 dc=ct-ctr;
+% 
+% 
+%                 cout=permute(ctr,[2 3 1]);
+%                 dcout=permute(dc,[2 3 1]);
+%                 indout=repmat((1:size(ctr,1)),1,length(maxima));
+%                 xh=cout(1,:,:);yh=cout(2,:,:);
+%                 dxh=dcout(1,:,:);dyh=dcout(2,:,:);
+                
+    
+                dato=data;
+                dato.data=maxout;
+
             else
+
                 adslf
             end
         end
