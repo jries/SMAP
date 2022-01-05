@@ -25,7 +25,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
             elseif isfield(l,'saveloc')
                 obj.transform=l.saveloc.file.transformation;
             elseif isfield(l,'T')
-                obj.transform=double(cat(3,eye(3,3),permute(l.T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
+                obj.transform.T=double(cat(3,eye(3,3),permute(l.T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
+                obj.transform.centercoord=l.imgcenter;
             else
                 errordlg(['no transformation found in' p.Tfile])
             end
@@ -184,7 +185,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 maxout.dy=squeeze(dyh(:));
                 dato=data;
                 dato.data=maxout;
-            elseif isnumeric(obj.transform) %new 4Pi
+            elseif isfield(obj.transform,'T') %new 4Pi
 
                 xpix=(maxima(1).xpix+roi(1)); %still x,y inconsistency! solve
                 ypix=(maxima(1).ypix+roi(2)); %put on camera chip
@@ -192,13 +193,14 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 
                 Nc=(maxima(1).phot);
                 ccombined=cref;
-                ct(:,:,1)=cref(:,1:2);
+%                 ct(:,:,1)=cref(:,1:2);
                 for k=2:length(maxima)    
                     Nt=maxima(k).phot;
-                    T=obj.transform(:,:,k);
+                    T=obj.transform.T(:,:,k);
                     Tinv=inv(T);
                     cN=[maxima(k).xpix+roi(1),maxima(k).ypix+roi(2),ones(size(maxima(k).ypix))];
-                    ctarget=(Tinv*cN')';
+                    ctarget=transformT4Pi(cN,Tinv,obj.transform.centercoord);
+%                     ctarget=(Tinv*cN')';
 
 %                     if p.framecorrection
 %                         ctarget=transform.transformToReferenceFramecorrection(k,cpix(indch,:)-multioffsetpix,data.frame);
@@ -219,8 +221,9 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 end
 
                 for k=length(maxima):-1:1
-                    T=obj.transform(:,:,k);
-                    ct=(T*ccombined')';
+                    T=obj.transform.T(:,:,k);
+                    ct=transformT4Pi(ccombined,T,obj.transform.centercoord);
+%                     ct=(T*ccombined')';
                     ct(:,1)=ct(:,1)-roi(1); %bring back to ROI on camera
                     ct(:,2)=ct(:,2)-roi(2);
                     ctt=ct(:,1:2);
@@ -281,6 +284,9 @@ classdef PeakCombiner<interfaces.WorkflowModule
     end
 end
 
+function ct=transformT4Pi(ccombined,T,centercoord)
+ct=(T*(ccombined-centercoord)')'+centercoord;
+end
 
 
 function pard=guidef(obj)

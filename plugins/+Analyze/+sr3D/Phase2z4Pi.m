@@ -37,18 +37,21 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
             phase=mod(locs.phase,2*pi);
             phaseerr=locs.phaseerr;
             cal3D=obj.locData.files.file(locs.filenumber(1)).savefit.cal3D;
-            frequency=cal3D.zT/cal3D.pixelsize_z;
-            
+%             frequency=1/cal3D.zT/cal3D.pixelsize_z;
+            periodnm=cal3D.zT*cal3D.pixelsize_z*1000;
+            frequency=pi/periodnm;
             numwindows=3; windowsize=ceil(max(locs.frame)/numwindows);
             framepos=0:windowsize:max(locs.frame);
             
             z0=0;
+            axp=obj.initaxis('phase vs z');
             for k=1:length(framepos)-1
                 inframe=locs.frame>framepos(k)&locs.frame<framepos(k+1);
-                z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0);
+                z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0,axp);
                 z0all(k)=z0;
             end
-            axp=obj.initaxis('phase vs z');
+            
+            
 %             z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0,axp);
             
             frameposc=framepos(1:end-1)+(framepos(2)-framepos(1))/2;
@@ -103,6 +106,7 @@ function z0=getz0phase(zastig,phase,frequency,z0,ax)
 % phasez=mod((zastig-z0)*2*frequency,2*pi);
 % cyclicaverage(mod(phase-phasez,2*pi),2*pi)
 % z0=0
+% frequency=pi/periodnm;
 zfp=phase/2/frequency;
 dz=zfp-zastig+pi/frequency/2+z0;
 dzm=mod(dz,pi/frequency);

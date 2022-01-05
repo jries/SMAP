@@ -29,7 +29,7 @@ classdef imageloader4Pimat<interfaces.imageloaderSMAP
                 fnum=mod(frame,obj.batchlength);
                 if batch~=obj.currentfiledata.batch
                     obj.currentfiledata.frames=load([obj.allfiles.path filesep obj.allfiles.files{batch}]);
-                    obj.currentfiledata.batch=1;
+                    obj.currentfiledata.batch=batch;
                 end
                 image(:,:,1,1)=obj.currentfiledata.frames.qd1(:,:,fnum);
                 image(:,:,1,2)=obj.currentfiledata.frames.qd2(:,:,fnum);
@@ -37,7 +37,8 @@ classdef imageloader4Pimat<interfaces.imageloaderSMAP
                 image(:,:,1,4)=obj.currentfiledata.frames.qd4(:,:,fnum);
 
 %                 image={obj.currentfiledata.frames.qd1(:,:,fnum),obj.currentfiledata.frames.qd2(:,:,fnum),obj.currentfiledata.frames.qd3(:,:,fnum),obj.currentfiledata.frames.qd4(:,:,fnum)};
-            catch
+            catch err
+                err
                 image=[];
             end
         end
