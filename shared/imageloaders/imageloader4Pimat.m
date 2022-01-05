@@ -19,28 +19,39 @@ classdef imageloader4Pimat<interfaces.imageloaderSMAP
             obj.allfiles.files={allfiles(:).name};
             obj.allfiles.path=path;
             md=obj.getmetadata;
+            getmetadatatagsi(obj);
             obj.metadata.basefile=path;
             obj.currentfiledata.batch=0;
+            obj.currentfiledata.frames=[];
+            obj.currentImageNumber=1;
             obj.file=file;
         end
         function image=getimagei(obj,frame)
-            try
+%             try
                 batch=ceil(frame/obj.batchlength);
-                fnum=mod(frame,obj.batchlength);
+                fnum=mod(frame-1,obj.batchlength)+1;
                 if batch~=obj.currentfiledata.batch
+                    if batch>length(obj.allfiles.files) 
+                        image=[];
+                        return;
+                    end
                     obj.currentfiledata.frames=load([obj.allfiles.path filesep obj.allfiles.files{batch}]);
                     obj.currentfiledata.batch=batch;
                 end
-                image(:,:,1,1)=obj.currentfiledata.frames.qd1(:,:,fnum);
-                image(:,:,1,2)=obj.currentfiledata.frames.qd2(:,:,fnum);
-                image(:,:,1,3)=obj.currentfiledata.frames.qd3(:,:,fnum);
-                image(:,:,1,4)=obj.currentfiledata.frames.qd4(:,:,fnum);
+                if fnum<=size(obj.currentfiledata.frames.qd1,3)
+                    image(:,:,1,1)=obj.currentfiledata.frames.qd1(:,:,fnum);
+                    image(:,:,1,2)=obj.currentfiledata.frames.qd2(:,:,fnum);
+                    image(:,:,1,3)=obj.currentfiledata.frames.qd3(:,:,fnum);
+                    image(:,:,1,4)=obj.currentfiledata.frames.qd4(:,:,fnum);
+                else
+                    image=[];
+                end
 
 %                 image={obj.currentfiledata.frames.qd1(:,:,fnum),obj.currentfiledata.frames.qd2(:,:,fnum),obj.currentfiledata.frames.qd3(:,:,fnum),obj.currentfiledata.frames.qd4(:,:,fnum)};
-            catch err
-                err
-                image=[];
-            end
+%             catch err
+%                 err
+%                 image=[];
+%             end
         end
         
         function closei(obj)
