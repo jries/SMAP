@@ -95,11 +95,13 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             end
             info=maxima;
             frameh=data{1}.frame;
-            info(1).frame=maxima(1).xpix*0+frameh;
+            for k=1:length(info)
+                info(k).frame=maxima(k).xpix*0+frameh;
+            end
            
 
             outs.info=info;
-            outs.img=cutoutimages(:,:,1:ind,:);
+            outs.img=cutoutimages;
             dato=data{1};%.copy;
             dato.data=outs;%set(outs);
             outputdat=dato;

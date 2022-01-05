@@ -230,7 +230,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                     maxout(k).xpix=ct(:,1);
                     maxout(k).ypix=ct(:,2);
     
-                    maxout(k).ID=k;
+                    maxout(k).ID=k*ones(size(maxout(k).xpix));
                     maxout(k).dx=dc(:,1);
                     maxout(k).dy=dc(:,2);
                 end

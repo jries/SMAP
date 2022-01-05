@@ -37,7 +37,7 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
             phase=mod(locs.phase,2*pi);
             phaseerr=locs.phaseerr;
             cal3D=obj.locData.files.file(locs.filenumber(1)).savefit.cal3D;
-            frequency=cal3D.frequency/cal3D.dz;
+            frequency=cal3D.zT/cal3D.pixelsize_z;
             
             numwindows=3; windowsize=ceil(max(locs.frame)/numwindows);
             framepos=0:windowsize:max(locs.frame);
