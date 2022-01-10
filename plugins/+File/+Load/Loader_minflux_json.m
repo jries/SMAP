@@ -143,7 +143,7 @@ pard.simple.position=[1,1];
 pard.simple.Width=2;
 pard.simple.TooltipString='Only load main localization attributes needed for rendering.';
 
-pard.onlyvalid.object=struct('Style','checkbox','String','load only valid','Value',1);
+pard.onlyvalid.object=struct('Style','checkbox','String','load only valid','Value',0);
 pard.onlyvalid.position=[2,1];
 pard.onlyvalid.Width=2;
 pard.onlyvalid.TooltipString='Load only localizations with the value tag == true.';

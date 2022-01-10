@@ -41,6 +41,12 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            y=obj.locData.loc.ynm(index);
            time=obj.locData.loc.time(index);
 
+           if isfield(obj.locData.loc,'znm')
+               z=obj.locData.loc.znm(index);
+           else
+               z=[];
+           end
+
            %find direction         
            c = cov(x-mean(x), y-mean(y));
            [a, ev] = eig(c);
@@ -54,6 +60,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
 
            obj.coord.xr=xr;obj.coord.yr=yr;obj.coord.time=time;obj.coord.timeplot=time-min(time);
+           obj.coord.z=z;
           
            if  isempty(obj.steps)
                refit(0,0,obj,1)
@@ -175,7 +182,16 @@ end
 obj.coord.indtime=indtime;
 p.fitmean=contains(p.fitmode.selection,'mean');
 if what==1
+    try
     steps=AutoStepfinderRies(obj.coord.xr(indtime),p);
+    catch err
+        steps=[];
+    end
+    if isempty(steps)
+        disp('no steps found')
+        steps.properties.StepSize=10;
+        steps.properties.IndexStep=[];
+    end
     indstep=[1 ;steps.properties.IndexStep ];      
     
     if obj.getSingleGuiParameter('splitmerge')
@@ -244,13 +260,36 @@ grid(axxy,'on')
 axm=-16:-16:axxy.XLim(1);
 axxy.XTick=[axm(end:-1:1) 0:16:axxy.XLim(2)];
 axxy.YTick=round((axxy.YLim(1):6:axxy.YLim(2))/6)*6;
-
-
 ff='%2.1f';
 sigmax=std(obj.coord.xr);sigmay=std(obj.coord.yr);
 sxdetrend=std(diff(obj.coord.xr))/sqrt(2);sydetrend=std(diff(obj.coord.yr))/sqrt(2);
 [~, sxrobust]=robustMean(obj.coord.xr); [~, syrobust]=robustMean(obj.coord.yr);
 title(axxy,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.' ' std(y) = ' num2str(sigmay,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
+
+if ~isempty(obj.coord.z)
+    ax3D=obj.setoutput('zxy');
+    hold(ax3D,'off')
+    plot3(ax3D,obj.coord.xr-goff, obj.coord.yr,obj.coord.z-median(obj.coord.z))
+    xlabel(ax3D,'x (nm)')
+    ylabel(ax3D,'y (nm)')
+    zlabel(ax3D,'z (nm)')
+    hold(ax3D,'on')
+    scatter3(ax3D,obj.steps.stepvalue-goff,obj.steps.possteps.y,obj.steps.possteps.z-median(obj.coord.z),'k')
+    view(ax3D,0,0)
+    axis(ax3D,'equal')
+    
+    axm=-16:-16:ax3D.XLim(1);
+    ax3D.XTick=[axm(end:-1:1) 0:16:ax3D.XLim(2)];
+%     ax3D.YTick=round((ax3D.YLim(1):25:ax3D.YLim(2))/25)*25;
+%     ax3D.ZTick=round((ax3D.ZLim(1):25:ax3D.ZLim(2))/25)*25;
+        ax3D.YTick=round((min(obj.coord.yr):25:max(obj.coord.yr))/25)*25;
+    ax3D.ZTick=round((min(obj.coord.z-median(obj.coord.z)):25:max(obj.coord.z-median(obj.coord.z)))/25)*25;
+%     ax3D.ZLim=[min(obj.coord.z-median(obj.coord.z)) max(obj.coord.z-median(obj.coord.z))];
+%     ax3D.DataAspectRatio=[1 1 1];
+
+    grid(ax3D,'on')
+
+end
 
 axsy=obj.setoutput('steps_y');
 plot(axsy,obj.coord.timeplot,obj.coord.yr)
@@ -262,14 +301,15 @@ end
 axsy.XTickLabel=round(obj.steps.steptime);
 grid(axsy)
 
+if ~isempty(dmv) && length(dmv)>1
 ax3=obj.setoutput('stephist');
 histogram(ax3,dmv,min(dmv):.5:max(dmv));
-
 %step time
 axstept=obj.setoutput('dwelltime');
 dt=max(0.1,round(mean(obj.steps.dwelltime)/5));
 histogram(axstept,obj.steps.dwelltime,0:dt:max(obj.steps.dwelltime))
 title(axstept,"mean step time = "+ num2str(mean(obj.steps.dwelltime),'%2.1f') + " ms");
+end
 end
 
 function selectrange(a,b,obj)
@@ -460,6 +500,10 @@ steps.stepvalue=stepv;
 steps.stepsize=diff(stepv);
 steps.possteps.x=stepv;
 steps.possteps.y=stepvalue(y,stepindex,mfun);
+if ~isempty(obj.coord.z)
+    z=obj.coord.z(indtime);
+    steps.possteps.z=stepvalue(z,stepindex,mfun);
+end
 steps.possteps.time=tv(stepindex);
 steps.dwelltime=diff(steps.steptime);
 if isfield(obj.site.evaluation,obj.name)

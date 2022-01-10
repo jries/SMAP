@@ -37,11 +37,12 @@ loc.dcr(:,1)=single(jt.dcr(ind2));
 loc.cfr(:,1)=single(jt.cfr(ind2));
 loc.vld(:,1)=jt.vld(ind1);
 loc.phot(:,1)=single(jt.eco(ind2));
+loc.eco(:,1)=single(jt.eco(ind2));
+loc.efo(:,1)=single(jt.efo(ind2));
+loc.ecc(:,1)=single(jt.ecc(ind2));
+loc.efc(:,1)=single(jt.efc(ind2));
 if loadall
-    loc.eco(:,1)=single(jt.eco(ind2));
-    loc.ecc(:,1)=single(jt.ecc(ind2));
-    loc.efo(:,1)=single(jt.efo(ind2));
-    loc.efc(:,1)=single(jt.efc(ind2));
+    
     loc.sta(:,1)=single(jt.sta(ind2));
     if isfield(jt,'fbg')
         loc.fbg(:,1)=single(jt.fbg(ind2));
