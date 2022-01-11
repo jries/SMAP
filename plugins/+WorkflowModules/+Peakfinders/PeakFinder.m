@@ -38,7 +38,7 @@ classdef PeakFinder<interfaces.WorkflowModule
             image=data.data;%get;
             if ~isempty(image)
                 if all(size(obj.roimask)== size(image,1:2))
-                    image=image.*obj.roimask - ~obj.roimask;
+                    image=image.*obj.roimask - (~obj.roimask);
 %                     image(~obj.roimask)=-1;
                 end
                 for k=size(image,3):-1:1

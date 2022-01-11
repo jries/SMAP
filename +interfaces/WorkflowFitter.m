@@ -295,7 +295,7 @@ numch=length(info);
                                 fitterstackinfo{X,Y}(ch).(obj.infofields{k})=zeros(obj.numberInBlock,1,'single');
                             end
                             for k=1:length(addfields)
-                                if iscell(info.(addfields{k}))
+                                if iscell(info(ch).(addfields{k}))
                                     fitterstackinfo{X,Y}(ch).(addfields{k}){obj.numberInBlock,1}=[];
                                 else
                                     fitterstackinfo{X,Y}(ch).(addfields{k})=zeros(obj.numberInBlock,1,'single');

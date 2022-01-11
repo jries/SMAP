@@ -72,6 +72,8 @@ classdef RoiCutterWF<interfaces.WorkflowModule
 
 
             for ch=1:length(maxima)
+                maxima(ch).xpixf=maxima(ch).xpix;
+                maxima(ch).ypixf=maxima(ch).ypix;
                 maxima(ch).xpix=round(maxima(ch).xpix);
                 maxima(ch).ypix=round(maxima(ch).ypix);
                 goodind=~(maxima(ch).ypix<=dn|maxima(ch).ypix>sim(1)-dn|maxima(ch).xpix<=dn|maxima(ch).xpix>sim(2)-dn);

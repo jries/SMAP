@@ -220,6 +220,9 @@ classdef PeakCombiner<interfaces.WorkflowModule
 %                     ct(end+1:end+size(ctar,1),:,k)=ctar(:,1:2);
                 end
 
+                %
+                ccombined=round(ccombined);
+
                 for k=length(maxima):-1:1
                     T=obj.transform.T(:,:,k);
                     ct=transformT4Pi(ccombined,T,obj.transform.centercoord);
@@ -284,8 +287,11 @@ classdef PeakCombiner<interfaces.WorkflowModule
     end
 end
 
-function ct=transformT4Pi(ccombined,T,centercoord)
-ct=(T*(ccombined-centercoord)')'+centercoord;
+function cto=transformT4Pi(ccombined,T,centercoord)
+ccombinedh=ccombined(:,[2 1 3]);
+
+ct=(T*(ccombinedh-centercoord)')'+centercoord;
+cto=ct(:,[2 1 3]);
 end
 
 
