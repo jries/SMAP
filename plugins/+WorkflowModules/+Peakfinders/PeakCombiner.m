@@ -8,7 +8,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
     methods
         function obj=PeakCombiner(varargin)
             obj@interfaces.WorkflowModule(varargin{:});
-             obj.inputParameters={'loc_loc_filter_sigma','EMon','loc_ROIsize','loc_fileinfo','loc_multifile'};
+             obj.inputParameters={'loc_loc_filter_sigma','EMon','loc_ROIsize','loc_fileinfo','loc_multifile','loc_4Pichanneldrift'};
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -186,9 +186,18 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 dato=data;
                 dato.data=maxout;
             elseif isfield(obj.transform,'T') %new 4Pi
+                if p.framecorrection
+                    drift=p.loc_4Pichanneldrift;
+                    s=size(drift.dx,1);
+                    driftx=drift.dx(min(s,data.frame),:);
+                    drifty=drift.dy(min(s,data.frame),:);
+                else
+                    driftx=zeros(1,4);drifty=zeros(1,4);
+                end
 
-                xpix=(maxima(1).xpix+roi(1)); %still x,y inconsistency! solve
-                ypix=(maxima(1).ypix+roi(2)); %put on camera chip
+                % plus or minus drift??
+                xpix=(maxima(1).xpix+roi(1))+driftx(1); %still x,y inconsistency! solve
+                ypix=(maxima(1).ypix+roi(2))+drifty(1); %put on camera chip
                 cref=[xpix,ypix,ones(size(xpix))];
                 
                 Nc=(maxima(1).phot);
@@ -208,6 +217,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
 %                     else
 %                         ctarget=transform.transformToReference(k,cpix(indch,:)-multioffsetpix);
 %                     end
+                    ctarget(:,1)=ctarget(:,1)+driftx(k);
+                    ctarget(:,2)=ctarget(:,2)+drifty(k);
                     
                     [iA,iB,uiA,uiB]=matchlocs(ccombined(:,1),ccombined(:,2),ctarget(:,1),ctarget(:,2),[0 0],6);
                     if isempty(iA)
@@ -229,8 +240,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
                     T=obj.transform.T(:,:,k);
                     ct=transformT4Pi(ccombined,T,obj.transform.centercoord);
 %                     ct=(T*ccombined')';
-                    ct(:,1)=ct(:,1)-roi(1); %bring back to ROI on camera
-                    ct(:,2)=ct(:,2)-roi(2);
+                    ct(:,1)=ct(:,1)-roi(1)+driftx(k); %bring back to ROI on camera
+                    ct(:,2)=ct(:,2)-roi(2)+drifty(k);
                     ctt=ct(:,1:2);
                     ctr=round(ctt);
                     dc=ct(:,1:2)-ctr;
@@ -290,10 +301,10 @@ classdef PeakCombiner<interfaces.WorkflowModule
 end
 
 function cto=transformT4Pi(ccombined,T,centercoord)
-ccombinedh=ccombined(:,[2 1 3]);
+% ccombinedh=ccombined(:,[2 1 3]);
 ccombinedh=ccombined;
 ct=(T*(ccombinedh-centercoord)')'+centercoord;
-cto=ct(:,[2 1 3]);
+% cto=ct(:,[2 1 3]);
 cto=ct;
 end
 

@@ -117,8 +117,8 @@ locs.PSFxpix=sx;
 locs.PSFypix=sx;
 fitpar.refractive_index_mismatch=1;
 
-fac{5}=fitpar.Pixelsizez*fitpar.refractive_index_mismatch; %fix direction
-off{5}=-fitpar.Zcenter*fitpar.Pixelsizez*fitpar.refractive_index_mismatch;
+fac{5}=-fitpar.Pixelsizez*fitpar.refractive_index_mismatch; %fix direction
+off{5}=+fitpar.Zcenter*fitpar.Pixelsizez*fitpar.refractive_index_mismatch;
 faccrlb{5}=fitpar.Pixelsizez*fitpar.refractive_index_mismatch;
 
 names={'ypix','xpix','phot','bg','zastig','phase'};
