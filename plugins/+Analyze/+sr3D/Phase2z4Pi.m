@@ -17,10 +17,10 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
         function out=run(obj,p)
             obj.setPar('undoModule','Phase2z4Pi');
             notify(obj.P,'backup4undo');
-            fitterpath=[fileparts(obj.getPar('maindirectory')) filesep 'ries-private' filesep 'PSF4Pi'];
-            if ~isdeployed
-                addpath(fitterpath)
-            end
+%             fitterpath=[fileparts(obj.getPar('maindirectory')) filesep 'ries-private' filesep 'PSF4Pi'];
+%             if ~isdeployed
+%                 addpath(fitterpath)
+%             end
             locsall=obj.locData.getloc({'znm','zastig','zastigerr','phase','znmerr','phaseerr','frame'});
             locs=obj.locData.getloc({'znm','zastig','zastigerr','phase','znmerr','phaseerr','frame','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','fov');
             if isempty(locs.zastig)

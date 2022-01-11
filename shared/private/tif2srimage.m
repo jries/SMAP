@@ -46,7 +46,13 @@ positionc=position;
 positionc(1:2)=position(1:2)-roi(1);
 positionc(3:4)=position(3:4)-roi(2);
 
-coim=cutoutim(permute(double(fileh.(form)(tnum).image),[2 1 3]),positionc);
+imh=double(fileh.(form)(tnum).image);
+s=size(imh);
+if length(s)>3 %4Pi or multi-channel
+    imh=sum(imh,4);
+end
+
+coim=cutoutim(permute(imh,[2 1 3]),positionc);
 
 magnification=pixsize/p.sr_pixrec*1000;
 % magnification=magnification([2 1])

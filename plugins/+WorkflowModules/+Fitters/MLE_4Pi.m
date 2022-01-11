@@ -98,9 +98,9 @@ o=ones( numpar,1);fac=num2cell(o);z=zeros( numpar,1);off=num2cell(z);
 faccrlb=fac;
 
 fac{2}=1;
-off{2}=-dn+posx;
+off{2}=-dn+posx+1; %+1 added to overlay raw and image
 
-off{1}=-dn+posy;
+off{1}=-dn+posy+1;
 
 fac{4}=EMexcess;
 fac{3}=EMexcess;
@@ -173,7 +173,7 @@ function out=fitwrapper_4pi(imstack,fitpar,stackinfo,varstack)
 % s=size(imstack);
 dx=[stackinfo(:).dx];
 dy=[stackinfo(:).dy];
-[P,CRLB,LogL] = psfloc_4Pi(fitpar,imstack,dx,dy,fitpar.link);
+[P,CRLB,LogL] = psfloc_4Pi(fitpar,imstack,dy,dx,fitpar.link);
 
 % EMexcess=1;
 
