@@ -50,17 +50,18 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
             z0=0;
             axp=obj.initaxis('phase vs z');
             axph=axp;
-            
-            f=figure(88);
-            ax=gca;
-            hold(ax,'on')
+            ax2=obj.initaxis('z0 corrected phase');
+
+            hold(ax2,'off')
             for k=1:length(framepos)-1
                 inframe=locs.frame>framepos(k)&locs.frame<framepos(k+1);
                 z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0,axph);
                 axph=[];
                 z0all(k)=z0;
-                [zph,phicor]=z_from_phi_JR(zastig,mod(phase,2*pi),frequency,z0);
-                plot(ax,zastig,phicor,'.')
+                [zph,phicor]=z_from_phi_JR(zastig(inframe),mod(phase(inframe),2*pi),frequency,z0);
+%                 [zph,phicor]=z_from_phi_JR(zastig,mod(phase,2*pi),frequency,z0);
+                plot(ax2,zastig(inframe),mod(phicor,2*pi),'.')
+                 hold(ax2,'on')
                 
             end
             
@@ -76,14 +77,21 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
             else
                 z0=mean(z0all);
             end
-            zph=-z_from_phi_JR(zastigall,mod(locsall.phase,2*pi),frequency,z0); %minus from fitter inversion
-            obj.locData.setloc('zphase',zph);
+            [zph,phcor]=z_from_phi_JR(zastigall,mod(locsall.phase,2*pi),frequency,z0); %minus from fitter inversion
+            obj.locData.setloc('zphase',-zph);
             if isempty(locs.zastig)
                 obj.locData.setloc('zastig',zastigall);
                 obj.locData.setloc('zastigerr',zastigerrall);
             end
+            ax3=obj.initaxis('phase corr all');
+            dscatter(zastigall,phcor)
+            hold on
+            zplot=min(zastigall):max(zastigall);
+        
+            plot(zplot,mod(zplot*2*frequency,2*pi),'k.')
+            hold off
             
-            obj.locData.setloc('znm',zph);
+            obj.locData.setloc('znm',-zph);
             obj.locData.regroup;
             obj.locData.filter;
             out=0;
