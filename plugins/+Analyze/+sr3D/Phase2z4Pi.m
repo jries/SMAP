@@ -41,36 +41,47 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
 %             frequency=1/cal3D.zT/cal3D.pixelsize_z;
             periodnm=cal3D.zT*cal3D.pixelsize_z*1000;
             frequency=pi/periodnm;
-            numwindows=3; windowsize=ceil(max(locs.frame)/numwindows);
-            framepos=0:windowsize:max(locs.frame);
+%             numwindows=1; windowsize=ceil(max(locs.frame)/numwindows);
+            framepos=[0:p.windowframe:max(locs.frame) max(locs.frame)+1];
+            if framepos(end)-framepos(end-1)<(framepos(2)-framepos(1))*0.75
+                framepos(end-1)=[];
+            end
             
             z0=0;
             axp=obj.initaxis('phase vs z');
             axph=axp;
+            
+            f=figure(88);
+            ax=gca;
+            hold(ax,'on')
             for k=1:length(framepos)-1
                 inframe=locs.frame>framepos(k)&locs.frame<framepos(k+1);
                 z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0,axph);
                 axph=[];
                 z0all(k)=z0;
+                [zph,phicor]=z_from_phi_JR(zastig,mod(phase,2*pi),frequency,z0);
+                plot(ax,zastig,phicor,'.')
+                
             end
             
             
 %             z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0,axp);
             
             frameposc=framepos(1:end-1)+(framepos(2)-framepos(1))/2;
-            z0int=fit(double(frameposc)',double(z0all)','smoothingspline');
-            ax=obj.initaxis('z0');
-            plot(ax,frameposc,z0all,frameposc,z0int(frameposc))
-            z0=z0int(locsall.frame);
+            if length(z0all)>3
+                z0int=fit(double(frameposc)',double(z0all)','smoothingspline');
+                ax=obj.initaxis('z0');
+                plot(ax,frameposc,z0all,frameposc,z0int(frameposc))
+                z0=z0int(locsall.frame);
+            else
+                z0=mean(z0all);
+            end
             zph=-z_from_phi_JR(zastigall,mod(locsall.phase,2*pi),frequency,z0); %minus from fitter inversion
             obj.locData.setloc('zphase',zph);
             if isempty(locs.zastig)
                 obj.locData.setloc('zastig',zastigall);
                 obj.locData.setloc('zastigerr',zastigerrall);
             end
-            % znm average:
-%             zpherr=phaseerr/2/frequency;
-%             obj.locData.setloc('zphasecorr',zph-z0);
             
             obj.locData.setloc('znm',zph);
             obj.locData.regroup;
@@ -84,8 +95,12 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
 end
 
 function pard=guidef
-% pard.text1.object=struct('String','parameters','Style','text');
-% pard.text1.position=[1,1];
+pard.windowframet.object=struct('String','window (frames)','Style','text');
+pard.windowframet.position=[1,1];
+
+pard.windowframe.object=struct('String','2000','Style','edit');
+pard.windowframe.position=[1,2];
+
 % 
 % pard.text2.object=struct('String','zmin','Style','text');
 % pard.text2.position=[2,1];
@@ -117,6 +132,8 @@ dz=zfp-zastig+pi/frequency/2+z0;
 dzm=mod(dz,pi/frequency);
 z0=-cyclicaverage(dzm,pi/frequency)+pi/frequency/2+z0;
 
+
+
 if nargin>4 &&~isempty(ax)
     phasez=mod((zastig-z0)*2*frequency,2*pi);
     indgood=zastig>min(zastig)+1 & zastig<max(zastig)-1 ;
@@ -124,9 +141,12 @@ if nargin>4 &&~isempty(ax)
     dscatter(zastig(indgood),phase(indgood))
     hold on
     plot(zastig,phasez,'r.')
+%     plot(zastig(indgood),zph(indgood),'g.')
     xlabel('zastig')
     ylabel('phase')
     legend('phase','phase from z astig')
+%     figure(88)
+%     plot(-zastig(indgood),zph(indgood),'k.')
 end
 
 % figure(88);histogram(dzm)
