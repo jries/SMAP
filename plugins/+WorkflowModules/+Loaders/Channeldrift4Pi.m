@@ -79,12 +79,12 @@ classdef Channeldrift4Pi<interfaces.WorkflowModule
 
         end
         function pard=guidef(obj)
-            pard.frameblockt.object=struct('Style','text','String','window (frames)');
+            pard.frameblockt.object=struct('Style','text','String','Ch drift window (frames)');
             pard.frameblockt.position=[1,1];
-            pard.frameblockt.Width=2;
+            pard.frameblockt.Width=1.5;
             pard.frameblock.object=struct('Style','edit','String','3000');
-            pard.frameblock.position=[1,3];
-            pard.frameblock.Width=1;
+            pard.frameblock.position=[1,2.5];
+            pard.frameblock.Width=0.5;
             pard.plugininfo.type='WorkflowModule'; 
             pard.plugininfo.description='runs the 4Pi fitting two times to determine channel drift';
         end
