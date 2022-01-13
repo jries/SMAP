@@ -217,8 +217,8 @@ classdef PeakCombiner<interfaces.WorkflowModule
 %                     else
 %                         ctarget=transform.transformToReference(k,cpix(indch,:)-multioffsetpix);
 %                     end
-                    ctarget(:,1)=ctarget(:,1)+driftx(k);
-                    ctarget(:,2)=ctarget(:,2)+drifty(k);
+                    ctarget(:,1)=ctarget(:,1)-driftx(k);
+                    ctarget(:,2)=ctarget(:,2)-drifty(k);
                     
                     [iA,iB,uiA,uiB]=matchlocs(ccombined(:,1),ccombined(:,2),ctarget(:,1),ctarget(:,2),[0 0],6);
                     if isempty(iA)

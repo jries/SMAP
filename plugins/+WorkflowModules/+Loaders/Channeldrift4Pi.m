@@ -33,7 +33,7 @@ classdef Channeldrift4Pi<interfaces.WorkflowModule
 
             peakfinder=wf.module('PeakFinder');
             cutoff=peakfinder.guihandles.cutoffvalue.String;
-            peakfinder.guihandles.cutoffvalue.String='3'; %to GUI?
+            peakfinder.guihandles.cutoffvalue.String='7'; %to GUI?
 
             fitter=wf.module('MLE_4Pi');
             oldlink=fitter.guihandles.globaltable.Data;
