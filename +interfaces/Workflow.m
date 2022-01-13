@@ -57,7 +57,10 @@ classdef Workflow<interfaces.DialogProcessor
                 module=p.module;
             elseif iscell(p.module)
                 modulepath=p.module;
-                module=plugin(p.module{:});
+                if length(modulepath)==3 && ~(strcmp(modulepath{3},'x'))
+                    modulepath={modulepath{1:2} 'x' modulepath{3}};
+                end
+                module=plugin(modulepath{:});
                 
                 if ~(isa(module,'interfaces.WorkflowModule')|| isa(module,'interfaces.DialogProcessor'))
                     tag=[];

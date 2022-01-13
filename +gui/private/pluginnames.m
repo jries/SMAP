@@ -1,4 +1,3 @@
-
 function out=pluginnames(varargin)
 plugs=plugin;
 for k=1:length(varargin)

@@ -12,83 +12,36 @@ if ~isdeployed
     
     strcase={};
     strlist={};
-    d=dirrecursive(plugindir,2);
+    d=dirrecursive(plugindir,3);
     fn1=fieldnames(d);
     for k1=1:length(fn1)
         fn1h=fn1{k1};
         fn2=fieldnames(d.(fn1h));
         for k2=1:length(fn2)
             fn2h=fn2{k2};
-            dirh=[plugindir filesep '+' fn1h filesep '+' fn2h filesep];
-            fn3=dir([dirh '*.m']);
-%             dirh=d.(fn1h).(fn2h);
-            if ~isempty(fn3)
+            [strcaseh, strlisth]=makepluginlist(pold,{fn1h,fn2h},plugindir);
+            strlist(end+1:end+length(strlisth))=strlisth;
+            strcase(end+1:end+length(strcaseh))=strcaseh;
+            if ~isempty(d.(fn1h).(fn2h))
+                fn3=fieldnames(d.(fn1h).(fn2h));
                 for k3=1:length(fn3)
-                    [~,fn3h]=fileparts(fn3(k3).name);
-                    ismodule=false;
-                    try
-                        ptry=pold.(fn1h).(fn2h).(fn3h);
-                        ismodule=true;
-%                         if length(ptry)>3
-                            pname=ptry{4};
-%                         else
-%                             pname=ptry{3};
-%                         end
-                        
-%                         if length(ptry)>4
-                            pkind=ptry{5};
-%                         else
-%                             pkind='';
-%                         end                        
-                    catch
-                        try
-                            module=callmodule(fn1h,fn2h,fn3h);
-                            
-                        if isa(module,'interfaces.GuiModuleInterface')
-                            module.pluginpath={fn1h,fn2h,fn3h};
-                            ismodule=true;
-                            try
-                                guidef=module.guidef;
-                                pname=guidef.plugininfo.name;
-                            catch
-                            pname=module.info.name;
-                            end
-                            try
-                                guidef=module.guidef;
-                                pkind=guidef.plugininfo.type;
-                            catch
-                                pkind='';
-                            end
-                        end
-                        catch err
-                            if ~strcmp(err.identifier,'MATLAB:scriptNotAFunction')
-                                warning(err.message)
-                                disp([fn1h,fn2h,fn3h])
-                            end
-                        end
-                    end
-                    if ismodule
-                        strcase(end+1:end+2)=makecase(fn1h,fn2h,fn3h);
-                        strlist(end+1)=makelist(fn1h,fn2h,fn3h,pname,pkind);
-                    end
-%                     catch
-%                          fn3h
-%                     end
-                    
+                    fn3h=fn3{k3};
+                    [strcaseh, strlisth]=makepluginlist(pold,{fn1h,fn2h,fn3h},plugindir);
+                    strlist(end+1:end+length(strlisth))=strlisth;
+                    strcase(end+1:end+length(strcaseh))=strcaseh;
                 end
+                %another iteration
             end
-%             end
         end
- 
     end
     %assemble outher lines
-    strpre1{1}='function out=plugin(fn1,fn2,fn3,varargin)';
+    strpre1{1}='function out=plugin(fn1,fn2,fn3,fn4,varargin)';
     strpre1{2}='if nargin>0';
-    strpre1{3}='fstr=[fn1 ''.'' fn2 ''.'' fn3];';
+    strpre1{3}='fstr=[fn1 ''.'' fn2 ''.'' fn3 ''.'' fn4];';
     strpre1{4}='switch fstr';
     
     strpost1{1}='end';
-    strpost1{2}='module.pluginpath={fn1,fn2,fn3};';
+    strpost1{2}='module.pluginpath={fn1,fn2,fn3,fn4};';
     strpost1{3}='out=module;';
     strpost1{4}='else';
     
@@ -108,6 +61,64 @@ else
 end
 end
 
+function [strcase, strlist]=makepluginlist(pold,fn,plugindir)
+strcase={};
+strlist={};
+dirh=[plugindir filesep '+' fn{1} filesep '+' fn{2} filesep];
+if length(fn)>2
+    dirh=[dirh '+' fn{3} filesep];
+else
+    fn{3}='x';
+end
+fn3=dir([dirh '*.m']);
+if ~isempty(fn3)
+    for k3=1:length(fn3)
+        [~,fn3h]=fileparts(fn3(k3).name);
+        ismodule=false;
+        try
+            ptry=pold.(fn{1}).(fn{2}).(fn{3}).(fn3h);
+            ismodule=true;
+            pname=ptry{5};
+            pkind=ptry{6};                      
+        catch
+            try
+                module=callmodule(fn{1},fn{2},fn{3},fn3h);
+                
+            if isa(module,'interfaces.GuiModuleInterface')
+                module.pluginpath={fn{1},fn{2},fn{3},fn3h};
+                ismodule=true;
+                try
+                    guidef=module.guidef;
+                    pname=guidef.plugininfo.name;
+                catch
+                pname=module.info.name;
+                end
+                try
+                    guidef=module.guidef;
+                    pkind=guidef.plugininfo.type;
+                catch
+                    pkind='';
+                end
+            end
+            catch err
+                if ~strcmp(err.identifier,'MATLAB:scriptNotAFunction')
+                    warning(err.message)
+                    disp([fn{1},fn{2},fn{3},fn3h])
+                end
+            end
+        end
+        if ismodule
+            strcase(end+1:end+2)=makecase(fn{1},fn{2},fn{3},fn3h);
+            strlist(end+1)=makelist(fn{1},fn{2},fn{3},fn3h,pname,pkind);
+        end
+%                     catch
+%                          fn3h
+%                     end
+        
+    end
+end
+end
+
 function dirout=dirrecursive(plugindir,depth)
 alldir=dir([plugindir filesep '+*']);
     dirout=[];
@@ -121,23 +132,36 @@ alldir=dir([plugindir filesep '+*']);
 end
 
 
-function out=makecase(a,b,c)
-out{1}=['case ''' a '.' b '.' c ''''];
-out{2}=['   module=' a '.' b '.' c '(varargin{:});'];
-end
-
-function out=makelist(a,b,c,d,e)
-if nargin<4
-    out{1}=['out.' a '.' b '.' c '={''' a ''',''' b ''',''' c '''};'];
-elseif nargin<5
-    out{1}=['out.' a '.' b '.' c '={''' a ''',''' b ''',''' c ''',''' d '''};'];
+function out=makecase(a,b,c,d)
+out{1}=['case ''' a '.' b '.' c '.' d ''''];
+if c=='x'
+    out{2}=['   module=' a '.' b '.' d '(varargin{:});'];
 else
-    out{1}=['out.' a '.' b '.' c '={''' a ''',''' b ''',''' c ''',''' d ''',''' e '''};'];
+    out{2}=['   module=' a '.' b '.' c '.' d '(varargin{:});'];
 end
 end
 
-function out=callmodule(a,b,c)
-out=eval([ a '.' b '.' c ]);
+% function out=makelist(a,b,c,d,e,f)
+% if nargin<4
+%     out{1}=['out.' a '.' b '.' c '={''' a ''',''' b ''',''' c '''};'];
+% elseif nargin<5
+%     out{1}=['out.' a '.' b '.' c '={''' a ''',''' b ''',''' c ''',''' d '''};'];
+% elseif nargin<6
+%     out{1}=['out.' a '.' b '.' c '={''' a ''',''' b ''',''' c ''',''' d ''',''' e '''};'];
+% else
+%         out{1}=['out.' a '.' b '.' c '={''' a ''',''' b ''',''' c ''',''' d ''',''' e ''',''' f '''};'];
+% end
+% end
+function out=makelist(a,b,c,d,e,f)
+out{1}=['out.' a '.' b '.' c '.' d '={''' a ''',''' b ''',''' c ''',''' d ''',''' e ''',''' f '''};'];
+end
+
+function out=callmodule(a,b,c,d)
+if c=='x'
+    out=eval([ a '.' b '.' d ]);
+else
+    out=eval([ a '.' b '.' c '.' d ]);    
+end
 end
 
 function writecell(fid,str)

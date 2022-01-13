@@ -14,7 +14,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             fw=obj.guiPar.FieldWidth;
             fh=obj.guiPar.FieldHeight;
-            allloaders=pluginnames('File','Load');
+            allloaders=pluginnames('File','Load','x');
             
             lp={};
             upperpos=obj.guihandles.load.Position;
@@ -22,7 +22,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
 
                 loaderhandle=uipanel(obj.handle,'Units','pixels','Position',[1,5.25*fh,2.9*fw,upperpos(2)-5.25*fh],'Visible','off');
                 
-                loaderp=plugin('File','Load',allloaders{k},loaderhandle,obj.P);
+                loaderp=plugin('File','Load','x',allloaders{k},loaderhandle,obj.P);
 %                 infom.pluginpath={'File','Load',obj.loaders{k}};
                        
                 loaderp.attachLocData(obj.locData);
@@ -42,7 +42,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             obj.loaders{1}.handle.Visible='on';
             obj.guihandles.loadmodule.String=lp;
             
-            allsavers=pluginnames('File','Save');
+            allsavers=pluginnames('File','Save','x');
             
             upperpos=obj.guihandles.save.Position;
 %             obj.savers= plugintemp.plugins('File','Save',allsavers{1},[],obj.P); %to initialize
@@ -50,7 +50,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 saverhandle=uipanel(obj.handle,'Units','pixels','Position',[1,.6*fh,2.9*fw,upperpos(2)-.6*fh],'Visible','off');
                
                 
-                saver=plugin('File','Save',allsavers{k},saverhandle,obj.P);
+                saver=plugin('File','Save','x',allsavers{k},saverhandle,obj.P);
 %                 saver.pluginpath={'File','Save',allsavers{k}};
                 saver.attachLocData(obj.locData);
                 saver.makeGui;

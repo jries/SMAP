@@ -37,25 +37,34 @@ for k=1:length(names1)
         h2(k,l)=uimenu(h1(k),'Label',names2{l});
         names3=pluginnames(names1{k},names2{l});
         modulethere3=false;
-        for m=1:length(names3)     
-                pluginpath=pluginnames(names1{k},names2{l},names3{m});
-                pname=pluginpath{4};
-                ptype=pluginpath{5};
+        for m=1:length(names3)  
+            names4=pluginnames(names1{k},names2{l},names3{m});
+            if ~(strcmp(names3{m},'x'))
+                h3(k,l,m)=uimenu(h2(k,l),'Label',names3{m});
+                hparent=h3(k,l,m);
+            else
+                hparent=h2(k,l);
+            end
+            for n=1:length(names4)
+                pluginpath=pluginnames(names1{k},names2{l},names3{m},names4{n});
+                pname=pluginpath{5};
+                ptype=pluginpath{6};
                 if any(strcmp(nomenutypes,ptype))
                     continue
                 end
-                h3(k,l,m)=uimenu(h2(k,l),'Label',pname,'Callback',{@makeplugin,obj,{names1{k},names2{l},names3{m}}});
+                h4(k,l,m,n)=uimenu(hparent,'Label',pname,'Callback',{@makeplugin,obj,{names1{k},names2{l},names3{m},names4{n}}});
                 modulethere3=true;  
                 modulethere2=true;
                 
-                pout.(names1{k}).(names2{l}).(names3{m}).module={names1{k},names2{l},names3{m},pname,ptype};
+                pout.(names1{k}).(names2{l}).(names3{m}).(names4{n}).module={names1{k},names2{l},names3{m},names4{n},pname,ptype};
+            end
         end
         if ~modulethere3
-            delete(h2(k,l));
+%             delete(h2(k,l)); %%%XXX
         end
     end
     if ~modulethere2
-        delete(h1(k));
+%         delete(h1(k));
     end
 end
 
