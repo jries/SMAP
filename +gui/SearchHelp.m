@@ -7,6 +7,7 @@ classdef SearchHelp<interfaces.GuiModuleInterface
        helpdir
        annotation
        searchind
+       pluginnames
     end
     
     methods
@@ -36,11 +37,12 @@ hf=obj.figure;
 h.searchstring=uicontrol(hf, 'Style','edit','Units','normalized','Position',[0.02,0.93,0.75,0.05]);
 h.searchbutton=uicontrol(hf, 'Style','pushbutton','String','Search','Units','normalized','Position',[0.8,0.93,0.18,0.05],...
     'Callback',{@search_callback,obj});
-h.resultslist=uicontrol(hf,'Style','listbox','Units','normalized','Position',[0.02,0.02,0.3,0.9],'Callback',{@list_callback,obj});
-h.resultspanel=uipanel(hf,'Units','normalized','Position',[0.32,0.22,0.66,0.7],'BackgroundColor','w');
-h.resultstt=uicontrol(hf,'Style','edit','Units','normalized','Position',[0.32,0.02,0.66,0.2],'BackgroundColor','w','HorizontalAlignment','left','Max',100);
-
+h.resultslist=uicontrol(hf,'Style','listbox','Units','normalized','Position',[0.02,0.04,0.3,0.88],'Callback',{@list_callback,obj});
+h.resultspanel=uipanel(hf,'Units','normalized','Position',[0.32,0.24,0.66,0.68],'BackgroundColor','w');
+h.resultstt=uicontrol(hf,'Style','edit','Units','normalized','Position',[0.32,0.04,0.66,0.2],'BackgroundColor','w','HorizontalAlignment','left','Max',100);
+h.filename=uicontrol(hf,'Style','text','Units','normalized','Position',[0.02,0.01,0.96,0.03]);
 obj.guihandles=h;
+obj.pluginnames=plugin;
 end
 
 function search_callback(a,b,obj)
@@ -100,6 +102,7 @@ else
     end
 end
 pos=[0 0 .65 1];
+
 obj.annotation=showpluginhelp(obj.guihandles.resultspanel,description,pos);
 % obj.annotation=annotation(obj.guihandles.resultspanel,'textbox',pos,...
 %              'HorizontalAlignment','left',...
@@ -107,7 +110,11 @@ obj.annotation=showpluginhelp(obj.guihandles.resultspanel,description,pos);
 %              'String',(txt),'Interpreter',interpreter,'FontSize',12);
 %           obj.annotation.Position=pos;
 obj.guihandles.resultstt.Max=100;
- obj.guihandles.resultstt.String=txttt;       
+ obj.guihandles.resultstt.String=txttt;  
+
+path=searchinstruct(obj.pluginnames,obj.guihandles.resultslist.String(select));
+path=strrep(path,'.x.','.');
+obj.guihandles.filename.String=path;
 end
 
 function out=onlynames(in)

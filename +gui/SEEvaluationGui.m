@@ -37,7 +37,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             set(obj.guihandles.addmodule,'Callback',{@addmodule_callback,obj})
             set(obj.guihandles.removemodule,'Callback',{@removemodule_callback,obj})
             obj.guihandles.preview.Callback={@preview_callback,obj};
-            addmodule(obj,'generalStatistics');
+            addmodule(obj,{'ROIManager','Evaluate','measure', 'generalStatistics'});
             
             % Yu-Le added
             addpath(genpath('./LocMoFit'))

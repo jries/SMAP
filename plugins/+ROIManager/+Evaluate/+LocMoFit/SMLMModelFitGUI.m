@@ -1,4 +1,4 @@
-classdef SMLMModelFitGUI<ROIManager.Evaluate.LocMoFitGUI
+classdef SMLMModelFitGUI<ROIManager.Evaluate.LocMoFit.LocMoFitGUI
     % Important:  This plugin is obsolete and will be removed in future
     % update. Please use LocMoFitGUI instead.
     methods
