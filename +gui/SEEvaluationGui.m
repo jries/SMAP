@@ -89,7 +89,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             end
             
         end
-        function addmodule(obj,modulename,p)
+        function addmodule(obj,pluginpath,p)
             dx=2;
             table=obj.guihandles.modules;
             obj.guiPar.Vrim=0;
@@ -99,6 +99,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             table.Units='pixels';
             pos=table.Position;
             table.Units=tunits;
+            modulename=pluginpath{end};
             modulename2=modulename;
             ind=2;
             while sum(sum(strcmpi(d,modulename2)))
@@ -110,7 +111,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             sn=s(1)+1;
             d{sn,1}=true;
             d{sn,2}=modulename2;
-            process=plugin('ROIManager','Evaluate','x',modulename);
+            process=plugin(pluginpath{:});
             if isa(process,'interfaces.SEEvaluationProcessor')
                 process.attachPar(obj.P);
                 panel=uipanel(obj.handle,'Units','pixels','Position',[pos(1)+pos(3)+dx,dx,sizeparent(3)-pos(1)-pos(3)-2*dx,sizeparent(4)-2*dx-20],'Visible','off');
@@ -163,15 +164,19 @@ classdef SEEvaluationGui< interfaces.SEProcessor
 end
 
 function addmodule_callback(a,b,obj)
-newmodule=listdlg('ListString',obj.pluginnames);
-for k=1:length(newmodule)
-    modulename=obj.pluginnames{newmodule(k)};
-    % Yu-Le added
-    if strcmp(modulename, 'SMLMModelFitGUI')
-        modulename = 'LocMoFitGUI';
-    end
-    addmodule(obj,modulename)
+plugins=plugin;
+types={'ProcessorPlugin','ROI_Evaluate','all'};
+pg=['ROIManager.' browsefields(plugins.ROIManager,'Evaluate',1,0,true,types)];
+
+if isempty(pg)
+    return
 end
+pluginname=field2cell(pg);
+if strcmp(pluginname{end}, 'SMLMModelFitGUI')
+    pluginname{end} = 'LocMoFitGUI';
+end
+addmodule(obj,pluginname)
+
 end
 
 function removemodule_callback(a,b,obj)
