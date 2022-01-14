@@ -22,6 +22,7 @@ elseif strcmp(field,'..')
      recursions=recursions+1;
     psub=prop;
     field='';
+
 elseif isstruct(prop.(field))
     fn=fieldnames(prop.(field));
     fnt=fn;
@@ -35,8 +36,8 @@ elseif isstruct(prop.(field))
                 type=ph{5};
             
             elseif isfield(ph,'module')
-                fnt{k}=ph.module{4};
-                type=ph.module{5};
+                fnt{k}=ph.module{5};
+                type=ph.module{6};
             else
                 type='dir';
             end
@@ -48,11 +49,17 @@ elseif isstruct(prop.(field))
             end
         end
     end
+    psub=prop.(field);
+    if length(fn)==1 && strcmp(fn{1},'x')
+        str=[field '.' browsefields(psub,'x',recursions-1,1,parsefield,types)];
+        return
+
+    end
     fn=fn(indin);
     fnt=fnt(indin);
     fn={'..',fn{:}};
     fnt={'..',fnt{:}};
-    psub=prop.(field);
+    
 else
     str=field;
     return;

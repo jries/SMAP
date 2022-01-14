@@ -28,7 +28,7 @@ classdef GuiPluginGroup< interfaces.GuiModuleInterface & interfaces.LocDataInter
 %                     else
                         
                         allplugins=fieldnames(obj.guiplugins);
-                         allplugins=setdiff(allplugins,{'position','name','module'});
+                         allplugins=setdiff(allplugins,{'position','name','module','x'});
                          posm=[];
                         for k=1:length(allplugins)
                             if isfield(obj.guiplugins.(allplugins{k}),'position');
@@ -104,7 +104,7 @@ classdef GuiPluginGroup< interfaces.GuiModuleInterface & interfaces.LocDataInter
             if iscell(pluginpath)&&length(pluginpath)>=3
                 thisplugin=[];
                 try
-                thisplugin=plugin(pluginpath{1:3});
+                thisplugin=plugin(pluginpath{1:4});
                 catch
                     
                     obj.guiplugins=myrmfield(obj.guiplugins,'name');
@@ -202,7 +202,7 @@ switch callobj.Label
     case 'add plugin'
         plugins=obj.getPar('menu_plugins');
         types={'ProcessorPlugin','ROI_Analyze','SaverPlugin'};
-        pg=browsefields(plugins,{},2,0,true,types);
+        pg=browsefields(plugins,{},3,0,true,types);
         
         if isempty(pg)
             return
