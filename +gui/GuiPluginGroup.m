@@ -186,6 +186,9 @@ end
 
 
 function processorselect_callback(object,data,obj)
+if isempty(obj.plugins)
+    return
+end
 for k=1:length(obj.plugins.allclassnames)
     obj.processors.(obj.plugins.allclassnames{k}).setvisibility('off')
 %     set(obj.guiPar.plugins.(obj.guiPar.allclassnames{k}).panel,'Visible','off')

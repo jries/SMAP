@@ -32,7 +32,7 @@ classdef GuiPluginWindow< interfaces.GuiModuleInterface & interfaces.LocDataInte
 %             end
             obj.guihandles=h;
             guiplugins=obj.guiplugins;
-            if ~isempty(guiplugins)
+            if ~isempty(guiplugins) && ~isempty(fieldnames(guiplugins))
                 fn=fieldnames(guiplugins);
                 fn=setdiff(fn,{'position','name'});
                 for k=1:length(fn)
@@ -114,7 +114,11 @@ switch callobj.Label
             return
         end
         name=name{1};
-        obj.guiplugins.(name).position=length(fieldnames(obj.guiplugins))+1;
+        if isempty(obj.guiplugins)
+            obj.guiplugins.(name).position=1;
+        else
+            obj.guiplugins.(name).position=length(fieldnames(obj.guiplugins))+1;
+        end
         obj.addplugingroup(name);
         guimodules.(obj.maindir).(name)=[];
 

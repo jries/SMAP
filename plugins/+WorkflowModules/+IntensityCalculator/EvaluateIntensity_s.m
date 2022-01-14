@@ -35,11 +35,11 @@ classdef EvaluateIntensity_s<interfaces.WorkflowModule
             huitable.Units='normalized';
             huitable.TooltipString='Select (check) evaluators to determine intensities';
             obj.guihandles.evalmodules=huitable;
-            ev1={plugin('WorkflowModules','IntensityCalculator','roi2int_sumG')};
+            ev1={plugin('WorkflowModules','IntensityCalculator','x','roi2int_sumG')};
              obj.evaluators=ev1;
-             ev2={plugin('WorkflowModules','IntensityCalculator','roi2int_fitG')};%roi2int_fitG;
+             ev2={plugin('WorkflowModules','IntensityCalculator','x','roi2int_fitG')};%roi2int_fitG;
              obj.evaluators(2)=ev2;
-            ev3={plugin('WorkflowModules','IntensityCalculator','roi2int_expPSF')};%roi2int_fitG;
+            ev3={plugin('WorkflowModules','IntensityCalculator','x','roi2int_expPSF')};%roi2int_fitG;
              obj.evaluators(3)=ev3;
             p=obj.guiPar;
             p.Xpos=1;p.Vpos=1;p.Vrim=0;

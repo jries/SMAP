@@ -11,7 +11,7 @@ if isstruct(p)||isobject(p)
         end
     end
 else
-    if iscell(p)
+    if iscell(p)&& ~isempty(p)
         to=p{1};
         if isnumeric(to)||islogical(to)
             to=num2str(to);

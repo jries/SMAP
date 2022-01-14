@@ -219,7 +219,7 @@ end
 
 [f, p]=uiputfile(gfile);
 if f
-    if strcmp(fn,'SimpleGUI')
+    if strcmp(f,'SimpleGUI')
         answ=questdlg('Overwrite SimpleGUI.txt? This file is synchronized via git with all other SMAP users worldwide. If not, select NO and save under a different name.');
         if ~strcmp(answ, 'Yes')
             disp('saving of settings aborted.')

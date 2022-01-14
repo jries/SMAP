@@ -6,6 +6,10 @@ function txt=writestruct(file,p)%replacestruct,parseascell)
 %     parseascell=false;
 % end
 %read struct from text file
+if ~isstruct(p)
+    txt='';
+    return
+end
  txt=struct2txt(p,'');
  for k=1:length(txt)
      txt{k}(1)=[];

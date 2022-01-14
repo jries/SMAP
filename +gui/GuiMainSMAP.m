@@ -202,7 +202,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             if exist(gfile,'file')
                 guimodules=readstruct(gfile,[],true);
             else
-                guimodules=pmenu;
+%                 guimodules=pmenu;
+                guimodules.Process={};guimodules.Analyze={};guimodules.ROIManager.Evaluate={};
             end
             guimodulespure=myrmfield(guimodules,{'GuiParameters','globalGuiState'});
             obj.setPar('guimodules',guimodulespure);
