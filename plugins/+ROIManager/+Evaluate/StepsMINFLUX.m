@@ -86,16 +86,20 @@ function plotstatistics(obj)
 index=obj.index;
 time=obj.locData.loc.time(index);
 dt=diff(time);
-dtmin=min(dt);
+dtmin=min(dt(dt>0));
 dtmedian=median(dt);
 dtmean=mean(dt);
 ltime=time-min(time);
 ff='%2.1f';
 axt=obj.setoutput('time');
+bins=dtmin/2:dtmin:quantile(dt,0.995);
+if length(bins)<3
+    bins=dtmin/2:dtmin/2:dtmin*2;
+end
 hold(axt,'off')
-histogram(axt,dt,dtmin/2:dtmin:quantile(dt,0.995))
+histogram(axt,dt,bins)
 hold(axt,'on')
-histogram(axt,dt,0:dtmin*0.1:quantile(dt,0.995))
+histogram(axt,dt,bins)
 xlabel(axt,'dt (ms)')
 ylabel(axt,'frequency')
 title(axt,['dtmin = ' num2str(dtmin,ff) ' ms, dtmedian = ' num2str(dtmedian,ff) ' ms, dtmean = ' num2str(dtmean,ff) ' ms.'])
@@ -372,6 +376,7 @@ for k=2:length(istep)-1
     dplus=0;
     smin=inf;splus=inf;
     ih=istep(k);
+
     if abs(x(ih)-sval(k))<abs(x(ih)-sval(k-1)) %ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1))
         smin=abs(x(ih)-sval(k));
         dmin=-1;
@@ -408,7 +413,7 @@ for k=2:length(istep)-1
      if smin<splus
          istep(k)=max(1,max(istep(k)+dmin, istep(k-1)+1));
      else 
-         istep(k)=min(istep(k)+dplus,istep(k+1)-1);
+         istep(k)=max(1,min(istep(k)+dplus,istep(k+1)-1));
      end
 end
 istep=istep(1:end-1);
