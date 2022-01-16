@@ -147,7 +147,7 @@ function results=autostepfinder_mainloop(Data,initval)
     end    
     
     %% Final analysis: 
-    if max(N_found_steps_per_round)==0, cla;
+    if max(N_found_steps_per_round)==0
          nostepmessage=['No steps found in: ', ];
          disp(nostepmessage); 
        if initval.hand_load == 2
@@ -189,13 +189,13 @@ end
     FitX=Get_FitFromStepsindices(X,indexlist,initval);   
     stepsX=Get_Steps(FitX); 
 
-if nargin<2
-    close all;
-    subplot(2,1,1); plot(X,'r'),hold;plot(FitX,'k','LineWidth',2);
-    title('Data and Fit');xlabel('time');ylabel('position,a.u.');
-    subplot(2,1,2); semilogx(S_fin,'-o');
-    title('S-curve');xlabel('Stepnumber');ylabel('S-value, a.u.');
-end
+% if nargin<2
+%     close all;
+%     subplot(2,1,1); plot(X,'r'),hold;plot(FitX,'k','LineWidth',2);
+%     title('Data and Fit');xlabel('time');ylabel('position,a.u.');
+%     subplot(2,1,2); semilogx(S_fin,'-o');
+%     title('S-curve');xlabel('Stepnumber');ylabel('S-value, a.u.');
+% end
 
 
 function [bestshot,S_fin]=Eval_Scurve(S_raw)
@@ -564,16 +564,16 @@ while ratio<sigchange     %if not too much changes anymore; the higher this numb
         case 'all',  flag=abs(data-av)<tolerance*sigma;     %adjust outlier flags  
     end
     %plot menu------------------  
-    if sho==1
-        cleandata=data(selc); 
-        hx=(min(cleandata):(range(cleandata))/binz:max(cleandata));   %make an axis
-        sthst=hist(cleandata,hx);
-        figure;
-        bar(hx,sthst);
-        title('Histogram');
-        pause(0.5);  
-        close(gcf);
-    end
+%     if sho==1
+%         cleandata=data(selc); 
+%         hx=(min(cleandata):(range(cleandata))/binz:max(cleandata));   %make an axis
+%         sthst=hist(cleandata,hx);
+%         figure;
+%         bar(hx,sthst);
+%         title('Histogram');
+%         pause(0.5);  
+%         close(gcf);
+%     end
     %---------------------------- 
 end
 cleandata=data(selc); 

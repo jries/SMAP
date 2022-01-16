@@ -24,11 +24,14 @@ classdef MotorPAINT<interfaces.DialogProcessor
             tind=1;
             t=tic;
             
+            axall=obj.initaxis('raw');
+            hold(axall,'off');
             for k=1:length(gn)
                 indh=locs.groupindex==gn(k);
                 
                 x=locs.xnm(indh);
                 y=locs.ynm(indh);
+
 
                 lennm=sqrt(diff(quantile(x,[.1,0.9]))^2+diff(quantile(y,[.1,0.9]))^2);
 
@@ -36,6 +39,8 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 if lennm<p.minlennm
                     continue
                 end
+                plot(axall,x,y);
+                hold(axall,'on');
                 time=locs.time(indh);
                 
                 %p. splitmerge (T), splitmergestep([]), stepfunction (mean), coarsneness
@@ -81,13 +86,10 @@ classdef MotorPAINT<interfaces.DialogProcessor
 
             ax=obj.initaxis('tracks');
             hold(ax,'off')
-            for k=1:length(gn)
+            for k=1:length(xsall)
                 plot(ax,xsall{k},ysall{k})
                 hold(ax,'on')
             end
-
-
-           
 
         end
         function pard=guidef(obj)
