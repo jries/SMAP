@@ -27,6 +27,10 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
 
            %identify all localizations in track
            locs=obj.getLocs({'xnm','ynm','groupindex','tid'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2);
+           if isempty(locs.xnm)
+                disp('no localizations')
+                return
+           end
            if contains(p.link.selection,'group')
                fid='groupindex';
            else
@@ -47,17 +51,18 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                z=[];
            end
 
-           %find direction         
-           c = cov(x-mean(x), y-mean(y));
-           [a, ev] = eig(c);
-           [ev,ind] = sort(diag(ev));
-           [xa, ya] = deal(a(1,ind(end)), a(2,ind(end)));
-           angle = cart2pol(xa, ya);
-           [xr,yr]=rotcoord(x-mean(x),y-mean(y),angle);
-           indx=xr<mean(xr);
-           if mean(time(indx))>mean(time(~indx)) %increasing position with time
-               xr=-xr;
-           end
+           %find direction     
+           [xr,yr]=rotateCenterCoordinates(x,y,time);
+%            c = cov(x-mean(x), y-mean(y));
+%            [a, ev] = eig(c);
+%            [ev,ind] = sort(diag(ev));
+%            [xa, ya] = deal(a(1,ind(end)), a(2,ind(end)));
+%            angle = cart2pol(xa, ya);
+%            [xr,yr]=rotcoord(x-mean(x),y-mean(y),angle);
+%            indx=xr<mean(xr);
+%            if mean(time(indx))>mean(time(~indx)) %increasing position with time
+%                xr=-xr;
+%            end
 
            obj.coord.xr=xr;obj.coord.yr=yr;obj.coord.time=time;obj.coord.timeplot=time-min(time);
            obj.coord.z=z;
@@ -184,27 +189,29 @@ else
     indtime=true(size(obj.coord.xr));
 end
 obj.coord.indtime=indtime;
-p.fitmean=contains(p.fitmode.selection,'mean');
+% p.fitmean=contains(p.fitmode.selection,'mean');
 if what==1
-    try
-    steps=AutoStepfinderRies(obj.coord.xr(indtime),p);
-    catch err
-        steps=[];
-    end
-    if isempty(steps)
-        disp('no steps found')
-        steps.properties.StepSize=10;
-        steps.properties.IndexStep=[];
-    end
-    indstep=[1 ;steps.properties.IndexStep ];      
-    
-    if obj.getSingleGuiParameter('splitmerge')
-        stepsize=p.splitmergestep;
-        if isempty(stepsize)
-            stepsize=median(steps.properties.StepSize);
-        end
-        [indstep,stepvalue]=splitmergefit(obj.coord.xr(indtime),stepsize,p,steps);
-    end
+    p.stepfunction=p.fitmode.selection;
+    indstep=findstepsMINFLUX(obj.coord.xr(indtime),p);
+%     try
+%     steps=AutoStepfinderRies(obj.coord.xr(indtime),p);
+%     catch err
+%         steps=[];
+%     end
+%     if isempty(steps)
+%         disp('no steps found')
+%         steps.properties.StepSize=10;
+%         steps.properties.IndexStep=[];
+%     end
+%     indstep=[1 ;steps.properties.IndexStep ];      
+%     
+%     if obj.getSingleGuiParameter('splitmerge')
+%         stepsize=p.splitmergestep;
+%         if isempty(stepsize)
+%             stepsize=median(steps.properties.StepSize);
+%         end
+%         [indstep,stepvalue]=splitmergefit(obj.coord.xr(indtime),stepsize,p,steps);
+%     end
 else %refine
      [svalfit, indstep]=fitstepind(obj.coord.xr(indtime),obj.steps.indstep,str2func(p.fitmode.selection));
 end
@@ -322,142 +329,142 @@ refit(a,b,obj,1)
  plotstatistics(obj)
 end
 
-function [istepfit,svalfit]=splitmergefit(x,stepsize,p,steps)
-if contains(p.fitmode.selection,'mean')
-    mfun=@mean;
-else
-    mfun=@median;
-end
-
-istep=[1 ; steps.properties.IndexStep];
-sval=[steps.properties.LevelBefore; steps.properties.LevelAfter(end)];
-    svalfit=sval;
-    istepfit=istep;
-for s=1:10
-    [istepfit, svalfit]=mergesplit(istepfit,svalfit,stepsize);
-    % recalculate sval based on x and istep2
-    [svalfit, istepfit]=fitstepind(x,istepfit,mfun);
-   
-end
-% 
-% if nargin>3 %y passed on
-%     svalfity=stepvalue(y,istepfit,mfun);
-% else 
-%     svalfity=[];
+% function [istepfit,svalfit]=splitmergefit(x,stepsize,p,steps)
+% if contains(p.fitmode.selection,'mean')
+%     mfun=@mean;
+% else
+%     mfun=@median;
 % end
-end
+% 
+% istep=[1 ; steps.properties.IndexStep];
+% sval=[steps.properties.LevelBefore; steps.properties.LevelAfter(end)];
+%     svalfit=sval;
+%     istepfit=istep;
+% for s=1:10
+%     [istepfit, svalfit]=mergesplit(istepfit,svalfit,stepsize);
+%     % recalculate sval based on x and istep2
+%     [svalfit, istepfit]=fitstepind(x,istepfit,mfun);
+%    
+% end
+% % 
+% % if nargin>3 %y passed on
+% %     svalfity=stepvalue(y,istepfit,mfun);
+% % else 
+% %     svalfity=[];
+% % end
+% end
 
-function [svalfit, istepfit]=fitstepind(x,istepfit,mfun)
-    for k=1:10
-        svalfit=stepvalue(x,istepfit,mfun);
-        istepfitold=istepfit;
-        istepfit=moveind(x,svalfit,istepfit);   
-        if all(istepfit==istepfitold)
-            k
-            break
-        end
-    end
-end
+% function [svalfit, istepfit]=fitstepind(x,istepfit,mfun)
+%     for k=1:10
+%         svalfit=stepvalue(x,istepfit,mfun);
+%         istepfitold=istepfit;
+%         istepfit=moveind(x,svalfit,istepfit);   
+%         if all(istepfit==istepfitold)
+%             k
+%             break
+%         end
+%     end
+% end
 
-function sval=stepvalue(x,istep,fun)
-istep=[istep ;length(x)];
-for k=length(istep)-1:-1:1
-    sval(k,1)=fun(x(istep(k)+1:istep(k+1)));
-end
-end
+% function sval=stepvalue(x,istep,fun)
+% istep=[istep ;length(x)];
+% for k=length(istep)-1:-1:1
+%     sval(k,1)=fun(x(istep(k)+1:istep(k+1)));
+% end
+% end
 
-function istep=moveind(x,sval,istep)
-istep=[istep; length(x)];
-% d=2;
-
-% smin=0;splus=0;
-for k=2:length(istep)-1
-    dmin=0;
-    dplus=0;
-    smin=inf;splus=inf;
-    ih=istep(k);
-
-    if abs(x(ih)-sval(k))<abs(x(ih)-sval(k-1)) %ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1))
-        smin=abs(x(ih)-sval(k));
-        dmin=-1;
-    elseif ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1)) %ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1))
-        dmin=-2;
-        smin=abs(x(ih-1)-sval(k));
-
-% %         smin=abs(x(ih-1)-sval(k))-abs(x(ih-1)-sval(k-1));
-%     elseif ih>2 && abs(mean(x(ih-2:ih-1)-sval(k)))<abs(mean(x(ih-2:ih-1)-sval(k-1)))
+% function istep=moveind(x,sval,istep)
+% istep=[istep; length(x)];
+% % d=2;
+% 
+% % smin=0;splus=0;
+% for k=2:length(istep)-1
+%     dmin=0;
+%     dplus=0;
+%     smin=inf;splus=inf;
+%     ih=istep(k);
+% 
+%     if abs(x(ih)-sval(k))<abs(x(ih)-sval(k-1)) %ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1))
+%         smin=abs(x(ih)-sval(k));
+%         dmin=-1;
+%     elseif ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1)) %ih>1 && abs(x(ih-1)-sval(k))<abs(x(ih-1)-sval(k-1))
 %         dmin=-2;
-%         smin=abs(mean(x(ih-2:ih-1)-sval(k)))-abs(mean(x(ih-2:ih-1)-sval(k-1)));
-    end
-    if ih<length(x) && abs(x(ih+1)-sval(k-1))<abs(x(ih+1)-sval(k))% ih<length(x) && abs(x(ih)-sval(k))<abs(x(ih)-sval(k-1))
-        dplus=1;
-        splus=abs(x(ih+1)-sval(k-1));
-        
-    elseif ih<length(x)-1 && abs(x(ih+2)-sval(k-1))<abs(x(ih+2)-sval(k))
-        splus=abs(x(ih+2)-sval(k-1));
-        dplus=2;
-%         splus=abs(x(ih)-sval(k))-abs(x(ih)-sval(k-1));
-%     elseif ih<length(x)-1 && abs(mean(x(ih:ih+1)-sval(k)))<abs(mean(x(ih:ih+1)-sval(k-1)))
+%         smin=abs(x(ih-1)-sval(k));
+% 
+% % %         smin=abs(x(ih-1)-sval(k))-abs(x(ih-1)-sval(k-1));
+% %     elseif ih>2 && abs(mean(x(ih-2:ih-1)-sval(k)))<abs(mean(x(ih-2:ih-1)-sval(k-1)))
+% %         dmin=-2;
+% %         smin=abs(mean(x(ih-2:ih-1)-sval(k)))-abs(mean(x(ih-2:ih-1)-sval(k-1)));
+%     end
+%     if ih<length(x) && abs(x(ih+1)-sval(k-1))<abs(x(ih+1)-sval(k))% ih<length(x) && abs(x(ih)-sval(k))<abs(x(ih)-sval(k-1))
+%         dplus=1;
+%         splus=abs(x(ih+1)-sval(k-1));
+%         
+%     elseif ih<length(x)-1 && abs(x(ih+2)-sval(k-1))<abs(x(ih+2)-sval(k))
+%         splus=abs(x(ih+2)-sval(k-1));
 %         dplus=2;
-%         splus=abs(mean(x(ih+1:ih+2)-sval(k)))-abs(mean(x(ih+1:ih+2)-sval(k-1)));
-    end
-%         ind=find(abs(x(max(1,ih-d):ih-1)-sval(k))<abs(x(max(1,ih-d):ih-1)-sval(k-1)));
-%         if ~isempty(ind)
-%             dmin=-d-1+min(ind);
-%         end
-%         lx=length(x);
-%         ind=find(abs(x(ih+1:min(lx,ih+d))-sval(k))>abs(x(ih+1:min(lx,ih+d))-sval(k-1)));
-%         if ~isempty(ind)
-%            dplus=max(ind);
-%         end
-     if smin<splus
-         istep(k)=max(1,max(istep(k)+dmin, istep(k-1)+1));
-     else 
-         istep(k)=max(1,min(istep(k)+dplus,istep(k+1)-1));
-     end
-end
-istep=istep(1:end-1);
-end
+% %         splus=abs(x(ih)-sval(k))-abs(x(ih)-sval(k-1));
+% %     elseif ih<length(x)-1 && abs(mean(x(ih:ih+1)-sval(k)))<abs(mean(x(ih:ih+1)-sval(k-1)))
+% %         dplus=2;
+% %         splus=abs(mean(x(ih+1:ih+2)-sval(k)))-abs(mean(x(ih+1:ih+2)-sval(k-1)));
+%     end
+% %         ind=find(abs(x(max(1,ih-d):ih-1)-sval(k))<abs(x(max(1,ih-d):ih-1)-sval(k-1)));
+% %         if ~isempty(ind)
+% %             dmin=-d-1+min(ind);
+% %         end
+% %         lx=length(x);
+% %         ind=find(abs(x(ih+1:min(lx,ih+d))-sval(k))>abs(x(ih+1:min(lx,ih+d))-sval(k-1)));
+% %         if ~isempty(ind)
+% %            dplus=max(ind);
+% %         end
+%      if smin<splus
+%          istep(k)=max(1,max(istep(k)+dmin, istep(k-1)+1));
+%      else 
+%          istep(k)=max(1,min(istep(k)+dplus,istep(k+1)-1));
+%      end
+% end
+% istep=istep(1:end-1);
+% end
 
-function [istep, sval]=mergesplit(istep,sval,stepsize)
-stepv=diff(sval);
-step2=stepv(1:end-1)+stepv(2:end);
-sstep=find(abs(step2)<stepsize*1.4 & abs(stepv(1:end-1))<stepsize*.7);
-k=1;
-sstepc=sstep;
-while k<length(sstepc)
-    ind=find(sstepc==sstepc(k)+1);
-    if ~isempty(ind)
-        sstepc(ind)=[];
-        %k=k+1;
-    end
-    k=k+1;
-end
-istep(sstepc+2)=round((istep(sstepc+1)+istep(sstepc+2))/2);
-istep(sstepc+1)=[];
-sval(sstepc+1)=[];
-bigstep=find(abs(diff(sval))>stepsize*1.4)+1; %later pass on min / max step size
+% function [istep, sval]=mergesplit(istep,sval,stepsize)
+% stepv=diff(sval);
+% step2=stepv(1:end-1)+stepv(2:end);
+% sstep=find(abs(step2)<stepsize*1.4 & abs(stepv(1:end-1))<stepsize*.7);
+% k=1;
+% sstepc=sstep;
+% while k<length(sstepc)
+%     ind=find(sstepc==sstepc(k)+1);
+%     if ~isempty(ind)
+%         sstepc(ind)=[];
+%         %k=k+1;
+%     end
+%     k=k+1;
+% end
+% istep(sstepc+2)=round((istep(sstepc+1)+istep(sstepc+2))/2);
+% istep(sstepc+1)=[];
+% sval(sstepc+1)=[];
+% bigstep=find(abs(diff(sval))>stepsize*1.4)+1; %later pass on min / max step size
+% 
+% for k=1:length(bigstep)
+%     [sval,istep]=insertstep(sval,istep,bigstep(k));
+%     bigstep=bigstep+1; % as inserted, correct indices
+% end
+% end
 
-for k=1:length(bigstep)
-    [sval,istep]=insertstep(sval,istep,bigstep(k));
-    bigstep=bigstep+1; % as inserted, correct indices
-end
-end
-
-function [sval,istep]=insertstep(sval,istep,insertind)
-    istep=[istep(1:insertind) ;istep(insertind) ;istep(insertind+1:end)];
-    sval=[sval(1:insertind-1) ;(sval(insertind-1)+sval(insertind))/2 ;sval(insertind:end)];  
-    istep(insertind)=istep(insertind)-1;
-    istep(insertind+1)=istep(insertind+1)+1;
-end
-
-function [sval,istep]=removestep(sval,istep,insertind)
-if insertind+1<=length(istep)
-    istep(insertind+1)=round((istep(insertind)+istep(insertind+1))/2);
-end
-    istep(insertind)=[];
-    sval(insertind)=[];
-end
+% function [sval,istep]=insertstep(sval,istep,insertind)
+%     istep=[istep(1:insertind) ;istep(insertind) ;istep(insertind+1:end)];
+%     sval=[sval(1:insertind-1) ;(sval(insertind-1)+sval(insertind))/2 ;sval(insertind:end)];  
+%     istep(insertind)=istep(insertind)-1;
+%     istep(insertind+1)=istep(insertind+1)+1;
+% end
+% 
+% function [sval,istep]=removestep(sval,istep,insertind)
+% if insertind+1<=length(istep)
+%     istep(insertind+1)=round((istep(insertind)+istep(insertind+1))/2);
+% end
+%     istep(insertind)=[];
+%     sval(insertind)=[];
+% end
 
 function splitmerge(a,b,obj,what)
 dcm_obj = datacursormode(obj.axstep.Parent.Parent.Parent);
