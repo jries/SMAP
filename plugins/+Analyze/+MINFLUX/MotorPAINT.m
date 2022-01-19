@@ -13,8 +13,8 @@ classdef MotorPAINT<interfaces.DialogProcessor
         function out=run(obj,p)  
             out=[];
 
-            locs=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','time'},'layer',1,'Position','fov');
-            
+            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','time'},'layer',1,'Position','fov');
+            findin=find(indin);
             gn=unique(locs.groupindex(locs.numberInGroup>=p.minlen));
             
             locsout.xnm=[];
@@ -26,6 +26,10 @@ classdef MotorPAINT<interfaces.DialogProcessor
             
             axall=obj.initaxis('raw');
             hold(axall,'off');
+            if ~isfield(obj.locData.loc,'trackangle')
+                obj.locData.setloc('trackangle',0*obj.locData.loc.xnm)
+                obj.locData.setloc('tracklength',0*obj.locData.loc.xnm)
+            end
             for k=1:length(gn)
                 indh=locs.groupindex==gn(k);
                 
@@ -67,7 +71,12 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 locsout.tracklength(end+1:end+length(xs))=single(ones(size(xs))*tracklength);
                 locsout.tracknumber(end+1:end+length(xs))=single(ones(size(xs))*gn(k));
                 locsout.trackangle(end+1:end+length(xs))=single(ones(size(xs))*angle);
-                xsall{tind}=xs;ysall{tind}=ys;tind=tind+1;
+                xsall{tind}=xs;ysall{tind}=ys;
+                angleall(tind)=angle;
+                tind=tind+1;
+                
+                obj.locData.loc.trackangle(findin(indh))=angle;
+                obj.locData.loc.tracklength(findin(indh))=tracklength;
 
                 if toc(t)>1
                     obj.status(['MINFLUX tracks ' num2str(k/length(gn)*100,'%2.1f') '%, ' num2str(k) ' / ' num2str(length(gn))]); drawnow
@@ -89,6 +98,15 @@ classdef MotorPAINT<interfaces.DialogProcessor
             hold(ax,'off')
             for k=1:length(xsall)
                 plot(ax,xsall{k},ysall{k})
+                hold(ax,'on')
+            end
+
+            ax=obj.initaxis('angle');
+            cmap=hsv(256);
+            hold(ax,'off')
+            for k=1:length(xsall)
+                cind=max(1,ceil(angleall(k)/2/pi*255));
+                plot(ax,xsall{k},ysall{k},'Color',cmap(cind,:))
                 hold(ax,'on')
             end
 
