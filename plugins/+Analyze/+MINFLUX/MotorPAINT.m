@@ -20,7 +20,7 @@ classdef MotorPAINT<interfaces.DialogProcessor
             locsout.xnm=[];
             locsout.ynm=[];
             locsout.frame=[];
-            locsout.tracklength=[];locsout.tracknumber=[];
+            locsout.tracklength=[];locsout.tracknumber=[];locsout.trackangle=[];
             tind=1;
             t=tic;
             
@@ -47,7 +47,7 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 p.splitmerge=~isempty(p.splitmergestep);
                 p.stepfunction=p.stepfunctionm.selection; 
 
-                [xr,yr]=rotateCenterCoordinates(x,y,time);
+                [xr,yr,angle]=rotateCenterCoordinates(x,y,time);
 %                 try
                 istep=findstepsMINFLUX(xr,p);
 %                 catch err
@@ -66,6 +66,7 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 locsout.frame(end+1:end+length(xs))=single(time(istep));
                 locsout.tracklength(end+1:end+length(xs))=single(ones(size(xs))*tracklength);
                 locsout.tracknumber(end+1:end+length(xs))=single(ones(size(xs))*gn(k));
+                locsout.trackangle(end+1:end+length(xs))=single(ones(size(xs))*angle);
                 xsall{tind}=xs;ysall{tind}=ys;tind=tind+1;
 
                 if toc(t)>1
