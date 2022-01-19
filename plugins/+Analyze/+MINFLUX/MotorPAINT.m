@@ -74,7 +74,7 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 xsall{tind}=xs;ysall{tind}=ys;
                 angleall(tind)=angle;
                 tind=tind+1;
-                
+
                 obj.locData.loc.trackangle(findin(indh))=angle;
                 obj.locData.loc.tracklength(findin(indh))=tracklength;
 
@@ -83,7 +83,7 @@ classdef MotorPAINT<interfaces.DialogProcessor
                     t=tic;
                 end
             end
-            
+            axis(axall,"equal")
             [~, filename]=fileparts(obj.locData.files.file(1).name);
             obj.locData.addfile(['tracks_s' num2str(p.splitmergestep) '_' num2str(obj.locData.files.filenumberEnd) '_' filename]);
             % obj.locData.files.file(end).info.simulationParameters=obj.getGuiParameters;
@@ -100,15 +100,17 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 plot(ax,xsall{k},ysall{k})
                 hold(ax,'on')
             end
+            axis(ax,"equal")
 
-            ax=obj.initaxis('angle');
+            axc=obj.initaxis('angle');
             cmap=hsv(256);
-            hold(ax,'off')
+            hold(axc,'off')
             for k=1:length(xsall)
                 cind=max(1,ceil(angleall(k)/2/pi*255));
-                plot(ax,xsall{k},ysall{k},'Color',cmap(cind,:))
-                hold(ax,'on')
+                plot(axc,xsall{k},ysall{k},'Color',cmap(cind,:))
+                hold(axc,'on')
             end
+            axis(axc,"equal")
 
         end
         function pard=guidef(obj)
