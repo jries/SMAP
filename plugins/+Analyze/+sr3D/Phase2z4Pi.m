@@ -37,6 +37,7 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
             zastig=-zastig;zastigall=-zastigall; %in the fitter z inverted
             phase=mod(locs.phase,2*pi);
             phaseerr=locs.phaseerr;
+            phaseerrall = locsall.phaseerr;
             cal3D=obj.locData.files.file(locs.filenumber(1)).savefit.cal3D;
 %             frequency=1/cal3D.zT/cal3D.pixelsize_z;
             periodnm=cal3D.zT*cal3D.pixelsize_z*1000;
@@ -50,9 +51,9 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
             z0=0;
             axp=obj.initaxis('phase vs z');
             axph=axp;
-            ax2=obj.initaxis('z0 corrected phase');
+            %ax2=obj.initaxis('z0 corrected phase');
 
-            hold(ax2,'off')
+            %hold(ax2,'off')
             for k=1:length(framepos)-1
                 inframe=locs.frame>framepos(k)&locs.frame<framepos(k+1);
                 z0=getz0phase(zastig(inframe),phase(inframe),frequency,z0,axph);
@@ -60,8 +61,8 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
                 z0all(k)=z0;
                 [zph,phicor]=z_from_phi_JR(zastig(inframe),mod(phase(inframe),2*pi),frequency,z0);
 %                 [zph,phicor]=z_from_phi_JR(zastig,mod(phase,2*pi),frequency,z0);
-                plot(ax2,zastig(inframe),mod(phicor,2*pi),'.')
-                 hold(ax2,'on')
+                %plot(ax2,zastig(inframe),mod(phicor,2*pi),'.','markersize',1)
+                 %hold(ax2,'on')
                 
             end
             
@@ -91,7 +92,9 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
             plot(zplot,mod(zplot*2*frequency,2*pi),'k.')
             hold off
             
-            obj.locData.setloc('znm',-zph);
+            obj.locData.setloc('znm',-(zph+z0));
+            obj.locData.setloc('znmerr',phaseerrall/2/frequency);
+            obj.locData.setloc('locprecznm',phaseerrall/2/frequency);
             obj.locData.regroup;
             obj.locData.filter;
             out=0;

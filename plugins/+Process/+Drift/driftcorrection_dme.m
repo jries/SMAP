@@ -78,6 +78,7 @@ classdef driftcorrection_dme<interfaces.DialogProcessor
                         end
                            
                     end
+                    
                     locsnew=applydriftcorrection(drift,locsall);
                     lochere.loc=copyfields(lochere.loc,locsnew,fieldc);
                     
@@ -190,24 +191,43 @@ end
 t=toc;
 disp(['Time for DME drift correction: ' num2str(t) 's'])
 
-drifto.xy.x=drift(1,:)'*norm(1);
-drifto.xy.y=drift(2,:)'*norm(2);
+
+shift_dme = double(drift');
+fcc = [1:maxframe]';
+fitrange = round(linspace(1,numel(fcc),1000));
+shiftavg = movmean(shift_dme,200);
+drift_sm = [];
+for ii = 1:3
+    fz = fit(fcc(fitrange),shiftavg(fitrange,ii),'smoothingspline','SmoothingParam',1e-7);
+    drift_sm = cat(2,drift_sm,fz(fcc));
+end
+
+
+%drifto.xy.x=drift(1,:)'*norm(1);
+%drifto.xy.y=drift(2,:)'*norm(2);
+
+drifto.xy.x=drift_sm(:,1)*norm(1);
+drifto.xy.y=drift_sm(:,2)*norm(2);
 
 frames=1:maxframe;
 hold(p.ax,'off')
-plot(p.ax,frames,drifto.xy.x)
+plot(p.ax,frames,drift(1,:)'*norm(1),'color',[1,1,1]*0.7)
 hold(p.ax,'on')
+plot(p.ax,frames,drifto.xy.x)
+plot(p.ax,frames,drift(2,:)'*norm(2)+10,'color',[1,1,1]*0.7)
 plot(p.ax,frames,drifto.xy.y+10)
 
 
 if isz
-    drifto.z=drift(3,:)'*norm(3);
+    %drifto.z=drift(3,:)'*norm(3);
+    drifto.z=drift_sm(:,3)*norm(3);
+    plot(p.ax,frames,drift(3,:)'*norm(3)-10,'color',[1,1,1]*0.7)
     plot(p.ax,frames,drifto.z-10)
 end
 
 xlabel(p.ax,'frames');
 ylabel(p.ax,'drift (nm)');
-legend(p.ax,'x','y','z','Location','northwest')
+legend(p.ax,'','x','','y','','z','Location','northwest')
 
 % driftinfo=p;
 % flags=7;

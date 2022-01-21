@@ -22,13 +22,13 @@ P = zeros(numlocs,(numpar+1)+(numchannels-1)*(numpar-sum(shared)));
 CRLB = zeros(numlocs,numpar+(numchannels-1)*(numpar-sum(shared)));
 
 dTAll = cat(1,reshape(dx',1,4,[]),reshape(dy',1,4,[]),zeros(1,4,numlocs),zeros(1,4,numlocs),repmat(obj.Dz,1,1,numlocs),repmat(obj.Dphi,1,1,numlocs));
-
+silent = int32(1);
 datasize = size(data);
 PSF = zeros(datasize);
 for p=1:sp0(2)
     for k=1:sz0(2)
-        %[Ph,CRLBh, LogLh,psfh] = CPUmleFit_LM_4Pi_v1(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,k)'),single(p0(:,p)'));
-        [Ph,CRLBh, LogLh,psfh] = GPUmleFit_LM_4Pi_v1(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,k)'),single(p0(:,p)'));
+        [Ph,CRLBh, LogLh,psfh] = CPUmleFit_LM_4Pi_v1(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,k)'),single(p0(:,p)'),silent);
+        %[Ph,CRLBh, LogLh,psfh] = GPUmleFit_LM_4Pi_v1(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,k)'),single(p0(:,p)'),silent);
         indbetter=LogLh-LogL>1e-4; %copy only everything if LogLh increases by more than rounding error.
         P(indbetter,:)=Ph(indbetter,:);
         CRLB(indbetter,:)=CRLBh(indbetter,:);
