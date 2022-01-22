@@ -50,7 +50,7 @@ classdef Loader_sml_Tiff<interfaces.DialogProcessor
             if emon
                 im=im(:,end:-1:1);
                 im2=im2(:,end:-1:1);
-                roi(1)=512-roi(1)-roi(3);
+%                 roi(1)=512-roi(1)-roi(3); %XXX taken out on 18.1.22
             end
             
 %             catch err

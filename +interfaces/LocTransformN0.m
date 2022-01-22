@@ -229,10 +229,16 @@ classdef LocTransformN0<handle
             end
         end
         function imout=transformImageToTarget(obj,channel,image,cam_pixnm,roi)
+            if strcmp(obj.unit,'pixel')
+                cam_pixnm=[];
+            end
             imout=transformImage(obj.transform2Target{channel},image,cam_pixnm,roi);
         end
 
         function imout=transformImageToReference(obj,channel,image,cam_pixnm,roi)
+            if strcmp(obj.unit,'pixel')
+                cam_pixnm=[];
+            end
             imout=transformImage(obj.transform2Reference{channel},image,cam_pixnm,roi);
         end  
         
