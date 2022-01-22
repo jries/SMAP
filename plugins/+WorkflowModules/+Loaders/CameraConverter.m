@@ -352,10 +352,11 @@ function loadcamcalibrationfile(obj,p,imgp)
            disp('no scmos ROI specified but scmos calibration size equal to image size: assume it is the same ROI');
        else 
            roi=roiimg;
-           roi(1:2)=roi(1:2)-1; %zero based;
+           roi(1:2)=roi(1:2); %zero based;
            disp('no scmos ROI specified: assume entire chip used for calibration');
        end
-       if any(size(obj.gainmap)<roi(1:2)+roi(3:4)) %gainmap too small
+       if any(size(obj.gainmap,[2 1])<roi(1:2)+roi(3:4)) %gainmap too small
+           disp('scmos calibration map not compatible with image size.')
            roi(1:2)=0;
        end
 %        roi(1)=roi(1)+5 %test
