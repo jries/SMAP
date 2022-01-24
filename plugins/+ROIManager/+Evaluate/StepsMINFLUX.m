@@ -458,13 +458,13 @@ end
 %     istep(insertind+1)=istep(insertind+1)+1;
 % end
 % 
-% function [sval,istep]=removestep(sval,istep,insertind)
-% if insertind+1<=length(istep)
-%     istep(insertind+1)=round((istep(insertind)+istep(insertind+1))/2);
-% end
-%     istep(insertind)=[];
-%     sval(insertind)=[];
-% end
+function [sval,istep]=removestep(sval,istep,insertind)
+if insertind+1<=length(istep)
+    istep(insertind+1)=round((istep(insertind)+istep(insertind+1))/2);
+end
+    istep(insertind)=[];
+    sval(insertind)=[];
+end
 
 function splitmerge(a,b,obj,what)
 dcm_obj = datacursormode(obj.axstep.Parent.Parent.Parent);
