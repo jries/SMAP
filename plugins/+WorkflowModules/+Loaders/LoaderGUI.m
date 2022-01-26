@@ -63,7 +63,7 @@ classdef LoaderGUI<interfaces.WorkflowModule
             ip={};
             t1=[t1 '\n Specific loaders: '];
             for k=1:length(loadernames)
-                loader=plugin('WorkflowModules','Loaders',loadernames{k});
+                loader=plugin('WorkflowModules','Loaders','x',loadernames{k});
                 loader.attachPar(obj.P);
                 loader.attachLocData(obj.locData);
                 hp=uipanel(obj.handle,'Units','pixels','Position',panelpos,'Visible','off');
@@ -110,7 +110,6 @@ end
 loader=obj.loaders{object.Value};
 loader.handle.Visible='on';
 obj.currentloader=loader;
-
 end
 
 function pard=guidef(obj)
