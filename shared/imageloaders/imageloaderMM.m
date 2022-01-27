@@ -193,7 +193,12 @@ if ~isempty(obj.readoutimgtags)
     end   
     
     for k=1:length(obj.readoutimgtags)
-        tag=imgmeta.get(obj.readoutimgtags{k});
+        try
+            tag=imgmeta.get(obj.readoutimgtags{k});
+        catch err
+            tag=NaN;
+            err
+        end
         if ischar(tag)
             obj.imtags(k,imagenumber)=str2double(tag);
         else
