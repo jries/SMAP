@@ -168,6 +168,9 @@ if isempty(img)
     return
 end
 image=img.pix;
+if isempty(image)
+    return
+end
 % if numel(image)==obj.metadata.Width*obj.metadata.Height
     image=reshape(image,obj.metadata.Width,obj.metadata.Height)';
     if isa(image,'int16')
