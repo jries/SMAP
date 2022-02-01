@@ -43,6 +43,13 @@ function loadfile(obj,p,file)
 switch ext
     case '.mat'
         jt=load(file);
+        if ~isfield(jt,'loc') && isfield(jt,'itr')
+            
+            jt.itr.tim=jt.tim;
+            jt.itr.vld=jt.vld;
+            jt.itr.tid=jt.tid;
+            jt=jt.itr;
+        end
         loc=minfluxmat2loc(jt,p.onlyvalid,~p.simple);
         loc.xnm=loc.xnm-min(loc.xnm(loc.vld));
         loc.ynm=loc.ynm-min(loc.ynm(loc.vld));
