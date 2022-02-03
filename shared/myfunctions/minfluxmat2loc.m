@@ -50,6 +50,15 @@ if loadall
     loc.tid(:,1)=single(jt.tid(ind1));
     loc.act(:,1)=single(jt.act(ind1));
     loc.sky(:,1)=single(jt.sky(ind1));
+    if isfield(jt,'lnc')
+        locsnc=single(jt.lnc*1e9);
+        loc.xncnm(:,1)=locsnc(indx);
+        loc.yncnm(:,1)=locsnc(indy);
+        zncnm=locsnc(indz);
+        if any(zncnm>0)
+            loc.zncnm(:,1)=locsnc(indz);
+        end
+    end
 end
 
 %determine localization precision

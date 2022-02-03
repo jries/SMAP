@@ -48,11 +48,18 @@ switch ext
             jt.itr.tim=jt.tim;
             jt.itr.vld=jt.vld;
             jt.itr.tid=jt.tid;
+            jt.itr.act=jt.act;
+            jt.itr.sky=jt.sky;
             jt=jt.itr;
         end
         loc=minfluxmat2loc(jt,p.onlyvalid,~p.simple);
-        loc.xnm=loc.xnm-min(loc.xnm(loc.vld));
-        loc.ynm=loc.ynm-min(loc.ynm(loc.vld));
+        xoff=min(loc.xnm(loc.vld));yoff=min(loc.ynm(loc.vld));
+        loc.xnm=loc.xnm-xoff;
+        loc.ynm=loc.ynm-yoff;
+        if isfield(loc,'xncnm')
+            loc.xncnm=loc.xncnm-xoff;
+            loc.yncnm=loc.yncnm-yoff;
+        end
     case '.json'
         txt=fileread(file);
         jt=jsondecode(txt);
