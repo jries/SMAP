@@ -172,12 +172,12 @@ pard.searchstringt.object=struct('Style','text','String','search string');
 pard.searchstringt.position=[2,1];
  pard.searchstringt.Width=1.25;
 
-pard.searchstring.object=struct('Style','edit','String','Localization_[0-9]_sml.mat');
+pard.searchstring.object=struct('Style','edit','String','Loc_1_sml.mat'); %old: Localization_[0-9]_sml.mat
 pard.searchstring.position=[2,2.25];
  pard.searchstring.Width=1.75;
 pard.searchstring.TooltipString='serach string. Use matlab regular expression';
 
-pard.replacestring.object=struct('Style','edit','String','Z-stack_1');
+pard.replacestring.object=struct('Style','edit','String','Z_1'); % old: Z-stack_1
 pard.replacestring.position=[2,4];
  pard.replacestring.Width=1;
 pard.replacestring.TooltipString='replace string.';

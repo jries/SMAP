@@ -241,23 +241,27 @@ classdef LocSaver<interfaces.WorkflowModule
                 end
                 obj.locDatatemp.files.file.savefit=obj.savefit;
                 obj.locDatatemp.files.file.imagetags=obj.getPar('loc_imagetags');
-                
-                displayimagetags(obj,obj.locDatatemp.files.file.imagetags)
-                if ~contains(filename,'nosave') && obj.saveon
-                    try
-                         obj.locDatatemp.savelocs(filename,[],struct('fitparameters',fitpar));
-                    catch err
-                        [~,name,ext]=fileparts(filename);
-                        filenamenew=[pwd filesep name ext];
-                        obj.locDatatemp.savelocs(filenamenew,[],struct('fitparameters',fitpar));
-                        warndlg('could not save sml file. Saved in local directory')
-                        err
+                try
+                    displayimagetags(obj,obj.locDatatemp.files.file.imagetags)
+                    if ~contains(filename,'nosave') && obj.saveon
+                        try
+                             obj.locDatatemp.savelocs(filename,[],struct('fitparameters',fitpar));
+                        catch err
+                            [~,name,ext]=fileparts(filename);
+                            filenamenew=[pwd filesep name ext];
+                            obj.locDatatemp.savelocs(filenamenew,[],struct('fitparameters',fitpar));
+                            warndlg('could not save sml file. Saved in local directory')
+                            err
+                        end
+                        
+                        if p.savelocal
+                            movefile(filename,filenameremote);
+                        end
                     end
-                    
-                    if p.savelocal
-                        movefile(filename,filenameremote);
-                    end
+                catch err
+                    disp('could not read all image tags')
                 end
+        
 %               write to main GUI
 %                 obj.locData.clear;
                 obj.locData.setLocData(obj.locDatatemp);

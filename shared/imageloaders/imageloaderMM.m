@@ -75,7 +75,17 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             allmd(end+1,:)={'ROI direct',num2str(roih)};
             catch err
             end
-            possibleframes=[img.lastAcquiredFrame,summarymetadata.get('Slices'),summarymetadata.get('Frames'),summarymetadata.get('Positions')];
+            sl=0;fr=0;po=0;
+            try
+                sl=summarymetadata.get('Slices');
+            end
+            try
+                fr=summarymetadata.get('Frames');
+            end
+            try
+                po=summarymetadata.get('Positions');
+            end            
+            possibleframes=[img.lastAcquiredFrame,sl,fr,po];
             framesd=min(possibleframes(possibleframes>100));
             if isempty(framesd)
                 framesd=max(possibleframes);
@@ -168,6 +178,9 @@ if isempty(img)
     return
 end
 image=img.pix;
+if isempty(image)
+    return
+end
 % if numel(image)==obj.metadata.Width*obj.metadata.Height
     image=reshape(image,obj.metadata.Width,obj.metadata.Height)';
     if isa(image,'int16')
@@ -193,7 +206,12 @@ if ~isempty(obj.readoutimgtags)
     end   
     
     for k=1:length(obj.readoutimgtags)
-        tag=imgmeta.get(obj.readoutimgtags{k});
+        try
+            tag=imgmeta.get(obj.readoutimgtags{k});
+        catch err
+            tag=NaN;
+            err
+        end
         if ischar(tag)
             obj.imtags(k,imagenumber)=str2double(tag);
         else
