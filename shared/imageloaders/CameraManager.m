@@ -331,6 +331,15 @@ if data.Indices(2)==indtag
         warndlg('please load images before assigning fields')
         return     
     end
+    if data.Indices(1)==14 %select path
+        cp=table.Data{14,3};
+        [fi,pa]=uigetfile(cp);
+        if fi
+            table.Data{14,3}=[pa fi];
+            tables2prop(obj);
+        end
+    else
+    
     ma=obj.imloader.getmetadatatags;
      tag = gettag(ma);
      if ~isempty(tag)
@@ -354,6 +363,7 @@ if data.Indices(2)==indtag
                 table.Data{15,3}=newentry;
             end
         end
+     end
         tables2prop(obj);
      end
 end
