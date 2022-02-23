@@ -20,18 +20,18 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             elseif ismac
                 set(0,'DefaultUIControlFontSize',12);
             elseif isunix
-                set(0,'DefaultUIControlFontSize',9);
+                set(0,'DefaultUIControlFontSize',9);               
             end
             SMAP_stopnow=false;
-
+            
             obj.setPar('maindirectory',pwd);
             disp(['main directory: ' pwd]);
-             %settings directory
+             %settings directory 
              if isdeployed
                  if ispc
                     [status, result] = system('set PATH');
                     executableFolder = char(regexpi(result, 'Path=(.*?);', 'tokens', 'once'));
-
+                    
                     programroot=ctfroot;
                     ind=strfind(programroot,filesep);
                     homedir=programroot(1:ind(3)-1);
@@ -43,8 +43,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                         [homedir filesep 'Documents' filesep 'SMAP' filesep 'settings'],...
                         'C:\Program Files\SMAP\application\settings',...
                         [homedir(1) ':\Program Files\SMAP\application\settings']};
-
-
+            
+                     
                  else
                      programroot=ctfroot;
                      ind=strfind(programroot,'application/SMAP.app/');
@@ -75,7 +75,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                      break
                  end
              end
-
+             
              if isempty(settingsdir)
                  hwd=warndlg(['please select the directory /settings/ with the SMAP settings or copy the settings directory in any of the default directories and restart: ' possibledirs],'select settings','modal');
                  waitfor(hwd);
@@ -100,7 +100,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             end
             disp(['plugin help directory: ' pluginhelp]);
             obj.setPar('PluginHelpDirectory',pluginhelp);
-
+                
             initglobalsettings(obj);
             if ~isdeployed
                 addpath('shared');
@@ -112,9 +112,9 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             else
                 disp(pwd)
             end
-
+        
             %update documentation from external files
-
+            
             %from OC
 %              urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
 %              outdirdoc=[settingsdir filesep 'temp' filesep 'Documentation.tar'];
@@ -128,7 +128,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %              delete(outdirdoc);
         %from tier1
             worked=false;
-%            try
+%            try 
                 mainaddress='https://www.embl.de/download/ries/Documentation/';
                 docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf','Getting_Started.pdf'};
 %                 if isdeployed
@@ -151,22 +151,22 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 disp(['could not download and save documentation pdfs. Help might not work. Make sure you have write access to settings. Move the settings directory to ' possibledirs]);
                 warndlg(['could not download and save documentation pdfs. Help might not work.  Make sure you have write access to settings. Move the settings directory to ' possibledirs])
             end
-
+            
             %update plugin file if new plugins are saved
             makeplugincallfile('plugins');
-
+            
             %add java path to bioformats
                 bfpath=obj.getGlobalSetting('bioformatspath');
                 bffile=[bfpath filesep 'bioformats_package.jar'];
-
+                
             if exist(bffile,'file') %&& ~isdeployed
                 javaaddpath(bffile);
             else
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
                 disp('you can download the Matlab toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
             end
-
-
+           
+            
             handle=figure(199);
              delete(handle.Children)
             obj.setPar('mainGuihandle',handle);
@@ -176,7 +176,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             set(handle,'MenuBar','none','Toolbar','none')
             [pmenu,hmenu]=makePluginMenu(obj,handle);
             obj.setPar('menu_plugins',pmenu);
-
+            
             obj.guiPar.width=550;
             scrsz = get(groot,'ScreenSize');
             height=min(scrsz(4)-80,760);
@@ -187,18 +187,18 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 vpossmap=3;
             end
             set(handle,'Units','Pixels', 'Name','SMAP')
-            set(handle,'Position',[vpossmap hpos obj.guiPar.width height]);
+            set(handle,'Position',[vpossmap hpos obj.guiPar.width height]);            
             set(handle,'ButtonDownFcn',{@figure_selected,obj},...
                 'SizeChangedFcn',{@sizechanged_callback,obj},'NumberTitle','off')
-            drawnow
+            drawnow 
             tabpos=[2 32 obj.guiPar.width-2 368];
 
-
+  
             gfile=obj.getGlobalSetting('guiPluginConfigFile');
             if ~exist(gfile,'file')
                 gfile=strrep(gfile,'settings', settingsdir);
             end
-
+                
             if exist(gfile,'file')
                 guimodules=readstruct(gfile,[],true);
             else
@@ -206,11 +206,11 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             end
             guimodulespure=myrmfield(guimodules,{'GuiParameters','globalGuiState'});
             obj.setPar('guimodules',guimodulespure);
-
+            
             h.maintab = uitabgroup(handle,'Units','pixels','Position',tabpos);
             if ispc
                 posmen='tri';
-                shiftmen=[-10 -5];
+                shiftmen=[-10 -5];            
             elseif ismac
                 posmen='tli';
                 shiftmen=[10 -10];
@@ -223,7 +223,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             ch=uicontextmenu(f);
             h.maintab.UIContextMenu=ch;
             m1 = uimenu(ch,'Label','detach','Callback',{@detach_callback,obj,h.maintab});
-
+      
 
             h.tab_file = uitab(h.maintab,'Title','File');
             h.tab_loc = uitab(h.maintab,'Title','Localize');
@@ -232,7 +232,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.tab_analyze = uitab(h.maintab,'Title','Analyze','Tag','tab_analyze');
             h.tab_siteexplorer=uitab(h.maintab,'Title','ROIs','Tag','tab_siteexplorer');
             set(h.maintab,'SelectedTab',h.tab_file)
-
+            
             h.stopnow=uicontrol('Style','togglebutton','Units','normalized',...
                 'Position',[0.9,0.002,.07,.03],'String','Stop','Callback',{@stopnow_callback,obj});
             h.stopnow.Units='pixels';
@@ -249,18 +249,18 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             end
             h.status.Position(4)=hstatus;
             h.status.Position(2)=1;
-            obj.addSynchronization('status',h.status,{'String'})
+            obj.addSynchronization('status',h.status,{'String'})             
 
-
+            
             h.errorindicator=uicontrol(handle,'Style','togglebutton','Units','normalized',...
                 'Position',[0.01,0.002,.03,.03],'String',' ','Callback',{@error_reset,obj});
             h.errorindicator.Tooltip=sprintf('If an error occured during an analysis, this button turns \n red and you can read the error by clicking on it.');
-            obj.addSynchronization('errorindicator',[],[],{@error_callback,obj,0})
-
+            obj.addSynchronization('errorindicator',[],[],{@error_callback,obj,0}) 
+            
             %Plugins
 
             obj.status('init plugins')
-
+           
             %file
             h.filepanel=uipanel(h.tab_file,'Units','pixel','Position',obj.guiPar.tabsize1);
             obj.status('init GuiFile')
@@ -268,7 +268,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             gfile.attachLocData(obj.locData);
             gfile.makeGui();
             obj.children.guiFile=gfile;
-
+            
             %localize
             obj.status('init Localize')
             h.localizepanel=uipanel(h.tab_loc,'units','pixel','Position',obj.guiPar.tabsize1);
@@ -276,7 +276,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             gloc.attachLocData(obj.locData);
             gloc.makeGui();
             obj.children.guiLoc=gloc;
-
+            
             %Render tab
             h.renderpanel=uipanel(h.tab_render,'units','pixel','Position',obj.guiPar.tabsize1);
             obj.status('init GuiRender')
@@ -284,9 +284,9 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             grec.attachLocData(obj.locData);
             grec.makeGui();
             obj.children.guiRender=grec;
-
-
-
+            
+           
+            
             %Process tab
             obj.status('init processor plugins')
             h.processpanel=uipanel(h.tab_process,'units','pixel','Position',obj.guiPar.tabsize1);
@@ -297,8 +297,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
 %             gprocess.plugindir={'drift','Register','Assign2C','Modify'};
             gprocess.makeGui();
             obj.children.guiProcess=gprocess;
-
-%             %Analysis tab
+            
+%             %Analysis tab   
             obj.status('init analysis plugins')
             h.analysispanel=uipanel(h.tab_analyze,'units','pixel','Position',obj.guiPar.tabsize1);
             ganalysis=gui.GuiPluginWindow(h.analysispanel,obj.P);
@@ -306,8 +306,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             ganalysis.maindir='Analyze';
             ganalysis.guiplugins=guimodules.Analyze;
             ganalysis.makeGui();
-
-
+            
+            
             %statistics,xy vs time, blinking stats
             %line profile, image correlation stuff (line, image)
             %calibrate 3DA, side view, 3D volume
@@ -315,7 +315,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
 
             obj.children.guiAnalysis=ganalysis;
 
-
+            
              %Site explorer
             obj.status('init ROI manager')
             h.sitespanel=uipanel(h.tab_siteexplorer,'Units','pixel','Position',obj.guiPar.tabsize1);
@@ -326,31 +326,31 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             gsites.guiplugins=myrmfield(guimodules.ROIManager,'Evaluate');
             gsites.makeGui();
             obj.children.guiSites=gsites;
-
+            
             obj.guihandles=h;
-
+            
             %undo
             undo=gui.Undo(obj.handle,obj.P);
             undo.attachLocData(obj.locData);
             undo.makeGui();
             obj.children.undo=undo;
-
+            
              if isfield(guimodules,'GuiParameters')
-
+                
                 obj.setGuiParameters(guimodules.GuiParameters,true);
-
+                
              end
-
+            
             cb=hmenu.hsimplegui.Callback;
             if  isfield(guimodules,'globalGuiState')&&~isempty(guimodules.globalGuiState)&& strcmp(guimodules.globalGuiState,'s')
                 feval(cb{1},struct('Checked','off'),0,cb{2})
-
+                
             else
                 feval(cb{1},struct('Checked','on'),0,cb{2})
             end
-
+            
             obj.status('all initialized')
-            drawnow
+            drawnow  
             set(handle, 'HandleVisibility', 'off');
             obj.setnormalizedpositionunits;
         end
@@ -384,7 +384,7 @@ end
 
 
 function sizechanged_callback(object, event, obj)
-uiwait(obj.handle,1)
+uiwait(obj.handle,1)  
 f=object.Position(3)/obj.guiPar.width;
 if f~=1
 obj.resize(f);
@@ -447,5 +447,5 @@ function resetstyle(obj)
     obj.guihandles.errorindicator.String=' ';
 end
 % function saveplugin_callback(a,b,obj)
-%
+% 
 % end
