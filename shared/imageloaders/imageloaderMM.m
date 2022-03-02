@@ -151,7 +151,17 @@ for k=1:length(dirs)
     dirs{k}=[MMpath filesep 'plugins' filesep 'Micro-Manager' filesep strrep(dirs{k},'/',filesep)];
 end
 
-dirs{end+1}=  [MMpath filesep 'ij.jar']; 
+mmjar=[MMpath filesep 'ij.jar']; 
+if ~exist(mmjar,'file')
+     disp('Micro-manager V2.0 has a bug. Please install V1.4 instead.')
+    mmjar=[MMpath filesep 'ImageJ.app' filesep 'Contents' filesep 'Java' filesep 'ij.jar']; 
+end
+if ~exist(mmjar,'file')
+    disp('ij.jar not found. imageloaderMM line 159')
+%     mmjar=[MMpath filesep 'ImageJ.app' filesep 'Contents' filesep 'Java' filesep 'ij.jar']; 
+end
+
+dirs{end+1}=  mmjar; 
 jp=javaclasspath;
 diradd=dirs(~ismember(dirs,jp));
 if ~isempty(diradd)
