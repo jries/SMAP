@@ -253,5 +253,7 @@ function initimagetags(obj)
             end
             obj.readoutimgtags=strtrim(obj.readoutimgtags);
             obj.init=true;
+        else 
+            obj.readoutimgtags={};
         end    
 end
