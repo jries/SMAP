@@ -274,7 +274,8 @@ pt.mirror=[false false]; %ref
 pt.xrange=pp.xrange1+camroi1(1); 
 pt.yrange=pp.yrange1+camroi1(2);
 pt.unit='pixel';
-pt.type='projective';
+%pt.type='projective'; %old
+pt.type=ph.Tform; %use from GUI
 transform.setTransform(1,pt)
 pt.mirror=pp.mirrorax;
 
