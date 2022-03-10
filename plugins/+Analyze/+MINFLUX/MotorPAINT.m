@@ -83,7 +83,9 @@ classdef MotorPAINT<interfaces.DialogProcessor
                     t=tic;
                 end
             end
+            axis(axall,"ij")            
             axis(axall,"equal")
+
             [~, filename]=fileparts(obj.locData.files.file(1).name);
             obj.locData.addfile(['tracks_s' num2str(p.splitmergestep) '_' num2str(obj.locData.files.filenumberEnd) '_' filename]);
             % obj.locData.files.file(end).info.simulationParameters=obj.getGuiParameters;
@@ -101,6 +103,7 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 hold(ax,'on')
             end
             axis(ax,"equal")
+            axis(ax,"ij")
 
             axc=obj.initaxis('angle');
             cmap=hsv(256);
@@ -111,6 +114,7 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 hold(axc,'on')
             end
             axis(axc,"equal")
+            axis(axc,"ij")
 
         end
         function pard=guidef(obj)
