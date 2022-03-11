@@ -194,6 +194,11 @@ else
     cspline.mirror=0;
 end
 
+%find focus z position
+if p.z0focus
+    z0reference=getfocusPSF(splinefit.PSFsmooth);
+end
+
 cspline.z0=z0reference;%round((b3_0.dataSize(3)+1)/2);
 cspline.dz=p.dz;
 cspline.x0=dRx+1;
