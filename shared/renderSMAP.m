@@ -303,6 +303,9 @@ if dl
 
 end
 
+if isnan(nlocs)
+    nlocs=sum(srimage(:));
+end
 imageo.image=srimage;
 imageo.lut=lutall;
 imageo.lutapplied=lutapplied;

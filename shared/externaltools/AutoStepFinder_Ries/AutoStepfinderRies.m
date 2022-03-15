@@ -147,7 +147,7 @@ function results=autostepfinder_mainloop(Data,initval)
     end    
     
     %% Final analysis: 
-    if max(N_found_steps_per_round)==0, cla;
+    if max(N_found_steps_per_round)==0
          nostepmessage=['No steps found in: ', ];
          disp(nostepmessage); 
        if initval.hand_load == 2
@@ -189,13 +189,13 @@ end
     FitX=Get_FitFromStepsindices(X,indexlist,initval);   
     stepsX=Get_Steps(FitX); 
 
-if nargin<2
-    close all;
-    subplot(2,1,1); plot(X,'r'),hold;plot(FitX,'k','LineWidth',2);
-    title('Data and Fit');xlabel('time');ylabel('position,a.u.');
-    subplot(2,1,2); semilogx(S_fin,'-o');
-    title('S-curve');xlabel('Stepnumber');ylabel('S-value, a.u.');
-end
+% if nargin<2
+%     close all;
+%     subplot(2,1,1); plot(X,'r'),hold;plot(FitX,'k','LineWidth',2);
+%     title('Data and Fit');xlabel('time');ylabel('position,a.u.');
+%     subplot(2,1,2); semilogx(S_fin,'-o');
+%     title('S-curve');xlabel('Stepnumber');ylabel('S-value, a.u.');
+% end
 
 
 function [bestshot,S_fin]=Eval_Scurve(S_raw)
@@ -242,7 +242,7 @@ function [FitX,f,S,splitlog]=Split_until_ready(X,initval)
     
      %parameters needed for calculating S(1):-----------------
     qx=sum(X.^2);                                   %sum of squared data
-    qm=N*(mean(X))^2;                               %sum of squared averages plateaus, startvalue
+    qm=N*(mysimplemean(X))^2;                               %sum of squared averages plateaus, startvalue
     aqm=(inxt-istart+1)*avl^2+(istop-inxt)*avr^2;   %sum of squared averages anti-plateaus, startvalue
     S(c)=(qx-aqm)/(qx-qm);                          %S: ratio of variances of fit and anti-fit        
     %---------------------------------       
@@ -261,7 +261,7 @@ function [FitX,f,S,splitlog]=Split_until_ready(X,initval)
         %the new fields)
         
         if 1
-            S(c)=mean((X-cFitX).^2)/mean((X-FitX).^2);         %direct fit   
+            S(c)=mysimplemean((X-cFitX).^2)/mysimplemean((X-FitX).^2);         %direct fit   
         else
             S(c)=(qx-aqm)/(qx-qm);                             %Calculate new S-function 
         end
@@ -326,9 +326,9 @@ function cFitX=Adapt_cFit(f,idx,cFitX,X)
     i2=f(idx,3);
     i3=f(idx+1,3); 
     i4=f(idx+2,3);
-    cFitX(i1+1:i2)=mean(X(i1+1:i2)); 
-    cFitX(i2+1:i3)=mean(X(i2+1:i3));
-    cFitX(i3+1:i4)=mean(X(i3+1:i4));    
+    cFitX(i1+1:i2)=mysimplemean(X(i1+1:i2)); 
+    cFitX(i2+1:i3)=mysimplemean(X(i2+1:i3));
+    cFitX(i3+1:i4)=mysimplemean(X(i3+1:i4));    
     
  function [idx, avl, avr,rankit,errorcurve]=Splitfast(Segment)              %
 %this function also adresses a one-dim array 'Segment'
@@ -340,13 +340,15 @@ function cFitX=Adapt_cFit(f,idx,cFitX,X)
 		Chisq=(1:w-1)*0;                           
         AvL=Segment(1);    AvR=sum(Segment(2:w))/(w-1); AvAll=sum(Segment)/w;  
         for t=2:w-2
-            AvL=(AvL*(t-1)+Segment(t))/t;     AvR=(AvR*(w-t+1)-Segment(t))/(w-t);
-            DStepL=AvL-AvAll;           DStepR=AvR-AvAll;
-            DeltaChisq=((DStepL.^2)*t+(DStepR.^2)*(w-t));            
-            Chisq(t)=-DeltaChisq;       
+            AvL=(AvL*(t-1)+Segment(t))/t;     
+            AvR=(AvR*(w-t+1)-Segment(t))/(w-t);
+%             DStepL=AvL-AvAll;           DStepR=AvR-AvAll;
+%             DeltaChisq
+            Chisq(t)=-(((AvL-AvAll).^2)*t+((AvR-AvAll).^2)*(w-t));            
+%             Chisq(t)=-DeltaChisq;       
         end
          [~,idx]=min(Chisq(2:w-2)); idx=idx+1;
-         avl=mean(Segment(1:idx));                    avr=mean(Segment(idx+1:w));
+         avl=mysimplemean(Segment(1:idx));                    avr=mysimplemean(Segment(idx+1:w));
          %rankit=(avr-avl)^2/(1/(idx-1)+1/(w-idx-1));  %quantity expresing predicted accuracy step (squared)
          rankit=(avr-avl)^2*w;
     else                                            %low-limit cases
@@ -562,16 +564,16 @@ while ratio<sigchange     %if not too much changes anymore; the higher this numb
         case 'all',  flag=abs(data-av)<tolerance*sigma;     %adjust outlier flags  
     end
     %plot menu------------------  
-    if sho==1
-        cleandata=data(selc); 
-        hx=(min(cleandata):(range(cleandata))/binz:max(cleandata));   %make an axis
-        sthst=hist(cleandata,hx);
-        figure;
-        bar(hx,sthst);
-        title('Histogram');
-        pause(0.5);  
-        close(gcf);
-    end
+%     if sho==1
+%         cleandata=data(selc); 
+%         hx=(min(cleandata):(range(cleandata))/binz:max(cleandata));   %make an axis
+%         sthst=hist(cleandata,hx);
+%         figure;
+%         bar(hx,sthst);
+%         title('Histogram');
+%         pause(0.5);  
+%         close(gcf);
+%     end
     %---------------------------- 
 end
 cleandata=data(selc); 
@@ -680,7 +682,7 @@ function resout=SaveAndPlot(initval,SaveName,handles,...
 
 %This function saves and plots data.
 stepno_final=length(FinalSteps(:,1));
-disp('Steps found:'), disp(stepno_final);    
+% disp('Steps found:'), disp(stepno_final);    
 
     
 

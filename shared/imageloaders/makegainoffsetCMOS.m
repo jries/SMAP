@@ -7,8 +7,14 @@ function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime
     if length(camfname)>5 && strcmp(camfname(end-4:end),'.calb')
         camfname=camfname(1:end-5);
     end
-    camfilemat=['settings' filesep 'cameras' filesep camfname '.mat'];
-    camfilejson=['settings' filesep 'cameras' filesep camfname '.calb'];
+    [path]=fileparts(camfname);
+    if isempty(path)
+        camfilemat=['settings' filesep 'cameras' filesep camfname '.mat'];
+        camfilejson=['settings' filesep 'cameras' filesep camfname '.calb'];
+    else
+        camfilemat=[ camfname '.mat'];
+        camfilejson=[camfname '.calb'];
+    end
     if exist(camfilemat,'file')
         l=load(camfilemat);
         roi=[];
@@ -60,6 +66,8 @@ function [gainmap,offsetmap,varmap,roi]=makegainoffsetCMOS(camfname,exposuretime
         varmap=varmap.*gainmap.^2;
         if isfield(sr,'x') && sr.x>=0 %roi defined 
             roi=[sr.x sr.y sr.width sr.height]; %1 based
+        elseif isfield(sr,'x0') && sr.x0>=0 %roi defined 
+            roi=[sr.x0 sr.y0 sr.width sr.height]; %1 based
         else
             roi=[];
         end

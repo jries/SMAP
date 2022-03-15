@@ -30,17 +30,17 @@ classdef TrainDeepSMLM<interfaces.DialogProcessor
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-        function initGui(obj)
-            initGui@interfaces.DialogProcessor(obj);
-            obj.jsonfile=obj.jsondefault;
-            tt=uitable(obj.handle);
-            tt.Position=obj.guihandles.partablepos.Position;
-            tt.Position(4)=tt.Position(4)*7;
-            obj.guihandles.parttable=tt;
-            jsontxt=fileread(obj.jsondefault);
-            obj.jsonstruct=jsondecode(jsontxt);
-            makejsontable(obj);
-        end
+%         function initGui(obj)
+%             initGui@interfaces.DialogProcessor(obj);
+%             obj.jsonfile=obj.jsondefault;
+%             tt=uitable(obj.handle);
+%             tt.Position=obj.guihandles.partablepos.Position;
+%             tt.Position(4)=tt.Position(4)*7;
+%             obj.guihandles.parttable=tt;
+%             jsontxt=fileread(obj.jsondefault);
+%             obj.jsonstruct=jsondecode(jsontxt);
+%             makejsontable(obj);
+%         end
 
     end
 end

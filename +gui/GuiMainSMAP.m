@@ -163,7 +163,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 javaaddpath(bffile);
             else
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
-                disp('you can download the Matalb toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
+                disp('you can download the Matlab toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
             end
            
             

@@ -12,7 +12,7 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
         end
         
         function out=run(obj,p)      
-            locs=obj.locData.getloc({'xnm','ynm','time','numberInGroup','filenumber','efo','cfr','eco','ecc','efc','id'},'layer',find(obj.getPar('sr_layerson')),'Position','roi');
+            locs=obj.locData.getloc({'xnm','ynm','znm','time','numberInGroup','filenumber','efo','cfr','eco','ecc','efc','id'},'layer',find(obj.getPar('sr_layerson')),'Position','roi');
             filelist=obj.getPar('filelist_short');
             filename=filelist.String{mode(locs.filenumber)};
             dt=diff(locs.time);
@@ -56,9 +56,29 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
             xlabel(axy,'time (ms)')
             ylabel(axy,'y (nm)')
             title(axy,['std(y) = ' num2str(sigmay,ff) ' nm, std(y) robust = ' num2str(syrobust,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
+            
+            if ~isempty(locs.znm)
+                sigmaz=std(locs.znm);
+                szdetrend=std(diff(locs.znm))/sqrt(2);
+                [~, szrobust]=robustMean(locs.znm); 
+                axz=obj.initaxis('z');
+                plot(axz,ltime,locs.znm-mean(locs.znm),ltime,0*locs.time,'k', ...
+                    ltime,0*locs.time+sigmaz,'c',ltime,0*locs.time-sigmaz,'r',...
+                    ltime,0*locs.time+szrobust,'r',ltime,0*locs.time-szrobust,'c',...
+                    ltime,0*locs.time+szdetrend,'m',ltime,0*locs.time-szdetrend,'m')
+                legend(axz,'data','','std','','robust std','','detrend std','')
+                xlabel(axz,'time (ms)')
+                ylabel(axz,'z (nm)')
+                title(axz,['std(z) = ' num2str(sigmaz,ff) ' nm, std(z) robust = ' num2str(szrobust,ff) ' nm, std(z) detrend = ' num2str(szdetrend,ff) ' nm.'])
+                tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmaz \t sigmax robust \t sigmay robust \t sigmaz robust \t sigmax detrend \t sigmay detrend \t sigmaz detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t filename';
+                tsig=['\t' num2str(sigmax) '\t' num2str(sigmay) '\t' num2str(sigmaz)  '\t' num2str(sxrobust)  '\t' num2str(syrobust) '\t' num2str(szrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend) '\t' num2str(szdetrend)];
+            else
+                tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmax robust \t sigmay robust \t sigmax detrend \t sigmay detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t filename' ;
+                tsig=['\t' num2str(sigmax) '\t' num2str(sigmay)  '\t' num2str(sxrobust)  '\t' num2str(syrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend)];
+            end
 
             axt=obj.initaxis('time');
-            histogram(axt,dt,dtmin/2:dtmin:quantile(dt,0.995))
+            histogram(axt,dt,dtmin/2:dtmin:max(quantile(dt,0.995),dtmin/2+2*dtmin))
             hold(axt,'on')
             histogram(axt,dt,0:dtmin*0.1:quantile(dt,0.995))
             xlabel(axt,'dt (ms)')
@@ -95,10 +115,9 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
                 ylabel(axcc,'ecc')
             end
 
-            header=sprintf('nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmax robust \t sigmay robust \t sigmax detrend \t sigmay detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t filename' );
+            header=sprintf(tz);
             disp(header)
-            results=sprintf([num2str(nlocs)  '\t' num2str(ontime)  '\t' num2str(dtmin)  '\t' num2str(dtmedian) '\t' num2str(dtmean) '\t' num2str(sigmax) ...
-                 '\t' num2str(sigmay)  '\t' num2str(sxrobust)  '\t' num2str(syrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend) '\t' num2str(efo) '\t' ...
+            results=sprintf([num2str(nlocs)  '\t' num2str(ontime)  '\t' num2str(dtmin)  '\t' num2str(dtmedian) '\t' num2str(dtmean) tsig '\t' num2str(efo) '\t' ...
                  num2str(cfr) '\t' num2str(eco) '\t' num2str(ecc) '\t' num2str(efc) '\t' filename]  );
             out.clipboard=results;
 

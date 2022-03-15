@@ -428,7 +428,7 @@ else
     fout=[path file];
 end
 
-saveyaml(obj,fout)
+saveyaml(obj.yamlpar,fout)
 end
 
 function saveyaml(yamlpar,fout)
