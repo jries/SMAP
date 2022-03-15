@@ -196,13 +196,16 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
   
             gfile=obj.getGlobalSetting('guiPluginConfigFile');
             if ~exist(gfile,'file')
-                gfile=strrep(gfile,'settings', settingsdir);
+                ind = strfind(gfile,'settings');
+                gfile=[settingsdir gfile(ind+8:end)];
+%                 gfile=strrep(gfile,'settings', settingsdir);
             end
                 
             if exist(gfile,'file')
                 guimodules=readstruct(gfile,[],true);
             else
-                guimodules=pmenu;
+%                 guimodules=pmenu;
+                guimodules=struct('File',[],'Analyze',[],'Process',[],'ROIManager',[]);
             end
             guimodulespure=myrmfield(guimodules,{'GuiParameters','globalGuiState'});
             obj.setPar('guimodules',guimodulespure);
