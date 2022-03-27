@@ -32,6 +32,14 @@ classdef MotorPAINT<interfaces.DialogProcessor
             end
             for k=1:length(gn)
                 indh=locs.groupindex==gn(k);
+
+                if p.skipfirst>0
+                    outn=find(indh,p.skipfirst,'first');
+                    indh(outn)=false;
+                end
+                if sum(indh)<p.minlen
+                    continue
+                end
                 
                 x=locs.xnm(indh);
                 y=locs.ynm(indh);
@@ -89,12 +97,14 @@ classdef MotorPAINT<interfaces.DialogProcessor
             [~, filename]=fileparts(obj.locData.files.file(1).name);
             obj.locData.addfile(['tracks_s' num2str(p.splitmergestep) '_' num2str(obj.locData.files.filenumberEnd) '_' filename]);
             % obj.locData.files.file(end).info.simulationParameters=obj.getGuiParameters;
+            if p.addtracks
             obj.locData.addLocData(locsout);
 
             obj.locData.filter
             %            try
             initGuiAfterLoad(obj);
             obj.locData.filter
+            end
 
             ax=obj.initaxis('tracks');
             hold(ax,'off')
@@ -104,6 +114,8 @@ classdef MotorPAINT<interfaces.DialogProcessor
             end
             axis(ax,"equal")
             axis(ax,"ij")
+            ax.XLim=axall.XLim;
+            ax.YLim=axall.YLim;
 
             axc=obj.initaxis('angle');
             cmap=hsv(256);
@@ -115,6 +127,8 @@ classdef MotorPAINT<interfaces.DialogProcessor
             end
             axis(axc,"equal")
             axis(axc,"ij")
+            axc.XLim=axall.XLim;
+            axc.YLim=axall.YLim;
 
         end
         function pard=guidef(obj)
@@ -169,6 +183,16 @@ pard.stepfunctionm.object=struct('String',{{'mean','median'}},'Style','popupmenu
 pard.stepfunctionm.position=[3,4.];
 pard.stepfunctionm.Width=1;
 
+pard.skipfirstt.object=struct('String','Skip first:','Style','text');
+pard.skipfirstt.position=[4,1];
+pard.skipfirstt.Width=1.5;
+pard.skipfirst.object=struct('String','0','Style','edit');
+pard.skipfirst.position=[4,2.5];
+pard.skipfirst.Width=0.5;
+
+pard.addtracks.object=struct('String','Add tracks','Style','checkbox','Value',1);
+pard.addtracks.position=[5,1];
+pard.addtracks.Width=2;
 
 pard.plugininfo.description=sprintf('');
 pard.plugininfo.type='ProcessorPlugin';

@@ -63,8 +63,11 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
 %            if mean(time(indx))>mean(time(~indx)) %increasing position with time
 %                xr=-xr;
 %            end
+            
+%            xr=x;yr=y;  %XXXX to not rotate
 
            obj.coord.xr=xr;obj.coord.yr=yr;obj.coord.time=time;obj.coord.timeplot=time-min(time);
+           obj.coord.x=x;obj.coord.y=y;
            obj.coord.z=z;
           
            if  isempty(obj.steps)
@@ -531,6 +534,8 @@ obj.site.evaluation.(obj.name)=out;
 end
 
 function makemovie(a,b,obj)
+plotsimple=true;
+
 time=obj.coord.timeplot;
 frametime=obj.getSingleGuiParameter('frametime');
 if isempty(frametime)
@@ -539,6 +544,12 @@ end
 
 x=obj.coord.xr;
 y=obj.coord.yr;
+
+% % XXXXXX 
+% nmax=500;
+% nmin=10;
+% x=x(nmin:nmax);y=y(nmin:nmax);time=time(nmin:nmax);
+
 ts=min(time):frametime:max(time);
 f=figure(99);
 f.Position(1)=1;f.Position(3)=1280;
@@ -547,11 +558,12 @@ ax=gca;
 delete(ax.Children)
 
 axis(ax,'equal');
+axis(ax,'ij');
 
 xlim(ax,[min(x)-10 max(x)+10])
 ylim(ax,[min(y)-10 max(y)+10])
 hold(ax,'on')
-plot(ax,[min(x)-5 min(x)+10-5], [min(y)-5 min(y)-5],'k','LineWidth',3)
+plot(ax,[min(x)-5 min(x)+10-5], [max(y) max(y)],'k','LineWidth',3)
 ax.XTick=[];
 ax.YTick=[];
 for k=1:length(ts)
@@ -560,28 +572,34 @@ for k=1:length(ts)
     yh=y(indh);
     th=time(indh);
 %                     hold(ax,'off')
-    hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
-    hold(ax,'on')
-    hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
+
     
 
     tpassed=ts(k)-ts(1);
-    ht=text(ax,double(min(x)),double(max(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
+    ht=text(ax,double(min(x)),double(min(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
         
     indc=obj.steps.steptime<ts(k);
     cx=obj.steps.possteps.x(indc);
     cy=obj.steps.possteps.y(indc);
 %     if ~isempty(cx)
+        hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
+        hold(ax,'on')
+    if ~plotsimple
+
+        hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
         hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
+    end
 %     end
-    hl=plot(ax,xh,yh,'k','LineWidth',1);
+    hl=plot(ax,xh,yh,'k','LineWidth',.5);
     drawnow
     Fr(k)=getframe(ax);
     delete(hd)
     delete(hl)
     delete(ht)
-    delete(hb)
-    delete(hc)
+    if ~plotsimple
+        delete(hb)
+        delete(hc)
+    end
 end
 smlfile=obj.getPar('lastSMLFile');
 if ~isempty(smlfile)
@@ -592,7 +610,7 @@ end
 
 [file,pfad]=uiputfile([pfad filesep '*.mp4']);
 if file
-    mysavemovie(Fr,[pfad  file],'FrameRate',20)
+    mysavemovie(Fr,[pfad  file],'FrameRate',30)
 end
 
                   
