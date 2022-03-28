@@ -22,6 +22,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                 end
                 if isfield(obj.site.evaluation.(obj.name),'range')
                     obj.range=out.range;
+                else
+                    obj.range=[];
                 end                
            end
 
@@ -51,8 +53,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                z=[];
            end
 
-           %find direction     
-           [xr,yr]=rotateCenterCoordinates(x,y,time);
+
+           [xr,yr]=rotateCenterCoordinates(x,y,time,obj.range);
 %            c = cov(x-mean(x), y-mean(y));
 %            [a, ev] = eig(c);
 %            [ev,ind] = sort(diag(ev));
@@ -324,6 +326,16 @@ dt=max(0.1,round(mean(obj.steps.dwelltime)/5));
 histogram(axstept,obj.steps.dwelltime,0:dt:max(obj.steps.dwelltime))
 title(axstept,"mean step time = "+ num2str(mean(obj.steps.dwelltime),'%2.1f') + " ms");
 end
+
+%correlation
+axcc=obj.setoutput('correlation');
+x=obj.coord.xr(obj.coord.indtime);
+h=histcounts(x,min(x):1:max(x));
+xc=myxcorr(h,h);
+plot(axcc,xc);
+xlabel(axcc,'delta x (nm)');
+ylabel(axcc,'auto corr')
+
 end
 
 function selectrange(a,b,obj)
@@ -534,16 +546,16 @@ obj.site.evaluation.(obj.name)=out;
 end
 
 function makemovie(a,b,obj)
-plotsimple=true;
-
-time=obj.coord.timeplot;
+plotsimple=obj.getSingleGuiParameter('simplemovie');
+indt=obj.coord.indtime;
+time=obj.coord.timeplot(indt);
 frametime=obj.getSingleGuiParameter('frametime');
 if isempty(frametime)
     frametime=mode(diff(time));
 end
 
-x=obj.coord.xr;
-y=obj.coord.yr;
+x=obj.coord.xr(indt);
+y=obj.coord.yr(indt);
 
 % % XXXXXX 
 % nmax=500;
@@ -571,25 +583,19 @@ for k=1:length(ts)
     xh=x(indh);
     yh=y(indh);
     th=time(indh);
-%                     hold(ax,'off')
-
-    
-
     tpassed=ts(k)-ts(1);
     ht=text(ax,double(min(x)),double(min(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
         
     indc=obj.steps.steptime<ts(k);
     cx=obj.steps.possteps.x(indc);
     cy=obj.steps.possteps.y(indc);
-%     if ~isempty(cx)
-        hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
-        hold(ax,'on')
-    if ~plotsimple
 
+    hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
+    hold(ax,'on')
+    if ~plotsimple
         hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
         hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
     end
-%     end
     hl=plot(ax,xh,yh,'k','LineWidth',.5);
     drawnow
     Fr(k)=getframe(ax);
@@ -611,9 +617,7 @@ end
 [file,pfad]=uiputfile([pfad filesep '*.mp4']);
 if file
     mysavemovie(Fr,[pfad  file],'FrameRate',30)
-end
-
-                  
+end 
 end
 
 function pard=guidef(obj)
@@ -679,9 +683,13 @@ pard.makemovie.position=[6,1];
 pard.makemovie.Width=1.5;
 
 pard.frametimet.object=struct('String','frametime','Style','text');
-pard.frametimet.position=[6,3];
+pard.frametimet.position=[6,2.5];
 pard.frametime.object=struct('String','1','Style','edit');
-pard.frametime.position=[6,4];
+pard.frametime.position=[6,3.5];
+pard.frametime.Width=0.5;
+
+pard.simplemovie.object=struct('String','simple','Style','checkbox');
+pard.simplemovie.position=[6,4];
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};
