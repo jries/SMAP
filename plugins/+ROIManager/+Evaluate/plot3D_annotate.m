@@ -26,8 +26,13 @@ classdef plot3D_annotate<interfaces.SEEvaluationProcessor
             if isfield(obj.site.evaluation,obj.name) && isfield(obj.site.evaluation.(obj.name),'roicoordinates')
                 obj.roicoordinates=obj.site.evaluation.(obj.name).roicoordinates;
                 obj.plotrois;
+                out.GuiParameters=obj.site.evaluation.(obj.name).GuiParameters; %ICfix_210515 --- CHECK 
+                out.roicoordinates=obj.site.evaluation.(obj.name).roicoordinates; %ICfix_210515 --- CHECK 
+                %out=obj.site.evaluation.(obj.name);  - use this above
+                %instead of two lines
             else
                 obj.roicoordinates=[];
+               
             end
         end
      
@@ -161,15 +166,15 @@ function roiposnm=coord3Dpix2nm(roipos,pos,rotationanglez,polarangle,winsize)
     yp=roipos(:,2);zp=roipos(:,3);
     [y2,zi]=rotcoorddeg(yp,zp,polarangle);
     [xi,yi]=rotcoorddeg(xp,y2,rotationanglez);
-    roiposnm(:,1)=xi+pos(1);
-    roiposnm(:,2)=yi+pos(2);
+    roiposnm(:,1)=xi+pos(1); 
+    roiposnm(:,2)=-yi+pos(2); %%%%220329 -yi
     roiposnm(:,3)=zi+pos(3);
 end
 function roipos=coord3Dnm2pix(roiposnm,pos,rotationanglez,polarangle,winsize)
-    xi=roiposnm(:,1)-pos(1);
-    yi=roiposnm(:,2)-pos(2);
+    xi=roiposnm(:,1)-pos(1); 
+    yi=-(roiposnm(:,2)-pos(2)); %%%%220329 -(...)
     zi=roiposnm(:,3)-pos(3);
-    [xp,y2]=rotcoorddeg(xi,yi,-rotationanglez);
+    [xp,y2]=rotcoorddeg(xi,yi,-rotationanglez); %-
     [yp,zp]=rotcoorddeg(y2,zi,-polarangle);
     roipos(:,1)=xp-winsize/2;
     roipos(:,2)=yp;

@@ -44,10 +44,22 @@ ruleExprs = regexprep(rule, '(pars\.m\d+\.[ml]Par\.\w+)', ['obj\.converterSource
 ruleExprs = regexprep(ruleExprs, '(pars\.m\d+\.offset\.\w+)', ['obj\.converterSource\{' num2str(k) char("\}\.getVariable(\'$1\')")]);      % Offset
 ruleExprs = regexprep(ruleExprs, '(usr\_\w+)\((\d+)\)', 'vectorSubset\($1\,$2\)');                                                      % User defined (vector)
 ruleExprs = regexprep(ruleExprs, '(usr\_\w+)', ['obj\.converterSource\{' num2str(k) char("\}\.getVariable(\'$1\')")]);                     % User defined (single element)
+
+%%%IC220331
+%this part allows converter phrasing:
+%in convert tab: Rule = someVarinConverterSource{Target} Target = m1.mPar.cx1 ->
+% someVarinConverterSource(m1.mPar.cx1).value 
+if contains(ruleExprs,'{Target}') % & if contains(rule,'InitPars') 
+    %paramSource=erase( rule, '{Target}');
+    ruleExprs = regexprep(ruleExprs, '(\{Target\})', ['\)\.value\(strcmp\(\{obj\.converterSource\{' num2str(k) '\}\.getVariable\(' char(39) erase( rule, '{Target}') char(39) '\)\.name\}, ' char(39) replace(target,'.','\.') char(39) '\)\)']);
+    ruleExprs=['struct2table(' ruleExprs];
+end
+%%% end of IC220331
 ruleExprs = regexprep(ruleExprs, '(rel\(\w+)', ['obj\.converterSource\{' num2str(k) char("\}\.$1")]);                                   % Relative info
 ruleExprs = regexprep(ruleExprs, 'find\.(m\d+\.\w+)', ['obj\.converterSource\{' num2str(k) char("\}\.getVariable(\'$1\')")]);           % Search for the values
 ruleExprs = regexprep(ruleExprs, 'find\.(\w+)', ['obj\.converterSource\{' num2str(k) char("\}\.getVariable(\'$1\')")]);           % Search for the values
-%% deal with the rule
+
+    %% deal with the rule
 if isempty(obj.converterRules)
     % initiate the converterRules
     obj.converterRules.target = {};
@@ -88,4 +100,5 @@ if startsWith(target, 'usr_')
         obj.converterUserDefined.(target) = 0;
     end
 end
+
 end
