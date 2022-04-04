@@ -417,9 +417,14 @@ end
 function [locs,parameters]=locsfromDiscFun(p)
 % added by Yu-Le for LocMoFit:   
 fitter = p.obj.getPar('fitter');
-finalROISize = p.obj.getPar('finalROISize');
 fitter.roiSize = p.se_siteroi;
-modCoord = fitter.getSimRef('finalROISize',str2num(finalROISize)); % get point type visualization
+if p.obj.getPar('useDepth')
+    depth = p.obj.getPar('depth');
+    modCoord = fitter.getSimRef('depth',str2num(depth)); % get point type visualization
+else
+    finalROISize = p.obj.getPar('finalROISize');
+    modCoord = fitter.getSimRef('finalROISize',str2num(finalROISize)); % get point type visualization
+end
 parameters.allParsArg = fitter.allParsArg;
 parameters.model = fitter.model;
 % Export

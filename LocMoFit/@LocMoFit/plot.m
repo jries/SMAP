@@ -311,7 +311,9 @@ else
         newLocs.znm = zeros(size(newLocs.xnm));
     end
     for layer = 1:length(allModelLayers)
-        if isempty(layerPoint{layer}.z )
+        if ~isfield(layerPoint{layer},'z')
+            
+        elseif isempty(layerPoint{layer}.z )
             disp('Check here when getting error.')
             % 200610 modified:
 %             layerPoint{layer}.z = zeros(size(layerPoint{layer}.x));

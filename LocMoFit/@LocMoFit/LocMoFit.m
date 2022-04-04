@@ -16,12 +16,12 @@ classdef LocMoFit<matlab.mixin.Copyable
     %	1.0.0
     %
     % Pleas cite:
-    %   preprintWu, Y.-L. et al. Maximum-likelihood model fitting for
+    %   Wu, Y.-L. et al. Maximum-likelihood model fitting for
     %   quantitative analysis of SMLM data. 2021.08.30.456756. bioRxiv
     %   (2021) doi:10.1101/2021.08.30.456756.
     % 
     % Last update:
-    %	19.11.2021
+    %	29.01.2022
     properties
         dimension               % ??? The dimension of the data.
         allParsArg              % All arguments of the parameters.
@@ -819,6 +819,8 @@ classdef LocMoFit<matlab.mixin.Copyable
         end
         
         function BG = convertBG(obj, queriedForm, layer, val)
+            % convert from one parameterization to another.
+            
             l = layer;
             if strcmp(queriedForm,'density')
                 % density here is defined as the projected density.
@@ -826,7 +828,11 @@ classdef LocMoFit<matlab.mixin.Copyable
                 optionValue = obj.advanceSetting.(['m9' num2str(l) '_background']).value;
                 if strcmp(optionValue,'weight')
                     weight = val;
-                    numOfBGLocs = weight*obj.numOfLocsPerLayer(l);
+                    if ~isempty(obj.numOfLocsPerLayer)
+                        numOfBGLocs = weight*obj.numOfLocsPerLayer(l);
+                    else
+                        numOfBGLocs = 0;
+                    end
                     BG = numOfBGLocs/(pi*(0.5*obj.roiSize/1000)^2);
                 else
                     BG = val;
@@ -838,7 +844,11 @@ classdef LocMoFit<matlab.mixin.Copyable
                 else
                     density = val;
                     numOfBGLocs = density*(pi*(0.5*obj.roiSize/1000)^2);
-                    BG = numOfBGLocs./obj.numOfLocsPerLayer(l);
+                    if ~isempty(obj.numOfLocsPerLayer)
+                    	BG = numOfBGLocs./obj.numOfLocsPerLayer(l);
+                    else
+                        BG = 0.001;
+                    end
                 end
             else
                 error(strjoin(["'" queriedForm "' is not a valid option. Use either 'density', 'weight'"], ''))
@@ -1078,15 +1088,19 @@ classdef LocMoFit<matlab.mixin.Copyable
             %       * 'finalROISize': the final ROI size for fitting. the 
             %       ROI size for simulations is usually larger than this
             %       value to make sure the background fills everywhere.
+            %       * 'depth': the final depth. This option determines the
+            %       axial range of the background.
             %   
             % Returns:
             %   modCoord: reference coordinates.
             %
             p = inputParser;
-            p.addParameter('finalROISize',obj.roiSize)
+            p.addParameter('finalROISize',[])
+            p.addParameter('depth',[])
             p.parse(varargin{:})
             
             finalROISize = p.Results.finalROISize;
+            depth = p.Results.depth;
                         
             % In the given range, assign values to the parameters randomly.
             obj.assignParsVal;
@@ -1190,10 +1204,13 @@ classdef LocMoFit<matlab.mixin.Copyable
                     % scale up to ROI size of the simulation
                     
                     numOfLabels;
-                    
+                    roiSize = obj.roiSize;
                     offset = obj.exportOffset();
                     if isfield(offset{90+l},'density')
                         BGDensity = offset{90+l}.density;
+                        if ~isempty('depth')
+                            finalROISize = roiSize;
+                        end
                         BGCount = BGDensity*(pi*(0.5*finalROISize/1000)^2);
                         offset{90+l}.weight = BGCount/(BGCount+numOfLabels);
                     end
@@ -1201,8 +1218,7 @@ classdef LocMoFit<matlab.mixin.Copyable
                     
                     numAll = numOfLabels*(pExp_Offset)/(1-pExp_Offset)+numOfLabels;
                     
-                    roiSize = obj.roiSize;
-                    [x,y,z] = getBGLocs(numAll, roiSize, finalROISize, pExp_Offset, obj.dataDim);
+                    [x,y,z] = getBGLocs(numAll, roiSize, finalROISize, pExp_Offset, obj.dataDim, depth);
                     n = ones(size(x));
                     modCoord{l}.x = [modCoord{l}.x; x];
                     modCoord{l}.y = [modCoord{l}.y; y];

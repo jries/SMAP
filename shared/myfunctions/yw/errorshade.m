@@ -14,6 +14,7 @@ function h = errorshade(varargin)
         p = inputParser;
         p.addParameter('Color',[]);
         p.addParameter('LineWidth',[]);
+        p.addParameter('LineAlpha',[]);
         p.addParameter('Marker',[]);
         p.addParameter('MarkerFaceColor',[]);
         p.addParameter('MarkerSize',3);
@@ -27,6 +28,14 @@ function h = errorshade(varargin)
         p = p.Results;
     end
     h = plot(ax,x,y);
+    
+    if ~isempty(p.LineAlpha)
+        if startsWith(p.Color, '#')
+            p.Color = hex2rgb(p.Color);
+        end
+        p.Color = [p.Color p.LineAlpha];
+    end
+    p = rmfield(p,'LineAlpha');
     
     if length(varargin) > 3
         fn = fieldnames(p);

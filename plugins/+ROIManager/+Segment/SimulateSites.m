@@ -225,18 +225,34 @@ function setModPars_callback(a,b,obj)
     typeOption_callback(guihandles.typeOption,[],obj);
     
     % Final ROI size
+    % This is now replaced by depth.
     guihandles.t_FinalROISize = uicontrol(fig, 'Style','text','String','Final ROI size:');
     guihandles.t_FinalROISize.Position = [2 12 1 1];
+    
+    guihandles.t_Depth = uicontrol(fig, 'Style','text','String','Depth:');
+    guihandles.t_Depth.Position = [2 12 1 1];
         
     finalROISize = obj.getPar('finalROISize');
+    depth = obj.getPar('depth');
     if isempty(finalROISize)
         obj.setPar('finalROISize','200')
         finalROISize = '200';
+    end
+    if isempty(depth)
+        obj.setPar('depth','200')
+        depth = '200';
     end
     guihandles.finalROISize = uicontrol(fig, 'Style','edit','String',finalROISize);
     guihandles.finalROISize.Position = [3 12 0.5 1];
     guihandles.finalROISize.Callback = {@finalROISize_callback,obj};
     
+    guihandles.depth = uicontrol(fig, 'Style','edit','String',depth);
+    guihandles.depth.Position = [3 12 0.5 1];
+    guihandles.depth.Callback = {@depth_callback,obj};
+    
+    guihandles.toggle = uicontrol(fig, 'Style','pushbutton','String','<->');
+    guihandles.toggle.Position = [3.5 12 0.5 1];
+    guihandles.toggle.Callback = {@toggle_callback,{obj,guihandles}};
     
     %% Data
     % Acquire the LocMoFit obj, and then display parameters based on the allParsArg
@@ -367,6 +383,29 @@ end
 
 function finalROISize_callback(a,b,obj)
     obj.setPar('finalROISize',a.String);
+end
+
+function depth_callback(a,b,obj)
+    obj.setPar('depth',a.String);
+end
+
+function toggle_callback(a,b,allObj)
+    obj = allObj{1};
+    guihandles = allObj{2};
+    currentUseDepth = obj.getPar('useDepth');
+    if isempty(currentUseDepth)||currentUseDepth ==0
+        guihandles.t_Depth.Visible = 'on';
+        guihandles.depth.Visible = 'on';
+        guihandles.t_FinalROISize.Visible = 'off';
+        guihandles.finalROISize.Visible = 'off';
+        obj.setPar('useDepth',1);
+    else
+        guihandles.t_Depth.Visible = 'off';
+        guihandles.depth.Visible = 'off';
+        guihandles.t_FinalROISize.Visible = 'on';
+        guihandles.finalROISize.Visible = 'on';
+        obj.setPar('useDepth',0);
+    end
 end
 
 function parArgTable_CellEditCallback(a,b,obj)

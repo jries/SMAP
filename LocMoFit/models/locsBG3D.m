@@ -5,10 +5,18 @@ classdef locsBG3D<geometricModel
     methods
         function obj = locsBG3D(varargin)
             obj@geometricModel(varargin{:});
-
+            % Define parameters that can be altered during fitting here:
+            obj.name = {'density', 'depth'};                               % parameter names
+            obj.fix = [0 1];                                               % fix to a constant or not
+            obj.value = [20 200];                                          % initial guess
+            obj.lb = [-inf -inf];                                          % relative lower bound
+            obj.ub = [inf inf];                                            % relative upper bound
+            obj.min = [0 100];                                             % absolute lower bound
+            obj.max = [inf 1000];                                          % absolute upper bound
+                       
             % Define other properties here:
-            obj.modelType = 'background';
-            obj.modelTypeOption = {'background','continuous'};
+            obj.modelType = 'discretized';
+            obj.modelTypeOption = {'discretized','continuous'};
             obj.dimension = 3;
         end
         
@@ -30,15 +38,14 @@ classdef locsBG3D<geometricModel
         % points.
         % p: additional information of the model.
         
-        locs = obj.ParentObject.ParentObject.locs;
-        lPar = obj.ParentObject.ParentObject.exportPars(1,'lPar');
-        locs = obj.ParentObject.ParentObject.locsHandler(locs,lPar);
-        model.x = locs.xnm-obj.ParentObject.pixelSize;
-        model.y = locs.ynm-obj.ParentObject.pixelSize;
-        model.z = locs.znm-obj.ParentObject.pixelSize;
-        model.channel = ones(size(model.x));
+        roiSize = obj.ParentObject.ParentObject.roiSize;
+        copyNumber = par.density.*roiSize./1000;
+        points = (rand([copyNumber, 3])-0.5) .* [roiSize roiSize par.depth];
+        
+        model.x = points(:,1);
+        model.y = points(:,2);
+        model.z = points(:,3);
         model.n = ones(size(model.x));
-
         %     likelihood = gaussDist(model,double(locs.ynmrot), double(locs.xnmrot), double(locs.znm), 8,8,10);
         %     likelihoodBoun = gaussDist(model,0,0,0, 16,16,20);
 
