@@ -51,10 +51,13 @@ classdef RegisterImages<interfaces.DialogProcessor
 %             dxr=obj.getPar('shiftxy_min','layer',reflayer);
 %             dyr=obj.getPar('shiftxy_max','layer',reflayer);
             if p.correctcoordinates
-                
-                tch=obj.locData.loc.channel==p.targetchannels(1);
-                for k=2:length(p.targetchannels)
-                    tch=tch|(obj.locData.loc.channel==p.targetchannels(k));
+                if isempty(p.targetchannels)
+                    tch=true(size(obj.locData.loc.channel));
+                else
+                    tch=obj.locData.loc.channel==p.targetchannels(1);
+                    for k=2:length(p.targetchannels)
+                        tch=tch|(obj.locData.loc.channel==p.targetchannels(k));
+                    end
                 end
                 tfile=p.dataselect.Value==obj.locData.loc.filenumber;
                 tch=tch&tfile;

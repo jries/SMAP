@@ -376,7 +376,7 @@ function loadcamcalibrationfile(obj,p,imgp)
     
     else
         if obj.getSingleGuiParameter('correctcamera')
-            disp(['could not find camera correction file ' camfile])
+            disp(['could not find camera correction file ' obj.loc_cameraSettings.correctionfile])
         end
         obj.setPar('cam_varmap',[]);
     end

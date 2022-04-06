@@ -950,7 +950,10 @@ switch event.Key
             removecell_callback(0,0,obj);
         else
             removesite_callback(0,0,obj);
-        end        
+        end    
+    case 'slash'
+            toggleuse_callback(0,0,obj)
+
 end
 
 end
