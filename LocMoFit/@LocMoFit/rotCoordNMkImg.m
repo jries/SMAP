@@ -185,7 +185,10 @@ switch mode
                     imageo = drawerSMAP(imageo,p_render);
                 end
                 thisImg = imageo.image;
-                v = v + thisImg;
+                
+                if ~isempty(thisImg) % XXXX added by Jonas
+                    v = v + thisImg;
+                end
             end
         end
         imagesc(ax, v);
