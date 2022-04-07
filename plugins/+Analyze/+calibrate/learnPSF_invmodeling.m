@@ -1,7 +1,4 @@
 classdef learnPSF_invmodeling<interfaces.DialogProcessor
-    % PLUGIN_TEMPLATE Summary of this plugin goes here
-    % put a description of your plugin here.
-        %replace Plugin_Template by filename   
     properties
         outputfile
         %define class properties if needed
@@ -9,18 +6,15 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
     methods
         function obj=learnPSF_invmodeling(varargin)   %replace by filename        
             obj@interfaces.DialogProcessor(varargin{:}) 
-            obj.showresults=true; %set true, if results are shown by default
-            obj.guiselector.show=true; %if true, the selector for simple vs complex GUI is shown.
+            obj.showresults=false; %set true, if results are shown by default
+            obj.guiselector.show=false; %if true, the selector for simple vs complex GUI is shown.
         end       
         function initGui(obj)
-            %is called after the GUI, defined in guidef, is made. Here you
-            %can add additional GUI components, e.g. some that are not
-            %defined by simple uicontrols (e.g. uitable), set additional
-            %synchronizations and callbacks.
         end
         function out=run(obj,p)
-            paramtemplate=[fileparts(pwd) filesep 'psfmodelling' filesep 'examples' filesep 'param_single.json'];
-            
+            envpath = '/Users/jonasries/opt/anaconda3/envs/myenv'; %to preferences. Also use different name for env.
+            runpath = [fileparts(pwd) '/psfmodelling/examples'];
+            paramtemplate=[runpath filesep 'param_single.json'];
             fid = fopen(paramtemplate); 
             raw = fread(fid,inf); 
             str = char(raw'); 
@@ -57,48 +51,29 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             fwrite(fid,encode_str); 
             fclose(fid);
             %% run python script
-            envpath = '/Users/ries/opt/miniconda3/envs/myenv';
-            runpath = '/Users/ries/git/psfmodelling/examples';
-            %envpath = 'C:\Users\Ries Lab\anaconda3\envs\psfinv_tf2';
-            %runpath = 'C:\Users\Ries Lab\git\PSFlearningTF2\psfmodelling\examples';
+
+
             [p1,env]=fileparts(envpath);
             condapath=fileparts(p1);
             pythonfile = 'learn_singleChannel.py';
-            command = ['python ' pythonfile ' ' paramfile ' &'];
+            command = ['python ' pythonfile ' "' paramfile '"'];
             currentpath=pwd;
-            if ispc
-                pcall=['call "' condapath '\Scripts\activate.bat" ' env ' & cd "' runpath '" & ' command ' & exit &'];
-                
-            else
-                cd(runpath)
-                pcall=[envpath '/bin/'  command ];
-            end
-            
-            [obj.decodepid,status, results]=systemcallpython(pdecode,command,decodepath,logfile);
-            [status, results]=system(pcall,'-echo');
+
+            logfile=strrep(paramfile,'.json','_log.txt');
+
+            [pid,status, results]=systemcallpython(envpath,command,runpath,logfile);
+
             cd(currentpath);
-           
             out=[]; %no output
-           
+
+            t=timer('StartDelay',1,'Period',1,'TasksToExecute',100,'ExecutionMode','fixedDelay');
+            t.TimerFcn={@displayprogress_timer,logfile,obj.P.par.mainGui.content.guihandles.status};
+            t.StartFcn={@displayprogress_timer,'',@obj.status};
+            t.start;       
         end
         function pard=guidef(obj)
            %pard structure can be =[]; All fields are optional.
-            
-            %define your GUI: for every GUI control define a structure as
-            %follows, replace 'guiobject' by a name by which you want to
-            %access the parameters
-            % required fields: .object=struct(...). Defines a uicontrol
-            % object. Just pass on all arguments you would otherwise pass
-            % on to uicontrol. Careful: if you want to pass on a cell
-            % array, you need to put it into double brackets: {{'a','b'}}.
-            % Use i.e. for 'String' property of popupmenus or for
-            % 'Callback' with options.
-            %please note, that if you define your own callback function,
-            %you need to take care of synchronizaiton with outputParameters
-            %yourself, e.g. by calling obj.obj.updateGuiParameter(0,0,guihandle);
-            %.position: relative position in a 4x11 grid. You can use
-            %non-integer values
-            %optional fields: Width, Height. In relative units.
+
             pard.load_filest.object=struct('String','bead stacks:','Style','text');
             pard.load_filest.position=[1,1];
             pard.load_files.object=struct('String','load','Style','pushbutton','Callback',{{@load_files_callback,obj}});
@@ -200,14 +175,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.lInorm.object=struct('String','1','Style','edit');
             pard.lInorm.position=[lw,4.5];  
             pard.lInorm.Width=0.5;
-            
-          
-            %automatically hide and show other gui parameters based on the
-            %value of a specific parameter
-            %pass on structure array, each element with the fields
-             %value choose which Value the description corresponds to
-             % on: array of names of gui objects to switched on when this
-             % value is selected
+
 %              % off: array of names of gui objects to switched off
 %             p(1).value=0; p(1).on={}; p(1).off={'guiobject2','guiobject'};
 %             p(2).value=1; p(2).on={'guiobject2','guiobject'}; p(2).off={};
@@ -256,5 +224,34 @@ end
 function selectroi_callback(a,b,obj)
 end
 
+
+function displayprogress_timer(obj,event,logfile,handle)
+if isempty(logfile)
+    obj.UserData.starttime=now;
+    obj.UserData.updatetime=datetime;
+    obj.UserData.oldtextlength=0;
+    handle.String='timer init';drawnow
+    return
+end
+
+if exist(logfile,'file') && dir(logfile).datenum>obj.UserData.starttime
+    alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
+    if isempty(alllines)
+        return
+    end
+    line=alllines(end);
+    if ~isempty(line) && length(alllines)>obj.UserData.oldtextlength
+        handle.String=(line);
+        obj.UserData.updatetime=datetime;
+        obj.UserData.oldtextlength=length(alllines);
+        drawnow
+    end     
+end
+if datetime-obj.UserData.updatetime>duration(0,0,20)
+    disp('timer timeout')
+    handle.String='timer done';drawnow
+    obj.stop
+end
+end
 
 

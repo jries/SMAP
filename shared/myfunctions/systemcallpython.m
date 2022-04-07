@@ -20,10 +20,14 @@ if nargin>3
 end
 pcall=strrep(strrep(pcall,'/',filesep),'\',filesep);
 cstr=strsplit(command);
-taskname=[cstr{1} '.exe'];
-pidold=getpids(taskname);
+if ispc
+    taskname=[cstr{1} '.exe'];
+else
+    taskname=[ cstr{1}];
+end
+[pidold,tasknames]=getpids(taskname);
 [status, results]=system([pcall ' &'],'-echo');
-pidnew=getpids(taskname);
+[pidnew,tasknew]=getpids(taskname);
 pid=setdiff(pidnew,pidold);
 cd(cdir);
 end
