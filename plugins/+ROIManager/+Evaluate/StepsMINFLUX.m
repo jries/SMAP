@@ -104,12 +104,55 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            
            plotstatistics(obj)
         end
+        function updateroiposition(obj,a,b)
+            %catch delete and add vertex!!!
+            oldtime=b.PreviousPosition(:,1);
+            newtime=b.CurrentPosition(:,1);
+           movedvertex= find(oldtime ~= newtime);
+            timemoved=newtime(movedvertex);
+            [~,newind]=min((obj.coord.timeplot(obj.coord.indtime)-timemoved).^2);
+            if (movedvertex== 1 || newind>obj.steps.indstep(movedvertex-1)) && (movedvertex== length(obj.steps.indstep) ||newind<obj.steps.indstep(movedvertex+1))
+                obj.steps.indstep(movedvertex)=newind;
+                obj.steps.steptime(movedvertex)=timemoved;
+                caluclatestepparameters(obj,obj.steps.indstep)
+            end
+            manualcurate(obj)
+        end
+        function addvertexroi(obj,a,b)
+            %catch delete and add vertex!!!
+            oldtime=obj.steps.steptime;
+            newtime=a.Position(:,1);
+            ind=find(oldtime~=newtime(1:end-1),1,'first');
+            if isempty(ind)
+                [~,newind]=min((obj.coord.timeplot(obj.coord.indtime)-newtime(end)).^2);
+                newsteps = [obj.steps.indstep;newind];
+            else
+                [~,newind]=min((obj.coord.timeplot(obj.coord.indtime)-newtime(ind)).^2);
+                newsteps=[obj.steps.indstep(1:ind-1); newind ;obj.steps.indstep(ind:end)];
+            end
+            caluclatestepparameters(obj,newsteps)
+            manualcurate(obj)
+        end
+        function deletevertexroi(obj,a,b)
+            oldtime=obj.steps.steptime;
+            newtime=a.Position(:,1);
+            ind=find(oldtime(1:end-1)~=newtime,1,'first');
+            if isempty(ind)
+                newsteps=obj.steps.indstep(1:end-1);
+            else
+                newsteps=[obj.steps.indstep(1:ind-1); obj.steps.indstep(ind+1:end)];
+            end
+
+            caluclatestepparameters(obj,newsteps)
+            manualcurate(obj)    
+        end
         function pard=guidef(obj)
             pard=guidef(obj);
         end     
     end
 
 end
+
 
 function plotstatistics(obj)
 index=obj.index;
@@ -299,9 +342,13 @@ m = uimenu(cm,'Text','Menu1');
 cm.ContextMenuOpeningFcn = @(src,event)disp('Context menu opened');
 hstep.ContextMenu = cm;
 dmv=diff(mv);
-for k=1:length(dmv)
-    text(ax2,(obj.steps.steptime(k+1)),mean(mv(k:k+1)),num2str(dmv(k),'%2.1f'),'FontSize',10,'Color','magenta','HitTest','off')
-end
+% for k=1:length(dmv)
+%     text(ax2,(obj.steps.steptime(k+1)),mean(mv(k:k+1)),num2str(dmv(k),'%2.1f'),'FontSize',10,'Color','magenta','HitTest','off')
+% end
+
+showvalues(obj,ax2,obj.steps.steptime(2:end),(mv(1:end-1)+mv(2:end))/2,dmv);
+
+
 obj.axstep=ax2;
 
 if ~isempty(info)
@@ -384,6 +431,19 @@ plot(axcc,xc);
 xlabel(axcc,'delta x (nm)');
 ylabel(axcc,'auto corr')
 
+end
+
+function h=showvalues(obj,ax,x,y,val,space)
+if ~obj.getSingleGuiParameter('showtext')
+    h=[];
+    return
+end
+if nargin<6
+    space='';
+end
+for k=length(val):-1:1
+    h(k)=text(ax,x(k),y(k),[space num2str(val(k),'%2.1f')],'FontSize',10,'Color','magenta','HitTest','off');
+end
 end
 
 function selectrange(a,b,obj)
@@ -521,6 +581,23 @@ end
 %     istep(insertind+1)=istep(insertind+1)+1;
 % end
 % 
+function manualcurate(obj)
+f=figure(234);
+ax=gca;
+hold(ax,'off')
+plot(ax,obj.coord.timeplot(obj.coord.indtime),obj.coord.xr(obj.coord.indtime),'k','HitTest','off')
+hold(ax,'on')
+
+stairs(ax,obj.steps.steptime,obj.steps.stepvalue,'r','LineWidth',2,'HitTest','off')
+stepv2=[obj.steps.stepvalue(1);(obj.steps.stepvalue(2:end)+obj.steps.stepvalue(1:end-1))/2];
+showvalues(obj,ax,obj.steps.steptime(2:end),stepv2(2:end),diff(obj.steps.stepvalue),'    ');
+roi=images.roi.Polyline(ax,'Position',horzcat(obj.steps.steptime,stepv2),'LineWidth',1,'Color','y');
+addlistener(roi,'ROIMoved',@obj.updateroiposition);
+addlistener(roi,'VertexAdded',@obj.addvertexroi);
+addlistener(roi,'VertexDeleted',@obj.deletevertexroi);
+end
+
+
 function [sval,istep]=removestep(sval,istep,insertind)
 if insertind+1<=length(istep)
     istep(insertind+1)=round((istep(insertind)+istep(insertind+1))/2);
@@ -530,6 +607,9 @@ end
 end
 
 function splitmerge(a,b,obj,what)
+manualcurate(obj)
+return
+
 dcm_obj = datacursormode(obj.axstep.Parent.Parent.Parent);
 info=dcm_obj.getCursorInfo;
 if isempty(info)
@@ -636,6 +716,15 @@ y=obj.coord.yr(indt);
 % nmax=500;
 % nmin=10;
 % x=x(nmin:nmax);y=y(nmin:nmax);time=time(nmin:nmax);
+if obj.getSingleGuiParameter('filtertrack')
+    fw=obj.getSingleGuiParameter('filterwindow');
+    fmode=obj.getSingleGuiParameter('fitmode').selection;
+    timen=min(time):fw:max(time);
+    xx=bindata(time,x,timen,fmode);
+    yy=bindata(time,y,timen,fmode);
+    x=xx;y=yy;time=timen;
+end
+
 
 ts=min(time):frametime:max(time);
 f=figure(99);
@@ -719,67 +808,72 @@ pard.currentrange.position=[1,1];
 pard.currentrange.Width=2;
 
 pard.refit.object=struct('String','Refit','Style','pushbutton','Callback',{{@refit,obj,1}});
-pard.refit.position=[5,3];
-pard.refit.Width=2;
+pard.refit.position=[5,2];
+pard.refit.Width=1;
 
 pard.refine.object=struct('String','Refine','Style','pushbutton','Callback',{{@refit,obj,2}});
 pard.refine.position=[5,1];
-pard.refine.Width=2;
+pard.refine.Width=1;
+
+pard.showtext.object=struct('String','values','Style','checkbox');
+pard.showtext.position=[5,3];
+pard.showtext.Width=2;
 
 %auto-fit
 p(1).value=0; p(1).on={}; p(1).off={'splitmerget','splitmergestep'};
 p(2).value=1; p(2).on=p(1).off; p(2).off={};
-pard.splitmerge.object=struct('Value',1,'String','Split and merge','Style','checkbox','Callback',{{@obj.switchvisible,p}});
+pard.splitmerge.object=struct('Value',1,'String','Split/merge','Style','checkbox','Callback',{{@obj.switchvisible,p}});
 pard.splitmerge.position=[3,1];
-pard.splitmerge.Width=2;
+pard.splitmerge.Width=1.5;
 pard.splitmerget.object=struct('String','step','Style','text');
-pard.splitmerget.position=[3,3];
+pard.splitmerget.position=[3,2.5];
 pard.splitmergestep.object=struct('String','','Style','edit');
-pard.splitmergestep.position=[3,4];
+pard.splitmergestep.position=[3,3];
+pard.splitmergestep.Width=0.5;
 
-pard.split.object=struct('String','Split','Style','pushbutton','Callback',{{@splitmerge,obj,1}});
-pard.split.position=[4,1];
+pard.split.object=struct('String','Manual','Style','pushbutton','Callback',{{@splitmerge,obj,1}});
+pard.split.position=[3,3.5];
 pard.split.Width=1.5;
-pard.merge.object=struct('String','Merge','Style','pushbutton','Callback',{{@splitmerge,obj,2}});
-pard.merge.position=[4,2.5];
-pard.merge.Width=1.5;
-
-pard.left.object=struct('String','<-','Style','pushbutton','Callback',{{@splitmerge,obj,3}});
-pard.left.position=[4,4];
-pard.left.Width=0.5;
-
-pard.right.object=struct('String','->','Style','pushbutton','Callback',{{@splitmerge,obj,4}});
-pard.right.position=[4,4.5];
-pard.right.Width=0.5;
+% pard.merge.object=struct('String','Merge','Style','pushbutton','Callback',{{@splitmerge,obj,2}});
+% pard.merge.position=[4,2.5];
+% pard.merge.Width=1.5;
+% 
+% pard.left.object=struct('String','<-','Style','pushbutton','Callback',{{@splitmerge,obj,3}});
+% pard.left.position=[4,4];
+% pard.left.Width=0.5;
+% 
+% pard.right.object=struct('String','->','Style','pushbutton','Callback',{{@splitmerge,obj,4}});
+% pard.right.position=[4,4.5];
+% pard.right.Width=0.5;
 
 
 pard.makemovie.object=struct('String','Make Movie','Style','pushbutton','Callback',{{@makemovie,obj}});
-pard.makemovie.position=[6,1];
+pard.makemovie.position=[7,1];
 pard.makemovie.Width=1.5;
 
 pard.frametimet.object=struct('String','frametime','Style','text');
-pard.frametimet.position=[6,2.5];
+pard.frametimet.position=[7,2.5];
 pard.frametime.object=struct('String','1','Style','edit');
-pard.frametime.position=[6,3.5];
+pard.frametime.position=[7,3.5];
 pard.frametime.Width=0.5;
 
 pard.simplemovie.object=struct('String','simple','Style','checkbox');
-pard.simplemovie.position=[6,4];
+pard.simplemovie.position=[7,4];
 
 
 p(1).value=0; p(1).on={}; p(1).off={'filterwindowt','filterwindow','filtermode'};
 p(2).value=1; p(2).on=p(1).off; p(2).off={};
 
 pard.filtertrack.object=struct('String','Filter','Style','checkbox','Callback',{{@obj.switchvisible,p}});
-pard.filtertrack.position=[7,1];
+pard.filtertrack.position=[6,1];
 pard.filterwindowt.object=struct('String','window (ms)','Style','text');
-pard.filterwindowt.position=[7,2];
+pard.filterwindowt.position=[6,1.7];
 pard.filterwindowt.Width=1.5;
 pard.filterwindow.object=struct('String','1','Style','edit');
-pard.filterwindow.position=[7,3];
+pard.filterwindow.position=[6,3];
 pard.filterwindow.Width=0.5;
 pard.filtermode.object=struct('String',{{'mean','median'}},'Style','popupmenu');
-pard.filtermode.position=[7,3.5];
+pard.filtermode.position=[6,3.5];
 pard.filtermode.Width=1.5;
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};
