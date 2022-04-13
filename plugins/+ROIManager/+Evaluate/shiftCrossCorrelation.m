@@ -74,7 +74,10 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
             out.xcorr=sx12;
             out.dxline=(xm-size(sx12hr,1)/2)*maxprecision;
             out.dyline=(ym-size(sx12hr,2)/2)*maxprecision;
-            
+            out.xr1 = xr1;
+            out.yr1 = yr1;
+            out.xr2 = xr2;
+            out.yr2 = yr2;
 
         end
         function pard=guidef(obj)
