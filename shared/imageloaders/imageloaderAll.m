@@ -35,6 +35,8 @@ end
            imloader=@imageloaderMMsingle;
        case '.dcimg'
            imloader=@imageloaderDCIMG;
+       case '.mat'
+           imloader=@imageloader_mat;
        otherwise
            imloader=@imageloaderOME;
    end    

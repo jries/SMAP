@@ -14,7 +14,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
         function out=run(obj,p)
             envpath = '/Users/jonasries/opt/anaconda3/envs/myenv'; %to preferences. Also use different name for env.
             runpath = [fileparts(pwd) '/psfmodelling/examples'];
-            paramtemplate=[runpath filesep 'param_single.json'];
+            paramtemplate=[runpath filesep 'params.json'];
             fid = fopen(paramtemplate); 
             raw = fread(fid,inf); 
             str = char(raw'); 
@@ -23,6 +23,42 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
 
             %overwrite with updated parameters:
             fn1=p.filelist{1};
+
+            %loss
+            loss.mse1=p.loss1(1);
+            loss.mse2=p.loss1(2);
+            loss.smooth=p.loss1(3);
+            loss.edge=p.loss1(4)* 0.01;
+            loss.psf_min=p.loss2(1);
+            loss.bg_min=p.loss2(2);
+            loss.photon_min=p.loss2(3)*1e-6;
+            loss.Inorm=p.loss2(4);
+
+            % modality
+            switch p.representation.selection
+                case 'Voxels'
+                    PSFtype='voxels';
+                case 'Pupil'
+                    PSFtype='pupil';
+                    loss.smooth=0;
+                case 'Zernike'
+                    PSFtype = 'zernike_vector'; 
+                    loss.smooth=0;
+            end
+
+            switch p.modality.selection
+                case '1 Ch'
+                    pf.PSFtype=PSFtype;
+                    pf.channeltype='single';
+                case '2 Ch'
+                    pf.PSFtype='voxels';
+                    pf.channeltype='multi';
+                case '4 Pi'
+                    pf.PSFtype='voxels';
+                    pf.channeltype='4pi';          
+            end
+
+
             
             % in future: read meta data
 %             r=imageloaderAll(fn1);
@@ -34,17 +70,11 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf.vary_photon=p.vary_photon;
             pf.usecuda=p.usecuda;
             pf.iteration=p.iteration;
-            loss.mse1=p.lmse1;
-            loss.mse2=p.lmse2;
-            loss.smooth=p.lsmooth;
-            loss.edge=p.ledge * 0.01;
-            loss.psf_min=p.lpsfmin;
-            loss.bg_min=p.lbgmin;
-            loss.photon_min=p.lphotonmin *1e-6;
-            loss.Inorm=p.lInorm;
+
             pf.loss_weight=loss;
             [pfad,fnh]=fileparts(fn1);
             paramfile=fullfile(pfad,[fnh '_par.json']);
+            pf.savename=[pfad 'psfmodel_' fnh];
 
             encode_str = jsonencode(pf,'PrettyPrint',true);
             fid = fopen(paramfile,'w'); 
@@ -71,6 +101,8 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             t.StartFcn={@displayprogress_timer,'',@obj.status};
             t.start;       
         end
+
+        
         function pard=guidef(obj)
            %pard structure can be =[]; All fields are optional.
 
@@ -88,20 +120,48 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.dz.position=[1,4.5];
             pard.dz.Width=0.5;
 
-            pard.representationt.object=struct('String','Representation','Style','text');
-            pard.representationt.position=[2,1];            
-            pard.representation.object=struct('String',{{'voxels','OTF','Zernike'}},'Style','popupmenu');
-            pard.representation.position=[2,2];   
-            pard.modalityt.object=struct('String','Modality:','Style','text');
-            pard.modalityt.position=[2,3];            
-            pard.modality.object=struct('String',{{'1 Ch','2 Ch','4 Pi'}},'Style','popupmenu');
-            pard.modality.position=[2,4];  
+%             pard.representationt.object=struct('String','Representation','Style','text');
+%             pard.representationt.position=[2,3];            
+              
 
+
+            pard.modalityt.object=struct('String','Modality:','Style','text');
+            pard.modalityt.position=[2,1];            
+            pard.modality.object=struct('String',{{'1 Ch','2 Ch','4 Pi'}},'Style','popupmenu','Callback',{{@modechanged,obj}});
+            pard.modality.position=[2,1.5];  
+            pard.modality.Width=0.75;
+
+            pard.representation.object=struct('String',{{'Voxels','Pupil','Zernike'}},'Style','popupmenu');
+            pard.representation.position=[2,2.25]; 
+            pard.representation.Width=0.75;
+            
             lw=3;
+            %2Ch
+            pard.mirrortypet.object=struct('String','mirror','Style','text','Visible','off');
+            pard.mirrortypet.position=[lw,3]; 
+            pard.mirrortypet.Width=1;
+            pard.mirrortype.object=struct('String',{{'none','up-down','right-left'}},'Style','popupmenu','Visible','off');
+            pard.mirrortype.position=[lw,4]; 
+            pard.mirrortype.Width=1;
+            pard.channelarranget.object=struct('String','channel','Style','text','Visible','off');
+            pard.channelarranget.position=[lw,1]; 
+            pard.channelarranget.Width=1;
+            pard.channelarrange.object=struct('String',{{'up-down','right-left'}},'Style','popupmenu','Visible','off');
+            pard.channelarrange.position=[lw,2]; 
+            pard.channelarrange.Width=1;
+            %4Pi
+            pard.zTt.object=struct('String','Period (µm)','Style','text','Visible','off');
+            pard.zTt.position=[lw,1]; 
+            pard.zTt.Width=1;
+            pard.zT.object=struct('String','0.26','Style','edit','Visible','off');
+            pard.zT.position=[lw,2]; 
+            pard.zT.Width=1;
+
+            lw=4;
             pard.segmentationt.object=struct('String','Segmenation:','Style','text');
             pard.segmentationt.position=[lw,1];  
             
-            lw=4;
+            lw=5;
             pard.estimate_drift.object=struct('String','est drift','Style','checkbox');
             pard.estimate_drift.position=[lw,1]; 
             pard.vary_photon.object=struct('String','vary N','Style','checkbox');
@@ -115,7 +175,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.iteration.position=[lw,4.5]; 
             pard.iteration.Width=0.5;
 
-            lw=5;
+            lw=6;
             pard.beadsizet.object=struct('String','Bead radius nm','Style','text');
             pard.beadsizet.position=[lw,1];  
             pard.beadsizet.Width=1.5;
@@ -125,65 +185,33 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.selectroi.object=struct('String','Select ROI','Style','pushbutton','Callback',{{@selectroi_callback,obj}});
             pard.selectroi.position=[lw,4];              
 
-            lw=6;
-            pard.lmse1t.object=struct('String','mse1','Style','text');
+            lw=7;
+            pard.lmse1t.object=struct('String','Loss: mse1, mse2, smooth, edge','Style','text');
             pard.lmse1t.position=[lw,1];  
-            pard.lmse1t.Width=0.5;
-            pard.lmse2t.object=struct('String','mse2','Style','text');
-            pard.lmse2t.position=[lw,1.5];  
-            pard.lmse2t.Width=0.5;
-            pard.lsmootht.object=struct('String','smooth','Style','text');
-            pard.lsmootht.position=[lw,2];  
-            pard.lsmootht.Width=0.5;
-            pard.ledget.object=struct('String','edge','Style','text');
-            pard.ledget.position=[lw,2.5];  
-            pard.ledget.Width=0.5;
-            pard.lpsfmint.object=struct('String','psf min','Style','text');
-            pard.lpsfmint.position=[lw,3];  
-            pard.lpsfmint.Width=0.5;
-            pard.lbgmint.object=struct('String','bg min','Style','text');
-            pard.lbgmint.position=[lw,3.5];  
-            pard.lbgmint.Width=0.5;
-            pard.lphotonmint.object=struct('String','phot min','Style','text');
-            pard.lphotonmint.position=[lw,4.];  
-            pard.lphotonmint.Width=0.5;
-            pard.lInormt.object=struct('String','I norm','Style','text');
-            pard.lInormt.position=[lw,4.5];  
-            pard.lInormt.Width=0.5;
-            lw=lw+1;
-            pard.lmse1.object=struct('String','1','Style','edit');
-            pard.lmse1.position=[lw,1];  
-            pard.lmse1.Width=0.5;
-            pard.lmse2.object=struct('String','1','Style','edit');
-            pard.lmse2.position=[lw,1.5];  
-            pard.lmse2.Width=0.5;
-            pard.lsmooth.object=struct('String','1','Style','edit');
-            pard.lsmooth.position=[lw,2];  
-            pard.lsmooth.Width=0.5;
-            pard.ledge.object=struct('String','1','Style','edit');
-            pard.ledge.position=[lw,2.5];  
-            pard.ledge.Width=0.5;
-            pard.lpsfmin.object=struct('String','1','Style','edit');
-            pard.lpsfmin.position=[lw,3];  
-            pard.lpsfmin.Width=0.5;
-            pard.lbgmin.object=struct('String','1','Style','edit');
-            pard.lbgmin.position=[lw,3.5];  
-            pard.lbgmin.Width=0.5;
-            pard.lphotonmin.object=struct('String','1','Style','edit');
-            pard.lphotonmin.position=[lw,4.];  
-            pard.lphotonmin.Width=0.5;
-            pard.lInorm.object=struct('String','1','Style','edit');
-            pard.lInorm.position=[lw,4.5];  
-            pard.lInorm.Width=0.5;
+            pard.lmse1t.Width=1.75;
+            pard.loss1.object=struct('String','1 1 1 1','Style','edit');
+            pard.loss1.position=[lw,2.75];  
+            pard.loss1.Width=0.5;
 
-%              % off: array of names of gui objects to switched off
-%             p(1).value=0; p(1).on={}; p(1).off={'guiobject2','guiobject'};
-%             p(2).value=1; p(2).on={'guiobject2','guiobject'}; p(2).off={};
-% 
+            pard.loss2t.object=struct('String','min: psf, bg, phot, Inorm','Style','text');
+            pard.loss2t.position=[lw,3.25];  
+            pard.loss2t.Width=1.25;
+            pard.loss2.object=struct('String','1 1 1 0','Style','edit');
+            pard.loss2.position=[lw,4.5];  
+            pard.loss2.Width=0.5;
+
 %             pard.onofftoggle.object=struct('Style','checkbox','String','show','Callback',{{@obj.switchvisible,p}});
             pard.plugininfo.type='ProcessorPlugin'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
         end
     end
+end
+
+function modechanged(a,b,obj)
+    p(1).value=1;p(1).off={'mirrortypet','mirrortype','channelarranget','channelarrange','zTt','zT'};p(1).on={};
+    p(2).value=2;p(2).off={'zTt','zT'};p(2).on={'mirrortypet','mirrortype','channelarranget','channelarrange'};
+    p(3).value=3;p(3).off={'mirrortypet','mirrortype','channelarranget','channelarrange'};p(3).on={'zTt','zT'};
+   obj.switchvisible(a,b,p);
+    
 end
 
 function load_files_callback(a,b,obj)
@@ -219,6 +247,7 @@ obj.guihandles.filelist.Value=1;
     catch err
         disp('EM mirror could not be defined automatically, set manually')
     end
+    % if dz found: add to GUI
 
 end
 function selectroi_callback(a,b,obj)
