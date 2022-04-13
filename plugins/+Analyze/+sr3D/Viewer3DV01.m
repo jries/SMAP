@@ -106,7 +106,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
         function makelocDatacopy(obj)
 
             hroi=obj.getPar('sr_roihandle');
-            if ~isvalid(hroi)
+            if isempty(hroi) || ~isvalid(hroi)
+                disp('Could not run 3D viewer. Select ROI first')
                 return
             end
             posrx=hroi.getPosition;

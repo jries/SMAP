@@ -40,7 +40,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
             if obj.getPar('loc_preview') %&& ~obj.previewdone
                 locs=data.data;
                 previewlocs=obj.getPar('preview_locs');
-                if isempty(locs)
+                if isempty(locs) || ~isstruct(locs)
                     locs=previewlocs;
                 elseif ~isempty(previewlocs) 
                     fn=fieldnames(previewlocs);
@@ -109,9 +109,11 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                 end
                 col=[0.3 0.3 0.];
                 dn=floor(obj.getPar('loc_ROIsize')/2);
-                for k=1:length(maxima.xpix)
-                    pos=[maxima.xpix(k)-dn maxima.ypix(k)-dn maxima.xpix(k)+dn maxima.ypix(k)+dn ];
-                    plotrect(ax,pos,col);
+                if ~isempty(dn)
+                    for k=1:length(maxima.xpix)
+                        pos=[maxima.xpix(k)-dn maxima.ypix(k)-dn maxima.xpix(k)+dn maxima.ypix(k)+dn ];
+                        plotrect(ax,pos,col);
+                    end
                 end
                 
                 %plot locs
@@ -120,7 +122,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                     plot(ax,locs.xpix,locs.ypix,'k.','Parent',ax,'MarkerSize',4)
                     dn=ceil((obj.getPar('loc_ROIsize')-1)/2);
                     if isempty(dn)
-                        dn=3;
+                        dn=1;
                     end
                     for k=1:length(locs.xpix)
                         pos=[locs.xpix(k)-dn locs.ypix(k)-dn locs.xpix(k)+dn locs.ypix(k)+dn ];

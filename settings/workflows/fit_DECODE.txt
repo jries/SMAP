@@ -16,3 +16,6 @@ DECODE_fitting.handle=hfit;
 
 LocSaver.Vpos=1;
 LocSaver.handle=hloc;
+
+PlotLocsPreview.Vpos=6;
+PlotLocsPreview.handle=hfit;

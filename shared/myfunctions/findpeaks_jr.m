@@ -1,4 +1,4 @@
-function P=findpeaks(x,y,SlopeThreshold,AmpThreshold,smoothwidth,peakgroup,smoothtype)
+function P=findpeaks_jr(x,y,SlopeThreshold,AmpThreshold,smoothwidth,peakgroup,smoothtype)
 % function P=findpeaks(x,y,SlopeThreshold,AmpThreshold,smoothwidth,peakgroup,smoothtype)
 % Function to locate the positive peaks in a noisy x-y time series data
 % set.  Detects peaks by looking for downward zero-crossings

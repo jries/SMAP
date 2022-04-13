@@ -22,6 +22,7 @@ classdef ImageFilter<interfaces.WorkflowModule
             pard=guidef(obj);
         end
         function prerun(obj,p)
+            obj.scmosfiltered=[];
             obj.scmosvariance=[];
             p=obj.getAllParameters;
             fs=p.loc_loc_filter_sigma(1);

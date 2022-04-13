@@ -8,6 +8,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         decodeprocess
         tensorboardprocess
         decodepid
+        fitlocal
     end
     methods
         function obj=DECODE_training_estimates(varargin)  
@@ -17,7 +18,8 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
         function out=run(obj,p)
            out=[];       
            if p.trainlocal
-               pdecode=[obj.getGlobalSetting('DECODE_path') ];
+               obj.fitlocal=true;
+               pdecode=strrep([obj.getGlobalSetting('DECODE_path') ],'\','/');
                if ~exist(pdecode,'dir')
                    warning('Decode not found, please specify in the SMAP/Preferences menu in the Plugin tab.');
                    return
@@ -30,22 +32,21 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                end
                finalizejson(obj);
                saveyaml(obj.yamlpar,yamlpath);
-    %            https://github.com/brian-lau/MatlabProcessManager
-               decodepath='../DECODE';
-               pcall=[pdecode '/bin/python -m decode.neuralfitter.train.live_engine -p ' yamlpath ' -l ' obj.yamlpar.InOut.experiment_out];
-               pm=processManager('command',pcall,'autoStart',false,'workingDir',decodepath);
-               pm.printStdout=false ;
-               pm.printStderr=true;
-               pm.wrap=1000;
-               pm.pollInterval=10;
-               pm.start()
-               obj.decodeprocess=pm;
-    
-               pcalltb=[pdecode '/bin/tensorboard --samples_per_plugin images=100 --port=6007 --logdir=' obj.yamlpar.InOut.experiment_out];
-               ptb=processManager('command',pcalltb,'workingDir',obj.yamlpar.InOut.experiment_out);
-               obj.tensorboardprocess=ptb;
+               logdir=[fileparts(obj.yamlpar.InOut.experiment_out) filesep 'log'];
+
+               command=['python -m decode.neuralfitter.train.train -p ' yamlpath ' -l ' logdir];
+               decodepath=[fileparts(pwd) filesep 'DECODE'];
+               [pid,status, results]=systemcallpython(pdecode,command,decodepath);
+               port=num2str(obj.yamlpar.SMAP.tensorboardport);
+               tfcommand=['tensorboard --samples_per_plugin images=100 --port=' port ' --logdir=' logdir];
+               getpids('tensorboard.exe','kill');
+               [pidtb,status, results]=systemcallpython(pdecode,tfcommand,decodepath);
+               obj.decodeprocess=pid;
+               obj.tensorboardprocess.pid=pidtb;
+               obj.tensorboardprocess.port=port;
 
            else %workstation via HTTP
+               obj.fitlocal=false;
                %make output directory
 %                outdir=[obj.yamlpar.Connect.local_network_storage  'training' filesep obj.yamlpar.InOut.experiment_out];
                local_network_storage=[obj.getGlobalSetting('DECODE_network_data') '/'];
@@ -56,6 +57,8 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                %copy files
                finalizejson(obj);
                yamlp=obj.yamlpar;
+
+
                calfile=obj.yamlpar.InOut.calibration_file;
                [pc,fout,fext]=fileparts(calfile);
                if ~exist([outdirlocal  fout fext],'file')
@@ -68,7 +71,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                status.watch_dir=[status.watch_dir filesep];
          
                outpath=['training/' obj.yamlpar.InOut.experiment_out]; 
-               yamlp.InOut.calibration_file=fullfile(outpath,[fout fext]);
+               yamlp.InOut.calibration_file=strrep(fullfile(outpath,[fout fext]),'\','/');
                %save yaml
                [~,fname]=fileparts(obj.locData.files.file(1).name);
                yamlname=['DECODE_train_' fname '.yaml'];
@@ -80,7 +83,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                yamlp.Hardware.device=gpurec;
                yamlp.Hardware.device_simulation=gpurec;
 
-               yamlp.InOut.experiment_out=fullfile(outpath);
+               yamlp.InOut.experiment_out=strrep(fullfile(outpath),'\','/');
                saveyaml(yamlp,yamlpath);
 
                url=[server '/submit_training'];
@@ -117,7 +120,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
             tt.Position=obj.guihandles.partablepos.Position;
             tt.Position(4)=tt.Position(4)*7;
             obj.guihandles.parttable=tt;
-            obj.yamlpar=ReadYaml(yamldefault);
+            obj.yamlpar=ReadYamlSimple(yamldefault);
             obj.yamlfile=yamldefault;
             makejsontable(obj);
         end
@@ -144,7 +147,7 @@ end
 % end
 
 function makejsontable(obj)
-use.SMAP={'set_emitters_per_um2','zrange_nm'};
+use.SMAP={'set_emitters_per_um2','zrange_nm','tensorboardport'};
 use.InOut={'calibration_file','experiment_out'};
 use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform'};
 use.Camera={'em_gain','e_per_adu','baseline','read_sigma','spur_noise','px_size'};
@@ -335,8 +338,11 @@ function usecurrent_callback(a,b,obj)
     stat=make_statistics2({locs});
     close(f)
 
-    js.Simulation.lifetime_avg=max(1,stat.lifetime.mu-1);
+    js.Simulation.lifetime_avg=max(1,stat.lifetime.mu-1);      
     js.Simulation.intensity_mu_sig= [1,0.2]*stat.photons.meanphot/js.Simulation.lifetime_avg; %30% variation
+    if stat.lifetime.mu<0.8 %if most fluorophores in1 frame only, but we simulate with longer on-time, increase brightness
+        js.Simulation.intensity_mu_sig=js.Simulation.intensity_mu_sig*1.3;
+    end
     bgminmax=quantile(locsu.bg,[0.01, 0.95]);
     dbg=bgminmax(2)-bgminmax(1);
     bgrange=bgminmax+ [-1, 1]*dbg*0.3;
@@ -422,12 +428,12 @@ else
     fout=[path file];
 end
 
-saveyaml(obj,fout)
+saveyaml(obj.yamlpar,fout)
 end
 
 function saveyaml(yamlpar,fout)
 yout=rmfield(yamlpar,'SMAP');
-WriteYaml(fout, yout);
+WriteYamlSimple(fout, yout);
 end
 
 function finalizejson(obj)
@@ -439,8 +445,8 @@ list={'LD','HD','UHD'};
 emit=[15 25 50];
 density=find(strcmp(js.SMAP.set_emitters_per_um2,list));
 js.Simulation.emitter_av=emit(density);
-js.Simulation.emitter_extent{3,1}=round(js.SMAP.zrange_nm(1));
-js.Simulation.emitter_extent{3,2}=round(js.SMAP.zrange_nm(2));
+js.Simulation.emitter_extent{3}{1}=round(js.SMAP.zrange_nm(1));
+js.Simulation.emitter_extent{3}{2}=round(js.SMAP.zrange_nm(2));
 js.InOut.calibration_file=strrep(js.InOut.calibration_file,'\','/');
 js.InOut.experiment_out=strrep(js.InOut.experiment_out,'\','/');
 
@@ -477,6 +483,15 @@ function setz(obj)
 end
 
 function stoplearning_callback(a,b,obj)
+if obj.fitlocal
+    pid = obj.decodeprocess;
+    if ispc
+        cmd = sprintf('taskkill /F /PID %d', pid);
+    else
+        cmd = sprintf('kill %d', pid);
+    end
+    system(cmd)
+else
 if ~isempty(obj.decodepid) %remote training
     if length(obj.decodepid)>1
         for k=1:length(obj.decodepid)
@@ -517,12 +532,13 @@ else
     end
 end
 end
+end
 
 function tensorboard_callback(a,b,obj)
-if ~isempty(obj.decodepid) %remote training
+if ~obj.fitlocal %remote training
    page='http://pc-ries25:8001/#scalars';
 else
-    page='http://localhost:6007';
+    page=['http://localhost:' obj.tensorboardprocess.port];
 end
 web(page,'-browser')
 end

@@ -307,10 +307,12 @@ function loadcamcalibrationfile(obj,p,imgp)
            disp('no scmos ROI specified but scmos calibration size equal to image size: assume it is the same ROI');
        else 
            roi=roiimg;
-           roi(1:2)=roi(1:2)-1; %zero based;
+           roi(1:2)=roi(1:2); %zero based;
            disp('no scmos ROI specified: assume entire chip used for calibration');
        end
-       if any(size(obj.gainmap)<roi(1:2)+roi(3:4)) %gainmap too small
+       sg=size(obj.gainmap);
+       if any(sg([2 1])<roi(1:2)+roi(3:4)) %gainmap too small
+           disp('scmos calibration map not compatible with image size.')
            roi(1:2)=0;
        end
 %        roi(1)=roi(1)+5 %test
@@ -329,7 +331,7 @@ function loadcamcalibrationfile(obj,p,imgp)
     
     else
         if obj.getSingleGuiParameter('correctcamera')
-            disp(['could not find camera correction file ' camfile])
+            disp(['could not find camera correction file ' obj.loc_cameraSettings.correctionfile])
         end
         obj.setPar('cam_varmap',[]);
     end

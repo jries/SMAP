@@ -4,13 +4,13 @@ classdef DECODE_fitting<interfaces.WorkflowModule
         decodepid
         workingdir
         yamldefault='DECODE_local.yaml';
+        imagefile
     end
     methods
         function obj=DECODE_fitting(varargin)
             obj@interfaces.WorkflowModule(varargin{:})
             obj.inputChannels=1; 
             obj.isstartmodule=true;
-%              
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -25,9 +25,11 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 obj.setPar('overwrite_pixelsize',[])
             end
         end
-        function run(obj,data,p)
+        function outreturn=run(obj,data,p)
+            outreturn=[];
             cam_settings=obj.getPar('loc_cameraSettings');
             [workingdirlocal, outname]=fileparts(p.outputpath);
+            frameshere=cam_settings.imagefile;
             if strcmpi(p.runwhere.selection,'local')
                 if ismac
                     gpurec='cpu';
@@ -38,13 +40,13 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 model_path=p.model_path;
                 emitter_path=p.outputpath;
             else %server
-                server=p.server;
+                server=obj.getGlobalSetting('DECODE_server');
                 gpustat=webread([server '/status_gpus']);
                 [gpus,gpurec]=parsegpustathttp(gpustat);  
                             % frames for server 
                 decodenetwork=obj.getGlobalSetting('DECODE_network_data');
                 pstart=length(decodenetwork);
-                frameshere=cam_settings.imagefile;
+% %                 frameshere=cam_settings.imagefile;
                 framesdir=frameshere(1:pstart);
                 if ~strcmp(framesdir,decodenetwork) %not the same: later copy here
                     disp('images need to be on the decode network storage for data')
@@ -65,7 +67,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                     return
                 end  
                 emitter_path=[p.outputpath(pstart+2:end)];
-                yamlwrappathremote=[fileparts(emitter_path) '/' outname '_fitwrap.yaml'];
+                yamlwrappathremote=strrep([fileparts(emitter_path) '/' outname '_fitwrap.yaml'],'\','/');
             end
 
             %for both
@@ -92,24 +94,81 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             else
                 wrapyaml.Camera.px_size=cam_settings.cam_pixelsize_um*1000;
             end
-            yamlwrappathlocal=[workingdirlocal '/' outname '_fitwrap.yaml'];
-            % make wrapper yaml
-            WriteYaml(yamlwrappathlocal, wrapyaml);
 
+            %frames
+            if obj.getPar('loc_preview')
+                f1=max(0,obj.getPar('loc_previewframe')-2);
+                f2=f1+2; 
+                framerange=[f1 f2];
+                starttext='Preview started, this can take a while (10s of seconds)';
+            else
+                frames=obj.getPar('loc_frames_fit');
+                if frames(2)>=cam_settings.numberOfFrames 
+                    if frames(1)==1
+                        framerange=[];
+                    else
+                        framerange=[0 cam_settings.numberOfFrames];
+                    end
+                else
+                    framerange=frames-1;
+                end
+                starttext='DECODE fitting started';
+            end
+            wrapyaml.Frames.range=uint32(framerange);
+
+            yamlwrappathlocal=[workingdirlocal filesep outname '_fitwrap.yaml'];
+            % make wrapper yaml
+            WriteYamlSimple(yamlwrappathlocal, wrapyaml);
+            fileh5=strrep(frameshere,'.tif','.h5'); % read h5
             %start fitting
             if strcmpi(p.runwhere.selection,'local')
+                command=['python -m decode.neuralfitter.inference.infer --fit_meta_path ' yamlwrappathlocal];
+                pdecode=obj.getGlobalSetting('DECODE_path');
+                decodepath=[fileparts(pwd) filesep 'DECODE'];
+                logfile=[workingdirlocal '/' outname '_log.txt'];
+                [obj.decodepid,status, results]=systemcallpython(pdecode,command,decodepath,logfile);
+                if status~=0
+                    disp('fitting did not work')
+                    return
+                end
+                starttime=now;
+                line="";
+                pause(1)
+                while 1
+                    pause(1)
+                    if exist(logfile,'file') && dir(logfile).datenum>starttime
+                        alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
+                        if isempty(alllines)
+                            continue
+                        end
+                        line=alllines(end);
+                        if ~isempty(line)
+                            obj.status(line);
+                            drawnow
+                        end
+                    elseif now-starttime>60
+                        break        
+                    end
+                    %determine when to stop
+                    if contains(line,"Fit done and emitters saved") 
+                        disp('logfile contains line: fitting done')
+                        break
+                    end
+                end   
             else %server
                 % call decode fitter
+                obj.status(starttext); drawnow;
                 url = [obj.getGlobalSetting('DECODE_server') '/submit_fit'];
                 options = weboptions('RequestMethod', 'post', 'ArrayFormat','json');
                 pid = webread(url, 'path_fit_meta', yamlwrappathremote, options);
                 obj.decodepid=pid;
-                obj.status('DECODE fitting started'); drawnow;
+                
                 %update staus
                 logfile=[workingdirlocal '/out.log' ];
                 fittingstat=webread([server '/status_processes']);
+                pause(1)
                 while strcmp(fittingstat.fit.(['x' num2str(pid)]),'running') || contains(fittingstat.fit.(['x' num2str(pid)]),'sleep')
-                    pause(2)
+                    pause(1)
                     if exist(logfile,'file')
                         alllines=readlines(logfile,'WhitespaceRule','trim','EmptyLineRule','skip');
                         if isempty(alllines)
@@ -124,9 +183,8 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                     fittingstat=webread([server '/status_processes']);
                 end
             end
-            fileh5=strrep(frameshere,'.tif','.h5'); % read h5
+           
             [locs,info]=decodeh5ToLoc(fileh5);
-
             locs.xpix=locs.xnm/info.pix2nm(1)+1;
             locs.ypix=locs.ynm/info.pix2nm(2)+2; %check ROI XXXXX
             locs.xpixerr=locs.xnmerr/info.pix2nm(1);
@@ -138,16 +196,23 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             end
             %check sign of z and pixel size. Look for offset compared to
             %fitting.
-           
+
             obj.setPar('loc_fitinfo',wrapyaml) % setPer('fitinfo') all training and fitting yaml parameters,
             output=interfaces.WorkflowData;
             output.eof=true;
             output.data=locs;
             output.ID=1;
             output.frame=1;
-            obj.output(output);
-            % later: preview and restricted frames!
-
+            if obj.getPar('loc_preview')
+                output.frame=framerange(1);
+                obj.setPar('preview_locs',locs);
+                obj.setPar('preview_peakfind',locs);
+                obj.output(output,2);
+                obj.status('Preview done.')             
+            else
+                obj.output(output);
+                obj.status('DECODE fitting done.')
+            end
         end
         function addFile(obj,file,setinfo)   %for batch processing?
             if isempty(file)
@@ -155,7 +220,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                 file=fileinfo.imagefile;
             end
             if setinfo
-                if contains(file,'/decode/fits')
+                if obj.getSingleGuiParameter('runwhere').Value==2 || contains(file,'decode/fits') || contains(file,'decode\fits')
                     outfile=strrep(file,'.tif','.h5');
                 else
                     [~,fn]=fileparts(file);
@@ -163,15 +228,12 @@ classdef DECODE_fitting<interfaces.WorkflowModule
                     decodenetwork=obj.getGlobalSetting('DECODE_network_data');
                     outfile=[decodenetwork filesep 'fits' filesep dir filesep fn '.h5'];
                 end
+                obj.setPar('loc_outputfilename',strrep(outfile,'.h5','_sml.mat'));
                 obj.setGuiParameters(struct('outputpath',outfile))
+                obj.imagefile=file;
                 %later: selection if h5 or csv
             end
-            %update output file
-        %     obj.workingdir=fileparts(fileparts(p));
-        %     if isempty(obj.getSingleGuiParameter('outputpath'))
-        %         
-        %     end
-            %output on channel 2 data.data=filename
+
         end
         function setoutputfilename(obj)
             %can be dummy but called from batch processor
@@ -183,16 +245,7 @@ classdef DECODE_fitting<interfaces.WorkflowModule
             obj.createGlobalSetting('DECODE_path','DECODE','The anaconda environmet path of decode (eg. /decode_env/):',struct('Style','dir','String','decode')) 
             obj.createGlobalSetting('DECODE_network_data','DECODE','network directory for DECODE training and fitting',struct('Style','dir','String',' '))
             obj.createGlobalSetting('DECODE_server','DECODE','network directory for DECODE training and fitting',struct('Style','edit','String','http://pc-ries25:8000'))
-            
-%             yamldefault=[obj.getPar('SettingsDirectory') filesep 'temp' filesep obj.yamldefault];
-%             if ~exist(yamldefault,'file')
-%                 yamlold=[obj.getPar('SettingsDirectory') filesep 'cameras' filesep 'DECODE_default.yaml'];
-%                 copyfile(yamlold, yamldefault)
-%             end
-%             ypar=ReadYaml(yamldefault);
-%             obj.setGuiParameters(struct('server',ypar.Connect.remote_workstation));
-        end
-            
+        end            
     end
 end
 
@@ -211,21 +264,35 @@ if f
         warndlg('param_run.yaml expected in model_0.pt path')
     end 
     obj.workingdir=fileparts(fileparts(p));
-%     if isempty(obj.getSingleGuiParameter('outputpath'))
-%         obj.setGuiParameters(struct('outputpath',obj.workingdir))
-%     end
 end
 end
 
 
 function selectoutput(a,b,obj)
-outputp=obj.getSingleGuiParameter('outputpath');
-if ~exist(outputp,"dir")
-    outputp=obj.getGlobalSetting('DECODE_network_data');
+p=obj.getAllParameters;
+outputp=p.outputpath;
+if ~isempty(obj.imagefile)
+    [plocal,flocal]=fileparts(obj.imagefile);
+    flocal=strrep(flocal,'.tif','.h5');
+else
+    flocal='fit.h5';
+    plocal='';
 end
-dir=uigetdir([outputp filesep]);
+
+if isempty(outputp) || ~exist(fileparts(outputp),'dir')
+    if p.runwhere.Value==2 %local
+        
+        outputp=plocal;
+    else
+        outputp=obj.getGlobalSetting('DECODE_network_data');
+    end
+    outputp=[outputp filesep flocal];
+end
+
+[file,pfad]=uiputfile(outputp);
 if ~isempty(dir)
-    obj.setGuiParameters(struct('outputpath',dir))
+    obj.setGuiParameters(struct('outputpath',[pfad file]))
+    obj.setPar('loc_outputfilename',strrep([pfad file],'.h5','_sml.mat'));
 end
 end
 

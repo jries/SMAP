@@ -75,7 +75,17 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             allmd(end+1,:)={'ROI direct',num2str(roih)};
             catch err
             end
-            possibleframes=[img.lastAcquiredFrame,summarymetadata.get('Slices'),summarymetadata.get('Frames'),summarymetadata.get('Positions')];
+            sl=0;fr=0;po=0;
+            try
+                sl=summarymetadata.get('Slices');
+            end
+            try
+                fr=summarymetadata.get('Frames');
+            end
+            try
+                po=summarymetadata.get('Positions');
+            end            
+            possibleframes=[img.lastAcquiredFrame,sl,fr,po];
             framesd=min(possibleframes(possibleframes>100));
             if isempty(framesd)
                 framesd=max(possibleframes);
@@ -141,7 +151,17 @@ for k=1:length(dirs)
     dirs{k}=[MMpath filesep 'plugins' filesep 'Micro-Manager' filesep strrep(dirs{k},'/',filesep)];
 end
 
-dirs{end+1}=  [MMpath filesep 'ij.jar']; 
+mmjar=[MMpath filesep 'ij.jar']; 
+if ~exist(mmjar,'file')
+     disp('Micro-manager V2.0 has a bug. Please install V1.4 instead.')
+    mmjar=[MMpath filesep 'ImageJ.app' filesep 'Contents' filesep 'Java' filesep 'ij.jar']; 
+end
+if ~exist(mmjar,'file')
+    disp('ij.jar not found. imageloaderMM line 159')
+%     mmjar=[MMpath filesep 'ImageJ.app' filesep 'Contents' filesep 'Java' filesep 'ij.jar']; 
+end
+
+dirs{end+1}=  mmjar; 
 jp=javaclasspath;
 diradd=dirs(~ismember(dirs,jp));
 if ~isempty(diradd)
@@ -168,6 +188,9 @@ if isempty(img)
     return
 end
 image=img.pix;
+if isempty(image)
+    return
+end
 % if numel(image)==obj.metadata.Width*obj.metadata.Height
     image=reshape(image,obj.metadata.Width,obj.metadata.Height)';
     if isa(image,'int16')
@@ -193,7 +216,12 @@ if ~isempty(obj.readoutimgtags)
     end   
     
     for k=1:length(obj.readoutimgtags)
-        tag=imgmeta.get(obj.readoutimgtags{k});
+        try
+            tag=imgmeta.get(obj.readoutimgtags{k});
+        catch err
+            tag=NaN;
+            err
+        end
         if ischar(tag)
             obj.imtags(k,imagenumber)=str2double(tag);
         else
@@ -225,5 +253,7 @@ function initimagetags(obj)
             end
             obj.readoutimgtags=strtrim(obj.readoutimgtags);
             obj.init=true;
+        else 
+            obj.readoutimgtags={};
         end    
 end

@@ -62,6 +62,9 @@ function [imout,norm]=normalizeImage(img,imaxtoggle,imax,imgnorm)
     else
         imout=img;
     end
+%     if isempty(norm)
+%         norm=1;
+%     end
 end
 
 function [imo,lut]=applyLut(im,lutname,pmin,pmax,lutinv)

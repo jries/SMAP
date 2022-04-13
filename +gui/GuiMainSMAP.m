@@ -163,7 +163,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 javaaddpath(bffile);
             else
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
-                disp('you can download the Matalb toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
+                disp('you can download the Matlab toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
             end
            
             
@@ -196,13 +196,16 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
   
             gfile=obj.getGlobalSetting('guiPluginConfigFile');
             if ~exist(gfile,'file')
-                gfile=strrep(gfile,'settings', settingsdir);
+                ind = strfind(gfile,'settings');
+                gfile=[settingsdir gfile(ind+8:end)];
+%                 gfile=strrep(gfile,'settings', settingsdir);
             end
                 
             if exist(gfile,'file')
                 guimodules=readstruct(gfile,[],true);
             else
-                guimodules=pmenu;
+%                 guimodules=pmenu;
+                guimodules=struct('File',[],'Analyze',[],'Process',[],'ROIManager',[]);
             end
             guimodulespure=myrmfield(guimodules,{'GuiParameters','globalGuiState'});
             obj.setPar('guimodules',guimodulespure);

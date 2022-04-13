@@ -8,7 +8,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
     methods
         function obj=PeakCombiner(varargin)
             obj@interfaces.WorkflowModule(varargin{:});
-             obj.inputParameters={'loc_loc_filter_sigma','EMon','loc_ROIsize','loc_fileinfo'};
+             obj.inputParameters={'loc_loc_filter_sigma','EMon','loc_ROIsize','loc_fileinfo','loc_multifile'};
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -52,7 +52,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 indref=obj.transform.getRef(xnm,ynm);
                 xnmref=xnm(indref);
                 ynmref=ynm(indref);
-                Nref=maxima.phot(indref).^2; %rather sqrt???
+                Nref=maxima.phot(indref).^2; %rather sqrt??? Think about this now!
                 Nt=maxima.phot(~indref).^2;
                 [xt,yt]=transform.transformCoordinatesInv(xnm(~indref),ynm(~indref));
                 [iA,iB,uiA,uiB]=matchlocs(xnmref,ynmref,xt,yt,[0 0],pixelsize(1)*4);
@@ -124,13 +124,19 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 Nc=sqrt(maxima.phot(indref));
 %                 xf=cpix(indref,1);yf=cpix(indref,2);intf=maxima.intensity(indref);
                 ccombined=cref;
+                if p.loc_multifile
+                    multioffsetpix=[p.loc_fileinfo.Width 0];%imagesize/2 find out if x or y
+                    transform.info{2}.xrange=transform.info{2}.xrange+p.loc_fileinfo.Width;
+                else
+                    multioffsetpix=0;
+                end
                 for k=2:transform.channels
                     indch=transform.getPart(k,cpix);
                     Nt=Nall(indch);
                     if p.framecorrection
-                        ctarget=transform.transformToReferenceFramecorrection(k,cpix(indch,:),data.frame);
+                        ctarget=transform.transformToReferenceFramecorrection(k,cpix(indch,:)-multioffsetpix,data.frame);
                     else
-                        ctarget=transform.transformToReference(k,cpix(indch,:));
+                        ctarget=transform.transformToReference(k,cpix(indch,:)-multioffsetpix);
                     end
                     
                     [iA,iB,uiA,uiB]=matchlocs(ccombined(:,1),ccombined(:,2),ctarget(:,1),ctarget(:,2),[0 0],6);
@@ -152,6 +158,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 else
                     ct=transform.transformToTargetAll(ccombined); %transfrom not rounded
                 end
+                ct(:,:,2)=ct(:,:,2)+multioffsetpix;
                 ct(:,1,:)=ct(:,1,:)-roi(1); %bring back to ROI on camera
                 ct(:,2,:)=ct(:,2,:)-roi(2);
                 %test dc XXXXX

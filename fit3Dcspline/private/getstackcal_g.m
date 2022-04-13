@@ -235,7 +235,9 @@ sstack=size(beads(1).stack.image);
         splinefit.PSFsmooth={single(corrPSFhdr)};   
         cspline.mirror=0;
     end
-   
+    if p.z0focus
+        z0reference=getfocusPSF(splinefit.PSFsmooth);
+    end
         
         cspline.z0=z0reference;%round((b3_0.dataSize(3)+1)/2);
         cspline.dz=p.dz;
