@@ -123,10 +123,6 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
             allmd=vertcat(allmd,list);
 
             obj.allmetadatatags=allmd;
-           
-
-            
-
         end       
     end    
     end
