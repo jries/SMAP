@@ -1,6 +1,8 @@
 classdef learnPSF_invmodeling<interfaces.DialogProcessor
-    properties
+    properties        
         outputfile
+        cameraSettings=struct('EMon',1,'emgain',1,'conversion',1,'offset',400,'cam_pixelsize_um',0.1);        
+        
         %define class properties if needed
     end
     methods
@@ -10,11 +12,18 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             obj.guiselector.show=false; %if true, the selector for simple vs complex GUI is shown.
         end       
         function initGui(obj)
+            obj.createGlobalSetting('PSFlearning_env','Python','The anaconda environmet path for the PSF learning (eg. /psf_env/):',struct('Style','dir','String','')) 
         end
         function out=run(obj,p)
-            envpath = '/Users/jonasries/opt/anaconda3/envs/myenv'; %to preferences. Also use different name for env.
+            envpath=[obj.getGlobalSetting('PSFlearning_env') ];
+            if ~exist(envpath,"dir")
+                warndlg('please select the PSF learning conda environment in the parameters menu.')
+                return
+            end
+              
+%             envpath = '/Users/jonasries/opt/anaconda3/envs/psfenv'; %to preferences. Also use different name for env.
             runpath = [fileparts(pwd) '/psfmodelling/examples'];
-            paramtemplate=[runpath filesep 'params.json'];
+            paramtemplate=[runpath filesep 'params_default.json'];
             fid = fopen(paramtemplate); 
             raw = fread(fid,inf); 
             str = char(raw'); 
@@ -22,8 +31,11 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf = jsondecode(str);
 
             %overwrite with updated parameters:
-
+            pf.plotall=false;
+      
+            pf.filelist=p.filelist;
             fn1=p.filelist{1};
+            [~,~,pf.format]=fileparts(fn1);
             %loss
             loss.mse1=p.loss1(1);
             loss.mse2=p.loss1(2);
@@ -37,7 +49,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             % modality
             switch p.representation.selection
                 case 'Voxels'
-                    PSFtype='voxels';
+                    PSFtype='voxel';
                 case 'Pupil'
                     PSFtype='pupil';
                     loss.smooth=0;
@@ -50,10 +62,10 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
                     pf.PSFtype=PSFtype;
                     pf.channeltype='single';
                 case '2 Ch'
-                    pf.PSFtype='voxels';
+                    pf.PSFtype='voxel';
                     pf.channeltype='multi';
                 case '4 Pi'
-                    pf.PSFtype='voxels';
+                    pf.PSFtype='voxel';
                     pf.channeltype='4pi';          
             end
 
@@ -66,19 +78,19 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf.pixelsize_y=md.cam_pixelsize_um(end);
 
             pf.pixelsize_z=p.dz;
-            pf.datapath=fileparts(fn1);
-            pf.bead_radius=p.beadsize;
+            pf.datapath=[fileparts(fn1) filesep];
+            pf.bead_radius=p.beadsize/1000;
             pf.estimate_drift=p.estimate_drift==1;
             pf.vary_photon=p.vary_photon==1;
             pf.usecuda=p.usecuda==1;
             pf.iteration=p.iteration;
 
             %ROI goes here
-            FOV = struct('x_center',md.Width/2,'y_center',md.Height/2,'width',md.Width,'height',md.Height,'z_start',p.skipframes(1),'z_end',p.skipframes(end)); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
+            roiradius=0; %use entire field
+            FOV = struct('x_center',md.Width/2,'y_center',md.Height/2,'radius',roiradius,'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
             pf.FOV = FOV;
 
             pf.roi_size=[1 1]*p.roisize;
-            skipframes
             pf.peak_height=p.segcutoff;
 
             pf.gaus_sigma = [2,2];
@@ -87,7 +99,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf.loss_weight=loss;
             [pfad,fnh]=fileparts(fn1);
             paramfile=fullfile(pfad,[fnh '_par.json']);
-            pf.savename=[pfad 'psfmodel_' fnh];
+            pf.savename=[pfad filesep 'psfmodel_' fnh];
 
             encode_str = jsonencode(pf,'PrettyPrint',true);
             fid = fopen(paramfile,'w'); 
@@ -97,16 +109,17 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             %% run python script
             [p1,env]=fileparts(envpath);
 %             condapath=fileparts(p1);
-            pythonfile = 'learn_singleChannel.py';
+            pythonfile = 'learn_psf.py';
             command = ['python ' pythonfile ' "' paramfile '"'];
             currentpath=pwd;
 
             logfile=strrep(paramfile,'.json','_log.txt');
 
             [pid,status, results]=systemcallpython(envpath,command,runpath,logfile);
-
+             disp(pid)
             cd(currentpath);
             out=[]; %no output
+            % use PID to see if still running
 
             t=timer('StartDelay',1,'Period',1,'TasksToExecute',100,'ExecutionMode','fixedDelay');
             t.TimerFcn={@displayprogress_timer,logfile,obj.P.par.mainGui.content.guihandles.status};
@@ -116,23 +129,33 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
 
         
         function pard=guidef(obj)
-            pard.load_filest.object=struct('String','bead stacks:','Style','text');
+            pard.load_filest.object=struct('String','beads:','Style','text');
             pard.load_filest.position=[1,1];
+            pard.load_filest.Width=0.5;
             pard.load_files.object=struct('String','load','Style','pushbutton','Callback',{{@load_files_callback,obj}});
-            pard.load_files.position=[1,2];
+            pard.load_files.position=[1,1.5];
+            pard.load_files.Width=0.5;
             pard.filelist.object=struct('String','','Style','edit','Max',10);
-            pard.filelist.position=[1,3];            
-            pard.filelist.Width=1;
+            pard.filelist.position=[1,2.];            
+            pard.filelist.Width=2;
+
+            pard.camparbutton.object=struct('String','Cam par','Style','pushbutton','Callback',{{@campar_callback,obj}});
+            pard.camparbutton.position=[1,4];
+            pard.camparbutton.Width=0.5;
+            pard.lockcampar.object=struct('String','lock','Style','checkbox');
+            pard.lockcampar.position=[1,4.5];
+            pard.lockcampar.Width=0.5;
+
             pard.dzt.object=struct('String','dz (nm)','Style','text');
-            pard.dzt.position=[1,4];
+            pard.dzt.position=[2,3];
             pard.dzt.Width=0.5;
             pard.dz.object=struct('String','50','Style','edit');
-            pard.dz.position=[1,4.5];
+            pard.dz.position=[2,3.5];
             pard.dz.Width=0.5;
 
             pard.modalityt.object=struct('String','Modality:','Style','text');
             pard.modalityt.position=[2,1];            
-            pard.modality.object=struct('String',{{'1 Ch','2 Ch','4 Pi'}},'Style','popupmenu','Tag','modality','Callback',{{@modechanged,obj}});
+            pard.modality.object=struct('String',{{'1 Ch','2 Ch','4 Pi','LLS'}},'Style','popupmenu','Tag','modality','Callback',{{@modechanged,obj}});
             pard.modality.position=[2,1.5];  
             pard.modality.Width=0.75;
 
@@ -167,7 +190,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.zTt.Width=1;
             pard.zT.object=struct('String','0.26','Style','edit','Visible','off');
             pard.zT.position=[lw,2]; 
-            pard.zT.Width=1;
+            pard.zT.Width=0.5;
 
             lw=4;
             pard.segmentationt.object=struct('String','Segmenation: cutoff','Style','text');
@@ -255,39 +278,49 @@ sf.guihandles.filelist.String=(obj.guihandles.filelist.String);
 waitfor(sf.handle);
 obj.guihandles.filelist.String=sf.filelist;
 obj.guihandles.filelist.Value=1;
-
-    ind=strfind(sf.filelist{1},';');
-    if ~isempty(ind)
-        fileh=sf.filelist{1}(1:ind-1);
-    else
-        fileh=sf.filelist{1};
-    end
-    [path,file]=fileparts(fileh);
-    if length(sf.filelist)>1
-        fileh2=sf.filelist{2};
-        path2=fileparts(fileh2);
-        if ~strcmp(path,path2) %not the same: look two hierarchies down
-            if strcmp(fileparts(path),fileparts(path2))
-                path=fileparts(path);
-            elseif strcmp(fileparts(fileparts(path)),fileparts(fileparts(path2)))
-                path=fileparts(fileparts(path));
-            end
-        end
-    end
-    obj.outputfile.String=[path filesep file '_3dcal.mat'];
-    try
-        r=imageloaderAll(fileh,[],obj.P);
-        mirror=r.metadata.EMon;
-%                     obj.guihandles.emgain.Value=mirror;
-    catch err
-        disp('EM mirror could not be defined automatically, set manually')
-    end
-    % if dz found: add to GUI
-
+r=imageloaderAll(sf.filelist{1},[],obj.P);
+md=r.metadata;
+fn=fieldnames(obj.cameraSettings);
+islock=obj.getSingleGuiParameter('lockcampar');
+if ~islock
+    obj.cameraSettings=copyfields(obj.cameraSettings,md,fn);
 end
+end
+
 function selectroi_callback(a,b,obj)
 end
 
+function campar_callback(a,b,obj)
+fn=fieldnames(obj.cameraSettings);
+for k=length(fn):-1:1
+    fields{k}=fn{k};
+    defAns{k}=converttostring(obj.cameraSettings.(fn{k}));
+end
+answer=inputdlg(fields,'Acquisition settings',1,defAns);
+if ~isempty(answer) && ~obj.getSingleGuiParameter('lockcampar')
+    for k=1:length(fn)
+        if isnumeric(obj.cameraSettings.(fn{k}))||islogical(obj.cameraSettings.(fn{k}))
+            obj.cameraSettings.(fn{k})=str2num(answer{k});
+        else
+            obj.cameraSettings.(fn{k})=(answer{k});
+        end
+    end
+end
+if obj.getSingleGuiParameter('lockcampar')
+    warning('cannot update camera paramters because they are locked')
+end
+end
+
+function out=converttostring(in)
+if iscell(in)
+    out=join(in,',');
+    out=out{1};
+elseif ischar(in)
+    out=in;
+else
+    out=num2str(in);
+end
+end
 
 function displayprogress_timer(obj,event,logfile,handle)
 if isempty(logfile)
