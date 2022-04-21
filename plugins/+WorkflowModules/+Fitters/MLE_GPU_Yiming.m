@@ -435,10 +435,10 @@ switch fitpar.fitmode
                 fitpar.splinefit{1}.cspline.coeff=permute(val.locres.coeff,[4,3,2,1]);
                 fitpar.splinefit{1}.cspline.z0=ceil(size(val.locres.coeff,2)/2);
                 
-                if ~isfield(fitpar.splinefit{1}.cspline,'isEM')
-                    fitpar.splinefit{1}.cspline.isEM=false;
-                end
-                fitpar.EMon=false;
+%                 if ~isfield(fitpar.splinefit{1}.cspline,'isEM')
+%                     fitpar.splinefit{1}.cspline.isEM=false;
+%                 end
+%                 fitpar.EMon=false;
 
             
         end

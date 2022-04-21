@@ -58,22 +58,33 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
                     PSFtype = 'zernike_vector'; 
                     loss.smooth=0;
             end
+            roisize=[1 1]*p.roisize;
+            pf.gaus_sigma = [2,2];
+            pf.max_kernel = [3,3];
+
             switch p.modality.selection
                 case '1 Ch'
                     pf.PSFtype=PSFtype;
                     pf.channeltype='single';
                 case '2 Ch'
-                    pf.PSFtype='voxel';
+%                     pf.PSFtype='voxel';
                     pf.channeltype='multi';
                 case '4 Pi'
                     pf.PSFtype='voxel';
-                    pf.channeltype='4pi';          
+                    pf.channeltype='4pi';  
+                case 'LLS'
+                    pf.PSFtype='voxel';
+                    pf.channeltype='single'; 
+                    rz=round(2700/p.dz); %XXX change?
+                    roisize=[rz,roisize];
+                    pf.gaus_sigma = [6,2,2];
+                    pf.max_kernel = [9,3,3];
             end
 
             % read meta data
             r=imageloaderAll(fn1,[],obj.P);
             md=r.metadata;
-            pf.gain = 1/md.conversion;
+            pf.gain = md.conversion;
             pf.ccd_offset=md.offset;
             pf.pixelsize_x=md.cam_pixelsize_um(1);
             pf.pixelsize_y=md.cam_pixelsize_um(end);
@@ -90,11 +101,9 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             FOV = struct('x_center',obj.selectedROI(1),'y_center',obj.selectedROI(2),'radius',obj.selectedROI(3),'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
             pf.FOV = FOV;
 
-            pf.roi_size=[1 1]*p.roisize;
+            pf.roi_size=roisize; 
             pf.peak_height=p.segcutoff;
 
-            pf.gaus_sigma = [2,2];
-            pf.max_kernel = [5,5];
 
             pf.loss_weight=loss;
             [pfad,fnh]=fileparts(fn1);
