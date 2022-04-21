@@ -2,13 +2,13 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
     properties        
         outputfile
         cameraSettings=struct('EMon',1,'emgain',1,'conversion',1,'offset',400,'cam_pixelsize_um',0.1);        
-        
+        selectedROI=[0 0 0];
         %define class properties if needed
     end
     methods
         function obj=learnPSF_invmodeling(varargin)   %replace by filename        
             obj@interfaces.DialogProcessor(varargin{:}) 
-            obj.showresults=false; %set true, if results are shown by default
+            obj.showresults=true; %set true, if results are shown by default
             obj.guiselector.show=false; %if true, the selector for simple vs complex GUI is shown.
         end       
         function initGui(obj)
@@ -20,6 +20,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
                 warndlg('please select the PSF learning conda environment in the parameters menu.')
                 return
             end
+            
               
 %             envpath = '/Users/jonasries/opt/anaconda3/envs/psfenv'; %to preferences. Also use different name for env.
             runpath = [fileparts(pwd) '/psfmodelling/examples'];
@@ -77,7 +78,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf.pixelsize_x=md.cam_pixelsize_um(1);
             pf.pixelsize_y=md.cam_pixelsize_um(end);
 
-            pf.pixelsize_z=p.dz;
+            pf.pixelsize_z=p.dz/1000;
             pf.datapath=[fileparts(fn1) filesep];
             pf.bead_radius=p.beadsize/1000;
             pf.estimate_drift=p.estimate_drift==1;
@@ -86,8 +87,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf.iteration=p.iteration;
 
             %ROI goes here
-            roiradius=0; %use entire field
-            FOV = struct('x_center',md.Width/2,'y_center',md.Height/2,'radius',roiradius,'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
+            FOV = struct('x_center',obj.selectedROI(1),'y_center',obj.selectedROI(2),'radius',obj.selectedROI(3),'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
             pf.FOV = FOV;
 
             pf.roi_size=[1 1]*p.roisize;
@@ -122,9 +122,14 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             % use PID to see if still running
 
             t=timer('StartDelay',1,'Period',1,'TasksToExecute',100,'ExecutionMode','fixedDelay');
-            t.TimerFcn={@displayprogress_timer,logfile,obj.P.par.mainGui.content.guihandles.status};
-            t.StartFcn={@displayprogress_timer,'',obj.P.par.mainGui.content.guihandles.status};
+            pt.statusHandle=obj.P.par.mainGui.content.guihandles.status;
+            pt.PID=pid;
+            pt.savefile=pf.savename;
+            t.TimerFcn={@displayprogress_timer,logfile,pt};
+            t.StartFcn={@displayprogress_timer,'',pt};
+            t.StopFcn={@fitting_done,obj,pt};
             t.start;       
+
         end
 
         
@@ -174,15 +179,15 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             %2Ch
             pard.mirrortypet.object=struct('String','mirror','Style','text','Visible','off');
             pard.mirrortypet.position=[lw,3]; 
-            pard.mirrortypet.Width=1;
+            pard.mirrortypet.Width=.5;
             pard.mirrortype.object=struct('String',{{'none','up-down','right-left'}},'Style','popupmenu','Visible','off');
-            pard.mirrortype.position=[lw,4]; 
+            pard.mirrortype.position=[lw,3.5]; 
             pard.mirrortype.Width=1;
             pard.channelarranget.object=struct('String','channel','Style','text','Visible','off');
             pard.channelarranget.position=[lw,1]; 
-            pard.channelarranget.Width=1;
+            pard.channelarranget.Width=.5;
             pard.channelarrange.object=struct('String',{{'up-down','right-left'}},'Style','popupmenu','Visible','off');
-            pard.channelarrange.position=[lw,2]; 
+            pard.channelarrange.position=[lw,1.5]; 
             pard.channelarrange.Width=1;
             %4Pi
             pard.zTt.object=struct('String','Period (µm)','Style','text','Visible','off');
@@ -197,7 +202,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.segmentationt.position=[lw,1];  
             pard.segmentationt.Width=1.5;
             pard.segcutoff.object=struct('String','0.2','Style','edit');
-            pard.segcutoff.position=[lw,2.5]; 
+            pard.segcutoff.position=[lw,2.]; 
             pard.segcutoff.Width=0.5;
 
             pard.skipframest.object=struct('String','skip frames','Style','text');
@@ -252,6 +257,37 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
     end
 end
 
+function fitting_done(a,b,obj,pt)
+fn=dir([pt.savefile '*.h5']);
+if isempty(fn)
+    disp('no output file written')
+    return
+end
+[~,ind]=max([fn(:).datenum]);
+% finf=h5info([fn(ind).folder filesep fn(ind).name]);
+v=loadh5([fn(ind).folder filesep fn(ind).name]);
+
+axb=obj.initaxis('beads');
+xb=double(v.rois.cor(:,1));
+yb=double(v.rois.cor(:,2));
+
+plot(axb,xb,yb,'o')
+axis(axb,'equal')
+nbeads=size(v.rois.psf_data,1);
+title([num2str(nbeads) ' beads found'])
+
+
+zfit=reshape(v.locres.P(5,:),[],nbeads);
+frames=(1:size(zfit,1))';
+ax=obj.initaxis('zfit');
+plot(ax,frames,frames,'k');
+hold(ax,'on');
+plot(ax,frames,zfit)
+hold(ax,'off')
+xlabel('frame')
+ylabel('frame fit')
+end
+
 function modechanged(a,b,obj)
 if strcmpi(a.Tag,'modality')
     p(1).value=1;p(1).off={'mirrortypet','mirrortype','channelarranget','channelarrange','zTt','zT'};p(1).on={};
@@ -285,9 +321,32 @@ islock=obj.getSingleGuiParameter('lockcampar');
 if ~islock
     obj.cameraSettings=copyfields(obj.cameraSettings,md,fn);
 end
+obj.selectedROI=[0 0 0];
 end
 
 function selectroi_callback(a,b,obj)
+fl=obj.getSingleGuiParameter('filelist');
+r=imageloaderAll(fl{1},[],obj.P);
+img=r.getmanyimages([],'mat');
+f=figure;
+ax=gca;
+imagesc(ax,mean(img,3))
+title('Select ROI, double click when done')
+axis equal
+roi=drawcircle(ax);
+obj.selectedROI=customWait(roi);
+delete(f)
+end
+function pos = customWait(hROI)
+l = addlistener(hROI,'ROIClicked',@clickCallback);
+uiwait;
+delete(l);
+pos = [hROI.Position,hROI.Radius];
+end
+function clickCallback(~,evt)
+if strcmp(evt.SelectionType,'double')
+    uiresume;
+end
 end
 
 function campar_callback(a,b,obj)
@@ -322,12 +381,12 @@ else
 end
 end
 
-function displayprogress_timer(obj,event,logfile,handle)
+function displayprogress_timer(obj,event,logfile,pt)
 if isempty(logfile)
     obj.UserData.starttime=now;
     obj.UserData.updatetime=datetime;
     obj.UserData.oldtextlength=0;
-    handle.String='timer init';drawnow
+    pt.statusHandle.String='timer init';drawnow
     return
 end
 
@@ -338,15 +397,28 @@ if exist(logfile,'file') && dir(logfile).datenum>obj.UserData.starttime
     end
     line=alllines(end);
     if ~isempty(line) && length(alllines)>obj.UserData.oldtextlength
-        handle.String=(line);
+        pt.statusHandle.String=(line);
         obj.UserData.updatetime=datetime;
         obj.UserData.oldtextlength=length(alllines);
         drawnow
     end     
 end
-if datetime-obj.UserData.updatetime>duration(0,0,20)
-    disp('timer timeout')
-    handle.String='timer done';drawnow
+timeout=(datetime-obj.UserData.updatetime)>duration(0,0,60);
+fn=dir([pt.savefile '*.h5']);
+filesaved=false;
+if ~isempty(fn)
+    for k=1:length(fn)
+        if fn(k).datenum>obj.UserData.starttime && datetime(fn(k).datenum,'ConvertFrom','datenum')+duration(0,0,10)<datetime('now')
+            filesaved=true;
+        end
+    end
+end
+
+piddeleted=~processstatus(pt.PID);
+
+if timeout || filesaved || piddeleted
+    disp(['timer ended. timeout' num2str(timeout) 'filesaved' num2str(filesaved) 'piddeleted' num2str(piddeleted)])
+    pt.statusHandle.String='timer done';drawnow
     obj.stop
 end
 end
