@@ -302,6 +302,7 @@ if strcmpi(a.Tag,'modality')
     p(1).value=1;p(1).off={'mirrortypet','mirrortype','channelarranget','channelarrange','zTt','zT'};p(1).on={};
     p(2).value=2;p(2).off={'zTt','zT'};p(2).on={'mirrortypet','mirrortype','channelarranget','channelarrange'};
     p(3).value=3;p(3).off={'mirrortypet','mirrortype','channelarranget','channelarrange'};p(3).on={'zTt','zT'};
+    p(4)=p(1); %LLS
     obj.switchvisible(a,b,p);
 elseif strcmpi(a.Tag,'representation')
     l1=obj.getSingleGuiParameter('loss1');
