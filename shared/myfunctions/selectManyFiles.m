@@ -324,8 +324,10 @@ function img=findimageindir(path,p)
 img={};
 files=dir([path filesep '*.tif']);
 if ~isempty(files)
-    img={[path filesep files(1).name]};
-    return
+    if ~strcmp(files(1).name(1),'.')
+        img={[path filesep files(1).name]};
+        return
+    end
 end
 files=dir([path filesep 'Pos*']);
 for k=1:length(files)
@@ -333,8 +335,10 @@ for k=1:length(files)
         path2=[path filesep files(k).name filesep];
         files2=dir([path2 '*.tif']);
         if ~isempty(files2)
-            img={[path2 files2(1).name]};
-            return
+            if ~strcmp(files2(1).name(1),'.')
+                img={[path2 files2(1).name]};
+                return
+            end
         end
     end
 end
