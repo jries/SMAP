@@ -396,6 +396,39 @@ classdef functionModel<SMLMModel
         end
         
         function [sigmaFactor, sigmaSet, sigmaZSet] = deriveSigma(obj, locs)
+            % :meth:`deriveSigma` derives the final sigma used for
+            % fitting. When :attr:`fixSigma` is set as true, sigma are
+            % derived based on pre-defined values. Otherwise, sigma are
+            % derived based on localization precisions. For a continuous
+            % model, the minimum sigma is defined as the median of
+            % localization precisions.
+            % 
+            % Uasage:
+            %   obj.deriveSigma(locs)
+            %
+            % Args:
+            %   obj (functionModel object): an object created by
+            %   :func:`functionModel`.
+            %   locs (structure array): a typical localization structure
+            %   array used in SMAP.
+            %
+            % Returns:
+            %   sigmaFactor (numeric vector): a 1-by-2 vector that
+            %   determines the fold of localization precisions used for
+            %   fitting.
+            %   sigmaSet (numeric vector|numeric scalar): sigma used for
+            %   fitting. A N-by-1 vector, where N is the number of
+            %   localiztions when :attr:`fixSigma` is true.
+            %   sigmaZSet (numeric vector|numeric scalar): z sigma used for
+            %   fitting. A N-by-1 vector, where N is the number of
+            %   localiztions when :attr:`fixSigma` is true.
+            %
+            % Last update:
+            %   24.04.2022
+            %
+            % See also:
+            %   :class:`functionModel`
+
             if ~obj.fixSigma
                 sigmaFactor = obj.sigmaFactor;
                 

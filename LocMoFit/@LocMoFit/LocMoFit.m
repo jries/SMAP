@@ -1486,7 +1486,7 @@ classdef LocMoFit<matlab.mixin.Copyable
                 [out(1),out(2),out(3)] = rotcoord3(pos(1),pos(2),pos(3),deg2rad(xrot),deg2rad(yrot),deg2rad(zrot),'XYZ');
             else
                 pos = zeros([1 2]);
-                disp('The function rel for 2D needs to be implemented.')%!!!!
+                disp('The function rel for 2D has to be implemented.')%!!!!
             end
             out = out(posOut);
         end

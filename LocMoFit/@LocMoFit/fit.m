@@ -173,7 +173,7 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
         mLLfit = -obj.fitInfo.LLfit*sum(ismember(locs.layer,obj.allModelLayer));
     end
 end
-obj.currentCascadeStep = 1; % resent the currenct step
+obj.currentCascadeStep = 1; % reset the currenct step
 obj.allParsArg.value(indFit) = parBestFit;            % only update the fit parameters
 
 if ~p.skipFit
