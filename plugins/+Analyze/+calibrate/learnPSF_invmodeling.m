@@ -13,17 +13,25 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
         end       
         function initGui(obj)
             obj.createGlobalSetting('PSFlearning_env','Python','The anaconda environmet path for the PSF learning (eg. /psf_env/):',struct('Style','dir','String','')) 
+            runpath = [fileparts(pwd) '/psfmodelling'];
+            if ~exist(runpath,'dir')
+                obj.createGlobalSetting('PSFlearning_git','Python','The git repository for PSF learning (eg. /psfmodelling/):',struct('Style','dir','String','')) 
+            end
         end
         function out=run(obj,p)
             envpath=[obj.getGlobalSetting('PSFlearning_env') ];
             if ~exist(envpath,"dir")
                 warndlg('please select the PSF learning conda environment in the parameters menu.')
                 return
-            end
-            
-              
-%             envpath = '/Users/jonasries/opt/anaconda3/envs/psfenv'; %to preferences. Also use different name for env.
+            end              
             runpath = [fileparts(pwd) '/psfmodelling/examples'];
+            if ~exist(runpath,'dir')
+                runpath=[obj.getGlobalSetting('PSFlearning_git') filesep 'examples'];
+                if ~exist(runpath,'dir')
+                    warndlg('please add the path to the psfmodelling code from git to the Parameters/Python')
+                end
+            end
+
             paramtemplate=[runpath filesep 'params_default.json'];
             fid = fopen(paramtemplate); 
             raw = fread(fid,inf); 
@@ -130,7 +138,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             out=[]; %no output
             % use PID to see if still running
 
-            t=timer('StartDelay',1,'Period',1,'TasksToExecute',100,'ExecutionMode','fixedDelay');
+            t=timer('StartDelay',1,'Period',1,'TasksToExecute',10000,'ExecutionMode','fixedDelay');
             pt.statusHandle=obj.P.par.mainGui.content.guihandles.status;
             pt.PID=pid;
             pt.savefile=pf.savename;
@@ -309,9 +317,11 @@ params = jsondecode(val);
 
 axb=obj.initaxis('beads');
 hold(axb,"off")
-xb=double(v.rois.cor(:,1));
-yb=double(v.rois.cor(:,2));
-scatter(xb,yb,30,v.rois.fileID(1,:)+1,'Parent',axb,'LineWidth',2)
+cor=squeeze(permute(v.rois.cor,[3 2 1]));
+fileids=squeeze(permute(v.rois.fileID,[2 1]));
+xb=double(cor(1,:,1));
+yb=double(cor(2,:,1));
+scatter(xb,yb,30,fileids(:,1)+1,'Parent',axb,'LineWidth',2)
 colormap(axb,'lines')
 
 % plot(axb,xb,yb,'o')
@@ -335,10 +345,15 @@ xlabel('frame')
 ylabel('frame fit')
 
 axp=obj.initaxis('PSF');
-imx(axp,permute(v.res.I_model,[3,2,1]));
+Imodel=squeeze(permute(v.res.I_model,[4,3,2,1]));
+imx(axp,Imodel);
+
+psf_data=squeeze(permute(v.rois.psf_data-v.rois.psf_fit,[6,5,4,3,2,1]));
 
 axr=obj.initaxis('residuals');
-imx(axr,permute(v.rois.psf_data-v.rois.psf_fit,[4,3,2,1]));
+imx(axr,psf_data);
+
+%4Pi: A,B, PSF (incl modulation)
 
 if isfield(v.res,'pupil')
     axphase=obj.initaxis('phase');
@@ -390,7 +405,7 @@ end
 obj.selectedROI=[0 0 0];
 imgs=r.getmanyimages([],'mat');
 ax=obj.initaxis('f1');
-imagesc(ax,max(double(imgs),[],3))
+imagesc(ax,max(double(imgs(:,:,:,1)),[],3))
 axis(ax,'equal')
 end
 

@@ -119,8 +119,10 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
             
 
             l=load(f1,'metadata');
-            list=mystruct2list(l.metadata);
-            allmd=vertcat(allmd,list);
+            if isfield(l,'metadata')
+                list=mystruct2list(l.metadata);
+                allmd=vertcat(allmd,list);
+            end
 
             obj.allmetadatatags=allmd;
         end       
