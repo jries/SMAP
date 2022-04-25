@@ -3,7 +3,8 @@ classdef CME3D_manager < SMLMModelFit_manager
     end
     methods
         function obj = CME3D_manager(varargin)
-            obj@SMLMModelFit_manager(varargin{:})
+%             obj@SMLMModelFit_manager(1,2)
+            obj@SMLMModelFit_manager(varargin{:});
         end
         function dynamicRec(obj)
             % Performing dynamic reconstructction based on the master
