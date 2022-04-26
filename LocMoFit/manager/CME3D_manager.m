@@ -139,6 +139,11 @@ classdef CME3D_manager < SMLMModelFit_manager
         end
         
         function mkMovie(obj, varargin)
+            % Last edits: 26.04.2022
+            % Log:
+            %   26.04.2022: fix the issue of black frames after the first
+            %   frame.
+            
             % If failed, roll back to dc91109e0bc306d9fce7f2d1aef6af451653576b
             inp = inputParser();
             inp.addParameter('saveTo','');
@@ -201,7 +206,7 @@ classdef CME3D_manager < SMLMModelFit_manager
                 indSites_bin = indSites(winBegin(k):winEnd(k));
                 obj.idxCurrentSite = indSites_bin;
                 if k ~= 1
-                    [~, locs] = obj.modifyMaster('spatialOffset', 0, 'spatialTrimXY', [0 0], 'binRadius', binRadius(k), 'scalingFactor', scalingFactor(k), 'binCloseAng', binCloseAng(k));
+                    [~, locs] = obj.modifyMaster('spatialOffset', 0, 'spatialTrimXY', [0 0], 'binRadius', binRadius(k), 'scalingFactor', scalingFactor(k), 'binCloseAng', binCloseAng(k), 'siteID',indSites_bin);
                 else
                     % Register the first bin again without re-scaling
                     for l = indSites_bin
