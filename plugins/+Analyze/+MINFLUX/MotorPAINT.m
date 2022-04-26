@@ -13,14 +13,19 @@ classdef MotorPAINT<interfaces.DialogProcessor
         function out=run(obj,p)  
             out=[];
 
-            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','time'},'layer',1,'Position','fov');
+            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','znm','time'},'layer',1,'Position','fov');
             findin=find(indin);
             gn=unique(locs.groupindex(locs.numberInGroup>=p.minlen));
+            isz=~isempty(locs.znm);
             
             locsout.xnm=[];
             locsout.ynm=[];
+            
             locsout.frame=[];
             locsout.tracklength=[];locsout.tracknumber=[];locsout.trackangle=[];
+            if isz
+                locsout.znm=[];
+            end
             tind=1;
             t=tic;
             
@@ -79,6 +84,13 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 locsout.tracklength(end+1:end+length(xs))=single(ones(size(xs))*tracklength);
                 locsout.tracknumber(end+1:end+length(xs))=single(ones(size(xs))*gn(k));
                 locsout.trackangle(end+1:end+length(xs))=single(ones(size(xs))*angle);
+                if isz
+                    z=locs.znm(indh);
+                    zs=stepvalue(z,istep);
+                    locsout.znm(end+1:end+length(zs))=single(zs);
+                    zsall{tind}=zs;
+                end
+
                 xsall{tind}=xs;ysall{tind}=ys;
                 angleall(tind)=angle;
                 tind=tind+1;
@@ -129,6 +141,19 @@ classdef MotorPAINT<interfaces.DialogProcessor
             axis(axc,"ij")
             axc.XLim=axall.XLim;
             axc.YLim=axall.YLim;
+            if isz
+                ax3Dt=obj.initaxis('track 3D');
+                hold(ax3Dt,'off')
+                for k=1:length(xsall)
+                    plot3(ax3Dt,xsall{k},ysall{k},zsall{k})
+                    hold(ax3Dt,'on')
+                end
+                axis(ax3Dt,"equal")
+                axis(ax3Dt,"ij")
+                grid(ax3Dt,"on")
+                ax3Dt.XLim=axall.XLim;
+                ax3Dt.YLim=axall.YLim;
+            end
 
         end
         function pard=guidef(obj)

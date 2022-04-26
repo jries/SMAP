@@ -70,6 +70,27 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf.gaus_sigma = [2,2];
             pf.max_kernel = [3,3];
 
+                        % read meta data
+%             r=imageloaderAll(fn1,[],obj.P);
+%             md=r.metadata;
+            camset=obj.cameraSettings;
+            pf.gain = camset.conversion;
+            pf.ccd_offset=camset.offset;
+            pf.pixelsize_x=camset.cam_pixelsize_um(1);
+            pf.pixelsize_y=camset.cam_pixelsize_um(end);
+
+            pf.pixelsize_z=p.dz/1000;
+            pf.datapath=[fileparts(fn1) filesep];
+            pf.bead_radius=p.beadsize/1000;
+            pf.estimate_drift=p.estimate_drift==1;
+            pf.vary_photon=p.vary_photon==1;
+            pf.usecuda=p.usecuda==1;
+            pf.iteration=p.iteration;
+            pf.skew_const=[p.skew_const(1) p.skew_const(end)];
+
+
+            xroi=round(obj.selectedROI(2));yroi=round(obj.selectedROI(1));
+
             switch p.modality.selection
                 case '1 Ch'
                     pf.PSFtype=PSFtype;
@@ -77,6 +98,30 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
                 case '2 Ch'
 %                     pf.PSFtype='voxel';
                     pf.channeltype='multi';
+                    %adjust ROI XXXXXX
+                    sim=size(r.getimage(1));
+                    switch pf.channel_arrange
+                        case 'up-down'
+                            if xroi>sim(1)/2
+                                if strcmp(pf.mirrortype,'none')
+                                    xroi=xroi-sim(1)/2; 
+                                else
+                                    xroi=sim(1)-xroi; %XXXX check index in mp, swap?
+                                end
+                            end
+                        case 'right-left'
+                            if yroi>sim(2)/2
+                                if strcmp(pf.mirrortype,'none')
+                                    yroi=yroi-sim(2)/2; 
+                                else
+                                   yroi=sim(2)-yroi;
+                                end
+                            end
+                        otherwise 
+                            error('error ')
+                    end
+
+                           
                 case '4 Pi'
                     pf.PSFtype='voxel';
                     pf.channeltype='4pi';  
@@ -87,26 +132,11 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
                     roisize=[rz,roisize];
                     pf.gaus_sigma = [6,2,2];
                     pf.max_kernel = [9,3,3];
+                    pf.estimate_drift=true;
             end
 
-            % read meta data
-            r=imageloaderAll(fn1,[],obj.P);
-            md=r.metadata;
-            pf.gain = md.conversion;
-            pf.ccd_offset=md.offset;
-            pf.pixelsize_x=md.cam_pixelsize_um(1);
-            pf.pixelsize_y=md.cam_pixelsize_um(end);
-
-            pf.pixelsize_z=p.dz/1000;
-            pf.datapath=[fileparts(fn1) filesep];
-            pf.bead_radius=p.beadsize/1000;
-            pf.estimate_drift=p.estimate_drift==1;
-            pf.vary_photon=p.vary_photon==1;
-            pf.usecuda=p.usecuda==1;
-            pf.iteration=p.iteration;
-
             %ROI goes here
-            FOV = struct('x_center',obj.selectedROI(1),'y_center',obj.selectedROI(2),'radius',obj.selectedROI(3),'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
+            FOV = struct('x_center',round(xroi),'y_center',round(yroi),'radius',round(obj.selectedROI(3)),'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
             pf.FOV = FOV;
 
             pf.roi_size=roisize; 
@@ -213,6 +243,12 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.zT.object=struct('String','0.26','Style','edit','Visible','off');
             pard.zT.position=[lw,2]; 
             pard.zT.Width=0.5;
+            pard.skew_constt.object=struct('String','Skew constant [y x]','Style','text','Visible','off');
+            pard.skew_constt.position=[lw,1]; 
+            pard.skew_constt.Width=1;
+            pard.skew_const.object=struct('String','-1.194, 0','Style','edit','Visible','off');
+            pard.skew_const.position=[lw,2]; 
+            pard.skew_const.Width=1;
 
             lw=4;
             pard.segmentationt.object=struct('String','Segmenation: cutoff','Style','text');
@@ -284,9 +320,9 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.loss2.Optional=true;
 
 
-            pard.camparbutton.object=struct('String','Show results','Style','pushbutton','Callback',{{@showresults_callback,obj}});
-            pard.camparbutton.position=[lw+1,1];
-            pard.camparbutton.Width=1;
+            pard.showresultsbutton.object=struct('String','Show results','Style','pushbutton','Callback',{{@showresults_callback,obj}});
+            pard.showresultsbutton.position=[lw+1,1];
+            pard.showresultsbutton.Width=1;
 
             pard.plugininfo.type='ProcessorPlugin'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
         end
@@ -319,19 +355,24 @@ axb=obj.initaxis('beads');
 hold(axb,"off")
 cor=squeeze(permute(v.rois.cor,[3 2 1]));
 fileids=squeeze(permute(v.rois.fileID,[2 1]));
-xb=double(cor(1,:,1));
-yb=double(cor(2,:,1));
-scatter(xb,yb,30,fileids(:,1)+1,'Parent',axb,'LineWidth',2)
+markert={'o','x','+','d'};
+for k=1:size(cor,3)
+xb=double(cor(1,:,k));
+yb=double(cor(2,:,k));
+scatter(xb,yb,30,fileids(:,1)+1,markert{k},'Parent',axb,'LineWidth',2)
+hold(axb,'on')
+end
 colormap(axb,'lines')
 
 % plot(axb,xb,yb,'o')
-axis(axb,'equal')
-nbeads=size(v.rois.psf_data,1);
+
+nbeads=size(cor,2);
 title([num2str(nbeads) ' beads found'])
 if params.FOV.radius>0
     hold(axb,"on")
-    circle(params.FOV.x_center,params.FOV.y_center,params.FOV.radius,'Parent',axb)
+    circle(params.FOV.y_center,params.FOV.x_center,params.FOV.radius,'Parent',axb)
 end
+axis(axb,'equal')
 
 % zfit=reshape(v.locres.P(5,:),[],nbeads);
 zfit=v.locres.loc.z;
@@ -345,7 +386,12 @@ xlabel('frame')
 ylabel('frame fit')
 
 axp=obj.initaxis('PSF');
+if isfield(v.res,'I_model')
 Imodel=squeeze(permute(v.res.I_model,[4,3,2,1]));
+elseif isfield(v.res,'channel0')
+    Imodel=squeeze(permute(v.res.channel0.I_model,[4,3,2,1]));
+    Imodel(:,:,:,2)=squeeze(permute(v.res.channel1.I_model,[4,3,2,1]));
+end
 imx(axp,Imodel);
 
 psf_data=squeeze(permute(v.rois.psf_data-v.rois.psf_fit,[6,5,4,3,2,1]));
@@ -370,11 +416,16 @@ end
 
 function modechanged(a,b,obj)
 if strcmpi(a.Tag,'modality')
-    p(1).value=1;p(1).off={'mirrortypet','mirrortype','channelarranget','channelarrange','zTt','zT'};p(1).on={};
-    p(2).value=2;p(2).off={'zTt','zT'};p(2).on={'mirrortypet','mirrortype','channelarranget','channelarrange'};
-    p(3).value=3;p(3).off={'mirrortypet','mirrortype','channelarranget','channelarrange'};p(3).on={'zTt','zT'};
-    p(4)=p(1); %LLS
+    p(1).value=1;p(1).off={'mirrortypet','mirrortype','channelarranget','channelarrange','zTt','zT','skew_const','skew_constt'};p(1).on={};
+    p(2).value=2;p(2).off={'zTt','zT','skew_const','skew_constt'};p(2).on={'mirrortypet','mirrortype','channelarranget','channelarrange'};
+    p(3).value=3;p(3).off={'mirrortypet','mirrortype','channelarranget','channelarrange','skew_const','skew_constt'};p(3).on={'zTt','zT'};
+    p(4).value=4;p(4).off={'mirrortypet','mirrortype','channelarranget','channelarrange','zTt','zT'};p(4).on={'skew_const','skew_constt'};
     obj.switchvisible(a,b,p);
+%     switch obj.getSingleGuiParameter('modality').selection
+%         case 'LLS'
+%             obj.setGuiParameters(struct('estimate_drift',true));
+%     end
+    % set drift on for LLS
 elseif strcmpi(a.Tag,'representation')
     l1=obj.getSingleGuiParameter('loss1');
     switch obj.getSingleGuiParameter('representation').selection
@@ -416,17 +467,21 @@ img=r.getmanyimages([],'mat');
 f=figure;
 ax=gca;
 imagesc(ax,mean(img,3))
-title('Select ROI, double click when done')
+title('Select ROI, double click when done. To clear, close figure.')
 axis equal
 roi=drawcircle(ax);
 obj.selectedROI=customWait(roi);
 delete(f)
 end
 function pos = customWait(hROI)
+try
 l = addlistener(hROI,'ROIClicked',@clickCallback);
 uiwait;
 delete(l);
 pos = [hROI.Position,hROI.Radius];
+catch err %figure closed
+    pos=[0, 0, 0];
+end
 end
 function clickCallback(~,evt)
 if strcmp(evt.SelectionType,'double')
@@ -467,6 +522,7 @@ end
 end
 
 function displayprogress_timer(obj,event,logfile,pt)
+timeout=120;
 if isempty(logfile)
     obj.UserData.starttime=now;
     obj.UserData.updatetime=datetime;
@@ -488,7 +544,7 @@ if exist(logfile,'file') && dir(logfile).datenum>obj.UserData.starttime
         drawnow
     end     
 end
-timeout=(datetime-obj.UserData.updatetime)>duration(0,0,60);
+timeout=(datetime-obj.UserData.updatetime)>duration(0,0,timeout);
 fn=dir([pt.savefile '*.h5']);
 filesaved=false;
 if ~isempty(fn)
