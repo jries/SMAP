@@ -62,7 +62,9 @@ classdef CME3D_manager < SMLMModelFit_manager
             parentObj.locData.loc.(['ynmaligned_' 'masterAvgMod']) = zeros(size(parentObj.locData.loc.xnm));
             parentObj.locData.loc.(['znmaligned_' 'masterAvgMod']) = zeros(size(parentObj.locData.loc.xnm));
             
-            for k = 2:settings.binNumber
+            % Skip the first bins, register the rest of bins with
+            % re-scaling
+            for k = settings.lastBin_noRescale+1:settings.binNumber
                 siteID_oneBin = rank_sitesInBin((k-1)*binSize+1:k*binSize);
                 currentBin = k;
                 [idxNewLocs, locs] = obj.modifyMaster('spatialOffset', currentBin * settings.distBetweenBins+1000,...
@@ -77,15 +79,18 @@ classdef CME3D_manager < SMLMModelFit_manager
             
             % Register the first bin without re-scaling
             et = 0;
-            for k = 1:binSize
-                obj.idxCurrentSite = rank_sitesInBin(k);
-                tic
-                obj.registerSites('firstBin', true,'spatialOffset', settings.distBetweenBins+1000, 'spatialTrimXY', settings.spatialTrimXY);
-                et = et+toc;
-                if et >10
-                    parentObj.status(['Register sites: Site ' num2str(k) ' of the ' num2str(binSize) ' sites done.']);
-                    drawnow
-                    et = 0;
+            for currentBin = 1:settings.lastBin_noRescale
+                for q = 1:binSize
+                    real_siteID = (currentBin-1)*binSize + q;
+                    obj.idxCurrentSite = rank_sitesInBin(real_siteID);
+                    tic
+                    obj.registerSites('firstBin', true,'spatialOffset', currentBin * settings.distBetweenBins+1000, 'spatialTrimXY', settings.spatialTrimXY);
+                    et = et+toc;
+                    if et >10
+                        parentObj.status(['Register sites: Site ' num2str(q) ' of the ' num2str(binSize) ' sites in bin ' num2str(currentBin) ' done.']);
+                        drawnow
+                        et = 0;
+                    end
                 end
             end
             
@@ -300,7 +305,7 @@ classdef CME3D_manager < SMLMModelFit_manager
                 settings.distBetweenBins = p.distBetweenBins;
                 settings.spatialTrimXY = p.spatialTrimXY;
                 settings.masterAvgR = p.masterAvgR;
-
+                settings.lastBin_noRescale = p.lastBin_noRescale;
                 settings.mainFitter = 'LocMoFitGUI_2';
 
     %             settings.converter(1).rule = '0';
