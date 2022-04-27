@@ -18,15 +18,17 @@
 %   * [analysisID]_avg.mat: NPC averages.
 %
 % Last update:
-%   21.04.2022
+%   27.04.2022
 %
 % See also:
 %   publish_report_particleFusion.m
 %
 % Version:
-%   v1.6.5
+%   v1.6.6
 %
 % Log:
+%   * v1.6.6: now the script saves the variable *par* (parameters of the
+%   analysis) as [analysisID]_par.mat.
 %   * v1.6.5: adding more comments on how to use this script.
 %   * v1.6.4: changes made to ensure that for every particle in the pre-
 %   registration, the initial parameters are properly reset.
@@ -105,6 +107,7 @@ g = initParFu(par);
 % Detecting the previously saved analysis and deciding where to continue
 % in the procedure. This creates a new field *proc_continueFrom* in the
 % structure array *par*
+save([par.save_drive par.save_wd par.save_name '_par.mat'], 'par')
 par = initProcCtrl(par);
 
 %% Correct tilt and tip.
