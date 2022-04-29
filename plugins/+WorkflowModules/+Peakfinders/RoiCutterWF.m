@@ -69,7 +69,31 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             
             cutoutimages=zeros(kernelSize,kernelSize,length(maxima(1).xpix),length(maxima),'single');
 %             ind=0;
-
+            %if length(maxima)>1: multi-channel separated, assumes images
+            %also separated by (x,y,1,ch). 
+             if size(image,4)~=length(maxima)
+                 trafo=obj.getPar('loc_globaltransform');
+                 switch trafo.params.channel_arrange
+                     case 'up-down'
+                        mp=trafo.images_size(1);
+                        imnew(:,:,1,1)=image(1:mp,:);
+                        imh=image(mp+1:end,:);
+                        if ~strcmp(trafo.params.mirrortype,'none')
+                            imh=imh(end:-1:1,:);
+                        end
+                        imnew(:,:,1,2)=imh;  
+                     case 'right-left'
+                         mp=trafo.images_size(2);
+                        imnew(:,:,1,1)=image(:,1:mp);
+                        imh=image(:,mp+1:end);
+                        if ~strcmp(trafo.params.mirrortype,'none')
+                            imh=imh(:,end:-1:1);
+                        end
+                        imnew(:,:,1,2)=imh;  
+                 end
+                image=imnew;
+                sim=size(imnew);
+             end
 
             for ch=1:length(maxima)
                 maxima(ch).xpixf=maxima(ch).xpix;

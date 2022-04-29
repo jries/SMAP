@@ -17,19 +17,38 @@ classdef PeakCombiner<interfaces.WorkflowModule
             initGui@interfaces.WorkflowModule(obj);
         end
         function prerun(obj,p)
-            l=load(p.Tfile);
-            if isfield(l,'transformation')
-                obj.transform=l.transformation;  
-            elseif isfield(l,'SXY')
-                obj.transform=l.SXY(1).cspline.global.transformation;
-            elseif isfield(l,'saveloc')
-                obj.transform=l.saveloc.file.transformation;
-            elseif isfield(l,'T')
-                obj.transform.T=double(cat(3,eye(3,3),permute(l.T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
-                obj.transform.centercoord=l.imgcenter;
-            else
-                errordlg(['no transformation found in' p.Tfile])
+            [~,~,ext]=fileparts(p.Tfile);
+            switch ext
+                case '*.mat'
+                    l=load(p.Tfile);
+                    if isfield(l,'transformation')
+                        obj.transform=l.transformation;  
+                    elseif isfield(l,'SXY')
+                        obj.transform=l.SXY(1).cspline.global.transformation;
+                    elseif isfield(l,'saveloc')
+                        obj.transform=l.saveloc.file.transformation;
+                    elseif isfield(l,'T')
+                        obj.transform.T=double(cat(3,eye(3,3),permute(l.T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
+                        obj.transform.centercoord=l.imgcenter;
+                    else
+                        errordlg(['no transformation found in' p.Tfile])
+                    end
+                case '.h5'
+                    l=loadh5(p.Tfile);
+                    T=l.res.T;
+                    s=size(T);
+                    if length(s)==2 %2Ch
+                        obj.transform.T=double(cat(3,eye(3,3),permute(T,[2 ,1]))); % xXXX create transform with that matrix.
+                    elseif length(s)==3 %4Pi
+                        obj.transform.T=double(cat(3,eye(3,3),permute(T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
+                    end
+                    obj.transform.centercoord=l.res.imgcenter;
+                    
+                    obj.transform.params = jsondecode(h5readatt(p.Tfile,'/','params'));
+                    obj.transform.images_size=double(l.rois.image_size(end:-1:1));
+                  
             end
+                    
             obj.setPar('loc_globaltransform',obj.transform);
         end
         function dato=run(obj,data,p)
@@ -194,6 +213,10 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 else
                     driftx=zeros(1,4);drifty=zeros(1,4);
                 end
+                
+                if numel(maxima)==1 %all localizations on one chip
+                    maxima=splitlocschannels(maxima,obj.transform);
+                end
 
                 % plus or minus drift??
                 xpix=(maxima(1).xpix+roi(1))+driftx(1); %still x,y inconsistency! solve
@@ -283,16 +306,16 @@ classdef PeakCombiner<interfaces.WorkflowModule
         function loadbutton(obj,a,b)
             fn=obj.guihandles.Tfile.String;
             path=fileparts(fn);
+            filter={'*3Dcal.mat;psfmodel*.h5'};
             if ~exist(path,'file')
                 fn=[fileparts(obj.getPar('loc_outputfilename')) filesep '*.mat'];
             end
-            [f,path]=uigetfile(fn,'Select transformation file _T.mat');
+            [f,path]=uigetfile(filter,'Select transformation file _T.mat',fn);
             if f
-                Tload=load([path f],'transformation');
-                if ~isfield(Tload,'transformation')
-                    msgbox('could not find transformation in file. Load other file?')
-                end
-                
+%                 Tload=load([path f],'transformation');
+%                 if ~isfield(Tload,'transformation')
+%                     msgbox('could not find transformation in file. Load other file?')
+%                 end
                 obj.guihandles.Tfile.String=[path f];
                 obj.setPar('transformationfile',[path f]);
             end      
@@ -308,6 +331,25 @@ ct=(T*(ccombinedh-centercoord)')'+centercoord;
 cto=ct;
 end
 
+function  maximao=splitlocschannels(maxima,t)
+switch t.params.channel_arrange
+    case 'up-down'
+        direction='ypix';
+        mp=t.images_size(1);
+
+    case 'right-left'
+        direction='xpix';
+        mp=t.images_size(2);
+end
+ind=maxima.(direction)<=mp;
+maximao(1)=copystructReduce(maxima,ind);
+maximao(2)=copystructReduce(maxima,~ind);
+if strcmp(t.params.mirrortype,'none')
+    maximao(2).(direction)=maximao(2).(direction)-mp;
+else
+    maximao(2).(direction)=2*mp-maximao(2).(direction);
+end
+end
 
 function pard=guidef(obj)
 pard.Tfile.object=struct('Style','edit','String','*_T.mat');

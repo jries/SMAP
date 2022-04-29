@@ -252,6 +252,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             end
             h.status.Position(4)=hstatus;
             h.status.Position(2)=1;
+            h.status.Position(1)=10;
             obj.addSynchronization('status',h.status,{'String'})             
 
             

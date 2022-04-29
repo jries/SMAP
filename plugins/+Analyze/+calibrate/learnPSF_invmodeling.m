@@ -76,8 +76,8 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             camset=obj.cameraSettings;
             pf.gain = camset.conversion;
             pf.ccd_offset=camset.offset;
-            pf.pixelsize_x=camset.cam_pixelsize_um(1);
-            pf.pixelsize_y=camset.cam_pixelsize_um(end);
+            pf.pixelsize_y=camset.cam_pixelsize_um(1);
+            pf.pixelsize_x=camset.cam_pixelsize_um(end);
 
             pf.pixelsize_z=p.dz/1000;
             pf.datapath=[fileparts(fn1) filesep];
@@ -86,10 +86,12 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf.vary_photon=p.vary_photon==1;
             pf.usecuda=p.usecuda==1;
             pf.iteration=p.iteration;
-            pf.skew_const=[p.skew_const(1) p.skew_const(end)];
+            pf.skew_const=[0 0];
+            
 
 
             xroi=round(obj.selectedROI(2));yroi=round(obj.selectedROI(1));
+            
 
             switch p.modality.selection
                 case '1 Ch'
@@ -99,6 +101,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
 %                     pf.PSFtype='voxel';
                     pf.channeltype='multi';
                     %adjust ROI XXXXXX
+                    r=imageloaderAll(fn1,[],obj.P);
                     sim=size(r.getimage(1));
                     switch pf.channel_arrange
                         case 'up-down'
@@ -133,6 +136,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
                     pf.gaus_sigma = [6,2,2];
                     pf.max_kernel = [9,3,3];
                     pf.estimate_drift=true;
+                    pf.skew_const=[p.skew_const(1) p.skew_const(end)];
             end
 
             %ROI goes here
@@ -536,9 +540,16 @@ if exist(logfile,'file') && dir(logfile).datenum>obj.UserData.starttime
     if isempty(alllines)
         return
     end
-    line=alllines(end);
+    line=char(alllines(end));
     if ~isempty(line) && length(alllines)>obj.UserData.oldtextlength
-        pt.statusHandle.String=(line);
+           numchar=70;
+           if length(line)>numchar
+               txt2{1}=line(1:numchar);
+               txt2{2}=line(numchar+1:end);
+           else
+               txt2=line;
+           end
+        pt.statusHandle.String=(txt2);
         obj.UserData.updatetime=datetime;
         obj.UserData.oldtextlength=length(alllines);
         drawnow
