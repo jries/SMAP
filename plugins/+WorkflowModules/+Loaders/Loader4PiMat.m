@@ -5,7 +5,7 @@ classdef Loader4PiMat<WorkflowModules.Loaders.TifLoader
     methods
         function obj=Loader4PiMat(varargin)
             obj@WorkflowModules.Loaders.TifLoader(varargin{:})
-            obj.loaders={'4Pi mat',@imageloader4Pimat};
+            obj.loaders={'mat',@imageloader_mat};
             obj.fileext='*.mat';
         end   
         function initGui(obj)

@@ -1,9 +1,19 @@
-function sr = resetparam_4Pi_fit(offsetfile,Fm,bxsz,trans)
-coeff = permute(Fm.coeff,[6,5,4,3,2,1]);
-Tm = double(cat(3,eye(3,3),permute(Fm.T,[3,2,1])));
-pz = Fm.pixelsize_z*1e3;
-pxsz = Fm.pixelsize_x*1e3;
-zT = Fm.zT;
+function sr = resetparam_4Pi_fit(offsetfile,calfile,bxsz,trans)
+val=loadh5(calfile);
+params = jsondecode(h5readatt(calfile,'/','params'));
+%     fitpar.splinefit{1}.dz=params.pixelsize_z*1000;
+%     fitpar.splinefit{1}.coeff=squeeze(permute(val.locres.coeff,[6,5,4,3,2,1]));
+%     fitpar.splinefit{1}.z0=ceil(size(val.locres.coeff,3)/2);
+% fitpar.dz=params.pixelsize_z*1000;
+% fitpar.z0=fitpar.splinefit{1}.z0;
+% fitpar.mode='cspline';
+
+
+coeff = squeeze(permute(val.locres.coeff,[6,5,4,3,2,1]));
+Tm = double(cat(3,eye(3,3),permute(val.res.T,[3,2,1])));
+pz = params.pixelsize_z*1000;
+pxsz = params.pixelsize_x*1e3;
+zT = params.modulation_period;
 ccz = size(coeff,3)/2;
 sr.Gainpath = offsetfile;
 sr.Peakthresh = 6;
@@ -25,4 +35,5 @@ pt = zT/2/pi*pz;
 sr.Pixelsizez = pz; % nm
 sr.Pixelsizeang = pt;% radian to nm
 sr.Periodz = zT*pz; % nm
+sr.zT=zT;
 sr.updateTflag = 0;

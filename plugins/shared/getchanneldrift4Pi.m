@@ -3,7 +3,7 @@ if nargin<3
     dx0=0;dy0=0;
 end
 frames=[1:frameblock:max(loc.frame) max(loc.frame)+1];
-if frames(end)-frames(end-1)<frameblock*0.75 %avoid small last block
+if frames(end)-frames(end-1)<frameblock*0.75 && frames(end)-frames(1)>frameblock%avoid small last block
     frames(end-1)=[];
 end
 dx=zeros(length(frames)-1,4);

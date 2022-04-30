@@ -34,13 +34,13 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
                 zastigall=locsall.zastig;
                 zastigerrall=locsall.zastigerr;
             end
-            zastig=-zastig;zastigall=-zastigall; %in the fitter z inverted
+            zastig=zastig;zastigall=zastigall; %in the fitter z inverted
             phase=mod(locs.phase,2*pi);
             phaseerr=locs.phaseerr;
             phaseerrall = locsall.phaseerr;
             cal3D=obj.locData.files.file(locs.filenumber(1)).savefit.cal3D;
 %             frequency=1/cal3D.zT/cal3D.pixelsize_z;
-            periodnm=cal3D.zT*cal3D.pixelsize_z*1000;
+            periodnm=cal3D.zT*1000;
             frequency=pi/periodnm;
 %             numwindows=1; windowsize=ceil(max(locs.frame)/numwindows);
             framepos=[0:p.windowframe:max(locs.frame) max(locs.frame)+1];

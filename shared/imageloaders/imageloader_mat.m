@@ -127,5 +127,5 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
             obj.allmetadatatags=allmd;
         end       
     end    
-    end
+end
 

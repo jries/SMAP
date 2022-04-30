@@ -228,17 +228,18 @@ function loadcall_callback(a,b,obj)
 p=obj.getAllParameters;
 ph=fileparts(p.cal_3Dfile);
 if ~exist(ph,'file')
-    p.cal_3Dfile= [fileparts(obj.getPar('loc_outputfilename')) filesep '*.mat'];
+    p.cal_3Dfile= [fileparts(obj.getPar('loc_outputfilename')) filesep '*.h5'];
 end
-[f,p]=uigetfile(p.cal_3Dfile);
-if f
-    l=load([p f]);
-    if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
-        msgbox('no 3D data recognized. Select other file.');
-    end
-    obj.setGuiParameters(struct('cal_3Dfile',[p f]));
-     obj.setPar('cal_3Dfile',[p f]); 
-end
+filter={'*3Dcal.mat;psfmodel*.h5'};
+[f,pfad]=uigetfile(filter,'load 3D calibration file',p.cal_3Dfile);
+% if f
+%     l=load([p f]);
+%     if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
+%         msgbox('no 3D data recognized. Select other file.');
+%     end
+%     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
+%      obj.setPar('cal_3Dfile',[p f]); 
+% end
 end
 
 function fitpar=getfitpar(obj)
@@ -260,8 +261,11 @@ p=obj.getAllParameters;
 %     fitpar.factor{k}=str2num(p.globaltable.Data{k,2});
 % end
 calfile=p.cal_3Dfile;
-cal=load(calfile);
-fitpar=resetparam_4Pi_fit('',cal,0,[0 0]);
+
+
+
+
+fitpar=resetparam_4Pi_fit('',calfile,0,[0 0]);
 fitpar.iterations=p.iterations;
 fitpar.roisperfit=p.roisperfit;
 fitpar.isscmos=p.isscmos;
@@ -274,8 +278,9 @@ fitpar.mode='4pi';
 % fitpar.dz=cal.pixelsize_z;
 % fitpar.pixelsize=cal.pixelsize_x;
 % fitpar.zT=cal.zT;
+savefit=fitpar;
 
-savefit=copyfields([],cal,{'T','zT','pixelsize_x','pixelsize_z','bead_radius'});
+% savefit=copyfields([],cal,{'T','zT','pixelsize_x','pixelsize_z','bead_radius'});
 savefit.cal_3Dfile=p.cal_3Dfile;
 obj.setPar('savefit',struct('cal3D',savefit));
 
