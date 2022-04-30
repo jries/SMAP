@@ -34,7 +34,7 @@ classdef Phase2z4Pi<interfaces.DialogProcessor
                 zastigall=locsall.zastig;
                 zastigerrall=locsall.zastigerr;
             end
-            zastig=zastig;zastigall=zastigall; %in the fitter z inverted
+            zastig=-zastig;zastigall=-zastigall; %in the fitter z inverted
             phase=mod(locs.phase,2*pi);
             phaseerr=locs.phaseerr;
             phaseerrall = locsall.phaseerr;
