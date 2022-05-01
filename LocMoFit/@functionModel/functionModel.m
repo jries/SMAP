@@ -395,7 +395,7 @@ classdef functionModel<SMLMModel
             obj.updateMParsArg
         end
         
-        function [sigmaFactor, sigmaSet, sigmaZSet] = deriveSigma(obj, locs)
+        function [sigmaFactor, sigmaSet, sigmaZSet] = deriveSigma(obj, locs, varargin)
             % :meth:`deriveSigma` derives the final sigma used for
             % fitting. When :attr:`fixSigma` is set as true, sigma are
             % derived based on pre-defined values. Otherwise, sigma are
@@ -424,10 +424,20 @@ classdef functionModel<SMLMModel
             %   localiztions when :attr:`fixSigma` is true.
             %
             % Last update:
-            %   24.04.2022
+            %   28.04.2022
             %
             % See also:
             %   :class:`functionModel`
+
+            inp = inputParser;
+            minSigma = obj.ParentObject.getAdvanceSetting('minSigma');
+            if isempty(minSigma)
+                inp.addParameter('minSigma', 'median')
+            else
+                inp.addParameter('minSigma', minSigma)
+            end
+            inp.parse(varargin{:})
+            inp = inp.Results;
 
             if ~obj.fixSigma
                 sigmaFactor = obj.sigmaFactor;
@@ -441,15 +451,21 @@ classdef functionModel<SMLMModel
                 if obj.dimension == 3
                     sigmaZSet = locs.locprecznm;
                 end
+
                 switch obj.modelType
                     case 'discrete'
                         % do nothing here if discrete
                     otherwise
-                        medSig = median(locs.locprecnm);
-                        sigmaSet(sigmaSet<medSig)=medSig;
-                        if obj.dimension == 3
-                            medSigz = median(locs.locprecznm);
-                            sigmaZSet(sigmaZSet<medSigz) = medSigz;
+                        if strcmp(inp.minSigma,'median')
+                            % define the median locprec as the minimum
+                            medSig = median(locs.locprecnm);
+                            sigmaSet(sigmaSet<medSig)=medSig;
+                            if obj.dimension == 3
+                                medSigz = median(locs.locprecznm);
+                                sigmaZSet(sigmaZSet<medSigz) = medSigz;
+                            end
+                        elseif strcmp(inp.minSigma,'off')
+                            % do nothing here if off
                         end
                 end
             else

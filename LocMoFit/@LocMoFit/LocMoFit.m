@@ -1605,7 +1605,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             u210630(obj)
             obj.updateAdvancedSetting
 %             u210917(obj)
-%             u210919(obj)            
+            u210919(obj)            
         end
     end
     methods(Access = protected)
@@ -1714,7 +1714,12 @@ function out = defaultAdvanceSettings
     out.layerNorm.option = {'on','off'};
     out.layerNorm.value = 'on';
     out.layerNorm.name = 'Layer normalization';
-    out.cascade.description = 'This only applies multi-color fitting.';
+    out.layerNorm.description = 'This only applies multi-color fitting.';
+
+    out.minSigma.option = {'median','off'};
+    out.minSigma.value = 'median';
+    out.minSigma.name = 'Min sigma';
+    out.minSigma.description = 'Define the minimum localization precision.';
     
 end
 
