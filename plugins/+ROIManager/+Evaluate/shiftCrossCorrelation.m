@@ -79,6 +79,28 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
             out.xr2 = xr2;
             out.yr2 = yr2;
 
+            % YW added:
+            % get the FWHM of the peak of the xcross perpendicular to the
+            % kinetochore axis.
+            yProfile = sx12hr(xm,:);
+            yProfile = yProfile-min(yProfile); 
+            yMax_val = max(yProfile);
+            i1=find(yProfile>yMax_val/2,1,'first');
+            i2=find(yProfile>yMax_val/2,1,'last');
+            fwhm = (i2-i1)*maxprecision;
+
+            ax3=obj.setoutput('fwhm');
+            yshift = (-size(sx12hr,1)/2:size(sx12hr,1)/2)*maxprecision;
+            plot(ax3, yshift(1:end-1)+0.5, yProfile,'r');
+            hold(ax3, 'on')
+            yline(ax3, yMax_val/2)
+            title(ax3, ['FWHM = ' num2str(fwhm) ' nm'])
+            xlabel(ax3, 'y shift (nm)')
+            ylabel(ax3, 'xcorr')
+            hold(ax3, 'off')
+
+            out.fwhm = fwhm;
+
         end
         function pard=guidef(obj)
             pard=guidef;
