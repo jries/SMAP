@@ -215,23 +215,25 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 end
                 
                 if numel(maxima)==1 %all localizations on one chip
-                    maxima=splitlocschannels(maxima,obj.transform);
+                    maximas=splitlocschannels(maxima,obj.transform);
+                else
+                    maximas=maxima;
                 end
 
                 % plus or minus drift??
-                xpix=(maxima(1).xpix+roi(1))+driftx(1); %still x,y inconsistency! solve
-                ypix=(maxima(1).ypix+roi(2))+drifty(1); %put on camera chip
+                xpix=(maximas(1).xpix+roi(1))+driftx(1); %still x,y inconsistency! solve
+                ypix=(maximas(1).ypix+roi(2))+drifty(1); %put on camera chip
                 cref=[xpix,ypix,ones(size(xpix))];
                 
-                Nc=(maxima(1).phot);
+                Nc=(maximas(1).phot);
                 ccombined=cref;
 %                 ct(:,:,1)=cref(:,1:2);
 % if 0
-                for k=2:length(maxima)    
-                    Nt=maxima(k).phot;
+                for k=2:length(maximas)    
+                    Nt=maximas(k).phot;
                     T=obj.transform.T(:,:,k);
                     Tinv=inv(T);
-                    cN=[maxima(k).xpix+roi(1),maxima(k).ypix+roi(2),ones(size(maxima(k).ypix))];
+                    cN=[maximas(k).xpix+roi(1),maximas(k).ypix+roi(2),ones(size(maximas(k).ypix))];
                     ctarget=transformT4Pi(cN,Tinv,obj.transform.centercoord);
 %                     ctarget=(Tinv*cN')';
 

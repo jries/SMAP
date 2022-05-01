@@ -368,6 +368,25 @@ hold(axb,'on')
 end
 colormap(axb,'lines')
 
+axb=obj.initaxis('T(beads)');
+if isfield(v.res,'T')
+    T=v.res.T;
+    cc=v.res.imgcenter;
+    s=size(T);
+    if length(s)==2 %2Ch
+        T=double(cat(3,eye(3,3),permute(T,[2 ,1]))); % xXXX create transform with that matrix.
+    elseif length(s)==3 %4Pi
+        T=double(cat(3,eye(3,3),permute(T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
+    end
+    
+    for k=1:size(cor,3)
+        cref=double([(cor(1,:,k))',(cor(2,:,k))',ones(size(cor,2),1)]);
+        Th=inv(T(:,:,k));
+        ct=(Th*(cref-cc)')'+cc;
+        scatter(ct(:,1),ct(:,2),30,fileids(:,1)+1,markert{k},'Parent',axb,'LineWidth',2)
+        hold(axb,'on')
+    end
+end
 % plot(axb,xb,yb,'o')
 
 nbeads=size(cor,2);
@@ -382,12 +401,13 @@ axis(axb,'equal')
 zfit=v.locres.loc.z;
 frames=(1:size(zfit,2))';
 ax=obj.initaxis('zfit');
-plot(ax,frames,frames,'k');
+offm=mean(mean(zfit-frames'));
+plot(ax,frames,zfit-frames')
 hold(ax,'on');
-plot(ax,frames,zfit)
+plot(ax,frames,offm+0*frames,'k');
 hold(ax,'off')
 xlabel('frame')
-ylabel('frame fit')
+ylabel('frame fit - frame')
 
 axp=obj.initaxis('PSF');
 if isfield(v.res,'I_model')
