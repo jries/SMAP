@@ -3,6 +3,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
         outputfile
         cameraSettings=struct('EMon',1,'emgain',1,'conversion',1,'offset',400,'cam_pixelsize_um',0.1);        
         selectedROI=[0 0 0];
+        zernikepar
         %define class properties if needed
     end
     methods
@@ -15,8 +16,11 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             obj.createGlobalSetting('PSFlearning_env','Python','The anaconda environmet path for the PSF learning (eg. /psf_env/):',struct('Style','dir','String','')) 
             runpath = [fileparts(pwd) '/psfmodelling'];
             if ~exist(runpath,'dir')
-                obj.createGlobalSetting('PSFlearning_git','Python','The git repository for PSF learning (eg. /psfmodelling/):',struct('Style','dir','String','')) 
+                obj.createGlobalSetting('PSFlearning_git','Python','The git repository for PSF learning (eg. /psfmodelling):',struct('Style','dir','String','')) 
             end
+            paramtemplate=[runpath filesep 'examples' filesep 'params_default.json'];
+            pf=myreadjson(paramtemplate);
+            obj.zernikepar=copyfields(obj.zernikepar,pf.option_params);
         end
         function out=run(obj,p)
             envpath=[obj.getGlobalSetting('PSFlearning_env') ];
@@ -33,11 +37,12 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             end
 
             paramtemplate=[runpath filesep 'params_default.json'];
-            fid = fopen(paramtemplate); 
-            raw = fread(fid,inf); 
-            str = char(raw'); 
-            fclose(fid); 
-            pf = jsondecode(str);
+            pf=myreadjson(paramtemplate);
+%             fid = fopen(paramtemplate); 
+%             raw = fread(fid,inf); 
+%             str = char(raw'); 
+%             fclose(fid); 
+%             pf = jsondecode(str);
 
             %overwrite with updated parameters:
             pf.plotall=false;
@@ -143,6 +148,8 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             FOV = struct('x_center',round(xroi),'y_center',round(yroi),'radius',round(obj.selectedROI(3)),'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
             pf.FOV = FOV;
 
+            pf.option_params=obj.zernikepar;
+
             pf.roi_size=roisize; 
             pf.peak_height=p.segcutoff;
 
@@ -229,17 +236,22 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             lw=3;
             %2Ch
             pard.mirrortypet.object=struct('String','mirror','Style','text','Visible','off');
-            pard.mirrortypet.position=[lw,3]; 
+            pard.mirrortypet.position=[lw,2.5]; 
             pard.mirrortypet.Width=.5;
             pard.mirrortype.object=struct('String',{{'none','up-down','right-left'}},'Style','popupmenu','Visible','off');
-            pard.mirrortype.position=[lw,3.5]; 
-            pard.mirrortype.Width=1;
+            pard.mirrortype.position=[lw,3.]; 
+            pard.mirrortype.Width=.75;
             pard.channelarranget.object=struct('String','channel','Style','text','Visible','off');
             pard.channelarranget.position=[lw,1]; 
             pard.channelarranget.Width=.5;
             pard.channelarrange.object=struct('String',{{'up-down','right-left'}},'Style','popupmenu','Visible','off');
             pard.channelarrange.position=[lw,1.5]; 
-            pard.channelarrange.Width=1;
+            pard.channelarrange.Width=.75;
+
+            pard.zernikeparbutton.object=struct('String','Pupil par','Style','pushbutton','Callback',{{@zernikepar_callback,obj}},'Visible','off');
+            pard.zernikeparbutton.position=[lw,4];
+            pard.zernikeparbutton.Width=1;
+
             %4Pi
             pard.zTt.object=struct('String','Period (µm)','Style','text','Visible','off');
             pard.zTt.position=[lw,1]; 
@@ -333,6 +345,13 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
     end
 end
 
+function zernikepar_callback(a,b,obj)
+out=mystructdialog(obj.zernikepar);
+if ~isempty(out)
+    obj.zernikepar=out;
+end
+end
+
 function showresults_callback(a,b,obj)
 [pf,fi]=uigetfile('*.h5');
 fitting_done(0,0,obj,[fi pf])
@@ -385,6 +404,18 @@ if isfield(v.res,'T')
         ct=(Th*(cref-cc)')'+cc;
         scatter(ct(:,1),ct(:,2),30,fileids(:,1)+1,markert{k},'Parent',axb,'LineWidth',2)
         hold(axb,'on')
+        
+        if k==1 %ch1
+            pos1.x=ct(:,1);pos1.y=ct(:,2);pos1.frame=double(fileids(:,1));
+        else
+            pos2.x=ct(:,1);pos2.y=ct(:,2);pos2.frame=double(fileids(:,1));
+            [iA,iB]=matchlocsall(pos1,pos2,0,0,1000);
+            dx=pos1.x(iA)-pos2.x(iB);
+            dy=pos1.y(iA)-pos2.y(iB);
+            axch=obj.initaxis(['dx_' num2str(k)]);
+            plot(axch,dx,dy,'x');
+            title(axch,['stdx=' num2str(std(dx),2) ' pix, stdy=' num2str(std(dy),2) ' pix.'])
+        end
     end
 end
 % plot(axb,xb,yb,'o')
@@ -452,9 +483,14 @@ if strcmpi(a.Tag,'modality')
     % set drift on for LLS
 elseif strcmpi(a.Tag,'representation')
     l1=obj.getSingleGuiParameter('loss1');
+    p(1).value=1;p(1).off={'zernikeparbutton'};p(1).on={};
+    p(2).value=2;p(2).off={};p(2).on={'zernikeparbutton'};
+    p(3)=p(2);p(3).value=3;
+    obj.switchvisible(a,b,p);
     switch obj.getSingleGuiParameter('representation').selection
         case 'Voxels'
             l1(3)=1;
+            
         case {'Zernike','Pupil'}
             l1(3)=0;
     end
@@ -514,36 +550,41 @@ end
 end
 
 function campar_callback(a,b,obj)
-fn=fieldnames(obj.cameraSettings);
-for k=length(fn):-1:1
-    fields{k}=fn{k};
-    defAns{k}=converttostring(obj.cameraSettings.(fn{k}));
+out=mystructdialog(obj.cameraSettings);
+if ~isempty(out) && ~obj.getSingleGuiParameter('lockcampar')
+    obj.cameraSettings=out;
 end
-answer=inputdlg(fields,'Acquisition settings',1,defAns);
-if ~isempty(answer) && ~obj.getSingleGuiParameter('lockcampar')
-    for k=1:length(fn)
-        if isnumeric(obj.cameraSettings.(fn{k}))||islogical(obj.cameraSettings.(fn{k}))
-            obj.cameraSettings.(fn{k})=str2num(answer{k});
-        else
-            obj.cameraSettings.(fn{k})=(answer{k});
-        end
-    end
-end
+
+% fn=fieldnames(obj.cameraSettings);
+% for k=length(fn):-1:1
+%     fields{k}=fn{k};
+%     defAns{k}=converttostring(obj.cameraSettings.(fn{k}));
+% end
+% answer=inputdlg(fields,'Acquisition settings',1,defAns);
+% if ~isempty(answer) && ~obj.getSingleGuiParameter('lockcampar')
+%     for k=1:length(fn)
+%         if isnumeric(obj.cameraSettings.(fn{k}))||islogical(obj.cameraSettings.(fn{k}))
+%             obj.cameraSettings.(fn{k})=str2num(answer{k});
+%         else
+%             obj.cameraSettings.(fn{k})=(answer{k});
+%         end
+%     end
+% end
 if obj.getSingleGuiParameter('lockcampar')
     warning('cannot update camera paramters because they are locked')
 end
 end
 
-function out=converttostring(in)
-if iscell(in)
-    out=join(in,',');
-    out=out{1};
-elseif ischar(in)
-    out=in;
-else
-    out=num2str(in);
-end
-end
+% function out=converttostring(in)
+% if iscell(in)
+%     out=join(in,',');
+%     out=out{1};
+% elseif ischar(in)
+%     out=in;
+% else
+%     out=num2str(in);
+% end
+% end
 
 function displayprogress_timer(obj,event,logfile,pt)
 timeout=120;
