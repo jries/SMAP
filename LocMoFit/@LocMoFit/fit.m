@@ -42,7 +42,12 @@ if ~isempty(obj.solver.SolverOptions)&&~p.skipFit
         obj.solver.SolverOptions(idx*2) = num2cell(str2double(obj.solver.SolverOptions(idx*2)));
     end
     
+    % Deal with the data type of the solverOptions
     solverOptions = obj.solver.SolverOptions;
+    indF = strcmp(solverOptions, 'false');
+    if any(indF)
+        solverOptions{indF} = false;
+    end
     
     % Deal with the plotFcn
     plotFun = [];
@@ -151,6 +156,7 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
                     finalUb,...
                     solverOption);
             case 'particleswarm'
+                solverOption.InitialSwarmMatrix = init';
                 [parBestFit,mLLfit] = solverFun(@(fitPars)objFun(fitPars),...
                     length(lb),...
                     finalLb,...
