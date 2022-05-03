@@ -93,6 +93,14 @@ pard.masterAvgR.object=struct('Style','edit','String', '150');
 pard.masterAvgR.position=[4,2];
 pard.masterAvgR.Width=0.5;
 
+pard.t_lastBin_noRescale.object=struct('Style','text','String','No rescale up to bin');
+pard.t_lastBin_noRescale.position=[5,1];
+pard.t_lastBin_noRescale.Width=1;
+
+pard.lastBin_noRescale.object=struct('Style','edit','String','1');
+pard.lastBin_noRescale.position=[5,2];
+pard.lastBin_noRescale.Width=0.5;
+
 pard.noNeg.object=struct('Style','checkbox','Value',0,'String','Only curvature>0');
 pard.noNeg.position=[1,3];
 pard.noNeg.Width=1;

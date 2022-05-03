@@ -810,6 +810,28 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 end
             end
         end
+
+        function updateGUI_fromLocMoFitObj(obj)
+            fitter = obj.fitter;
+            for m = 1:fitter.numOfModel
+                htable = obj.guihandles.(['partable_' num2str(m)]);
+                obj.loadParTable(htable, fitter, m);
+                obj.updateAdvanceTab(fitter, m);
+            end
+        end
+
+        function updateAdvanceTab(obj,fitter, modelnumberStr)
+            m = modelnumberStr;
+            htable = obj.guihandles.(['settingstable_' num2str(m)]);
+            internalPar_list = fitter.getModelInternalSettingList(m);
+            data = {};
+            for k = length(internalPar_list):-1:1
+                currentPar = internalPar_list{k};
+                val = fitter.getModelInternalSetting(m, currentPar);
+                data(k,:) = {currentPar val};
+            end
+            htable.Data = data;
+        end
     end
     events
         mParsArgModified
