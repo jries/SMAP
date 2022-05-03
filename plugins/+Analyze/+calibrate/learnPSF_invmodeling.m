@@ -627,7 +627,7 @@ if ~isempty(fn)
     end
 end
 
-piddeleted=~processstatus(pt.PID);
+piddeleted=~processstatus(pt.PID) && ismac; %somehow on PC this does not work
 
 if timeout || filesaved || piddeleted
     disp(['timer ended. timeout' num2str(timeout) 'filesaved' num2str(filesaved) 'piddeleted' num2str(piddeleted)])

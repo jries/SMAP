@@ -10,6 +10,11 @@ if ismac
         out=ll{ind};
         running=true;
     end
+else
+     [response,out] = system(['tasklist /fi "PID eq ' num2str(pid) '"']);
+     if contains(out,'INFO: No tasks are running which match the specified criteria.')
+     else
+         running=true;
+     end         
 end
-
 end
