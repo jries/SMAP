@@ -43,10 +43,22 @@ if ~isempty(obj.solver.SolverOptions)&&~p.skipFit
     end
     
     % Deal with the data type of the solverOptions
+    %   Convert all that can be converted to numeric
     solverOptions = obj.solver.SolverOptions;
+    strInd = find(cellfun(@(x)isstr(x),solverOptions));
+    for k = 1:length(strInd)
+        val = str2num(solverOptions{strInd(k)});
+        if ~isempty(val)
+            solverOptions{strInd(k)} = val;
+        end
+    end
     indF = strcmp(solverOptions, 'false');
     if any(indF)
         solverOptions{indF} = false;
+    end
+    indT = strcmp(solverOptions, 'true');
+    if any(indT)
+        solverOptions{indT} = true;
     end
     
     % Deal with the plotFcn
