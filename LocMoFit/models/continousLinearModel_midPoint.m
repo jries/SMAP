@@ -113,7 +113,9 @@ classdef continousLinearModel_midPoint<geometricModel
                 notify(obj.ParentObject,'mParsArgModified');
                 evtdata = mParsArgModifiedData(obj.ParentObject.ID);
                 notify(obj.ParentObject.ParentObject,'mParsArgModified',evtdata);
-                notify(obj.ParentObject.ParentObject.linkedGUI,'mParsArgModified',evtdata);
+                if ~isempty(obj.ParentObject.ParentObject.linkedGUI)
+                    notify(obj.ParentObject.ParentObject.linkedGUI,'mParsArgModified',evtdata);
+                end
                 obj.ParentObject.ParentObject.saveInit;
             end
         end

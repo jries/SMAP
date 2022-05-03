@@ -1691,36 +1691,48 @@ function out = defaultAdvanceSettings
     out.controlLogLikelihood.value = 'none';
     out.controlLogLikelihood.name = 'Control log-likelihood';
     out.controlLogLikelihood.description = 'Specify the type of control log-likelihood to export.';
+    out.controlLogLikelihood.developer = false;
 
     out.gaussDistMode.option = {'ordinary', 'fast'};
     out.gaussDistMode.value = 'ordinary';
     out.gaussDistMode.name = 'Gauss distance';
     out.gaussDistMode.description = 'Specify the type of Gauss distance calculated during the optimization.';
-    
+    out.gaussDistMode.developer = false;
+
     out.gaussDistCutoff.option = {};
     out.gaussDistCutoff.value = 3.5;
     out.gaussDistCutoff.name = 'Gauss distance offset';
     out.gaussDistCutoff.description = 'Specify the maximal effective distance. Any larger distance results in 0 likelihood.';
-    
+    out.controlLogLikelihood.developer = 'false';
+
     out.confidenceInterval.option = {'on','off'};
     out.confidenceInterval.value = 'off';
     out.confidenceInterval.name = 'Confidence interval';
-    
+    out.confidenceInterval.developer = false;
+
     out.cascade.option = {};
     out.cascade.value = 1;
     out.cascade.name = 'Cascade';
     out.cascade.description = 'Specify the factor of the relative parameter range and the offset of Gaussian sigma for cascade iterative optimization.';
+    out.cascade.developer = false;
     
     out.layerNorm.option = {'on','off'};
     out.layerNorm.value = 'on';
     out.layerNorm.name = 'Layer normalization';
     out.layerNorm.description = 'This only applies multi-color fitting.';
-
+    out.layerNorm.developer = false;
+    
     out.minSigma.option = {'median','off'};
     out.minSigma.value = 'median';
     out.minSigma.name = 'Min sigma';
     out.minSigma.description = 'Define the minimum localization precision.';
-    
+    out.minSigma.developer = false;
+
+    out.runtime.option = {'on','off'};
+    out.runtime.value = 'off';
+    out.runtime.name = 'Run time';
+    out.runtime.description = 'Record the run time of fitting.';
+    out.runtime.developer = true;
 end
 
 function [out,allOptions] = defaultLParSelection(parameterType)

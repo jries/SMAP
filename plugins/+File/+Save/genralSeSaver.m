@@ -28,11 +28,17 @@ classdef genralSeSaver<interfaces.DialogProcessor
             end
               
             
-            [f,path]=uiputfile(of);
+            if isfield(p, 'saveTo')
+                [path,f,ext]=fileparts(p.saveTo);
+                path = [path filesep];
+                f = [f ext];
+            else
+                [f,path]=uiputfile(of);
+            end
             if f
-                if isempty(strfind(f,'_sml'))
+                if isempty(strfind(f,'_se'))
                     f(end-3:end)=[];
-                    f=[f '_sml.mat'];
+                    f=[f '_se.mat'];
                 end   
             par=obj.getAllParameters;
             

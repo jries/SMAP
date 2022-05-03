@@ -143,6 +143,12 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
     
     indFit = ~obj.allParsArg.fix;
     if ~p.skipFit
+        switch obj.getAdvanceSetting('runtime')
+            case 'on'
+                tic
+            case 'off'
+%               'Do nothing.'
+        end
         switch obj.solver.SolverName
             case 'fminsearchbnd'
                 [parBestFit,mLLfit] = solverFun(@(fitPars)objFun(fitPars),...
@@ -168,9 +174,18 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
                     [],...
                     solverOption);
         end
+        switch obj.getAdvanceSetting('runtime')
+            case 'on'
+                runtime = toc;
+            case 'off'
+%               'Do nothing.'
+        end
     else
         parBestFit = obj.allParsArg.value(indFit)';
         mLLfit = -obj.fitInfo.LLfit*sum(ismember(locs.layer,obj.allModelLayer));
+        if isfield(obj.fitInfo, 'runtime')
+            runtime = obj.fitInfo.runtime;
+        end
     end
 end
 obj.currentCascadeStep = 1; % reset the currenct step
@@ -214,6 +229,9 @@ obj.fitInfo.normAICc = obj.fitInfo.AICc/numFittedLocs;
 if isfield(obj.temp, 'optimHistory')
     obj.fitInfo.optimHistory = obj.getTemp('optimHistory');
     obj.rmTemp('optimHistory');
+end
+if exist('runtime','var')
+    obj.fitInfo.runtime = runtime;
 end
 
 %% Calculate control log-likelihood values
