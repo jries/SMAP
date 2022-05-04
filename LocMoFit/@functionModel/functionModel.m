@@ -416,10 +416,10 @@ classdef functionModel<SMLMModel
             %   sigmaFactor (numeric vector): a 1-by-2 vector that
             %   determines the fold of localization precisions used for
             %   fitting.
-            %   sigmaSet (numeric vector|numeric scalar): sigma used for
+            %   sigmaSet (numeric vector | numeric scalar): sigma used for
             %   fitting. A N-by-1 vector, where N is the number of
             %   localiztions when :attr:`fixSigma` is true.
-            %   sigmaZSet (numeric vector|numeric scalar): z sigma used for
+            %   sigmaZSet (numeric vector | numeric scalar): z sigma used for
             %   fitting. A N-by-1 vector, where N is the number of
             %   localiztions when :attr:`fixSigma` is true.
             %

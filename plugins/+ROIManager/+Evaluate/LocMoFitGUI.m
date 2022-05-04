@@ -820,6 +820,29 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             end
         end
 
+        function updateGUI_convert_fromLocMoFitObj(obj)
+            % Uupdate GUI: update the convert table based on the LocMoFit
+            % Obj.
+            % Known issue: targets start with 'usr_' cannot be processed.
+            fitter = obj.fitter;
+            allSourceFitter = fitter.converterSource;
+            loaded_beforeMe = obj.find_LocMoFit_beforeMe;
+            fn = fieldnames(loaded_beforeMe);
+            fitterGUI_order = {};
+            for k = 2:length(allSourceFitter)
+                for m = 1:length(loaded_beforeMe)
+                    l = isequal(allSourceFitter{k}, loaded_beforeMe.(fn{m}));
+                    if l
+                        fitterGUI_order{k} = fn{m};
+                    end
+                end
+            end
+            numOfRules = length(fitter.converterRules.target);
+            data = cell(numOfRules,4);
+            data(:,1:3) = [fitterGUI_order(fitter.converterRules.target_Id)' fitter.converterRules.target' fitter.converterRules.target'];
+            obj.guihandles.anchorConvert.Data = data;
+        end
+
         function updateAdvanceTab(obj,fitter, modelnumberStr)
             m = modelnumberStr;
             htable = obj.guihandles.(['settingstable_' num2str(m)]);
@@ -831,6 +854,25 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 data(k,:) = {currentPar val};
             end
             htable.Data = data;
+        end
+
+        function fitter_stack = find_LocMoFit_beforeMe(obj)
+            se = obj.locData.SE;
+            eval_ = se.processors.eval;
+            loadedPlugins = fieldnames(eval_.children);
+            loadedLocMoFitGUI = loadedPlugins(startsWith(loadedPlugins, 'LocMoFit'));
+            currentName = obj.name;
+            ind_current = find(ismember(loadedLocMoFitGUI, currentName));
+            if ind_current > 1
+                loadedLocMoFitGUI_beforeMe = loadedLocMoFitGUI(1:ind_current-1);
+                fn = fieldnames(se.processors.eval.children);
+                for k = 1:length(loadedLocMoFitGUI_beforeMe)
+                    fitter_stack.(loadedLocMoFitGUI_beforeMe{k}) = se.processors.eval.children.(loadedLocMoFitGUI_beforeMe{k}).fitter;
+                end
+            else
+                fitter_stack = [];
+            end
+            
         end
     end
     events
@@ -1029,7 +1071,11 @@ for k = 1:length(fn)
             fitter.setAdvanceSetting(fn{k},oneCtrl.String);
     end
 end
-obj.updateLayer
+try
+    obj.updateLayer
+catch
+    warning('Layer(s) is not updated.')
+end
 close(fig)
 end
 
@@ -1595,7 +1641,7 @@ pard.evokeMatchPar.Height=0.8;
 end
 
 % ## Match parameters
-function evokeParMatcher_callback(a,b,obj)
+function hStack = evokeParMatcher_callback(a,b,obj)
 obj.setPar('matchPar_fitGUIselected',[]);
 fig = figure;
 sourceSMLMFit = uicontrol(fig, 'Style', 'popupmenu','Position',[10 380 100 20]);
@@ -1614,6 +1660,11 @@ matchTable.ColumnName = {'Selected', 'Parameter'};
 
 applyMatch = uicontrol(fig, 'Style', 'pushbutton','String','Apply','Position',[10 10 80 30]);
 applyMatch.Callback = {@applyMatching_callback,obj, sourceModel,matchTable};
+
+hStack.sourceSMLMFit = sourceSMLMFit;
+hStack.sourceModel = sourceModel;
+hStack.matchTable = matchTable;
+hStack.applyMatch = applyMatch;
 end
 
 function SMLMFitSelect_callback(a,b,obj,sourceModel)

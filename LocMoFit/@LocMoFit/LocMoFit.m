@@ -943,15 +943,85 @@ classdef LocMoFit<matlab.mixin.Copyable
         %% convert related
         function rmConvertRules(obj)
             obj.converterRules.target = {};
+            obj.converterRules.target_Id = [];
             obj.converterRules.rule = {};
+            obj.converterRules.rule_raw = {};
         end
         
         function rmOneConvertRule(obj, targets)
             indRm = ismember(obj.converterRules.target,targets);
             obj.converterRules.target(indRm) = [];
+            obj.converterRules.target_Id(indRm) = [];
             obj.converterRules.rule(indRm) = [];
+            obj.converterRules.rule_raw(indRm) = [];
         end
         
+        function matchAllPar(obj, modelId, refObj, refModelId, varargin)
+            % :meth:`matchAllPar` matches the parameters with the same names.
+            %
+            % Uasage:
+            %   obj.matchAllPar(refObj, modelId, except)
+            %
+            % Args:
+            %   obj (LocMoFit object): an object created by
+            %   :meth:`LocMoFit`.
+            %   modelId (numeric scalar): the model ID that identifies the
+            %   target model.
+            %   refObj (LocMoFit object): an object created by
+            %   :meth:`LocMoFit`. The referece that the parameters matches
+            %   to.
+            %   refModelId (numeric scalar): the model ID that identifies
+            %   the reference model.
+            %   Name-value pairs:
+            %       * except (character vector | cell array of character
+            %   vectors): parameter IDs (parIds) of the parameters to
+            %   exclude from the matching.
+            %
+            % Returns:
+            %   Nothing.
+            %
+            % Last update:
+            %   03.05.2022
+            %
+            
+            % Deal with Name-value pairs
+            p = inputParser;
+            p.addParameter('except', []);
+            p.parse;
+            p = p.Results;
+
+            % get target parIds in the long form
+            tParIds = obj.getAllParId(modelId,'form','long');
+            
+            % remove the target pars that should be excluded
+            if ~isempty(p.except)
+                lLong = ismember(tParIds, p.except);
+                tParIds_short = obj.getAllParId('short');
+                lShort = ismember(tParIds_short, p.except);
+                lRm = lLong | lShort;
+                tParIds = tParIds(~lRm);
+            end
+            % keep only the stems
+            tParIds_stem = regexprep(tParIds,'m\d\.','');
+            
+            % the same for reference pars
+            rParIds = refObj.getAllParId(modelId,'form','long');
+            rParIds_stem = regexprep(rParIds,'m\d\.','');
+
+            [lFound,idxRef] = ismember(tParIds_stem, rParIds_stem);
+            tParIds_found = tParIds_stem(lFound);
+            tParIds_found = tParIds_found';
+            rParIds_found = rParIds_stem(idxRef(lFound));
+            rParIds_found = rParIds_found';
+            prefix = ['pars.m',num2str(refModelId)];
+            rParIds_found = join([cellstr(repmat(prefix,size(rParIds_found))), rParIds_found], '.');
+            prefix = ['pars.m',num2str(modelId)];
+            tParIds_found = join([cellstr(repmat(prefix,size(tParIds_found))), tParIds_found], '.');
+            
+            for k = 1:length(tParIds_found)
+                obj.converter(refObj, rParIds_found{k} ,tParIds_found{k})
+            end
+        end
         %% advanced settings
         function initAdvanceSetting(obj)
             default = defaultAdvanceSettings();
@@ -1007,6 +1077,21 @@ classdef LocMoFit<matlab.mixin.Copyable
                 end
             catch
                 warning("The property 'advanceSetting' might be wrong or missing.")
+            end
+        end
+
+        function reactToSet_advanceSetting(obj)
+            % :meth:`reactToSet_advanceSetting` defines how LoMoFit reacts
+            % when :attr:`advanceSetting` is set.
+            fn = fieldnames(obj.advanceSetting);
+            for k = 1:length(fn)
+                switch fn{k}
+                    case 'compiledMode'
+                        val = obj.getAdvanceSetting('compiledMode');
+                        obj.compiledMode(val);
+                    otherwise
+                        % do nothing
+                end
             end
         end
         %% Site registration
@@ -1594,12 +1679,14 @@ classdef LocMoFit<matlab.mixin.Copyable
                 end
             end
             obj.advanceSetting = val;
+            obj.reactToSet_advanceSetting;
         end
         %% for compatibilities
         function updateVersion(obj)
             % This function is for necessary updates
             % Structral changes leading to running failular have to be
             % fixed here.
+            uConverter(obj)
             uModelTypeOptoins(obj)
             uEarlier(obj)
             u210630(obj)
@@ -1733,6 +1820,12 @@ function out = defaultAdvanceSettings
     out.runtime.name = 'Run time';
     out.runtime.description = 'Record the run time of fitting.';
     out.runtime.developer = true;
+
+    out.compiledMode.option = {'on','off'};
+    out.compiledMode.value = 'off';
+    out.compiledMode.name = 'Compiled mode';
+    out.compiledMode.description = 'Activate the compiled mode or not.';
+    out.compiledMode.developer = true;
 end
 
 function [out,allOptions] = defaultLParSelection(parameterType)
@@ -1825,6 +1918,15 @@ function uModelTypeOptoins(obj)
                 oneModelObj.modelTypeOption = modObjContainer.modelTypeOption;
             end
         end
+    end
+end
+
+function uConverter(obj)
+    % Last update: 03.05.2022
+    % To make sure the new fields of the converterRules are not missing.
+    if ~isfield(obj.converterRules, 'target_Id')
+        obj.converterRules.target_Id = [];
+        obj.converterRules.rule_raw = {};
     end
 end
 % 
