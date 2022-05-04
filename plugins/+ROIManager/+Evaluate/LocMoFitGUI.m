@@ -1256,6 +1256,9 @@ if isempty(currentLoadedModel)
         '*.png','Image files (*.png)'; ...
         };
     fnold=obj.guihandles.(['modelname_' modelnumber]).String;
+    if isempty(fnold)
+        [~,fnold] = LocMoFit.getModelList;
+    end
     [f,p]=uigetfile(filter,'Select a geometric model',fnold);
     if ~f %no model selected: return
         disp('Cancelled by the user. No model loaded.')
@@ -1327,6 +1330,12 @@ if ~strcmp(modPath,'Loaded')&&~results.skipAddModel
         geoModeltemp = functionModel(modPath);
     end
     
+    if isempty(obj.locData.loc)
+        % When there is not localizations, assuming the user is loading the
+        % geometric model for simulations.
+        fitter.dataDim = geoModeltemp.dimension;
+    end
+
     % If the position of the model has been occupied, replace the occupying model.
     if ~isempty(fitter.model)&&~length(fitter.model)<str2double(modelnumber)
         fitter.changeModel(geoModeltemp, str2double(modelnumber));

@@ -214,7 +214,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             %   model: an SMLMModel object or sub-object.
             % TODO:
             %   flag1: obj.initLParSelector for will be available when
-            %   implemnted
+            %   implemented
             
             lastMod = length(obj.model);
             if 0
@@ -227,7 +227,8 @@ classdef LocMoFit<matlab.mixin.Copyable
         end
         
         function changeModel(obj, newModel, modelNumber)
-            % Remove the old corresponding parameters and add a new model to overwrite the old model with the same ID.
+            % Remove the old corresponding parameters and add a new model
+            % to overwrite the old model with the same ID. 
            	% 
             % Usage:
             %   changeModel(obj, newModel, modelNumber)
@@ -1088,12 +1089,19 @@ classdef LocMoFit<matlab.mixin.Copyable
                 switch fn{k}
                     case 'compiledMode'
                         val = obj.getAdvanceSetting('compiledMode');
-                        obj.compiledMode(val);
+%                         obj.compiledMode(val);
                     otherwise
                         % do nothing
                 end
             end
         end
+        %% compiled mode related
+        function compiledMode(obj)
+            [modelList,folder_model] = LocMoFit.getModelList;
+            % To-do:
+            % load all the models as objects.
+        end
+
         %% Site registration
         function locs = locsRegister(obj, locs, lParsVal, modelID, varargin)
             if ~isempty(lParsVal)
@@ -1724,6 +1732,14 @@ classdef LocMoFit<matlab.mixin.Copyable
                     xPars{k}.(fn{l}) = sourcePars(:,l)';
                 end
             end
+        end
+        function [modelList, folder_model] = getModelList
+            path_LocMoFit = which('LocMoFit');
+            folder_LocMoFit = fileparts(path_LocMoFit);
+            folder_LocMoFit = replace(folder_LocMoFit, '@LocMoFit', '');
+            folder_model = [folder_LocMoFit 'models\'];
+            modelList = cellstr(ls(folder_model));
+            modelList = modelList(3:end);
         end
     end
     events
