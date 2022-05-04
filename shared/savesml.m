@@ -68,7 +68,12 @@ if isfield(p,'saveSepFile') && p.saveSepFile % Yu-Le added
         saveloc=locData.savelocs(oneFile,indg,[],[],excludesavefields,filenumber);
     end
 else
-    saveloc=locData.saveSE(file,indg,[],[],excludesavefields,filenumber); % BETA , maybe problematic with more than 1 file: this will save only displayed loicalizations
+    switch p.pluginpath{end}
+        case 'SMLMsaver'
+            saveloc=locData.savelocs(file,indg,[],[],excludesavefields,filenumber); % BETA , maybe problematic with more than 1 file: this will save only displayed loicalizations
+        case 'generalSeSaver'
+            saveloc=locData.saveSE(file,indg,[],[],excludesavefields,filenumber);
+    end
 end
 
 

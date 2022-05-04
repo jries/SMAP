@@ -1,10 +1,10 @@
-classdef genralSeSaver<interfaces.DialogProcessor
+classdef generalSeSaver<interfaces.DialogProcessor
 %     saves localizations in SMAP proprietary _sml.mat MATLAB format
     properties
         excludesavefields={'groupindex','numberInGroup','colorfield'};
     end
     methods
-        function obj=genralSeSaver(varargin)  
+        function obj=generalSeSaver(varargin)  
                 obj@interfaces.DialogProcessor(varargin{:}) ;
                 obj.inputParameters={'filelist_long','mainfile','mainGui','numberOfLayers','sr_layerson'};
         end
