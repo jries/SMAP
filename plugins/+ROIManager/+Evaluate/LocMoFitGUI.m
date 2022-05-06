@@ -839,7 +839,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             end
             numOfRules = length(fitter.converterRules.target);
             data = cell(numOfRules,4);
-            data(:,1:3) = [fitterGUI_order(fitter.converterRules.target_Id)' fitter.converterRules.target' fitter.converterRules.target'];
+            data(:,1:3) = [fitterGUI_order(fitter.converterRules.target_Id)' fitter.converterRules.rule_raw' fitter.converterRules.target'];
             obj.guihandles.anchorConvert.Data = data;
         end
 

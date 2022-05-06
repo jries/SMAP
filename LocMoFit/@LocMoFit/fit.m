@@ -199,6 +199,7 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
 %               'Do nothing.'
         end
     else
+        oldFitInfo = obj.fitInfo;
         parBestFit = obj.allParsArg.value(indFit)';
         mLLfit = -obj.fitInfo.LLfit*sum(ismember(locs.layer,obj.allModelLayer));
         if isfield(obj.fitInfo, 'runtime')
@@ -236,37 +237,40 @@ end
 %% Calculate log-likelihood values
 % save the log liklihood and weighting factors
 % fitInfo is created here
-obj.fitInfo = [];
-numFittedLocs = sum(ismember(locs.layer,obj.allModelLayer));
-obj.fitInfo.LLfit = -mLLfit/numFittedLocs;
-obj.fitInfo.numOfLocsPerLayer = obj.numOfLocsPerLayer;
-obj.fitInfo.BGDensity = obj.getBGDensity;
-obj.fitInfo.AIC = 2*obj.numOfFreePar+2*mLLfit;
-obj.fitInfo.AICc = obj.fitInfo.AIC+2*(obj.numOfFreePar^2+obj.numOfFreePar)/(numFittedLocs-obj.numOfFreePar-1);
-obj.fitInfo.normAICc = obj.fitInfo.AICc/numFittedLocs;
-if isfield(obj.temp, 'optimHistory')
-    obj.fitInfo.optimHistory = obj.getTemp('optimHistory');
-    obj.rmTemp('optimHistory');
-end
-if exist('runtime','var')
-    obj.fitInfo.runtime = runtime;
-end
-
-%% Calculate control log-likelihood values
-switch p.controlLogLikelihood
-    case 'none'
-        obj.fitInfo.LLExpDist = [];
-    case 'expected'
-%         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
-        obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
-        obj.fitInfo.LLExp = mean(obj.fitInfo.LLExpDist);
-        obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
-        obj.fitInfo.LLZScore = (obj.fitInfo.LLfit-obj.fitInfo.LLExp)./obj.fitInfo.LLExpStd;
-    case 'overfitted'
-        obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
-    case 'both'
-        obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,2);
-        obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
+if ~p.skipFit
+    obj.fitInfo = [];
+    numFittedLocs = sum(ismember(locs.layer,obj.allModelLayer));
+    obj.fitInfo.LLfit = -mLLfit/numFittedLocs;
+    obj.fitInfo.numOfLocsPerLayer = obj.numOfLocsPerLayer;
+    obj.fitInfo.BGDensity = obj.getBGDensity;
+    obj.fitInfo.AIC = 2*obj.numOfFreePar+2*mLLfit;
+    obj.fitInfo.AICc = obj.fitInfo.AIC+2*(obj.numOfFreePar^2+obj.numOfFreePar)/(numFittedLocs-obj.numOfFreePar-1);
+    obj.fitInfo.normAICc = obj.fitInfo.AICc/numFittedLocs;
+    if isfield(obj.temp, 'optimHistory')
+        obj.fitInfo.optimHistory = obj.getTemp('optimHistory');
+        obj.rmTemp('optimHistory');
+    end
+    if exist('runtime','var')
+        obj.fitInfo.runtime = runtime;
+    end
+    %% Calculate control log-likelihood values
+    switch p.controlLogLikelihood
+        case 'none'
+            obj.fitInfo.LLExpDist = [];
+        case 'expected'
+    %         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
+            obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
+            obj.fitInfo.LLExp = mean(obj.fitInfo.LLExpDist);
+            obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
+            obj.fitInfo.LLZScore = (obj.fitInfo.LLfit-obj.fitInfo.LLExp)./obj.fitInfo.LLExpStd;
+        case 'overfitted'
+            obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
+        case 'both'
+            obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,2);
+            obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
+    end
+else
+    obj.fitInfo = oldFitInfo;
 end
 
 %% Variations of parameters

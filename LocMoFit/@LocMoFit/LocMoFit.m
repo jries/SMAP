@@ -964,19 +964,13 @@ classdef LocMoFit<matlab.mixin.Copyable
             %   obj.matchAllPar(refObj, modelId, except)
             %
             % Args:
-            %   obj (LocMoFit object): an object created by
-            %   :meth:`LocMoFit`.
-            %   modelId (numeric scalar): the model ID that identifies the
-            %   target model.
-            %   refObj (LocMoFit object): an object created by
-            %   :meth:`LocMoFit`. The referece that the parameters matches
+            %   obj (LocMoFit object): an object created by :meth:`LocMoFit`.
+            %   modelId (numeric scalar): the model ID that identifies the target model.
+            %   refObj (LocMoFit object): an object created by :meth:`LocMoFit`. The referece that the parameters matches
             %   to.
-            %   refModelId (numeric scalar): the model ID that identifies
-            %   the reference model.
+            %   refModelId (numeric scalar): the model ID that identifies the reference model.
             %   Name-value pairs:
-            %       * except (character vector | cell array of character
-            %   vectors): parameter IDs (parIds) of the parameters to
-            %   exclude from the matching.
+            %       * except (character vector | cell array of character vectors): parameter IDs (parIds) of the parameters to exclude from the matching.
             %
             % Returns:
             %   Nothing.
@@ -985,10 +979,22 @@ classdef LocMoFit<matlab.mixin.Copyable
             %   03.05.2022
             %
             
+            % This function check the form or the background for a layer
+%             %
+%             % Usage:
+%             %   obj.getBGForm(modelnumber)
+%             %
+%             % Args:
+%             %   modelnumber: a integer indicating the layer. E.g., m9X for
+%             %   the Xth layer.
+%             %
+%             % Returns:
+%             %   form: a char of either 'density' or 'weight'.
+
             % Deal with Name-value pairs
             p = inputParser;
             p.addParameter('except', []);
-            p.parse;
+            p.parse(varargin{:});
             p = p.Results;
 
             % get target parIds in the long form
@@ -997,7 +1003,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             % remove the target pars that should be excluded
             if ~isempty(p.except)
                 lLong = ismember(tParIds, p.except);
-                tParIds_short = obj.getAllParId('short');
+                tParIds_short = obj.getAllParId(modelId, 'form', 'short');
                 lShort = ismember(tParIds_short, p.except);
                 lRm = lLong | lShort;
                 tParIds = tParIds(~lRm);
@@ -1016,7 +1022,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             rParIds_found = rParIds_found';
             prefix = ['pars.m',num2str(refModelId)];
             rParIds_found = join([cellstr(repmat(prefix,size(rParIds_found))), rParIds_found], '.');
-            prefix = ['pars.m',num2str(modelId)];
+            prefix = ['m',num2str(modelId)];
             tParIds_found = join([cellstr(repmat(prefix,size(tParIds_found))), tParIds_found], '.');
             
             for k = 1:length(tParIds_found)
@@ -1088,7 +1094,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             for k = 1:length(fn)
                 switch fn{k}
                     case 'compiledMode'
-                        val = obj.getAdvanceSetting('compiledMode');
+%                         val = obj.getAdvanceSetting('compiledMode');
 %                         obj.compiledMode(val);
                     otherwise
                         % do nothing

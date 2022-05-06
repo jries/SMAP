@@ -1,5 +1,12 @@
 function plotFreeRot(obj, varargin)
-%% PLOTFREEROT Image rotation triggered by the rotatoin of points visulization
+% :func:`plotFreeRot` creates the GUI for a user to explore data in 3D with
+% free rotations.
+% 
+% Uasage:
+%   obj.plotFreeRot(ax, locs)
+%   obj.plotFreeRot(ax, locs)
+
+% PLOTFREEROT Image rotation triggered by the rotatoin of points visulization
 % Different layers should have different colours. The lut should be based on 
 % what user defined or based on the setting in SMAP.
     % allow user to define the axes
@@ -36,7 +43,7 @@ function plotFreeRot(obj, varargin)
         p.parse(varargin{:});
         results = p.Results;
         
-        % Control panel
+        % Control panel (scatter plot)
         uip = uipanel('Title','Control','Parent',ax.Parent.Parent,'Position',[.01 .01 .98 .2]);
         bg = uibuttongroup('Parent',uip,'Position',[.8 .01 .2 .98]);
         uicontrol(bg ,'Style','text','String','Image soure','Position',[1 42 70 20]);
