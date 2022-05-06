@@ -359,6 +359,13 @@ for k=1:length(files)
     end 
 
 end
+files=dir([path filesep '*.mat']);
+if ~isempty(files)
+    if ~strcmp(files(1).name(1),'.')
+        img={[path filesep files(1).name]};
+        return
+    end
+end
 end
 
 function pard=guidef(obj)

@@ -440,12 +440,17 @@ hold(ax,'off')
 xlabel('frame')
 ylabel('frame fit - frame')
 
-axp=obj.initaxis('PSF');
+axp=obj.initaxis('I_model');
 if isfield(v.res,'I_model')
-Imodel=squeeze(permute(v.res.I_model,[4,3,2,1]));
+    Imodel=squeeze(permute(v.res.I_model,[4,3,2,1]));
 elseif isfield(v.res,'channel0')
     Imodel=squeeze(permute(v.res.channel0.I_model,[4,3,2,1]));
-    Imodel(:,:,:,2)=squeeze(permute(v.res.channel1.I_model,[4,3,2,1]));
+    for k=2:10
+        ch=['channel' num2str(k-1)];
+        if isfield(v.res,ch)       
+            Imodel(:,:,:,k)=squeeze(permute(v.res.(ch).I_model,[4,3,2,1]));
+        end
+    end
 end
 imx(axp,Imodel);
 
