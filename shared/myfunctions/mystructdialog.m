@@ -31,6 +31,6 @@ if iscell(in)
 elseif ischar(in)
     out=in;
 else
-    out=num2str(in);
+    out=num2str(in(:)');
 end
 end
