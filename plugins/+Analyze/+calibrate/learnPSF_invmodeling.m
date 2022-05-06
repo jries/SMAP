@@ -14,7 +14,10 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
         end       
         function initGui(obj)
             obj.createGlobalSetting('PSFlearning_env','Python','The anaconda environmet path for the PSF learning (eg. /psf_env/):',struct('Style','dir','String','')) 
-            runpath = [fileparts(pwd) '/psfmodelling'];
+            runpath = [fileparts(pwd) filesep 'psfmodelling'];
+            if ~exist(runpath,'dir')
+                 runpath=obj.getGlobalSetting('PSFlearning_git');
+            end
             if ~exist(runpath,'dir')
                 obj.createGlobalSetting('PSFlearning_git','Python','The git repository for PSF learning (eg. /psfmodelling):',struct('Style','dir','String','')) 
                 warndlg('please add the path to the psfmodelling code from git to the Parameters/Python and restart the plugin')                
@@ -422,7 +425,7 @@ end
 % plot(axb,xb,yb,'o')
 
 nbeads=size(cor,2);
-title([num2str(nbeads) ' beads found'])
+title(axb,[num2str(nbeads) ' beads found'])
 if params.FOV.radius>0
     hold(axb,"on")
     circle(params.FOV.y_center,params.FOV.x_center,params.FOV.radius,'Parent',axb)
