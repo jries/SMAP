@@ -51,9 +51,11 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
             end
             image=[];
             [tind,zind]=ind2sub([obj.infoall.timepoints(batch),obj.infoall.zslices(batch)],fnum);
+
             if tind>obj.infoall.timepoints(batch) || zind>obj.infoall.zslices(batch)
                 return
             end
+
 
             for k=obj.infoall.channels:-1:1
                     image(:,:,1,k)=obj.currentfiledata.frames.(obj.infofiles(batch).name{k})(:,:,tind,zind);

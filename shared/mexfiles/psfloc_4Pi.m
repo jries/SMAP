@@ -34,6 +34,8 @@ if isempty(fitter)
             allfitters{k}(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,1)'),single(p0(:,1)'),silent);
             fitter=allfitters{k};
             disp(fitter)
+            break;
+            
         catch err
         end    
     end
