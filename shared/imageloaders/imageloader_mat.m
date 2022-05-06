@@ -41,7 +41,7 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
             else
                 fnum=frame;
             end
-            if batch~=obj.currentfiledata.batch
+            if isempty(batch) || batch~=obj.currentfiledata.batch
                 if isempty(batch) || batch>length(obj.allfiles.files) 
                     image=[];
                     return;

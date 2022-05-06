@@ -234,7 +234,7 @@ classdef TifLoader<interfaces.WorkflowModule
              if p.onlineanalysis
                  obj.guihandles.framestop.String='inf';
              else
-                numf=obj.imloader.metadata.numberOfFrames+1;
+                numf=obj.imloader.metadata.numberOfFrames;
                 if isnan(numf)
                     numf=inf;
                 end
