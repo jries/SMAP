@@ -1,5 +1,6 @@
 
 function [P,CRLB,LogL,PSF] = psfloc_4Pi(obj,rois,dx,dy,shared)
+persistent fitter
 data = rois;
 data = data+obj.BGoffset;
 numlocs = size(rois,3);
@@ -25,9 +26,22 @@ dTAll = cat(1,reshape(dx',1,4,[]),reshape(dy',1,4,[]),zeros(1,4,numlocs),zeros(1
 silent = int32(1);
 datasize = size(data);
 PSF = zeros(datasize);
+
+if isempty(fitter)
+    allfitters={@GPUmleFit_LM_4Pi_v1,@CPUmleFit_LM_4Pi_v1};
+    for k=1:length(allfitters)
+        try
+            allfitters{k}(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,1)'),single(p0(:,1)'),silent);
+            fitter=allfitters{k};
+            disp(fitter)
+        catch err
+        end    
+    end
+end
+
 for p=1:sp0(2)
     for k=1:sz0(2)
-        [Ph,CRLBh, LogLh,psfh] = CPUmleFit_LM_4Pi_v1(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,k)'),single(p0(:,p)'),silent);
+        [Ph,CRLBh, LogLh,psfh] = fitter(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,k)'),single(p0(:,p)'),silent);
         %[Ph,CRLBh, LogLh,psfh] = GPUmleFit_LM_4Pi_v1(single(data),uint32(sharedA),iterations,single(obj.IABall),single(dTAll),single(phi0A),single(zstart(:,k)'),single(p0(:,p)'),silent);
         indbetter=LogLh-LogL>1e-4; %copy only everything if LogLh increases by more than rounding error.
         P(indbetter,:)=Ph(indbetter,:);
