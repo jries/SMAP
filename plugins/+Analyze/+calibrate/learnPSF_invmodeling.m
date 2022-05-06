@@ -17,6 +17,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             runpath = [fileparts(pwd) '/psfmodelling'];
             if ~exist(runpath,'dir')
                 obj.createGlobalSetting('PSFlearning_git','Python','The git repository for PSF learning (eg. /psfmodelling):',struct('Style','dir','String','')) 
+                warndlg('please add the path to the psfmodelling code from git to the Parameters/Python and restart the plugin')                
             end
             paramtemplate=[runpath filesep 'examples' filesep 'params_default.json'];
             pf=myreadjson(paramtemplate);
