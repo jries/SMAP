@@ -35,7 +35,7 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
             obj.file=file;
         end
         function image=getimagei(obj,frame)
-            batch=find(frame<=obj.infoall.framesinbatch,1,'last');
+            batch=find(frame<=obj.infoall.framesinbatch,1,'first');
             if batch>1
                 fnum=frame-obj.infoall.framesinbatch(batch-1);
             else
@@ -50,8 +50,8 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
                 obj.currentfiledata.batch=batch;
             end
             image=[];
-            [tind,zind]=ind2sub([obj.infoall.timepoints,obj.infoall.zslices],fnum);
-            if tind>obj.infoall.timepoints || zind>obj.infoall.zslices
+            [tind,zind]=ind2sub([obj.infoall.timepoints(batch),obj.infoall.zslices(batch)],fnum);
+            if tind>obj.infoall.timepoints(batch) || zind>obj.infoall.zslices(batch)
                 return
             end
 
@@ -83,6 +83,9 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
                     if strcmpi(f1info(l).name,'metadata')
                     elseif contains(f1info(l).name,'qd')
                         sh=f1info(l).size;
+                        if length(sh)<4
+                            sh(4)=1;
+                        end
                         info(k).channels=info(k).channels+1;
                         info(k).zslices(indch)=sh(4);
                         info(k).timepoints(indch)=sh(3);
@@ -98,7 +101,7 @@ classdef imageloader_mat<interfaces.imageloaderSMAP
             obj.infoall.numframes=numframes;
             obj.infoall.zslices=zslicesall;
             obj.infoall.timepoints=timepointsall;
-            obj.infoall.framesinbatch=cumsum(zslicesall*timepointsall);
+            obj.infoall.framesinbatch=cumsum(zslicesall.*timepointsall);
             obj.infoall.channels=max([info(:).channels]);
             obj.infofiles=info;
             obj.infoall.imagesize=sh(1:2);

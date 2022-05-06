@@ -232,14 +232,14 @@ if ~exist(ph,'file')
 end
 filter={'*3Dcal.mat;psfmodel*.h5'};
 [f,pfad]=uigetfile(filter,'load 3D calibration file',p.cal_3Dfile);
-% if f
+if f
 %     l=load([p f]);
 %     if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
 %         msgbox('no 3D data recognized. Select other file.');
 %     end
-%     obj.setGuiParameters(struct('cal_3Dfile',[p f]));
-%      obj.setPar('cal_3Dfile',[p f]); 
-% end
+    obj.setGuiParameters(struct('cal_3Dfile',[pfad f]));
+     obj.setPar('cal_3Dfile',[pfad f]); 
+end
 end
 
 function fitpar=getfitpar(obj)
