@@ -29,6 +29,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             % [to-do] allow selection
             fitterGUI_name = 'LocMoFitGUI_2';
+            %fitterGUI_name = 'LocMoFitGUI';
             eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             idxFitterGUI = strcmp(fitterGUI_name,eval);
             fitter = copy(se.processors.eval.processors{idxFitterGUI}.fitter);
