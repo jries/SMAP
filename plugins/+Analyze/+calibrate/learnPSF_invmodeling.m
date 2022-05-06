@@ -135,7 +135,8 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
 
                            
                 case '4 Pi'
-                    pf.PSFtype='voxel';
+                    %pf.PSFtype='voxel';
+                    pf.PSFtype = PSFtype;
                     pf.channeltype='4pi';  
                 case 'LLS'
                     pf.PSFtype='voxel';
@@ -434,7 +435,7 @@ axis(axb,'equal')
 
 % zfit=reshape(v.locres.P(5,:),[],nbeads);
 zfit=v.locres.loc.z;
-frames=(1:size(zfit,2))';
+frames=(0:size(zfit,2)-1)';
 ax=obj.initaxis('zfit');
 offm=mean(mean(zfit-frames'));
 plot(ax,frames,zfit-frames')
@@ -535,7 +536,13 @@ r=imageloaderAll(fl{1},[],obj.P);
 img=r.getmanyimages([],'mat');
 f=figure;
 ax=gca;
-imagesc(ax,mean(img,3))
+switch ndims(img)
+    case 3
+        imagesc(ax,mean(img,3))
+    case 4
+        imagesc(ax,mean(img,[3,4]))
+end
+    
 title('Select ROI, double click when done. To clear, close figure.')
 axis equal
 roi=drawcircle(ax);
