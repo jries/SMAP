@@ -964,9 +964,9 @@ classdef LocMoFit<matlab.mixin.Copyable
             %   obj.matchAllPar(refObj, modelId, except)
             %
             % Args:
-            %   obj (LocMoFit object): an object created by :meth:`LocMoFit`.
+            %   obj (:obj:`LocMoFit`): an object created by :meth:`LocMoFit`.
             %   modelId (numeric scalar): the model ID that identifies the target model.
-            %   refObj (LocMoFit object): an object created by :meth:`LocMoFit`. The referece that the parameters matches
+            %   refObj (:obj:`LocMoFit`): an object created by :meth:`LocMoFit`. The referece that the parameters matches
             %   to.
             %   refModelId (numeric scalar): the model ID that identifies the reference model.
             %   Name-value pairs:

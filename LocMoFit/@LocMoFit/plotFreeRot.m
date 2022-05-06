@@ -43,7 +43,7 @@ function plotFreeRot(obj, varargin)
         p.parse(varargin{:});
         results = p.Results;
         
-        % Control panel (scatter plot)
+        % Control panel
         uip = uipanel('Title','Control','Parent',ax.Parent.Parent,'Position',[.01 .01 .98 .2]);
         bg = uibuttongroup('Parent',uip,'Position',[.8 .01 .2 .98]);
         uicontrol(bg ,'Style','text','String','Image soure','Position',[1 42 70 20]);
@@ -107,6 +107,7 @@ function plotFreeRot(obj, varargin)
             ax.View = [0 0];
         end
         
+        % Create the scatter plot
         locsViz = pointViz(ax, locs, obj);
         obj.setTemp('subViz', subViz);
         obj.setTemp('axViz', ax);

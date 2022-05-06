@@ -64,7 +64,6 @@ switch mode
         else
             G = obj.getTemp('gausstemplate');
         end
-        
         for k = 1:obj.numOfModel
            
             [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,forRevY.*modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
@@ -94,9 +93,13 @@ switch mode
 
                 oneItem = rmfield(oneItem,'ZData');
                 fn = fieldnames(oneItem);
-                hold(ax, 'on');
+                if l > 1
+                    hold(ax, 'on');
+                end
                 h = plot(ax,oneItem.XData,oneItem.YData);
-                hold(ax,'off')
+                if l > 1
+                    hold(ax, 'off');
+                end
                 for f = 1:length(fn)
                     if ~any(strcmp(fn{f},{'YData','XData'}))
                         set(h,fn{f},oneItem.(fn{f}));
@@ -104,10 +107,10 @@ switch mode
                 end
             end
         end
-        hold on
+        hold(ax,'on')
         imagesc(ax, v);
         axis(ax,'equal')
-        hold off
+        hold(ax,'off')
         
         % Deal with locs
         for k = 1:max(locsCoord.layer)
@@ -126,10 +129,12 @@ switch mode
             hold(ax, 'on');
             vizX = (locsCoord.xnm(lLayer&lSectionLocs)+obj.roiSize/2+pixelSize)./pixelSize;
             vizY = (locsCoord.ynm(lLayer&lSectionLocs)+obj.roiSize/2+pixelSize)./pixelSize;
-            plot(ax,  vizX,vizY,' or', 'MarkerEdgeColor','k','MarkerFaceColor',oneColor,'MarkerSize',3.5)
+            scatter(ax,  vizX,vizY,10,'o','filled', 'MarkerEdgeColor','k','MarkerFaceColor',oneColor, 'MarkerFaceAlpha',0.5, 'MarkerEdgeAlpha',0.5)
             hold(ax,'off')
         end
-        
+        h_Img = findobj(ax.Children, 'type', 'image');
+        h_Others = findobj(ax.Children, '-not', 'type', 'image');
+        ax.Children = [h_Others; h_Img];
         
     case 'Data'
         v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
