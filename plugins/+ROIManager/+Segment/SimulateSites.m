@@ -112,6 +112,23 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
             end
           out=[];
         end
+        
+        function prepare_LocMoFit(obj, fitter)
+            fitter_cp = copy(fitter);  % copy the fitter object to not overwrite it
+            fitter_cp.allParsArg.fix = true(size(fitter_cp.allParsArg.fix));
+            fitter_cp.rmConvertRules;
+            for l = 1:length(fitter_cp.allModelLayer)
+                fitter_cp.addPar({90+fitter_cp.allModelLayer(l),{'sim'},{'numOfMol'},0, inf,0,1,{''},0,inf}) % add this parameter to control the number of molecules.
+            end
+            if isempty(fitter_cp.dimension)
+                fitter_cp.dimension = fitter_cp.dataDim;
+            end
+            obj.setPar('fitter',fitter_cp)
+            obj.setPar('fitter_ori',fitter)
+            obj.guihandles.setModPars_button.Visible='on';
+            obj.guihandles.coordinatefile.String='-- Internal LocMoFit';
+        end
+
         function pard=guidef(obj)
             pard=guidef(obj);
         end
@@ -182,17 +199,9 @@ function applySelecedFitter_callback(a,b,obj, selectionTable, fig)
     
     idxSelected_final = idxFitterFound(idxSelected);
     fitter_ori = obj.locData.SE.processors.eval.processors{idxSelected_final}.fitter;
-    fitter = copy(fitter_ori);  % copy the fitter object to not overwrite it
-    fitter.allParsArg.fix = true(size(fitter.allParsArg.fix));
-    fitter.rmConvertRules;
-    for l = 1:length(fitter.allModelLayer)
-        fitter.addPar({90+fitter.allModelLayer(l),{'sim'},{'numOfMol'},0, inf,0,1,{''},0,inf}) % add this parameter to control the number of molecules.
-    end
-    obj.setPar('fitter',fitter)
-    obj.setPar('fitter_ori',fitter_ori)
+   
+    obj.prepare_LocMoFit(fitter_ori);
     close(fig);
-    obj.guihandles.setModPars_button.Visible='on';
-    obj.guihandles.coordinatefile.String='-- Internal LocMoFit';
 end
 
 function setModPars_callback(a,b,obj)
@@ -231,9 +240,17 @@ function setModPars_callback(a,b,obj)
     
     guihandles.t_Depth = uicontrol(fig, 'Style','text','String','Depth:');
     guihandles.t_Depth.Position = [2 12 1 1];
-        
+    
+    % get settings
     finalROISize = obj.getPar('finalROISize');
     depth = obj.getPar('depth');
+    useDepth = obj.getPar('useDepth');
+
+    % initiate settings if required
+    if isempty(useDepth)
+        useDepth = 0;
+        obj.setPar('useDepth', useDepth);
+    end
     if isempty(finalROISize)
         obj.setPar('finalROISize','200')
         finalROISize = '200';
@@ -249,6 +266,18 @@ function setModPars_callback(a,b,obj)
     guihandles.depth = uicontrol(fig, 'Style','edit','String',depth);
     guihandles.depth.Position = [3 12 0.5 1];
     guihandles.depth.Callback = {@depth_callback,obj};
+
+    if useDepth
+        guihandles.t_Depth.Visible = 'on';
+        guihandles.depth.Visible = 'on';
+        guihandles.t_FinalROISize.Visible = 'off';
+        guihandles.finalROISize.Visible = 'off';
+    else
+        guihandles.t_Depth.Visible = 'off';
+        guihandles.depth.Visible = 'off';
+        guihandles.t_FinalROISize.Visible = 'on';
+        guihandles.finalROISize.Visible = 'on';
+    end
     
     guihandles.toggle = uicontrol(fig, 'Style','pushbutton','String','<->');
     guihandles.toggle.Position = [3.5 12 0.5 1];
@@ -303,7 +332,7 @@ function setModPars_callback(a,b,obj)
     %% Editor
     guihandles.editor = uicontrol(fig, 'Style','pushbutton','String','Editor');
     guihandles.editor.Position = [3.5 1 0.5 1];
-    guihandles.editor.Callback = {@editor_callback,guihandles.parArgTable};
+    guihandles.editor.Callback = {@editor_callback,{guihandles.parArgTable,guihandles.convertTable,obj}};
 
     %% save and load
     guihandles.saveParArg = uicontrol(fig, 'Style','pushbutton','String','Save');
@@ -316,18 +345,43 @@ function setModPars_callback(a,b,obj)
     guiStyle(guihandles, fieldnames(guihandles))
 end
 
-function editor_callback(a,b,parArgTable)
-    fig = figure('Name','Editor');
-    text2show = sprintf(['%s\t%s\t%s\t%s\t%s\n'], string(parArgTable.Data'));
-    guihandles.editor = uicontrol(fig, 'Style','edit','String', text2show);
-    guihandles.editor.Max = 2;
-    guihandles.editor.Position = [1 1 5 12];
-    guihandles.editor.HorizontalAlignment = 'left';
+function editor_callback(a,b,inputs)
+%     fig = figure('Name','Editor');
+%     text2show = sprintf(['%s\t%s\t%s\t%s\t%s\n'], string(parArgTable.Data'));
+%     guihandles.editor = uicontrol(fig, 'Style','edit','String', text2show);
+%     guihandles.editor.Max = 2;
+%     guihandles.editor.Position = [1 1 5 12];
+%     guihandles.editor.HorizontalAlignment = 'left';
+%     
+%     guihandles.save = uicontrol(fig, 'Style','pushbutton','String', 'save');
+%     guihandles.save.Position = [1 13 1 1];
+%     guihandles.save.Callback = {@editorSave_callback,guihandles.editor,parArgTable};
+%     guiStyle(guihandles,fieldnames(guihandles));
+    parArgTable = inputs{1};
+    convertTable = inputs{2};
+    obj = inputs{3};
+    szConvertTable = size(convertTable.Data);
+    blank = repmat({''},[szConvertTable(1) 3]);
+
+    % Save parTable to the temp folder
+    warning('off', 'MATLAB:MKDIR:DirectoryExists');
+    mkdir('.\LocMoFit\temp')
+    warning('on', 'MATLAB:MKDIR:DirectoryExists');
+    fileName = ['temp_' datestr(datetime, 'yyyymmddHHMMSS') '.csv'];
+    saveAs = ['.\LocMoFit\temp\' fileName];
+    writecell([parArgTable.Data;[convertTable.Data blank]], saveAs);
     
-    guihandles.save = uicontrol(fig, 'Style','pushbutton','String', 'save');
-    guihandles.save.Position = [1 13 1 1];
-    guihandles.save.Callback = {@editorSave_callback,guihandles.editor,parArgTable};
-    guiStyle(guihandles,fieldnames(guihandles));
+    % Open it in the default editor of .csv files.
+    winopen(saveAs)
+
+    % monitor whether the .csv is changed
+    % if so, load the updated values back to the GUI via
+    % loadParArg_callback
+    file = System.IO.FileSystemWatcher('LocMoFit\temp\');
+    file.Filter = fileName;
+    file.EnableRaisingEvents = true;
+    addlistener(file,'Changed',@(x,y)loadParArg_callback(x,y,inputs(1:2),saveAs));
+    obj.setPar('monitorFile',file);
 end
 
 function saveParArg_callback(a,b,tables)
@@ -335,15 +389,21 @@ function saveParArg_callback(a,b,tables)
     convertTable = tables{2};
     szConvertTable = size(convertTable.Data);
     blank = repmat({''},[szConvertTable(1) 3]);
-    [file,path] = uiputfile('*.txt','Save parameter argument table');
+    [file,path] = uiputfile({'*.txt';'*.csv'},'Save parameter argument table');
     writecell([parArgTable.Data;[convertTable.Data blank]], [path file]);
 end
 
-function loadParArg_callback(a,b,tables)
+function loadParArg_callback(a,b,tables,varargin)
     parArgTable = tables{1};
     convertTable = tables{2};
     
-    [file,path] = uigetfile('*.txt','Load parameter argument table');
+    if isempty(varargin)
+        [file,path] = uigetfile('*.txt','Load parameter argument table');
+    else
+        [path,name,ext] = fileparts(varargin{1});
+        path = [path filesep];
+        file = [name ext];
+    end
     opts = delimitedTextImportOptions('NumVariables',5);
     oneTable = readcell([path file],opts);
     oneTable = string(oneTable);
@@ -545,7 +605,7 @@ pard.load_button.position=[1,4];
 pard.load_button.TooltipString=pard.coordinatefile.TooltipString;
 
 % Added by Yu-Le
-pard.useFitter_button.object = struct('Style','pushbutton','String', 'Use fitter', 'Callback', {{@useFitter_callback,obj}});
+pard.useFitter_button.object = struct('Style','pushbutton','String', 'Use LocMoFIt', 'Callback', {{@useFitter_callback,obj}});
 pard.useFitter_button.position = [2 4];
 
 pard.setModPars_button.object = struct('Style','pushbutton','String', 'Set model pars', 'Callback', {{@setModPars_callback,obj}});
