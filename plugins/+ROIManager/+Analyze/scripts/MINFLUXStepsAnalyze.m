@@ -38,7 +38,7 @@ hold off
 ff='%2.1f';
 title(['fit: <step>=' num2str(fs.b1,ff) ', sigma=' num2str(fs.c1,ff) ',mean(step)=' num2str(mean(stepsize),ff) ', std=' num2str(std(stepsize),ff)])
 
-dt=10;
+dt=1;
 n=0:dt:max(steptime);
 
 %double exp fit:
@@ -61,17 +61,22 @@ startp=[1/mean(steptime), 10/mean(steptime), max(ht)];
 indt=nt<maxtime;
 ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 [~,imax]=max(ht);
+
+
 %convolution of two exponentials with same rates, Peng dynein paper
 timefun=@(k1,A,x) A*k1^2*x.*exp(-k1*x);
-startp=[2/mean(steptime), max(ht)*mean(steptime)^2/ht(imax)];
+startp=[1/mean(steptime), 3*max(ht)*mean(steptime)^2/ht(imax)];
 indt=nt<maxtime;
-ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
+indt=indt & nt>15;
+ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp)
 hold on
 plot(nt,ft(nt),'r--')
 
+
+
 %convolution of two exponentials with different rates, 
 timefun=@(k1,k2,A,x) A*(k1*k2/((k2-k1)))^2*((x-(2/((k2-k1)))).*exp(-k1*x)+(x-(2/((k2-k1)))).*exp(-k2*x));
-startp=[ft.k1,ft.k1/10, max(ht)*mean(steptime)^2/ht(imax)];
+startp=[ft.k1,ft.k1/5, max(ht)*mean(steptime)^2/ht(imax)];
 ft2=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 hold on
 plot(nt,ft2(nt),'g--')
