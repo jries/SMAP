@@ -96,9 +96,11 @@ classdef MotorPAINT<interfaces.DialogProcessor
                     zs=stepvalue(z,istep);
                     locsout.znm(end+1:end+length(zs))=single(zs);
                     zsall{tind}=zs;
+                    zrawall{tind}=z;
                 end
 
                 xsall{tind}=xs;ysall{tind}=ys;
+                xrawall{tind}=x;yrawall{tind}=y;
                 angleall(tind)=angle;
                 tind=tind+1;
 
@@ -150,16 +152,19 @@ classdef MotorPAINT<interfaces.DialogProcessor
             axc.YLim=axall.YLim;
             if isz
                 ax3Dt=obj.initaxis('track 3D');
-                hold(ax3Dt,'off')
-                for k=1:length(xsall)
-                    plot3(ax3Dt,xsall{k},ysall{k},zsall{k})
-                    hold(ax3Dt,'on')
-                end
-                axis(ax3Dt,"equal")
-                axis(ax3Dt,"ij")
-                grid(ax3Dt,"on")
-                ax3Dt.XLim=axall.XLim;
-                ax3Dt.YLim=axall.YLim;
+                plot3Dtracks(ax3Dt,xsall,ysall,zsall,[-100 100 -100])
+%                 plot3Dtracks(ax3Dt,xrawall,yrawall,zrawall,[-100 100 -100])
+
+%                 hold(ax3Dt,'off')
+%                 for k=1:length(xsall)
+%                     plot3(ax3Dt,xsall{k},ysall{k},zsall{k})
+%                     hold(ax3Dt,'on')
+%                 end
+%                 axis(ax3Dt,"equal")
+%                 axis(ax3Dt,"ij")
+%                 grid(ax3Dt,"on")
+%                 ax3Dt.XLim=axall.XLim;
+%                 ax3Dt.YLim=axall.YLim;
             end
 
         end
