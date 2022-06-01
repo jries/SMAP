@@ -28,7 +28,11 @@ classdef clusterStatistics<interfaces.SEEvaluationProcessor
                     locs=obj.getLocs(fields,'layer',k,'size',roisizeh);  
                     
                     for f=1:length(fields)
+                        
                         vh=locs.(fields{f});
+                        if isempty(vh)
+                            continue
+                        end
                         vh(isnan(vh))=[];
                         vh(isinf(vh))=[];
                         
@@ -40,7 +44,14 @@ classdef clusterStatistics<interfaces.SEEvaluationProcessor
                           out.(['layers' num2str(k)]).(fields{f}).vals=locs.(fields{f});
                           out.(['layers' num2str(k)]).(fields{f}).NnotNAN=length(vh);
                     end
-                    
+                    cm=cov(locs.xnm,locs.ynm);
+                    [V,D]=eig(cm);
+                    ev=[D(1,1) D(2,2)];
+
+                    out.(['layers' num2str(k)]).covariance.stdlong=sqrt(min(ev(:)));
+                    out.(['layers' num2str(k)]).covariance.stdshort=sqrt(max(ev(:)));
+                    out.(['layers' num2str(k)]).covariance.angle=atan2(V(1,1),V(2,1));
+
                      out.(['layers' num2str(k)]).Nlocs=length(locs.xnm);
                      
                 end
