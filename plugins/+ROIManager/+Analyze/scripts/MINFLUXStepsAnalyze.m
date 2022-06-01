@@ -28,6 +28,7 @@ xlabel('stepsize(nm)')
 
 nf=n(1:end-1)+ds/2;
 mn=max(4*round(mean(stepsize)/2), max(stepsize));
+
 xlim([0 mn])
 %Gauss fit
 fs=fit(nf',hs','gauss1');
