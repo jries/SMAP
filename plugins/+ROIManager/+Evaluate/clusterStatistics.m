@@ -48,8 +48,8 @@ classdef clusterStatistics<interfaces.SEEvaluationProcessor
                     [V,D]=eig(cm);
                     ev=[D(1,1) D(2,2)];
 
-                    out.(['layers' num2str(k)]).covariance.stdlong=sqrt(min(ev(:)));
-                    out.(['layers' num2str(k)]).covariance.stdshort=sqrt(max(ev(:)));
+                    out.(['layers' num2str(k)]).covariance.stdshort=sqrt(min(ev(:)));
+                    out.(['layers' num2str(k)]).covariance.stdlong=sqrt(max(ev(:)));
                     out.(['layers' num2str(k)]).covariance.angle=atan2(V(1,1),V(2,1));
 
                      out.(['layers' num2str(k)]).Nlocs=length(locs.xnm);
