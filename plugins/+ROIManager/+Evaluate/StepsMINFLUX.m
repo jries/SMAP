@@ -365,7 +365,13 @@ axis(axxy,'equal')
 xlabel(axxy,'x (nm)')
 ylabel(axxy,'y (nm)')
 hold(axxy,'on')
-scatter(axxy,obj.steps.stepvalue-goff,obj.steps.possteps.y,'k')
+
+if ~isempty(obj.coord.xfr)
+plot(axxy, obj.coord.xfr-goff, obj.coord.yfr,'k')
+end
+
+
+scatter(axxy,obj.steps.stepvalue-goff,obj.steps.possteps.y,'r')
 grid(axxy,'on')
 axm=-16:-16:axxy.XLim(1);
 axxy.XTick=[axm(end:-1:1) 0:16:axxy.XLim(2)];
@@ -442,7 +448,7 @@ if nargin<6
     space='';
 end
 for k=length(val):-1:1
-    h(k)=text(ax,x(k),y(k),[space num2str(val(k),'%2.1f')],'FontSize',10,'Color','magenta','HitTest','off');
+    h(k)=text(ax,x(k),y(k),[space num2str(val(k),'%2.0f')],'FontSize',10,'Color','magenta','HitTest','off');
 end
 end
 
