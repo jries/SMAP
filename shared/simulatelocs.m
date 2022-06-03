@@ -256,10 +256,12 @@ for k=numberofsites:-1:1
         switch p.obj.getPar('modelType')
             case 'Image'
                 locsh=locsfromContFun(p);
+                fitter.resetInit;
             case 'Point'
                 [locsd,ph]=locsfromDiscFun(p);
                 locsh=labelremove(locsd,p.labeling_efficiency);
                 phere.model=ph;
+                fitter.resetInit;
         end
     elseif ~isempty(locfun)
        

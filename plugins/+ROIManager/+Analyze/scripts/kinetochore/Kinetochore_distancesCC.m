@@ -8,8 +8,8 @@ cellnumbers_un = [];
 %% separate the used and unused sites
 if length(sites(~lUsed))>0
     indCells_unused = unique(getFieldAsVector(sites(~lUsed), 'info.cell'));
-    cellnumbers_un = [cellnumbers_un cellnumbers(indCells_unused)];
-    cellnumbers(indCells_unused) = [];
+    cellnumbers_un = [cellnumbers_un cellnumbers(ismember(cellnumbers,indCells_unused))];
+    cellnumbers(ismember(cellnumbers,indCells_unused)) = [];
     %cellnumbers = cellnumbers(cellnumbers~=indCells_unused);
     [imout_un, dx1_un, dy1_un, dx2_un, dy2_un, dx_un, dy_un, indcellAll_un] = extractStat(cellnumbers_un, sites, cells);
 end
@@ -77,15 +77,18 @@ end
 plot(0,0,'k*')
 [ctxtx, cmx, csx]=mean2str((dx1+dx2)/2,pr);
 [ctxty, cmy, csy]=mean2str((dy1+dy2)/2,pr);
+[ctxtx_, cmx_, csx_]=mean2str_((dx1+dx2)/2,pr);
+[ctxty_, cmy_, csy_]=mean2str_((dy1+dy2)/2,pr);
 
 title({ctxtx; ctxty})
 
-heading=sprintf('file \t N \t CC av dx \t  dy \t cluster dx \t std \t dy \t std \t cell x \t std \t cell y \t std');
+heading=sprintf('file \t N \t CC av dx \t  dy \t cluster dx \t std \t dy \t std \t cell x \t std \t cell y \t std \t cell x_ \t std \t cell y_ \t std');
 disp(heading)
 tab=sprintf('\t');
 outstr=[g.getPar('lastSMLFile') tab num2str(length(sites)) tab num2str(dxline) tab ...
-    num2str(dyline) tab smx tab ssx tab smy tab ssy...
-    tab cmx tab csx tab cmy tab csy];
+    num2str(dyline) tab smx tab ssx tab smy tab ssy tab ...
+    cmx tab csx tab cmy tab csy tab ...
+    cmx_ tab csx_ tab cmy_ tab csy_];
 clipboard('copy',outstr);
 % 
 % h=fspecial('gaussian',10,1);
@@ -93,6 +96,13 @@ clipboard('copy',outstr);
 
 function [out,ms,ss]=mean2str(x,pr)
 [m,s]=robustMean(x);
+out=[num2str(m,pr) '\pm' num2str(s,pr)];
+ms=num2str(m);ss=num2str(s);
+end
+
+function [out,ms,ss]=mean2str_(x,pr)
+m=mean(x);
+s=std(x);
 out=[num2str(m,pr) '\pm' num2str(s,pr)];
 ms=num2str(m);ss=num2str(s);
 end

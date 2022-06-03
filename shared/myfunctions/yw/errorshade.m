@@ -24,7 +24,7 @@ function h = errorshade(varargin)
         p.addParameter('Shade_LineWidth',[]);
         p.addParameter('Shade_FaceColor',[]);
         p.addParameter('Shade_LineStyle',[]);
-        p.addParameter('Tag',[])
+        p.addParameter('Tag',char())
         p.parse(varargin{4:end});
         p = p.Results;
     end

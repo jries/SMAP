@@ -1161,13 +1161,40 @@ classdef LocMoFit<matlab.mixin.Copyable
             % Returns:
             %   Parameter values saved in obj.allParsArg.
             lSampling = ~obj.allParsArg.fix;
-            rangeSampling = obj.allParsArg.ub(lSampling)-obj.allParsArg.lb(lSampling);
-            randVal = rand([sum(lSampling) 1]);
-            valueSampling = randVal.*rangeSampling+obj.allParsArg.lb(lSampling);
-            obj.allParsArg.value(lSampling) = valueSampling;
+            obj.resetInit;
+            lInf = obj.allParsArg.value == inf;
+
+            lRand = lSampling&(~lInf);
+
+            if sum(lRand)>0
+                rangeSampling = obj.allParsArg.ub(lRand)-obj.allParsArg.lb(lRand);
+                randVal = rand([sum(lRand) 1]);
+                valueSampling = randVal.*rangeSampling+obj.allParsArg.lb(lRand);
+                obj.allParsArg.value(lRand) = valueSampling;
+            end
+
+            lIncrement = lSampling&lInf;
+            if sum(lIncrement)==1
+                % this takes only one parameter so far
+                inc_sim = obj.getTemp('inc_sim');
+                lb = obj.allParsArg.lb(lIncrement);
+                ub = obj.allParsArg.ub(lIncrement);
+                numOfCall_sim = obj.getTemp('numOfCall_sim');
+                val = lb+inc_sim*numOfCall_sim;
+                if val < ub
+                    obj.allParsArg.value(lIncrement) = val;
+                    obj.setTemp('numOfCall_sim', numOfCall_sim+1);
+                else
+                    obj.allParsArg.value(lIncrement) = val;
+                    obj.setTemp('numOfCall_sim', 1);
+                end
+            elseif sum(lIncrement)>1
+                warning('Eqaually spacing assignment dose not support multiple parameters.')
+            end
         end
         
         function p = getSimIntensity(obj, label)
+            obj.saveInit;
             obj.assignParsVal;
             parFix = obj.allParsArg.fix;
             obj.allParsArg.fix = true(size(parFix));
@@ -1202,6 +1229,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             depth = p.Results.depth;
                         
             % In the given range, assign values to the parameters randomly.
+            obj.saveInit;
             obj.assignParsVal;
             
             % Get parameters from convert

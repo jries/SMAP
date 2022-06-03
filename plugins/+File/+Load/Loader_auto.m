@@ -79,7 +79,7 @@ obj.notfound=false;
             case 'tif'
                 loadername='Loader_tif';
 
-            case {'sml','fitpos','sites'}
+            case {'sml','fitpos','sites','se'}
                 loadername='Loader_sml';
                 
             case 'guiparameters'
@@ -89,7 +89,6 @@ obj.notfound=false;
                 loadername='Loader_workflow';
             case {'csv','hdf5','txt'}
                 loadername='Loader_csvAndMore';
-              
             otherwise
                 warning('file type not recognized')
                 obj.notfound=true;

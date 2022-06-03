@@ -172,7 +172,7 @@ function rotate_callBack(a,b,obj, results,bg, section,t_section)
         case 'Model'
             obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, pixelSize, 'Model', str2double(section.String)./t_section.Value, results.lutLocs);
         case 'Data'
-            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, 2, 'Data', str2double(section.String)./t_section.Value, results.lutLocs);
+            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, pixelSize, 'Data', str2double(section.String)./t_section.Value, results.lutLocs);
     end
     title(subViz,'2D Projection of the left panel')
     set(subViz,'YDir','normal')

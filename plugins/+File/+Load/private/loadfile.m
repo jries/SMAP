@@ -8,7 +8,7 @@ filedat.filename=file;
 
 filenumber=obj.locData.files.filenumberEnd;
 switch mode
-    case 'sml'
+    case {'sml','se'}
         [templocData,GUIsettings,siteexplorer]=load_smlV3(filedat);
         obj.setPar('lastSMLFile',file);
     case 'fitpos'

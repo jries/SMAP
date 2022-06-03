@@ -235,7 +235,7 @@ switch mode
                 oneColor = oneLut(150,:);
                 
                 hold(ax, 'on');
-                plot(ax,  (modVizX(idx)+obj.roiSize/pixelSize)./2,+(modVizY(idx)+obj.roiSize/pixelSize)./2,'- r', 'Color','w','LineWidth',5)
+                plot(ax,  modVizX(idx)./pixelSize+(obj.roiSize/pixelSize)./2,+modVizY(idx)./pixelSize+(obj.roiSize/pixelSize)./2,'- r', 'Color','w','LineWidth',5)
                 hold(ax,'off')
             end
             

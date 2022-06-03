@@ -478,7 +478,15 @@ function parArgTable_CellEditCallback(a,b,obj)
     switch colId
         case 4
             % column 4: values
-            if length(elements) == 2
+            if length(elements) == 3
+                elements = str2double(elements);
+                obj.allParsArg.fix(indEdited) = false;
+                obj.allParsArg.value(indEdited) = inf;
+                obj.allParsArg.lb(indEdited) = elements(1);
+                obj.allParsArg.ub(indEdited) = elements(3);
+                obj.setTemp('inc_sim', elements(2));
+                obj.setTemp('numOfCall_sim', 0);
+            elseif length(elements) == 2
                 elements = str2double(elements);
                 obj.allParsArg.fix(indEdited) = false;
                 obj.allParsArg.value(indEdited) = 0;

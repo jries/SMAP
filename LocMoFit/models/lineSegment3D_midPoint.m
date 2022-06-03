@@ -1,5 +1,8 @@
 classdef lineSegment3D_midPoint<geometricModel
     % A general model describing a linear structure traverse in 3D space.
+    % 
+    % Last update:
+    %   20220603
     methods
         function obj = lineSegment3D_midPoint(varargin)
             obj@geometricModel(varargin{:});
@@ -31,10 +34,25 @@ classdef lineSegment3D_midPoint<geometricModel
             
             % control points:
             [ctrlX,ctrlY,ctrlZ] = getCtrlPoints(par, numOfCtrlPointSet);
-                       
-            model.x = ctrlX;
-            model.y = ctrlY;
-            model.z = ctrlZ;
+            
+            if isempty(obj.ParentObject.locsPrecFactor)
+                locsPrecFactor = 1;
+            else
+                locsPrecFactor = obj.ParentObject.locsPrecFactor;
+            end
+                      
+            % vecterization
+            for l = 1:size(ctrlZ,2)
+                arcLen = arclength(ctrlX(:,l), ctrlY(:,l), ctrlZ(:,l),'spline');
+                proportion_seg = par.dist(:,l)/arcLen;
+                leftPoints = 0.5:-proportion_seg:0;
+                bindingSites = [leftPoints(end:-1:1) 0.5+proportion_seg:proportion_seg:1];
+                [pt,diffVector] = interparc(double(bindingSites), double(ctrlX(:,l)), double(ctrlY(:,l)), double(ctrlZ(:,l))) ;
+            end
+
+            model.x = pt(:,1);
+            model.y = pt(:,2);
+            model.z = pt(:,3);
             model.channel = ones(size(model.x));
             model.n = ones(size(model.x));
             
