@@ -1,6 +1,7 @@
 function lut=mymakelut(lutname)
 if nargin==0
-    lut={'red hot','green cold','cyan cold','jet', 'turbo','red','green','green white','blue','blue white','magenta','magenta white','cyan','yellow','orange','purple','bgy','bry','gray','gray white','hsv','parula','parula black','kgy'};
+    lut={'red hot','green cold','cyan cold','jet', 'turbo','red','green','blue','magenta','cyan','yellow','orange','purple','bgy','bry','gray','gray white','hsv','parula','parula black','kgy'};
+    %'green white','magenta white','blue white',
 else
 switch lutname
     case 'red hot'
