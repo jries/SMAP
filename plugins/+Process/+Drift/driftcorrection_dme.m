@@ -194,12 +194,13 @@ disp(['Time for DME drift correction: ' num2str(t) 's'])
 
 shift_dme = double(drift');
 fcc = [1:maxframe]';
-fitrange = round(linspace(1,numel(fcc),1000));
+fitrange = round(linspace(1,numel(fcc),min([1000,numel(fcc)])));
 shiftavg = movmean(shift_dme,200);
+%drift_sm = shiftavg;
 drift_sm = [];
 for ii = 1:3
-    fz = fit(fcc(fitrange),shiftavg(fitrange,ii),'smoothingspline','SmoothingParam',1e-7);
-    drift_sm = cat(2,drift_sm,fz(fcc));
+   fz = fit(fcc(fitrange),shiftavg(fitrange,ii),'smoothingspline','SmoothingParam',1e-7);
+   drift_sm = cat(2,drift_sm,fz(fcc));
 end
 
 

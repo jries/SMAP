@@ -63,7 +63,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             loss.bg_min=p.loss2(2);
             loss.photon_min=p.loss2(3)*1e-6;
             loss.Inorm=p.loss2(4);
-
+            loss.gxy_min=p.loss2(5)*10;
             % modality
             switch p.representation.selection
                 case 'Voxels'
@@ -71,7 +71,14 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
                 case 'Pupil'
                     PSFtype='pupil';
                     loss.smooth=0;
+                case 'Pupil vector'
+                    PSFtype='pupil_vector';
+                    loss.smooth=0;    
+                    p.vary_photon=1;
                 case 'Zernike'
+                    PSFtype='zernike';
+                    loss.smooth=0;                         
+                case 'Zernike vector'
                     PSFtype = 'zernike_vector'; 
                     loss.smooth=0;
             end
@@ -108,6 +115,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
                     pf.channeltype='single';
                 case '2 Ch'
 %                     pf.PSFtype='voxel';
+                    pf.PSFtype=PSFtype;
                     pf.channeltype='multi';
                     %adjust ROI XXXXXX
                     r=imageloaderAll(fn1,[],obj.P);
@@ -150,7 +158,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             end
 
             %ROI goes here
-            FOV = struct('x_center',round(xroi),'y_center',round(yroi),'radius',round(obj.selectedROI(3)),'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
+            FOV = struct('y_center',round(yroi),'x_center',round(xroi),'radius',round(obj.selectedROI(3)),'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
             pf.FOV = FOV;
 
             pf.option_params=obj.zernikepar;
@@ -227,7 +235,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.modality.position=[2,1.5];  
             pard.modality.Width=0.75;
 
-            pard.representation.object=struct('String',{{'Voxels','Pupil','Zernike'}},'Style','popupmenu','Tag','representation','Callback',{{@modechanged,obj}});
+            pard.representation.object=struct('String',{{'Voxels','Pupil','Pupil vector','Zernike','Zernike vector'}},'Style','popupmenu','Tag','representation','Callback',{{@modechanged,obj}});
             pard.representation.position=[2,2.25]; 
             pard.representation.Width=0.75;
 
@@ -331,11 +339,11 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.loss1.Width=0.5;
             pard.loss1.Optional=true;
 
-            pard.loss2t.object=struct('String','min: psf, bg, phot, Inorm','Style','text');
+            pard.loss2t.object=struct('String','min: psf, bg, phot, Inorm, gxy','Style','text');
             pard.loss2t.position=[lw,3.25];  
             pard.loss2t.Width=1.25;
             pard.loss2t.Optional=true;
-            pard.loss2.object=struct('String','1 1 1 0','Style','edit');
+            pard.loss2.object=struct('String','1 1 1 0 1','Style','edit');
             pard.loss2.position=[lw,4.5];  
             pard.loss2.Width=0.5;
             pard.loss2.Optional=true;
@@ -444,6 +452,7 @@ plot(ax,frames,offm+0*frames,'k');
 hold(ax,'off')
 xlabel('frame')
 ylabel('frame fit - frame')
+ylim([-0.1,0.1]/params.pixelsize_z)
 
 axp=obj.initaxis('I_model');
 if isfield(v.res,'I_model')
@@ -496,12 +505,14 @@ elseif strcmpi(a.Tag,'representation')
     p(1).value=1;p(1).off={'zernikeparbutton'};p(1).on={};
     p(2).value=2;p(2).off={};p(2).on={'zernikeparbutton'};
     p(3)=p(2);p(3).value=3;
+    p(4)=p(2);p(4).value=4;
+    p(5)=p(2);p(5).value=5;
     obj.switchvisible(a,b,p);
     switch obj.getSingleGuiParameter('representation').selection
         case 'Voxels'
             l1(3)=1;
             
-        case {'Zernike','Pupil'}
+        case {'Zernike','Pupil','Zernike vector','Pupil vector'}
             l1(3)=0;
     end
     obj.setGuiParameters(struct('loss1',l1));
