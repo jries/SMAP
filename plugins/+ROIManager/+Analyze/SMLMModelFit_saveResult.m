@@ -324,7 +324,7 @@ pard.winSize.position=[7,4.4];
 pard.winSize.Width=0.5;
 
 pard.t_stepSize.object=struct('Style','text','String','Step size');
-pard.t_stepSize.position=[8,3.7];
+pard.t_stepSize.position=[88,3.7];
 pard.t_stepSize.Width=0.7;
 
 pard.onlyPositive.object=struct('Style','checkbox','Value',0,'String','Only curvature>0');
