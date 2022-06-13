@@ -17,8 +17,9 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
 %                 return
 %             end
             
-            maxprecision=0.1;% nm
-       
+%             maxprecision=0.1;% nm
+            maxprecision=1;% nm
+
             %get coordinates
             layers=find(p.sr_layerson);
             locs1=obj.getloc({'xnm','ynm','locprecnm','layer'},'layer',layers(1),'size','freeroi');
@@ -87,6 +88,8 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
              % project along line, summ up perpendicular direction -> cc
              % along line for further averaging.
             out.xcorr=sx12;
+            out.acorr1=sx1;
+            out.acorr2=sx2;
             out.dxline=(xm-size(sx12hr,1)/2)*maxprecision;
             out.dyline=(ym-size(sx12hr,2)/2)*maxprecision;
 
@@ -96,72 +99,73 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
             out.yr2 = yr2;
             
 
-            % YW added:
-            % get the FWHM of the peak of the xcross perpendicular to the
-            % kinetochore axis.
+%             % YW added:
+%             % get the FWHM of the peak of the xcross perpendicular to the
+%             % kinetochore axis.
 %             yProfile = sx12hr(xm,:);
 %             yProfile = yProfile-min(yProfile); 
 %             yMax_val = max(yProfile);
-%             i1=find(yProfile>yMax_val/2,1,'first');
-%             i2=find(yProfile>yMax_val/2,1,'last');
-%             fwhm = (i2-i1)*maxprecision;
-
-%             ax3=obj.setoutput('fwhm');
+% %             i1=find(yProfile>yMax_val/2,1,'first');
+% %             i2=find(yProfile>yMax_val/2,1,'last');
+% %             fwhm = (i2-i1)*maxprecision;
+% 
+%             ax3=obj.setoutput('xcorr_profile');
 %             yshift = (-size(sx12hr,1)/2:size(sx12hr,1)/2)*maxprecision;
 %             plot(ax3, yshift(1:end-1)+0.5, yProfile,'r');
 %             hold(ax3, 'on')
-%             yline(ax3, yMax_val/2)
-%             title(ax3, ['FWHM = ' num2str(fwhm) ' nm'])
 %             xlabel(ax3, 'y shift (nm)')
 %             ylabel(ax3, 'xcorr')
 %             hold(ax3, 'off')
-
-%             out.fwhm12 = fwhm;
-
-            [yshift1, yProfile1, gaussFit1, bg1] = auto_corr_analysis(sx1f, p, maxprecision);
-            [yshift2, yProfile2, gaussFit2, bg2] = auto_corr_analysis(sx2f, p, maxprecision);
-            
-            if obj.display
-                val = feval(gaussFit1, -p.maxshift:p.maxshift);
-    %             i1=find(yProfile>yMax_val/2,1,'first');
-    %             i2=find(yProfile>yMax_val/2,1,'last');
-    %             fwhm = (i2-i1)*maxprecision;
-    %             size_oneK = fwhm - 2.355*mean(locs1.locprecnm);
-                ax4=obj.setoutput('fwhm_auto_l1');
-                plot(ax4, yshift1, yProfile1,'r');
-                hold(ax4, 'on')
-    %             yline(ax4, yMax_val/2)
-                plot(ax4, -p.maxshift:p.maxshift, val);
-                yline(ax4, bg1);
-    %             title(ax4, ['FWHM = ' num2str(fwhm) ' nm; width_k = ' num2str(size_oneK)])
-                xlabel(ax4, 'y shift (nm)')
-                ylabel(ax4, 'auto corr')
-                hold(ax4, 'off')
-            end
-            out.v1Acorr = yProfile1;
-            out.y1Acorr = yshift1;
-            out.acorrFit1 = gaussFit1;
-
-            if obj.display
-                val = feval(gaussFit2, -p.maxshift:p.maxshift);
-    %             i1=find(yProfile>yMax_val/2,1,'first');
-    %             i2=find(yProfile>yMax_val/2,1,'last');
-    %             fwhm = (i2-i1)*maxprecision;
-    %             size_oneK = fwhm - 2.355*mean(locs1.locprecnm);
-                ax5=obj.setoutput('fwhm_auto_l2');
-                plot(ax5, yshift2, yProfile2,'r');
-                hold(ax5, 'on')
-    %             yline(ax4, yMax_val/2)
-                plot(ax5, -p.maxshift:p.maxshift, val);
-                yline(ax5, bg2);
-    %             title(ax4, ['FWHM = ' num2str(fwhm) ' nm; width_k = ' num2str(size_oneK)])
-                xlabel(ax5, 'y shift (nm)')
-                ylabel(ax5, 'auto corr')
-                hold(ax5, 'off')
-            end
-            out.v2Acorr = yProfile2;
-            out.y2Acorr = yshift2;
-            out.acorrFit2 = gaussFit2;
+% 
+% %             out.fwhm12 = fwhm;
+%     
+%             [yshift1, yProfile1, gaussFit1, bg1] = auto_corr_analysis(sx1, p, maxprecision);
+%             [yshift2, yProfile2, gaussFit2, bg2] = auto_corr_analysis(sx2, p, maxprecision);
+%             [yshift2f, yProfile2f, gaussFit2f, bg2f] = auto_corr_analysis(sx2f, p, maxprecision);
+%             
+%             if obj.display
+%                 val = feval(gaussFit1, -p.maxshift:p.maxshift);
+%     %             i1=find(yProfile>yMax_val/2,1,'first');
+%     %             i2=find(yProfile>yMax_val/2,1,'last');
+%     %             fwhm = (i2-i1)*maxprecision;
+%     %             size_oneK = fwhm - 2.355*mean(locs1.locprecnm);
+%                 ax4=obj.setoutput('fwhm_auto_l1');
+%                 plot(ax4, yshift1, yProfile1,'r');
+%                 hold(ax4, 'on')
+%     %             yline(ax4, yMax_val/2)
+%                 plot(ax4, -p.maxshift:p.maxshift, val);
+% %                 yline(ax4, bg1);
+%     %             title(ax4, ['FWHM = ' num2str(fwhm) ' nm; width_k = ' num2str(size_oneK)])
+%                 xlabel(ax4, 'y shift (nm)')
+%                 ylabel(ax4, 'auto corr')
+%                 hold(ax4, 'off')
+%             end
+%             out.v1Acorr = yProfile1;
+%             out.y1Acorr = yshift1;
+%             out.acorrFit1 = gaussFit1;
+%         
+%             if obj.display
+%                 val = feval(gaussFit2, -p.maxshift:p.maxshift);
+%     %             i1=find(yProfile>yMax_val/2,1,'first');
+%     %             i2=find(yProfile>yMax_val/2,1,'last');
+%     %             fwhm = (i2-i1)*maxprecision;
+%     %             size_oneK = fwhm - 2.355*mean(locs1.locprecnm);
+%                 ax5=obj.setoutput('fwhm_auto_l2');
+%                 plot(ax5, yshift2, yProfile2,'r');
+%                 hold(ax5, 'on')
+%     %             yline(ax4, yMax_val/2)
+%                 plot(ax5, -p.maxshift:p.maxshift, val);
+%                 plot(ax5, yshift2f, yProfile2f,'b');
+% %                 yline(ax5, bg2);
+%     %             title(ax4, ['FWHM = ' num2str(fwhm) ' nm; width_k = ' num2str(size_oneK)])
+%                 xlabel(ax5, 'y shift (nm)')
+%                 ylabel(ax5, 'auto corr')
+%                 hold(ax5, 'off')
+%                 legend(ax5,{'Auto-correlation','Fit','Filtering + auto-correlation'})
+%             end
+%             out.v2Acorr = yProfile2;
+%             out.y2Acorr = yshift2;
+%             out.acorrFit2 = gaussFit2;
 %             out.fwhm1 = fwhm;
 %             out.size_oneK = size_oneK;
 
@@ -173,23 +177,52 @@ classdef shiftCrossCorrelation<interfaces.SEEvaluationProcessor
     end
 end
 
-function [yshift, yProfile, gaussFit, bg] = auto_corr_analysis(sxf, p, maxprecision)
-    sxhr=imresize(sxf,p.pixrec/maxprecision,'cubic');
-    [~,linind]=max(sxhr(:));
-    [xm,ym]=ind2sub(size(sxhr),linind);
-% out.dxline=(xm-size(sx12hr,1)/2)*maxprecision;
-    yProfile = sxhr(xm,:);
-    yProfile = yProfile-min(yProfile); 
-%             yMax_val = max(yProfile);
-%     gauss2 = 'a1*exp(-((x-b)/c1)^2) + a2*exp(-((x-b)/c2)^2)+d';
-    gauss2 = 'a1*exp(-((x-b)/c1)^2) + a2*exp(-((x-b)/c2)^2)';
-    yshift = (-size(sxhr,1)/2:size(sxhr,1)/2)*maxprecision;
-    yshift = yshift(1:end-1);
-%     gaussFit = fit(yshift',yProfile', gauss2, 'StartPoint',[max(yProfile)*0.9 max(yProfile)*0.1 0 10 100 0]);
-    gaussFit = fit(yshift',yProfile', gauss2, 'StartPoint',[max(yProfile)*0.9 max(yProfile)*0.1 0 25 100]);
-%     bg = gaussFit.a2+gaussFit.d;
-    bg = gaussFit.a2;
-end
+% function [yshift, yProfile, gaussFit, bg] = auto_corr_analysis(sxf, p, maxprecision)
+%     % Resize to one pixel per shift
+%     [~,linind] = max(sxf(:));
+%     [xm,ym]=ind2sub(size(sxf),linind);
+%     yProfile = sxf(xm,:);
+%     [~,linind] = max(yProfile);
+%     yProfile(linind) = yProfile(linind+1);
+% 
+%     yProfile=imresize(yProfile,[1 length(yProfile)*p.pixrec/maxprecision],'cubic');
+% %     sxhr = sxf;
+% %     maxprecision = 1;
+% %     [~,linind]=max(sxhr(:));
+% %     [xm,ym]=ind2sub(size(sxhr),linind);
+% % out.dxline=(xm-size(sx12hr,1)/2)*maxprecision;
+% %     yProfile = sxhr(xm,:);
+%     yProfile = yProfile-min(yProfile); 
+% %             yMax_val = max(yProfile);
+% %     gauss2 = 'a1*exp(-((x-b)/c1)^2) + a2*exp(-((x-b)/c2)^2)+d';
+%     gauss2 = 'a1*exp(-((x-b)/c1)^2) + a2*exp(-((x-b)/c2)^2)';
+%     yshift = (-length(yProfile)/2:length(yProfile)/2).*maxprecision;
+%     yshift = yshift(1:end-1);
+% %     gaussFit = fit(yshift',yProfile', gauss2, 'StartPoint',[max(yProfile)*0.9 max(yProfile)*0.1 0 10 100 0]);
+%     gaussFit = fit(yshift',yProfile', gauss2, 'StartPoint',[max(yProfile)*0.9 max(yProfile)*0.1 0 25 100]);
+% %     bg = gaussFit.a2+gaussFit.d;
+%     bg = gaussFit.a2;
+% end
+% 
+% function [yshift, yProfile, gaussFit, bg] = auto_corr_analysis(sxf, p, maxprecision)
+%     sxhr=imresize(sxf,p.pixrec/maxprecision,'cubic');
+%     % Resize to one pixel per shift
+% %     maxprecision = 1;
+%     [~,linind]=max(sxhr(:));
+%     [xm,ym]=ind2sub(size(sxhr),linind);
+% % out.dxline=(xm-size(sx12hr,1)/2)*maxprecision;
+%     yProfile = sxhr(xm,:);
+%     yProfile = yProfile-min(yProfile); 
+% %             yMax_val = max(yProfile);
+% %     gauss2 = 'a1*exp(-((x-b)/c1)^2) + a2*exp(-((x-b)/c2)^2)+d';
+%     gauss2 = 'a1*exp(-((x-b)/c1)^2) + a2*exp(-((x-b)/c2)^2)';
+%     yshift = (-size(sxhr,1)/2:size(sxhr,1)/2).*maxprecision;
+%     yshift = yshift(1:end-1);
+% %     gaussFit = fit(yshift',yProfile', gauss2, 'StartPoint',[max(yProfile)*0.9 max(yProfile)*0.1 0 10 100 0]);
+%     gaussFit = fit(yshift',yProfile', gauss2, 'StartPoint',[max(yProfile)*0.9 max(yProfile)*0.1 0 25 100]);
+% %     bg = gaussFit.a2+gaussFit.d;
+%     bg = gaussFit.a2;
+% end
 function pard=guidef
 pard.inputParameters={'se_sitepixelsize','numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','layer2_'};
 
