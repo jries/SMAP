@@ -511,9 +511,10 @@ elseif strcmpi(a.Tag,'representation')
     switch obj.getSingleGuiParameter('representation').selection
         case 'Voxels'
             l1(3)=1;
-            
+            obj.setGuiParameters(struct('vary_photon',0));
         case {'Zernike','Pupil','Zernike vector','Pupil vector'}
             l1(3)=0;
+            obj.setGuiParameters(struct('vary_photon',1));
     end
     obj.setGuiParameters(struct('loss1',l1));
 
