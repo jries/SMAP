@@ -103,6 +103,14 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pf.usecuda=p.usecuda==1;
             pf.iteration=p.iteration;
             pf.skew_const=[0 0];
+            pf.max_bead_number = p.maxbeadnum;
+            
+            switch p.stagemove.selection
+                case 'to objective'
+                    pf.stage_mov_dir = 'normal';
+                case 'away from objective'
+                    pf.stage_mov_dir = 'reverse';
+            end
             
 
 
@@ -328,8 +336,22 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.beadsize.object=struct('String','0','Style','edit');
             pard.beadsize.position=[lw,2];  
             pard.beadsize.Width=0.5;
+            
+            pard.maxbeadnumt.object=struct('String','Max bead No.','Style','text');
+            pard.maxbeadnumt.position=[lw,3];  
+            pard.maxbeadnumt.Width=1.5;
+            pard.maxbeadnum.object=struct('String','50','Style','edit');
+            pard.maxbeadnum.position=[lw,3.75];  
+            pard.maxbeadnum.Width=0.5;
 
             lw=7;
+            pard.stagemovet.object=struct('String','stage mov dir:','Style','text');
+            pard.stagemovet.position=[lw,1];            
+            pard.stagemove.object=struct('String',{{'to objective','away from objective'}},'Style','popupmenu','Tag','modality');
+            pard.stagemove.position=[lw,2];  
+            pard.stagemove.Width=0.75;
+
+            lw=8;
             pard.lmse1t.object=struct('String','Loss: mse1, mse2, smooth, edge','Style','text');
             pard.lmse1t.position=[lw,1];  
             pard.lmse1t.Width=1.75;
