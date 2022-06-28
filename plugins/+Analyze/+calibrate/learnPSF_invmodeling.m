@@ -166,7 +166,7 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             end
 
             %ROI goes here
-            FOV = struct('y_center',round(yroi),'x_center',round(xroi),'radius',round(obj.selectedROI(3)),'z_start',p.skipframes(1),'z_end',-p.skipframes(end),'z_step',1); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
+            FOV = struct('y_center',round(yroi),'x_center',round(xroi),'radius',round(obj.selectedROI(3)),'z_start',p.skipframes(1),'z_end',-p.skipframes(2),'z_step',p.skipframes(3)); % if width and height are zero, use the full FOV, 'z_start' is counting as 0,1,2..., 'z_end' is counting as 0,-1,-2...
             pf.FOV = FOV;
 
             pf.option_params=obj.zernikepar;
@@ -298,11 +298,11 @@ classdef learnPSF_invmodeling<interfaces.DialogProcessor
             pard.segcutoff.Optional=true;
 
 
-            pard.skipframest.object=struct('String','skip frames','Style','text');
-            pard.skipframest.position=[lw,3]; 
-            pard.skipframest.Width=0.75;
+            pard.skipframest.object=struct('String','[skip frames, step]','Style','text');
+            pard.skipframest.position=[lw,2.9]; 
+            pard.skipframest.Width=1;
             pard.skipframest.Optional=true;
-            pard.skipframes.object=struct('String','0 0','Style','edit');
+            pard.skipframes.object=struct('String','0 0 1','Style','edit');
             pard.skipframes.position=[lw,3.75]; 
             pard.skipframes.Width=0.5;
             pard.skipframes.Optional=true;
