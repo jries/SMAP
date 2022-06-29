@@ -36,15 +36,38 @@ xn=(xx(1:end-1)+xx(2:end))/2;
 xn(2:end+1)=xn;
 xn(1)=-inf; xn(end+1)=inf;
 yy=zeros(size(xx));
-for k=1:length(xx)
-    ind=x>=xn(k)&x<xn(k+1);
-    try
-    yy(k)=fh(y(ind));
-    catch
-        yy(k)=NaN;
+
+if length(x)<1e5 %old way
+
+    for k=1:length(xx)
+        ind=x>=xn(k)&x<xn(k+1);
+        try
+        yy(k)=fh(y(ind));
+        catch
+            yy(k)=NaN;
+        end
     end
+else
+    ind1=1;
+    for k=1:length(xx)
+        while ind1<=length(x) && x(ind1)<xn(k)
+            ind1=ind1+1;
+        end
+        ind2=ind1;
+        while ind2<=length(x) && x(ind2)<xn(k+1)
+            ind2=ind2+1;
+        end
+        try
+            yy(k)=fh(y(ind1:ind2-1));
+        catch
+            yy(k)=NaN;
+        end
+        ind1=ind2;
+    end
+
 end
 xwin=diff(xn);
+
 end
 
 function out=rmshere(in)
