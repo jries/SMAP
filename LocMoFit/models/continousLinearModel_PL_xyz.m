@@ -8,7 +8,7 @@ classdef continousLinearModel_PL_xyz<geometricModel
             obj.fix = [0 0 0 0 0 0 0 0 0 0 0 0] ;
             obj.value = [0 0 0 100 0 0 200 0 0 300 0 0];
             obj.lb = [-50 -50 -50 -50 -50 -50 -50 -50 -50 -50 -50 -50];
-            obj.ub = [-50 -50 -50 -50 -50 -50 -50 -50 -50 -50 -50 -50];
+            obj.ub = [50 50 50 50 50 50 50 50 50 50 50 50];
             obj.min = [-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf];
             obj.max = [inf inf inf inf inf inf inf inf inf inf inf inf];
             obj.modelType = 'discretized';
