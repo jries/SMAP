@@ -40,7 +40,7 @@ hold off
 ff='%2.1f';
 title(['fit: <step>=' num2str(fs.b1,ff) ', sigma=' num2str(fs.c1,ff) ',mean(step)=' num2str(mean(stepsize),ff) ', std=' num2str(std(stepsize),ff)])
 
-dt=1;
+dt=2;
 
 n=0:dt:max(steptime);
 
@@ -58,11 +58,11 @@ maxtime=quantile(steptime,.98);
 xlim([0 maxtime])
 
 
-%two exponentials
-timefun=@(k1,k2,A,x) A*(exp(-k1*x)-exp(-k2*x));
-startp=[1/mean(steptime), 10/mean(steptime), max(ht)];
-indt=nt<maxtime;
-ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
+% %two exponentials
+% timefun=@(k1,k2,A,x) A*(exp(-k1*x)-exp(-k2*x));
+% startp=[1/mean(steptime), 10/mean(steptime), max(ht)];
+% indt=nt<maxtime;
+% ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 [~,imax]=max(ht);
 
 
@@ -71,8 +71,8 @@ ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 timefun=@(k1,A,x) A*k1^2*x.*exp(-k1*x);
 startp=[1/mean(steptime), 3*max(ht)*mean(steptime)^2/ht(imax)];
 indt=nt<maxtime;
-indt=indt & nt>15;
-ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp)
+indt=indt & nt>5;
+ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 hold on
 plot(nt,ft(nt),'r--')
 
@@ -85,12 +85,12 @@ startp=[ft.k1,ft.k1/5, max(ht)*mean(steptime)^2/ht(imax)];
 
 ft2=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 hold on
-plot(nt,ft2(nt),'g--')
+% plot(nt,ft2(nt),'g--')
 
 ftx=fit(nt(imax:find(indt,1,'last'))',ht(imax:find(indt,1,'last'))','exp1');
 plot(nt(imax:find(indt,1,'last')),ftx(nt(imax:find(indt,1,'last'))),'r')
-title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff) ' N = ' num2str(length(steptime),4) ...
-    ', 2exp: 1/k1,: ' num2str(1./ft2.k1,ff) ',1/k2,: ' num2str(1./ft2.k2,ff)])
+title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff) ' N = ' num2str(length(steptime),4)]);% ...
+%     ', 2exp: 1/k1,: ' num2str(1./ft2.k1,ff) ',1/k2,: ' num2str(1./ft2.k2,ff)])
 % title(['Peng: 1/k = ' num2str(-1/ft.k1,ff) ' ms, robustmean(steptime) = ' num2str(robustMean(steptime),ff) ' N = ' num2str(length(steptime),4)])
 
 
