@@ -107,10 +107,10 @@ switch mode
                 end
             end
         end
-        hold(ax,'on')
+%         hold(ax,'on')
         imagesc(ax, v);
         axis(ax,'equal')
-        hold(ax,'off')
+%         hold(ax,'off')
         
         % Deal with locs
         for k = 1:max(locsCoord.layer)

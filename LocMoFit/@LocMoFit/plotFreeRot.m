@@ -125,8 +125,8 @@ function plotFreeRot(obj, varargin)
 
         % Buttons for the rotation
         guihandles.t_zrot = uicontrol(uip ,'Style','text','String','Rotation about z','Position',[1 1 1 1]);
-        guihandles.zrot_slow = uicontrol(uip ,'Style','pushbutton','String','>','Position',[1.9 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 5, obj,results,bg, guihandles.section});
-        guihandles.zrot_fast = uicontrol(uip ,'Style','pushbutton','String','>>','Position',[2.2 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 20, obj,results,bg, guihandles.section});
+        guihandles.zrot_slow = uicontrol(uip ,'Style','pushbutton','String','>','Position',[1.9 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 5, obj,results,bg, guihandles.section, guihandles.t_section});
+        guihandles.zrot_fast = uicontrol(uip ,'Style','pushbutton','String','>>','Position',[2.2 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 20, obj,results,bg, guihandles.section, guihandles.t_section});
         guiStyle(guihandles, fieldnames(guihandles));
      end
 end

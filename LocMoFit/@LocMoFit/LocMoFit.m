@@ -1335,7 +1335,7 @@ classdef LocMoFit<matlab.mixin.Copyable
                     offset = obj.exportOffset();
                     if isfield(offset{90+l},'density')
                         BGDensity = offset{90+l}.density;
-                        if ~isempty('depth')
+                        if ~isempty(depth)
                             finalROISize = roiSize;
                         end
                         BGCount = BGDensity*(pi*(0.5*finalROISize/1000)^2);

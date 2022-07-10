@@ -60,6 +60,9 @@ classdef functionModel<SMLMModel
                 obj.mPars.(modelObj.parsArgName{k}) = modelObj.(modelObj.parsArgName{k});
             end
         end
+        function updateModelFun(obj)
+            obj.modelFun = @(mPars, dx)obj.modelObj.reference(mPars,dx);
+        end
         function [ax, img] = plot(obj, mPars, varargin)
             if isempty(mPars)
                 if ~isempty(obj.mPars)
@@ -492,13 +495,15 @@ classdef functionModel<SMLMModel
                 locsPrecFactor = min(obj.sigmaSet);
             end
         end
-        
     end
     methods(Access = protected)
         function cp = copyElement(obj)
             cp = copyElement@matlab.mixin.Copyable(obj);
             cp.modelObj = copy(cp.modelObj);
             cp.modelObj.ParentObject = cp;
+        end
+        function respond2ModelObjChange(obj) % call to the "update" method of subclass
+            obj.updateModelFun;
         end
     end
 end
