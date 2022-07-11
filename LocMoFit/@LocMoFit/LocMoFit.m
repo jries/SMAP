@@ -1771,7 +1771,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             path_LocMoFit = which('LocMoFit');
             folder_LocMoFit = fileparts(path_LocMoFit);
             folder_LocMoFit = replace(folder_LocMoFit, '@LocMoFit', '');
-            folder_model = [folder_LocMoFit 'models\'];
+            folder_model = [folder_LocMoFit 'models' filesep];
             modelList = cellstr(ls(folder_model));
             modelList = modelList(3:end);
         end
