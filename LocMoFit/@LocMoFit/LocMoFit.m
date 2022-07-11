@@ -142,13 +142,14 @@ classdef LocMoFit<matlab.mixin.Copyable
         d = distance2RefPoint(obj, refPoint,varargin)
         %% model related functions
         function setModel(obj,model,modelId)
-            % Adding one single model to the LocMoFit object according to the modelId.
+            % Setting one single model of the LocMoFit object according to the modelId.
             % Initiation of all arguments of the parameters (allParsArg).
             %
             % Usage:
             %   setModel(obj,model,modelId)
             %
             % Args:
+            %   obj: an LocMoFit object.
             %   model: an SMLMModel object or sub-object.
             %   modelId: the ID of the model being added.
             
@@ -246,6 +247,29 @@ classdef LocMoFit<matlab.mixin.Copyable
                 obj.allParsArg.(fn{k})(lModel) = [];
             end
             obj.setModel(newModel,modelNumber);
+        end
+
+        function rmLastModel(obj)
+            % Remove the last model (in terms of the order).
+           	% 
+            % Usage:
+            %   rmLastModel(obj)
+            %
+            % Args:
+            %   obj: an LocMoFit object.
+            
+            lastMod = length(obj.model);
+            obj.model(lastMod) = [];
+
+            lModel = ismember(obj.allParsArg.model, lastMod);
+            fn = fieldnames(obj.allParsArg);
+            
+            % Set parameters of the model to null
+            for k = 1:length(fn)
+                obj.allParsArg.(fn{k})(lModel) = [];
+            end
+            obj.updateAProp('numOfLayer');
+            obj.updateLayer
         end
         
         function updateModel(obj, modelNumber)

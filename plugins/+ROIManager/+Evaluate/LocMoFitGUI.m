@@ -522,6 +522,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 %% add first module and + tab
                 obj.guihandles.tabgroup=obj.guihandles.tab1.Parent;
                 obj.addguitotab(1);
+                obj.guihandles.rmtab=uitab(obj.guihandles.tabgroup,'Title','[x]');
                 obj.guihandles.addtab=uitab(obj.guihandles.tabgroup,'Title','+');
                 obj.numMod = 1;                 % init of the model counts
                 obj.guihandles.tabgroup.SelectionChangedFcn={@selectLayer_callback,obj};
@@ -700,6 +701,16 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.(['rmInternalSetting_' num2str(number)])=uicontrol(hsettings,'Style','pushbutton','String','-');
             obj.guihandles.(['rmInternalSetting_' num2str(number)]).Position = [280 0 20 20];
             obj.guihandles.(['rmInternalSetting_' num2str(number)]).Callback = {@rmInternalSetting_callback, obj, num2str(number)};
+        end
+
+        function rmguifromtab(obj,number)
+            %% rmguifromtab removes the last model from the GUI.
+            fn = fieldnames(obj.guihandles);
+            indRm = find(endsWith(fn,['_' num2str(number)]));
+            for k = length(indRm):-1:1
+                delete(obj.guihandles.(fn{indRm(k)}));
+                obj.guihandles = rmfield(obj.guihandles, fn{indRm(k)});
+            end
         end
         
         function addconverttotab(obj)
@@ -905,18 +916,48 @@ end
 function selectLayer_callback(tabgroup,eventdata,obj)
 % if + tab selected this makes a new model
 layertitle=(eventdata.NewValue.Title);
-if strcmp(layertitle,'+')
-    numtabs=length(tabgroup.Children);
-    obj.addguitotab(numtabs-2)
-    obj.numMod = numtabs-2;   % save the number of model
-    s=1:length(tabgroup.Children);
-    % shift the order of table
-    s(end-2)=s(end);
-    s(end)=s(end)-2;
-    s(end-1)=s(end);
-    s(end)=s(end)+1;
-    tabgroup.Children=tabgroup.Children(s);
-    tabgroup.SelectedTab=tabgroup.Children(end-2);
+switch layertitle
+    case '+'
+        numberOfExtraTab = 3;
+        numtabs=length(tabgroup.Children);
+        obj.addguitotab(numtabs-numberOfExtraTab)
+        obj.numMod = numtabs-numberOfExtraTab;   % save the number of model
+        s=1:length(tabgroup.Children);
+        % shift the order of table
+        s = [s(1:end-numberOfExtraTab-1) s(end) s(end-numberOfExtraTab:end-1)];
+        tabgroup.Children=tabgroup.Children(s);
+        tabgroup.SelectedTab=tabgroup.Children(end-numberOfExtraTab);
+    case '[x]'
+        allTabTitle = {tabgroup.Children.Title};
+        idxRmButton = find(strcmp(layertitle, allTabTitle));
+        mod2rm = allTabTitle{idxRmButton - 1};
+        rmDone = 0;
+        if strcmp(mod2rm, 'M1')
+            warning(['There should be at least one model so ' mod2rm ' cannot be removed.'])
+        else
+            answer = questdlg(['Remove ' mod2rm '?'],...
+                'Remove the last model', ...
+                'Yes', 'No',...
+                'No');
+            switch answer
+                case 'Yes'
+                    modelID = str2num(mod2rm(2:end));
+                    obj.rmguifromtab(modelID);
+                    delete(obj.guihandles.(['tab' mod2rm(2:end)]));
+                    obj.guihandles = rmfield(obj.guihandles, ['tab' mod2rm(2:end)]);
+                    if obj.fitter.numOfModel == modelID
+                        obj.fitter.rmLastModel;
+                    end
+                    obj.numMod = obj.numMod-1;
+                    disp([mod2rm ' has been successively removed.'])
+                    rmDone = 1;
+                otherwise
+
+            end
+            
+        end
+        tabgroup.SelectedTab = tabgroup.Children(idxRmButton-rmDone-1);
+    otherwise
 end
 end
 
