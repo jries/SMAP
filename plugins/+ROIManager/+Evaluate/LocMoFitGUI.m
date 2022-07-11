@@ -830,7 +830,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             fn = fieldnames(loaded_beforeMe);
             fitterGUI_order = {};
             for k = 2:length(allSourceFitter)
-                for m = 1:length(loaded_beforeMe)
+                for m = 1:length(fn)
                     l = isequal(allSourceFitter{k}, loaded_beforeMe.(fn{m}));
                     if l
                         fitterGUI_order{k} = fn{m};
