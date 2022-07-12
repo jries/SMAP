@@ -44,9 +44,6 @@ Installation
     b.  Type: `git clone https://github.com/jries/SMAP` and type
         in your username and password for your git account.
 
-    c.  Install the 3D fitter by typing
-        `git clone https://github.com/jries/fit3Dcspline`
-
 2.  Install Micromanager 1.4.22 from https://micro-manager.org
 
 3.  If needed install www.openmicroscopy.org/bio-formats/downloads
