@@ -7,6 +7,7 @@ steptime=[];
 pluginname='StepsMINFLUX';
 fieldname1='steps';
 
+vel=[];
 
 for k=1:length(sites)
     if ~isfield(sites(k).evaluation,pluginname) || ~isfield(sites(k).evaluation.(pluginname),fieldname1) % if no steps are found, look at next site
@@ -16,6 +17,7 @@ for k=1:length(sites)
     sh=sites(k).evaluation.(pluginname).(fieldname1);
     stepsize(end+1:end+length(sh.stepsize))=sh.stepsize; %add values from current site to the list
     steptime(end+1:end+length(sh.dwelltime))=sh.dwelltime;
+    vel(end+1)=sites(k).evaluation.(pluginname).stattrack.velocity;
 end
 
 figure(88) %do the plotting
@@ -93,4 +95,9 @@ title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff
 %     ', 2exp: 1/k1,: ' num2str(1./ft2.k1,ff) ',1/k2,: ' num2str(1./ft2.k2,ff)])
 % title(['Peng: 1/k = ' num2str(-1/ft.k1,ff) ' ms, robustmean(steptime) = ' num2str(robustMean(steptime),ff) ' N = ' num2str(length(steptime),4)])
 
-
+figure(80)
+n=0:0.05:max(vel);
+histogram(vel,n)
+xlabel('velocity (nm/s)')
+ff2='%2.0f';
+title(['v = ' num2str(mean(vel)*1000,ff2) '±' num2str(std(vel)*1000,ff2) ' nm/s '])
