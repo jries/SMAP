@@ -153,18 +153,25 @@ classdef MotorPAINT<interfaces.DialogProcessor
             if isz
                 ax3Dt=obj.initaxis('track 3D');
                 plot3Dtracks(ax3Dt,xsall,ysall,zsall,[-100 100 -100])
-%                 plot3Dtracks(ax3Dt,xrawall,yrawall,zrawall,[-100 100 -100])
 
-%                 hold(ax3Dt,'off')
-%                 for k=1:length(xsall)
-%                     plot3(ax3Dt,xsall{k},ysall{k},zsall{k})
-%                     hold(ax3Dt,'on')
-%                 end
-%                 axis(ax3Dt,"equal")
-%                 axis(ax3Dt,"ij")
-%                 grid(ax3Dt,"on")
-%                 ax3Dt.XLim=axall.XLim;
-%                 ax3Dt.YLim=axall.YLim;
+                ax3Dtr=obj.initaxis('track 3D raw');
+                hold(ax3Dtr,'off')
+                skipfirst=10;
+                c=jet(length(xrawall));
+                for tr=1:length(xrawall)
+                    xh=xrawall{tr}(skipfirst+1:end);
+                    yh=yrawall{tr}(skipfirst+1:end);
+                    zh=zrawall{tr}(skipfirst+1:end);
+
+                    hl=plot3(ax3Dtr,xh,yh,zh,'Color',c(tr,:),'LineWidth',.5);
+                    hold(ax3Dtr,'on')
+
+                end
+                axis(ax3Dtr,'tight')
+                axis(ax3Dtr,'equal');
+                view(ax3Dtr,70,27)
+                
+
             end
 
         end

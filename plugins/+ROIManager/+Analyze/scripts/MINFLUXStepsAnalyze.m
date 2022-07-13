@@ -10,6 +10,7 @@ fieldname1='steps';
 
 for k=1:length(sites)
     if ~isfield(sites(k).evaluation,pluginname) || ~isfield(sites(k).evaluation.(pluginname),fieldname1) % if no steps are found, look at next site
+        k
         continue
     end
     sh=sites(k).evaluation.(pluginname).(fieldname1);

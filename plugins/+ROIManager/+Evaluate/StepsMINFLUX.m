@@ -95,6 +95,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
            caluclatestepparameters(obj, obj.steps.indstep);
            plotsteps(obj)
+           out=obj.site.evaluation.(obj.name);
 
            out.statall=calculatestatistics(obj,index);
            out.stattrack=calculatestatistics(obj,index,obj.coord.indtime);
