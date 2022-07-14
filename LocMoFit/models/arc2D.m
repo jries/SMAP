@@ -17,7 +17,7 @@ classdef arc2D<geometricModel
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized','continuous'};
             obj.dimension = 2;
-            
+            obj.listed = true;
         end
         
         function [model, p]= reference(obj, par, dx)

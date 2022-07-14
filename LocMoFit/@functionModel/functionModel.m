@@ -26,15 +26,21 @@ classdef functionModel<SMLMModel
     end
     methods
         intensityVal = modelHandler(obj, locs, mPars,varargin)
-        function obj = functionModel(filePath)
+        function obj = functionModel(model2load)
             % The constructor of the functional model object. This function
             % fetches the default values from the geometric model.
-            if exist('filePath','var')
-                obj.sourcePath = filePath;
-                [filePath, modelFun, ext] = fileparts(filePath);
-                addpath(filePath)
-                modelObj = str2func(modelFun);
-                modelObj = modelObj('Parent', obj);
+            if exist('model2load','var')
+                if isa(model2load,'geometricModel')
+                    modelObj = model2load;
+                else
+                    filePath = model2load;
+                    obj.sourcePath = filePath;
+                    [filePath, modelFun, ext] = fileparts(filePath);
+                    addpath(filePath)
+                    modelObj = str2func(modelFun);
+                    modelObj = modelObj('Parent', obj);
+                end
+                modelObj.ParentObject = obj;
                 obj.modelObj = modelObj;
 
                 % Fetches the default values
@@ -42,7 +48,7 @@ classdef functionModel<SMLMModel
                 obj.modelFun = @(mPars, dx)obj.modelObj.reference(mPars,dx);
                 obj.modelType = modelObj.modelType;
                 obj.dimension = modelObj.dimension;
-    %             obj.dimension = length(size(img));
+                %             obj.dimension = length(size(img));
                 if strcmp(modelObj.modelType,'discrete')
                     obj.pixelSize = 1;
                 end

@@ -10,6 +10,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         currentLoadedModel  %
         alignSettings       % Converter for alignment.
         sourceModel         % The source function model of the image model.
+        compiledMode        %
     end
     methods
         function obj=LocMoFitGUI(varargin)
@@ -18,8 +19,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel','sourceModel'};
             addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
         end
-        
-        
+               
         function setGuiParameters(obj,p,setchildren,setmenu)
             obj.fitter = p.fitter;
             obj.fitter.updateVersion;
@@ -468,6 +468,22 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 obj.guiPar.Vpos=3;
                 obj.guiPar.FieldHeight=20;
             end
+
+            isdeployed = true;
+            if isdeployed
+                obj.compiledMode = 'on';
+                modelList = LocMoFit.getModelList;
+                hModels = [];
+                for k = 1:length(modelList)
+                    tempModel = eval(modelList{k});
+                    if tempModel.listed
+                        hModels.(modelList{k}) = tempModel;
+                    end
+                end
+                obj.setPar('modelOptions', hModels)
+            else
+                obj.compiledMode = 'off';
+            end
             
             %% ParArg table related things
             % field names in the parsArg table
@@ -548,6 +564,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             else
                 dy=0;
             end
+
             pard.tab.tab1='Settings';
             
             pard.t_optimizer.object=struct('Style','text','String','Optimizer:');
@@ -587,7 +604,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.noFit.Height=1;
             pard.noFit.tab='tab1';
                        
-            pard.useAlignment.object=struct('Style','checkbox','String','Transform','Value',0);
+            pard.useAlignment.object=struct('Style','checkbox','String','Register','Value',0);
             pard.useAlignment.position=[4.5+dy,3.5];
             pard.useAlignment.Width=1.5;
             pard.useAlignment.Height=1;
@@ -635,7 +652,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             %
             tag=['M' num2str(number)];
             obj.guihandles.(['tab' num2str(number)])=uitab(obj.guihandles.tabgroup,'Title',tag,'Tag',tag);
-            guidefhere=addnumbertofield(guidefmodel(obj,number),number);
+            pardModelTab = guidefmodel(obj,number);
+            pardModelTab = obj.setVisibility_compiledMode(pardModelTab);
+            guidefhere=addnumbertofield(pardModelTab,number);
             Vrimold=obj.guiPar.Vrim;handleold=obj.handle;
             obj.guiPar.Vrim=0;
             if ismac
@@ -668,12 +687,12 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.(['partable_' num2str(number)]).RowName = [];
             
             % button for saving the model
-            obj.guihandles.(['savePar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','Save');
+            obj.guihandles.(['savePar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','Export');
             obj.guihandles.(['savePar_' num2str(number)]).Position = [20 0 40 20];
             obj.guihandles.(['savePar_' num2str(number)]).Callback = {@savePar_callback, obj, number};
             
             % button for loading the model
-            obj.guihandles.(['loadPar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','Load');
+            obj.guihandles.(['loadPar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','Import');
             obj.guihandles.(['loadPar_' num2str(number)]).Position = [60 0 40 20];
             obj.guihandles.(['loadPar_' num2str(number)]).Callback = {@loadPar_callback, obj, number};
             
@@ -694,13 +713,13 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.(['settingstable_' num2str(number)]).RowName = [];
             obj.guihandles.(['settingstable_' num2str(number)]).CellSelectionCallback = {@settingTable_cellSelectionCallback, obj, num2str(number)};
             
-            % Buttons for adding removing a row of setting
-            obj.guihandles.(['addInternalSetting_' num2str(number)])=uicontrol(hsettings,'Style','pushbutton','String','+');
-            obj.guihandles.(['addInternalSetting_' num2str(number)]).Position = [260 0 20 20];
-            obj.guihandles.(['addInternalSetting_' num2str(number)]).Callback = {@addInternalSetting_callback, obj, num2str(number)};
-            obj.guihandles.(['rmInternalSetting_' num2str(number)])=uicontrol(hsettings,'Style','pushbutton','String','-');
-            obj.guihandles.(['rmInternalSetting_' num2str(number)]).Position = [280 0 20 20];
-            obj.guihandles.(['rmInternalSetting_' num2str(number)]).Callback = {@rmInternalSetting_callback, obj, num2str(number)};
+%             % Buttons for adding removing a row of setting
+%             obj.guihandles.(['addInternalSetting_' num2str(number)])=uicontrol(hsettings,'Style','pushbutton','String','+');
+%             obj.guihandles.(['addInternalSetting_' num2str(number)]).Position = [260 0 20 20];
+%             obj.guihandles.(['addInternalSetting_' num2str(number)]).Callback = {@addInternalSetting_callback, obj, num2str(number)};
+%             obj.guihandles.(['rmInternalSetting_' num2str(number)])=uicontrol(hsettings,'Style','pushbutton','String','-');
+%             obj.guihandles.(['rmInternalSetting_' num2str(number)]).Position = [280 0 20 20];
+%             obj.guihandles.(['rmInternalSetting_' num2str(number)]).Callback = {@rmInternalSetting_callback, obj, num2str(number)};
         end
 
         function rmguifromtab(obj,number)
@@ -800,6 +819,27 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             hConvert.ColumnFormat{3} = optionTarget;
             obj.guihandles.anchorConvert=hConvert;
         end
+
+        % Configure the visibility in response to certain change here
+        function parModelTab = setVisibility_compiledMode(obj, parModelTab)
+            visible_whenOn = {'modelname_CM','modelload_CM'};
+            visible_whenOff = {'modelname','modelload'};
+            switch obj.compiledMode
+                case 'on'
+                    visible = visible_whenOn;
+                    invisible = visible_whenOff;
+                case 'off'
+                    visible = visible_whenOff;
+                    invisible = visible_whenOn;
+            end
+            for k = 1:length(visible)
+                parModelTab.(visible{k}).Visible = 'on';
+            end
+            for k = 1:length(invisible)
+                parModelTab.(invisible{k}).Visible = 'off';
+            end
+        end
+
         % callback for loading
         function load_callback(obj,a,b,path2setting)
             % get the path of the saved info
@@ -933,6 +973,7 @@ switch layertitle
         mod2rm = allTabTitle{idxRmButton - 1};
         rmDone = 0;
         if strcmp(mod2rm, 'M1')
+            obj.setPar('status', 'this model cannot be removed (see warning)')
             warning(['There should be at least one model so ' mod2rm ' cannot be removed.'])
         else
             answer = questdlg(['Remove ' mod2rm '?'],...
@@ -1113,6 +1154,7 @@ for k = 1:length(fn)
     end
 end
 try
+    obj.updateGUI
     obj.updateLayer
 catch
     warning('Layer(s) is not updated.')
@@ -1193,15 +1235,36 @@ else
     dy=0;
 end
 pard.tab.tabmodel='Model';
+
 pard.modelname.object=struct('Style','edit','String','');
 pard.modelname.position=[3+dy,1];
 pard.modelname.Width=2;
 pard.modelname.tab=['tabmodel_' num2str(number)];
+pard.modelname.Visible = 'on';
 
 pard.modelload.object=struct('Style','pushbutton','String','load model','Callback',{{@loadmodel_callback,obj}});
 pard.modelload.position=[3+dy,3];
 pard.modelload.Width=1;
 pard.modelload.tab=['tabmodel_' num2str(number)];
+pard.modelload.Visible = 'on';
+
+fn = {};
+modelOptions = obj.getPar('modelOptions');
+if ~isempty(modelOptions)
+    fn = fieldnames(modelOptions);
+end
+fn = [fn; '[from a file...]'];
+pard.modelname_CM.object=struct('Style','popupmenu','String', {fn},'value', 1);
+pard.modelname_CM.position=[3+dy,1];
+pard.modelname_CM.Width=2;
+pard.modelname_CM.tab=['tabmodel_' num2str(number)];
+pard.modelname_CM.Visible = 'off';
+
+pard.modelload_CM.object=struct('Style','pushbutton','String','load model','Callback',{{@loadmodel_callback,obj}});
+pard.modelload_CM.position=[3+dy,3];
+pard.modelload_CM.Width=1;
+pard.modelload_CM.tab=['tabmodel_' num2str(number)];
+pard.modelload_CM.Visible = 'off';
 
 pard.modelType.object=struct('Style','popupmenu','String',{'Type'},'value', 1,'Callback',{{@modType_callback,obj,number}});
 pard.modelType.position=[3+dy,4];
@@ -1291,30 +1354,58 @@ function loadmodel_callback(a,b,obj)
 currentLoadedModel = obj.currentLoadedModel;
 if isempty(currentLoadedModel)
     modelnumber=(a.Parent.Parent.Parent.Title(2:end)); %hack to get the right tab
-    filter = {'*.m;*.mlx;*_img.mat;*.png','Supported formats (**.m,*.mlx,*_img.mat,*.png)';...
-        '*.m;*.mlx','Code files (*.m,*.mlx)'; ...
-        '*_img.mat','Matrix files (*_img.mat)'; ...
-        '*.png','Image files (*.png)'; ...
-        };
-    fnold=obj.guihandles.(['modelname_' modelnumber]).String;
-    if isempty(fnold)
-        [~,fnold] = LocMoFit.getModelList;
+    if ~isempty(obj.guihandles.(['modelname_CM_' modelnumber]).String)
+        modelOptions = obj.guihandles.(['modelname_CM_' modelnumber]).String;
+        modelSelected = modelOptions{obj.guihandles.(['modelname_CM_' modelnumber]).Value};
+    else
+        modelSelected = '';
     end
-    [f,p]=uigetfile(filter,'Select a geometric model',fnold);
-    if ~f %no model selected: return
-        disp('Cancelled by the user. No model loaded.')
-        return
+    if strcmp(obj.compiledMode,'off')||startsWith(modelSelected, '[')
+        filter = {'*.m;*.mlx;*_img.mat;*.png','Supported formats (**.m,*.mlx,*_img.mat,*.png)';...
+            '*.m;*.mlx','Code files (*.m,*.mlx)'; ...
+            '*_img.mat','Matrix files (*_img.mat)'; ...
+            '*.png','Image files (*.png)'; ...
+            };
+        if startsWith(modelSelected, '[')
+            if strcmp(modelSelected, '[from a file...]')
+                fnold = '';
+            else
+                fnold=modelSelected(2:end-1);
+            end
+        else
+            fnold = obj.guihandles.(['modelname_' modelnumber]).String;
+        end
+        if isempty(fnold)
+            [~,fnold] = LocMoFit.getModelList;
+        end
+        [f,p]=uigetfile(filter,'Select a geometric model',fnold);
+        if ~f %no model selected: return
+            obj.setPar('status','no model loaded')
+            disp('Cancelled by the user. No model loaded.')
+            return
+        end
+        if startsWith(modelSelected, '[')
+            toAdd = ['[' p f ']'];
+            idxToAdd = find(strcmp(toAdd, obj.guihandles.(['modelname_CM_' modelnumber]).String));
+            if ~isempty(idxToAdd)
+                obj.guihandles.(['modelname_CM_' modelnumber]).Value = idxToAdd;
+            else
+                obj.guihandles.(['modelname_CM_' modelnumber]).String{end+1}=['[' p f ']'];
+                obj.guihandles.(['modelname_CM_' modelnumber]).Value = length(obj.guihandles.(['modelname_CM_' modelnumber]).String);
+            end
+        else
+            obj.guihandles.(['modelname_' modelnumber]).String=[p f];
+        end
     end
-    obj.guihandles.(['modelname_' modelnumber]).String=[p f];
 else
     modelnumber = currentLoadedModel;
 end
 % If the model is loaded from a saved file, then skip addModel and load the
 % model obj from the file, otherwise create a new obj.
 if obj.getPar('loading')
-    initmodel(obj, modelnumber,'skipAddModel',true);
+    initmodel(obj, modelnumber,'skipAddModel',true, 'compiledMode', obj.compiledMode);
 else
-    initmodel(obj, modelnumber);
+    initmodel(obj, modelnumber, 'compiledMode', obj.compiledMode);
 end
 
 % Update the model type options.
@@ -1336,6 +1427,7 @@ obj.guihandles.(['modelType_' modelnumber]).Value = indType;
 
 % Update the layers in use.
 obj.updateLayer;
+obj.setPar('status', 'model successfully loaded')
 end
 
 %    Initiate the model
@@ -1344,6 +1436,7 @@ function initmodel(obj, modelnumber,varargin)
 % Initiate the function.
 p = inputParser;
 addParameter(p, 'skipAddModel',false)
+addParameter(p, 'compiledMode','off')
 parse(p,varargin{:});
 results = p.Results;
 fitter = obj.fitter;
@@ -1352,25 +1445,50 @@ modPath = obj.guihandles.(['modelname_' modelnumber]).String;
 if ~strcmp(modPath,'Loaded')&&~results.skipAddModel
     
     %% Decide which subclass of the SMLMModel to use based on the input model.
-    [filePath, modelFun, ext] = fileparts(obj.guihandles.(['modelname_' modelnumber]).String);
-    
-    % Add the root of the model script as a path
-    
-    %     modelFun = str2func(modelFun);
-    %     tempModelObj = modelFun();
-    if ismember(ext,{'.png', '.bmp', '.tif', '.tiff'}) || (strcmp(ext,{'.mat'}) && endsWith(modelFun,'_img'))
-        if strcmp(ext, '.mat')
-            img = load(modPath,'img');
-            img = img.img;
-        else
-            img = imread(modPath);
-        end
-        geoModeltemp = imageModel(img);
-    else
-        addpath(filePath);
-        geoModeltemp = functionModel(modPath);
+    switch results.compiledMode
+        case 'off'
+            lFromFile = true;
+            fileSource = modPath;
+        case 'on'
+            modelOptions = obj.guihandles.(['modelname_CM_' modelnumber]).String;
+            idxModelSeleted = obj.guihandles.(['modelname_CM_' modelnumber]).Value;
+            modelSeleted = modelOptions{idxModelSeleted};
+            if startsWith(modelSeleted,'[')
+                lFromFile = true;
+                fileSource = modelSeleted(2:end-1);
+                modPath = fileSource;
+            else
+                lFromFile = false;
+            end
     end
     
+    if lFromFile
+        [filePath, modelFun, ext] = fileparts(fileSource);
+
+        % Add the root of the model script as a path
+
+        %     modelFun = str2func(modelFun);
+        %     tempModelObj = modelFun();
+        if ismember(ext,{'.png', '.bmp', '.tif', '.tiff'}) || (strcmp(ext,{'.mat'}) && endsWith(modelFun,'_img'))
+            if strcmp(ext, '.mat')
+                img = load(modPath,'img');
+                img = img.img;
+            else
+                img = imread(modPath);
+            end
+            geoModeltemp = imageModel(img);
+        else
+            addpath(filePath);
+            geoModeltemp = functionModel(modPath);
+        end
+    else
+        oneGuiHandle = obj.guihandles.(['modelname_CM_' modelnumber]);
+        ind = oneGuiHandle.Value;
+        modelName = oneGuiHandle.String{ind};
+        modelOptions = obj.getPar('modelOptions');
+        geoModeltemp = functionModel(copy(modelOptions.(modelName)));
+    end
+
     if isempty(obj.locData.loc)
         % When there is not localizations, assuming the user is loading the
         % geometric model for simulations.
@@ -1407,12 +1525,21 @@ obj.fitter = fitter;
 hSettingTable=obj.guihandles.(['settingstable_' modelnumberStr]); %handle of table
 hSettingTable.CellEditCallback = {@settingTable_cellEditCallback,obj, modelnumber};
 
-if isempty(fitter.getModelInternalSettingList(modelnumber))
+modelInternalSetting = fitter.getModelInternalSettingList(modelnumber);
+if isempty(modelInternalSetting)
     hSettingTable.ColumnFormat{1} = [];
+    hSettingTable.Data = {};
 else
     % !!!200528: I was asked to input a row vector instead of column. Keep this in
     % mind if things happend again.
-    hSettingTable.ColumnFormat{1} = cellstr(fitter.getModelInternalSettingList(modelnumber))';
+    hSettingTable.Data = {};
+    hSettingTable.Data(:,1) = cellstr(modelInternalSetting)';
+    for k = length(modelInternalSetting):-1:1
+        hSettingTable.Data{k,2} = fitter.getModelInternalSetting(modelnumber,modelInternalSetting{k});
+    end
+    hSettingTable.ColumnEditable = [false true];
+    hSettingTable.ColumnWidth = {150 50};
+%     hSettingTable.
 end
 
 % Update the convert tab.

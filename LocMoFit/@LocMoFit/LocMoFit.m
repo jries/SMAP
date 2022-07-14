@@ -1117,19 +1117,13 @@ classdef LocMoFit<matlab.mixin.Copyable
             fn = fieldnames(obj.advanceSetting);
             for k = 1:length(fn)
                 switch fn{k}
-                    case 'compiledMode'
+%                     case 'compiledMode'
 %                         val = obj.getAdvanceSetting('compiledMode');
 %                         obj.compiledMode(val);
                     otherwise
                         % do nothing
                 end
             end
-        end
-        %% compiled mode related
-        function compiledMode(obj)
-            [modelList,folder_model] = LocMoFit.getModelList;
-            % To-do:
-            % load all the models as objects.
         end
 
         %% Site registration
@@ -1796,8 +1790,9 @@ classdef LocMoFit<matlab.mixin.Copyable
             folder_LocMoFit = fileparts(path_LocMoFit);
             folder_LocMoFit = replace(folder_LocMoFit, '@LocMoFit', '');
             folder_model = [folder_LocMoFit 'models' filesep];
-            modelList = cellstr(ls(folder_model));
-            modelList = modelList(3:end);
+            fileList = dir([folder_model '*.m']);
+            modelList = {fileList.name};
+            modelList = regexprep(modelList, '(.m)$', '');
         end
     end
     events

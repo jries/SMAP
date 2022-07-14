@@ -20,6 +20,7 @@ classdef geometricModel<matlab.mixin.Copyable
         modelType            % selected model type
         modelTypeOption      % possible model types of a specific geometric model
         dimension            % a scalar indicating the dimensionality of the model. Either 2 or 3.
+        listed = false       % whether this model will be listed in the GUI.
     end
     properties (Hidden)
         parsArgName = {'name', 'fix', 'value', 'lb', 'ub', 'min', 'max'}';
@@ -41,6 +42,9 @@ classdef geometricModel<matlab.mixin.Copyable
                 p.addParameter('Parent', [])
                 parse(p,varargin{:});
                 obj.ParentObject = p.Results.Parent;
+            end
+            if isempty(obj.listed)
+                obj.listed = false;
             end
         end
         function setInternalSettings(obj,settingName,value)
