@@ -1,7 +1,7 @@
 %plot 3D tracks, export movie.
 %get ind of tracks
 frametime=1; %real t ime
-
+markersred=12;
 siten=8;
 viewpoint=[-58 30];
 xlimind=2;
@@ -62,7 +62,7 @@ plot3(ax,ax.XLim(xlimind)*[1 1], ax.YLim(ylimind)*[1 1], ax.ZLim,'k')
 
 tp=[640 2700 -50];
 cxo=[1,0.2,0.2];
-clear Fr
+clear Fr c
 c{1}=[0,0,1];
 cs{1}=[0.5,0.5,1];
 
@@ -91,11 +91,12 @@ for k=1:length(ts)
     hz=plot3(ax,xh,yh,0*zh+ax.ZLim(1),'Color',cs{tr});
     hy=plot3(ax,xh,0*yh+ax.YLim(ylimind),zh,'Color',cs{tr});
     hx=plot3(ax,0*xh+ax.XLim(xlimind),yh,zh,'Color',cs{tr});
-    hd=plot3(ax,xh(end),yh(end),zh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
 
-    hzo=plot3(ax,xh(end),yh(end),1+ax.ZLim(1),'o','MarkerFaceColor',cxo,'MarkerSize',15);
-    hyo=plot3(ax,xh(end),-1+ax.YLim(ylimind),zh(end),'o','MarkerFaceColor',cxo,'MarkerSize',15);
-    hxo=plot3(ax,1+ax.XLim(xlimind),yh(end),zh(end),'o','MarkerFaceColor',cxo,'MarkerSize',15);
+    hd=plot3(ax,xh(end),yh(end),zh(end),'ro','MarkerFaceColor','r','MarkerSize',markersred);
+
+    hzo=plot3(ax,xh(end),yh(end),1+ax.ZLim(1),'o','MarkerFaceColor',cxo,'MarkerSize',markersred);
+    hyo=plot3(ax,xh(end),-1+ax.YLim(ylimind),zh(end),'o','MarkerFaceColor',cxo,'MarkerSize',markersred);
+    hxo=plot3(ax,1+ax.XLim(xlimind),yh(end),zh(end),'o','MarkerFaceColor',cxo,'MarkerSize',markersred);
 
 
     grid(ax,'on')
