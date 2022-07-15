@@ -71,7 +71,11 @@ function plotFreeRot(obj, varargin)
         end
         guihandles.playback = uicontrol(uip ,'Style','pushbutton','String','|>','Position',[3.8 1 0.3 1],'Callback',{@playback_callBack,obj,ax,locs,results,bg, guihandles.section},'Enable',lEnable);
         guihandles.timeLine = uicontrol(uip ,'Style','slider','Position',[4.1 1 0.9 1],'Callback',{@timeLine_callBack,obj,ax,locs, results,bg, guihandles.section, guihandles.section},'Enable',lEnable);
-        
+        if ~isfield(obj.display, 'plotFreeRot')
+            obj.display.plotFreeRot.disable = 0;
+            obj.display.plotFreeRot.target2Render = 'Model';
+            obj.display.plotFreeRot.View = [0 0];
+        end
         if isfield(obj.display.plotFreeRot, 'target2Render')
             switch obj.display.plotFreeRot.target2Render
                 case 'Model'

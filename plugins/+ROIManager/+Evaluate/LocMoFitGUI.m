@@ -1547,6 +1547,16 @@ hConvert = obj.guihandles.anchorConvert;
 optionTarget = unique([hConvert.ColumnFormat{3} parId]);
 hConvert.ColumnFormat{3} = optionTarget;
 obj.guihandles.anchorConvert=hConvert;
+
+% Update the model options
+if results.skipAddModel
+    path_model = obj.guihandles.(['modelname_' modelnumberStr]).String;
+    if ~isempty(path_model)
+        modelOptions = obj.guihandles.(['modelname_CM_' modelnumberStr]).String;
+        obj.guihandles.(['modelname_CM_' modelnumberStr]).String = [modelOptions;['[' path_model ']']];
+        obj.guihandles.(['modelname_CM_' modelnumberStr]).Value = length(modelOptions)+1;
+    end
+end
 end
 
 % Enable settings
@@ -1568,10 +1578,8 @@ elseif isequal(modelType, 'continuous')||isequal(modelType, 'background')
 else
     % for discrete/discretized models
     obj.guihandles.(['layer_' modelnumber]).Enable = 'on';
-    obj.guihandles.(['pixelsizefit_' modelnumber]).Enable = 'off';
+    obj.guihandles.(['pixelsizefit_' modelnumber]).Enable = 'on';
     obj.guihandles.(['pixelsizefit_' modelnumber]).String = 1;
-    obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'off';
-    obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'on';
     
     % for point models, user can choose to set sigma or sigma factor
     % here create the UI for the selection based on radiobutton
@@ -1586,6 +1594,14 @@ else
     obj.guihandles.(['useSigmaFactor_' modelnumber]).Position = [0 32 15 15]; %! the 32 here is used as an flag for the callback 'sigmaOrFactor_SeChangedFcn'
     obj.guihandles.(['useSigma_' modelnumber]).Parent = obj.guihandles.(['sigmaOrFactor_' modelnumber]);
     obj.guihandles.(['useSigma_' modelnumber]).Position = [0 7 15 15];
+
+    if obj.guihandles.(['useSigma_' modelnumber]).Value
+        obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'off';
+        obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'on';
+    else
+        obj.guihandles.(['sigma_fit_' modelnumber]).Enable = 'on';
+        obj.guihandles.(['sigmaFactor_fit_' modelnumber]).Enable = 'off';
+    end
 end
 obj.guihandles.(['modelType_' modelnumber]).Enable = 'on';
 end
