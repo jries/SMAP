@@ -31,14 +31,22 @@ if isfield(p,'sr_layersseparate')&&~isempty(p.sr_layersseparate)&&p.sr_layerssep
 end
 
 if strcmpi('tiff', p.rendermode.selection)%obj.locData.files.file(p.ch_filelist.value).istiff
-    file=locs.files.file;
+    if myisfield(locs,'files')
+        file=locs.files.file;
+    else
+        file=[];
+    end
     imageo=tif2srimage(file,p);
     imageo.istiff=1;
     return
 end
 
 if strcmpi('raw', p.rendermode.selection) %obj.locData.files.file(p.ch_filelist.value).istiff
-    file=locs.files.file;
+    if myisfield(locs,'files')
+        file=locs.files.file;
+    else
+        file=[];
+    end
     imageo=tif2srimage(file,p,'raw');
     imageo.istiff=1;
     return

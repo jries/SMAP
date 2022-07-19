@@ -13,14 +13,19 @@ classdef MotorPAINT<interfaces.DialogProcessor
         function out=run(obj,p)  
             out=[];
 
-            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','time'},'layer',1,'Position','fov');
+            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','znm','time'},'layer',1,'Position','fov');
             findin=find(indin);
             gn=unique(locs.groupindex(locs.numberInGroup>=p.minlen));
+            isz=~isempty(locs.znm);
             
             locsout.xnm=[];
             locsout.ynm=[];
+            
             locsout.frame=[];
             locsout.tracklength=[];locsout.tracknumber=[];locsout.trackangle=[];
+            if isz
+                locsout.znm=[];
+            end
             tind=1;
             t=tic;
             
@@ -32,6 +37,14 @@ classdef MotorPAINT<interfaces.DialogProcessor
             end
             for k=1:length(gn)
                 indh=locs.groupindex==gn(k);
+
+                if p.skipfirst>0
+                    outn=find(indh,p.skipfirst,'first');
+                    indh(outn)=false;
+                end
+                if sum(indh)<p.minlen
+                    continue
+                end
                 
                 x=locs.xnm(indh);
                 y=locs.ynm(indh);
@@ -52,8 +65,15 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 p.stepfunction=p.stepfunctionm.selection; 
 
                 [xr,yr,angle]=rotateCenterCoordinates(x,y,time);
+                switch p.smoothingfunction.selection
+                    case 'simple smooth'
+                        istep=smoothtrackind(xr,p);
+                    case 'step finder'
+                         istep=findstepsMINFLUX(xr,p);
+                end
 %                 try
-                istep=findstepsMINFLUX(xr,p);
+               
+                
 %                 catch err
 %                     err
 %                     rethrow(err)
@@ -71,7 +91,16 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 locsout.tracklength(end+1:end+length(xs))=single(ones(size(xs))*tracklength);
                 locsout.tracknumber(end+1:end+length(xs))=single(ones(size(xs))*gn(k));
                 locsout.trackangle(end+1:end+length(xs))=single(ones(size(xs))*angle);
+                if isz
+                    z=locs.znm(indh);
+                    zs=stepvalue(z,istep);
+                    locsout.znm(end+1:end+length(zs))=single(zs);
+                    zsall{tind}=zs;
+                    zrawall{tind}=z;
+                end
+
                 xsall{tind}=xs;ysall{tind}=ys;
+                xrawall{tind}=x;yrawall{tind}=y;
                 angleall(tind)=angle;
                 tind=tind+1;
 
@@ -89,12 +118,14 @@ classdef MotorPAINT<interfaces.DialogProcessor
             [~, filename]=fileparts(obj.locData.files.file(1).name);
             obj.locData.addfile(['tracks_s' num2str(p.splitmergestep) '_' num2str(obj.locData.files.filenumberEnd) '_' filename]);
             % obj.locData.files.file(end).info.simulationParameters=obj.getGuiParameters;
+            if p.addtracks
             obj.locData.addLocData(locsout);
 
             obj.locData.filter
             %            try
             initGuiAfterLoad(obj);
             obj.locData.filter
+            end
 
             ax=obj.initaxis('tracks');
             hold(ax,'off')
@@ -104,6 +135,8 @@ classdef MotorPAINT<interfaces.DialogProcessor
             end
             axis(ax,"equal")
             axis(ax,"ij")
+            ax.XLim=axall.XLim;
+            ax.YLim=axall.YLim;
 
             axc=obj.initaxis('angle');
             cmap=hsv(256);
@@ -115,6 +148,31 @@ classdef MotorPAINT<interfaces.DialogProcessor
             end
             axis(axc,"equal")
             axis(axc,"ij")
+            axc.XLim=axall.XLim;
+            axc.YLim=axall.YLim;
+            if isz
+                ax3Dt=obj.initaxis('track 3D');
+                plot3Dtracks(ax3Dt,xsall,ysall,zsall,[-100 100 -100])
+
+                ax3Dtr=obj.initaxis('track 3D raw');
+                hold(ax3Dtr,'off')
+                skipfirst=10;
+                c=jet(length(xrawall));
+                for tr=1:length(xrawall)
+                    xh=xrawall{tr}(skipfirst+1:end);
+                    yh=yrawall{tr}(skipfirst+1:end);
+                    zh=zrawall{tr}(skipfirst+1:end);
+
+                    hl=plot3(ax3Dtr,xh,yh,zh,'Color',c(tr,:),'LineWidth',.5);
+                    hold(ax3Dtr,'on')
+
+                end
+                axis(ax3Dtr,'tight')
+                axis(ax3Dtr,'equal');
+                view(ax3Dtr,70,27)
+                
+
+            end
 
         end
         function pard=guidef(obj)
@@ -155,6 +213,11 @@ pard.splitmergestep.object=struct('String','8','Style','edit');
 pard.splitmergestep.position=[2,2.5];
 pard.splitmergestep.Width=0.5;
 
+
+pard.smoothingfunction.object=struct('String',{{'step finder','simple smooth'}},'Style','popupmenu');
+pard.smoothingfunction.position=[2,3];
+pard.smoothingfunction.Width=2;
+
 pard.coarsenesst.object=struct('String','Coarseness','Style','text');
 pard.coarsenesst.position=[3,1];
 pard.coarsenesst.Width=1.5;
@@ -169,6 +232,16 @@ pard.stepfunctionm.object=struct('String',{{'mean','median'}},'Style','popupmenu
 pard.stepfunctionm.position=[3,4.];
 pard.stepfunctionm.Width=1;
 
+pard.skipfirstt.object=struct('String','Skip first:','Style','text');
+pard.skipfirstt.position=[4,1];
+pard.skipfirstt.Width=1.5;
+pard.skipfirst.object=struct('String','0','Style','edit');
+pard.skipfirst.position=[4,2.5];
+pard.skipfirst.Width=0.5;
+
+pard.addtracks.object=struct('String','Add tracks','Style','checkbox','Value',1);
+pard.addtracks.position=[5,1];
+pard.addtracks.Width=2;
 
 pard.plugininfo.description=sprintf('');
 pard.plugininfo.type='ProcessorPlugin';

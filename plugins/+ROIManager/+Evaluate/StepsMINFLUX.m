@@ -8,6 +8,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         coord
         range
         index
+        stats
     end
     methods
         function obj=StepsMINFLUX(varargin)        
@@ -22,6 +23,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                 end
                 if isfield(obj.site.evaluation.(obj.name),'range')
                     obj.range=out.range;
+                else
+                    obj.range=[];
                 end                
            end
 
@@ -51,8 +54,25 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                z=[];
            end
 
-           %find direction     
-           [xr,yr]=rotateCenterCoordinates(x,y,time);
+           [xr,yr,angle]=rotateCenterCoordinates(x,y,time,obj.range);
+            if p.filtertrack
+                zf=z;
+                windowsize=p.filterwindow;
+                xf=runningWindowAnalysis(time,x,time,windowsize,p.filtermode.selection);     
+                yf=runningWindowAnalysis(time,y,time,windowsize,p.filtermode.selection);  
+                if ~isempty(z)
+                    zf=runningWindowAnalysis(time,z,time,windowsize,p.filtermode.selection);  
+                end
+%                 plot(axx,timeplot,xf,'b');
+                [xfr,yfr,angle]=rotateCenterCoordinates(xf,yf,time,obj.range,angle);
+            else
+                
+                xfr=[]; yfr=[]; zf=[];
+            end
+
+
+           
+
 %            c = cov(x-mean(x), y-mean(y));
 %            [a, ev] = eig(c);
 %            [ev,ind] = sort(diag(ev));
@@ -63,22 +83,69 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
 %            if mean(time(indx))>mean(time(~indx)) %increasing position with time
 %                xr=-xr;
 %            end
+            
+%            xr=x;yr=y;  %XXXX to not rotate
 
            obj.coord.xr=xr;obj.coord.yr=yr;obj.coord.time=time;obj.coord.timeplot=time-min(time);
-           obj.coord.z=z;
+           obj.coord.x=x;obj.coord.y=y;obj.coord.xfr=xfr;obj.coord.yfr=yfr;
+           obj.coord.z=z;  obj.coord.zf=zf;
           
            if  isempty(obj.steps)
                refit(0,0,obj,1)
            end
            caluclatestepparameters(obj, obj.steps.indstep);
            plotsteps(obj)
+           out=obj.site.evaluation.(obj.name);
 
-           out.statall=caluclatestatistics(obj,index);
-           out.stattrack=caluclatestatistics(obj,index,obj.coord.indtime);
+           out.statall=calculatestatistics(obj,index);
+           out.stattrack=calculatestatistics(obj,index,obj.coord.indtime);
 
            filelist=obj.getPar('filelist_short');
            out.filename=filelist.String{mode(locs.filenumber)};
+           
            plotstatistics(obj)
+        end
+        function updateroiposition(obj,a,b)
+            %catch delete and add vertex!!!
+            oldtime=b.PreviousPosition(:,1);
+            newtime=b.CurrentPosition(:,1);
+           movedvertex= find(oldtime ~= newtime);
+            timemoved=newtime(movedvertex);
+            [~,newind]=min((obj.coord.timeplot(obj.coord.indtime)-timemoved).^2);
+            if (movedvertex== 1 || newind>obj.steps.indstep(movedvertex-1)) && (movedvertex== length(obj.steps.indstep) ||newind<obj.steps.indstep(movedvertex+1))
+                obj.steps.indstep(movedvertex)=newind;
+                obj.steps.steptime(movedvertex)=timemoved;
+                caluclatestepparameters(obj,obj.steps.indstep)
+            end
+            manualcurate(obj)
+        end
+        function addvertexroi(obj,a,b)
+            %catch delete and add vertex!!!
+            oldtime=obj.steps.steptime;
+            newtime=a.Position(:,1);
+            ind=find(oldtime~=newtime(1:end-1),1,'first');
+            if isempty(ind)
+                [~,newind]=min((obj.coord.timeplot(obj.coord.indtime)-newtime(end)).^2);
+                newsteps = [obj.steps.indstep;newind];
+            else
+                [~,newind]=min((obj.coord.timeplot(obj.coord.indtime)-newtime(ind)).^2);
+                newsteps=[obj.steps.indstep(1:ind-1); newind ;obj.steps.indstep(ind:end)];
+            end
+            caluclatestepparameters(obj,newsteps)
+            manualcurate(obj)
+        end
+        function deletevertexroi(obj,a,b)
+            oldtime=obj.steps.steptime;
+            newtime=a.Position(:,1);
+            ind=find(oldtime(1:end-1)~=newtime,1,'first');
+            if isempty(ind)
+                newsteps=obj.steps.indstep(1:end-1);
+            else
+                newsteps=[obj.steps.indstep(1:ind-1); obj.steps.indstep(ind+1:end)];
+            end
+
+            caluclatestepparameters(obj,newsteps)
+            manualcurate(obj)    
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -86,6 +153,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
     end
 
 end
+
 
 function plotstatistics(obj)
 index=obj.index;
@@ -153,7 +221,7 @@ if ~isempty(obj.locData.loc.(field))
 end
 end
 
-function out=caluclatestatistics(obj,indexin,indind)
+function out=calculatestatistics(obj,indexin,indind)
 if islogical(indexin)
     indexin=find(indexin);
 end
@@ -178,6 +246,19 @@ out.tracktime=max(time)-min(time);
 xh=obj.coord.xr(indind);
 out.tracklength=xh(end)-xh(1);
 out.velocity=out.tracklength/out.tracktime;
+
+out.stdall.x=sqrt(sum(obj.steps.std.x.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+out.stdall.y=sqrt(sum(obj.steps.std.y.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+out.stdalldet.x=sqrt(sum(obj.steps.stddetrend.x.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+out.stdalldet.y=sqrt(sum(obj.steps.stddetrend.y.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+
+if ~isempty(obj.coord.xfr)
+    out.stdall.xf=sqrt(sum(obj.steps.std.xf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+    out.stdall.yf=sqrt(sum(obj.steps.std.yf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+    out.stdalldet.xf=sqrt(sum(obj.steps.stddetrend.xf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+    out.stdalldet.yf=sqrt(sum(obj.steps.stddetrend.yf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+end
+obj.stats=out;
 end
 
 function refit(a,b,obj,what)
@@ -222,6 +303,7 @@ plotsteps(obj)
 end
 
 function plotsteps(obj)
+ff='%2.1f';
 try
 dcm_obj = datacursormode(obj.axstep.Parent.Parent.Parent);
 info=dcm_obj.getCursorInfo;
@@ -230,8 +312,20 @@ catch err
 end
 ax2=obj.setoutput('steps_x');
 hold(ax2,'off')
-plot(ax2,obj.coord.timeplot,obj.coord.xr,'HitTest','off');
-hold(ax2,'on')
+if ~isempty(obj.coord.xfr)
+    plot(ax2,obj.coord.timeplot,obj.coord.xr,'LineWidth',0.25,'Color',[1 1 1]*0.7,'HitTest','off');
+    hold(ax2,'on')
+    plot(ax2,obj.coord.timeplot,obj.coord.xfr,'k','HitTest','off');
+    
+    sxdetrend=std(diff(obj.coord.xr))/sqrt(2);sxfdetrend=std(diff(obj.coord.xfr))/sqrt(2);
+    title(ax2,['std(x) detrend = ' num2str(sxdetrend,ff) ' nm.' ' std(xf) detrend = ' num2str(sxfdetrend,ff) ' nm.' ' std_s(x) = ' num2str(obj.stats.stdall.x,ff) ' nm.' ' std_sf(x) = ' num2str(obj.stats.stdall.xf,ff) ' nm.'])
+
+else
+    plot(ax2,obj.coord.timeplot,obj.coord.xr,'k','HitTest','off');
+    hold(ax2,'on')
+end
+
+
 xlabel(ax2,'time (ms)')
 ylabel(ax2,'position (nm)')
 if ~isempty(obj.range)
@@ -249,14 +343,20 @@ m = uimenu(cm,'Text','Menu1');
 cm.ContextMenuOpeningFcn = @(src,event)disp('Context menu opened');
 hstep.ContextMenu = cm;
 dmv=diff(mv);
-for k=1:length(dmv)
-    text(ax2,(obj.steps.steptime(k+1)),mean(mv(k:k+1)),num2str(dmv(k),'%2.1f'),'FontSize',10,'Color','magenta','HitTest','off')
-end
+% for k=1:length(dmv)
+%     text(ax2,(obj.steps.steptime(k+1)),mean(mv(k:k+1)),num2str(dmv(k),'%2.1f'),'FontSize',10,'Color','magenta','HitTest','off')
+% end
+
+showvalues(obj,ax2,obj.steps.steptime(2:end),(mv(1:end-1)+mv(2:end))/2,dmv);
+
+
 obj.axstep=ax2;
 
 if ~isempty(info)
     datatip(hstep,info.Position(1),info.Position(2));
 end
+
+
 %xy plot
 goff=median(mod(obj.steps.stepvalue,16),'omitnan');
 axxy=obj.setoutput('xy');
@@ -266,12 +366,18 @@ axis(axxy,'equal')
 xlabel(axxy,'x (nm)')
 ylabel(axxy,'y (nm)')
 hold(axxy,'on')
-scatter(axxy,obj.steps.stepvalue-goff,obj.steps.possteps.y,'k')
+
+if ~isempty(obj.coord.xfr)
+plot(axxy, obj.coord.xfr-goff, obj.coord.yfr,'k')
+end
+
+
+scatter(axxy,obj.steps.stepvalue-goff,obj.steps.possteps.y,'r')
 grid(axxy,'on')
 axm=-16:-16:axxy.XLim(1);
 axxy.XTick=[axm(end:-1:1) 0:16:axxy.XLim(2)];
 axxy.YTick=round((axxy.YLim(1):6:axxy.YLim(2))/6)*6;
-ff='%2.1f';
+
 sigmax=std(obj.coord.xr);sigmay=std(obj.coord.yr);
 sxdetrend=std(diff(obj.coord.xr))/sqrt(2);sydetrend=std(diff(obj.coord.yr))/sqrt(2);
 [~, sxrobust]=robustMean(obj.coord.xr); [~, syrobust]=robustMean(obj.coord.yr);
@@ -299,7 +405,8 @@ if ~isempty(obj.coord.z)
 %     ax3D.DataAspectRatio=[1 1 1];
 
     grid(ax3D,'on')
-
+    szdetrend=std(diff(obj.coord.z))/sqrt(2);
+    title(ax3D,['std_z(detrend) = ' num2str(szdetrend,ff)]);
 end
 
 axsy=obj.setoutput('steps_y');
@@ -320,6 +427,29 @@ axstept=obj.setoutput('dwelltime');
 dt=max(0.1,round(mean(obj.steps.dwelltime)/5));
 histogram(axstept,obj.steps.dwelltime,0:dt:max(obj.steps.dwelltime))
 title(axstept,"mean step time = "+ num2str(mean(obj.steps.dwelltime),'%2.1f') + " ms");
+end
+
+%correlation
+axcc=obj.setoutput('correlation');
+x=obj.coord.xr(obj.coord.indtime);
+h=histcounts(x,min(x):1:max(x));
+xc=myxcorr(h,h);
+plot(axcc,xc);
+xlabel(axcc,'delta x (nm)');
+ylabel(axcc,'auto corr')
+
+end
+
+function h=showvalues(obj,ax,x,y,val,space)
+if ~obj.getSingleGuiParameter('showtext')
+    h=[];
+    return
+end
+if nargin<6
+    space='';
+end
+for k=length(val):-1:1
+    h(k)=text(ax,x(k),y(k),[space num2str(val(k),'%2.0f')],'FontSize',10,'Color','magenta','HitTest','off');
 end
 end
 
@@ -458,6 +588,23 @@ end
 %     istep(insertind+1)=istep(insertind+1)+1;
 % end
 % 
+function manualcurate(obj)
+f=figure(234);
+ax=gca;
+hold(ax,'off')
+plot(ax,obj.coord.timeplot(obj.coord.indtime),obj.coord.xr(obj.coord.indtime),'k','HitTest','off')
+hold(ax,'on')
+
+stairs(ax,obj.steps.steptime,obj.steps.stepvalue,'r','LineWidth',2,'HitTest','off')
+stepv2=[obj.steps.stepvalue(1);(obj.steps.stepvalue(2:end)+obj.steps.stepvalue(1:end-1))/2];
+showvalues(obj,ax,obj.steps.steptime(2:end),stepv2(2:end),diff(obj.steps.stepvalue),'    ');
+roi=images.roi.Polyline(ax,'Position',horzcat(obj.steps.steptime,stepv2),'LineWidth',1,'Color','y');
+addlistener(roi,'ROIMoved',@obj.updateroiposition);
+addlistener(roi,'VertexAdded',@obj.addvertexroi);
+addlistener(roi,'VertexDeleted',@obj.deletevertexroi);
+end
+
+
 function [sval,istep]=removestep(sval,istep,insertind)
 if insertind+1<=length(istep)
     istep(insertind+1)=round((istep(insertind)+istep(insertind+1))/2);
@@ -467,6 +614,9 @@ end
 end
 
 function splitmerge(a,b,obj,what)
+manualcurate(obj)
+return
+
 dcm_obj = datacursormode(obj.axstep.Parent.Parent.Parent);
 info=dcm_obj.getCursorInfo;
 if isempty(info)
@@ -504,8 +654,11 @@ obj.coord.indtime=indtime;
 mfun=str2func(obj.getSingleGuiParameter('fitmode').selection);
 x=obj.coord.xr(indtime);
 y=obj.coord.yr(indtime);
+
+
+
 tv=obj.coord.timeplot(indtime);  
-stepv=stepvalue(x,stepindex,mfun);
+[stepv,nval]=stepvalue(x,stepindex,mfun);
 steps.indstep=stepindex;
 steps.steptime=tv(stepindex);
 steps.stepvalue=stepv;
@@ -515,6 +668,8 @@ steps.possteps.y=stepvalue(y,stepindex,mfun);
 if ~isempty(obj.coord.z)
     z=obj.coord.z(indtime);
     steps.possteps.z=stepvalue(z,stepindex,mfun);
+    steps.std.z=stepvalue(z,stepindex,@std);
+    steps.stddetrend.z=stepvalue(diff(z),stepindex,@std)/sqrt(2);
 end
 steps.possteps.time=tv(stepindex);
 steps.dwelltime=diff(steps.steptime);
@@ -522,23 +677,62 @@ if isfield(obj.site.evaluation,obj.name)
     out=obj.site.evaluation.(obj.name);
 end
 
+%calculate statistics:
+steps.std.x=stepvalue(x,stepindex,@std);
+steps.std.y=stepvalue(y,stepindex,@std);
+
+steps.stddetrend.x=stepvalue(diff(x),stepindex,@std)/sqrt(2);
+steps.stddetrend.y=stepvalue(diff(y),stepindex,@std)/sqrt(2);
+
+if ~isempty(obj.coord.xfr)
+    xf=obj.coord.xfr(indtime);
+    yf=obj.coord.yfr(indtime);
+
+    steps.std.xf=stepvalue(xf,stepindex,@std);
+    steps.std.yf=stepvalue(yf,stepindex,@std);
+    
+    steps.stddetrend.xf=stepvalue(diff(xf),stepindex,@std)/sqrt(2);
+    steps.stddetrend.yf=stepvalue(diff(yf),stepindex,@std)/sqrt(2);
+end
+
+steps.numlocsstep=nval;
 out.steps=steps;
 obj.steps=steps;
-out.statall=caluclatestatistics(obj,obj.index);
-out.stattrack=caluclatestatistics(obj,obj.index,obj.coord.indtime);
+out.statall=calculatestatistics(obj,obj.index);
+out.stattrack=calculatestatistics(obj,obj.index,obj.coord.indtime);
 out.range=obj.range;
 obj.site.evaluation.(obj.name)=out;
+
+
+
 end
 
 function makemovie(a,b,obj)
-time=obj.coord.timeplot;
+plotsimple=obj.getSingleGuiParameter('simplemovie');
+indt=obj.coord.indtime;
+time=obj.coord.timeplot(indt);
 frametime=obj.getSingleGuiParameter('frametime');
 if isempty(frametime)
     frametime=mode(diff(time));
 end
 
-x=obj.coord.xr;
-y=obj.coord.yr;
+x=obj.coord.xr(indt);
+y=obj.coord.yr(indt);
+
+% % XXXXXX 
+% nmax=500;
+% nmin=10;
+% x=x(nmin:nmax);y=y(nmin:nmax);time=time(nmin:nmax);
+if obj.getSingleGuiParameter('filtertrack')
+    fw=obj.getSingleGuiParameter('filterwindow');
+    fmode=obj.getSingleGuiParameter('fitmode').selection;
+    timen=min(time):fw:max(time);
+    xx=bindata(time,x,timen,fmode);
+    yy=bindata(time,y,timen,fmode);
+    x=xx;y=yy;time=timen;
+end
+
+
 ts=min(time):frametime:max(time);
 f=figure(99);
 f.Position(1)=1;f.Position(3)=1280;
@@ -547,11 +741,12 @@ ax=gca;
 delete(ax.Children)
 
 axis(ax,'equal');
+axis(ax,'ij');
 
 xlim(ax,[min(x)-10 max(x)+10])
 ylim(ax,[min(y)-10 max(y)+10])
 hold(ax,'on')
-plot(ax,[min(x)-5 min(x)+10-5], [min(y)-5 min(y)-5],'k','LineWidth',3)
+plot(ax,[min(x)-5 min(x)+10-5], [max(y) max(y)],'k','LineWidth',3)
 ax.XTick=[];
 ax.YTick=[];
 for k=1:length(ts)
@@ -559,29 +754,29 @@ for k=1:length(ts)
     xh=x(indh);
     yh=y(indh);
     th=time(indh);
-%                     hold(ax,'off')
-    hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
-    hold(ax,'on')
-    hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
-    
-
     tpassed=ts(k)-ts(1);
-    ht=text(ax,double(min(x)),double(max(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
+    ht=text(ax,double(min(x)),double(min(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
         
     indc=obj.steps.steptime<ts(k);
     cx=obj.steps.possteps.x(indc);
     cy=obj.steps.possteps.y(indc);
-%     if ~isempty(cx)
+
+    hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
+    hold(ax,'on')
+    if ~plotsimple
+        hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
         hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
-%     end
-    hl=plot(ax,xh,yh,'k','LineWidth',1);
+    end
+    hl=plot(ax,xh,yh,'k','LineWidth',.5);
     drawnow
     Fr(k)=getframe(ax);
     delete(hd)
     delete(hl)
     delete(ht)
-    delete(hb)
-    delete(hc)
+    if ~plotsimple
+        delete(hb)
+        delete(hc)
+    end
 end
 smlfile=obj.getPar('lastSMLFile');
 if ~isempty(smlfile)
@@ -592,10 +787,8 @@ end
 
 [file,pfad]=uiputfile([pfad filesep '*.mp4']);
 if file
-    mysavemovie(Fr,[pfad  file],'FrameRate',20)
-end
-
-                  
+    mysavemovie(Fr,[pfad  file],'FrameRate',30)
+end 
 end
 
 function pard=guidef(obj)
@@ -622,49 +815,73 @@ pard.currentrange.position=[1,1];
 pard.currentrange.Width=2;
 
 pard.refit.object=struct('String','Refit','Style','pushbutton','Callback',{{@refit,obj,1}});
-pard.refit.position=[5,3];
-pard.refit.Width=2;
+pard.refit.position=[5,2];
+pard.refit.Width=1;
 
 pard.refine.object=struct('String','Refine','Style','pushbutton','Callback',{{@refit,obj,2}});
 pard.refine.position=[5,1];
-pard.refine.Width=2;
+pard.refine.Width=1;
+
+pard.showtext.object=struct('String','values','Style','checkbox');
+pard.showtext.position=[5,3];
+pard.showtext.Width=2;
 
 %auto-fit
 p(1).value=0; p(1).on={}; p(1).off={'splitmerget','splitmergestep'};
 p(2).value=1; p(2).on=p(1).off; p(2).off={};
-pard.splitmerge.object=struct('Value',1,'String','Split and merge','Style','checkbox','Callback',{{@obj.switchvisible,p}});
+pard.splitmerge.object=struct('Value',1,'String','Split/merge','Style','checkbox','Callback',{{@obj.switchvisible,p}});
 pard.splitmerge.position=[3,1];
-pard.splitmerge.Width=2;
+pard.splitmerge.Width=1.5;
 pard.splitmerget.object=struct('String','step','Style','text');
-pard.splitmerget.position=[3,3];
+pard.splitmerget.position=[3,2.5];
 pard.splitmergestep.object=struct('String','','Style','edit');
-pard.splitmergestep.position=[3,4];
+pard.splitmergestep.position=[3,3];
+pard.splitmergestep.Width=0.5;
 
-pard.split.object=struct('String','Split','Style','pushbutton','Callback',{{@splitmerge,obj,1}});
-pard.split.position=[4,1];
+pard.split.object=struct('String','Manual','Style','pushbutton','Callback',{{@splitmerge,obj,1}});
+pard.split.position=[3,3.5];
 pard.split.Width=1.5;
-pard.merge.object=struct('String','Merge','Style','pushbutton','Callback',{{@splitmerge,obj,2}});
-pard.merge.position=[4,2.5];
-pard.merge.Width=1.5;
-
-pard.left.object=struct('String','<-','Style','pushbutton','Callback',{{@splitmerge,obj,3}});
-pard.left.position=[4,4];
-pard.left.Width=0.5;
-
-pard.right.object=struct('String','->','Style','pushbutton','Callback',{{@splitmerge,obj,4}});
-pard.right.position=[4,4.5];
-pard.right.Width=0.5;
+% pard.merge.object=struct('String','Merge','Style','pushbutton','Callback',{{@splitmerge,obj,2}});
+% pard.merge.position=[4,2.5];
+% pard.merge.Width=1.5;
+% 
+% pard.left.object=struct('String','<-','Style','pushbutton','Callback',{{@splitmerge,obj,3}});
+% pard.left.position=[4,4];
+% pard.left.Width=0.5;
+% 
+% pard.right.object=struct('String','->','Style','pushbutton','Callback',{{@splitmerge,obj,4}});
+% pard.right.position=[4,4.5];
+% pard.right.Width=0.5;
 
 
 pard.makemovie.object=struct('String','Make Movie','Style','pushbutton','Callback',{{@makemovie,obj}});
-pard.makemovie.position=[6,1];
+pard.makemovie.position=[7,1];
 pard.makemovie.Width=1.5;
 
 pard.frametimet.object=struct('String','frametime','Style','text');
-pard.frametimet.position=[6,3];
+pard.frametimet.position=[7,2.5];
 pard.frametime.object=struct('String','1','Style','edit');
-pard.frametime.position=[6,4];
+pard.frametime.position=[7,3.5];
+pard.frametime.Width=0.5;
 
+pard.simplemovie.object=struct('String','simple','Style','checkbox');
+pard.simplemovie.position=[7,4];
+
+
+p(1).value=0; p(1).on={}; p(1).off={'filterwindowt','filterwindow','filtermode'};
+p(2).value=1; p(2).on=p(1).off; p(2).off={};
+
+pard.filtertrack.object=struct('String','Filter','Style','checkbox','Callback',{{@obj.switchvisible,p}});
+pard.filtertrack.position=[6,1];
+pard.filterwindowt.object=struct('String','window (ms)','Style','text');
+pard.filterwindowt.position=[6,1.7];
+pard.filterwindowt.Width=1.5;
+pard.filterwindow.object=struct('String','1','Style','edit');
+pard.filterwindow.position=[6,3];
+pard.filterwindow.Width=0.5;
+pard.filtermode.object=struct('String',{{'mean','median'}},'Style','popupmenu');
+pard.filtermode.position=[6,3.5];
+pard.filtermode.Width=1.5;
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};
 pard.plugininfo.type='ROI_Evaluate';

@@ -397,7 +397,20 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             
              %plot all site boxes
              if obj.locData.getPar('se_drawboxes')&&~isempty(obj.sites)&&~isempty(obj.sites(1).info)
-                 allsites=[obj.sites(:).info];
+                 try
+                    allsites=[obj.sites(:).info];
+                 catch err %fix connected sites
+                     err
+                     disp('fixing connected sites')
+                     for k=1:length(obj.sites)
+                        if ~isfield(obj.sites(k).info,'connectedsites')
+                            obj.sites(k).info.connectedsites=[];
+                        end
+                     end
+
+                     allsites=[obj.sites(:).info];
+                 end
+
                  ind=[allsites.cell]==cell.ID;
                  
                  if sum(ind)>0

@@ -11,7 +11,7 @@ if isfield(drift,'xy')
                 poso.xnm(indg&indpos)=pos.xnm(indg&indpos)-drift.xy(1).x(pos.frame(indg&indpos));
                 poso.xnm(indg&~indpos)=pos.xnm(indg&~indpos)-drift.xy(2).x(pos.frame(indg&~indpos)); 
             else
-                poso.xnm(indg)=pos.xnm(indg)-drift.xy(1).x(pos.frame(indg));
+                poso.xnm(indg)=pos.xnm(indg)-drift.xy(1).x(round(pos.frame(indg)));
             end
         end
         if isfield(drift.xy(1),'y')
@@ -20,7 +20,7 @@ if isfield(drift,'xy')
                 poso.ynm(indg&indpos)=pos.ynm(indg&indpos)-drift.xy(1).y(pos.frame(indg&indpos));
                 poso.ynm(indg&~indpos)=pos.ynm(indg&~indpos)-drift.xy(2).y(pos.frame(indg&~indpos)); 
             else
-                poso.ynm(indg)=pos.ynm(indg)-drift.xy(1).y(pos.frame(indg));
+                poso.ynm(indg)=pos.ynm(indg)-drift.xy(1).y(round(pos.frame(indg)));
             end
         end
 end
