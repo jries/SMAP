@@ -958,7 +958,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             fn = fieldnames(default);
             for k = 1:length(fn)
                 default.(fn{k}).name = ['m' num2str(modelnumber) '_' default.(fn{k}).name];
-                default = renameStructField(default,fn{k},['m' num2str(modelnumber) '_' fn{k}]);
+                default = RenameField(default,fn{k},['m' num2str(modelnumber) '_' fn{k}]);
                 % Check the form of the background: density or weight?
 %                 obj.getBGForm(modelnumber);
             end
