@@ -15,7 +15,6 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
     methods
         function obj=LocMoFitGUI(varargin)
             obj@interfaces.SEEvaluationProcessor(varargin{:});
-            addpath(genpath('./LocMoFit'))
             obj.propertiesToSave={'fitter', 'numMod', 'parsArgFieldnames', 'lFnParsArgEdit', 'fnParsArgColWidth', 'layerFieldnames', 'lFnLayerEdit', 'currentLoadedModel','sourceModel'};
             addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
         end
