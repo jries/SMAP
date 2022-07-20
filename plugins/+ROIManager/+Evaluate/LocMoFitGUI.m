@@ -472,13 +472,11 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             isdeployed = true;
             if isdeployed
                 obj.compiledMode = 'on';
-                modelList = LocMoFit.getModelList;
+                model2Load = modelList;
                 hModels = [];
-                for k = 1:length(modelList)
-                    tempModel = eval(modelList{k});
-                    if tempModel.listed
-                        hModels.(modelList{k}) = tempModel;
-                    end
+                for k = 1:length(model2Load)
+                    tempModel = modelList(model2Load{k});
+                    hModels.(model2Load{k}) = tempModel;
                 end
                 obj.setPar('modelOptions', hModels)
             else
