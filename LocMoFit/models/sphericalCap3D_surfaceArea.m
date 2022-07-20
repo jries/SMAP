@@ -10,11 +10,11 @@ classdef sphericalCap3D_surfaceArea<geometricModel
             % Define the default argument values here in the constructor.
             obj.name = {'surfaceArea', 'closeAngle'};
             obj.fix = [0 0] ;
-            obj.value = [0.5e+5 0];
+            obj.value = [5 0];
             obj.lb = [-inf 0];
             obj.ub = [inf 90];
-            obj.min = [-5e+5 -90];
-            obj.max = [5e+5 90];
+            obj.min = [-50 0];
+            obj.max = [50 180];
             
             % Define other properties here:
             obj.modelType = 'discretized';
@@ -28,13 +28,13 @@ classdef sphericalCap3D_surfaceArea<geometricModel
             surfaceArea = par.surfaceArea*1e+4;
             % Get the close angle from the input
             closeAngle = par.closeAngle;
-            lNeg = closeAngle<-90;
+            lNeg = closeAngle<0;
             if lNeg
-                closeAngle = abs(closeAngle)-180;
+                closeAngle = deg2rad(abs(closeAngle));
             end
             closeAngle = deg2rad(closeAngle);
             
-            r = sqrt(abs(surfaceArea)/(2*pi*(1-cos(closeAngle+pi/2))));         
+            r = sqrt(abs(surfaceArea)/(2*pi*(1-cos(closeAngle))));         
             r(lNeg) = -r(lNeg);
             
             if abs(r) == inf
@@ -66,7 +66,7 @@ classdef sphericalCap3D_surfaceArea<geometricModel
             gr = (sqrt(5.0) + 1.0) / 2.0;                       % golden ratio = 1.6180339887498948482
             ga = (2.0 - gr) * (2.0*pi);                         % golden angle = 2.39996322972865332
             increment = ga;
-            samplesUb = round((sin(closeAngle)+1)./offset-0.5);
+            samplesUb = round((sin(closeAngle-pi/2)+1)./offset-0.5);
             k = 1:samplesUb;
             
             
@@ -118,30 +118,29 @@ classdef sphericalCap3D_surfaceArea<geometricModel
             % Last update:
             %   08.11.2021
             derivedPars.realSurfaceArea = pars.surfaceArea.*1e+4;
-            derivedPars.curvature = 1./sqrt(derivedPars.realSurfaceArea./(2.*pi.*(1-cos(deg2rad(90+pars.closeAngle)))));
-            if pars.closeAngle < -90
+            derivedPars.curvature = 1./sqrt(derivedPars.realSurfaceArea./(2.*pi.*(1-cos(deg2rad(pars.closeAngle)))));
+            if pars.closeAngle < 0
                 derivedPars.curvature = -derivedPars.curvature;
-                derivedPars.realCloseAngle = abs(pars.closeAngle)-180;
+                derivedPars.realCloseAngle = abs(pars.closeAngle);
             else
                 derivedPars.realCloseAngle = pars.closeAngle;
             end
             derivedPars.radius = 1/derivedPars.curvature;
             
-            if derivedPars.realCloseAngle <= 0
-                derivedPars.projectionArea = pi*(derivedPars.radius*cos(deg2rad(-derivedPars.realCloseAngle)))^2;
+            if derivedPars.realCloseAngle <= 90
+                derivedPars.projectionArea = pi*(derivedPars.radius*sin(deg2rad(derivedPars.realCloseAngle)))^2;
             else
                 derivedPars.projectionArea = pi*derivedPars.radius^2;
             end
-            derivedPars.coverageFraction = (1-cos(deg2rad(90+derivedPars.realCloseAngle)))./2;
+            derivedPars.coverageFraction = (1-cos(deg2rad(derivedPars.realCloseAngle)))./2;
             
             % surface area (one side free)
             signRadius = sign(derivedPars.radius);
             radiusOneSideFree = derivedPars.radius-signRadius*pars.variation;
-            derivedPars.areaOneSideFree = radiusOneSideFree.^2*(2.*pi.*(1-cos(deg2rad(90+pars.closeAngle))));
+            derivedPars.areaOneSideFree = radiusOneSideFree.^2*(2.*pi.*(1-cos(deg2rad(pars.closeAngle))));
             
             %% Final version used in publication
-            derivedPars.closingAngle_pub = abs(pars.closeAngle+90);
-            derivedPars.openRadius = abs(derivedPars.radius*sin(deg2rad(180-derivedPars.closingAngle_pub)));
+            derivedPars.openRadius = abs(derivedPars.radius*sin(deg2rad(180-derivedPars.realCloseAngle)));
             if ~isempty(obj.ParentObject)&&~isempty(obj.ParentObject.ParentObject)
                 locMoFitter = obj.ParentObject.ParentObject;
                 modID = obj.ParentObject.ID;

@@ -926,6 +926,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             
         end
     end
+    
     events
         mParsArgModified
     end

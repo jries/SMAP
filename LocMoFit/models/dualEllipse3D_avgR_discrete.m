@@ -1,20 +1,20 @@
-classdef dualRing3D<geometricModel
+classdef dualEllipse3D_avgR_discrete<geometricModel
     % :class:`dualRingModel` is the dual ring model used in the LocMoFit
     % manuscript for describing Nup96-labeled NPCs.
     %
     % Log:
     %   201229: change the sign of the ring twist
     methods
-        function obj = dualRing3D(varargin)
+        function obj = dualEllipse3D_avgR_discrete(varargin)
             obj@geometricModel(varargin{:});
             % Define parameters that can be altered during fitting here:
-            obj.name = {'ringDistance', 'azimuthalShift', 'radius', 'cornerDegree'}; % parameter names
-            obj.fix = [0 0 1 1] ;                                                    % fix to a constant or not
-            obj.value = [0 0 53.7 12];                                               % initial guess
-            obj.lb = [0 -inf 0 0];                                                   % relative lower bound
-            obj.ub = [70 inf 0 22.5];                                                % relative upper bound
-            obj.min = [0 -inf 0 -inf];                                               % absolute lower bound
-            obj.max = [70 inf 100 inf];                                              % absolute upper bound
+            obj.name = {'ringDistance', 'azimuthalShift', 'avgR', 'ellipticity', 'aDir', 'cornerDegree'}; % parameter names
+            obj.fix = [0 0 0 0 1 1] ;                                                       % fix to a constant or not
+            obj.value = [50 0 60 0.3 0 12];                                                   % initial guess
+            obj.lb = [0 -inf 0 0 -inf 0];                                                   % relative lower bound
+            obj.ub = [70 inf inf inf inf 22.5];                                             % relative upper bound
+            obj.min = [0 -inf 0 0 0 -inf];                                              % absolute lower bound
+            obj.max = [70 inf 100 100 0.999 inf];                                            % absolute upper bound
             
             % Define discrite parameters here:
             obj.internalSettings.copyPerCorner = 2;
@@ -61,9 +61,18 @@ classdef dualRing3D<geometricModel
         cornerNum = pResults.cornerNum;
         useSecondRing = pResults.useSecondRing;
         cornerRange = par.cornerDegree;
-        
+        aDir = deg2rad(par.aDir);
+
+        % avgR = (a+b)/2; ellipticity = 1-b/a
+        % a = 2*avgR-b
+        % b = (2*avgR-b)*(1-par.ellipticity)
+        % b/(1-par.ellipticity) 
+        b = 2.*par.avgR*(1-par.ellipticity)./(2-par.ellipticity);
+        a = 2.*par.avgR-b;
+        % 
+
         % corner:
-        cornerPos = linspace(0,2*pi,cornerNum+1);
+        cornerPos = linspace(0,2*pi,cornerNum+1) + aDir;
         cornerPos = cornerPos(1:end-1);
         
         % copies in one corner:
@@ -88,20 +97,24 @@ classdef dualRing3D<geometricModel
             allCopiesTheta = permute(allCopiesTheta, [1 3 2]);
             allCopiesTheta = reshape(allCopiesTheta,prod(size(allCopiesTheta,[1 2])),size(allCopiesTheta,3));
         end
-        par.radius = tempTheta+par.radius;
+        par.a = tempTheta+a;
+        par.b = tempTheta+b;
         
         % assign the radius for each copy
-        allCopiesRho = repelem(par.radius', size(allCopiesTheta,1));
+        allCopiesA = repelem(par.a', size(allCopiesTheta,1));
+        allCopiesB = repelem(par.b', size(allCopiesTheta,1));
         
         % convert from polar coordinates
-        [allCopiesX,allCopiesY]= pol2cart(allCopiesTheta(:), allCopiesRho(:));
+        allCopiesX = allCopiesA(:).*cos(allCopiesTheta(:));
+        allCopiesY = allCopiesB(:).*sin(allCopiesTheta(:));
         allCopiesX = reshape(allCopiesX,size(allCopiesTheta));
         allCopiesY = reshape(allCopiesY,size(allCopiesTheta));
         
         % for the second ring
         if useSecondRing
             allCopiesThetaRing2 = allCopiesTheta-par.azimuthalShift.*pi./180;
-            [allCopiesXRing2,allCopiesYRing2]= pol2cart(allCopiesThetaRing2(:), allCopiesRho(:));
+            allCopiesXRing2 = allCopiesA(:).*cos(allCopiesThetaRing2(:));
+            allCopiesYRing2 = allCopiesB(:).*sin(allCopiesThetaRing2(:));
             allCopiesXRing2 = reshape(allCopiesXRing2,size(allCopiesTheta));
             allCopiesYRing2 = reshape(allCopiesYRing2,size(allCopiesTheta));
             halfRingDist = par.ringDistance./2;

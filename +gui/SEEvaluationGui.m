@@ -20,7 +20,7 @@ classdef SEEvaluationGui< interfaces.SEProcessor
         end
         function initGui(obj)
             initGui@interfaces.SEProcessor(obj);
-            
+            makeGeometricModelList;
             pos=obj.guihandles.addmodule.Position;
             pos2=obj.guihandles.removemodule.Position;
             pos(2)=pos(2)-obj.guiPar.FieldHeight*5;

@@ -1,14 +1,14 @@
-classdef dualEllipse3D_avgR<geometricModel
+classdef dualEllipse3D_discrete<geometricModel
     % :class:`dualRingModel` is the dual ring model used in the LocMoFit
     % manuscript for describing Nup96-labeled NPCs.
     %
     % Log:
     %   201229: change the sign of the ring twist
     methods
-        function obj = dualEllipse3D_avgR(varargin)
+        function obj = dualEllipse3D_discrete(varargin)
             obj@geometricModel(varargin{:});
             % Define parameters that can be altered during fitting here:
-            obj.name = {'ringDistance', 'azimuthalShift', 'avgR', 'ellipticity', 'aDir', 'cornerDegree'}; % parameter names
+            obj.name = {'ringDistance', 'azimuthalShift', 'a', 'ellipticity', 'aDir', 'cornerDegree'}; % parameter names
             obj.fix = [0 0 0 0 1 1] ;                                                       % fix to a constant or not
             obj.value = [50 0 60 0.3 0 12];                                                   % initial guess
             obj.lb = [0 -inf 0 0 -inf 0];                                                   % relative lower bound
@@ -25,6 +25,7 @@ classdef dualEllipse3D_avgR<geometricModel
             obj.modelType = 'discrete';
             obj.modelTypeOption = {'discrete'};
             obj.dimension = 3;
+            obj.listed = true;
             
         end
         
@@ -61,14 +62,8 @@ classdef dualEllipse3D_avgR<geometricModel
         useSecondRing = pResults.useSecondRing;
         cornerRange = par.cornerDegree;
         aDir = deg2rad(par.aDir);
-
-        % avgR = (a+b)/2; ellipticity = 1-b/a
-        % a = 2*avgR-b
-        % b = (2*avgR-b)*(1-par.ellipticity)
-        % b/(1-par.ellipticity) 
-        b = 2.*par.avgR*(1-par.ellipticity)./(2-par.ellipticity);
-        a = 2.*par.avgR-b;
-        % 
+        b = par.a.*(1-par.ellipticity);
+        % ellipticity = 1-b/a
 
         % corner:
         cornerPos = linspace(0,2*pi,cornerNum+1) + aDir;
@@ -96,7 +91,7 @@ classdef dualEllipse3D_avgR<geometricModel
             allCopiesTheta = permute(allCopiesTheta, [1 3 2]);
             allCopiesTheta = reshape(allCopiesTheta,prod(size(allCopiesTheta,[1 2])),size(allCopiesTheta,3));
         end
-        par.a = tempTheta+a;
+        par.a = tempTheta+par.a;
         par.b = tempTheta+b;
         
         % assign the radius for each copy
