@@ -988,7 +988,7 @@ switch layertitle
                         obj.fitter.rmLastModel;
                     end
                     obj.numMod = obj.numMod-1;
-                    disp([mod2rm ' has been successively removed.'])
+                    obj.setPar('status',[mod2rm ' has been successively removed'])
                     rmDone = 1;
                 otherwise
 

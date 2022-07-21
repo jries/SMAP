@@ -26,6 +26,11 @@ locs2 = p.locs2;                % the second set of locs
 obj.useCompensation = true;
 
 %% Set up the optimizer
+% for compiled version
+@fminsearchbnd;
+@fmincon;
+@particleswarm;
+
 solverFun = str2func(obj.solver.SolverName);
 if ~isempty(obj.solver.SolverOptions)&&~p.skipFit
     obj.status = 'initial';
