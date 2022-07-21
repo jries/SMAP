@@ -1,23 +1,23 @@
 classdef arc2D_arcLen<geometricModel
     % Last update:
-    %   19.11.2021
+    %   21.07.2022
     methods
         function obj = arc2D_arcLen(varargin)
             obj@geometricModel(varargin{:});
             % Define parameters that can be altered during fitting here:
             obj.name = {'arcLength', 'theta'}; % parameter names
             obj.fix = [0 0] ;                                                       % fix to a constant or not
-            obj.value = [10 60];                                                    % initial guess
+            obj.value = [10 30];                                                    % initial guess
             obj.lb = [-inf -inf];                                                   % relative lower bound
             obj.ub = [inf inf];                                                     % relative upper bound
             obj.min = [5 5];                                                        % absolute lower bound
-            obj.max = [30 360];                                                     % absolute upper bound
+            obj.max = [30 180];                                                     % absolute upper bound
                        
             % Define other properties here:
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized','continuous'};
             obj.dimension = 2;
-            
+            obj.listed = true;
         end
         
         function [model, p]= reference(obj, par, dx)
@@ -40,8 +40,8 @@ classdef arc2D_arcLen<geometricModel
         %   * 'p': additional information of the model.
 
         arcLen = par.arcLength;
-        theta = deg2rad(par.theta);
-        r = arcLen./theta;
+        twiceTheta = deg2rad(2*par.theta);
+        r = arcLen./twiceTheta;
         % 
         if isempty(obj.ParentObject)
             locsPrecFactor = 1;
@@ -51,11 +51,12 @@ classdef arc2D_arcLen<geometricModel
 %         arcLen = 2*pi*r*theta/360;
         nSample = max(round(arcLen/(dx*locsPrecFactor)),1);
         
-        halfRange = theta./2;
+        halfRange = twiceTheta./2;
         centroidx = r.*sin(halfRange)/halfRange;
         ang_samplePoints = linspace(-halfRange, halfRange, nSample)';
         model.x = r.*cos(ang_samplePoints)-centroidx;
         model.y = r.*sin(ang_samplePoints);
+        [model.x, model.y] = rotcoord2(model.x, model.y, pi/2);
         model.n = ones(size(model.x));
 
         p.cornerRange = [];
