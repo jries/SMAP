@@ -252,11 +252,16 @@ out.stdall.y=sqrt(sum(obj.steps.std.y.^2.*obj.steps.numlocsstep)/sum(obj.steps.n
 out.stdalldet.x=sqrt(sum(obj.steps.stddetrend.x.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
 out.stdalldet.y=sqrt(sum(obj.steps.stddetrend.y.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
 
+out.stdalldetmean.x=(sum(obj.steps.stddetrend.x.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+out.stdalldetmean.y=(sum(obj.steps.stddetrend.y.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+
 if ~isempty(obj.coord.xfr)
     out.stdall.xf=sqrt(sum(obj.steps.std.xf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
     out.stdall.yf=sqrt(sum(obj.steps.std.yf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
     out.stdalldet.xf=sqrt(sum(obj.steps.stddetrend.xf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
     out.stdalldet.yf=sqrt(sum(obj.steps.stddetrend.yf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+    out.stdalldetmean.xf=(sum(obj.steps.stddetrend.xf.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+    out.stdalldetmean.yf=(sum(obj.steps.stddetrend.yf.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
 end
 obj.stats=out;
 end
