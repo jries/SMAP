@@ -865,6 +865,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 htable = obj.guihandles.(['partable_' num2str(m)]);
                 obj.loadParTable(htable, fitter, m);
                 obj.updateAdvanceTab(fitter, m);
+                obj.setPar('loading',true)
+                initmodel(obj, num2str(m),'skipAddModel',true, 'compiledMode', false);
+                obj.setPar('loading',false)
             end
         end
 
@@ -988,7 +991,7 @@ switch layertitle
                         obj.fitter.rmLastModel;
                     end
                     obj.numMod = obj.numMod-1;
-                    obj.setPar('status',[mod2rm ' has been successively removed'])
+                    obj.setPar('status',[mod2rm ' has been successfully removed'])
                     rmDone = 1;
                 otherwise
 
@@ -1406,22 +1409,6 @@ else
     initmodel(obj, modelnumber, 'compiledMode', obj.compiledMode);
 end
 
-% Update the model type options.
-switch obj.fitter.model{str2num(modelnumber)}.modelType
-    case 'image'
-        if isempty(obj.sourceModel)
-            modelOption ={'image'};
-        else
-            modelOption ={obj.sourceModel{str2num(modelnumber)}.modelObj.modelTypeOption{:} 'image'};
-        end
-    case 'locsImg'
-        modelOption ={obj.fitter.model{str2num(modelnumber)}.modelObj.modelTypeOption{:}};
-    otherwise
-        modelOption ={obj.fitter.model{str2num(modelnumber)}.modelObj.modelTypeOption{:} 'image'};
-end
-indType = find(strcmp(modelOption,obj.fitter.model{str2num(modelnumber)}.modelType));
-obj.guihandles.(['modelType_' modelnumber]).String = modelOption;
-obj.guihandles.(['modelType_' modelnumber]).Value = indType;
 
 % Update the layers in use.
 obj.updateLayer;
@@ -1499,6 +1486,7 @@ if ~strcmp(modPath,'Loaded')&&~results.skipAddModel
     else
         fitter.addModel(geoModeltemp);
     end
+
 end
 % Set up the GUI of the model tab.
 enableSettings(obj,modelnumber,fitter);
@@ -1545,6 +1533,23 @@ hConvert = obj.guihandles.anchorConvert;
 optionTarget = unique([hConvert.ColumnFormat{3} parId]);
 hConvert.ColumnFormat{3} = optionTarget;
 obj.guihandles.anchorConvert=hConvert;
+
+% Update the model type options.
+    switch obj.fitter.model{modelnumber}.modelType
+        case 'image'
+            if isempty(obj.sourceModel)
+                modelOption ={'image'};
+            else
+                modelOption ={obj.sourceModel{modelnumber}.modelObj.modelTypeOption{:} 'image'};
+            end
+        case 'locsImg'
+            modelOption ={obj.fitter.model{modelnumber}.modelObj.modelTypeOption{:}};
+        otherwise
+            modelOption ={obj.fitter.model{modelnumber}.modelObj.modelTypeOption{:} 'image'};
+    end
+    indType = find(strcmp(modelOption,obj.fitter.model{modelnumber}.modelType));
+    obj.guihandles.(['modelType_' num2str(modelnumber)]).String = modelOption;
+    obj.guihandles.(['modelType_' num2str(modelnumber)]).Value = indType;
 
 % Update the model options
 if results.skipAddModel
@@ -1602,6 +1607,8 @@ else
     end
 end
 obj.guihandles.(['modelType_' modelnumber]).Enable = 'on';
+
+obj.updateLayer;
 end
 
 % Callback functions
