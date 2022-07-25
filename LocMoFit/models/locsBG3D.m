@@ -18,6 +18,8 @@ classdef locsBG3D<geometricModel
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized','continuous'};
             obj.dimension = 3;
+
+            obj.listed = true;
         end
         
         function [model, p]= reference(obj, par, dx)
