@@ -17,7 +17,7 @@ for k = 1:length(model2Show)
     rst_explicit_markup('autoclass',oneModel, 'members','','show-inheritance','');
     path2img = [dir_img oneModel '.png'];
     if exist(path2img)
-        rst_explicit_markup('image',['./images/oneModel' oneModel '.PNG'], 'width', '500')
+        rst_explicit_markup('image',['./images/' oneModel '.PNG'], 'width', '500')
     end
     linebreak_rst;
 end
