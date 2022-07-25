@@ -6,7 +6,7 @@ Model library
 	:members:
 	:show-inheritance:
 .. image:: ./images/models/arc2D.PNG
-	:width:500
+	:width: 500
 
 .. autoclass:: arc2D_arcLen
 	:members:
