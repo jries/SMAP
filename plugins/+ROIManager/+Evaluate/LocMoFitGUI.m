@@ -461,12 +461,6 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.fitter = SMLMModelFit('DataDim',dataDim);
             
             obj.currentLoadedModel = [];
-            if ismac
-                obj.guiPar.fontsize=12;
-                obj.guiPar.Vrim=0;
-                obj.guiPar.Vpos=3;
-                obj.guiPar.FieldHeight=20;
-            end
 
             isdeployed = true;
             if isdeployed
@@ -500,6 +494,15 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             if nargin >2 && varargin{2}==true %gui of tabs
                 makeGui@interfaces.GuiModuleInterface(obj,varargin{1});
             else %real make GUI of main gui
+                if ismac
+                    obj.guiPar.FieldHeight=20;
+                    obj.guiPar.fontsize=12;
+                    obj.guiPar.Xrim=20;
+                    obj.guiPar.Vrim=0;
+                    obj.guiPar.Vpos=1.5;
+                    obj.guiPar.Xpos=0.9;
+%                     tabh=[50 160];
+                end
                 makeGui@interfaces.GuiModuleInterface(obj); %make the main GUI from the guidef definitions
                 %Settings
                 optimizernames=obj.fitter.supportedSolver;
@@ -657,9 +660,11 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             if ismac
                 obj.guiPar.FieldHeight=20;
                 obj.guiPar.fontsize=12;
-                obj.guiPar.Xrim=0;
+                obj.guiPar.Xrim=25;
+                obj.guiPar.Vrim=0;
+                obj.guiPar.Xpos=0.7;
+                obj.guiPar.Vpos=1.5;
                 tabh=[50 160];
-                
             else
                 tabh=[20 120];
             end
@@ -732,10 +737,16 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         function addconverttotab(obj)
             tag='Convert';
             obj.guihandles.converter=uitab(obj.guihandles.tabgroup,'Title',tag,'Tag',tag);
-            guidefhere=guidefconvert(obj);
             Vrimold=obj.guiPar.Vrim;handleold=obj.handle;
             obj.guiPar.Vrim=0;
             obj.handle=obj.guihandles.converter;
+            if ismac
+                obj.guiPar.Vrim = 65;
+                obj.guiPar.Vpos = 0;
+                obj.guiPar.Xrim = 20;
+                obj.guiPar.Xpos = 0.9;
+            end
+            guidefhere=guidefconvert(obj);
             obj.makeGui(guidefhere,1);
             obj.handle=handleold;
             obj.guiPar.Vrim=Vrimold;
@@ -1812,8 +1823,9 @@ end
 % ## Define the gui
 function pard=guidefconvert(obj)
 pard.anchorConvert.object=struct('Style','text','String','');
-pard.anchorConvert.position=[10,1];
-pard.anchorConvert.Width=2;
+pard.anchorConvert.position=[9.5,1];
+pard.anchorConvert.Width=4;
+pard.anchorConvert.Height=9.5;
 
 pard.addNewRule.object=struct('Style','pushbutton','String','+','Callback',{{@addNewRule_callback,obj,'anchorConvert'}});
 pard.addNewRule.position=[10.1,1];
