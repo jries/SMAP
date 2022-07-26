@@ -1,7 +1,6 @@
 Model library
 =============
 .. automodule:: models
-:doc:`references`
 
 .. autoclass:: arc2D
 	:members:
@@ -74,4 +73,3 @@ Model library
 .. autoclass:: thickRing2D
 	:members:
 	:show-inheritance:
-
