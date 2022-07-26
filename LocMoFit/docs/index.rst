@@ -2,14 +2,14 @@ LocMoFit (localization model fit)
 =======
 
 .. toctree::
-   :maxdepth: 2  
+   :maxdepth: 1  
    :hidden:
    
    start
    structure
    
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :hidden:
    :caption: Basics
    
@@ -20,7 +20,7 @@ LocMoFit (localization model fit)
    SMAP.md
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :hidden:
    :caption: Tutorial
    
@@ -32,14 +32,14 @@ LocMoFit (localization model fit)
    ./tutorial/fourColorNPC.md
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :hidden:
    :caption: Application note
    
    ./applicationNote/simulations.md
    
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :hidden:
    :caption: Programming note
    
@@ -50,7 +50,6 @@ LocMoFit (localization model fit)
    :hidden:
    :caption: API documentation
    
-   modLibrary
    references
    
 Overview

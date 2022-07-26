@@ -1,6 +1,10 @@
 classdef arc2D<geometricModel
-    % Last update:
-    %   19.11.2021
+    % :class:`arc2D` is a 2D model that describes an arc geometry.
+    %
+    % Intrinsic parameters:
+    %   * `radius`: (nm) the radius of the ring where the arc is derived.
+    %   * `theta`: (degree) the closing anlge of the arc.
+    %
     methods
         function obj = arc2D(varargin)
             obj@geometricModel(varargin{:});
@@ -26,18 +30,25 @@ classdef arc2D<geometricModel
         % Usage:
         %   [model, p]= reference(obj, par, dx)
         %
-        % Args:
-        %   * 'obj': an object of subclass of :class:`geometricModel`.
-        %   * 'par': a structure object. Its fieldnames should be the names
-        %   of parameters, and their correspoinding content should be the
-        %   parameter values.
-        %   * 'dx': sampling rate.
+        % Inputs:
+        %   * **obj** (:class:`geometricModel`) – an object of any subclass of :class:`geometricModel`.
+        %   * **par** (structure array) – each field contains a parameter value and its fieldname should be the parameter name.
+        %   * **dx** (numeric scalar) – sampling rate.
         %
-        % Returns:
-        %   * 'model': a structure object. Its fieldnames should be x, y,
-        %   z, and n, indicating the xyz position amplitude n of the
-        %   sampled model points.
-        %   * 'p': additional information of the model.
+        % Output:
+        %   * **model** (structure array) – a structure object. Its fieldnames should be x, y, z, and n, indicating the xyz position amplitude n of the sampled model points.
+        %   * **p** (structure array) – additional information of the model.
+        %
+        % Images:
+        %   .. image:: ./images/models/arc2D.PNG
+        %       :width: 400
+        %   Scale bar: 50 nm.
+        %
+        % Example:
+        %   .. code-block:: matlab
+        %
+        %       [model, p]= reference(obj, par, dx)
+        %
 
         r = par.radius;
         theta = par.theta;

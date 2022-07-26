@@ -22,7 +22,7 @@ import sphinx_rtd_theme
 project = 'LocMoFit'
 version = '1.0.0'
 release = '1.0.0'
-copyright = '2021, Ries group, EMBL Heidelberg'
+copyright = '2022, Ries group, EMBL Heidelberg'
 author = 'Wu et al.'
 
 
@@ -42,6 +42,8 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+highlight_language = 'matlab'
 
 # -- Options for HTML output -------------------------------------------------
 

@@ -10,7 +10,7 @@ switch dataDim
             numAll = round(numAll*ratio);
         else
             % cilinderical
-            finalVol = pi*(finalROISize/2)^2*depth;
+            finalVol = pi*(roiSize/2)^2*depth;
             % cubic
             simVol = roiSize^3;
             ratio = simVol/finalVol;
