@@ -1,7 +1,14 @@
 classdef bucket2D<geometricModel
-    
-    % log
-    %   - 
+    % :class:`bucket2D` is a 2D model that describes a bucket geometry. It
+    % creates a bucket based on an arc. The bucket is created to contain
+    % the arc.
+    %
+    % Geometric parameters:
+    %   * `radius`: (nm) the radius of the ring where the arc is derived.
+    %   * `theta`: (degree) the closing anlge of the arc.
+    %
+    % See also:
+    %   :class:`arc2D<models.arc2D>`
     methods
         function obj = bucket2D(varargin)
             obj@geometricModel(varargin{:});
@@ -22,23 +29,9 @@ classdef bucket2D<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
-        % Sample coordinates of the model as reference.
-        % --- Syntax ---
-        % [model, p]= reference(obj, par, dx)
-        % --- Arguments ---
-        % -- Input --
-        % obj:
-        % par: a structure object. Its fieldnames should be the names of
-        % parameters, and their correspoinding content should be the
-        % parameter values.
-        % dx: sampling rate.
-        % -- Output --
-        % model: a structure object. Its fieldnames should be x, y, z, and
-        % n, indicating the xyz position amplitude n of the sampled model
-        % points.
-        % p: additional information of the model.
+        % For details, see :meth:`reference`.
         
-        % parameters:
+        % parameters
         r = par.radius;
         theta = par.theta;
 
@@ -72,6 +65,7 @@ classdef bucket2D<geometricModel
         p = [];
         end
         function derivedPars = getDerivedPars(obj, pars)
+            % For details, see :meth:`getDerivedPars`.
             derivedPars = [];
         end
     end

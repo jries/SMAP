@@ -13,7 +13,6 @@ LocMoFit (localization model fit)
    :hidden:
    :caption: Basics
    
-   ./basics/quickstart.md
    ./basics/geometricModel.md
    ./basics/GUIOverview.md
    ./basics/parTable.md
@@ -24,6 +23,7 @@ LocMoFit (localization model fit)
    :hidden:
    :caption: Tutorial
    
+   ./tutorial/quickstart.md
    Composite model <./tutorial/compositeModel.md>
    ./tutorial/chainSteps.md
    ./tutorial/simulations.md
