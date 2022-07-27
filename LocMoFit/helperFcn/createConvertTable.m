@@ -2,7 +2,7 @@ function htable = createConvertTable(oldh, obj)
     % TODO: this function is under an integration to the SMLMModelFit
     % object. Please use the function there instead of this one.
     pos=oldh.Position;
-    htable=uitable(oldh.Parent,'Data',{},'Position',[pos(1:2)+[5 10] 300 200]);
+    htable=uitable(oldh.Parent,'Data',{},'Position',pos);
     
     if isa(obj,'ROIManager.Evaluate.LocMoFitGUI')
         colNames={'Source', 'Rule', 'Target_fit', 'Target_usr'};
