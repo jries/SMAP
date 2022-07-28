@@ -39,8 +39,8 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             addmodule(obj,'generalStatistics');
             
             % Yu-Le added
-            addpath(genpath('./LocMoFit'))
-            makeGeometricModelList;
+%             addpath(genpath('./LocMoFit'))
+%             makeGeometricModelList;
 
             obj.makeinfobutton('sw');
         end 
