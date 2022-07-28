@@ -565,6 +565,8 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 dy=0;
             end
 
+            
+
             pard.tab.tab1='Settings';
             
             pard.t_optimizer.object=struct('Style','text','String','Optimizer:');
@@ -645,6 +647,12 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.layerSetting.Width=3.9;
             pard.layerSetting.Height=4;
             pard.layerSetting.tab='tab1';
+
+            pard.helpButton.object=struct('Style','pushbutton','String','?', 'Callback',{{@helpLocMoFitGUI,obj}});
+            pard.helpButton.position=[0+dy,4.7];
+            pard.helpButton.Width=0.3;
+            pard.helpButton.Height=0.6;
+            pard.helpButton.tab='none';
         end
         
         function addguitotab(obj,number)
@@ -655,7 +663,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pardModelTab = guidefmodel(obj,number);
             pardModelTab = obj.setVisibility_compiledMode(pardModelTab);
             guidefhere=addnumbertofield(pardModelTab,number);
-            Vrimold=obj.guiPar.Vrim;handleold=obj.handle;
+            guiParold=obj.guiPar;handleold=obj.handle;
             obj.guiPar.Vrim=0;
             if ismac
                 obj.guiPar.FieldHeight=20;
@@ -674,7 +682,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.fitter = fitter;
             obj.fitter.linkedGUI = obj;
             obj.handle=handleold;
-            obj.guiPar.Vrim=Vrimold;
+            obj.guiPar=guiParold;
             %initialize parameter table. Here change the looks!
             hpar=obj.guihandles.(['tabpar_' num2str(number)]);
             hsettings=obj.guihandles.(['tabsettings_' num2str(number)]);
@@ -737,7 +745,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         function addconverttotab(obj)
             tag='Convert';
             obj.guihandles.converter=uitab(obj.guihandles.tabgroup,'Title',tag,'Tag',tag);
-            Vrimold=obj.guiPar.Vrim;handleold=obj.handle;
+            guiParold=obj.guiPar;handleold=obj.handle;
             obj.guiPar.Vrim=0;
             obj.handle=obj.guihandles.converter;
             if ismac
@@ -745,11 +753,14 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 obj.guiPar.Vpos = 0;
                 obj.guiPar.Xrim = 20;
                 obj.guiPar.Xpos = 0.9;
+            else
+                obj.guiPar.Vrim = 45;
+                obj.guiPar.FieldHeight = 22;
             end
             guidefhere=guidefconvert(obj);
             obj.makeGui(guidefhere,1);
             obj.handle=handleold;
-            obj.guiPar.Vrim=Vrimold;
+            obj.guiPar=guiParold;
         end
         
         function parId = loadParTable(obj, htable, fitter, modelnumber)
@@ -1250,7 +1261,7 @@ pard.tab.tabmodel='Model';
 
 pard.modelname.object=struct('Style','edit','String','');
 pard.modelname.position=[3+dy,1];
-pard.modelname.Width=2;
+pard.modelname.Width=1.8;
 pard.modelname.tab=['tabmodel_' num2str(number)];
 pard.modelname.Visible = 'on';
 
@@ -1268,9 +1279,14 @@ end
 fn = [fn; '[from a file...]'];
 pard.modelname_CM.object=struct('Style','popupmenu','String', {fn},'value', 1);
 pard.modelname_CM.position=[3+dy,1];
-pard.modelname_CM.Width=2;
+pard.modelname_CM.Width=1.8;
 pard.modelname_CM.tab=['tabmodel_' num2str(number)];
 pard.modelname_CM.Visible = 'off';
+
+pard.modelInfo.object=struct('Style','pushbutton','String','i','Callback',{{@helpLocMoFitGUI,obj,true}});
+pard.modelInfo.position=[3+dy,2.8];
+pard.modelInfo.Width=0.2;
+pard.modelInfo.tab=['tabmodel_' num2str(number)];
 
 pard.modelload_CM.object=struct('Style','pushbutton','String','load model','Callback',{{@loadmodel_callback,obj}});
 pard.modelload_CM.position=[3+dy,3];

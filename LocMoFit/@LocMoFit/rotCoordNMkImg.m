@@ -64,7 +64,7 @@ switch mode
         else
             G = obj.getTemp('gausstemplate');
         end
-        for k = 1:obj.numOfModel
+        for k = 1:obj.numOfLayer
            
             [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,forRevY.*modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
             if obj.model{k}.fixSigma
@@ -73,13 +73,9 @@ switch mode
                 variation = obj.getVariable(['par.m' num2str(k) '.lPar.variation']);
                 thisImg = getModelImg(modCoord{k}.x, modCoord{k}.y, 'roiSize', obj.roiSize, 'pixelSize', pixelSize, 'sigma', (sqrt(median(locsCoord.locprecnm)^2+variation^2)+obj.model{k}.sigmaFactor(2)).*obj.model{k}.sigmaFactor(1), 'gausstemplate',G,'norm',modCoord{k}.n)';
             end
-            thisImg = thisImg/max(thisImg,[],1:2);
-            if obj.numOfLayer==1
-                thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut('cyan'));
-            else
-                thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut(obj.model{k}.displayLut));
-            end
-            v = v + thisImg;
+
+            modelWeight = obj.getVariable(['par.m' num2str(k) '.lPar.weight']);
+            v = v + thisImg./sum(thisImg,1:2).*modelWeight;
             
             % Deal with additional info from the model
             items = obj.getThings2Plot;
@@ -106,7 +102,13 @@ switch mode
                     end
                 end
             end
+        if obj.numOfLayer==1
+            v = ind2rgb(round(v.*255./max(v,[],1:2)), mymakelut('cyan'));
+        else
+            v = ind2rgb(round(v.*255./max(v,[],1:2)), mymakelut(obj.model{k}.displayLut));
         end
+        end
+        
 %         hold(ax,'on')
         imagesc(ax, v);
         axis(ax,'equal')
