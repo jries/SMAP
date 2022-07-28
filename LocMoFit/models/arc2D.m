@@ -1,10 +1,17 @@
 classdef arc2D<geometricModel
     % :class:`arc2D` is a 2D model that describes an arc geometry.
     %
-    % Intrinsic parameters:
+    % Geometric parameters:
     %   * `radius`: (nm) the radius of the ring where the arc is derived.
     %   * `theta`: (degree) the closing anlge of the arc.
     %
+    % Relavent biological structure:
+    %   * Cross-section of a clathrin coat
+    %
+    % Preview:
+    %   .. image:: ./images/models/arc2D.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = arc2D(varargin)
             obj@geometricModel(varargin{:});
@@ -25,31 +32,8 @@ classdef arc2D<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
-        % This funtion samples coordinates of the model as reference.
-        %
-        % Usage:
-        %   [model, p]= reference(obj, par, dx)
-        %
-        % Inputs:
-        %   * **obj** (:class:`geometricModel`) – an object of any subclass of :class:`geometricModel`.
-        %   * **par** (structure array) – each field contains a parameter value and its fieldname should be the parameter name.
-        %   * **dx** (numeric scalar) – sampling rate.
-        %
-        % Output:
-        %   * **model** (structure array) – a structure object. Its fieldnames should be x, y, z, and n, indicating the xyz position amplitude n of the sampled model points.
-        %   * **p** (structure array) – additional information of the model.
-        %
-        % Images:
-        %   .. image:: ./images/models/arc2D.PNG
-        %       :width: 400
-        %   Scale bar: 50 nm.
-        %
-        % Example:
-        %   .. code-block:: matlab
-        %
-        %       [model, p]= reference(obj, par, dx)
-        %
-
+        % For details, see :meth:`reference`.
+        
         r = par.radius;
         theta = par.theta;
 
@@ -72,6 +56,7 @@ classdef arc2D<geometricModel
         p.cornerRange = [];
         end
         function derivedPars = getDerivedPars(obj, pars)
+            % For details, see :meth:`getDerivedPars`.
             derivedPars = [];
         end
     end

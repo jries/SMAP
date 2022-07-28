@@ -1,6 +1,18 @@
 classdef arc2D_arcLen<geometricModel
-    % Last update:
-    %   21.07.2022
+    % :class:`arc2D_arcLen` is a 2D model that describes an arc geometry.
+    % It describes the same geometry as by :class:`arc2D<models.arc2D>` but
+    % with a different parameterization.
+    %
+    % Geometric parameters:
+    %   * `arcLength`: (nm) the length of the arc.
+    %   * `theta`: (degree) the closing anlge of the arc.
+    %
+    % Relavent biological structure:
+    %   * Cross-section of a clathrin coat
+    %
+    % See also:
+    %   :class:`arc2D<models.arc2D>`
+    
     methods
         function obj = arc2D_arcLen(varargin)
             obj@geometricModel(varargin{:});
@@ -21,23 +33,7 @@ classdef arc2D_arcLen<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
-        % This funtion samples coordinates of the model as reference.
-        %
-        % Usage:
-        %   [model, p]= reference(obj, par, dx)
-        %
-        % Args:
-        %   * 'obj': an object of subclass of :class:`geometricModel`.
-        %   * 'par': a structure object. Its fieldnames should be the names
-        %   of parameters, and their correspoinding content should be the
-        %   parameter values.
-        %   * 'dx': sampling rate.
-        %
-        % Returns:
-        %   * 'model': a structure object. Its fieldnames should be x, y,
-        %   z, and n, indicating the xyz position amplitude n of the
-        %   sampled model points.
-        %   * 'p': additional information of the model.
+        % For details, see :meth:`reference`.
 
         arcLen = par.arcLength;
         twiceTheta = deg2rad(2*par.theta);
