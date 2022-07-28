@@ -8,6 +8,7 @@ pluginname='StepsMINFLUX';
 fieldname1='steps';
 
 vel=[];
+tracklengthlocs=[];
 
 for k=1:length(sites)
     if ~isfield(sites(k).evaluation,pluginname) || ~isfield(sites(k).evaluation.(pluginname),fieldname1) % if no steps are found, look at next site
@@ -18,9 +19,10 @@ for k=1:length(sites)
     stepsize(end+1:end+length(sh.stepsize))=sh.stepsize; %add values from current site to the list
     steptime(end+1:end+length(sh.dwelltime))=sh.dwelltime;
     vel(end+1)=sites(k).evaluation.(pluginname).stattrack.velocity;
+    tracklengthlocs(end+1)=sites(k).evaluation.(pluginname).statall.nlocs;
 end
 
-figure(88) %do the plotting
+figure(188) %do the plotting
 subplot(1,2,1)
 ds=.5;
 n=round(min(stepsize)):ds:max(stepsize);
@@ -95,9 +97,23 @@ title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff
 %     ', 2exp: 1/k1,: ' num2str(1./ft2.k1,ff) ',1/k2,: ' num2str(1./ft2.k2,ff)])
 % title(['Peng: 1/k = ' num2str(-1/ft.k1,ff) ' ms, robustmean(steptime) = ' num2str(robustMean(steptime),ff) ' N = ' num2str(length(steptime),4)])
 
-figure(80)
+figure(180)
+subplot(1,2,1)
 n=0:0.05:max(vel);
 histogram(vel,n)
 xlabel('velocity (nm/s)')
 ff2='%2.0f';
 title(['v = ' num2str(mean(vel)*1000,ff2) '±' num2str(std(vel)*1000,ff2) ' nm/s '])
+
+subplot(1,2,2)
+hold off
+nl=0:500:max(tracklengthlocs);
+histogram(tracklengthlocs,nl)
+h=histcounts(tracklengthlocs,nl);
+fp=fit(nl(1:end-1)',h','exp1');
+hold on
+plot(nl,fp(nl))
+
+title(['<nlocs> = ' num2str(mean(tracklengthlocs),ff2) ', median = ' num2str(median(tracklengthlocs),ff2) ', exp = ' num2str(-1/fp.b,ff2)])
+
+
