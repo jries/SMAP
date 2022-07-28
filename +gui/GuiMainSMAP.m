@@ -104,7 +104,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             initglobalsettings(obj);
             if ~isdeployed
                 addpath('shared');
-                addpath('LocMoFit');
+                addpath(genpath('LocMoFit'));
                 addpath(pwd);
                 if ~exist([settingsdir filesep 'temp'],'dir')
                     mkdir([settingsdir filesep 'temp'])
