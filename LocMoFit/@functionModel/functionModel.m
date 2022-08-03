@@ -69,6 +69,10 @@ classdef functionModel<SMLMModel
         function updateModelFun(obj)
             obj.modelFun = @(mPars, dx)obj.modelObj.reference(mPars,dx);
         end
+        function updateSourcePath(obj)
+            modelClass = class(obj.modelObj);
+            obj.sourcePath = which(modelClass);
+        end
         function [ax, img] = plot(obj, mPars, varargin)
             if isempty(mPars)
                 if ~isempty(obj.mPars)
@@ -502,6 +506,7 @@ classdef functionModel<SMLMModel
         end
         function respond2ModelObjChange(obj) % call to the "update" method of subclass
             obj.updateModelFun;
+            obj.updateSourcePath;
         end
     end
 end

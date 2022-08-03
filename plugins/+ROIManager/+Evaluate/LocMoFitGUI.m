@@ -1442,7 +1442,7 @@ obj.updateLayer;
 obj.setPar('status', 'model successfully loaded')
 end
 
-%    Initiate the model
+%    Initiate the modelwhich
 function initmodel(obj, modelnumber,varargin)
 % Initiate the model.
 % Initiate the function.
@@ -1580,9 +1580,22 @@ obj.guihandles.anchorConvert=hConvert;
 
 % Update the model options
 if results.skipAddModel
-    path_model = obj.guihandles.(['modelname_' modelnumberStr]).String;
-    if ~isempty(path_model)
-        modelOptions = obj.guihandles.(['modelname_CM_' modelnumberStr]).String;
+    % update the path to the model class
+    SMLMModelObj = obj.fitter.model{str2num(modelnumberStr)};
+    if ~isempty(SMLMModelObj.modelObj)
+        path_model = SMLMModelObj.sourcePath;
+        modelClass = class(SMLMModelObj.modelObj);
+    else
+        path_model = 'Image saved in the object';
+        modelClass = char();
+    end
+    
+    modelOptions = fieldnames(obj.getPar('modelOptions'));
+    [l, ind] = ismember(modelClass,modelOptions);
+    if l
+        obj.guihandles.(['modelname_CM_' modelnumberStr]).String = modelOptions;
+        obj.guihandles.(['modelname_CM_' modelnumberStr]).Value = ind;
+    else
         obj.guihandles.(['modelname_CM_' modelnumberStr]).String = [modelOptions;['[' path_model ']']];
         obj.guihandles.(['modelname_CM_' modelnumberStr]).Value = length(modelOptions)+1;
     end
