@@ -12,6 +12,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         sourceModel         % The source function model of the image model.
         compiledMode        %
     end
+    properties (Dependent)
+        lPreview            % which model is for previewing
+    end
     methods
         function obj=LocMoFitGUI(varargin)
             obj@interfaces.SEEvaluationProcessor(varargin{:});
@@ -44,6 +47,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 m = m+1;
             end
             setGuiParameters@interfaces.SEEvaluationProcessor(obj,p);
+            
         end
         
         function initTabWhenLoading(obj)
@@ -69,6 +73,27 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj, inp, varargin)
+            eval_  = obj.locData.SE.processors.eval;
+            loadedPlugins = fieldnames(eval_.children);
+            allLocMoFitGUI = loadedPlugins(startsWith(loadedPlugins, 'LocMoFit'));
+
+            anyGUI_previewMode = 0;
+            for k = 1:length(allLocMoFitGUI)
+               anyGUI_previewMode = anyGUI_previewMode + sum(eval_.children.(allLocMoFitGUI{k}).lPreview);
+            end
+
+            forceDisplay_currentGUI = obj.lPreview;
+            if anyGUI_previewMode
+                varargin =  {'onlySetUp',true, 'forceDisplay',true, 'keepParsVal',true};
+            end
+            if any(forceDisplay_currentGUI)
+                warning off backtrace
+                warning on verbose
+                msg = ['Now is in the preview mode so the fit is not executed. To exit the preview mode, uncheck the preview box(es) of model(s) ' num2str(find(forceDisplay_currentGUI)) ' in ' obj.name];
+                warning(msg, 'verbose')
+                warning on backtrace
+                warning off verbose
+            end
             % varargin is used only when called by the run_addguitotab.mlx
             p = inputParser;
             addParameter(p,'onlySetUp',false, @islogical);
@@ -142,11 +167,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                     obj.fitter = fitter;
                 end
                 fitter = obj.fitter;
-                %% When pick site is checked, do nothing but pass on the old output
-                for k = fitter.numOfModel:-1:1
-                    lAllPicked(k) = inp.(['pickSite_' num2str(k)]);
-                end
-                lAnyPickedOn = any(lAllPicked);
+                
+                %% When other GUI are in the preview mode but not this one, do nothing but pass on the old output
+                lPassOnDataOnly = ~any(forceDisplay_currentGUI) & anyGUI_previewMode;
                 
                 % Parameter arguments
                 for k = 1:fitter.numOfModel
@@ -366,7 +389,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                     out.fitInfo = fitter.fitInfo;
                     out.externalInfo = fitter.externalInfo;
                 end
-                if ~lAnyPickedOn
+                if ~lPassOnDataOnly
                     if obj.getPar('se_display')||forceDisplay
                         if fitter.model{1}.dimension == 2
                             vis = obj.setoutput('Plot');
@@ -707,13 +730,14 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.(['loadPar_' num2str(number)]).Callback = {@loadPar_callback, obj, number};
             
             % toggle button for selecting a site
-            obj.guihandles.(['pickSite_' num2str(number)])=uicontrol(hpar,'Style','togglebutton','String','Pick site');
-            obj.guihandles.(['pickSite_' num2str(number)]).Position = [180 0 60 20];
+%             obj.guihandles.(['pickSite_' num2str(number)])=uicontrol(hpar,'Style','togglebutton','String','Pick site');
+%             obj.guihandles.(['pickSite_' num2str(number)]).Position = [180 0 60 20];
             
             % button for previewing the model
-            obj.guihandles.(['forceDisplay_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','Preview');
-            obj.guihandles.(['forceDisplay_' num2str(number)]).Position = [240 0 60 20];
-            obj.guihandles.(['forceDisplay_' num2str(number)]).Callback = {@displayModel_callback, obj};
+            obj.guihandles.(['forceDisplay_' num2str(number)])=uicontrol(hpar,'Style','checkbox','String','Preview', 'Value',0);
+            obj.guihandles.(['forceDisplay_' num2str(number)]).Position = [240 0 120 20];
+            obj.guihandles.(['forceDisplay_' num2str(number)]).Tooltip = 'When this option is checked, the fit will be skipped and the model is visualized based on the starting paramters.';
+%             obj.guihandles.(['forceDisplay_' num2str(number)]).Callback = {@forceDisplay_callback, obj, number};
             
             % internal settings tab
             obj.guihandles.(['settingstable_' num2str(number)])=uitable(hsettings,'Data',{});
@@ -947,6 +971,17 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             end
             
         end
+        function value = get.lPreview(obj)
+            inp = obj.getGuiParameters;
+            fn = fieldnames(inp);
+            ind = startsWith(fieldnames(inp),'forceDisplay_');
+            fn_subset = fn(ind);
+            forceDisplay = [];
+            for k = length(fn_subset):-1:1
+                forceDisplay(k) = inp.(fn_subset{k});
+            end
+            value = forceDisplay;
+        end
     end
     
     events
@@ -1105,6 +1140,19 @@ obj.guihandles.optimizerpar=htable;
 end
 
 %         Call back for selecting the optimizer
+
+% function forceDisplay_callback(a,b,obj,modelID)
+%     currentName = obj.name;
+%     GUINumber = strrep(currentName, 'LocMoFitGUI', '');
+%     if isempty(GUINumber)
+%         GUINumber = 1;
+%     else
+%         GUINumber = str2num(GUINumber(2:end));
+%     end
+%     LocMoFitGUI_preview = obj.locData.getPar('LocMoFitGUI_preview');
+%     LocMoFitGUI_preview(GUINumber, modelID) = a.Value;
+%     obj.locData.setPar('LocMoFitGUI_preview', LocMoFitGUI_preview);
+% end
 
 function optimizer_callback(a,b,obj)
 % !!! later here should update the options for the optimizer settings
@@ -1771,12 +1819,6 @@ else
     obj.guihandles.(['sigma_fit_' modelNumber]).Enable = 'off';
     obj.guihandles.(['sigmaFactor_fit_' modelNumber]).Enable = 'on';
 end
-end
-
-% Parameters callback
-function displayModel_callback(a,b,obj)
-% Display the current model
-obj.run(obj.getAllParameters, 'onlySetUp',true, 'forceDisplay',true, 'keepParsVal',true);
 end
 
 function savePar_callback(a,b,obj,modID)
