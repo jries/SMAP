@@ -61,6 +61,14 @@ html_theme_options = {
     'prev_next_buttons_location': None
 }
 
+html_baseurl = 'index'
+
+# -- latex --------------------------------------------------------------------
+latex_documents = [
+    ('startdoc', 'LocMoFit_manual.tex', 'LocMoFit (Localization Model Fit)',
+     'Yu-Le Wu', 'manual')
+]
+
 # -- matlab source code ------------------------------------------------------
 matlab_src_dir = os.path.abspath("..")
 

@@ -1,28 +1,30 @@
 # Composite model
 
-In this tutorial you will learn how to build a composite model with the GUI. We will build a 3D dual-ring model by combining two times the identical ring model. You will need:
-* **SMAP** installed. Further information can be found on our [GitHub](https://github.com/jries/SMAP/) site.
-* _U2OS_Nup96_BG-AF647_demo_sml.mat_
-* _ring3d.mat_
-* _dualRing_model1_fitPar.csv_
-* _dualRing_model2_fitPar.csv_
+:::{note}
+Time required: ~10 min.
+:::
 
-The four files above can be downloaded [here](https://www.embl.de/download/ries/LocMoFit/).
+In {doc}`quick start<../tutorial/quickstart>`, we fitted a 2D ring to single nuclear pore complexes (NPCs). However, in 3D, there are actually two parallel rings in one NPC (can be seen in the side view). To extract parameters such as the distance between the two rings, a different geometry is required. Normally, this would reqire the user to create a new file with some coding. However, this particular geometry can be derived from the existing one (i.e., twice the 2D ring in 3D). Building a composite model by combining existing ones without coding is supported by LocMoFit.
+
+## Task
+Building a composite model with the GUI. We will build a 3D dual-ring model by combining two times the identical ring model.
+	
+## Requirment
+* Software: **SMAP** installed. Further information can be found on our [GitHub](https://github.com/jries/SMAP/) site.
+* Localization data: _U2OS_Nup96_BG-AF647_demo_sml.mat_
+* Fitting settings:
+	* _dualRing_model1_fitPar.csv_
+	* _dualRing_model2_fitPar.csv_
+
+The data and setting files can be downloaded [here](https://www.embl.de/download/ries/LocMoFit/).
 
 ## Preparation
-:::{important}
-Skip step 1 and 2 if you continue from {doc}`quick start<../basics/quickstart>`.
-
-Instead, remove the previous loaded **LocMoFitGUI** if you continue from {doc}`quick start<../basics/quickstart>`:
-	1. Go to **[ROIs]** -> **[Evaluate]** and click on the module to remove.
-	2. Click **remove**.
-:::
-1. Start SMAP.
+1. Start SMAP ({doc}`how to? <../howto/SMAP.runSMAP>`).
 2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_.
-3. Load a new instance of the plugin **LocMoFitGUI** (see {doc}`quick start<../basics/quickstart>` if you forget how to do it).
+3. Load a new instance of the plugin **LocMoFitGUI** (see {doc}`quick start<../tutorial/quickstart>` if you forget how to do it).
 
 ## Setup
-We will combine two identical rings (in the image format) in 3D to form a 3D dual-ring model ({doc}`more about model types<../basics/geometricModel>`).
+We will combine two identical rings in 3D ({class}`ring3D<models.ring3D>`) to form a 3D dual-ring model ({doc}`more about model types<../basics/geometricModel>`).
 
 1. We first load the individual models and set up the arguments of the model parameters:
 	* Go to **[M1]** -> **[Model]**, click **load model**. Navigate to the model directory, open _ring3d_img.mat_. Go to the tab **[Parameters]** and click the button **load**. In the new window, navigate to the settings directory and open dualRing_model1_fitPar.csv. Click **Import** button in the popup window.

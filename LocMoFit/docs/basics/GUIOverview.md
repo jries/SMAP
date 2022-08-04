@@ -1,5 +1,5 @@
-# GUI overview
-## Main GUI
+# Graphic user interface (GUI)
+## GUI overview
 ![LocMoFit GUI in SMAP](../images/overview.PNG)
 
 LocMoFit is integrated into SMAP. You can follow the steps to access to LocMoFit in SMAP:
@@ -39,6 +39,21 @@ Here you will see the following:
  * buttons **Save** and **Load** allow you to save and load settings.
  * a button **Pick site** allows you to click a site in the ROI manager without evaluating the fit. This is usually used together with the button _Preview_
  * a button **Preview** to show the model with the initial parameters.
+ 
+##### Description of the fields
+* _name_: parameter names.
+* _value_: initial values of parameters.
+* _fix_: specify the parameter should be fix or or not. If checked, the parameter will be set to the value you defined and will be a constant that are not fitted.
+* _lb_: relative lower boundaries of parameter ranges.
+* _ub_: relative upper boundaries of parameter ranges.
+* _type_: types of parameters. This is not editable.
+* _min_: absolute lower boundaries of parameter ranges.
+* _max_: absolute upper boundaries of parameter ranges.
+* _label_: user-defined labels for the corresponding parameters.
+
+   :::{note}
+   For example, _value_ 30, _lb_ -10, _ub_ 20, _min_ 10, and _max_ 45 results to a parameter range of [20 45]. This is based on first get [value+lb value+ub] = [20 50], and then check whether this is beyond [min max] = [10 45] or not. If this is the case, the range will be set to the min or max values so the final upper boundary is 45 but not 50.
+   :::
  
 #### Sub-tab _[Advance]_
 ![m1_Advance](../images/m1_Advance.PNG)
