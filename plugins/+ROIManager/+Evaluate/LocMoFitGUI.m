@@ -601,6 +601,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.optimizer.position=[1.5+dy,2];
             pard.optimizer.Width=1.5;
             pard.optimizer.tab='tab1';
+            pard.optimizer.TooltipString = 'Select the optimizer for the fitting here.';
             
             pard.loadfitting.object=struct('Style','pushbutton','String','load', 'Callback',{{@obj.load_callback}});
             pard.loadfitting.position=[1+dy,3.8];
@@ -628,37 +629,42 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.noFit.Width=1.3;
             pard.noFit.Height=1;
             pard.noFit.tab='tab1';
+            pard.noFit.TooltipString='If checked, the fit will not be excecuted. This is useful for viewing the old fit result.';
                        
             pard.useAlignment.object=struct('Style','checkbox','String','Register','Value',0);
             pard.useAlignment.position=[4.5+dy,3.5];
             pard.useAlignment.Width=1.5;
             pard.useAlignment.Height=1;
             pard.useAlignment.tab='tab1';
-            pard.useAlignment.TooltipString = 'Perform the transformation of the site based on the model.';
+            pard.useAlignment.TooltipString = 'Regester the current sites to a common coordinate system. If needed, click on [...] to define extra transformations before the registration.';
             
             pard.setting_alignment.object=struct('Style','pushbutton','String','...','Callback',{{@setting_alignment_callback,obj}});
             pard.setting_alignment.position=[4.3+dy,4.7];
             pard.setting_alignment.Width=0.25;
             pard.setting_alignment.Height=0.5;
             pard.setting_alignment.tab='tab1';
+            pard.setting_alignment.TooltipString = 'Settings for extra transformations.';
                                   
             pard.optimizerpar.object=struct('Style','text','String','');
             pard.optimizerpar.position=[4.5+dy,1];
             pard.optimizerpar.Width=2.5;
             pard.optimizerpar.Height=3;
             pard.optimizerpar.tab='tab1';
+            pard.optimizerpar.TooltipString = 'Define settings for the optimizer of choice here.';
             
             pard.addRowOptimizer.object=struct('Style','pushbutton','String','+', 'Callback',{{@addRowOptimizer_callback,obj}});
             pard.addRowOptimizer.position=[5+dy,3];
             pard.addRowOptimizer.Width=0.2;
             pard.addRowOptimizer.Height=0.4;
             pard.addRowOptimizer.tab='tab1';
+            pard.addRowOptimizer.TooltipString = 'Add a new row.';
             
             pard.rmRowOptimizer.object=struct('Style','pushbutton','String','-', 'Callback',{{@rmRowOptimizer_callback,obj}});
             pard.rmRowOptimizer.position=[5+dy,3.2];
             pard.rmRowOptimizer.Width=0.2;
             pard.rmRowOptimizer.Height=0.4;
             pard.rmRowOptimizer.tab='tab1';
+            pard.rmRowOptimizer.TooltipString = 'Remove the selected row.';
             
             pard.t_layerSetting.object=struct('Style','text','String','Layer background:');
             pard.t_layerSetting.position=[6+dy,1];
@@ -676,6 +682,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             pard.helpButton.Width=0.3;
             pard.helpButton.Height=0.6;
             pard.helpButton.tab='none';
+            pard.helpButton.TooltipString = 'Help page for the current tab.';
         end
         
         function addguitotab(obj,number)
@@ -723,11 +730,13 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.(['savePar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','Export');
             obj.guihandles.(['savePar_' num2str(number)]).Position = [20 0 40 20];
             obj.guihandles.(['savePar_' num2str(number)]).Callback = {@savePar_callback, obj, number};
-            
+            obj.guihandles.(['savePar_' num2str(number)]).Tooltip = 'Export the settings as a text file.';
+
             % button for loading the model
             obj.guihandles.(['loadPar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','Import');
             obj.guihandles.(['loadPar_' num2str(number)]).Position = [60 0 40 20];
             obj.guihandles.(['loadPar_' num2str(number)]).Callback = {@loadPar_callback, obj, number};
+            obj.guihandles.(['loadPar_' num2str(number)]).Tooltip = 'Import previously exported settings.';
             
             % toggle button for selecting a site
 %             obj.guihandles.(['pickSite_' num2str(number)])=uicontrol(hpar,'Style','togglebutton','String','Pick site');
@@ -1324,23 +1333,26 @@ modelOptions = obj.getPar('modelOptions');
 if ~isempty(modelOptions)
     fn = fieldnames(modelOptions);
 end
-fn = [fn; '[from a file...]'];
+fn = ['Select a model...'; fn; '[from a file...]'];
 pard.modelname_CM.object=struct('Style','popupmenu','String', {fn},'value', 1);
 pard.modelname_CM.position=[3+dy,1];
 pard.modelname_CM.Width=1.8;
 pard.modelname_CM.tab=['tabmodel_' num2str(number)];
 pard.modelname_CM.Visible = 'off';
+pard.modelname_CM.Tooltip = 'The geometric model to be loaded.';
 
 pard.modelInfo.object=struct('Style','pushbutton','String','i','Callback',{{@helpLocMoFitGUI,obj,true}});
 pard.modelInfo.position=[3+dy,2.8];
 pard.modelInfo.Width=0.2;
 pard.modelInfo.tab=['tabmodel_' num2str(number)];
+pard.modelInfo.Tooltip = 'Information of the selected model.';
 
 pard.modelload_CM.object=struct('Style','pushbutton','String','load model','Callback',{{@loadmodel_callback,obj}});
 pard.modelload_CM.position=[3+dy,3];
 pard.modelload_CM.Width=1;
 pard.modelload_CM.tab=['tabmodel_' num2str(number)];
 pard.modelload_CM.Visible = 'off';
+pard.modelload_CM.Tooltip = 'Load the selected model to LocMoFit.';
 
 pard.modelType.object=struct('Style','popupmenu','String',{'Type'},'value', 1,'Callback',{{@modType_callback,obj,number}});
 pard.modelType.position=[3+dy,4];
@@ -1348,6 +1360,7 @@ pard.modelType.Width=1;
 pard.modelType.tab=['tabmodel_' num2str(number)];
 pard.modelType.Tooltip='Convert the model to the type you specify.';
 pard.modelType.Enable = 'off';
+pard.modelType.Tooltip = 'Model forms.';
 
 pard.layert.object=struct('Style','text','String','Layer');
 pard.layert.position=[4+dy,1];
@@ -1479,19 +1492,23 @@ end
 % If the model is loaded from a saved file, then skip addModel and load the
 % model obj from the file, otherwise create a new obj.
 if obj.getPar('loading')
-    initmodel(obj, modelnumber,'skipAddModel',true, 'compiledMode', obj.compiledMode);
+    init_status = initmodel(obj, modelnumber,'skipAddModel',true, 'compiledMode', obj.compiledMode);
 else
-    initmodel(obj, modelnumber, 'compiledMode', obj.compiledMode);
+    init_status = initmodel(obj, modelnumber, 'compiledMode', obj.compiledMode);
 end
 
 
 % Update the layers in use.
-obj.updateLayer;
-obj.setPar('status', 'model successfully loaded')
+if init_status
+    obj.updateLayer;
+    obj.setPar('status', 'model successfully loaded')
+else
+    obj.setPar('status', 'no model is loaded: please select a model first')
+end
 end
 
 %    Initiate the modelwhich
-function initmodel(obj, modelnumber,varargin)
+function status = initmodel(obj, modelnumber,varargin)
 % Initiate the model.
 % Initiate the function.
 p = inputParser;
@@ -1517,6 +1534,10 @@ if ~strcmp(modPath,'Loaded')&&~results.skipAddModel
                 lFromFile = true;
                 fileSource = modelSeleted(2:end-1);
                 modPath = fileSource;
+            elseif endsWith(modelSeleted,'...')
+                disp('Please select a model first.')
+                status = 0;
+                return
             else
                 lFromFile = false;
             end
@@ -1648,6 +1669,7 @@ if results.skipAddModel
         obj.guihandles.(['modelname_CM_' modelnumberStr]).Value = length(modelOptions)+1;
     end
 end
+status = 1;
 end
 
 % Enable settings
