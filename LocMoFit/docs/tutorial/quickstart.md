@@ -8,7 +8,7 @@ LocMoFit fits a geometry to single structures in SMLM data. In this tutorial, yo
 
 We will be using the nuclear pore complex (NPC) as the example. This complex appears as rings if you see them in the top view.
 
-![NPCs](../images/NPCs_topview.PNG)
+![NPCs](../images/NPCs_topview.png)
 
 ## Task
 Fitting a 2D ring model to the top-view projection of NPCs to find their positions.
@@ -28,7 +28,7 @@ The mat file can be downloaded [here](https://www.embl.de/download/ries/LocMoFit
 
 The current window:
 
-![SMAP: data loaded](../images/SMAP_dataLoaded.PNG)
+![SMAP: data loaded](../images/SMAP_dataLoaded.png)
 
 You should see the data set displayed in the **Overview**.
 
@@ -40,7 +40,7 @@ Before fitting, let's explore the data a bit first. We can find the list of segm
 	:::
 2. Click a few sites in the ROI list to display them.
 
-	![ROIManager](../images/ROIManager_overview.PNG)
+	![ROIManager](../images/ROIManager_overview.png)
 
 ## Loading LocMoFit
 Let's now start to work with LocMoFit by loading it into SMAP:
@@ -50,7 +50,7 @@ start-line: 1
 ---
 :::
 :::{note}
-The button ![help](../images/button_help.PNG) in the up-right corner of the LocMoFit GUI provides you details of fields and buttons in the current tab/sub-tab.
+The button ![help](../images/button_help.png) in the up-right corner of the LocMoFit GUI provides you details of fields and buttons in the current tab/sub-tab.
 :::
 
 ## Setup
@@ -58,7 +58,7 @@ We will be using the in-built model {class}`ring2D<models.ring2D>` here ({doc}`m
 1. First, we have to load the model into LocMoFit:
 	* In the right panel, go to **[M1]** -> **[Model]**, click the drop-down menu (where _selet the model..._ is shown), and then select _ring2D_.
 	
-		![Model tab](../images/modelTab_default.PNG)
+		![Model tab](../images/modelTab_default.png)
    
 	* Click **load model**. Now the model is loaded.
 	:::{note}
@@ -66,13 +66,13 @@ We will be using the in-built model {class}`ring2D<models.ring2D>` here ({doc}`m
 	:::
 	
 	:::{Note}
-	Clicking the button ![Model info](../images/button_info.PNG) next to the drop-down menu opens the webpage detailing the selected model.
+	Clicking the button ![Model info](../images/button_info.png) next to the drop-down menu opens the webpage detailing the selected model.
 	:::
 	
 2. The we set up the parameter settings:
 	* Go to the tab **[Parameters]**
 
-		![parameters tab](../images/parameters_modelLoaded.PNG)
+		![parameters tab](../images/parameters_modelLoaded.png)
 
 	* Fill in the table as followed:
 	
@@ -110,12 +110,12 @@ In practice, you often have to optimize the fitting settings, especially finding
 	* The loaded modules will be evaluated only when **evaluate on** is checked.
 	* Result windows of the loaded modules will be displayed only when **display** is checked.
 	
-		![Evaluate panel](../images/evaluate_lowerLeft.PNG)
+		![Evaluate panel](../images/evaluate_lowerLeft.png)
 	:::
 
 3. Now click on the first ROI in the _ROI manager_ window and wait for a few seconds. You should see a new window _LocMoFitGUI_, in which the localizations are plotted on the initial model.
 
-	![Initial model](../images/viewer_quickstart_preview.PNG)
+	![Initial model](../images/viewer_quickstart_preview.png)
 
 4. You can explore the data more by repeating these steps for a few more ROIs.
 
@@ -125,7 +125,7 @@ Next, we will execute the fitting. This is done by clicking the site in the list
 1. Go back the tab **[Parameters]** and uncheck **preview**.
 	
 2. In the _ROI Manager_ window, click on one site and wait for a few seconds. You should see the updated _LocMoFitGUI_ window displaying the fitted model.
-	![Viewer](../images/viewer_quickstart.PNG)
+	![Viewer](../images/viewer_quickstart.png)
 	:::{Note}
 	The **LocMoFitGUI** window allows you to inspect the result right after fitting. The window may look different depending on the model type.
 	:::
