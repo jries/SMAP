@@ -35,6 +35,10 @@ Bucket
 
 Ring
 ----
+.. autoclass:: ring2D
+	:members:
+	:show-inheritance:
+
 .. autoclass:: ring3D
 	:members:
 	:show-inheritance:

@@ -30,4 +30,4 @@ You can access to LocMoFit by installing SMAP. Check section _Installation_ for 
 You can downloaded the zipped files of LocMoFit [here](https://www.embl.de/download/ries/LocMoFit/). To install the code, simply unzip (usually in less than 5 min) the file and add the path of the unzipped folder to MATLAB. 
 
 ## Using LocMoFit with GUI now (SMAP required)
-We recommned you to follow along the tutorial {doc}`/tutorial/quickstart` to learn LocMoFit.
+After the installation, we are ready to go. To learn more about the LocMoFit GUI, we recommned you to follow along the tutorial {doc}`/tutorial/quickstart`.
