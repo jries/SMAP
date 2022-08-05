@@ -19,7 +19,9 @@ Fitting a 2D ring model to the top-view projection of NPCs to find their positio
 
 The mat file can be downloaded [here](https://www.embl.de/download/ries/LocMoFit/).
 
-## Preparation
+## Main tutorial
+
+### Preparation
 1. Start **SMAP** ({doc}`how to? <../howto/SMAP.runSMAP>`).
 2. Load the localization data ({doc}`how to?<../howto/SMAP.loadData>`) _U2OS_Nup96_BG-AF647_demo_sml.mat_. This file contains segmented nuclear pore complexes that you will be analyzing in the following steps.
 :::{note}
@@ -32,7 +34,7 @@ The current window:
 
 You should see the data set displayed in the **Overview**.
 
-## Warm-up
+### Warm-up
 Before fitting, let's explore the data a bit first. We can find the list of segmented NPCs in the **ROIManager**:
 1. Go to **[ROI]** -> **[Settings]**, click **show ROI manager**. This opens the **ROIManager** in a new window.
 	:::{Note}
@@ -42,7 +44,7 @@ Before fitting, let's explore the data a bit first. We can find the list of segm
 
 	![ROIManager](../images/ROIManager_overview.png)
 
-## Loading LocMoFit
+### Loading LocMoFit
 Let's now start to work with LocMoFit by loading it into SMAP:
 :::{include} ../howto/SMAP.loadLocMoFit.md
 ---
@@ -53,7 +55,7 @@ start-line: 1
 The button ![help](../images/button_help.png) in the up-right corner of the LocMoFit GUI provides you details of fields and buttons in the current tab/sub-tab.
 :::
 
-## Setup
+### Setup
 We will be using the in-built model {class}`ring2D<models.ring2D>` here ({doc}`more about model types<../basics/geometricModel>`).
 1. First, we have to load the model into LocMoFit:
 	* In the right panel, go to **[M1]** -> **[Model]**, click the drop-down menu (where _selet the model..._ is shown), and then select _ring2D_.
@@ -100,7 +102,7 @@ We will be using the in-built model {class}`ring2D<models.ring2D>` here ({doc}`m
 	:::
 	With the settings, now you defined a ring with radius = 53.7 nm. The ring can be moved in the xy plane freely from -150 to 150 nm.
 
-## Preview
+### Preview
 In practice, you often have to optimize the fitting settings, especially finding good initial parameters. In this case, previewing the model with the initial parameters is useful.
 
 1. To active the preview mode, check the checkbox **preview** in the bottom-left corner of the tab **[Parameters]**.
@@ -119,7 +121,7 @@ In practice, you often have to optimize the fitting settings, especially finding
 
 4. You can explore the data more by repeating these steps for a few more ROIs.
 
-## Fitting
+### Fitting
 Next, we will execute the fitting. This is done by clicking the site in the list of sites in the _ROI manager_ window with the preview box unchecked:
 
 1. Go back the tab **[Parameters]** and uncheck **preview**.
@@ -131,5 +133,5 @@ Next, we will execute the fitting. This is done by clicking the site in the list
 	:::
 Now you have your first fit done! Congratulations! You should see the previously uncentered structure now centered becasue the fit finds the position of the structure. You can further explore a few sites to get familiar with the interface.
 
-## Next tutorial
+### Next tutorial
 You are in the introductory series. The next tutorial is {doc}`Composite model<../tutorial/compositeModel>`.
