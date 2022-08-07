@@ -633,13 +633,31 @@ classdef LocMoFit<matlab.mixin.Copyable
         end
         
         function setParArgBatch(obj, parArg, varargin)
-            nPar = length(parArg.name);
-            for k = 1:nPar
-                parIdFull = ['pars.m' num2str(parArg.model(k)) '.' parArg.type{k} '.' parArg.name{k}];
-                parId = ['m' num2str(parArg.model(k)) '.' parArg.type{k} '.' parArg.name{k}];
-                if ~isempty(obj.getVariable(parIdFull))
-                    obj.setParArg(parId,'value', parArg.value(k), 'lb', parArg.lb(k),'ub', parArg.ub(k),'fix', parArg.fix(k),'min', parArg.min(k),'max', parArg.max(k),'label', parArg.label(k))
-                end
+            inp = inputParser;
+            addParameter(inp,'modelID',1, @isnumeric);
+            parse(inp,varargin{:});
+            inp = inp.Results;
+
+            class_parArg = class(parArg);
+            switch class_parArg
+                case 'struct'
+                    nPar = length(parArg.name);
+                    for k = 1:nPar
+                        parIdFull = ['pars.m' num2str(parArg.model(k)) '.' parArg.type{k} '.' parArg.name{k}];
+                        parId = ['m' num2str(parArg.model(k)) '.' parArg.type{k} '.' parArg.name{k}];
+                        if ~isempty(obj.getVariable(parIdFull))
+                            obj.setParArg(parId,'value', parArg.value(k), 'lb', parArg.lb(k),'ub', parArg.ub(k),'fix', parArg.fix(k),'min', parArg.min(k),'max', parArg.max(k),'label', parArg.label(k))
+                        end
+                    end
+                case 'cell'
+                    nPar = size(parArg,1);
+                    for k = 1:nPar
+                        parIdFull = ['pars.m' num2str(inp.modelID) '.' strtrim(parArg{k,6}) '.' strtrim(parArg{k,1})];
+                        parId = ['m' num2str(inp.modelID) '.' strtrim(parArg{k,6}) '.' strtrim(parArg{k,1})];
+                        if ~isempty(obj.getVariable(parIdFull))
+                            obj.setParArg(parId,'value', parArg{k,2}, 'lb', parArg{k,4},'ub', parArg{k,5}, 'fix',parArg{k,3},'min', parArg{k,7},'max',parArg{k,8},'label', parArg{k,9})
+                        end
+                    end
             end
         end
         
