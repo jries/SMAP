@@ -10,7 +10,7 @@ classdef ellipse3D<geometricModel
     %       :width: 400
     %   Scale bar: 50 nm.
     methods
-        function obj = ellipse2D(varargin)
+        function obj = ellipse3D(varargin)
             obj@geometricModel(varargin{:});
             % Define parameters that can be altered during fitting here:
             obj.name = {'a','b'}; % parameter names

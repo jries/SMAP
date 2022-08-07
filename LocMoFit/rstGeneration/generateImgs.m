@@ -11,7 +11,7 @@ par_general.saveTo = 'X:\users\Yu-Le\LocMoFit_t2\NPC3D\dualEllipseSim\simulation
 % standard condition
 par_std.LE = 0.7;
 par_std.RB = 4;
-par_std.linkageError = 3;
+par_std.linkageError = 5;
 par_std.lifetime = 1;
 par_std.frame = 1000000;
 par_std.ellipticity = 0.1;
@@ -26,6 +26,8 @@ par_mode{1}.BG_pixel = 100;
 fn_mode = fieldnames(par_mode{1});
 
 % Settings for the simulations
+SMAP
+h_SimulateSites = g.children.guiSites.children.Segment.children.SimulateSites;
 p = h_SimulateSites.getGuiParameters;
 
 h_guiFile = g.children.guiFile;
@@ -41,16 +43,16 @@ p.use_psf = par_general.use_psf;
 % p.psf_file = par_general.psf_file;
 
 %% Get all the listed models
-SMAP
 locs.xnm = 0; locs.ynm = 0; locs.znm = 0; locs.locprecnm = 5; locs.locprecznm = 10; locs.layer = 1;
 % SE
 se = g.locData.SE;
 eval_ = se.processors.eval;
-h_SimulateSites = g.children.guiSites.children.Segment.children.SimulateSites;
 
 roiSize = 200;
 model2Show = modelList;
 for k = 1:length(model2Show)
+    oneModel = model2Show{k};
+    oneModel = 'arc2D';
     eval_.addmodule('LocMoFitGUI');
     idxFitter = find(strcmp('LocMoFitGUI',fieldnames(eval_.children)));
     fitterGUI = eval_.processors{idxFitter};
@@ -144,6 +146,7 @@ for k = 1:length(model2Show)
     guiPar.lut.Value = 1;
     guiPar.render_colormode.Value = 1;
     L1.setGuiParameters(guiPar)
+    g.locData.setPar('layer1_selectedField', {'locprecnm', 0,10, 1, 1})
 
     guiFormat = g.getPar('guiFormat');
     guiFormat.guihandles.pixrec.String = '1';
@@ -161,14 +164,15 @@ for k = 1:length(model2Show)
             pan(2).select(oneView.Children);
             close(oneView);
 
-            pan.margin = [0 0 0 5];
+            pan.margin = [0 0 0 7];
             pan.de.margin = [1 0 0 0];
+            pan.fontsize = 16;
             set(pan.de.axis, 'visible', 'on','xtick',[],'ytick',[],'xlabel',[],'ylabel',[])
             axis(pan.de.axis,'image')
             title(pan(1).axis, 'model');
             title(pan(2).axis, 'simulation');
         
-            fig_pan.Position(3:4) = [500 265];
+            fig_pan.Position(3:4) = [500 274];
 
             sb = addScalebar(pan(2).axis,'bottom-right', roiSize./[15 15], 50);
             sb.LineWidth = 3;
