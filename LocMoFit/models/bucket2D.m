@@ -5,7 +5,7 @@ classdef bucket2D<geometricModel
     %
     % Geometric parameters:
     %   * `radius`: (nm) the radius of the ring where the arc is derived.
-    %   * `theta`: (degree) the closing anlge of the arc.
+    %   * `theta`: (°) the closing anlge of the arc.
     %
     % See also:
     %   :class:`arc2D<models.arc2D>`

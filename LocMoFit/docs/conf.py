@@ -68,6 +68,7 @@ latex_documents = [
     ('startdoc', 'LocMoFit_manual.tex', 'LocMoFit (Localization Model Fit)',
      'Yu-Le Wu', 'manual')
 ]
+latex_engine = 'xelatex'
 
 # -- matlab source code ------------------------------------------------------
 matlab_src_dir = os.path.abspath("..")

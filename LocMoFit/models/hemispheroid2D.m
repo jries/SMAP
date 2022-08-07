@@ -1,6 +1,19 @@
 classdef hemispheroid2D<geometricModel
-    % Last update:
-    %   21.07.2021
+    % :class:`hemispheroid2D` describes the side-view projection of a hemispheroid.
+    %
+    % Geometric parameters:
+    %   * `a`: (nm) the axis along the y-axis.
+    %   * `b`: (nm) the axis along the x-axis.
+    %   * `xcenter`: (nm) [obsolete] please set it to zero.
+    %   * `ycenter`: (nm) [obsolete] please set it to zero.
+    %
+    % Relavent biological structure:
+    %   * actin network at the endocytic site
+    %
+    % Preview:
+    %   .. image:: ./images/models/hemispheroid2D.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = hemispheroid2D(varargin)
             obj@geometricModel(varargin{:});

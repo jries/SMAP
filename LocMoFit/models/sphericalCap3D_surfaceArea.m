@@ -1,9 +1,18 @@
 classdef sphericalCap3D_surfaceArea<geometricModel
-    % Describing endocytic coat proteins as molecules covering a part of
-    % sphere with an angle indicating the closed part.
-    %
-    % Last update:
-    %   14.07.2021
+    % :class:`sphericalCap3D_surfaceArea` describes the geometry of a spherical cap in 3D.
+	%
+	% Geometric parameters:
+    %   * `surfaceArea`: (10\ :sup:`4` nm\ :sup:`2`) the surface area of the spherical cap.
+    %   * `closeAngle`: (°) the angle from the pole to the edge of the cap.
+	%
+    % Relavent biological structure:
+    %   * mammalian endocytic coat
+	%
+    % Preview:
+    %   .. image:: ./images/models/sphericalCap3D_surfaceArea.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
+
     methods
         function obj = sphericalCap3D_surfaceArea(varargin)
             obj@geometricModel(varargin{:});

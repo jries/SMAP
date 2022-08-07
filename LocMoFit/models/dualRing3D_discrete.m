@@ -1,9 +1,19 @@
 classdef dualRing3D_discrete<geometricModel
-    % :class:`dualRingModel` is the dual ring model used in the LocMoFit
-    % manuscript for describing Nup96-labeled NPCs.
-    %
-    % Log:
-    %   201229: change the sign of the ring twist
+    % :class:`dualRing3D_discrete` describes two parallel rings in 3D. The rings have the same xy position and radius.
+	%
+	% Geometric parameters:
+    %   * `ringDistance`: (nm) the distance between the two parallel rings.
+    %   * `azimuthalShift`: (°) the twist angle between the two parallel rings.
+    %   * `radius`: (nm) the radius of the rings.
+	%   * `cornerDegree`: (°) the rotational offset between two copies per corner.
+	%
+    % Relavent biological structure:
+    %   * the nuclear pore complex
+	%
+    % Preview:
+    %   .. image:: ./images/models/dualRing3D_discrete.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = dualRing3D_discrete(varargin)
             obj@geometricModel(varargin{:});
@@ -29,23 +39,7 @@ classdef dualRing3D_discrete<geometricModel
             
         end
         
-        function [model, p]= reference(obj, par, dx)
-        % Sample coordinates of the model as reference.
-        % --- Syntax ---
-        % [model, p]= reference(obj, par, dx)
-        % --- Arguments ---
-        % -- Input --
-        % obj:
-        % par: a structure object. Its fieldnames should be the names of
-        % parameters, and their correspoinding content should be the
-        % parameter values.
-        % dx: sampling rate.
-        % -- Output --
-        % model: a structure object. Its fieldnames should be x, y, z, and
-        % n, indicating the xyz position amplitude n of the sampled model
-        % points.
-        % p: additional information of the model.
-        
+        function [model, p]= reference(obj, par, dx)        
         
         % set additional parameters of the model
         ip = inputParser;

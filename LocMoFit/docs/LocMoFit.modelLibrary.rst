@@ -39,6 +39,10 @@ Ring
 	:members:
 	:show-inheritance:
 
+.. autoclass:: ellipse3D
+	:members:
+	:show-inheritance:
+	
 .. autoclass:: ring3D
 	:members:
 	:show-inheritance:
@@ -65,11 +69,11 @@ Tube and derivitives
 
 Dual rings and derivitives
 --------------------------
-.. autoclass:: dualEllipse3D_avgR_discrete
+.. autoclass:: dualEllipse3D_discrete
 	:members:
 	:show-inheritance:
-
-.. autoclass:: dualEllipse3D_discrete
+	
+.. autoclass:: dualEllipse3D_avgR_discrete
 	:members:
 	:show-inheritance:
 
@@ -108,5 +112,9 @@ Sperical model and derivitives
 Random geometry
 ---------------
 .. autoclass:: locsBG3D
+	:members:
+	:show-inheritance:
+
+.. autoclass:: gaussianCluster2D
 	:members:
 	:show-inheritance:

@@ -1,6 +1,20 @@
 classdef thickRing2D<geometricModel
-    % Last update:
-    %   21.07.2021
+    % :class:`thickRing2D` describes the side-view projection of a thick ring.
+    %
+    % Geometric parameters:
+    %   * `innerRadius`: (nm) the inner radius of the ring.
+    %   * `outerRadius`: (nm) the outer radius of the ring.
+	%   * `thickness`: (nm) the thickness of the ring.
+    %   * `xcenter`: (nm) [obsolete] please set it to zero.
+    %   * `ycenter`: (nm) [obsolete] please set it to zero.
+    %
+    % Relavent biological structure:
+    %   * actin network at the endocytic site
+    %
+    % Preview:
+    %   .. image:: ./images/models/hemispheroid2D.PNG
+    %       :width: 400
+    % Scale bar: 50 nm.
     methods
         function obj = thickRing2D(varargin)
             obj@geometricModel(varargin{:});

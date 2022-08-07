@@ -1,9 +1,21 @@
 classdef dualEllipse3D_discrete<geometricModel
-    % :class:`dualRingModel` is the dual ring model used in the LocMoFit
-    % manuscript for describing Nup96-labeled NPCs.
-    %
-    % Log:
-    %   201229: change the sign of the ring twist
+    % :class:`dualEllipse3D_discrete` describes two parallel ellipse in 3D. The ellipse have the same xy positions and short/long axes.
+	%
+	% Geometric parameters:
+    %   * `ringDistance`: (nm) the distance between the two parallel rings.
+    %   * `azimuthalShift`: (°) the twist angle between the two parallel rings.
+    %   * `a`: (nm) the length of the long axis.
+	%   * `ellipticity`: (no unit) or `e`, is defined as `e = 1-b/a`, where a and b are the long and short axes.
+	%   * `aDir`: (°) the rotational offset between the first corner and the long axis `a`.
+	%   * `cornerDegree`: (°) the rotational offset between two copies per corner.
+	%
+    % Relavent biological structure:
+    %   * deformed nuclear pore complex
+	%
+    % Preview:
+    %   .. image:: ./images/models/dualEllipse3D_discrete.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = dualEllipse3D_discrete(varargin)
             obj@geometricModel(varargin{:});
@@ -30,23 +42,7 @@ classdef dualEllipse3D_discrete<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
-        % Sample coordinates of the model as reference.
-        % --- Syntax ---
-        % [model, p]= reference(obj, par, dx)
-        % --- Arguments ---
-        % -- Input --
-        % obj:
-        % par: a structure object. Its fieldnames should be the names of
-        % parameters, and their correspoinding content should be the
-        % parameter values.
-        % dx: sampling rate.
-        % -- Output --
-        % model: a structure object. Its fieldnames should be x, y, z, and
-        % n, indicating the xyz position amplitude n of the sampled model
-        % points.
-        % p: additional information of the model.
-        
-        
+         
         % set additional parameters of the model
         ip = inputParser;
         fn = fieldnames(obj.internalSettings);

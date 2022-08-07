@@ -1,5 +1,21 @@
 classdef csplineTube3D_xyz<geometricModel
-    % A general model describing a linear structure traverse in 3D space.
+    % A c-spline for describing a linear structure traversing in 3D space. It describe the same geometry as :class:`csplineTube3D_midPoint<models.csplineTube3D_midPoint>` but with a different parameterization.
+    %
+    % Geometric parameters:
+    %   * `x_n, y_n, z_n`: (nm) the xyz coordinates of the n\ :sup:`th` control point.
+    %   * `r`: (nm) the radius of the tube.
+    %
+    % Relavent biological structure:
+    %   * Actin filaments
+    %   * The central axes of microtubules
+    % 
+	% See also:
+    %   :class:`csplineTube3D_midPoint<models.csplineTube3D_midPoint>`
+	%
+    % Preview:
+    %   .. image:: ./images/models/csplineTube3D_midPoint.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = csplineTube3D_xyz(varargin)
             obj@geometricModel(varargin{:});

@@ -1,8 +1,19 @@
 classdef csplineClosedTube3D_midPoint<geometricModel
-    % A general model describing a linear structure traverse in 3D space.
+    % A c-spline for describing a flexible tube that has its ends closed, traversing in 3D space.
     %
-    % Last update:
-    %   14.07.2021
+    % Geometric parameters:
+    %   * `xMid, yMid, zMid`: (nm) the xyz coordinates of the mid point.
+    %   * `r`: (nm) the radius of the tube.
+    %   * `dist`: (nm): the distance between neighbouring control points
+    %   * `rotAzi[L/R]_n, rotEle[L/R]_n`: (°) the azimuthal and elevation angles or of the vector pointing to the [L/R]_n control point. `[L/R]` is either L (left) or R (right) with respect to the mid point. `n` indicates the order. For exmple, rotAziL1 means the azimuthal angle defining the 1\ :sup:`st` point on the left of the mid point.
+    %
+    % Relavent biological structure:
+    %   * outer membrane of a mitochondria
+    %
+    % Preview:
+    %   .. image:: ./images/models/csplineClosedTube3D_midPoint.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = csplineClosedTube3D_midPoint(varargin)
             obj@geometricModel(varargin{:});

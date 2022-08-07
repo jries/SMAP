@@ -1,9 +1,25 @@
 classdef spheroidCap3Dp_surfaceArea<parametricModel
-    % Describing endocytic coat proteins as molecules covering a part of
-    % sphere with an angle indicating the closed part.
-    %
-    % Last update:
-    %   18.07.2021
+    % :class:`sphericalCap3Dp_surfaceArea` describes the geometry of spheroid cap in 3D. It is parametric. Spheroid cap is a spherial cap flattened at the poles.
+	%
+	% .. Important::
+	%
+	%   Here the flattening is applied along the y-axis, not the z-axis.
+	%
+	% Geometric parameters:
+    %   * `surfaceArea`: (10\ :sup:`4` nm\ :sup:`2`) the surface area of the spherical cap.
+    %   * `closeAngle`: (°) the angle from the pole to the edge of the cap.
+	%	* `flattening`: (no unit) or `f`, is defined as `1-c/a`, where a and c are the two distinct axis lengths. c lines on the y-axis.
+	%
+    % Relavent biological structure:
+    %   * mammalian endocytic coat
+	%
+	% See also:
+    %   :class:`spheroid3Dp_surfaceArea<models.spheroid3Dp_surfaceArea>`
+	%
+    % Preview:
+	% 	.. image:: ./images/models/spheroidCap3Dp_surfaceArea.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = spheroidCap3Dp_surfaceArea(varargin)
             obj@parametricModel(varargin{:});

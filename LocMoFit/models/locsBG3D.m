@@ -1,7 +1,10 @@
 classdef locsBG3D<geometricModel
-    
-    % log
-    %   - 201229: change the sign of the ring twist
+    % :class:`locsBG3D` is usually used for simulations. It allows generating localizations in 3D at random positions.
+	%
+	% Geometric parameters:
+    %   * `density`: (μm\ :sup:`-2`) density of background localizations in the xy plane.
+    %   * `depth`: (nm) the depth of the ROI.
+	%
     methods
         function obj = locsBG3D(varargin)
             obj@geometricModel(varargin{:});
