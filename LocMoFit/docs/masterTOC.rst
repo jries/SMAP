@@ -18,9 +18,7 @@
    :hidden:
    :caption: Tutorial
    
-   ./tutorial/quickstart.md
-   Composite model <./tutorial/compositeModel.md>
-   ./tutorial/chainSteps.md
+   ./tutorial/introductory_series.rst
    ./tutorial/simulations.md
 
 .. raw:: latex
@@ -38,14 +36,16 @@
 
 .. raw:: latex
 
+..
    \part{Notes}
 
-.. toctree::
-   :hidden:
-   :caption: Notes
-   
-   notes.application
-   notes.programming
+..
+	.. toctree::
+	   :hidden:
+	   :caption: Notes
+..   
+	   notes.application
+	   notes.programming
 
 .. raw:: latex
 

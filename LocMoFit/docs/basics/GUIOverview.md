@@ -1,6 +1,6 @@
 # Graphic user interface (GUI)
 ## GUI overview
-![LocMoFit GUI in SMAP](../images/overview.PNG)
+![LocMoFit GUI in SMAP](../images/SMAP_overview.png)
 
 LocMoFit is integrated into SMAP. You can follow the steps to access to LocMoFit in SMAP:
 1. Go to the **[ROIs]** tab.
@@ -31,7 +31,7 @@ In this tab, you can load and set up the first SMLM model.
 :::
 
 #### Sub-tab _[Parameters]_
-![m1_Parameters](../images/m1_Parameters.PNG)
+![m1_Parameters](../images/parameters_modelLoaded.png)
 
 If you already loaded a model, you can move on to this tab and set up the model parameters.
 Here you will see the following:
@@ -68,7 +68,7 @@ Here you will see the following:
 :::
 
 ### Tab _[Settings]_
-![settings](../images/overview_settings.PNG)
+![settings](../images/LocMoFit_settings.PNG)
 
 In this tab, you can set up settings beyond specific models and have a global control of the current LocMoFitGUI instance.
 Here you will see the following:
@@ -118,7 +118,7 @@ There are different parts:
       :::{Note}
       You can enable the history saving by turning on the _OutputFun_ in the table _optimizer parameters_
 	  
-	  ![fit2DImgModel_viewer](../images/OutputFun_on.PNG)
+	  ![outputFun on](../images/settings_outputFunOn.png)
       :::
 
 #### Tab _[FixRot]_
