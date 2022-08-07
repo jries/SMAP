@@ -1,8 +1,24 @@
 classdef csplineTube3D_midPoint<geometricModel
-    % A general model describing a linear structure traverse in 3D space.
+    % A c-spline for describing a linear structure traversing in 3D space.
     %
-    % Last update:
-    %   14.07.2021
+    % Geometric parameters:
+    %   * `xMid, yMid, zMid`: (nm) the xyz coordinates of the mid point.
+    %   * `r`: (nm) the radius of the tube.
+    %   * `dist`: (nm): the distance between neighbouring control points
+    %   * `rotAzi[L/R]_n, rotEle[L/R]_n`: (°) the azimuthal and elevation angles or of the vector pointing to the [L/R]_n control
+    %   point. `[L/R]` is either L (left) or R (right) with respect to the
+    %   mid point. `n` indicates the order. For exmple, rotAziL1 means the
+    %   azimuthal angle defining the 1st point on the left of the mid
+    %   point.
+    %
+    % Relavent biological structure:
+    %   * Actin filaments
+    %   * The central axes of microtubules
+    %
+    % Preview:
+    %   .. image:: ./images/models/csplineTube3D_midPoint.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = csplineTube3D_midPoint(varargin)
             obj@geometricModel(varargin{:});
@@ -22,6 +38,8 @@ classdef csplineTube3D_midPoint<geometricModel
             obj.listed = true;
         end
         function [model, p]= reference(obj, par, dx)
+        % For details, see :meth:`reference`.
+        
             % set additional parameters of the model
             ip = inputParser;
             fn = fieldnames(obj.internalSettings);
