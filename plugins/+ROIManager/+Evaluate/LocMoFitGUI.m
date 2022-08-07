@@ -414,6 +414,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                                         fitter.model{k}.displayLut = allLut{k};
                                     end
                                 end
+                                
                                 fitter.plotFreeRot(viz1,locs,'lutLocs',allLut,'sigma',fitter.model{1}.sigma,'pixelSize',fitter.model{1}.pixelSize);
                                 fitter.plotFixRot(viz2Parent,locs,'lutLocs',allLut,'sigma',fitter.model{1}.sigma,'pixelSize',fitter.model{1}.pixelSize);
                             else
@@ -1891,6 +1892,7 @@ refTable = obj.guihandles.(['partable_' num2str(modID)]);
 imported_found = table2cell(importTable(lInput,[2:5 7:9]));
 imported_found(:,2) = cellfun(@logical,imported_found(:,2), 'UniformOutput', false);
 refTable.Data(lOri,[2:5 7:9]) = imported_found;
+obj.fitter.setParArgBatch(refTable.Data, 'modelID', modID);
 close(uit.Parent)
 end
 %

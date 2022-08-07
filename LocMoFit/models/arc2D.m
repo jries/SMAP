@@ -9,7 +9,7 @@ classdef arc2D<geometricModel
     %   * Cross-section of a clathrin coat
     %
     % Preview:
-    %   .. image:: ./images/models/arc2D.PNG
+    %   .. image:: ./images/models/arc2D.png
     %       :width: 400
     %   Scale bar: 50 nm.
     methods
