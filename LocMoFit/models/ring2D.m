@@ -1,9 +1,16 @@
 classdef ring2D<geometricModel
-    % :class:`dualRingModel` is the dual ring model used in the LocMoFit
-    % manuscript for describing Nup96-labeled NPCs.
+    % :class:`ring2D` is a 2D model that describes a ring geometry.
     %
-    % Log:
-    %   201229: change the sign of the ring twist
+    % Geometric parameters:
+    %   * `radius`: (nm) the ring radius.
+    %
+    % Relavent biological structure:
+    %   * Top-view projections of the nuclear pore complex.
+    %
+    % Preview:
+    %   .. image:: ./images/models/ring2D.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = ring2D(varargin)
             obj@geometricModel(varargin{:});

@@ -375,14 +375,14 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                     
                     out.parsInit = fitter.parsInit;
                     fitter.getDerivedPars;
-                    
+                    fitter.deriveSigma(locs);
                     %% Get compensationFactor
                     % This factor compensate the number of locs between different channels
-                    compensationFactor = zeros(size(locs.layer))';
-                    for k = 1:fitter.numOfLayer
-                        compensationFactor(locs.layer==k) = fitter.compensationFactor(k);
-                    end
-                    compensationFactor(~ismember(locs.layer, fitter.allModelLayer)) = [];
+%                     compensationFactor = zeros(size(locs.layer))';
+%                     for k = 1:fitter.numOfLayer
+%                         compensationFactor(locs.layer==k) = fitter.compensationFactor(k);
+%                     end
+%                     compensationFactor(~ismember(locs.layer, fitter.allModelLayer)) = [];
                     [~,~,parBestFit] = fitter.prepFit;
                     %     fitter.fitInfo.ELL = fitter.getELL(parBestFit', compensationFactor, 2);
                     
@@ -1888,7 +1888,9 @@ end
 function importPar_callback(a,b,obj,modID,uit, importTable, ID_ref)
 refTable = obj.guihandles.(['partable_' num2str(modID)]);
 [~,lInput,lOri] = intersect(uit.Data(:,2),ID_ref);
-refTable.Data(lOri,[2:5 7:9]) = table2cell(importTable(lInput,[2:5 7:9]));
+imported_found = table2cell(importTable(lInput,[2:5 7:9]));
+imported_found(:,2) = cellfun(@logical,imported_found(:,2), 'UniformOutput', false);
+refTable.Data(lOri,[2:5 7:9]) = imported_found;
 close(uit.Parent)
 end
 %
@@ -1947,15 +1949,19 @@ end
 function hStack = evokeParMatcher_callback(a,b,obj)
 obj.setPar('matchPar_fitGUIselected',[]);
 fig = figure;
-sourceSMLMFit = uicontrol(fig, 'Style', 'popupmenu','Position',[10 380 100 20]);
+sourceSMLMFit_t = uicontrol(fig, 'Style', 'text','Position',[10 380 130 20], 'String', 'Source LocMoFitGUI','HorizontalAlignment','left');
+sourceSMLMFit = uicontrol(fig, 'Style', 'popupmenu','Position',[140 380 100 20]);
 sourceSMLMFit.String = obj.guihandles.anchorConvert.ColumnFormat{1};
 
-sourceModel = uicontrol(fig, 'Style', 'popupmenu','Position',[10 350 100 20]);
+sourceModel_t = uicontrol(fig, 'Style', 'text','Position',[10 350 130 20], 'String', 'Source model','HorizontalAlignment','left');
+sourceModel = uicontrol(fig, 'Style', 'popupmenu','Position',[140 350 100 20]);
 sourceModel.String = {'--'};
+
+matchTable_t = uicontrol(fig, 'Style', 'text','Position',[10 320 350 20], 'String', 'Assign to the selected parameters in this LocMoFitGUI:','HorizontalAlignment','left');
 
 sourceSMLMFit.Callback = {@SMLMFitSelect_callback,obj, sourceModel};
 
-matchTable = uitable(fig,'Position',[10 40 250 300]);
+matchTable = uitable(fig,'Position',[10 40 250 270]);
 allPossibleTargets = obj.guihandles.anchorConvert.ColumnFormat{3};
 matchTable.Data = [num2cell(true(size(allPossibleTargets))); allPossibleTargets]';
 matchTable.ColumnEditable = [true false];
@@ -1974,10 +1980,14 @@ function SMLMFitSelect_callback(a,b,obj,sourceModel)
 selectedFitGUI = a.String{a.Value};
 nameAllLoadedEval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
 indSelected = ismember(nameAllLoadedEval, selectedFitGUI);
+if any(indSelected)
 obj.setPar('matchPar_fitGUIselected',indSelected);
 numOfModel_selectedFitGUI = obj.locData.SE.processors.eval.processors{indSelected}.fitter.numOfModel;
 % export the options
-sourceModel.String = cellfun(@num2str, num2cell(1:numOfModel_selectedFitGUI));
+    sourceModel.String = cellfun(@num2str, num2cell(1:numOfModel_selectedFitGUI), 'UniformOutput',false);
+else
+    sourceModel.String = {'--'};
+end
 end
 
 function parMatcher_callback(a,b,obj)

@@ -404,6 +404,12 @@ classdef LocMoFit<matlab.mixin.Copyable
 %                 flagNewLayer = 1;
 %             end
 %         end
+
+        function deriveSigma(obj, locs)
+            for m = 1:obj.numOfModel
+                obj.model{m}.deriveSigma(locs);
+            end
+        end
         
         %% Parameter related methods
         function parsArg = subParsArg(obj, model, varargin)

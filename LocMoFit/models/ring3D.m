@@ -1,9 +1,17 @@
 classdef ring3D<geometricModel
-    % :class:`dualRingModel` is the dual ring model used in the LocMoFit
-    % manuscript for describing Nup96-labeled NPCs.
+    % The model class :class:`ring3D` describes a ring geometry in 3D.
     %
-    % Log:
-    %   201229: change the sign of the ring twist
+    % Geometric parameters:
+    %   * `radius`: (nm) the ring radius.
+    %
+    % Relavent biological structure:
+    %   * Top-view projections of the nuclear pore complex.
+    %
+    % Preview:
+    %   .. image:: ./images/models/ring3D.PNG
+    %       :width: 400
+    %   Scale bar: 50 nm.
+
     methods
         function obj = ring3D(varargin)
             obj@geometricModel(varargin{:});
