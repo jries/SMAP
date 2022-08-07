@@ -21,7 +21,7 @@ import sphinx_rtd_theme
 
 project = 'LocMoFit'
 version = '1.1.0'
-release = '2022Aug_beta'
+release = '1.1.0'
 copyright = '2022, Ries group, EMBL Heidelberg'
 author = 'Wu et al.'
 
