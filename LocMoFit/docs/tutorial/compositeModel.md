@@ -24,17 +24,22 @@ The data and setting files can be downloaded [here](https://www.embl.de/download
 	:::{important}
 	If you continue from the previous tutorial, please close the current SMAP and start a new session.
 	:::
-2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_.
-3. Load an instance of the plugin **LocMoFitGUI** (see {doc}`quick start<../tutorial/quickstart>` if you forget how to do it).
+2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_. ({doc}`how to?<../howto/SMAP.loadData>`) 
+
+3. Go to **[ROIs]** -> **[Settings]**, click **show ROI manager**. This opens the **ROIManager** in a new window.
+
+4. Load the plugin **LocMoFitGUI** in **[ROIs]** -> **[Evaluate]** (see {doc}`quick start<../tutorial/quickstart>` if you forget how to do it).
 
 ### Setup
 We will combine two identical rings in 3D ({class}`ring3D<models.ring3D>`) to form a 3D dual-ring model.
 
 1. We first load the individual models and set up the arguments of the model parameters. Now for the first ring model:
 	* Go to **[M1]** -> **[Model]**, click the drop-down menu (where _select the model..._ is shown), and then select _ring3D_. Click **load model**. 
-	* Go to the tab **[Parameters]** and click the button **Import**. In the new window, navigate to the settings directory and open dualRing_model1_fitPar.csv. Click **Import** button in the popup window.
+	* Go to the tab **[Parameters]** and click the button **Import**. In the new window, navigate to the settings directory and open _dualRing_model1_fitPar.csv_. Another new window should show up:
 		
 		![import parameters settings](../images/parameters_import.png)
+	
+	* Click **Import** button in the popup window. Now the parameter arguments/settings are updated.
 		
 		:::{note}
 		In the new window, the saved parameters (the field **import**) are matched to the parameters (the field **to**) in the GUI based on the same names and model types. We will discuss this more in step 2.
@@ -67,7 +72,7 @@ We will combine two identical rings in 3D ({class}`ring3D<models.ring3D>`) to fo
 	| radius    | 53.7000 | ☑ | 0 | 0 | mPar | 0 | 100 |
 	
 	:::{important}
-	**Why are there so many values zero?** Zeros mean that those parameters share the same values as M1. When there is more than one model, the extrinsic parameters (_lPar_) are always defined relative to the M1. For example, we set the **value** of _z_ of M2 to 40 nm in order to move it 40 nm away from M1 in _z_, having the two rings separate.
+	**Why are there so many zero values?** Zeros mean that those parameters share the same values as M1. When there is more than one model, the extrinsic parameters (_lPar_) are always defined relative to the M1. For example, we set the **value** of _z_ of M2 to 40 nm in order to move it 40 nm away from M1 in _z_, having the two rings separate.
 	:::
 
 3. To have better starting parameters, you may not want to always set the xy positions to zero. Instead, they can be roughly estimated based on the median position of the localizations. To take the median values as the starting parameters, you can use the functionality **Convert**, which dynamically converts from a *Rule* to the starting value of a parameter specified in **Target_fit**.
@@ -88,7 +93,7 @@ We will combine two identical rings in 3D ({class}`ring3D<models.ring3D>`) to fo
 	![viewer3D X-Z view](../images/viewer3D_XZ.png)
 	
 	:::{tip}
-	**In the viewer, how do I explore the model in 3D ?** In the scatter plot on the left, you can either hold the left-click and drag or right-click and select views:
+	**In the viewer, how do I explore the model in 3D?** In the scatter plot on the left, you can either hold the left-click and drag or right-click and select views:
 	
 	![viewer3D exploration](../images/viewer3D_toXY.png)
 	:::
@@ -114,7 +119,7 @@ You can save the current settings, including the loaded models, parameter settin
 
 	![LocMoFit: save settings](../images/LocMoFit_saveSettings.png)
 
-Congratulations! Now you retain the settings of the composite model you built for the first time.
+Congratulations! Now you retained the settings of the composite model you built for the first time.
 
 ### Next tutorial
 You are in the introductory series. The next tutorial is {doc}`Chaining steps<./chainSteps>`

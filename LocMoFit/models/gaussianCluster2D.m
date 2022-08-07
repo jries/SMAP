@@ -13,8 +13,13 @@ classdef gaussianCluster2D<geometricModel
     %   * a protein cluster on the plasma membrane
 	%
     % Preview:
-	% 	.. image:: ./images/models/gaussianCluster2D.PNG
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
+    %   .. image:: ./images/models/gaussianCluster2D.PNG
     %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = gaussianCluster2D(varargin)
             obj@geometricModel(varargin{:});
@@ -33,6 +38,7 @@ classdef gaussianCluster2D<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
+		% For details, see :meth:`reference`.
             model.x = par.x0;
             model.y = par.y0;
             model.n = 1;

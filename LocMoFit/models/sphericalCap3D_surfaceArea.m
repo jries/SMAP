@@ -9,6 +9,10 @@ classdef sphericalCap3D_surfaceArea<geometricModel
     %   * mammalian endocytic coat
 	%
     % Preview:
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
     %   .. image:: ./images/models/sphericalCap3D_surfaceArea.PNG
     %       :width: 400
     %   Scale bar: 50 nm.
@@ -33,6 +37,8 @@ classdef sphericalCap3D_surfaceArea<geometricModel
         end
 
         function [model, p]= reference(obj, par, dx)
+		% For details, see :meth:`reference`.
+		
             %% Get parameters
             surfaceArea = par.surfaceArea*1e+4;
             % Get the close angle from the input
@@ -121,8 +127,8 @@ classdef sphericalCap3D_surfaceArea<geometricModel
         end
         
         function derivedPars = getDerivedPars(obj, pars)
-            % Get extra parameters derived from the fit parameters.
-            %
+		% For details, see :meth:`getDerivedPars`.
+
             % Exports a empty variable when no derived parameters.
             % Last update:
             %   08.11.2021

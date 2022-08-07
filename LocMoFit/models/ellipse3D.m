@@ -6,6 +6,10 @@ classdef ellipse3D<geometricModel
 	%   * `b`: (nm) the axis along the y-axis.
     %
     % Preview:
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
     %   .. image:: ./images/models/ellipse3D.PNG
     %       :width: 400
     %   Scale bar: 50 nm.

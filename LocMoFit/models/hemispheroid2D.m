@@ -11,6 +11,10 @@ classdef hemispheroid2D<geometricModel
     %   * actin network at the endocytic site
     %
     % Preview:
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
     %   .. image:: ./images/models/hemispheroid2D.PNG
     %       :width: 400
     %   Scale bar: 50 nm.
@@ -33,6 +37,7 @@ classdef hemispheroid2D<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
+		% For details, see :meth:`reference`.
             c = [par.xcenter par.ycenter par.a par.b];
             fitter = obj.ParentObject.ParentObject;
             

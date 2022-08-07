@@ -32,11 +32,12 @@ Please first finish the tutorial {doc}`composite model<./compositeModel>`.
 	:::{important}
 	If you continue from the previous tutorial, please close the current SMAP and start a new session.
 	:::
-2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_.
-3. Load an instance of the plugin **LocMoFitGUI** (see {doc}`quick start<../tutorial/quickstart>` if you forget how to do it).
+2. Load the dataset _U2OS_Nup96_BG-AF647_demo_sml.mat_. ({doc}`how to?<../howto/SMAP.loadData>`) 
+
+3. Go to **[ROIs]** -> **[Settings]**, click **show ROI manager**. This opens the **ROIManager** in a new window.
 
 ### Loading LocMoFit
-Now you need two instances of LocMoFit:
+Now you need three instances of LocMoFit:
 * Go to **[Evaluate]** tab and click on **add module**.
 * In the popup window, select _LocMoFitGUI_ and click **ok**.
 * Repeat the two steps above twice more.
@@ -57,20 +58,20 @@ To set them up, follow the steps below:
 6. On the right panel, go to **[Settings]**, click **load**, navigate to the settings directory, and select _NPC3D_step3_points_LocMoFit.mat_.
 7. Go to tab **[Convert]**, click **Match**. You should see a new window:
 
-	![parameters import](../images/parameters_import.png)
+	![parameters import](../images/convert_apply.png)
 
 :::{note}
-What is this popup window for? It allows you to pass the parameter estimations from the previous steps to the current step as initial parameters based on the names of parameters.
+**What is this popup window for?** It allows you to pass the parameter estimations from the previous steps to the current step as initial parameters based on the names of parameters.
 :::
 
-8. In the popup window, select LocMoFitGUI_2 in **Source LocMoFitGUI_** and the click **Apply**. Now you should see new information filled in tab **[Convert]**:
+8. In the popup window, in **Source LocMoFitGUI**, change the selection from _this model_ to _LocMoFitGUI_2_ and the click **Apply**. Now you should see new information filled in tab **[Convert]**:
 
 	![parameters import](../images/LocMoFit_Convert_GUI3.png)
 	
 	:::{note}
-	**[Convert]** can be used to convert the fitted values in the previous step to a initial parameter of the current step. It calculates values according to the **rules** based on its **source** and then writes the values to the **target_fit** (see the column names of the convert table). For example, you just defined to assign the parameter m1.mPar.ringDistance in this step from the **Source** _LocMoFitGUI_ based on the value calculated by the **Rule** pars.m2.lPar.z.
+	**[Convert]** can be used to convert the fitted values in the previous step to an initial parameter of the current step. It calculates values according to the **rules** based on its **source** and then writes the values to the **target_fit** (see the column names of the convert table). For example, you just defined to assign the parameter m1.mPar.ringDistance in this step from the **Source** _LocMoFitGUI_ based on the value calculated by the **Rule** pars.m2.lPar.z.
 
-	_m1.mPar.ringDistance_ and _pars.m2.lPar.z_ are IDs of the corresponding parameters. m1.mPar.ringDistance means the parameter _ringDistance_, which is a intrinsic parameter (_mPar_) of model 1 (_m1_). See the syntax that can be used in **[convert]**.
+	_m1.mPar.ringDistance_ and _pars.m2.lPar.z_ are IDs of the corresponding parameters. m1.mPar.ringDistance means the parameter _ringDistance_, which is an intrinsic parameter (_mPar_) of model 1 (_m1_). See the syntax that can be used in **[convert]**.
 	:::
 
 ### Fitting
@@ -109,7 +110,7 @@ To show the summary of parameter values, you can use the SMAP plugin _summarizeM
 
 	![summary plugin](../images/summary_NPC.png)
 
-	The window where a scatter plot and histograms will then pop up:
+	The window where a scatter plot and histograms are will then pop up:
 	
 	![statistics](../images/stats_NPC.png)
 	

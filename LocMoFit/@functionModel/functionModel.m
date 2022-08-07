@@ -59,8 +59,8 @@ classdef functionModel<SMLMModel
             addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
         end
         function updateMParsArg(obj)
-            % update the mPars' arguments based on the change of the
-            % geometric model
+            % This function updates the mPars' arguments based on the change of the
+            % geometric model.
             modelObj = obj.modelObj;
             for k = 1:length(modelObj.parsArgName)
                 obj.mPars.(modelObj.parsArgName{k}) = modelObj.(modelObj.parsArgName{k});
@@ -410,8 +410,8 @@ classdef functionModel<SMLMModel
         
         function [sigmaFactor, sigmaSet, sigmaZSet] = deriveSigma(obj, locs, varargin)
             % :meth:`deriveSigma` derives the final sigma used for
-            % fitting. When :attr:`fixSigma` is set as true, sigma are
-            % derived based on pre-defined values. Otherwise, sigma are
+            % fitting. When :attr:`fixSigma` is set as true, sigmas are
+            % derived based on pre-defined values. Otherwise, sigmas are
             % derived based on localization precisions. For a continuous
             % model, the minimum sigma is defined as the median of
             % localization precisions.

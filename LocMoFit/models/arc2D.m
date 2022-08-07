@@ -56,7 +56,6 @@ classdef arc2D<geometricModel
         p.cornerRange = [];
         end
         function derivedPars = getDerivedPars(obj, pars)
-            % For details, see :meth:`getDerivedPars`.
             derivedPars = [];
         end
     end

@@ -511,13 +511,13 @@ classdef LocMoFit<matlab.mixin.Copyable
         
         function [val,ind] = wherePar(obj, parId)
             % [Replaced] see getVariable().
-            % 200731: this function has been replaced getVariable()
+            % 200731: this function has been replaced getVariable().
             disp('[Obselete] wherePar() will be replaced by getVariable().')
             [val,ind] = getVariable(obj, parId);
         end
         
         function [val,ind] = getVariable(obj, ID)
-            % Search for a variables in where info is potentially stored 
+            % Search for a variable in which info is potentially stored 
             % and report its location and value.
             % ID shold look like par.m1.lPar.x or directly the variable
             % name.
@@ -1767,9 +1767,8 @@ classdef LocMoFit<matlab.mixin.Copyable
         end
         %% for compatibilities
         function updateVersion(obj)
-            % This function is for necessary updates
-            % Structral changes leading to running failular have to be
-            % fixed here.
+            % This function is for necessary updates.
+            % Structral changes leading to failed runs have to be fixed here.
             uConverter(obj)
             uModelTypeOptoins(obj)
             uEarlier(obj)

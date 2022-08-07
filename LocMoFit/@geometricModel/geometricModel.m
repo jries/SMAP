@@ -35,7 +35,7 @@ classdef geometricModel<matlab.mixin.Copyable
             %   * 'Parent': parental obj.
             %
             % Returns:
-            %   obj: an :class:`geometricModel` object.
+            %   obj: a :class:`geometricModel` object.
                 
             if length(varargin)>0
                 p = inputParser;
