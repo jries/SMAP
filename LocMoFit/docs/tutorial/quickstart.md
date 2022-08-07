@@ -19,7 +19,7 @@ Fitting a 2D ring model to the top-view projection of NPCs to find their positio
 
 ### Preparation
 1. Start **SMAP** ({doc}`how to? <../howto/SMAP.runSMAP>`).
-2. Load the localization data ({doc}`how to?<../howto/SMAP.loadData>`) _U2OS_Nup96_BG-AF647_demo_sml.mat_. This file contains segmented nuclear pore complexes that you will be analyzing in the following steps.
+2. Load the localization data ({doc}`how to?<../howto/SMAP.loadData>`) _U2OS_Nup96_BG-AF647_demo_sml.mat_. This file contains segmented NPCs that you will be analyzing in the following steps.
 :::{note}
 **How was the segmentation done?** You can check out all the pre-processing steps from _fitting raw data (raw camera frames)_ to _segmentation of NPCs_ in [**SMAP_manual_NPC.pdf**](https://www.embl.de/download/ries/Documentation/SMAP_manual_NPC.pdf).
 :::
@@ -31,7 +31,7 @@ The current window:
 You should see the data set displayed in the **Overview**.
 
 ### Warm-up
-Before fitting, let's explore the data a bit first. We can find the list of segmented NPCs in the **ROIManager**:
+Before fitting, let us explore the data a bit first. We can find the list of segmented NPCs in the **ROIManager**:
 1. Go to **[ROIs]** -> **[Settings]**, click **show ROI manager**. This opens the **ROIManager** in a new window.
 	:::{Note}
 	**ROIManager** allows you to manage ROIs in different cells and files. Check section 8.2 (_Manually generating a list of ROIs_) in [**SMAP_manual_NPC.pdf**](https://www.embl.de/download/ries/Documentation/SMAP_UserGuide.pdf) for more information.
@@ -46,7 +46,7 @@ Before fitting, let's explore the data a bit first. We can find the list of segm
 3. Click a few sites in the ROI list to display them.
 
 ### Loading LocMoFit
-Let's now start to work with LocMoFit by loading it into SMAP:
+Let us now start to work with LocMoFit by loading it into SMAP:
 :::{include} ../howto/SMAP.loadLocMoFit.md
 ---
 start-line: 1
@@ -127,7 +127,7 @@ Next, we will execute the fitting. This is done by clicking the site in the list
 
 1. Go back the tab **[Parameters]** and uncheck **preview**.
 	
-2. In the _ROI Manager_ window, click on one site and wait for a few seconds. You should see the updated _LocMoFitGUI_ window displaying the fitted model.
+2. In the _ROI list_ of _ROI Manager_ window, click on site 1 and wait for a few seconds. You should see the updated _LocMoFitGUI_ window displaying the fitted model.
 	![Viewer](../images/viewer_quickstart.png)
 	:::{Note}
 	The **LocMoFitGUI** window allows you to inspect the result right after fitting. The window may look different depending on the model type.

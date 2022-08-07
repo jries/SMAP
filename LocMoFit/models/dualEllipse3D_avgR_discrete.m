@@ -16,6 +16,10 @@ classdef dualEllipse3D_avgR_discrete<geometricModel
     %   :class:`dualEllipse3D_discrete<models.dualEllipse3D_discrete>`
 	%
     % Preview:
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
 	% 	See :class:`dualEllipse3D_discrete<models.dualEllipse3D_discrete>`
 
     methods
@@ -44,7 +48,8 @@ classdef dualEllipse3D_avgR_discrete<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)      
-        
+         % For details, see :meth:`reference`.
+		 
         % set additional parameters of the model
         ip = inputParser;
         fn = fieldnames(obj.internalSettings);

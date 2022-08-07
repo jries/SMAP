@@ -13,6 +13,10 @@ classdef csplineTube3D_xyz<geometricModel
     %   :class:`csplineTube3D_midPoint<models.csplineTube3D_midPoint>`
 	%
     % Preview:
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
     %   .. image:: ./images/models/csplineTube3D_midPoint.PNG
     %       :width: 400
     %   Scale bar: 50 nm.
@@ -92,9 +96,11 @@ classdef csplineTube3D_xyz<geometricModel
         
         function items = getThings2Plot(obj,par)
         % The user can define what should be also displayed in the plots.
+		%
         % Args:
-        % 	obj: a :class:`geometricModel` object.
-        % Returns:
+        % 	obj: a :class:`@geometricModel.geometricModel` object.
+        %
+		% Returns:
         %   items: things to be plotted.
         %
             numOfCtrlPoint = obj.getInternalSettings('numOfCtrlPoint');

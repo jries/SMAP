@@ -11,6 +11,10 @@ classdef csplineClosedTube3D_midPoint<geometricModel
     %   * outer membrane of a mitochondria
     %
     % Preview:
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
     %   .. image:: ./images/models/csplineClosedTube3D_midPoint.PNG
     %       :width: 400
     %   Scale bar: 50 nm.
@@ -33,7 +37,8 @@ classdef csplineClosedTube3D_midPoint<geometricModel
             obj.listed = true;
         end
         function [model, p]= reference(obj, par, dx)
-            % set additional parameters of the model
+        % For details, see :meth:`reference`.
+
             ip = inputParser;
             fn = fieldnames(obj.internalSettings);
             for k = 1:length(fn)
@@ -111,11 +116,12 @@ classdef csplineClosedTube3D_midPoint<geometricModel
         
         function items = getThings2Plot(obj,par, varargin)
         % The user can define what should be also displayed in the plots.
+		%
         % Args:
-        % 	obj: a :class:`geometricModel` object.
-        % Returns:
-        %   items: things to be plotted.
+        % 	obj: a :class:`@geometricModel.geometricModel` object.
         %
+		% Returns:
+        %   items: things to be plotted.
             numOfCtrlPointSet = obj.getInternalSettings('numOfCtrlPointSet');
             [ctrlX,ctrlY,ctrlZ] = getCtrlPoints(par, numOfCtrlPointSet);
             items(1).XData = ctrlX;

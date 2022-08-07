@@ -8,6 +8,10 @@ classdef ring3D<geometricModel
     %   * Top-view projections of the nuclear pore complex.
     %
     % Preview:
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
     %   .. image:: ./images/models/ring3D.PNG
     %       :width: 400
     %   Scale bar: 50 nm.

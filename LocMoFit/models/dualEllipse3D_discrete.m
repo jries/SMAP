@@ -13,6 +13,10 @@ classdef dualEllipse3D_discrete<geometricModel
     %   * deformed nuclear pore complex
 	%
     % Preview:
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
     %   .. image:: ./images/models/dualEllipse3D_discrete.PNG
     %       :width: 400
     %   Scale bar: 50 nm.
@@ -42,7 +46,9 @@ classdef dualEllipse3D_discrete<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
-         
+         % For details, see :meth:`reference`.
+		 
+		 
         % set additional parameters of the model
         ip = inputParser;
         fn = fieldnames(obj.internalSettings);

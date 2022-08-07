@@ -1,6 +1,6 @@
 function fit(obj, locs, varargin)
 %% FIT Perform fitting based on the option values
-% :func:`fit` performs fitting based on the options
+% :func:`fit` performs fitting based on the options.
 %
 % Usage:
 %   fit(obj, locs, varargin)

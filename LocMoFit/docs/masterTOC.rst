@@ -23,11 +23,11 @@
 
 .. raw:: latex
 
-   \part{How to}
+   \part{FAQ}
    
 .. toctree::
    :hidden:
-   :caption: How to
+   :caption: FAQ
    
    howTo
    

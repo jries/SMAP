@@ -16,8 +16,12 @@ classdef spheroid3Dp_surfaceArea<spheroidCap3Dp_surfaceArea
     %   :class:`spheroidCap3Dp_surfaceArea<models.spheroidCap3Dp_surfaceArea>`
 	%
     % Preview:
-	% 	.. image:: ./images/models/spheroid3Dp_surfaceArea.PNG
-    %       :width: 400
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
+	%   .. image:: ./images/models/spheroid3Dp_surfaceArea.PNG 
+	%      :width: 400
     %   Scale bar: 50 nm.
     methods
         function obj = spheroid3Dp_surfaceArea(varargin)
@@ -51,13 +55,15 @@ classdef spheroid3Dp_surfaceArea<spheroidCap3Dp_surfaceArea
         end
         
         function par = convertPar(obj, par)
-            % spheroid is a special form of spheroid cap when closeAngle =
-            % 180
             par.closeAngle = 180;
+			% spheroid is a special form of spheroid cap when closeAngle =
+            % 180
+            
             par = convertPar@spheroidCap3Dp_surfaceArea(obj,par);
         end
 
         function derivedPars = getDerivedPars(obj, par)
+		% For details, see :meth:`getDerivedPars`.
             par.closeAngle = 180;
             derivedPars = getDerivedPars@spheroidCap3Dp_surfaceArea(obj,par);
         end

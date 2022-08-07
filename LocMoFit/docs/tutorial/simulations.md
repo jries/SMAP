@@ -14,7 +14,7 @@ Simulating realistic localization data based on a geometric model.
 ## Main tutorial
 
 ### Preparation
-You have to load the geometric model for generating localizations. We use LocMoFitGUI as the interface for setting up the model. Here we use the point model {class}`dualRing3D_discrete<models.dualRing3D_discrete>` of the nuclear pore complex as an example:
+You have to load the geometric model for generating localizations. We use LocMoFitGUI as the interface for setting up the model. Here we use the point model {class}`dualRing3D_discrete<models.dualRing3D_discrete>` of the nuclear pore complex (NPC) as an example:
 1. Start SMAP ({doc}`how to? <../howto/SMAP.runSMAP>`).
 2. Load a new instance of the module *LocMoFitGUI* in tab **[ROIs]** -> **[Evaluate]** (see {doc}`quick start<../tutorial/quickstart>` to recap).
 3. Uncheck **evaluate on** in the left panel:
@@ -30,7 +30,7 @@ Once the model is loaded, we have to pass it on to the simulation engine provide
 ![use LocMoFit](../images/simulateSites_useLocMoFit.png)
 
 1. We first connect the engine to the model:
-	* Go to [ROIs]->[Segment], click *SimulateSites* in the list of plugin:
+	* Go to [ROIs]->[Segment], click *SimulateSites* in the list of plugins:
 	* Click **Use LocMoFit** and check _LocMoFitGUI_ in the new window.
 	* Click **Apply**.
 	
@@ -54,7 +54,7 @@ Once the model is loaded, we have to pass it on to the simulation engine provide
 
 	![done](../images/simulateSites_done.png)
 	
-Now you can explore the overview of the simulated data. You can interact with the overview with a left click or double right click. You can deal with the simulated data as with real data.
+Now you can explore the overview of the simulated data. You can interact with the overview with a left click or right click. You can deal with the simulated data as with real data.
 
 :::{note}
 **How do I keep the simulated data?** You can save it through button **Save** in tab **[File]**:

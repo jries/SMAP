@@ -36,8 +36,8 @@ classdef sphericalCap3Dp_surfaceArea<parametricModel
         end
 
         function [model, p]= definedModel(obj, u, v, par, dx)
-            %% Get parameters
             [U,V] = meshgrid(u,v);
+			%% Get parameters
             U = U(:); V = V(:);
             if isempty(obj.ParentObject)||isempty(obj.ParentObject.locsPrecFactor)
                     locsPrecFactor = 1;
@@ -80,8 +80,7 @@ classdef sphericalCap3Dp_surfaceArea<parametricModel
         end
         
         function [u,v] = getParVector(obj,par,dx)
-            %             rimPos = par.r.*sin(-par.closeAngle);
-            if isempty(obj.ParentObject)||isempty(obj.ParentObject.locsPrecFactor)
+            if isempty(obj.ParentObject)||isempty(obj.ParentObject.locsPrecFactor)            %             rimPos = par.r.*sin(-par.closeAngle);
                 locsPrecFactor = 1;
             else
                 locsPrecFactor = obj.ParentObject.locsPrecFactor;
@@ -131,11 +130,8 @@ classdef sphericalCap3Dp_surfaceArea<parametricModel
         end
         
         function derivedPars = getDerivedPars(obj, pars)
-            % Get extra parameters derived from the fit parameters.
-            %
-            % Exports a empty variable when no derived parameters.
-            % Last update:
-            %   08.11.2021
+            % For details, see :meth:`getDerivedPars`.
+			
             derivedPars.realSurfaceArea = pars.surfaceArea.*1e+4;
             derivedPars.curvature = 1./sqrt(derivedPars.realSurfaceArea./(2.*pi.*(1-cos(deg2rad(pars.closeAngle)))));
             if pars.closeAngle < 0

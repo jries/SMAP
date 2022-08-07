@@ -27,7 +27,7 @@ In this tab, you can load and set up the first SMLM model.
  * a field _Sigma of Gaussian filtering_ where you can specify a constant sigma of Gaussian filtering. The higher the more blurred.
  * a field _Factor of Gaussian filtering_ where you can specify the factor of Gaussian filtering. The higher the more blurred.
 :::{Note}
- _Sigma of Gaussian filtering_ and _Factor of Gaussian filtering_ works exclusively.
+ _Sigma of Gaussian filtering_ and _Factor of Gaussian filtering_ exclude each other.
 :::
 
 #### Sub-tab _[Parameters]_
@@ -98,7 +98,7 @@ Here you will see the following:
 :::
 
 ## Fit viewer
-After the current site is fitted, the fit viewr will show if the **display** is checked.
+After the current site is fitted, the fit viewer will show if the **display** is checked.
 This viewer is different per model type and data dimension.
 
 ### For 3D continuous/discrete models
@@ -107,10 +107,10 @@ You should see this window show up:
 ![viewer](../images/fit3DFunModel_viewer.PNG)
 
 #### Tab _[FreeRot]_
-There are different parts:
+Here you will see the following:
 * a checkbox **Disable**. For efficiency, you can check it so that the plots will not be drawn.
 * the left panel _Dot plot_. Here both the model and the data are represented by dots.
-* the right panel _2D Projection of the left panel_. Here either one of the model or the data is rendered as a image. You can specify the image source bellow in the panel _Control_.
+* the right panel _2D Projection of the left panel_. Here either the model or the data is rendered as a image. You can specify the image source bellow in the panel _Control_.
 * the bottom panel _Control_. Here you can:
    * define the thickness of the cross-section along the y-axis.
    * rotate the site about z-axis with the buttons *>* and *>>* in small and large steps, respectively.
@@ -123,7 +123,7 @@ There are different parts:
 
 #### Tab _[FixRot]_
 :::{Note}
-By defualt, this tab is disabled. You can uncheck the checkbox **Disable** to show the content.
+By default, this tab is disabled. You can uncheck the checkbox **Disable** to show the content.
 :::
 * a checkbox **Disable**. For efficiency, you can check it so that the plots will not be drawn.
 * four panels of the fitted site with different rotation angles around the z-axis.
@@ -134,7 +134,7 @@ For each viewer, it comes with a tab **[Fitted_Par]** regardless of the model ty
 
 ![fit2DImgModel_viewer_par](../images/fit2DImgModel_viewer_par.PNG)
 :::
-* the main table that displays the parameters settings with parameter estimates shown in the column _Value_.
+* the main table that displays the parameter settings with parameter estimates shown in the column _Value_.
 * a button **Copy all** allows you to copy the entire table to the clipboard.
 
 ### For 3D image models
@@ -142,7 +142,7 @@ You should see this window show up:
 
 ![fit3DImgModel_viewer](../images/fit3DImgModel_viewer.PNG)
 
-There are three tabs of projections of the site in different views (planes **[XY]**, **[YZ]**, and **[XZ]**) and the common tab **[Fitted_Par]**.
+There are three projection tabs showing the site in different views (planes **[XY]**, **[YZ]**, and **[XZ]**) and the common tab **[Fitted_Par]**.
 
 ### For 2D models
 You should see this window show up:
@@ -151,7 +151,7 @@ You should see this window show up:
 
 There are two tabs:
 * **[Plot]** showing the data as points and the model as an image. In the control panel:
-   * You can playback the process of optimization if its history is saved.
-   * You can define the pxiel size for rendered image above.
-   * Normally the data is transforemd. You can transform the model instead by checking the checkbox **Move model**.
+   * you can playback the process of optimization if its history is saved.
+   * you can define the pxiel size for rendered image above.
+   * normally the data is transforemd. You can transform the model instead by checking the checkbox **Move model**.
 * the common tab **[Fitted_Par]**.

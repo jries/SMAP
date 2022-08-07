@@ -4,7 +4,7 @@ LocMoFit
 Overview
 --------
 
-LocMoFit (localization model fit) is a model fitting software for SMLM data. It fits an arbitrary geometric model to the localization coordinates of a segmented structure. LocMoFit is described in the bioRxiv preprint Wu, Y.-L. et al. Maximum-likelihood model fitting for quantitative analysis of SMLM data. 2021.08.30.456756. *bioRxiv* (2021) doi:`10.1101/2021.08.30.456756. <https://www.biorxiv.org/content/10.1101/2021.08.30.456756v1>`_
+LocMoFit (Localization Model Fit) is a model fitting software for SMLM data. It fits an arbitrary geometric model to the localization coordinates of a segmented structure. LocMoFit is described in the bioRxiv preprint Wu, Y.-L. et al. Maximum-likelihood model fitting for quantitative analysis of SMLM data. 2021.08.30.456756. *bioRxiv* (2021) doi:`10.1101/2021.08.30.456756. <https://www.biorxiv.org/content/10.1101/2021.08.30.456756v1>`_
 
 New to LocMoFit?
 ----------------
@@ -21,9 +21,9 @@ Content navigation
 ------------------
 Information is structured as pages under different topics on the left:
 
-	* **BASICS** contain the necessary information for working with LocMoFit.
+	* **BASICS** contains the necessary information for working with LocMoFit.
 	* **TUTORIAL** gets you familiar with LocMoFit through hands-on tutorials.
-	* **HOW TO** are answers to frequently asked questions.
+	* **FAQ** provides answers to frequently asked questions.
 	
 ..	
 	* **APPLICATION NOTE** are specific topics of how to apply LocMoFit.

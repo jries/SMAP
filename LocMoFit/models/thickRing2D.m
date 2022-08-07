@@ -12,9 +12,13 @@ classdef thickRing2D<geometricModel
     %   * actin network at the endocytic site
     %
     % Preview:
-    %   .. image:: ./images/models/hemispheroid2D.PNG
+	% 	.. note::
+	% 		It will be available soon.
+	%
+	% ..
+    %   .. image:: ./images/models/thickRing2D.PNG
     %       :width: 400
-    % Scale bar: 50 nm.
+    %   Scale bar: 50 nm.
     methods
         function obj = thickRing2D(varargin)
             obj@geometricModel(varargin{:});
@@ -33,6 +37,7 @@ classdef thickRing2D<geometricModel
             obj.listed = true;
         end
         function [model, p]= reference(obj,par, dx)
+		% For details, see :meth:`reference`.
             c = [par.xcenter par.ycenter par.innerRadius par.outerRadius par.thickness];
             fitter = obj.ParentObject.ParentObject;
 

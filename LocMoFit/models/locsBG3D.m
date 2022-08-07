@@ -26,23 +26,7 @@ classdef locsBG3D<geometricModel
         end
         
         function [model, p]= reference(obj, par, dx)
-            
-        % Sample coordinates of the model as reference.
-        % --- Syntax ---
-        % [model, p]= reference(obj, par, dx)
-        % --- Arguments ---
-        % -- Input --
-        % obj:
-        % par: a structure object. Its fieldnames should be the names of
-        % parameters, and their correspoinding content should be the
-        % parameter values.
-        % dx: sampling rate.
-        % -- Output --
-        % model: a structure object. Its fieldnames should be x, y, z, and
-        % n, indicating the xyz position amplitude n of the sampled model
-        % points.
-        % p: additional information of the model.
-        
+                    
         roiSize = obj.ParentObject.ParentObject.roiSize;
         copyNumber = par.density.*roiSize./1000;
         points = (rand([copyNumber, 3])-0.5) .* [roiSize roiSize par.depth];
