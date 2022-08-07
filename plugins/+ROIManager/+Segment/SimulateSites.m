@@ -126,7 +126,10 @@ classdef SimulateSites<interfaces.DialogProcessor&interfaces.SEProcessor
             obj.setPar('fitter',fitter_cp)
             obj.setPar('fitter_ori',fitter)
             obj.guihandles.setModPars_button.Visible='on';
-            obj.guihandles.coordinatefile.String='-- Internal LocMoFit';
+
+            p = obj.getGuiParameters;
+            p.coordinatefile = '-- Internal LocMoFit';
+            obj.setGuiParameters(p);
         end
 
         function pard=guidef(obj)
