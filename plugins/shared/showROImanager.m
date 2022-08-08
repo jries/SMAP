@@ -11,8 +11,13 @@ processors=obj.locData.SE.processors;
         % Yu-Le edited:
         figPos = fig.Position;
         screesize = get(0,'screensize');
-        if screesize(4)<figPos(4)
+        
+        if screesize(4)<1000
+            factor = [640 800]./screesize(3:4);
+            if factor(2)>1
+                disp('A larger screen is required for a better user experience.')
+            end
             fig.Units = "normalized";
-            fig.Position(3:4) = [0.2812 0.6250];
+            fig.Position(2:4) = [0.07 factor];
         end
         
