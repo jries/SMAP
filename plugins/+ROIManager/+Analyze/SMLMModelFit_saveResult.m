@@ -311,32 +311,40 @@ pard.recSites.object=struct('Style','pushbutton','String','Reconstruction','Call
 pard.recSites.position=[4,3.7];
 pard.recSites.Width=1;
 
+pard.t_lastBin_noRescale.object=struct('Style','text','String','No rescale up to bin');
+pard.t_lastBin_noRescale.position=[5,3.7];
+pard.t_lastBin_noRescale.Width=1;
+
+pard.lastBin_noRescale.object=struct('Style','edit','String','1');
+pard.lastBin_noRescale.position=[5,4.5];
+pard.lastBin_noRescale.Width=0.2;
+
 pard.mkMovie.object=struct('Style','pushbutton','String','Make movie','Callback', {{@obj.mkMovie_callBack}});
-pard.mkMovie.position=[6,3.7];
+pard.mkMovie.position=[7,3.7];
 pard.mkMovie.Width=1;
 
 pard.t_winSize.object=struct('Style','text','String','Window size');
-pard.t_winSize.position=[7,3.7];
+pard.t_winSize.position=[8,3.7];
 pard.t_winSize.Width=0.7;
 
 pard.winSize.object=struct('Style','edit','String','30');
-pard.winSize.position=[7,4.4];
+pard.winSize.position=[8,4.4];
 pard.winSize.Width=0.5;
 
 pard.t_stepSize.object=struct('Style','text','String','Step size');
-pard.t_stepSize.position=[8,3.7];
+pard.t_stepSize.position=[9,3.7];
 pard.t_stepSize.Width=0.7;
 
 pard.onlyPositive.object=struct('Style','checkbox','Value',0,'String','Only curvature>0');
-pard.onlyPositive.position=[9,3.7];
+pard.onlyPositive.position=[10,3.7];
 pard.onlyPositive.Width=1;
 
 pard.withoutClouds.object=struct('Style','checkbox','Value',1,'String','No clouds');
-pard.withoutClouds.position=[10,3.7];
+pard.withoutClouds.position=[11,3.7];
 pard.withoutClouds.Width=1;
 
 pard.cloudsThreshold.object=struct('Style','edit','String',0.016);
-pard.cloudsThreshold.position=[10,4.3];
+pard.cloudsThreshold.position=[11,4.3];
 pard.cloudsThreshold.Width=0.5;
 
 pard.stepSize.object=struct('Style','edit','String','30');

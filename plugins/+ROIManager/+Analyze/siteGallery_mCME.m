@@ -29,6 +29,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             % [to-do] allow selection
             fitterGUI_name = 'LocMoFitGUI_2';
+            %fitterGUI_name = 'LocMoFitGUI';
             eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             idxFitterGUI = strcmp(fitterGUI_name,eval);
             fitter = copy(se.processors.eval.processors{idxFitterGUI}.fitter);
@@ -37,7 +38,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             % check the model name (to differentiate mCME and NPC)
             fn = fieldnames(obj.locData.SE.processors.eval.children);
-            idx = strcmp(fn, 'LocMoFitGUI_2');
+            idx = strcmp(fn, fitterGUI_name);
             modelName = class(obj.locData.SE.processors.eval.processors{idx}.fitter.model{1}.modelObj);
                     
             % parameters
@@ -268,7 +269,7 @@ function update_callback(a,b,obj, oneNp)
     subSites = se.sites(siteOrder);
     
     fn = fieldnames(obj.locData.SE.processors.eval.children);
-    idx = strcmp(fn, 'LocMoFitGUI_2');
+    idx = strcmp(fn, fitterGUI_name);
     modelName = class(obj.locData.SE.processors.eval.processors{idx}.fitter.model{1}.modelObj);
         
     if ~strcmp(modelName, 'NPCPointModel_flexible2')
@@ -424,16 +425,16 @@ for k = 1:numOfUsedLabels
         case 'ID'
             oneLabel = ['Site ' num2str(siteInd)];
         case 'theta'
-            val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.closingAngle_pub;
+            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.closingAngle_pub;
             oneLabel = ['\theta = '  num2str(val, '%.1f') char(176)];
         case 'curvature'
-            val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.curvature;
+            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.curvature;
             oneLabel = ['\it1/R\rm = '  num2str(val, '%.1e') ' nm^{-1}'];
         case 'radius'
-            val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.radius;
+            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.radius;
             oneLabel = ['\itR\rm = '  num2str(val, '%.0f') ' nm'];
         case 'area'
-            val = subSites(siteInd).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.realSurfaceArea;
+            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.realSurfaceArea;
             oneLabel = ['\itA\rm = '  num2str(val, '%.0f') ' nm^2'];
     end
     if k == 1
@@ -669,7 +670,7 @@ function set2_callback(a,b,obj)
     sites = se.sites;
     realCloseAngle = [];
     for k = se.numberOfSites:-1:1
-        realCloseAngle(k) = sites(k).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
+        realCloseAngle(k) = sites(k).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.realCloseAngle+90;
     end
     ID = getFieldAsVector(sites,'ID');
     use = getFieldAsVector(sites,'annotation.use');

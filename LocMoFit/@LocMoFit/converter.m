@@ -1,6 +1,30 @@
 function converter(obj, source, rule, target)
 % converter saves the rule for converting info to the target
 % parameter.
+%
+% Usage:
+%   obj.convert(source, rule, target)
+% 
+% Args:
+%   source (LocMoFit object): an object created by :meth:`LocMoFit`. The
+%   source that the parameters matches to.
+%   rule (character vector): the rule of how the target parameter will be
+%   defined.
+%   target (character vector): can start with either 'pars_' for a
+%   parameter, 'usr_' for a user defined variable, or 'post_' for a post
+%   transformation parameter.
+%
+% Returns:
+%   Nothing.
+%
+% Last update:
+%   03.05.2022
+%
+% Log:
+%   03.05.2022: now new fields *rule_raw* and *target_Id* is added to
+%   *obj.converterRules* for tracing back to the original input source and
+%   rule.
+
 %% deal with source
 if isempty(obj.converterSource)
     % initiate the converterSource
@@ -51,12 +75,14 @@ ruleExprs = regexprep(ruleExprs, 'find\.(\w+)', ['obj\.converterSource\{' num2st
 if isempty(obj.converterRules)
     % initiate the converterRules
     obj.converterRules.target = {};
+    obj.converterRules.target_Id = [];
     obj.converterRules.rule = {};
+    obj.converterRules.rule_raw = {};
 end
 
 %% Check the rule for the target is set or not.
 % One target should always have only one rule.
-
+lastRule = length(obj.converterRules.target);
 if startsWith(target, 'post_')
     if ~isfield(obj.converterUserDefined, target)
         % initiate the converterUserDefined
@@ -65,8 +91,10 @@ if startsWith(target, 'post_')
         allStartWith = startsWith(fieldnames(obj.converterUserDefined), target);
         target = [target '_' num2str(sum(allStartWith)+1)];
         obj.converterUserDefined.(target) = 0;
-        obj.converterRules.target{end+1} = target;
-        obj.converterRules.rule{end+1} = ruleExprs;
+        obj.converterRules.target{lastRule+1} = target;
+        obj.converterRules.target_Id(lastRule+1) = k;
+        obj.converterRules.rule{lastRule+1} = ruleExprs;
+        obj.converterRules.rule_raw{lastRule+1} = rule;
     end
 end
 
@@ -74,11 +102,15 @@ end
 if ~(ind == 0)
     % If the target is set, then overwrite it
     obj.converterRules.target{ind} = target;
+    obj.converterRules.target_Id(ind) = k;
     obj.converterRules.rule{ind} = ruleExprs;
+    obj.converterRules.rule_raw{ind} = rule;
 else
     % Otherwise add the rule after the last position.
-    obj.converterRules.target{end+1} = target;
-    obj.converterRules.rule{end+1} = ruleExprs;
+    obj.converterRules.target{lastRule+1} = target;
+    obj.converterRules.target_Id(lastRule+1) = k;
+    obj.converterRules.rule{lastRule+1} = ruleExprs;
+    obj.converterRules.rule_raw{lastRule+1} = rule;
 end
 
 if startsWith(target, 'usr_')

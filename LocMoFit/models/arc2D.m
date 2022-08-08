@@ -1,6 +1,17 @@
 classdef arc2D<geometricModel
-    % Last update:
-    %   19.11.2021
+    % :class:`arc2D` is a 2D model that describes an arc geometry.
+    %
+    % Geometric parameters:
+    %   * `radius`: (nm) the radius of the ring where the arc is derived.
+    %   * `theta`: (degree) the closing anlge of the arc.
+    %
+    % Relavent biological structure:
+    %   * Cross-section of a clathrin coat
+    %
+    % Preview:
+    %   .. image:: ./images/models/arc2D.png
+    %       :width: 400
+    %   Scale bar: 50 nm.
     methods
         function obj = arc2D(varargin)
             obj@geometricModel(varargin{:});
@@ -17,28 +28,12 @@ classdef arc2D<geometricModel
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized','continuous'};
             obj.dimension = 2;
-            
+            obj.listed = true;
         end
         
         function [model, p]= reference(obj, par, dx)
-        % This funtion samples coordinates of the model as reference.
-        %
-        % Usage:
-        %   [model, p]= reference(obj, par, dx)
-        %
-        % Args:
-        %   * 'obj': an object of subclass of :class:`geometricModel`.
-        %   * 'par': a structure object. Its fieldnames should be the names
-        %   of parameters, and their correspoinding content should be the
-        %   parameter values.
-        %   * 'dx': sampling rate.
-        %
-        % Returns:
-        %   * 'model': a structure object. Its fieldnames should be x, y,
-        %   z, and n, indicating the xyz position amplitude n of the
-        %   sampled model points.
-        %   * 'p': additional information of the model.
-
+        % For details, see :meth:`reference`.
+        
         r = par.radius;
         theta = par.theta;
 

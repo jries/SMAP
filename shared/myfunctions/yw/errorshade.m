@@ -14,6 +14,7 @@ function h = errorshade(varargin)
         p = inputParser;
         p.addParameter('Color',[]);
         p.addParameter('LineWidth',[]);
+        p.addParameter('LineAlpha',[]);
         p.addParameter('Marker',[]);
         p.addParameter('MarkerFaceColor',[]);
         p.addParameter('MarkerSize',3);
@@ -23,11 +24,25 @@ function h = errorshade(varargin)
         p.addParameter('Shade_LineWidth',[]);
         p.addParameter('Shade_FaceColor',[]);
         p.addParameter('Shade_LineStyle',[]);
+        p.addParameter('Tag',char())
         p.parse(varargin{4:end});
         p = p.Results;
     end
     h = plot(ax,x,y);
+    if startsWith(p.Color, '#')
+        p.Color = hex2rgb(p.Color);
+    end
+        
+    if ~isempty(p.LineAlpha)
+        p.Color = [p.Color p.LineAlpha];
+    end
+    pp.LineAlpha = p.LineAlpha;
+    p = rmfield(p,'LineAlpha');
     
+    if startsWith(p.MarkerFaceColor, '#')
+       p.MarkerFaceColor = hex2rgb(p.MarkerFaceColor);
+    end
+        
     if length(varargin) > 3
         fn = fieldnames(p);
         if length(varargin) > 3
@@ -55,12 +70,15 @@ function h = errorshade(varargin)
                     oneFnNew = replace(oneFnOld,'Shade_','');
                     if strcmp(oneFnNew, 'EdgeColor')
                         oneFnNew = 'Color';
+                        p.(oneFnOld) = [hex2rgb(p.(oneFnOld)) pp.LineAlpha];
                     end
                     pa_1.(oneFnNew) = p.(oneFnOld);
                     pa_2.(oneFnNew) = p.(oneFnOld);
                 end
             end
         end
+        set(pa_1,'Tag',p.Tag)
+        set(pa_2,'Tag',p.Tag)
     else
         pa = fill(ax,errorX,errorY,'r');
         if length(varargin) > 3
@@ -73,6 +91,7 @@ function h = errorshade(varargin)
                 end
             end
         end
+        set(pa,'Tag',p.Tag)
         %     hold(ax,'off')
         if isempty(p.Shade_FaceColor)
             pa.FaceColor = p.Color;

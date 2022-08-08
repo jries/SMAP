@@ -51,11 +51,17 @@ if isfield(p,'saveSepFile') && p.saveSepFile % Yu-Le added
         lSameFolder__ = startsWith(fileName,'__');
         lOwnFolder__ = startsWith(fileName,'own__');
         fileName = regexprep(fileName, '^(|own)__', '_');
-        fileName = regexprep(fileName, '(_{1,2}sml)$', '');
+        if endsWith(fileName,'_se')
+            fileName = regexprep(fileName, '(_{1,2}se)$', '');
+            char_fromTheLast = 6;
+        else
+            fileName = regexprep(fileName, '(_{1,2}sml)$', '');
+            char_fromTheLast = 7;
+        end
         if lSameFolder__||lOwnFolder__
             % different names, same suffix
             [ownPath,oriName] = fileparts(locData.files.file(filenumber).name);
-            newName = [oriName(1:end-4) fileName file(end-7:end)]; % take out '_sml'
+            newName = [oriName(1:end-4) fileName file(end-char_fromTheLast:end)]; % take out '_sml'
             if lOwnFolder__
                 oneFile = [ownPath filesep newName];
             else
@@ -65,10 +71,21 @@ if isfield(p,'saveSepFile') && p.saveSepFile % Yu-Le added
             % same name, different suffix
             oneFile = [file(1:end-8) '_' num2str(filenumber) file(end-7:end)];
         end
-        saveloc=locData.savelocs(oneFile,indg,[],[],excludesavefields,filenumber);
+        switch p.pluginpath{end}
+            case 'SMLMsaver'
+                saveloc=locData.savelocs(oneFile,indg,[],[],excludesavefields,filenumber); % BETA , maybe problematic with more than 1 file: this will save only displayed loicalizations
+            case 'generalSeSaver'
+                saveloc=locData.saveSE(oneFile,indg,[],[],excludesavefields,filenumber);
+        end
+        
     end
 else
-    saveloc=locData.savelocs(file,indg,[],[],excludesavefields,filenumber); % BETA , maybe problematic with more than 1 file: this will save only displayed loicalizations
+    switch p.pluginpath{end}
+        case 'SMLMsaver'
+            saveloc=locData.savelocs(file,indg,[],[],excludesavefields,filenumber); % BETA , maybe problematic with more than 1 file: this will save only displayed loicalizations
+        case 'generalSeSaver'
+            saveloc=locData.saveSE(file,indg,[],[],excludesavefields,filenumber);
+    end
 end
 
 

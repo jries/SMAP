@@ -13,9 +13,12 @@ tnum=p.render_colormode.Value;
 
 %  file=lp.files.file;
  
- fileh=file(fs);
- 
- if length(fileh.(form))<tnum||isempty(fileh.(form)(tnum).image)
+ if isempty(file) 
+     fileh=[];
+ else
+    fileh=file(fs);
+ end
+ if isempty(fileh) || length(fileh.(form))<tnum||isempty(fileh.(form)(tnum).image)
      im.image=[];%zeros(round(p.sr_sizeRecPix(1)),round(p.sr_sizeRecPix(2)));
      im.rangex=rangex+p.shiftxy_min;
      im.rangey=rangey+p.shiftxy_max;

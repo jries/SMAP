@@ -307,7 +307,7 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 lineh.handle1=line([0 0],[0 0],'Parent',ax);
                 lineh.handle2=line([0 0],[0 0],'Parent',ax);
                 lineh.ax=ax;
-                lineh.text=text(0,0,' ','Color','w','FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);
+                lineh.text=text(0,0,' ','Color',[1 1 1]*0.7,'FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);
             end  
             switch roimodecallback
                 case {4,'imline'}

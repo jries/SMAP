@@ -31,8 +31,8 @@ znm=locs(indz);
 if any(znm>0)
     loc.znm(:,1)=locs(indz);
 end
-loc.time(:,1)=single(jt.tim(ind1))*1e3;  %from seconds to milliseconds
-loc.frame(:,1)=1:length(loc.xnm);
+loc.time(:,1)=double(jt.tim(ind1))*1e3;  %from seconds to milliseconds
+loc.frame(:,1)=double(1:length(loc.xnm));
 loc.dcr(:,1)=single(jt.dcr(ind2));
 loc.cfr(:,1)=single(jt.cfr(ind2));
 loc.vld(:,1)=jt.vld(ind1);

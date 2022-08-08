@@ -1,6 +1,6 @@
 function fit(obj, locs, varargin)
 %% FIT Perform fitting based on the option values
-% :func:`fit` performs fitting based on the options
+% :func:`fit` performs fitting based on the options.
 %
 % Usage:
 %   fit(obj, locs, varargin)
@@ -26,6 +26,11 @@ locs2 = p.locs2;                % the second set of locs
 obj.useCompensation = true;
 
 %% Set up the optimizer
+% for compiled version
+@fminsearchbnd;
+@fmincon;
+@particleswarm;
+
 solverFun = str2func(obj.solver.SolverName);
 if ~isempty(obj.solver.SolverOptions)&&~p.skipFit
     obj.status = 'initial';
@@ -42,7 +47,24 @@ if ~isempty(obj.solver.SolverOptions)&&~p.skipFit
         obj.solver.SolverOptions(idx*2) = num2cell(str2double(obj.solver.SolverOptions(idx*2)));
     end
     
+    % Deal with the data type of the solverOptions
+    %   Convert all that can be converted to numeric
     solverOptions = obj.solver.SolverOptions;
+    strInd = find(cellfun(@(x)isstr(x),solverOptions));
+    for k = 1:length(strInd)
+        val = str2num(solverOptions{strInd(k)});
+        if ~isempty(val)
+            solverOptions{strInd(k)} = val;
+        end
+    end
+    indF = strcmp(solverOptions, 'false');
+    if any(indF)
+        solverOptions{indF} = false;
+    end
+    indT = strcmp(solverOptions, 'true');
+    if any(indT)
+        solverOptions{indT} = true;
+    end
     
     % Deal with the plotFcn
     plotFun = [];
@@ -143,6 +165,12 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
     
     indFit = ~obj.allParsArg.fix;
     if ~p.skipFit
+        switch obj.getAdvanceSetting('runtime')
+            case 'on'
+                tic
+            case 'off'
+%               'Do nothing.'
+        end
         switch obj.solver.SolverName
             case 'fminsearchbnd'
                 [parBestFit,mLLfit] = solverFun(@(fitPars)objFun(fitPars),...
@@ -151,6 +179,7 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
                     finalUb,...
                     solverOption);
             case 'particleswarm'
+                solverOption.InitialSwarmMatrix = init';
                 [parBestFit,mLLfit] = solverFun(@(fitPars)objFun(fitPars),...
                     length(lb),...
                     finalLb,...
@@ -168,12 +197,22 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
                     [],...
                     solverOption);
         end
+        switch obj.getAdvanceSetting('runtime')
+            case 'on'
+                runtime = toc;
+            case 'off'
+%               'Do nothing.'
+        end
     else
+        oldFitInfo = obj.fitInfo;
         parBestFit = obj.allParsArg.value(indFit)';
         mLLfit = -obj.fitInfo.LLfit*sum(ismember(locs.layer,obj.allModelLayer));
+        if isfield(obj.fitInfo, 'runtime')
+            runtime = obj.fitInfo.runtime;
+        end
     end
 end
-obj.currentCascadeStep = 1; % resent the currenct step
+obj.currentCascadeStep = 1; % reset the currenct step
 obj.allParsArg.value(indFit) = parBestFit;            % only update the fit parameters
 
 if ~p.skipFit
@@ -203,34 +242,40 @@ end
 %% Calculate log-likelihood values
 % save the log liklihood and weighting factors
 % fitInfo is created here
-obj.fitInfo = [];
-numFittedLocs = sum(ismember(locs.layer,obj.allModelLayer));
-obj.fitInfo.LLfit = -mLLfit/numFittedLocs;
-obj.fitInfo.numOfLocsPerLayer = obj.numOfLocsPerLayer;
-obj.fitInfo.BGDensity = obj.getBGDensity;
-obj.fitInfo.AIC = 2*obj.numOfFreePar+2*mLLfit;
-obj.fitInfo.AICc = obj.fitInfo.AIC+2*(obj.numOfFreePar^2+obj.numOfFreePar)/(numFittedLocs-obj.numOfFreePar-1);
-obj.fitInfo.normAICc = obj.fitInfo.AICc/numFittedLocs;
-if isfield(obj.temp, 'optimHistory')
-    obj.fitInfo.optimHistory = obj.getTemp('optimHistory');
-    obj.rmTemp('optimHistory');
-end
-
-%% Calculate control log-likelihood values
-switch p.controlLogLikelihood
-    case 'none'
-        obj.fitInfo.LLExpDist = [];
-    case 'expected'
-%         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
-        obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
-        obj.fitInfo.LLExp = mean(obj.fitInfo.LLExpDist);
-        obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
-        obj.fitInfo.LLZScore = (obj.fitInfo.LLfit-obj.fitInfo.LLExp)./obj.fitInfo.LLExpStd;
-    case 'overfitted'
-        obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
-    case 'both'
-        obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,2);
-        obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
+if ~p.skipFit
+    obj.fitInfo = [];
+    numFittedLocs = sum(ismember(locs.layer,obj.allModelLayer));
+    obj.fitInfo.LLfit = -mLLfit/numFittedLocs;
+    obj.fitInfo.numOfLocsPerLayer = obj.numOfLocsPerLayer;
+    obj.fitInfo.BGDensity = obj.getBGDensity;
+    obj.fitInfo.AIC = 2*obj.numOfFreePar+2*mLLfit;
+    obj.fitInfo.AICc = obj.fitInfo.AIC+2*(obj.numOfFreePar^2+obj.numOfFreePar)/(numFittedLocs-obj.numOfFreePar-1);
+    obj.fitInfo.normAICc = obj.fitInfo.AICc/numFittedLocs;
+    if isfield(obj.temp, 'optimHistory')
+        obj.fitInfo.optimHistory = obj.getTemp('optimHistory');
+        obj.rmTemp('optimHistory');
+    end
+    if exist('runtime','var')
+        obj.fitInfo.runtime = runtime;
+    end
+    %% Calculate control log-likelihood values
+    switch p.controlLogLikelihood
+        case 'none'
+            obj.fitInfo.LLExpDist = [];
+        case 'expected'
+    %         obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,5);
+            obj.fitInfo.LLExpDist = obj.getLLExpDist(1000);
+            obj.fitInfo.LLExp = mean(obj.fitInfo.LLExpDist);
+            obj.fitInfo.LLExpStd = std(obj.fitInfo.LLExpDist);
+            obj.fitInfo.LLZScore = (obj.fitInfo.LLfit-obj.fitInfo.LLExp)./obj.fitInfo.LLExpStd;
+        case 'overfitted'
+            obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
+        case 'both'
+            obj.fitInfo.LLExp = obj.getELL(parBestFit,compensationFactor,2);
+            obj.fitInfo.LLOF = obj.getOFLL(compensationFactor);
+    end
+else
+    obj.fitInfo = oldFitInfo;
 end
 
 %% Variations of parameters

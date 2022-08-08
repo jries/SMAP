@@ -64,8 +64,7 @@ switch mode
         else
             G = obj.getTemp('gausstemplate');
         end
-        
-        for k = 1:obj.numOfModel
+        for k = 1:obj.numOfLayer
            
             [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,forRevY.*modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
             if obj.model{k}.fixSigma
@@ -74,13 +73,9 @@ switch mode
                 variation = obj.getVariable(['par.m' num2str(k) '.lPar.variation']);
                 thisImg = getModelImg(modCoord{k}.x, modCoord{k}.y, 'roiSize', obj.roiSize, 'pixelSize', pixelSize, 'sigma', (sqrt(median(locsCoord.locprecnm)^2+variation^2)+obj.model{k}.sigmaFactor(2)).*obj.model{k}.sigmaFactor(1), 'gausstemplate',G,'norm',modCoord{k}.n)';
             end
-            thisImg = thisImg/max(thisImg,[],1:2);
-            if obj.numOfLayer==1
-                thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut('cyan'));
-            else
-                thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut(obj.model{k}.displayLut));
-            end
-            v = v + thisImg;
+
+            modelWeight = obj.getVariable(['par.m' num2str(k) '.lPar.weight']);
+            v = v + thisImg./sum(thisImg,1:2).*modelWeight;
             
             % Deal with additional info from the model
             items = obj.getThings2Plot;
@@ -94,20 +89,30 @@ switch mode
 
                 oneItem = rmfield(oneItem,'ZData');
                 fn = fieldnames(oneItem);
-                hold(ax, 'on');
+                if l > 1
+                    hold(ax, 'on');
+                end
                 h = plot(ax,oneItem.XData,oneItem.YData);
-                hold(ax,'off')
+                if l > 1
+                    hold(ax, 'off');
+                end
                 for f = 1:length(fn)
                     if ~any(strcmp(fn{f},{'YData','XData'}))
                         set(h,fn{f},oneItem.(fn{f}));
                     end
                 end
             end
+        if obj.numOfLayer==1
+            v = ind2rgb(round(v.*255./max(v,[],1:2)), mymakelut('cyan'));
+        else
+            v = ind2rgb(round(v.*255./max(v,[],1:2)), mymakelut(obj.model{k}.displayLut));
         end
-        hold on
+        end
+        
+%         hold(ax,'on')
         imagesc(ax, v);
         axis(ax,'equal')
-        hold off
+%         hold(ax,'off')
         
         % Deal with locs
         for k = 1:max(locsCoord.layer)
@@ -126,10 +131,12 @@ switch mode
             hold(ax, 'on');
             vizX = (locsCoord.xnm(lLayer&lSectionLocs)+obj.roiSize/2+pixelSize)./pixelSize;
             vizY = (locsCoord.ynm(lLayer&lSectionLocs)+obj.roiSize/2+pixelSize)./pixelSize;
-            plot(ax,  vizX,vizY,' or', 'MarkerEdgeColor','k','MarkerFaceColor',oneColor,'MarkerSize',3.5)
+            scatter(ax,  vizX,vizY,10,'o','filled', 'MarkerEdgeColor','k','MarkerFaceColor',oneColor, 'MarkerFaceAlpha',0.5, 'MarkerEdgeAlpha',0.5)
             hold(ax,'off')
         end
-        
+        h_Img = findobj(ax.Children, 'type', 'image');
+        h_Others = findobj(ax.Children, '-not', 'type', 'image');
+        ax.Children = [h_Others; h_Img];
         
     case 'Data'
         v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
@@ -185,7 +192,10 @@ switch mode
                     imageo = drawerSMAP(imageo,p_render);
                 end
                 thisImg = imageo.image;
-                v = v + thisImg;
+                
+                if ~isempty(thisImg) % XXXX added by Jonas
+                    v = v + thisImg;
+                end
             end
         end
         imagesc(ax, v);
@@ -227,7 +237,7 @@ switch mode
                 oneColor = oneLut(150,:);
                 
                 hold(ax, 'on');
-                plot(ax,  (modVizX(idx)+obj.roiSize/pixelSize)./2,+(modVizY(idx)+obj.roiSize/pixelSize)./2,'- r', 'Color','w','LineWidth',5)
+                plot(ax,  modVizX(idx)./pixelSize+(obj.roiSize/pixelSize)./2,+modVizY(idx)./pixelSize+(obj.roiSize/pixelSize)./2,'- r', 'Color','w','LineWidth',5)
                 hold(ax,'off')
             end
             
