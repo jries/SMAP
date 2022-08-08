@@ -45,10 +45,10 @@ end
 dir='/Users/ries/Data_local/ViennaVibrations/'; 
 file='MP_0513_29_June.txt';
 % file='MP_2UG_8_30Jun.txt';
+file = 'MP_VBC2_2UG_19.4.txt';
 
-
-dir='/Volumes/Lacie/DataLacie/ViennaVibrations/'; 
-file='MP_VBC4_Raum_1105.txt';
+% dir='/Volumes/Lacie/DataLacie/ViennaVibrations/'; 
+% file='MP_VBC4_Raum_1105.txt';
 
 
 dt=300; %s=5min
@@ -106,8 +106,9 @@ end
 %%
 files={};
 files{1}='MP_0513_29_June.txt';
-files{2}='MP_2UG_8_30Jun.txt';
-files{3}='MP_VBC4_Raum_1105.txt';
+files{3}='MP_2UG_8_30Jun.txt';
+files{2}='MP_VBC4_Raum_1105.txt';
+files{4}='MP_VBC2_2UG_19.4.txt';
 for c=1:length(coord)
     c
     p.linepar={'LineWidth',1};
@@ -121,7 +122,9 @@ for c=1:length(coord)
 %     p.linepar={'Color',[0 0 0],'LineWidth',2};
 %     p.plottrace=false;
 %     plotvibrationanalysis(dir, file,coord{c},p);
-    legend({'VBC5_0513','VBC2_2UG','VBC4_1105'})
+%     legend({'VBC5_0513','VBC2_2UG','VBC4_1105'})
+%     legend({'VBC5_0513','VBC4_1105','VBC2_2UG','VBC2_2UG_19'})
+legend(files)
     subplot(2,3,2)
     title(coord{c})
 

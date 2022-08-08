@@ -208,8 +208,11 @@ function preview_callback(a,b,obj)
 % module=obj.processors{obj.currentmodule.number};
 % info=module.evaluate(obj.SE.currentsite);
 %for ttesting:
-
+try
  evaluatesite(obj,obj.SE.currentsite,1)
+catch
+    disp('Nothing is evaluated. Please click on one site in the ROI list first.')
+end
 end
 
 function evaluatesite(obj,site,ploton)
@@ -242,7 +245,7 @@ pard.removemodule.object=struct('Style','pushbutton','String','remove ');
 pard.removemodule.position=[1,1.9];
 pard.removemodule.Width=0.6;
 % 
-pard.preview.object=struct('Style','pushbutton','String','evaluate current ROI');
+pard.preview.object=struct('Style','pushbutton','String','evaluate current ROI','Callback',@obj.preview_callback);
 pard.preview.position=[11,1];
 pard.preview.Width=1.5;
 
