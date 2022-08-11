@@ -1296,7 +1296,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             modCoord = transModPoint(obj, modCoord);
             
             for l = 1:length(obj.allModelLayer)                
-                if any(modCoord{l}.n>1)
+                if any(modCoord{l}.n~=1)
                     % locs.n scales to the number of labels at
                     % corresponding positions
                     repeatLabel = round(modCoord{l}.n./min(modCoord{l}.n));
@@ -1702,6 +1702,46 @@ classdef LocMoFit<matlab.mixin.Copyable
                 settings = [];
             end
         end
+        function settings = getAllModelInternalSetting(obj)
+            % Get the list of the internal settings' name.
+            %
+            % --- Syntax ---
+            % settings = getModelInternalSettingList(obj, modelInd).
+            % 
+            % --- Description---
+            % settings: a list (string array) of the internal settings' name.
+            % obj: an LocMoFit object.
+            % modelID: the ID of the model.
+            settings = {};
+            for m = 1:obj.numOfModel
+                list_modIntSettings = obj.getModelInternalSettingList(m);
+                modIntSettings_currentMod = [];
+                for k = 1:length(list_modIntSettings)
+                    fn = list_modIntSettings{k};
+                    modIntSettings_currentMod.(fn) = obj.getModelInternalSetting(m, fn);
+                end
+                settings{m} = modIntSettings_currentMod;
+            end
+        end
+        function setAllModelInternalSetting(obj, settings)
+            % Get the list of the internal settings' name.
+            %
+            % --- Syntax ---
+            % settings = getModelInternalSettingList(obj, modelInd).
+            % 
+            % --- Description---
+            % settings: a list (string array) of the internal settings' name.
+            % obj: an LocMoFit object.
+            % modelID: the ID of the model.
+            for m = 1:obj.numOfModel
+                oneModSettings = settings{m};
+                fn = fieldnames(oneModSettings);
+                for k = 1:length(fn)
+                    val = oneModSettings.(fn{k});
+                    obj.setModelInternalSetting(m, fn{k}, val);
+                end
+            end
+        end
         function setModelInternalSetting(obj, modelInd, setting, value)
             % Set the value of a model internal settings.
             if ~isempty(obj.model{modelInd}.modelObj)
@@ -1918,6 +1958,12 @@ function out = defaultAdvanceSettings
     out.compiledMode.name = 'Compiled mode';
     out.compiledMode.description = 'Activate the compiled mode or not.';
     out.compiledMode.developer = true;
+
+    out.siteSpecificMode.option = {'on','off'};
+    out.siteSpecificMode.value = 'off';
+    out.siteSpecificMode.name = 'Site specific mode';
+    out.siteSpecificMode.description = 'Set to "on" to enable site specific parameter settings.';
+    out.siteSpecificMode.developer = true;
 end
 
 function [out,allOptions] = defaultLParSelection(parameterType)

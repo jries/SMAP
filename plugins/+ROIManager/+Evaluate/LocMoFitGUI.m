@@ -73,6 +73,8 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj, inp, varargin)
+            
+
             eval_  = obj.locData.SE.processors.eval;
             loadedPlugins = fieldnames(eval_.children);
             allLocMoFitGUI = loadedPlugins(startsWith(loadedPlugins, 'LocMoFit'));
@@ -84,9 +86,19 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
 
             forceDisplay_currentGUI = obj.lPreview;
             if anyGUI_previewMode
+                % any one of steps is in the preview mode then set this
+                % step also to the review mode
                 varargin =  {'onlySetUp',true, 'forceDisplay',true, 'keepParsVal',true};
             end
+            
+            if strcmp(obj.fitter.getAdvanceSetting('siteSpecificMode'), 'on')&&~anyGUI_previewMode
+                readPar_callback([],[],obj)
+                inp = obj.getGuiParameters;
+            end
+
             if any(forceDisplay_currentGUI)
+                % If this step is origianlly in the preview mode, throw
+                % warning.
                 warning off backtrace
                 warning on verbose
                 msg = ['Now is in the preview mode so the fit is not executed. To exit the preview mode, uncheck the preview box(es) of model(s) ' num2str(find(forceDisplay_currentGUI)) ' in ' obj.name];
@@ -94,16 +106,17 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 warning on backtrace
                 warning off verbose
             end
-            % varargin is used only when called by the run_addguitotab.mlx
+
             p = inputParser;
-            addParameter(p,'onlySetUp',false, @islogical);
-            addParameter(p,'forceDisplay',false, @islogical);
-            addParameter(p,'keepParsVal',false, @islogical);
+            addParameter(p,'onlySetUp',false, @islogical);% not used at the moment
+            addParameter(p,'forceDisplay',false, @islogical); % only disply not fit
+            addParameter(p,'keepParsVal',false, @islogical); % keep the original pars
             parse(p,varargin{:});
             results = p.Results;
             obj.fitter.linkedGUI = obj;
             forceDisplay = results.forceDisplay;
             keepParsVal = results.keepParsVal;
+
             try
                 %% RUNSMLMMODELFITGUI Actions to request from the plugin SMLMModelFitGUI
                 % This is the 'run' function for the SMLMModelFitGUI.
@@ -375,7 +388,9 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                     
                     out.parsInit = fitter.parsInit;
                     fitter.getDerivedPars;
-                    fitter.deriveSigma(locs);
+                    if ~strcmp(fitter.model{1}.modelType, 'image')
+                        fitter.deriveSigma(locs);
+                    end
                     %% Get compensationFactor
                     % This factor compensate the number of locs between different channels
 %                     compensationFactor = zeros(size(locs.layer))';
@@ -589,8 +604,6 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 dy=0;
             end
 
-            
-
             pard.tab.tab1='Settings';
             
             pard.t_optimizer.object=struct('Style','text','String','Optimizer:');
@@ -739,11 +752,31 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.guihandles.(['loadPar_' num2str(number)]).Callback = {@loadPar_callback, obj, number};
             obj.guihandles.(['loadPar_' num2str(number)]).Tooltip = 'Import previously exported settings.';
             
-            % toggle button for selecting a site
-%             obj.guihandles.(['pickSite_' num2str(number)])=uicontrol(hpar,'Style','togglebutton','String','Pick site');
-%             obj.guihandles.(['pickSite_' num2str(number)]).Position = [180 0 60 20];
+            % set settings as default
+            obj.guihandles.(['setDefPar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','set def.', 'Visible', 'off');
+            obj.guihandles.(['setDefPar_' num2str(number)]).Position = [100 0 35 20];
+            obj.guihandles.(['setDefPar_' num2str(number)]).Callback = {@setDefPar_callback, obj};
+            obj.guihandles.(['setDefPar_' num2str(number)]).Tooltip = 'Set the current settings as default.';
             
-            % button for previewing the model
+            % write all settings
+            obj.guihandles.(['writePar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','write', 'Visible', 'off');
+            obj.guihandles.(['writePar_' num2str(number)]).Position = [135 0 35 20];
+            obj.guihandles.(['writePar_' num2str(number)]).Callback = {@writePar_callback, obj};
+            obj.guihandles.(['writePar_' num2str(number)]).Tooltip = 'Write the settings for the current site.';
+            
+            % read all settings
+            obj.guihandles.(['readPar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','read', 'Visible', 'off');
+            obj.guihandles.(['readPar_' num2str(number)]).Position = [170 0 35 20];
+            obj.guihandles.(['readPar_' num2str(number)]).Callback = {@readPar_callback, obj};
+            obj.guihandles.(['readPar_' num2str(number)]).Tooltip = 'Read the previously written settings to the GUI.';
+            
+            % clear all settings
+            obj.guihandles.(['clearPar_' num2str(number)])=uicontrol(hpar,'Style','pushbutton','String','reset', 'Visible', 'off');
+            obj.guihandles.(['clearPar_' num2str(number)]).Position = [205 0 35 20];
+            obj.guihandles.(['clearPar_' num2str(number)]).Callback = {@clearPar_callback, obj};
+            obj.guihandles.(['clearPar_' num2str(number)]).Tooltip = 'Clear the written settings for the current site.';
+            
+            % checkbox for previewing the model
             obj.guihandles.(['forceDisplay_' num2str(number)])=uicontrol(hpar,'Style','checkbox','String','Preview', 'Value',0);
             obj.guihandles.(['forceDisplay_' num2str(number)]).Position = [240 0 120 20];
             obj.guihandles.(['forceDisplay_' num2str(number)]).Tooltip = 'When this option is checked, the fit will be skipped and the model is visualized based on the starting paramters.';
@@ -925,6 +958,14 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
                 initmodel(obj, num2str(m),'skipAddModel',true, 'compiledMode', false);
                 obj.setPar('loading',false)
             end
+
+            for m = 1:fitter.numOfModel
+                modelStr = num2str(m);
+                obj.guihandles.(['setDefPar_' modelStr]).Visible = fitter.getAdvanceSetting('siteSpecificMode');
+                obj.guihandles.(['writePar_' modelStr]).Visible = fitter.getAdvanceSetting('siteSpecificMode');
+                obj.guihandles.(['clearPar_' modelStr]).Visible = fitter.getAdvanceSetting('siteSpecificMode');
+                obj.guihandles.(['readPar_' modelStr]).Visible = fitter.getAdvanceSetting('siteSpecificMode');
+            end
         end
 
         function updateGUI_convert_fromLocMoFitObj(obj)
@@ -1017,7 +1058,15 @@ name = strtrim(data{indices(1),strcmp(fn,'name')});
 type = strtrim(data{indices(1),strcmp(fn,'type')});
 [~,idx] = fitter.wherePar(['pars.m' num2str(modelnumber) '.' type '.' name]);
 fitter.allParsArg.(fn{indices(2)})(idx) = b.NewData;
-fitter.saveInit;
+
+siteSpecificMode = fitter.getAdvanceSetting('siteSpecificMode');
+switch siteSpecificMode
+    case 'off'
+        fitter.saveInit;
+    case 'on'
+%         Do nothing
+end
+
 obj.fitter = fitter;
 end
 
@@ -1235,7 +1284,7 @@ for k = 1:length(fn)
     end
 end
 try
-    obj.updateGUI
+    obj.updateGUI_fromLocMoFitObj
     obj.updateLayer
 catch
     warning('Layer(s) is not updated.')
@@ -1895,6 +1944,64 @@ refTable.Data(lOri,[2:5 7:9]) = imported_found;
 obj.fitter.setParArgBatch(refTable.Data, 'modelID', modID);
 close(uit.Parent)
 end
+
+function writePar_callback(a,b,obj)
+    % Write the current settings as the default for the current site.
+    allModIntSetting = obj.fitter.getAllModelInternalSetting;
+    obj.site.evaluation.(obj.name).written = [];
+    obj.site.evaluation.(obj.name).written.allParsArg = obj.fitter.allParsArg;
+    obj.site.evaluation.(obj.name).written.allModIntSetting = allModIntSetting;
+    obj.site.evaluation.(obj.name).written.data_convert = obj.guihandles.anchorConvert.Data;
+
+    obj.setPar('status', 'The current settings are successfully wirtten.');
+end
+
+function readPar_callback(a,b,obj)
+    allModIntSetting = obj.site.evaluation.(obj.name).written.allModIntSetting;
+
+    obj.fitter.allParsArg = obj.site.evaluation.(obj.name).written.allParsArg;
+    obj.guihandles.anchorConvert.Data = obj.site.evaluation.(obj.name).written.data_convert;
+    obj.fitter.setAllModelInternalSetting(allModIntSetting)
+
+%     obj.updateGUI_convert_fromLocMoFitObj
+    obj.updateGUI_fromLocMoFitObj
+end
+
+function clearPar_callback(a,b,obj)
+    % Clear the written settings.
+    answer = questdlg('If you select yes, your previous written settings will be lost and the current parameter settings will be overwritten by the default',...
+        'Cear the written settings?', ...
+        'Yes', 'No',...
+        'No');
+    switch answer
+        case 'Yes'
+            if isempty(obj.site)
+                obj.setPar('status', 'Nothing to clear: no site is selected. Plesae select one site first.');
+            elseif isfield(obj.site.evaluation, obj.name)&&isfield(obj.site.evaluation.(obj.name), 'written')
+                obj.site.evaluation.(obj.name) = rmfield(obj.site.evaluation.(obj.name), 'written');
+                obj.setPar('status', 'The current settings are successfully cleared.');
+            else
+                obj.setPar('status', 'Nothing to clear: no setting is wirtten.');
+            end
+        otherwise
+            obj.setPar('status', 'Nothing is cleared: user cancelled.');
+    end
+    if ~isempty(obj.getPar('allModIntSetting_default'))
+        obj.fitter.resetInit
+        obj.fitter.setAllModelInternalSetting(obj.getPar('allModIntSetting_default'));
+        obj.guihandles.anchorConvert.Data = obj.getPar('data_convert');
+    %     obj.updateGUI_convert_fromLocMoFitObj
+        obj.updateGUI_fromLocMoFitObj
+    else
+    end
+end
+
+function setDefPar_callback(a,b,obj)
+    obj.fitter.saveInit;
+    obj.setPar('allModIntSetting_default', obj.fitter.getAllModelInternalSetting)
+    obj.setPar('data_convert', obj.guihandles.anchorConvert.Data)
+end
+
 %
 
 function [keyStr,locR,locT] = matchTable(ref,tar,keys, delimiter)
