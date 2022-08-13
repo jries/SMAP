@@ -626,7 +626,12 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         
                         if istab
                             if isfield(thisField,'tab')
-                                parenth=obj.guihandles.(thisField.tab);
+                                switch thisField.tab
+                                    case 'none'
+                                        parenth=obj.handle;
+                                    otherwise
+                                        parenth=obj.guihandles.(thisField.tab);
+                                end
                             else
                                 parenth=maintab;
                             end

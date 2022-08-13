@@ -1,6 +1,6 @@
-# GUI overview
-## Main GUI
-![LocMoFit GUI in SMAP](../images/overview.png)
+# Graphic user interface (GUI)
+## GUI overview
+![LocMoFit GUI in SMAP](../images/SMAP_overview.png)
 
 LocMoFit is integrated into SMAP. You can follow the steps to access to LocMoFit in SMAP:
 1. Go to the **[ROIs]** tab.
@@ -27,11 +27,11 @@ In this tab, you can load and set up the first SMLM model.
  * a field _Sigma of Gaussian filtering_ where you can specify a constant sigma of Gaussian filtering. The higher the more blurred.
  * a field _Factor of Gaussian filtering_ where you can specify the factor of Gaussian filtering. The higher the more blurred.
 :::{Note}
- _Sigma of Gaussian filtering_ and _Factor of Gaussian filtering_ works exclusively.
+ _Sigma of Gaussian filtering_ and _Factor of Gaussian filtering_ exclude each other.
 :::
 
 #### Sub-tab _[Parameters]_
-![m1_Parameters](../images/m1_Parameters.PNG)
+![m1_Parameters](../images/parameters_modelLoaded.png)
 
 If you already loaded a model, you can move on to this tab and set up the model parameters.
 Here you will see the following:
@@ -39,6 +39,21 @@ Here you will see the following:
  * buttons **Save** and **Load** allow you to save and load settings.
  * a button **Pick site** allows you to click a site in the ROI manager without evaluating the fit. This is usually used together with the button _Preview_
  * a button **Preview** to show the model with the initial parameters.
+ 
+##### Description of the fields
+* _name_: parameter names.
+* _value_: initial values of parameters.
+* _fix_: specify the parameter should be fix or or not. If checked, the parameter will be set to the value you defined and will be a constant that are not fitted.
+* _lb_: relative lower boundaries of parameter ranges.
+* _ub_: relative upper boundaries of parameter ranges.
+* _type_: types of parameters. This is not editable.
+* _min_: absolute lower boundaries of parameter ranges.
+* _max_: absolute upper boundaries of parameter ranges.
+* _label_: user-defined labels for the corresponding parameters.
+
+   :::{note}
+   For example, _value_ 30, _lb_ -10, _ub_ 20, _min_ 10, and _max_ 45 results to a parameter range of [20 45]. This is based on first get [value+lb value+ub] = [20 50], and then check whether this is beyond [min max] = [10 45] or not. If this is the case, the range will be set to the min or max values so the final upper boundary is 45 but not 50.
+   :::
  
 #### Sub-tab _[Advance]_
 ![m1_Advance](../images/m1_Advance.PNG)
@@ -53,7 +68,7 @@ Here you will see the following:
 :::
 
 ### Tab _[Settings]_
-![settings](../images/overview_settings.PNG)
+![settings](../images/LocMoFit_settings.PNG)
 
 In this tab, you can set up settings beyond specific models and have a global control of the current LocMoFitGUI instance.
 Here you will see the following:
@@ -83,7 +98,7 @@ Here you will see the following:
 :::
 
 ## Fit viewer
-After the current site is fitted, the fit viewr will show if the **display** is checked.
+After the current site is fitted, the fit viewer will show if the **display** is checked.
 This viewer is different per model type and data dimension.
 
 ### For 3D continuous/discrete models
@@ -92,10 +107,10 @@ You should see this window show up:
 ![viewer](../images/fit3DFunModel_viewer.PNG)
 
 #### Tab _[FreeRot]_
-There are different parts:
+Here you will see the following:
 * a checkbox **Disable**. For efficiency, you can check it so that the plots will not be drawn.
 * the left panel _Dot plot_. Here both the model and the data are represented by dots.
-* the right panel _2D Projection of the left panel_. Here either one of the model or the data is rendered as a image. You can specify the image source bellow in the panel _Control_.
+* the right panel _2D Projection of the left panel_. Here either the model or the data is rendered as a image. You can specify the image source bellow in the panel _Control_.
 * the bottom panel _Control_. Here you can:
    * define the thickness of the cross-section along the y-axis.
    * rotate the site about z-axis with the buttons *>* and *>>* in small and large steps, respectively.
@@ -103,12 +118,12 @@ There are different parts:
       :::{Note}
       You can enable the history saving by turning on the _OutputFun_ in the table _optimizer parameters_
 	  
-	  ![fit2DImgModel_viewer](../images/OutputFun_on.PNG)
+	  ![outputFun on](../images/settings_outputFunOn.png)
       :::
 
 #### Tab _[FixRot]_
 :::{Note}
-By defualt, this tab is disabled. You can uncheck the checkbox **Disable** to show the content.
+By default, this tab is disabled. You can uncheck the checkbox **Disable** to show the content.
 :::
 * a checkbox **Disable**. For efficiency, you can check it so that the plots will not be drawn.
 * four panels of the fitted site with different rotation angles around the z-axis.
@@ -119,7 +134,7 @@ For each viewer, it comes with a tab **[Fitted_Par]** regardless of the model ty
 
 ![fit2DImgModel_viewer_par](../images/fit2DImgModel_viewer_par.PNG)
 :::
-* the main table that displays the parameters settings with parameter estimates shown in the column _Value_.
+* the main table that displays the parameter settings with parameter estimates shown in the column _Value_.
 * a button **Copy all** allows you to copy the entire table to the clipboard.
 
 ### For 3D image models
@@ -127,7 +142,7 @@ You should see this window show up:
 
 ![fit3DImgModel_viewer](../images/fit3DImgModel_viewer.PNG)
 
-There are three tabs of projections of the site in different views (planes **[XY]**, **[YZ]**, and **[XZ]**) and the common tab **[Fitted_Par]**.
+There are three projection tabs showing the site in different views (planes **[XY]**, **[YZ]**, and **[XZ]**) and the common tab **[Fitted_Par]**.
 
 ### For 2D models
 You should see this window show up:
@@ -136,7 +151,7 @@ You should see this window show up:
 
 There are two tabs:
 * **[Plot]** showing the data as points and the model as an image. In the control panel:
-   * You can playback the process of optimization if its history is saved.
-   * You can define the pxiel size for rendered image above.
-   * Normally the data is transforemd. You can transform the model instead by checking the checkbox **Move model**.
+   * you can playback the process of optimization if its history is saved.
+   * you can define the pxiel size for rendered image above.
+   * normally the data is transforemd. You can transform the model instead by checking the checkbox **Move model**.
 * the common tab **[Fitted_Par]**.

@@ -17,7 +17,7 @@ function [locs, flag] = locsHandler(obj, locs, lParsVal, modelID, varargin)%!!! 
 %% Initiation
 p = inputParser;
 p.addParameter('usedformalism','rotationMatrix');
-p.addParameter('target','locs');                % can be either 'locs' or 'model'
+p.addParameter('target','locs');                % can be either 'locs' or 'model'; not used anymore
 p.addParameter('order_transform','TR');
 p.addParameter('onlyLocpre',false);
 

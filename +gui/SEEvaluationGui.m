@@ -20,7 +20,6 @@ classdef SEEvaluationGui< interfaces.SEProcessor
         end
         function initGui(obj)
             initGui@interfaces.SEProcessor(obj);
-            
             pos=obj.guihandles.addmodule.Position;
             pos2=obj.guihandles.removemodule.Position;
             pos(2)=pos(2)-obj.guiPar.FieldHeight*5;
@@ -40,7 +39,9 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             addmodule(obj,'generalStatistics');
             
             % Yu-Le added
-            addpath(genpath('./LocMoFit'))
+%             addpath(genpath('./LocMoFit'))
+%             makeGeometricModelList;
+
             obj.makeinfobutton('sw');
         end 
         function evaluate(obj,site)
