@@ -58,11 +58,15 @@ else
         ax8=initaxis(p.resultstabgroup,['err(' txt ')']);
         ax8.Position(3)=0.55;
     end
+    if p.lsf
+        axlsf1=initaxis(p.resultstabgroup,'LSF');
+        axlsf1.Position(3)=0.55;
+    end
 
 
 end
 else
-    ax1=[];ax2=[];ax3=[];ax4=[];ax5=[];ax6=[];ax7=[];ax8=[];
+    ax1=[];ax2=[];ax3=[];ax4=[];ax5=[];ax6=[];ax7=[];ax8=[];axlsf1=[];
 end
 datrange=1:length(locs);
 
@@ -364,9 +368,26 @@ if zexist && ~isempty(v{1}) && ~isempty(ax7)
     end   
 end
 
+if p.lsf
+for k=1:length(locs)
+    data.x=locs{k}.xnm';
+    data.y=locs{k}.ynm';
+    data.t=locs{k}.frame'/100;
+    data.spacewin=p.roidefs{k};
+    tt=linspace(1,max(data.t),26);
+    data.timewin(:,1)=tt(1:end-1);
+    data.timewin(:,2)=tt(2:end)-1/100;
+    [corrdata, params] = spacetime_resolution(data, 'NTauBin', 10, 'Bootstrap', false);
+
+end
+
+end
+
 if ploton && ~p.overview
    ax1.Parent.Parent.SelectedTab=ax1.Parent;
 end
+
+
 
 function [v,datrange]=getvals(locD,field,p,indin)
 if p.filter %use filtered values

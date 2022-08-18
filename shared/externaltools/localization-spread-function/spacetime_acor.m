@@ -80,7 +80,7 @@ end
     end
         
     difftau = diff(tau);
-    if (max(difftau) - min(difftau))/min(difftau) > 1e-13
+    if (max(difftau) - min(difftau))/min(difftau) > 1e-10
         error('spacetime_acor: requested tau values must be equally spaced. Support for unequally spaced tau may be added in a future release.')
     end
     Dtau = difftau(1);
