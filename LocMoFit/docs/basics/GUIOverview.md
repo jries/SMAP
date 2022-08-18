@@ -68,7 +68,7 @@ Here you will see the following:
 :::
 
 ### Tab _[Settings]_
-![settings](../images/LocMoFit_settings.PNG)
+![settings](../images/LocMoFit_settings.png)
 
 In this tab, you can set up settings beyond specific models and have a global control of the current LocMoFitGUI instance.
 Here you will see the following:

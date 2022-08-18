@@ -28,7 +28,7 @@ classdef ellipse3D<geometricModel
             % Define other properties here:
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized','continuous'};
-            obj.dimension = 2;
+            obj.dimension = 3;
             obj.listed = true;
             
         end
@@ -44,14 +44,15 @@ classdef ellipse3D<geometricModel
         minD = locsPrecFactor*dx;
         
         % corner:
-        circumference = 2.*pi.*par.radius;
+        h = ((par.a-par.b)./(par.a+par.b)).^2;
+        circumference = pi.*(par.a+par.b).*(1+3.*h./(10+sqrt(4-3*h)));
         cornerNum = circumference./minD;
 		
 		theta = linspace(0,2*pi,cornerNum+1);
         theta = theta(1:end-1);
         
-        oneRingX = par.a*cos(theta);     
-        oneRingY= par.b*sin(theta)  ;
+        oneRingX = par.a*cos(theta);
+        oneRingY= par.b*sin(theta);
         
         model.x = oneRingX.';
         model.y = oneRingY.';
