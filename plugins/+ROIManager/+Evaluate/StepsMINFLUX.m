@@ -252,11 +252,16 @@ out.stdall.y=sqrt(sum(obj.steps.std.y.^2.*obj.steps.numlocsstep)/sum(obj.steps.n
 out.stdalldet.x=sqrt(sum(obj.steps.stddetrend.x.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
 out.stdalldet.y=sqrt(sum(obj.steps.stddetrend.y.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
 
+out.stdalldetmean.x=(sum(obj.steps.stddetrend.x.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+out.stdalldetmean.y=(sum(obj.steps.stddetrend.y.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+
 if ~isempty(obj.coord.xfr)
     out.stdall.xf=sqrt(sum(obj.steps.std.xf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
     out.stdall.yf=sqrt(sum(obj.steps.std.yf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
     out.stdalldet.xf=sqrt(sum(obj.steps.stddetrend.xf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
     out.stdalldet.yf=sqrt(sum(obj.steps.stddetrend.yf.^2.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+    out.stdalldetmean.xf=(sum(obj.steps.stddetrend.xf.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
+    out.stdalldetmean.yf=(sum(obj.steps.stddetrend.yf.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
 end
 obj.stats=out;
 end
@@ -723,13 +728,22 @@ y=obj.coord.yr(indt);
 % nmax=500;
 % nmin=10;
 % x=x(nmin:nmax);y=y(nmin:nmax);time=time(nmin:nmax);
-if obj.getSingleGuiParameter('filtertrack')
-    fw=obj.getSingleGuiParameter('filterwindow');
-    fmode=obj.getSingleGuiParameter('fitmode').selection;
-    timen=min(time):fw:max(time);
-    xx=bindata(time,x,timen,fmode);
-    yy=bindata(time,y,timen,fmode);
-    x=xx;y=yy;time=timen;
+if obj.getSingleGuiParameter('filtertrack')  
+    fmode=obj.getSingleGuiParameter('filtermode').selection;
+    windowsize=obj.getSingleGuiParameter('filterwindow'); 
+    xf=runningWindowAnalysis(time,x,time,windowsize,fmode); 
+    yf=runningWindowAnalysis(time,y,time,windowsize,fmode); 
+    linew=1;
+    filtertrack=true;
+
+%     timen=min(time):fw:max(time);
+%     xx=bindata(time,x,timen,fmode);
+%     yy=bindata(time,y,timen,fmode);
+%     x=xf;y=yf;
+else
+    xf=x;yf=y;
+    linew=0.5;
+    filtertrack=false;
 end
 
 
@@ -751,28 +765,38 @@ ax.XTick=[];
 ax.YTick=[];
 for k=1:length(ts)
     indh=time<=ts(k);
-    xh=x(indh);
-    yh=y(indh);
+    xh=xf(indh);
+    yh=yf(indh);
     th=time(indh);
     tpassed=ts(k)-ts(1);
-    ht=text(ax,double(min(x)),double(min(y)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
+    ht=text(ax,double(min(xf)),double(min(yf)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
         
     indc=obj.steps.steptime<ts(k);
     cx=obj.steps.possteps.x(indc);
     cy=obj.steps.possteps.y(indc);
-
+    
+    if filtertrack
+         xr=x(indh);
+         yr=y(indh);
+         hr=plot(ax,xr,yr,'Color',[1 1 1]*0.7,'LineWidth',.5);
+         hold(ax,'on')
+    end
     hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
     hold(ax,'on')
+   
     if ~plotsimple
         hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
         hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
     end
-    hl=plot(ax,xh,yh,'k','LineWidth',.5);
+    hl=plot(ax,xh,yh,'k','LineWidth',linew);
     drawnow
     Fr(k)=getframe(ax);
     delete(hd)
     delete(hl)
     delete(ht)
+    if filtertrack
+    delete(hr)
+    end
     if ~plotsimple
         delete(hb)
         delete(hc)

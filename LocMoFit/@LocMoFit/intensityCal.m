@@ -80,12 +80,22 @@ for k = 1:obj.numOfModel
         % this is for models in the functional form
         onlyLocpre = true;
     end
-    
+
     newLocs = obj.locsHandler(locs, lPars{k}, k, 'onlyLocpre', onlyLocpre);
-    
-    if k == 1
+
+    if k==1
+        % This is to make sure that 'onlyLocpre' has been applied
         obj.setTemp('locsM1', newLocs);
     end
+%     if k == 1
+%         newLocs_ = newLocs;
+%         newLocs_.locprecnm = locs.locprecnm;
+%         if obj.model{1}.dimension == 3
+%             newLocs_.locprecznm = locs.locprecznm;
+%         end
+%         obj.setTemp('locsM1', newLocs_);
+%     end
+    
     % get the size of the largest vector(s) among locs related info
     fn = fieldnames(newLocs);
     numOfFn = length(fn);

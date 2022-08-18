@@ -14,7 +14,7 @@ switch solverName
         else
         end
     case 'particleswarm'
-        options = {'Display','UseVectorized','FunctionTolerance','FunValCheck','HybridFcn','MaxIterations','MaxStallIterations','MaxStallTime','MaxTime','MinNeighborsFraction','ObjectiveLimit','SelfAdjustmentWeight','SocialAdjustmentWeight','SwarmSize','OutputFcn'};
+        options = {'Display','UseParallel','UseVectorized','FunctionTolerance','FunValCheck','HybridFcn','MaxIterations','MaxStallIterations','MaxStallTime','MaxTime','MinNeighborsFraction','ObjectiveLimit','SelfAdjustmentWeight','SocialAdjustmentWeight','SwarmSize','OutputFcn'};
         if length(varargin)==0
             output = options;
         else

@@ -18,19 +18,19 @@ for k = obj.numOfModel:-1:1
         
         % translate lPar to mPar
         oneLPars = obj.exportPars(k,'lPar');          % get lPars
-        fn = fieldnames(oneLPars);
-        lFn2rm = ismember(fn,{'xscale','yscale'});
-        fn = fn(~lFn2rm);
-        for l = 1:length(fn)
-            oneLPars.(fn{l}) = -oneLPars.(fn{l});
-        end
+%         fn = fieldnames(oneLPars);
+%         lFn2rm = ismember(fn,{'xscale','yscale'});
+%         fn = fn(~lFn2rm);
+%         for l = 1:length(fn)
+%             oneLPars.(fn{l}) = -oneLPars.(fn{l});
+%         end
         
         pseudoLocs.xnm = ref.x;
         pseudoLocs.ynm = ref.y;
         if obj.model{1}.dimension == 3
             pseudoLocs.znm = ref.z;
         end
-        newPseudoLocs = obj.locsHandler(pseudoLocs, oneLPars,[],'usedformalism','rotationMatrixRev');
+        newPseudoLocs = obj.locsHandler(pseudoLocs, oneLPars,[],'order_transform', 'RT','usedformalism','rotationMatrixRev');
         ref.x = newPseudoLocs.xnm;
         ref.y = newPseudoLocs.ynm;
         if obj.model{1}.dimension == 3

@@ -8,7 +8,7 @@ classdef SMLMModel<matlab.mixin.Copyable
         ParentObject = [];      % Parental SMLMModelFit object.
         ID                      % The model's ID in the parental SMLMModelFit object.
         img                     % Model image.
-        parVal                  % ???
+        parVal                  % [obsolete].
         mPars                   % Model parameters.
         modelObj                % Source geometric model object.
         modelFun                % The function for creating coordinates based on the geometric model.
@@ -20,6 +20,7 @@ classdef SMLMModel<matlab.mixin.Copyable
         displayLut = 'red hot'; % The lookup table for the model.
         layer = 1;              % The layer that this model is fitted to.
     end
+    
     methods
         function obj = SMLMModel()
         end
@@ -34,7 +35,15 @@ classdef SMLMModel<matlab.mixin.Copyable
                 mPars.(obj.mPars.name{k})=obj.mPars.value(k);
             end
         end
-    end
+     function set.modelObj(obj,val)
+           obj.modelObj = val; % updates the property
+           respond2ModelObjChange(obj) % calls the protected method
+        end 
+     end 
+     methods(Access = protected)
+        function respond2ModelObjChange(obj, value) % no function definition here
+        end
+     end
     events
            mParsArgModified      % When the list of model parameters being changed.
     end
