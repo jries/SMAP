@@ -77,6 +77,41 @@ classdef continousLinearModel_PL_xyz<geometricModel
             items(1).LineStyle = 'none';
             items(1).LineWidth = 3;
         end
+        function derivedPars = getDerivedPars(obj, pars)
+            % Exports a empty variable when no derived parameters.
+            par = obj.ParentObject.ParentObject.exportPars(1,'mPar');
+            % control points:
+            [ctrlX,ctrlY,ctrlZ] = getCtrlPointsXYZ(par, obj.internalSettings.numOfCtrlPointSet);
+            
+            if isempty(obj.ParentObject.locsPrecFactor)
+                locsPrecFactor = 1;
+            else
+                locsPrecFactor = obj.ParentObject.locsPrecFactor;
+            end
+            
+            minD = locsPrecFactor*0.75;
+            
+            arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
+            samplingFactor = round(arcLen/minD);
+            [pt,dudt]= interparc(round(samplingFactor/2), ctrlX, ctrlY, ctrlZ);
+            
+            [L,R,K] = curvature(pt);
+            derivedPars.curvature = 1./R;
+            derivedPars.curvatureRadius = R;
+            derivedPars.curvatureVector = K;
+            derivedPars.arcLen = L;
+            derivedPars.pt = pt;
+            derivedPars.dudt = dudt;
+            
+            derivedPars.avgCurvature = mean(derivedPars.curvature,'omitnan');
+            derivedPars.p75Curvature = prctile(derivedPars.curvature, 75);
+%             figure; plot3(pt(:,1),pt(:,2),pt(:,3))
+%             % plot3([pt(:,1) pt(:,1)+50000*K(:,1)]',[pt(:,2) pt(:,2)+50000*K(:,2)]',[pt(:,3) pt(:,3)+50000*K(:,3)]')
+%             axis equal
+%             hold on; arrow3(pt,pt+K.*50000,'-k',0.2,0.4)
+
+
+        end
     end
     methods(Access = protected)
         function respond2InternalSettingsChange(obj,event)

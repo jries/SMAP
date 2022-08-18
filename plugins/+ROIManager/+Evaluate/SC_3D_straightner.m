@@ -17,7 +17,10 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
         end
         function out=run(obj, p)
             out=[];
-            polylinesource='LocMoFitGUI_2';
+            polylinesource=obj.getSingleGuiParameter('polylinesource');
+            expandPL=obj.getSingleGuiParameter('polylineexpandT');
+            expandby=obj.getSingleGuiParameter('polylineexpand');
+
             if ~isfield(obj.site.evaluation,polylinesource)
                 error('Please choose a polyline source that is available. %s has not been evaulated',polylinesource)
            
@@ -44,23 +47,24 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
                     end
                 end
             end
+            
+            %%Missing an option to just straighten based on the
+            %%polyline
+
+            derivedparameters=obj.site.evaluation.(polylinesource).GuiParameters.fitter.getDerivedPars;
+            descriptors=derivedparameters{1,1};%derivePars(obj,obj.site.evaluation.(polylinesource).allParsArg,polylinesource);%
+            
             %If there is no user specified polygon mask in annotation
             %tab, create a polygon mask from a polyline
-            if (~isvalid(obj.locData.SE.processors.preview.hlines.line3)||isempty(obj.locData.SE.processors.preview.hlines.line3))&&isfield(obj.site.evaluation.plot3D_annotate,'roicoordinates');
-                polygon=polybuffer(obj.site.evaluation.plot3D_annotate.roicoordinates.Position(:,1:2),'lines',350); %%%%%%%%%%%%%%%%%%%ADD as input par ###EXPAND POLYLINE by
-                [in,on] = inpolygon(obj.locData.loc.xnm,obj.locData.loc.ynm, polygon.Vertices(:,1),polygon.Vertices(:,2));
+            if (~isvalid(obj.locData.SE.processors.preview.hlines.line3)||isempty(obj.locData.SE.processors.preview.hlines.line3))&&isfield(obj.site.evaluation.plot3D_annotate,'roicoordinates') || expandPL
+                polygon=polybuffer(descriptors(:,1:2),'lines',expandby); 
+                [in,on] = inpolygon(locs.xnmrot,locs.ynmrot, polygon.Vertices(:,1),polygon.Vertices(:,2));
                 locsOri=locs;
                 locs=getFields(locs,in);
             end
 
-            %%Missing an option to just straighten based on the
-            %%polyline
 
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %derivedparameters=obj.site.evaluation.(locmofit).GuiParameters.fitter.getDerivedPars;
-            descriptors=derivePars(obj,obj.site.evaluation.(polylinesource).allParsArg,polylinesource);%derivedparameters{1,1};
-            
-            
+
             %locs=obj.site.evaluation.LocMoFitGUI_2.GuiParameters.fitter.locsHandler(locs,obj.site.evaluation.LocMoFitGUI_2.GuiParameters.fitter.exportPars(1,'lPar'))
             locs.xnmA=locs.xnmrot;
             locs.ynmA=locs.ynmrot;
@@ -268,11 +272,25 @@ pard.deleterois.object=struct('Style','pushbutton','String','delete all rois','C
 pard.deleterois.position=[2,1];
 pard.deleterois.Width=2;
 
-pard.binwidth.object=struct('String','2','Style','edit');
-pard.binwidth.position=[2,3.5];
-pard.binwidth.Width=0.5;
-pard.binwidth.TooltipString='Binwidth for profiles. If not checked, use pixel size of reconstruction';
-pard.setbinwidth.TooltipString=pard.binwidth.TooltipString;
+pard.polylinesourceT.object=struct('String','3D polyline source:','Style','text');
+pard.polylinesourceT.position=[3,1];
+pard.polylinesourceT.Width=2;
+
+pard.polylinesource.object=struct('String','LocMoFitGUI_2','Style','edit');
+pard.polylinesource.position=[3,2.5];
+pard.polylinesource.Width=2;
+pard.polylinesource.TooltipString='Specified previously run evaluation that will serve as a  source for the polyline. Avaliable LocMoFit and plot3Dannotation(still in progress).';
+
+pard.polylineexpandT.object=struct('String','Expand polyline to mask by (nm):','Style','checkbox','Value',0);
+pard.polylineexpandT.position=[4,1];
+pard.polylineexpandT.Width=2.5;
+pard.polylineexpand.TooltipString='In case there is no user specified mask within annotation tab this will be run irrespective of the status here.';
+
+pard.polylineexpand.object=struct('String','350','Style','edit');
+pard.polylineexpand.position=[4,3];
+pard.polylineexpand.Width=0.5;
+pard.polylineexpand.TooltipString='Expand around polyline by nm. Useful when ROI contains many localizations that do not belong to the SC stretch that will be straigthened';
+
 
 % pard.equaldistance.object=struct('Style','checkbox','String','equal distances');
 % pard.equaldistance.position=[2,1];
@@ -768,52 +786,52 @@ function index = insphere(data,position, dist)
     index=((data(:,1)-position(1)).^2+(data(:,2)-position(2)).^2+(data(:,3)-position(3)).^2<=dist^2);
 end
 
-function derivedPars = derivePars(obj, allpars,locmofit) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Only a temporary fix so that I do not have to run locmofit again every time
-         
-        % control points:
-        par=[];
-        for f=1:size(allpars.name,1)
-            par.(allpars.name{f})=allpars.value(f);
-        end
-        [ctrlX,ctrlY,ctrlZ] = getCtrlPointsXYZ_loc(par, obj.site.evaluation.(locmofit).fitInfo.modelPar_internal{1, 1}.numOfCtrlPointSet);
-        
-        if isempty(obj.site.evaluation.(locmofit).GuiParameters.fitter.model{1, 1}.locsPrecFactor)
-            locsPrecFactor = 1;
-        else
-            locsPrecFactor = obj.site.evaluation.(locmofit).GuiParameters.fitter.model{1, 1}.locsPrecFactor;
-        end
-        
-        minD = locsPrecFactor*0.75;
-        
-        arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
-        samplingFactor = round(arcLen/minD);
-        [pt,dudt] = interparc(round(samplingFactor/2), ctrlX, ctrlY, ctrlZ);
-        
-        [L,R,K] = curvature(pt);
-        derivedPars.pt=pt;
-        derivedPars.dudt=dudt;
-        derivedPars.curvature = 1./R;
-        
-        derivedPars.curvatureVector = K;
-        derivedPars.curvatureRadius = R;
-        derivedPars.arclength = L;
-        
-        derivedPars.avgCurvature = mean(derivedPars.curvature,'omitnan');
-        derivedPars.p75Curvature = prctile(derivedPars.curvature, 75);
-%             figure; plot3(pt(:,1),pt(:,2),pt(:,3))
-%             % plot3([pt(:,1) pt(:,1)+50000*K(:,1)]',[pt(:,2) pt(:,2)+50000*K(:,2)]',[pt(:,3) pt(:,3)+50000*K(:,3)]')
-%             axis equal
-%             hold on; arrow3(pt,pt+K.*50000,'-k',0.2,0.4)
-
-
-end
-function [ctrlX,ctrlY,ctrlZ] = getCtrlPointsXYZ_loc(par, numOfCtrlPointSet)
-% control points:
-      
-    for k = 1:numOfCtrlPointSet
-        ctrlX(k,:) = par.(['cx' num2str(k)]); % ->
-        ctrlY(k,:) = par.(['cy' num2str(k)]); % ->
-        ctrlZ(k,:) = par.(['cz' num2str(k)]); % ->
-    end
-    
-end
+% function derivedPars = derivePars(obj, allpars,locmofit) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Only a temporary fix so that I do not have to run locmofit again every time
+%          
+%         % control points:
+%         par=[];
+%         for f=1:size(allpars.name,1)
+%             par.(allpars.name{f})=allpars.value(f);
+%         end
+%         [ctrlX,ctrlY,ctrlZ] = getCtrlPointsXYZ_loc(par, obj.site.evaluation.(locmofit).fitInfo.modelPar_internal{1, 1}.numOfCtrlPointSet);
+%         
+%         if isempty(obj.site.evaluation.(locmofit).GuiParameters.fitter.model{1, 1}.locsPrecFactor)
+%             locsPrecFactor = 1;
+%         else
+%             locsPrecFactor = obj.site.evaluation.(locmofit).GuiParameters.fitter.model{1, 1}.locsPrecFactor;
+%         end
+%         
+%         minD = locsPrecFactor*0.75;
+%         
+%         arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
+%         samplingFactor = round(arcLen/minD);
+%         [pt,dudt] = interparc(round(samplingFactor/2), ctrlX, ctrlY, ctrlZ);
+%         
+%         [L,R,K] = curvature(pt);
+%         derivedPars.pt=pt;
+%         derivedPars.dudt=dudt;
+%         derivedPars.curvature = 1./R;
+%         
+%         derivedPars.curvatureVector = K;
+%         derivedPars.curvatureRadius = R;
+%         derivedPars.arclength = L;
+%         
+%         derivedPars.avgCurvature = mean(derivedPars.curvature,'omitnan');
+%         derivedPars.p75Curvature = prctile(derivedPars.curvature, 75);
+% %             figure; plot3(pt(:,1),pt(:,2),pt(:,3))
+% %             % plot3([pt(:,1) pt(:,1)+50000*K(:,1)]',[pt(:,2) pt(:,2)+50000*K(:,2)]',[pt(:,3) pt(:,3)+50000*K(:,3)]')
+% %             axis equal
+% %             hold on; arrow3(pt,pt+K.*50000,'-k',0.2,0.4)
+% 
+% 
+% end
+% function [ctrlX,ctrlY,ctrlZ] = getCtrlPointsXYZ_loc(par, numOfCtrlPointSet)
+% % control points:
+%       
+%     for k = 1:numOfCtrlPointSet
+%         ctrlX(k,:) = par.(['cx' num2str(k)]); % ->
+%         ctrlY(k,:) = par.(['cy' num2str(k)]); % ->
+%         ctrlZ(k,:) = par.(['cz' num2str(k)]); % ->
+%     end
+%     
+% end
