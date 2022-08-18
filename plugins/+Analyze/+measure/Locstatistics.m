@@ -26,6 +26,7 @@ classdef Locstatistics<interfaces.DialogProcessor
             if p.filter
                 for m=length(layers):-1:1
                     locs{m}=obj.locData.getloc(fields,'layer',layers(m),'position',position);
+                    locfile{m}=obj.getPar(['layer' num2str(layers(m)) '_']).ch_filelist.selection;
                     modetxt{m}=['layer' num2str(layers(m))];
                 end
             else
@@ -33,6 +34,8 @@ classdef Locstatistics<interfaces.DialogProcessor
                 locs{1}=obj.locData.getloc(fields,'position',position,'grouping','ungrouped');
                 modetxt{2}='grouped';
                 modetxt{1}='ungrouped';
+                locfile{1}=obj.getPar('ch_filelist','layer',1);
+                locfile{2}=obj.getPar('ch_filelist','layer',1);
             end
             
             out=make_statistics2(locs,p,true);
@@ -44,9 +47,10 @@ classdef Locstatistics<interfaces.DialogProcessor
                 tcl=[tcl sprintf('\t locprecznm max') ];
             end
             tcl=[tcl 13];
-            filename=obj.locData.files.file.name;
-            newFilename = strrep(filename,'\','-');
+%             filename=obj.locData.files.file.name;
+            
             for k=1:length(out.photons.Nloc)
+                newFilename = strrep(locfile{k},'\','-');
                 th=sprintf([newFilename '\t' num2str(out.photons.Nloc(k)) '\t' num2str(out.photons.mu(k)) '\t'  num2str(out.locprec.max(k)) '\t'...
                     num2str(out.locprec.median(k)) '\t' num2str(out.locprec.rising(k)) '\t' num2str(out.lifetime.mu(k)) '\t'...
                     num2str(out.background.mean(k)) '\t' num2str(out.background.max(k))]);
@@ -79,6 +83,9 @@ pard.filter.position=[1,2];
 
 pard.overview.object=struct('String','plot overview','Style','checkbox','Value',0);
 pard.overview.position=[1,3];
+
+pard.lsf.object=struct('String','LSF analysis','Style','checkbox','Value',0);
+pard.lsf.position=[1,3];
 
 pard.tphot.object=struct('String','photon range:','Style','text');
 pard.tphot.position=[3,1];
