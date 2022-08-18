@@ -739,6 +739,14 @@ classdef LocMoFit<matlab.mixin.Copyable
         function saveInit(obj)
             obj.parsInit.init = obj.allParsArg.value;
         end
+
+        function lockInit(obj)
+            obj.parsInit.init_locked = obj.parsInit.init;
+        end
+
+        function unlockInit(obj)
+            obj.parsInit = rmfield(obj.parsInit, 'init_locked');
+        end
         
         function [parId,subParsArgTemp] = getAllParId(obj, modelnumber, varargin)
             % Export Id for all parameters given a model number
