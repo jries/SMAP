@@ -64,7 +64,7 @@ classdef sphericalCap3D_surfaceArea<geometricModel
                 locsPrecFactor = obj.ParentObject.locsPrecFactor;
             end
             samplingFactor = (33.9/(locsPrecFactor*dx))^2;      % change this if you need more points
-            if r ~= inf
+            if r ~= inf&&r ~= -inf
                 samplingScale = round((4*pi*r^2)/(4*pi)*0.01);
             else
                 samplingScale = round(pi*rc_max^2/pi*0.01);

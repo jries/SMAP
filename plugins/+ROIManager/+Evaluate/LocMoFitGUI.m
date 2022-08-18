@@ -1597,6 +1597,8 @@ function setDefPar_callback(a,b,obj)
     obj.fitter.lockInit;
     obj.setPar('allModIntSetting_default', obj.fitter.getAllModelInternalSetting)
     obj.setPar('data_convert', obj.guihandles.anchorConvert.Data)
+    
+    obj.setPar('status', 'The current settings are successfully set as default.');
 end
 
 %
