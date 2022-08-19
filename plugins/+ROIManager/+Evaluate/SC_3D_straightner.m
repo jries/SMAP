@@ -17,9 +17,11 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
         end
         function out=run(obj, p)
             out=[];
+            display=obj.display;
             polylinesource=obj.getSingleGuiParameter('polylinesource');
             expandPL=obj.getSingleGuiParameter('polylineexpandT');
             expandby=obj.getSingleGuiParameter('polylineexpand');
+            saveLocsforsiteT=p.saveLocsforsiteT';
 
             if ~isfield(obj.site.evaluation,polylinesource)
                 error('Please choose a polyline source that is available. %s has not been evaulated',polylinesource)
@@ -27,7 +29,7 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             end
             layerson = find(obj.locData.getPar('sr_layerson'));             % check the layers used
             visitFlag = false;                                      % a flag for the conditional loop for the first round
-            fieldQ = {'locprecnm','locprecznm','PSFxnm','xnm','znm','ynm','frame','xnmrot','ynmrot'};    % fields will be used %%%%%%%%%%%%%%%%%%% need to add more for displayer
+            fieldQ = {'locprecnm','locprecznm','PSFxnm','xnm','znm','ynm','frame','xnmrot','ynmrot','phot1','phot2','channel'};    % fields will be used %%%%%%%%%%%%%%%%%%% need to add more for displayer
            
             fieldQNLayer = [fieldQ 'layer'];
             for k = layerson                                        % go through layers, collect all filtered locs -----from Yu-Le's LocMoFitGUI.m
@@ -52,7 +54,7 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             end
             
             %%Missing an option to just straighten based on the
-            %%polyline
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%polyline
 
             derivedparameters=obj.site.evaluation.(polylinesource).GuiParameters.fitter.getDerivedPars;
             descriptors=derivedparameters{1,1};%derivePars(obj,obj.site.evaluation.(polylinesource).allParsArg,polylinesource);%
@@ -66,36 +68,48 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
                 locs=getFields(locs,in);
             end
 
-
-
             %locs=obj.site.evaluation.LocMoFitGUI_2.GuiParameters.fitter.locsHandler(locs,obj.site.evaluation.LocMoFitGUI_2.GuiParameters.fitter.exportPars(1,'lPar'))
             locs.xnmA=locs.xnmrot;
             locs.ynmA=locs.ynmrot;
             locs.znmA=locs.znm;
 
-            figure('Name','3dpreview');
-            hold on
-            scatter3(descriptors.pt(:,1),descriptors.pt(:,2),descriptors.pt(:,3),[])
-            scatter3(locs.xnmA, locs.ynmA, locs.znmA,[2],locs.znmA,'filled'); % 
-            colorbar
-            daspect([1 1 1])
-            hold off
-               %out.
+            warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale'); 
             straightner=straigthen(locs,descriptors.pt);
+            warning('on', 'MATLAB:polyfit:RepeatedPointsOrRescale'); 
 
+            out.straightner=straightner;
+            out.cspline=descriptors.pt;
 
-            figure('Name','3dpreview');
-            hold on
-            scatter3(straightner.locs.xnmS(straightner.straight), straightner.locs.ynmS(straightner.straight),straightner.locs.znmS(straightner.straight),[2],straightner.locs.layer(straightner.straight),'filled'); % 
-            colorbar
-            colormap("flag")
-            daspect([1 1 1])
-            hold off
+            if display
+                figure('Name','3dpreview - localizations and polyline');
+                hold on
+                scatter3(descriptors.pt(:,1),descriptors.pt(:,2),descriptors.pt(:,3),[])
+                scatter3(locs.xnmA, locs.ynmA, locs.znmA,[2],locs.znmA,'filled'); % 
+                colorbar
+                daspect([1 1 1])
+                hold off
 
+                figure('Name','3dpreview - straightened localizations');
+                hold on
+                scatter3(straightner.locs.xnmS(straightner.straight), straightner.locs.ynmS(straightner.straight),straightner.locs.znmS(straightner.straight),[2],straightner.locs.layer(straightner.straight),'filled'); % 
+                colormap("flag")
+                daspect([1 1 1])
+                hold off
+            end         
+           if saveLocsforsiteT
+               locsS=getFields(straightner.locs,straightner.straight);
+               dateC=string(datetime('now', 'Format','yyMMdd'));
+               filepath=obj.locData.files.file(obj.site.info.filenumber).name;
+               path=regexp(obj.locData.files.file(obj.site.info.filenumber).name,'\\','split');
+               newpath=[strjoin([path(1:end-1)],"\\") '\\straightenedSCs'];
+               if ~exist(newpath, 'dir')
+                   mkdir(newpath);
+               end
 
-           
-            locsOri = locs;
-           
+               CSV=[newpath '\\' path{end}(1:end-4) obj.site.name(3:end-1) '_' dateC{1} '_straightenedSC.csv'];
+               final=struct2table(locsS);
+               writetable(final,CSV,'WriteRowNames',true);
+           end
 
             make3Daxis(obj) %make axis,
             plot3Dviews(obj,p);%plot image,
@@ -276,11 +290,11 @@ pard.deleterois.position=[2,1];
 pard.deleterois.Width=2;
 
 pard.polylinesourceT.object=struct('String','3D polyline source:','Style','text');
-pard.polylinesourceT.position=[3,1];
+pard.polylinesourceT.position=[3.25,1];
 pard.polylinesourceT.Width=2;
 
 pard.polylinesource.object=struct('String','LocMoFitGUI_2','Style','edit');
-pard.polylinesource.position=[3,2.5];
+pard.polylinesource.position=[3,3];
 pard.polylinesource.Width=2;
 pard.polylinesource.TooltipString='Specified previously run evaluation that will serve as a  source for the polyline. Avaliable LocMoFit and plot3Dannotation(still in progress).';
 
@@ -293,6 +307,12 @@ pard.polylineexpand.object=struct('String','350','Style','edit');
 pard.polylineexpand.position=[4,4.5];
 pard.polylineexpand.Width=0.5;
 pard.polylineexpand.TooltipString='Expand around polyline by nm. Useful when ROI contains many localizations that do not belong to the SC stretch that will be straigthened';
+
+
+pard.saveLocsforsiteT.object=struct('String','Save straightened localizations for site.','Style','checkbox','Value',0);
+pard.saveLocsforsiteT.position=[5,1];
+pard.saveLocsforsiteT.Width=5;
+pard.saveLocsforsiteT.TooltipString='Straighetend localizations will be saved as /path/to/current/file/straightenedSCs/filename_siteID.csv overwriting the previous version.';
 
 
 % pard.equaldistance.object=struct('Style','checkbox','String','equal distances');
@@ -311,7 +331,7 @@ pard.plugininfo.type='ROI_Evaluate';
 pard.plugininfo.description='';
 end
 
-function plot3Dstraigtened(obj,p,in)
+function plot3Dstraigtened(obj,p,locsS)
 if nargin<2
     p=[];
     in=true;

@@ -1,0 +1,12 @@
+PSFxnm=PSFxnm
+channel=channel
+frame=frame
+locprecnm=locprecnm
+locprecznm=locprecznm
+phot1=phot1
+phot2=phot2
+ynm=ynmS
+xnm=xnmS
+znm=znmS
+cam_pixelsize_um=100
+factor=1
