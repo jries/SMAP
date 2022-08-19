@@ -34,6 +34,9 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
                 if ~visitFlag
                     locs=obj.getLocs(fieldQ,'layer',k,'size','freeroi');
                     locs.layer = ones(size(locs.(fieldQ{1})))*k;
+                    fieldExact = fieldnames(locs);
+                    lRm = ~ismember(fieldExact, fieldQNLayer);
+                    locs = rmfield(locs,fieldExact(lRm));
                     visitFlag=true;
                 else
                     locsNewLayer = obj.getLocs(fieldQ,'layer',k,'size','freeroi');
@@ -56,8 +59,8 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             
             %If there is no user specified polygon mask in annotation
             %tab, create a polygon mask from a polyline
-            if (~isvalid(obj.locData.SE.processors.preview.hlines.line3)||isempty(obj.locData.SE.processors.preview.hlines.line3))&&isfield(obj.site.evaluation.plot3D_annotate,'roicoordinates') || expandPL
-                polygon=polybuffer(descriptors(:,1:2),'lines',expandby); 
+            if (~isvalid(obj.locData.SE.processors.preview.hlines.line3)||isempty(obj.locData.SE.processors.preview.hlines.line3)) || expandPL
+                polygon=polybuffer(descriptors.pt(:,1:2),'lines',expandby); 
                 [in,on] = inpolygon(locs.xnmrot,locs.ynmrot, polygon.Vertices(:,1),polygon.Vertices(:,2));
                 locsOri=locs;
                 locs=getFields(locs,in);
@@ -283,11 +286,11 @@ pard.polylinesource.TooltipString='Specified previously run evaluation that will
 
 pard.polylineexpandT.object=struct('String','Expand polyline to mask by (nm):','Style','checkbox','Value',0);
 pard.polylineexpandT.position=[4,1];
-pard.polylineexpandT.Width=2.5;
+pard.polylineexpandT.Width=3;
 pard.polylineexpand.TooltipString='In case there is no user specified mask within annotation tab this will be run irrespective of the status here.';
 
 pard.polylineexpand.object=struct('String','350','Style','edit');
-pard.polylineexpand.position=[4,3];
+pard.polylineexpand.position=[4,4.5];
 pard.polylineexpand.Width=0.5;
 pard.polylineexpand.TooltipString='Expand around polyline by nm. Useful when ROI contains many localizations that do not belong to the SC stretch that will be straigthened';
 
