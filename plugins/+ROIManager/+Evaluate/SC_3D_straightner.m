@@ -2,13 +2,13 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
 %     Calculates the line-profile along user-defined direction and fits it
 %     with a Gaussian or double-Gaussian model
     properties
-        roicoordinates
+        %roicoordinates
         roihandles={[]};
         roisize
         roisizey
 %         currentroi=0;
-        axis
-        images
+        %axis
+        %images
 %         roihandle
     end
     methods
@@ -18,10 +18,16 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
         function out=run(obj, p)
             out=[];
             display=obj.display;
+
             polylinesource=obj.getSingleGuiParameter('polylinesource').selection;
             expandPL=obj.getSingleGuiParameter('polylineexpandT');
             expandby=obj.getSingleGuiParameter('polylineexpand');
-            saveLocsforsiteT=p.saveLocsforsiteT';
+            
+            saveLocsforsiteT=p.saveLocsforsiteT;
+
+            axeslayer=str2num(obj.getSingleGuiParameter('axesLayer').selection);
+            calangle=obj.getSingleGuiParameter('axesangle');
+            angleplot=obj.getSingleGuiParameter('angleplot');
 
             createsubseg=obj.getSingleGuiParameter('createsubsegT');
             subseglength=obj.getSingleGuiParameter('createsubseg');
@@ -77,7 +83,7 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             locs.znmA=locs.znm;
 
             warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale'); 
-            straightner=straigthen(locs,descriptors.pt,createsubseg,subseglength);
+            straightner=straigthen(locs,descriptors.pt,createsubseg,subseglength, axeslayer, calangle);
             warning('on', 'MATLAB:polyfit:RepeatedPointsOrRescale'); 
 
             out.straightner=straightner;
@@ -115,183 +121,97 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
                writetable(final,CSV,'WriteRowNames',true);
            end
 
+           if angleplot==1
+               figure('Name','Angle between axes');
+               hold on
+               plot(straightner.axesangles); % 
+               hold off
+
+           end
+
 %             make3Daxis(obj) %make axis,
 %             plot3Dviews(obj,p);%plot image,
 %             if ~isfield(obj.site.annotation,'polarangle')
 %                 obj.site.annotation.polarangle=0;
 %             end
 %             obj.currentroi=0;
-            if isfield(obj.site.evaluation,obj.name) && isfield(obj.site.evaluation.(obj.name),'roicoordinates')
-                obj.roicoordinates=obj.site.evaluation.(obj.name).roicoordinates;
-                obj.plotrois;
-                out.GuiParameters=obj.site.evaluation.(obj.name).GuiParameters; %ICfix_210515 --- CHECK 
-                out.roicoordinates=obj.site.evaluation.(obj.name).roicoordinates; %ICfix_210515 --- CHECK 
-                %out=obj.site.evaluation.(obj.name);  - use this above
-                %instead of two lines
-            else
-                obj.roicoordinates=[];
-               
-            end
+%             if isfield(obj.site.evaluation,obj.name) && isfield(obj.site.evaluation.(obj.name),'roicoordinates')
+%                 obj.roicoordinates=obj.site.evaluation.(obj.name).roicoordinates;
+%                 obj.plotrois;
+%                 out.GuiParameters=obj.site.evaluation.(obj.name).GuiParameters; %ICfix_210515 --- CHECK 
+%                 out.roicoordinates=obj.site.evaluation.(obj.name).roicoordinates; %ICfix_210515 --- CHECK 
+%                 %out=obj.site.evaluation.(obj.name);  - use this above
+%                 %instead of two lines
+%             else
+%                 obj.roicoordinates=[];
+%                
+%             end
         end
      
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-        function addroi_callback(obj,a,b)
-            roistyle=obj.getSingleGuiParameter('roiform').selection;
-            [roifun,roifunmake,vertexbased,par]=roistyle2fun(roistyle);
-            
-            newroi1=roifun(obj.axis,'DrawingArea',[-obj.roisize -obj.roisizey obj.roisize*2 obj.roisizey*2],'Color','w',par{:});
-            [roipospix,roipos]=getpixcoord(obj,newroi1.Position,zeros(size(newroi1.Position,1),3));
-          
-            roiposnm=coord3Dpix2nm(roipospix,obj.site.pos,obj.site.annotation.rotationpos.angle,obj.site.annotation.polarangle,obj.roisize);
-            
-%             roiposnm=roipospix; %later: convert with rotation and position
-%             obj.currentroi=obj.currentroi+1;  
-            obj.roicoordinates(end+1).roistyle=roistyle;
-            obj.roicoordinates(end).Position=roiposnm;
-            delete(newroi1);
-            obj.plotrois;         
-        end
-        function deleteroi_callback(obj,a,b)
-            obj.roicoordinates=[];
-%             obj.plotrois; 
-            plot3Dviews(obj);
-        end
-        
-        function plotrois(obj)
-            if isempty(obj.roicoordinates)
-                return
-            end
-             %loop over roicoords
-%              k=obj.currentroi;
-            %delete old rois
-            for k=1:length(obj.roihandles{1})
-                delete(obj.roihandles{1}(k));
-                delete(obj.roihandles{2}(k));
-            end
-            
-            colors=lines(255);
-            
-            for k=1:length(obj.roicoordinates)
-                 [roifun,roifunmake,vertexbased,par]=roistyle2fun(obj.roicoordinates(k).roistyle);
-                 roiposnm=obj.roicoordinates(k).Position;
-                 roipospix=coord3Dnm2pix(roiposnm,obj.site.pos,obj.site.annotation.rotationpos.angle,obj.site.annotation.polarangle,obj.roisize);
-                 roipos1=[];roipos2=[];
-                 roipos1(:,1:2)=roipospix(:,1:2);
-                 roipos2(:,1)=roipospix(:,1)+obj.images.rangex(2)*1000;
-                 roipos2(:,2)=roipospix(:,3);
-
-                newroi1(k)=roifunmake(obj.axis,'Position',roipos1,'DrawingArea',[-obj.roisize -obj.roisizey obj.roisize obj.roisizey*2],'Color',colors(k,:),par{:});
-                addlistener(newroi1(k),'ROIMoved',@(src,evt) obj.updateposition(src,evt,k,1));
-                addlistener(newroi1(k),'DeletingROI',@(src,evt) obj.deleteroi(src,evt,k,1));
-                if vertexbased
-                    addlistener(newroi1(k),'VertexAdded',@(src,evt) obj.updateposition(src,evt,k,1));
-                    addlistener(newroi1(k),'VertexDeleted',@(src,evt) obj.updateposition(src,evt,k,1));
-                end
-
-                newroi2(k)=roifunmake(obj.axis,'Position',roipos2,'DrawingArea',[0 -obj.roisizey obj.roisize obj.roisizey*2],'Color',colors(k,:),par{:});
-                addlistener(newroi2(k),'ROIMoved',@(src,evt) obj.updateposition(src,evt,k,2));
-                addlistener(newroi2(k),'DeletingROI',@(src,evt) obj.deleteroi(src,evt,k,2));
-                if vertexbased
-                    addlistener(newroi2(k),'VertexAdded',@(src,evt) obj.updateposition(src,evt,k,2));
-                    addlistener(newroi2(k),'VertexDeleted',@(src,evt) obj.updateposition(src,evt,k,2));
-                end           
-            end
-            obj.roihandles={newroi1, newroi2};
-            obj.site.evaluation.(obj.name).roicoordinates=obj.roicoordinates;
-        end
-        
-        function updateposition(obj,src,evt,currentroi,roiside)
-            
-            
-            oldposnm=obj.roicoordinates(currentroi).Position; %convert
-            oldpospix=coord3Dnm2pix(oldposnm,obj.site.pos,obj.site.annotation.rotationpos.angle,obj.site.annotation.polarangle,obj.roisize);
-            
-            newpospix=src.Position;
-            %vertex added or deleted: oldpos has different number
-            if size(oldpospix,1) > size(newpospix,1) %vertex deleted
-                ind=findextra(oldpospix,newpospix);
-                oldpospix(ind,:)=[];
-            elseif size(oldpospix,1) < size(newpospix,1) %vertex added
-                ind=findextra(newpospix,oldpospix);
-                oldpospix=[oldpospix(1:ind-1,:); zeros(1,3); oldpospix(ind:end,:)];
-            end
-            
-            [roipospix,roipos]=getpixcoord(obj,newpospix,oldpospix);
-            
-            newroiposnm=coord3Dpix2nm(roipospix,obj.site.pos,obj.site.annotation.rotationpos.angle,obj.site.annotation.polarangle,obj.roisize);
-            obj.roicoordinates(currentroi).Position=newroiposnm;
-            plotrois(obj)
-
-        end
-        
-        function deleteroi(obj,src,evt,k,roiside)
-            obj.roicoordinates(k)=[];
-            obj.site.evaluation.(obj.name).roicoordinates(k)=[];
-            plotrois(obj)
-        end
-
+%         
     end
 
 end
 
-function ind=findextra(A,B)
-xA=A(:,1);
-xB=B(:,1);
-mind=min((xA-xB').^2,[],2);
-[~,ind]=max(mind);
-end
-
-function [roipospix,roipos]=getpixcoord(obj,roiposh,roiposold)
-roipospix=roiposold;
- if mean(roiposh(:,1))>0
-    roipos=2; %right
-    roiposh(:,1)=max(roiposh(:,1),0);
-    roipospix(:,1)=roiposh(:,1)-obj.roisize;
-    roipospix(:,3)=roiposh(:,2); %move to left
-%     roipospix(:,2)=0;
-else
-    roipos=1;
-    roiposh(:,1)=min(roiposh(:,1),0);
-    roipospix(:,1:2)=roiposh(:,1:2);
-%     roipospix(:,3)=0;
-end
-end
-
-function roiposnm=coord3Dpix2nm(roipos,pos,rotationanglez,polarangle,winsize)
-    xp=roipos(:,1)+winsize/2;
-    yp=roipos(:,2);zp=roipos(:,3);
-    [y2,zi]=rotcoorddeg(yp,zp,polarangle);
-    [xi,yi]=rotcoorddeg(xp,y2,rotationanglez);
-    roiposnm(:,1)=xi+pos(1); 
-    roiposnm(:,2)=-yi+pos(2); %%%%220329 -yi
-    roiposnm(:,3)=zi+pos(3);
-end
-function roipos=coord3Dnm2pix(roiposnm,pos,rotationanglez,polarangle,winsize)
-    xi=roiposnm(:,1)-pos(1); 
-    yi=-(roiposnm(:,2)-pos(2)); %%%%220329 -(...)
-    zi=roiposnm(:,3)-pos(3);
-    [xp,y2]=rotcoorddeg(xi,yi,-rotationanglez); %-
-    [yp,zp]=rotcoorddeg(y2,zi,-polarangle);
-    roipos(:,1)=xp-winsize/2;
-    roipos(:,2)=yp;
-    roipos(:,3)=zp;
-end
+% function ind=findextra(A,B)
+% xA=A(:,1);
+% xB=B(:,1);
+% mind=min((xA-xB').^2,[],2);
+% [~,ind]=max(mind);
+% end
+% 
+% function [roipospix,roipos]=getpixcoord(obj,roiposh,roiposold)
+% roipospix=roiposold;
+%  if mean(roiposh(:,1))>0
+%     roipos=2; %right
+%     roiposh(:,1)=max(roiposh(:,1),0);
+%     roipospix(:,1)=roiposh(:,1)-obj.roisize;
+%     roipospix(:,3)=roiposh(:,2); %move to left
+% %     roipospix(:,2)=0;
+% else
+%     roipos=1;
+%     roiposh(:,1)=min(roiposh(:,1),0);
+%     roipospix(:,1:2)=roiposh(:,1:2);
+% %     roipospix(:,3)=0;
+% end
+% end
+% 
+% function roiposnm=coord3Dpix2nm(roipos,pos,rotationanglez,polarangle,winsize)
+%     xp=roipos(:,1)+winsize/2;
+%     yp=roipos(:,2);zp=roipos(:,3);
+%     [y2,zi]=rotcoorddeg(yp,zp,polarangle);
+%     [xi,yi]=rotcoorddeg(xp,y2,rotationanglez);
+%     roiposnm(:,1)=xi+pos(1); 
+%     roiposnm(:,2)=-yi+pos(2); %%%%220329 -yi
+%     roiposnm(:,3)=zi+pos(3);
+% end
+% function roipos=coord3Dnm2pix(roiposnm,pos,rotationanglez,polarangle,winsize)
+%     xi=roiposnm(:,1)-pos(1); 
+%     yi=-(roiposnm(:,2)-pos(2)); %%%%220329 -(...)
+%     zi=roiposnm(:,3)-pos(3);
+%     [xp,y2]=rotcoorddeg(xi,yi,-rotationanglez); %-
+%     [yp,zp]=rotcoorddeg(y2,zi,-polarangle);
+%     roipos(:,1)=xp-winsize/2;
+%     roipos(:,2)=yp;
+%     roipos(:,3)=zp;
+% end
 
 function pard=guidef(obj)
-pard.addroi.object=struct('Style','pushbutton','String','add','Callback',@obj.addroi_callback);
-pard.addroi.position=[1,1];
-pard.addroi.Width=1;
-
-pard.roiform.object=struct('Style','popupmenu','String',{{'polyline','line','free','polygon'}});
-pard.roiform.position=[1,2];
-pard.roiform.Width=2;
-
-
-pard.deleterois.object=struct('Style','pushbutton','String','delete all rois','Callback',@obj.deleteroi_callback);
-pard.deleterois.position=[2,1];
-pard.deleterois.Width=2;
+% pard.addroi.object=struct('Style','pushbutton','String','add','Callback',@obj.addroi_callback);
+% pard.addroi.position=[1,1];
+% pard.addroi.Width=1;
+% 
+% pard.roiform.object=struct('Style','popupmenu','String',{{'polyline','line','free','polygon'}});
+% pard.roiform.position=[1,2];
+% pard.roiform.Width=2;
+% 
+% 
+% pard.deleterois.object=struct('Style','pushbutton','String','delete all rois','Callback',@obj.deleteroi_callback);
+% pard.deleterois.position=[2,1];
+% pard.deleterois.Width=2;
 
 pard.polylinesourceT.object=struct('String','3D polyline source:','Style','text');
 pard.polylinesourceT.position=[3.25,1];
@@ -320,31 +240,30 @@ pard.saveLocsforsiteT.position=[5,1];
 pard.saveLocsforsiteT.Width=5;
 pard.saveLocsforsiteT.TooltipString='Straighetend localizations will be saved as /path/to/current/file/straightenedSCs/filename_siteID.csv overwriting the previous version.';
 
-pard.axisangle.object=struct('String','Calculate angle.','Style','checkbox','Value',0);
-pard.axisangle.position=[6,1];
-pard.axisangle.Width=2;
-pard.axisangle.TooltipString='If checked, angle between axis along the length of the cspline/midline will be calculated by chosen method. Values will be saved within the evaluation output.';
+pard.axesangle.object=struct('String','Calculate angle.','Style','checkbox','Value',0);
+pard.axesangle.position=[6,1];
+pard.axesangle.Width=2;
+pard.axesangle.TooltipString='If checked, angle between axes will be calculated along the length of the cspline/midline by fitting a line. Values will be saved within the evaluation output.';
 
-pard.anglemethod.object=struct('Style','popupmenu','String',{{'identify2clusters','line','pca','covariance'}});%
+pard.anglemethod.object=struct('Style','popupmenu','String',{{'line','identify2clusters','pca','covariance'}});%
 pard.anglemethod.position=[6,3];
 pard.anglemethod.Width=2;
-pard.anglemethod.TooltipString='......';
+pard.anglemethod.TooltipString='Options are not available. Only line is implemented';
 
 pard.angleplot.object=struct('String','Plot angle.','Style','checkbox','Value',0);
 pard.angleplot.position=[8,1];
 pard.angleplot.Width=2;
-pard.angleplot.TooltipString='If checked when Display is allowed, the change of angle between the axis will be ploted.';
+pard.angleplot.TooltipString='If checked when Display is allowed, the change of angle between the axes will be ploted.';
 
 
-pard.axisLayerT.object=struct('String','Axis Layer:','Style','text');
-pard.axisLayerT.position=[7.25,1];
-pard.axisLayerT.Width=2;
-pard.axisLayerT.TooltipString='Choose layer that contains axis localizations.';
+pard.axesLayerT.object=struct('String','Axes Layer:','Style','text');
+pard.axesLayerT.position=[7.25,1];
+pard.axesLayerT.Width=2;
 
-pard.axisLayer.object=struct('Style','popupmenu','String',{find(obj.locData.getPar('sr_layerson'))});
-pard.axisLayer.position=[7,3];
-pard.axisLayer.Width=1;
-pard.axisLayer.TooltipString='Choose layer that contains axis localizations.';
+pard.axesLayer.object=struct('Style','popupmenu','String',{find(obj.locData.getPar('sr_layerson'))});
+pard.axesLayer.position=[7,3];
+pard.axesLayer.Width=1;
+pard.axesLayer.TooltipString='Choose layer that contains chromosome axes localizations.';
 
 pard.createsubsegT.object=struct('String','Straighten subsegments of (nm):','Style','checkbox','Value',1);
 pard.createsubsegT.position=[9,1];
@@ -466,195 +385,6 @@ end
 
 
 
-function plot3Dviews(obj,p)
-if nargin<2
-    p=[];
-end
-site=obj.site;
-angle=pos2angle(site.annotation.rotationpos.pos);
-p.rotationanglez=angle;
-if isfield(site.annotation,'polarangle')
-    p.polarangle=site.annotation.polarangle;
-else
-    p.polarangle=0;
-end
-% p1.sr_size(3)=obj.locData.getPar('se_dz')/2;
-
-
-% imz=make3Dimages(obj,p);
-% end         
-                
-% function imagez=make3Dimages(obj,p)                
-% imagez=[];
-% fileind=obj.locData.SE.indexFromID(obj.locData.SE.files,obj.site.info.filenumber);
-numlayers=obj.locData.getPar('numberOfLayers');
-allfields=[renderSMAP drawerSMAP displayerSMAP];
-players=obj.getLayerParameters(1:numlayers,allfields);
-if ~iscell(players)
-   players={players};
-end
-
-if obj.locData.getPar('se_imaxcheck_site')
-    p.imaxtoggle=false;
-    imax=obj.locData.getPar('se_imax_site');
-
-    for k=1:length(imax)
-        players{k}.imax_min=imax(k);
-    end
-    for k=length(imax)+1:numlayers
-        players{k}.imax_min=imax(1);
-    end
-end
-for k=1:numlayers
-    prz=copyfields(players{k},p);
-    
-    prz.sr_pos=site.pos;  %later move all of this out of the loop
-    prz.sr_size=ones(2,1)*obj.locData.getPar('se_sitefov')/2;
-    prz.sr_pixrec=obj.locData.getPar('se_sitepixelsize');
-    prz.sr_sizeRecPix=round((prz.sr_size*2)/prz.sr_pixrec);
-    prz.sr_axes=-1;
-    prz.normalizeFoV=prz.sr_sizeRecPix(1)/obj.locData.getPar('se_sitefov')*obj.locData.getPar('se_siteroi')/2;
-                 
-%     posh=[prz.sr_pos(1) prz.sr_pos(2) prz.sr_size(1)*2 prz.sr_size(2)*2];
-    locz=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','PSFxnm','intensity_render','phot','numberInGroup',prz.renderfield.selection},'layer',k,'position',obj.site);
-    if length(prz.sr_pos)<3
-        prz.sr_pos(3)=0;
-    end
-    xi=locz.xnm-site.pos(1);
-    yi=locz.ynm-site.pos(2);
-    zi=locz.znm-site.pos(3);
-    [x2,y2]=rotcoorddeg(xi,yi,prz.rotationanglez);
-    [y3,z3]=rotcoorddeg(y2,zi,prz.polarangle);
-    locz.sx=locz.locprecnm;locz.sy=locz.locprecznm;
-    prz.normalizeFoV=[];
-    prz.sr_pos=[0,0,0];
-    prz.sr_size(3)=obj.locData.getPar('se_dz')/2;
-    prz.sr_size(2)=prz.sr_size(3);
-    locz.x=x2;locz.y=z3;
-    rawimagez=renderSMAP(locz,prz,k);
-    locz.x=x2;locz.y=y3;
-    rawimagezxy=renderSMAP(locz,prz,k);
-    layersz(k).images.finalImages=drawerSMAP(rawimagez,prz);
-    layerszxy(k).images.finalImages=drawerSMAP(rawimagezxy,prz);
-    imax(k)=max(layersz(k).images.finalImages.imax,layerszxy(k).images.finalImages.imax);                   
-end
-imz{1}=displayerSMAP(layersz,prz);
-imz{2}=displayerSMAP(layerszxy,prz);  
-
-imzc.image=horzcat(imz{2}.image(end:-1:1,:,:), imz{1}.image); 
-imzc.rangey=imz{1}.rangey;
-imzc.rangex=[ imz{2}.rangex(1)-imz{2}.rangex(2) imz{1}.rangex(2)-imz{1}.rangex(1)];
-
-displayimage(imzc,obj.axis);
-obj.roisize=imzc.rangex(2)*1000;
-obj.roisizey=imzc.rangey(2)*1000;
-fl='%2.0f';
-title(obj.axis,['\theta=' num2str(p.polarangle,fl) '\circ, \rho=' num2str(p.rotationanglez,fl) '\circ, z= ' num2str(site.pos(3),fl) ' nm'])
-obj.images=imzc; 
-end
-
-
-function make3Daxis(obj)
-ax=obj.setoutput('orthogonal_views');
-ax.NextPlot='replacechildren';
-ax.ButtonDownFcn={@sideview_click,obj};
-f=ax.Parent;
-f.Units='normalized';
-uicontrol(f,'Style','pushbutton','String','reset','Units','normalized','Position',[0.9,0.05,0.08,0.05],'Callback',{@resetview,obj,obj.site})
-uicontrol(f,'Style','pushbutton','String','Info','Units','normalized','Position',[0.05,0.05,0.08,0.05],'Callback',@info)
-obj.axis=ax;
-end
-        
-
-function sideview_click(hax,dat,obj)
-site=obj.site;
-dx=(obj.images.rangex(2)-obj.images.rangex(1))/2*1000;
-dy=(obj.images.rangey(2)-obj.images.rangey(1))*1000;
-pos=dat.IntersectionPoint;
-if pos(1)>0 && pos(1)<dx*0.75 %only right side: side view%
-    site.pos(3)=site.pos(3)+pos(2);
-elseif pos(1)>dx*.75  %outside: rotate polarangle
-    if ~isfield(site.annotation,'polarangle')
-        site.annotation.polarangle=0;
-    end
-    anglenew=site.annotation.polarangle+pos(2)/dy/pi/2*180;
-    anglered=mod(anglenew+180,360)-180;
-    site.annotation.polarangle=anglered;
-    obj.setPar('se_currentPolarAngle',anglered);
-elseif pos(1)<0 %rotate rotation angle
-    angle=atan2d(pos(2),(dx/2+pos(1)))+180;
-    anglenew=site.annotation.rotationpos.angle-angle;
-    anglered=mod(anglenew+180,360)-180;
-    site.setlineangle(0,anglered);
-end
-    
-plot3Dviews(obj)
-obj.plotrois
-end
-
-function displayimage(img,hax)
-if isempty(img)
-    return
-end
- imagesc(img.rangex*1000,img.rangey*1000,img.image,'Parent',hax,'Pickable','none','HitTest','off')
-
-set(hax,'Xlim',double(img.rangex*1000))
-set(hax,'Ylim',double(img.rangey*1000))
-set(hax,'YDir','reverse')
-hax.HitTest='on';
-hax.PickableParts='all';
-
-axis(hax,'equal')
-set(hax,'YDir','normal')
-axis(hax,'tight')
-hax.XTick=0;
-hax.YTick=0;
-hax.XTickLabel={};
-hax.YTickLabel={};
-hax.TickDir='out';
-hax.YAxisLocation='right';
-hax.Box='on';
-
-end
-
-
-function [roifun,roifunmake,vertexbased,par]=roistyle2fun(roistyle)
-vertexbased=false;
-par={};
-switch roistyle
-    case 'rectangle'
-        roifun=@drawrectangle;
-        roifunmake=@images.roi.Rectangle;
-       
-    case 'ellipse'
-        roifun=@drawellipse;
-        roifunmake=@images.roi.Ellipse;
-    case 'polygon'
-        roifun=@drawpolygon;
-        roifunmake=@images.roi.Polygon;
-        vertexbased=true;
-    case 'free'
-        roifun=@drawfreehand;
-        roifunmake=@images.roi.Freehand;
-         par={'Closed',false};
-    case 'polyline'
-        roifun=@drawpolyline;  
-        roifunmake=@images.roi.Polyline;
-                vertexbased=true;
-    case 'line'
-        roifun=@drawline; 
-        roifunmake=@images.roi.Line;
-
-end
-end
-function resetview(a,b,obj,site)
-site.setlineangle(0,0);
-site.annotation.polarangle=0;
-site.pos(3)=0;
-obj.setPar('se_currentPolarAngle',0)
-plot3Dviews(obj)
-obj.plotrois
-end
 function info(a,b)
 text='To rotate in x-y plane: click in the left top view image in the direction you want to point left. \nTo change the z-position, click on the right image, left part, this position will be centered. \nTo change the polar angle, click in the right image, right part. The closer you are to the center, the smaller the change.';
 msgbox(sprintf(text));
@@ -670,7 +400,7 @@ function locI=getFields(loc,indices, FieldList)
     end
 end
 
-function out=straigthen(locs,polyline,  makesubseg, subseglength,selR)
+function out=straigthen(locs,polyline,  makesubseg, subseglength, anglelayer, calangle, selR)
 % Straighten the SC along the 3D polyline 
     %links to the used functions
     %(https://uk.mathworks.com/matlabcentral/answers/473087-how-do-you-calculate-a-trajectory-through-a-series-of-3d-points-using-cubic-splines#answer_384467)
@@ -687,7 +417,7 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength,selR)
     %   functions used in the point cloud thinner
     
     %alpha=18
-    if nargin<5
+    if nargin<7
       selR = 500;
     end
 
@@ -712,6 +442,8 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength,selR)
     locs.ynmP=locs.ynmA;
     locs.znmP=locs.znmA;
     out.straight=zeros(size(locs.xnmA,1),1);
+
+    useforanglecal=locs.layer==anglelayer;
     
     out.p=zeros(size(locs.xnmA,1),1);
     out.j=zeros(size(locs.xnmA,1),1);
@@ -729,15 +461,15 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength,selR)
     
     for p=1:(size(t,2)-1)
         axis=[1, 0, 0];%axis for now it is written only for X so do not change this
-        if makesubseg
+        if makesubseg==1
             ns=round(abs(norm(line(p,:)-line(p+1,:)))/subseglength); %%%%%%%%%%%%%%%%%Need to remove subsegment since I will be using locmofit's cspline
+            if ns==0
+                ns=1;
+            end
         else
             ns=1;
         end
         
-        if ns==0
-            ns=1;
-        end
         subseg=linspace(t(p),t(p+1),ns);
         
         for j=1:(size(subseg,2)-1)
@@ -825,6 +557,15 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength,selR)
             colour(index==1)=p;%j
             %anglesNX(p,j)=dot(r,stop-O);
             %axisangle(p,j)
+            if calangle==1
+                restricty=projections(:,2)<200 & projections(:,2)>-200;
+                coeffs=polyfit(projections([index==1 & useforanglecal & restricty],2),projections([index==1 & useforanglecal & restricty],3),1);
+                if coeffs(1)>=0
+                    AXangle(p,j)=atand(coeffs(1));
+                else
+                    AXangle(p,j)=180+atand(coeffs(1));
+                end
+            end
             out.p(index==1)=p;
             out.j(index==1)=j;
     
@@ -834,14 +575,17 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength,selR)
         locs.ynmS=newpoints(:,2);
         locs.znmS=newpoints(:,3);
     
-        locs.xnmP=projections(:,1); %ponits without added distance that aligns them in X (along the length of chromatin)
+        locs.xnmP=projections(:,1); %points without added distance that aligns them in X (along the length of chromatin) - remove this to save memory!!!, can be recreated from straightene
         locs.ynmP=projections(:,2);
         locs.znmP=projections(:,3);
         
         
         out.straight=logical(finin);
         out.segments=colour;
-        
+        if calangle==1
+            out.axesangles=AXangle;
+        end
+
     %     % Additonal filtering
     %     AS=alphaShape(double(locs.xnmA),double(locs.ynmA),double(locs.znmA),alpha,'HoleThreshold',200000);
     %     tri = alphaTriangulation(AS,1);
@@ -857,6 +601,15 @@ end
 function index = insphere(data,position, dist)
     index=((data(:,1)-position(1)).^2+(data(:,2)-position(2)).^2+(data(:,3)-position(3)).^2<=dist^2);
 end
+
+% function out=RotMatrix3DvectortoX(v)
+% axis=[1,0,0];
+% r=v/norm(v);
+% angle= -acosd(dot(r,axis));%- means rotate clockwise!! %atan2d(norm(cross(r,axis)),dot(r,axis)) %LINK missing to matlab and wiki page explaining this
+% u=cross(axis,r);
+% u=u/norm(u);
+% out=eye(3)*cosd(angle(1))+sind(angle(1))*[0,-u(3), u(2);u(3),0,-u(1);-u(2),u(1) 0]+(1-cosd(angle(1)))*  [u(1)^2, u(1)*u(2), u(1)*u(3); u(1)*u(2), u(2)^2, u(2)*u(3); u(1)*u(3), u(2)*u(3), u(3)^2 ];
+% end
 
 function out=getAxisRotPreview(normal,points,origin)
 % This finction is used to project points to a plane that is given by it's
@@ -875,4 +628,13 @@ proj=points - ((points-origin)*n)*n.';
 out.xnm=proj(:,1);
 out.ynm=proj(:,2);
 out.znm=proj(:,3);
+end
+
+function out=RotMatrix3DvectortoX(v)
+axis=[1,0,0];
+r=v/norm(v);
+angle= -acosd(dot(r,axis));%- means rotate clockwise!! %atan2d(norm(cross(r,axis)),dot(r,axis)) %LINK missing to matlab and wiki page explaining this
+u=cross(axis,r);
+u=u/norm(u);
+out=eye(3)*cosd(angle(1))+sind(angle(1))*[0,-u(3), u(2);u(3),0,-u(1);-u(2),u(1) 0]+(1-cosd(angle(1)))*  [u(1)^2, u(1)*u(2), u(1)*u(3); u(1)*u(2), u(2)^2, u(2)*u(3); u(1)*u(3), u(2)*u(3), u(3)^2 ];
 end
