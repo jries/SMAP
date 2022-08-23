@@ -18,10 +18,13 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
         function out=run(obj, p)
             out=[];
             display=obj.display;
-            polylinesource=obj.getSingleGuiParameter('polylinesource');
+            polylinesource=obj.getSingleGuiParameter('polylinesource').selection;
             expandPL=obj.getSingleGuiParameter('polylineexpandT');
             expandby=obj.getSingleGuiParameter('polylineexpand');
             saveLocsforsiteT=p.saveLocsforsiteT';
+
+            createsubseg=obj.getSingleGuiParameter('createsubsegT');
+            subseglength=obj.getSingleGuiParameter('createsubseg');
 
             if ~isfield(obj.site.evaluation,polylinesource)
                 error('Please choose a polyline source that is available. %s has not been evaulated',polylinesource)
@@ -74,7 +77,7 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             locs.znmA=locs.znm;
 
             warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale'); 
-            straightner=straigthen(locs,descriptors.pt);
+            straightner=straigthen(locs,descriptors.pt,createsubseg,subseglength);
             warning('on', 'MATLAB:polyfit:RepeatedPointsOrRescale'); 
 
             out.straightner=straightner;
@@ -95,11 +98,12 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
                 colormap("flag")
                 daspect([1 1 1])
                 hold off
-            end         
+            end  
+            
            if saveLocsforsiteT
                locsS=getFields(straightner.locs,straightner.straight);
                dateC=string(datetime('now', 'Format','yyMMdd'));
-               filepath=obj.locData.files.file(obj.site.info.filenumber).name;
+               %filepath=obj.locData.files.file(obj.site.info.filenumber).name;
                path=regexp(obj.locData.files.file(obj.site.info.filenumber).name,'\\','split');
                newpath=[strjoin([path(1:end-1)],"\\") '\\straightenedSCs'];
                if ~exist(newpath, 'dir')
@@ -111,11 +115,11 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
                writetable(final,CSV,'WriteRowNames',true);
            end
 
-            make3Daxis(obj) %make axis,
-            plot3Dviews(obj,p);%plot image,
-            if ~isfield(obj.site.annotation,'polarangle')
-                obj.site.annotation.polarangle=0;
-            end
+%             make3Daxis(obj) %make axis,
+%             plot3Dviews(obj,p);%plot image,
+%             if ~isfield(obj.site.annotation,'polarangle')
+%                 obj.site.annotation.polarangle=0;
+%             end
 %             obj.currentroi=0;
             if isfield(obj.site.evaluation,obj.name) && isfield(obj.site.evaluation.(obj.name),'roicoordinates')
                 obj.roicoordinates=obj.site.evaluation.(obj.name).roicoordinates;
@@ -293,7 +297,9 @@ pard.polylinesourceT.object=struct('String','3D polyline source:','Style','text'
 pard.polylinesourceT.position=[3.25,1];
 pard.polylinesourceT.Width=2;
 
-pard.polylinesource.object=struct('String','LocMoFitGUI_2','Style','edit');
+availableProcessors={cellfun(@(x) x.name,obj.locData.SE.processors.eval.processors,'UniformOutput',false)};
+in=regexp([availableProcessors{1,1:end}],'(LocMoFitGUI\w*|plot3D_annotate\w*)','match');
+pard.polylinesource.object=struct('Style','popupmenu','String',{[in{~cellfun('isempty',in)}]});
 pard.polylinesource.position=[3,3];
 pard.polylinesource.Width=2;
 pard.polylinesource.TooltipString='Specified previously run evaluation that will serve as a  source for the polyline. Avaliable LocMoFit and plot3Dannotation(still in progress).';
@@ -301,7 +307,7 @@ pard.polylinesource.TooltipString='Specified previously run evaluation that will
 pard.polylineexpandT.object=struct('String','Expand polyline to mask by (nm):','Style','checkbox','Value',0);
 pard.polylineexpandT.position=[4,1];
 pard.polylineexpandT.Width=3;
-pard.polylineexpand.TooltipString='In case there is no user specified mask within annotation tab this will be run irrespective of the status here.';
+pard.polylineexpandT.TooltipString='In case there is no user specified mask within annotation tab this will be run irrespective of the status here.';
 
 pard.polylineexpand.object=struct('String','350','Style','edit');
 pard.polylineexpand.position=[4,4.5];
@@ -313,6 +319,43 @@ pard.saveLocsforsiteT.object=struct('String','Save straightened localizations fo
 pard.saveLocsforsiteT.position=[5,1];
 pard.saveLocsforsiteT.Width=5;
 pard.saveLocsforsiteT.TooltipString='Straighetend localizations will be saved as /path/to/current/file/straightenedSCs/filename_siteID.csv overwriting the previous version.';
+
+pard.axisangle.object=struct('String','Calculate angle.','Style','checkbox','Value',0);
+pard.axisangle.position=[6,1];
+pard.axisangle.Width=2;
+pard.axisangle.TooltipString='If checked, angle between axis along the length of the cspline/midline will be calculated by chosen method. Values will be saved within the evaluation output.';
+
+pard.anglemethod.object=struct('Style','popupmenu','String',{{'identify2clusters','line','pca','covariance'}});%
+pard.anglemethod.position=[6,3];
+pard.anglemethod.Width=2;
+pard.anglemethod.TooltipString='......';
+
+pard.angleplot.object=struct('String','Plot angle.','Style','checkbox','Value',0);
+pard.angleplot.position=[8,1];
+pard.angleplot.Width=2;
+pard.angleplot.TooltipString='If checked when Display is allowed, the change of angle between the axis will be ploted.';
+
+
+pard.axisLayerT.object=struct('String','Axis Layer:','Style','text');
+pard.axisLayerT.position=[7.25,1];
+pard.axisLayerT.Width=2;
+pard.axisLayerT.TooltipString='Choose layer that contains axis localizations.';
+
+pard.axisLayer.object=struct('Style','popupmenu','String',{find(obj.locData.getPar('sr_layerson'))});
+pard.axisLayer.position=[7,3];
+pard.axisLayer.Width=1;
+pard.axisLayer.TooltipString='Choose layer that contains axis localizations.';
+
+pard.createsubsegT.object=struct('String','Straighten subsegments of (nm):','Style','checkbox','Value',1);
+pard.createsubsegT.position=[9,1];
+pard.createsubsegT.Width=3;
+pard.createsubsegT.TooltipString='If checked each segment of the polyline will be devided into subsegments of specified length which will be separately straightened.';
+
+
+pard.createsubseg.object=struct('String','5','Style','edit');
+pard.createsubseg.position=[9,4.5];
+pard.createsubseg.Width=0.5;
+pard.createsubseg.TooltipString='Specify the length of subsegments.';
 
 
 % pard.equaldistance.object=struct('Style','checkbox','String','equal distances');
@@ -627,7 +670,7 @@ function locI=getFields(loc,indices, FieldList)
     end
 end
 
-function out=straigthen(locs,polyline, selR)
+function out=straigthen(locs,polyline,  makesubseg, subseglength,selR)
 % Straighten the SC along the 3D polyline 
     %links to the used functions
     %(https://uk.mathworks.com/matlabcentral/answers/473087-how-do-you-calculate-a-trajectory-through-a-series-of-3d-points-using-cubic-splines#answer_384467)
@@ -644,7 +687,7 @@ function out=straigthen(locs,polyline, selR)
     %   functions used in the point cloud thinner
     
     %alpha=18
-    if nargin<4
+    if nargin<5
       selR = 500;
     end
 
@@ -686,7 +729,12 @@ function out=straigthen(locs,polyline, selR)
     
     for p=1:(size(t,2)-1)
         axis=[1, 0, 0];%axis for now it is written only for X so do not change this
-        ns=round(abs(norm(line(p,:)-line(p+1,:)))/5); %%%%%%%%%%%%%%%%%Need to remove subsegment since I will be using locmofit's cspline
+        if makesubseg
+            ns=round(abs(norm(line(p,:)-line(p+1,:)))/subseglength); %%%%%%%%%%%%%%%%%Need to remove subsegment since I will be using locmofit's cspline
+        else
+            ns=1;
+        end
+        
         if ns==0
             ns=1;
         end
@@ -775,7 +823,8 @@ function out=straigthen(locs,polyline, selR)
             oldO=O;
             finin(index==1)=1;
             colour(index==1)=p;%j
-            anglesNX(p,j)=dot(r,stop-O);
+            %anglesNX(p,j)=dot(r,stop-O);
+            %axisangle(p,j)
             out.p(index==1)=p;
             out.j(index==1)=j;
     
@@ -809,52 +858,21 @@ function index = insphere(data,position, dist)
     index=((data(:,1)-position(1)).^2+(data(:,2)-position(2)).^2+(data(:,3)-position(3)).^2<=dist^2);
 end
 
-% function derivedPars = derivePars(obj, allpars,locmofit) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Only a temporary fix so that I do not have to run locmofit again every time
-%          
-%         % control points:
-%         par=[];
-%         for f=1:size(allpars.name,1)
-%             par.(allpars.name{f})=allpars.value(f);
-%         end
-%         [ctrlX,ctrlY,ctrlZ] = getCtrlPointsXYZ_loc(par, obj.site.evaluation.(locmofit).fitInfo.modelPar_internal{1, 1}.numOfCtrlPointSet);
-%         
-%         if isempty(obj.site.evaluation.(locmofit).GuiParameters.fitter.model{1, 1}.locsPrecFactor)
-%             locsPrecFactor = 1;
-%         else
-%             locsPrecFactor = obj.site.evaluation.(locmofit).GuiParameters.fitter.model{1, 1}.locsPrecFactor;
-%         end
-%         
-%         minD = locsPrecFactor*0.75;
-%         
-%         arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
-%         samplingFactor = round(arcLen/minD);
-%         [pt,dudt] = interparc(round(samplingFactor/2), ctrlX, ctrlY, ctrlZ);
-%         
-%         [L,R,K] = curvature(pt);
-%         derivedPars.pt=pt;
-%         derivedPars.dudt=dudt;
-%         derivedPars.curvature = 1./R;
-%         
-%         derivedPars.curvatureVector = K;
-%         derivedPars.curvatureRadius = R;
-%         derivedPars.arclength = L;
-%         
-%         derivedPars.avgCurvature = mean(derivedPars.curvature,'omitnan');
-%         derivedPars.p75Curvature = prctile(derivedPars.curvature, 75);
-% %             figure; plot3(pt(:,1),pt(:,2),pt(:,3))
-% %             % plot3([pt(:,1) pt(:,1)+50000*K(:,1)]',[pt(:,2) pt(:,2)+50000*K(:,2)]',[pt(:,3) pt(:,3)+50000*K(:,3)]')
-% %             axis equal
-% %             hold on; arrow3(pt,pt+K.*50000,'-k',0.2,0.4)
-% 
-% 
-% end
-% function [ctrlX,ctrlY,ctrlZ] = getCtrlPointsXYZ_loc(par, numOfCtrlPointSet)
-% % control points:
-%       
-%     for k = 1:numOfCtrlPointSet
-%         ctrlX(k,:) = par.(['cx' num2str(k)]); % ->
-%         ctrlY(k,:) = par.(['cy' num2str(k)]); % ->
-%         ctrlZ(k,:) = par.(['cz' num2str(k)]); % ->
-%     end
-%     
-% end
+function out=getAxisRotPreview(normal,points,origin)
+% This finction is used to project points to a plane that is given by it's
+% normal. Normmal corresponds to the tangent of the SC midline, and
+% function returns points projected to the plane that is perpendicular to
+% the straightened axes
+%points is a nx3 matrix
+%normal is 3x1 column vector
+%origin is 1x3 row vector specifying point on the plane and origin of the
+%normal
+%out is nX3 matrix
+
+%normalize normal
+n=normal/norm(normal);
+proj=points - ((points-origin)*n)*n.';
+out.xnm=proj(:,1);
+out.ynm=proj(:,2);
+out.znm=proj(:,3);
+end
