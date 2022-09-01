@@ -1,6 +1,7 @@
 classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
     properties
         fig = gobjects(1);
+        fitterGUI_name
     end
     methods
         function obj=siteGallery_mCME(varargin)        
@@ -29,6 +30,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             % [to-do] allow selection
             fitterGUI_name = 'LocMoFitGUI_2';
+            obj.fitterGUI_name = fitterGUI_name;
             %fitterGUI_name = 'LocMoFitGUI';
             eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             idxFitterGUI = strcmp(fitterGUI_name,eval);
@@ -255,6 +257,7 @@ end
 
 function update_callback(a,b,obj, oneNp)
     global pan pantext
+    fitterGUI_name = obj.fitterGUI_name;
     se = obj.locData.SE;
     p = obj.getAllParameters;
     fitter = obj.getPar('fitter');
