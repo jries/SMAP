@@ -38,7 +38,7 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             end
             layerson = find(obj.locData.getPar('sr_layerson'));             % check the layers used
             visitFlag = false;                                      % a flag for the conditional loop for the first round
-            fieldQ = {'locprecnm','locprecznm','PSFxnm','xnm','znm','ynm','frame','xnmrot','ynmrot','phot1','phot2','channel'};    % fields will be used %%%%%%%%%%%%%%%%%%% need to add more for displayer
+            fieldQ = {'locprecnm','locprecznm','PSFxnm','xnm','znm','ynm','frame','xnmrot','ynmrot','phot1','phot2','filenumber','channel'};    % fields will be used %%%%%%%%%%%%%%%%%%% need to add more for displayer
            
             fieldQNLayer = [fieldQ 'layer'];
             for k = layerson                                        % go through layers, collect all filtered locs -----from Yu-Le's LocMoFitGUI.m
@@ -68,6 +68,7 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             derivedparameters=obj.site.evaluation.(polylinesource).GuiParameters.fitter.getDerivedPars;
             descriptors=derivedparameters{1,1};%derivePars(obj,obj.site.evaluation.(polylinesource).allParsArg,polylinesource);%
             
+            
             %If there is no user specified polygon mask in annotation
             %tab, create a polygon mask from a polyline
             if (~isvalid(obj.locData.SE.processors.preview.hlines.line3)||isempty(obj.locData.SE.processors.preview.hlines.line3)) || expandPL
@@ -82,19 +83,22 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             locs.ynmA=locs.ynmrot;
             locs.znmA=locs.znm;
 
-            warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale'); 
-            straightner=straigthen(locs,descriptors.pt,createsubseg,subseglength, axeslayer, calangle);
+            warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale'); %descriptors.pt
+            straightner=straigthen(locs,[descriptors.ctrlpoints.ctrlX descriptors.ctrlpoints.ctrlY descriptors.ctrlpoints.ctrlZ],createsubseg,subseglength, axeslayer, calangle);
             warning('on', 'MATLAB:polyfit:RepeatedPointsOrRescale'); 
 
             out.straightner=straightner;
             out.cspline=descriptors.pt;
+            out.curvature=descriptors.curvature;
+            out.ctrlpoints=descriptors.ctrlpoints;
+%            out.csplineDudt=descriptors.dudt;
 
             if display
                 figure('Name','3dpreview - localizations and polyline');
                 hold on
-                scatter3(descriptors.pt(:,1),descriptors.pt(:,2),descriptors.pt(:,3),[])
-                scatter3(locs.xnmA, locs.ynmA, locs.znmA,[2],locs.znmA,'filled'); % 
-                colorbar
+                scatter3(descriptors.ctrlpoints.ctrlX,descriptors.ctrlpoints.ctrlY,descriptors.ctrlpoints.ctrlZ,'green','filled')
+                scatter3(locs.xnmA, locs.ynmA, locs.znmA,[2],locs.layer,'filled'); % 
+                colormap("flag")
                 daspect([1 1 1])
                 hold off
 
@@ -121,7 +125,7 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
                writetable(final,CSV,'WriteRowNames',true);
            end
 
-           if angleplot==1
+           if angleplot==1 && calangle==1
                figure('Name','Angle between axes');
                hold on
                plot(straightner.axesangles); % 
@@ -245,7 +249,7 @@ pard.axesangle.position=[6,1];
 pard.axesangle.Width=2;
 pard.axesangle.TooltipString='If checked, angle between axes will be calculated along the length of the cspline/midline by fitting a line. Values will be saved within the evaluation output.';
 
-pard.anglemethod.object=struct('Style','popupmenu','String',{{'line','identify2clusters','pca','covariance'}});%
+pard.anglemethod.object=struct('Style','popupmenu','String',{{'line','polaranglebinning','covariance'}});%
 pard.anglemethod.position=[6,3];
 pard.anglemethod.Width=2;
 pard.anglemethod.TooltipString='Options are not available. Only line is implemented';
@@ -457,7 +461,7 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength, anglelayer, ca
     line=[x y z];
     colour=zeros(size(points,1),1);
     dist2O=ones(size(points,1),1)*selR;
-    
+    AXangle=[];
     
     for p=1:(size(t,2)-1)
         axis=[1, 0, 0];%axis for now it is written only for X so do not change this
@@ -470,7 +474,7 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength, anglelayer, ca
             ns=1;
         end
         
-        subseg=linspace(t(p),t(p+1),ns);
+        subseg=linspace(t(p),t(p+1),ns+1);%
         
         for j=1:(size(subseg,2)-1)
     
@@ -559,13 +563,12 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength, anglelayer, ca
             %axisangle(p,j)
             if calangle==1
                 restricty=projections(:,2)<200 & projections(:,2)>-200;
-                coeffs=polyfit(projections([index==1 & useforanglecal & restricty],2),projections([index==1 & useforanglecal & restricty],3),1);
-                if coeffs(1)>=0
-                    AXangle(p,j)=atand(coeffs(1));
-                else
-                    AXangle(p,j)=180+atand(coeffs(1));
-                end
+                [theta rho]=cart2pol(projections([index==1 & useforanglecal & restricty],2),projections([index==1 & useforanglecal & restricty],3));
+                
+                theta(theta<0)=theta(theta<0)+1*pi; %%%%%%%%%%%2
+                AXangle(end+1)=rad2deg(cyclicaverage(theta(rho<200),pi));%%%Add locprecision
             end
+
             out.p(index==1)=p;
             out.j(index==1)=j;
     
@@ -602,14 +605,6 @@ function index = insphere(data,position, dist)
     index=((data(:,1)-position(1)).^2+(data(:,2)-position(2)).^2+(data(:,3)-position(3)).^2<=dist^2);
 end
 
-% function out=RotMatrix3DvectortoX(v)
-% axis=[1,0,0];
-% r=v/norm(v);
-% angle= -acosd(dot(r,axis));%- means rotate clockwise!! %atan2d(norm(cross(r,axis)),dot(r,axis)) %LINK missing to matlab and wiki page explaining this
-% u=cross(axis,r);
-% u=u/norm(u);
-% out=eye(3)*cosd(angle(1))+sind(angle(1))*[0,-u(3), u(2);u(3),0,-u(1);-u(2),u(1) 0]+(1-cosd(angle(1)))*  [u(1)^2, u(1)*u(2), u(1)*u(3); u(1)*u(2), u(2)^2, u(2)*u(3); u(1)*u(3), u(2)*u(3), u(3)^2 ];
-% end
 
 function out=getAxisRotPreview(normal,points,origin)
 % This finction is used to project points to a plane that is given by it's

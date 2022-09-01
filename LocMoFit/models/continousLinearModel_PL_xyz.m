@@ -97,11 +97,13 @@ classdef continousLinearModel_PL_xyz<geometricModel
             
             [L,R,K] = curvature(pt);
             derivedPars.curvature = 1./R;
-            derivedPars.curvatureRadius = R;
-            derivedPars.curvatureVector = K;
-            derivedPars.arcLen = L;
+            derivedPars.ctrlpoints.ctrlX = ctrlX;
+            derivedPars.ctrlpoints.ctrlY = ctrlY;
+            derivedPars.ctrlpoints.ctrlZ = ctrlZ;
+            %derivedPars.curvatureVector = K;
+            %derivedPars.arcLen = L;
             derivedPars.pt = pt;
-            derivedPars.dudt = dudt;
+            %derivedPars.dudt = dudt;
             
             derivedPars.avgCurvature = mean(derivedPars.curvature,'omitnan');
             derivedPars.p75Curvature = prctile(derivedPars.curvature, 75);
