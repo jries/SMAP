@@ -7,6 +7,7 @@ if nargin<2
     p.filter=false;
     p.photrange=quantile(locs{1}.phot,[.02 0.98]);
     p.lifetimerange=[1,quantile(locs{1}.numberInGroup,.95)];
+    p.lsf=false;
 end
 
 if p.filter

@@ -227,7 +227,11 @@ end
 function last3d=get3dcalfile(obj)
  last3d=obj.getPar('cal_3Dfile');
      if isempty(last3d)
-     calftest=obj.locData.files.file.savefit.fitparameters.MLE_GPU_Yiming.cal_3Dfile;
+         if isfield(obj.locData.files.file.savefit.fitparameters,'MLE_GPU_Yiming')
+            calftest=obj.locData.files.file.savefit.fitparameters.MLE_GPU_Yiming.cal_3Dfile;
+         else
+             calftest=obj.locData.files.file.savefit.fitparameters.MLE_global_spline.cal_3Dfile;
+         end
         if exist(calftest,'file')
             last3d=calftest;
         end
