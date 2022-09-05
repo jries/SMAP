@@ -9,11 +9,7 @@ classdef sphericalCap3D_surfaceArea<geometricModel
     %   * mammalian endocytic coat
 	%
     % Preview:
-	% 	.. note::
-	% 		It will be available soon.
-	%
-	% ..
-    %   .. image:: ./images/models/sphericalCap3D_surfaceArea.PNG
+    %   .. image:: ./images/models/sphericalCap3D_surfaceArea.png
     %       :width: 400
     %   Scale bar: 50 nm.
 

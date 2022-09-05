@@ -11,8 +11,8 @@ function [ax,finalImg] = plot(obj,locs,varargin)
 %   lPars
 %   mPars
 %   plotType
-%   whichModel
-%   Projection
+%   whichModel 
+%   Projection (character vectors): either 'xy', 'xz', or 'yz'.
 %   pixelSize (numeric scalar): the pixel size of the rendered image. Default: determined by the :obj:`SMLMModel`.
 %   axes
 %   movModel
@@ -28,9 +28,12 @@ function [ax,finalImg] = plot(obj,locs,varargin)
 % Returns:
 %   ax (Axes object): the axes object where the fit is visualized.
 %   finalImg (structure array, numeric array): either a rendered image (numeric array) or a structure array representing the current model.
-%   
+% 
+% To-do:
+%   Consider to combine this method with the :meth:`rotCoordNMkImg`.
+%
 % Last update:
-%   06.05.2022
+%   02.09.2022
 %
 
 %% PLOT Display the fit results
