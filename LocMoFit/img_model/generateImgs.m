@@ -153,8 +153,10 @@ for k = 1:length(model_imgDefined)
             axis(allAx, 'image')
             axis(allAx, 'on')
             pan.margin = 0;
-            pan.margintop = 7;
-            pan.marginleft = 7;            
+            pan.units = 'pt';
+            pan.margintop = 17;
+            pan.marginleft = 17;
+    
             pan.fontsize = 12;
             pan.de.margin = 0;
             ylabel(pan(1,1).axis,'Model')
@@ -167,7 +169,8 @@ for k = 1:length(model_imgDefined)
     hSb.LineWidth = 3;
 
     %% Figure size
-    fig_pan.Position(3:4) = [7+6+201.5*numOfView 7+201.5*numOfView];
+    eachPan = 180;
+    fig_pan.Position(3:4) = [17+8+eachPan*numOfView 17+eachPan*numOfView];
 
     %% Save
 %     dateCreated = ['_c' char(datetime('now','TimeZone','local','Format','yyMMdd'))];
