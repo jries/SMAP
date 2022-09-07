@@ -133,16 +133,19 @@ classdef continousLinearModel_PL_xyz<geometricModel
                     % numOfCtrlPoint
                     for k = lastCtrlPoint_ori+1:obj.getInternalSettings('numOfCtrlPointSet')
                         if k ~= 0||lastCtrlPoint_ori~=obj.getInternalSettings('numOfCtrlPointSet')
-                            obj.addMPar(defaultParsArgNewCtrlPoint(k));
+                            toadd=defaultParsArgNewCtrlPoint(k);
+                            obj.addMPar(toadd);
                         end
                     end
                 elseif obj.getInternalSettings('numOfCtrlPointSet')<lastCtrlPoint_ori
                     % when the last control point number is larger than the
                     % numOfCtrlPoint
-                    obj.ParentObject.ParentObject.resetInit;
+                    %obj.ParentObject.ParentObject.resetInit; IC220907
+                    %removed
                     for k = obj.getInternalSettings('numOfCtrlPointSet')+1:lastCtrlPoint_ori
                         if lastCtrlPoint_ori~=obj.getInternalSettings('numOfCtrlPointSet')
-                            obj.rmMPar(defaultParsArgNewCtrlPoint(k).name);
+                            toremove=defaultParsArgNewCtrlPoint(k).name;
+                            obj.rmMPar(toremove);
                         end
                     end
                 end
@@ -152,6 +155,10 @@ classdef continousLinearModel_PL_xyz<geometricModel
                 notify(obj.ParentObject.ParentObject,'mParsArgModified',evtdata);
                 notify(obj.ParentObject.ParentObject.linkedGUI,'mParsArgModified',evtdata);
                 obj.ParentObject.ParentObject.saveInit;
+                % IC220907 addition
+                if isfield(obj.ParentObject.ParentObject.parsInit, 'init_locked')
+                    obj.ParentObject.ParentObject.lockInit;
+                end
             end
         end
     end

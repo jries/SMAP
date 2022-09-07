@@ -731,9 +731,9 @@ classdef LocMoFit<matlab.mixin.Copyable
         end
         function resetInit(obj)                                   % reset the init using the original values (before fitting)
             if isfield(obj.parsInit, 'init_locked')
-                obj.allParsArg.value = obj.parsInit.init_locked;
+                obj.allParsArg.value = obj.parsInit.init_locked; 
             elseif isfield(obj.parsInit, 'init')
-                obj.allParsArg.value = obj.parsInit.init;
+                obj.allParsArg.value = obj.parsInit.init; 
             end
         end
         function saveInit(obj)
@@ -741,7 +741,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         end
 
         function lockInit(obj)
-            obj.parsInit.init_locked = obj.parsInit.init;
+            obj.parsInit.init_locked = obj.parsInit.init; 
         end
 
         function unlockInit(obj)

@@ -422,7 +422,7 @@ function out=straigthen(locs,polyline,  makesubseg, subseglength, anglelayer, ca
     
     %alpha=18
     if nargin<7
-      selR = 500;
+      selR = 250;
     end
 
     t=1:size(polyline(:,3),1);
