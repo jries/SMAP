@@ -65,9 +65,17 @@ classdef SC_3D_straightner<interfaces.SEEvaluationProcessor
             %%Missing an option to just straighten based on the
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%polyline
 
-            derivedparameters=obj.site.evaluation.(polylinesource).GuiParameters.fitter.getDerivedPars;
-            descriptors=derivedparameters{1,1};%derivePars(obj,obj.site.evaluation.(polylinesource).allParsArg,polylinesource);%
-            
+            %derivedparameters=obj.site.evaluation.(polylinesource).GuiParameters.fitter.getDerivedPars;
+            %descriptors=derivedparameters{1,1};%derivePars(obj,obj.site.evaluation.(polylinesource).allParsArg,polylinesource);%
+            descriptors=[];
+            [ctrlX,ctrlY,ctrlZ]=getCtrlPointsXYZloc(obj.site.evaluation.(polylinesource).allParsArg);
+            [pt,dudt]= interparc(100, ctrlX, ctrlY, ctrlZ);
+            descriptors.pt=pt;
+            [L,R,K] = curvature(pt);
+            descriptors.curvature = 1./R;
+            descriptors.ctrlpoints.ctrlX = ctrlX;
+            descriptors.ctrlpoints.ctrlY = ctrlY;
+            descriptors.ctrlpoints.ctrlZ = ctrlZ;
             
             %If there is no user specified polygon mask in annotation
             %tab, create a polygon mask from a polyline
@@ -632,4 +640,22 @@ angle= -acosd(dot(r,axis));%- means rotate clockwise!! %atan2d(norm(cross(r,axis
 u=cross(axis,r);
 u=u/norm(u);
 out=eye(3)*cosd(angle(1))+sind(angle(1))*[0,-u(3), u(2);u(3),0,-u(1);-u(2),u(1) 0]+(1-cosd(angle(1)))*  [u(1)^2, u(1)*u(2), u(1)*u(3); u(1)*u(2), u(2)^2, u(2)*u(3); u(1)*u(3), u(2)*u(3), u(3)^2 ];
+end
+
+function [ctrlX,ctrlY,ctrlZ] = getCtrlPointsXYZloc(allpars)
+% control points:
+lx = startsWith(allpars.name,'cx');
+ctrlSetID = str2double(regexprep(allpars.name(lx),'\D',''));
+lastCtrlPoint_ori = max(ctrlSetID);
+par=[];
+for f=1:size(allpars.name,1)
+    par.(allpars.name{f})=allpars.value(f);
+end
+      
+    for k = 1:lastCtrlPoint_ori
+        ctrlX(k,:) = par.(['cx' num2str(k)]); % ->
+        ctrlY(k,:) = par.(['cy' num2str(k)]); % ->
+        ctrlZ(k,:) = par.(['cz' num2str(k)]); % ->
+    end
+    
 end
