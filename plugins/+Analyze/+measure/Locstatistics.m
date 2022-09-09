@@ -26,19 +26,12 @@ classdef Locstatistics<interfaces.DialogProcessor
             if p.filter
                 for m=length(layers):-1:1
                     [locs{m},~,roih]=obj.locData.getloc(fields,'layer',layers(m),'position',position);
-                    if isempty(roih)
-                    roidef{m}=[];
-                    elseif isstruct(roih)
-                        roidef{m}=roih.getPosition*1000;
+                    if isa(roih,'imline')
+                        roidef{m}.p=convert2polyshape(roih,obj.getPar('linewidth_roi'));
                     else
-                        pp=roih.getPosition*1000;
-                        roihs.x=pp(:,1);
-                        roihs.y=pp(:,2);
-                        roihs.p=polyshape(roihs.x,roihs.y);
-                        roihs.type='polyshape';
-                        roidef{m}=roihs;
+                        roidef{m}.p=convert2polyshape(roih);
                     end
-
+                    roidef{m}.type='polyshape';
                     locfile{m}=obj.getPar(['layer' num2str(layers(m)) '_']).ch_filelist.selection;
                     modetxt{m}=['layer' num2str(layers(m))];
                 end
@@ -98,7 +91,7 @@ pard.filter.position=[1,2];
 pard.overview.object=struct('String','plot overview','Style','checkbox','Value',0);
 pard.overview.position=[1,3];
 
-pard.lsf.object=struct('String','LSF analysis','Style','checkbox','Value',0,'Visible','off');
+pard.lsf.object=struct('String','LSF analysis','Style','checkbox','Value',0);
 pard.lsf.position=[1,4];
 
 pard.tphot.object=struct('String','photon range:','Style','text');
