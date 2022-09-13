@@ -1536,10 +1536,9 @@ classdef LocMoFit<matlab.mixin.Copyable
             obj.handles = rmfield(obj.handles,fn);
         end
         
-        function LLfit = loglikelihoodFun(obj, fitPars, compensationFactor, locs, varargin)
+        function [LLfit, prob] = loglikelihoodFun(obj, fitPars, compensationFactor, locs, varargin)
             % loglikelihoodFun computes the log-likelihood value of the
             % fit.
-            obj.currentFitPars = fitPars;
             p = inputParser;
             p.addParameter('expected',false);
             p.addParameter('dx',1);
@@ -1549,6 +1548,8 @@ classdef LocMoFit<matlab.mixin.Copyable
             if ~exist('fitPars', 'var')||isempty(fitPars)
                 fitPars = obj.allParsArg.value(~obj.allParsArg.fix)';
             end
+
+            obj.currentFitPars = fitPars;
             
             if ~exist('locs', 'var')||isempty(locs)
                 locs = obj.locs;

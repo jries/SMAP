@@ -1,13 +1,12 @@
 function [ax,finalImg] = plot(obj,locs,varargin)
-% :meth:`plot` visualize the fit result.
+% :meth:`plot` visualize the fitted model.
 %
 % Args:
 %   obj (:obj:`LocMoFit`): an object created by :meth:`LocMoFit`.
-%   locs (structure array): the typical localization structure array used
-%   in SMAP.
+%   locs (structure array): the typical localization structure array used in SMAP.
 %
 % Name-Value Arguments:
-%   bestPar
+%   bestPar (logical value): if true, the final parameter estimates will be used.
 %   lPars
 %   mPars
 %   plotType
@@ -28,12 +27,15 @@ function [ax,finalImg] = plot(obj,locs,varargin)
 % Returns:
 %   ax (Axes object): the axes object where the fit is visualized.
 %   finalImg (structure array, numeric array): either a rendered image (numeric array) or a structure array representing the current model.
-% 
-% To-do:
+%
+% Important:
+% 	For developers: currently this function can also export coordinates. This is somehow confusing. For compatibility, this function should keep the same input and output. However, in the future, it should be based on two parts: 1) exporting model points and 2) ploting based on the exported points. The second part is already there (see :meth:`rotCoordNMkImg`).
+%
+% Todo:
 %   Consider to combine this method with the :meth:`rotCoordNMkImg`.
 %
 % Last update:
-%   02.09.2022
+%   07.09.2022
 %
 
 %% PLOT Display the fit results
@@ -73,7 +75,7 @@ results = p.Results;
 whichModel = results.whichModel;
 projection = results.Projection;
 pixelSize = results.pixelSize;
-%% Check the model types and the number of layers
+%% [1] Check the model types and the number of layers
 % If any of the model is an image then display an image at the end.
 for k = obj.numOfModel:-1:1
     modelType{k} = obj.model{k}.modelType;
@@ -83,7 +85,7 @@ if ismember({'image'}, modelType)
     results.plotType = 'image';
 end
 allModelLayers = unique(modelLayer);
-%% Transform lPars to the shared coordinates system
+%% [2] Transforming lPars to the shared coordinates system
 % Only do lPars have additionality always move the model rather than the locs
 if results.bestPar
     lPars = {};
@@ -108,7 +110,7 @@ if results.bestPar
 else
     lPars = results.lPars;
 end
-%% Get images of the models
+%% [3] Getting images of the models
 % Image model should always display image visulization, while point model can 
 % display either image or point visulization.
 % Determine the image size
@@ -368,6 +370,7 @@ else
     % display all others
     %         newLocs.xnm(~ismember(locs.layer, allModelLayers))
     finalImg = layerPoint;
+    warning('Exporting model points using obj.plot() is not recommended anymore. Please use obj.getLayerPoint() instead.')
 end
 if ~results.doNotPlot
     axis(ax,'equal')

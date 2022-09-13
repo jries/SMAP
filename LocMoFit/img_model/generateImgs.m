@@ -40,6 +40,8 @@ locs.xnm = 0; locs.ynm = 0; locs.znm = 0; locs.locprecnm = 5; locs.locprecznm = 
 % SE
 p_ori = p;
 model_imgDefined = img_creation_settings();
+se = g.locData.SE;
+eval_ = se.processors.eval;
 for k = 1:length(model_imgDefined)
     oneModel = model_imgDefined{k};
     p_model = img_creation_settings(oneModel);
@@ -177,6 +179,7 @@ for k = 1:length(model_imgDefined)
     fName = [p.general.saveTo oneModel '.png'];
     exportgraphics(fig_pan,fName, 'Resolution', 200)
 
+    %%
     eval_.removemodule('LocMoFitGUI');
 end
 %% Functions
@@ -247,11 +250,20 @@ end
 
 function plotView(pan, view, g, h_viewer3D, fitterGUI, p, locs)
     fitter = fitterGUI.fitter;
-    fitter.roiSize = g.getPar('se_siteroi');
+    roiSize = g.getPar('se_siteroi');
+    fitter.roiSize = roiSize;
+    if roiSize>1000
+        pixelSize = 10;
+    elseif roiSize>300
+        pixelSize = 5;
+    else
+        pixelSize = 1;
+    end
     switch view
         case 'xy'
             % model
-            ax_mod = fitter.plot(locs, 'pixelSize', 1, 'Projection','xy');
+            
+            ax_mod = fitter.plot(locs, 'pixelSize', pixelSize, 'Projection','xy');
             fig_mod = ax_mod.Parent;
             pan(1).select(ax_mod);
             close(fig_mod);
@@ -269,7 +281,7 @@ function plotView(pan, view, g, h_viewer3D, fitterGUI, p, locs)
             title(pan(1).axis, 'Topview xy')
         case 'xz'
             % model
-            ax_mod = fitter.plot(locs, 'pixelSize', 1, 'Projection','xz');
+            ax_mod = fitter.plot(locs, 'pixelSize', pixelSize, 'Projection','xz');
             fig_mod = ax_mod.Parent;
             pan(1).select(ax_mod);
             close(fig_mod);

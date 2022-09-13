@@ -1,6 +1,6 @@
 function out = img_creation_settings(modelName)
     if nargin == 0
-        out = {'sphericalCap3D_surfaceArea','arc2D'};
+        out = {'sphericalCap3D_surfaceArea','arc2D','csplineClosedTube3D_midPoint'};
         return
     else
         out.SMAP = [];          % general parameters
@@ -21,5 +21,17 @@ function out = img_creation_settings(modelName)
             out.SMAP.general.view = {'xy', 'xz'};
             out.SMAP.settings.se_sitefov = 250;
             out.SMAP.settings.se_siteroi = 250;
+        case 'csplineClosedTube3D_midPoint'
+            out.LocMoFit.parID = {'m1.mPar.rotAziL1', 'm1.mPar.rotEleL1',...
+                'm1.mPar.rotAziL2', 'm1.mPar.rotEleL2',...
+                'm1.mPar.rotAziR1', 'm1.mPar.rotEleR1',...
+                'm1.mPar.rotAziR2', 'm1.mPar.rotEleR2',...
+                'm1.mPar.r',...
+                'm1.mPar.dist',...
+                'm91.sim.numOfMol'};
+            out.LocMoFit.value = [12 0 13 2 19 0 15 2 250 400 5000];
+            out.SMAP.general.view = {'xy', 'xz'};
+            out.SMAP.settings.se_sitefov = 2200;
+            out.SMAP.settings.se_siteroi = 2200;
     end
 end
