@@ -9,6 +9,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         range
         index
         stats
+        id;
     end
     methods
         function obj=StepsMINFLUX(varargin)        
@@ -42,6 +43,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            id=mode(locs.(fid));
            index=obj.locData.loc.(fid)==id;
            obj.index=index;
+           obj.id=id;
             
            %get coordinates
            x=obj.locData.loc.xnm(index);
@@ -235,6 +237,8 @@ dt=diff(time);
 out.dtmin=min(dt);
 out.dtmedian=median(dt);
 out.dtmean=mean(dt);
+
+out.id=obj.id;
 
 out.efo=median(obj.locData.loc.efo(index));
 out.cfr=median(obj.locData.loc.cfr(index));
