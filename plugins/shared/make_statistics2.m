@@ -60,8 +60,10 @@ else
         ax8.Position(3)=0.55;
     end
     if p.lsf
-        axlsf1=initaxis(p.resultstabgroup,'LSF');
+        axlsf1=initaxis(p.resultstabgroup,'LSF corr');
         axlsf1.Position(3)=0.55;
+        axlsf2=initaxis(p.resultstabgroup,'LSF res');
+        axlsf2.Position(3)=0.55;
     end
 
 
@@ -370,16 +372,39 @@ if zexist && ~isempty(v{1}) && ~isempty(ax7)
 end
 
 if p.lsf
+    hold(axlsf1,'off')
 for k=1:length(locs)
     data.x=locs{k}.xnm';
     data.y=locs{k}.ynm';
-    data.t=locs{k}.frame'/100;
+    data.t=(locs{k}.frame'-min(locs{k}.frame))/100;
+    % ROI
+%     if isnumeric(p.roidefs{k})&& numel(p.roidefs{k}) ==4 %ROI, FoV
+%         c=p.roidefs{k};
+%         coord=[c(1)-c(3), c(2)-c(4);c(1)+c(3), c(2)-c(4);c(1)+c(3), c(2)+c(4);c(1)-c(3), c(2)+c(4)];
+%         data.spacewin.p=polyshape(coord(:,1),coord(:,2));
+%         data.spacewin.type='polyshape';
+%     else
     data.spacewin=p.roidefs{k};
-    tt=linspace(1,max(data.t),26);
+    
+   
+    
+    tt=linspace(0,max(data.t),26);
     data.timewin(:,1)=tt(1:end-1);
     data.timewin(:,2)=tt(2:end)-1/100;
-    [corrdata, params] = spacetime_resolution(data, 'NTauBin', 10, 'Bootstrap', false);
-
+    [corrdata, params] = spacetime_resolution(data, 'NTauBin', 10, 'Bootstrap', false,'R' ,0.5:1:250);
+    tau = corrdata.taubincenters;
+    plot(axlsf1, corrdata.r, corrdata.nDg);
+    lh = legend(axlsf1,arrayfun(@num2str, tau(1:end-1), 'UniformOutput', false));
+%     title(axlsf1,lh,'\tau (s)');
+    xlabel(axlsf1,'r (nm)');
+    ylabel(axlsf1, 'g(r, \tau)');
+    hold(axlsf1,'on')
+    
+    errorbar(axlsf2,tau(1:end-1),corrdata.s,corrdata.confint, 'o-');
+    title(axlsf2,sprintf('Average resolution is %.1f nm ', corrdata.S))
+    xlabel(axlsf2,'\tau (s)');
+    ylabel(axlsf2,'resolution estimate (nm)');
+    hold(axlsf2,'on')
 end
 
 end
