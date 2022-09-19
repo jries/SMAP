@@ -74,6 +74,11 @@ fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k2);
 fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
 plot(nt,fthyp(nt),'b')
 
+%16 nm, four equal constants
+fitf=@(k1,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k1+0.00013);
+fthyp4_1=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,1]);
+plot(nt,fthyp4_1(nt),'c--')
+
 %Hypoexp fit 8 nm
 fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexponentialpdf(x,[k1,k2]);
 [htmax,imax]=max(ht);
@@ -100,7 +105,8 @@ title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff
      '; N = ' num2str(length(steptime),4)]);
 
 legend('data',...
-    ['4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
+    ['4exp 2 k: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
+    ['4exp 1 k: ' num2str(1/fthyp4_1.k1,ff)],...
     ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
     ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
     ['exp: 1/k = ' num2str(-1/ftx.b,ff)])
@@ -148,8 +154,12 @@ Ns=sum(ht(indt));
 
 %Hypoexp fit 16 nm
 fitf=@(k1,k2,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k2));
-fthyp=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
-plot(nt,fthyp(nt),'b')
+fthypc=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
+plot(nt,fthypc(nt),'b')
+
+fitf=@(k1,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k1+0.001));
+fthypc4_1=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,1]);
+plot(nt,fthypc4_1(nt),'c--')
 
 %Hypoexp fit 8 nm
 fitf=@(k1,k2,A,x) A*Ns*dt*cumsum(Hypoexponentialpdf(x,[k1,k2]));
@@ -179,7 +189,8 @@ plot(nt(imax:find(indt,1,'last')),sum(ht(1:imax-1))+cumsum(ftx(nt(imax:find(indt
 %      '; N = ' num2str(length(steptime),4)]);
 
 legend('data',...
-    ['4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
+    ['4exp 2 k: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthypc.k2,ff)],...
+    ['4exp 1 k: ' num2str(1/fthypc4_1.k1,ff)],...
     ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
     ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
     ['exp: 1/k = ' num2str(-1/ftx.b,ff)],'Location','southeast')
@@ -196,8 +207,9 @@ xlim([0 maxtime])
 hold on
 
 %Hypoexp fit 16 nm
-plot(nt,htc'-fthyp(nt),'b')
+plot(nt,htc'-fthypc(nt),'b')
 
+plot(nt,htc'-fthypc4_1(nt),'c--')
 
 %Hypoexp fit 8 nm
 plot(nt,htc'-fthyp2(nt),'m')
@@ -208,7 +220,8 @@ plot(nt,htc'-ft(nt),'g--')
 plot(nt(imax:find(indt,1,'last')),htc(imax:find(indt,1,'last'))'-sum(ht(1:imax-1))-cumsum(ftx(nt(imax:find(indt,1,'last')))),'r')
 
 legend('data',...
-    ['4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
+    ['4exp 2 k: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthypc.k2,ff)],...
+    ['4exp 1 k: ' num2str(1/fthypc4_1.k1,ff)],...
     ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
     ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
     ['exp: 1/k = ' num2str(-1/ftx.b,ff)],'Location','southeast')
