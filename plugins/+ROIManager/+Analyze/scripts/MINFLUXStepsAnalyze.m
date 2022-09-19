@@ -55,7 +55,7 @@ nt=n(1:end-1)+dt/2;
 
 subplot(1,2,2)
 hold off
-stairs(n,[ht,0])
+stairs(n,[ht,0],'k')
 % histogram(steptime,n,'DisplayStyle','stairs')
 xlabel('step time (ms)')
 maxtime=quantile(steptime,.98);
@@ -72,14 +72,32 @@ xlim([0 maxtime])
 
 
 %convolution of two exponentials with same rates, Peng dynein paper
-timefun=@(k1,A,x) A*k1^2*x.*exp(-k1*x);
-startp=[1/mean(steptime), 3*max(ht)*mean(steptime)^2/ht(imax)];
+timefun=@(k1,A,x) A*N*dt*k1^2*x.*exp(-k1*x);
+startp=[1, 3*max(ht)*mean(steptime)^2/ht(imax)];
 indt=nt<maxtime;
 indt=indt & nt>5;
 ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 hold on
 plot(nt,ft(nt),'r--')
 
+%Hypoexp fit 16 nm
+N=length(steptime);
+fitf=@(k1,k2,A,x) N*dt*Hypoexp4fit(x,k1,k2,A);
+[htmax,imax]=max(ht);
+kstart=1/nt(imax);
+% plot(nt,fitf(kstart,kstart*8,1,nt),'b--')
+fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*8,1]);
+plot(nt,fthyp(nt),'b')
+
+
+%Hypoexp fit 8 nm
+N=length(steptime);
+fitf=@(k1,k2,A,x) A*N*dt*Hypoexponentialpdf(x,[k1,k2]);
+[htmax,imax]=max(ht);
+kstart=1/nt(imax);
+% plot(nt,fitf(kstart,kstart*8,1,nt),'m--')
+fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*8,1]);
+plot(nt,fthyp2(nt),'m')
 
 
 %convolution of two exponentials with different rates, 
@@ -93,9 +111,18 @@ hold on
 
 ftx=fit(nt(imax:find(indt,1,'last'))',ht(imax:find(indt,1,'last'))','exp1');
 plot(nt(imax:find(indt,1,'last')),ftx(nt(imax:find(indt,1,'last'))),'r')
-title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff) ' N = ' num2str(length(steptime),4)]);% ...
+title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff)...
+    '; 4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff) ...
+     '; 2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff) ...
+     '; N = ' num2str(length(steptime),4)]);% ...
 %     ', 2exp: 1/k1,: ' num2str(1./ft2.k1,ff) ',1/k2,: ' num2str(1./ft2.k2,ff)])
 % title(['Peng: 1/k = ' num2str(-1/ft.k1,ff) ' ms, robustmean(steptime) = ' num2str(robustMean(steptime),ff) ' N = ' num2str(length(steptime),4)])
+
+
+legend('data',['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
+    ['4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
+    ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
+    ['exp: 1/k = ' num2str(-1/ftx.b,ff)])
 
 figure(180)
 subplot(1,2,1)

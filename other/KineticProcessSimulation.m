@@ -1,6 +1,6 @@
 %Simulate kinetic processes, chain of events with kinetic constants ki
 
-N=100000; %number of data points
+N=1000000; %number of data points
 tausingle=[10 30];
 eps=0.01; % ki ~= kj for all i,j
 taus=[tausingle, tausingle+eps];
@@ -18,10 +18,21 @@ ks=1./taus;
 t2=sum(timet,2);
 figure(88);
 subplot(2,1,1)
-[fp,nt]=plotwithfit(t2,dt);
+[fp,nt,ht]=plotwithfit(t2,dt);
 title(['16 nm steps, tau=' num2str(1/fp.k1)])
 fx=Hypoexponentialpdf(nt,ks);
 plot(nt,fx*N*dt,'r')
+
+%try fit
+% fitf=fittype('N*dt*Hypoexp4fit(x,k1,k2)');
+fitf=@(k1,k2,A,x) N*dt*Hypoexp4fit(x,k1,k2,A);
+
+[htmax,imax]=max(ht);
+kstart=1/nt(imax);
+plot(nt,fitf(kstart*2,kstart*4,1,nt),'g--')
+fph=fit(nt',ht',fitf,'StartPoint',[kstart*2,kstart*4,1]);
+plot(nt,fph(nt),'b')
+
 
 subplot(2,1,2)
 l=size(timet,2); 
@@ -35,7 +46,8 @@ title(['8 nm steps, tau=' num2str(1/fp.k1)])
 fx=Hypoexponentialpdf(nt,ks(1:midp));
 plot(nt,fx*N*dt*2,'r')
 
-function [ft,nt]=plotwithfit(dat,dt)
+
+function [ft,nt,ht]=plotwithfit(dat,dt)
 n=0:dt:max(dat);
 
 %double exp fit:
