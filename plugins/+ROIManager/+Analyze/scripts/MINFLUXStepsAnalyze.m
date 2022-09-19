@@ -23,7 +23,7 @@ for k=1:length(sites)
 end
 
 figure(188) %do the plotting
-subplot(1,2,1)
+subplot(2,2,1)
 ds=.5;
 n=round(min(stepsize)):ds:max(stepsize);
 hs=histcounts(stepsize,n);
@@ -53,76 +53,59 @@ ht=histcounts(steptime,n);
 nt=n(1:end-1)+dt/2;
 
 
-subplot(1,2,2)
+subplot(2,2,2)
 hold off
 stairs(n,[ht,0],'k')
-% histogram(steptime,n,'DisplayStyle','stairs')
 xlabel('step time (ms)')
 maxtime=quantile(steptime,.98);
 xlim([0 maxtime])
-
-
-% %two exponentials
-% timefun=@(k1,k2,A,x) A*(exp(-k1*x)-exp(-k2*x));
-% startp=[1/mean(steptime), 10/mean(steptime), max(ht)];
-% indt=nt<maxtime;
-% ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
-[~,imax]=max(ht);
-
-
-
-%convolution of two exponentials with same rates, Peng dynein paper
-timefun=@(k1,A,x) A*N*dt*k1^2*x.*exp(-k1*x);
-startp=[1, 3*max(ht)*mean(steptime)^2/ht(imax)];
-indt=nt<maxtime;
-indt=indt & nt>5;
-ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 hold on
-plot(nt,ft(nt),'r--')
-
-%Hypoexp fit 16 nm
-N=length(steptime);
-fitf=@(k1,k2,A,x) N*dt*Hypoexp4fit(x,k1,k2,A);
+%startp
 [htmax,imax]=max(ht);
 kstart=1/nt(imax);
-% plot(nt,fitf(kstart,kstart*8,1,nt),'b--')
-fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*8,1]);
+indt=nt<maxtime;
+indt=indt & nt>0;
+Ns=sum(ht(indt));
+
+
+
+%Hypoexp fit 16 nm
+fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k2);
+fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
 plot(nt,fthyp(nt),'b')
 
-
 %Hypoexp fit 8 nm
-N=length(steptime);
-fitf=@(k1,k2,A,x) A*N*dt*Hypoexponentialpdf(x,[k1,k2]);
+fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexponentialpdf(x,[k1,k2]);
 [htmax,imax]=max(ht);
 kstart=1/nt(imax);
 % plot(nt,fitf(kstart,kstart*8,1,nt),'m--')
 fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*8,1]);
 plot(nt,fthyp2(nt),'m')
 
+%convolution of two exponentials with same rates, Peng dynein paper
+timefun=@(k1,A,x) A*Ns*dt*k1^2*x.*exp(-k1*x);
+startp=[kstart,1];
 
-%convolution of two exponentials with different rates, 
-timefun=@(k1,k2,A,x) A*(k1*k2/((k2-k1)))^2*((x-(2/((k2-k1)))).*exp(-k1*x)+(x-(2/((k2-k1)))).*exp(-k2*x));
-startp=[ft.k1,ft.k1/5, max(ht)*mean(steptime)^2/ht(imax)];
+ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 
+plot(nt,ft(nt),'g--')
 
-ft2=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
-hold on
-% plot(nt,ft2(nt),'g--')
-
+%exp
 ftx=fit(nt(imax:find(indt,1,'last'))',ht(imax:find(indt,1,'last'))','exp1');
 plot(nt(imax:find(indt,1,'last')),ftx(nt(imax:find(indt,1,'last'))),'r')
+
 title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff)...
     '; 4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff) ...
      '; 2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff) ...
-     '; N = ' num2str(length(steptime),4)]);% ...
-%     ', 2exp: 1/k1,: ' num2str(1./ft2.k1,ff) ',1/k2,: ' num2str(1./ft2.k2,ff)])
-% title(['Peng: 1/k = ' num2str(-1/ft.k1,ff) ' ms, robustmean(steptime) = ' num2str(robustMean(steptime),ff) ' N = ' num2str(length(steptime),4)])
+     '; N = ' num2str(length(steptime),4)]);
 
-
-legend('data',['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
+legend('data',...
     ['4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
     ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
+    ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
     ['exp: 1/k = ' num2str(-1/ftx.b,ff)])
+
+
 
 figure(180)
 subplot(1,2,1)
@@ -144,3 +127,90 @@ plot(nl,fp(nl))
 title(['<nlocs> = ' num2str(mean(tracklengthlocs),ff2) ', median = ' num2str(median(tracklengthlocs),ff2) ', exp = ' num2str(-1/fp.b,ff2)])
 
 
+figure(188)
+subplot(2,2,3)
+hold off
+htc=cumsum(ht);
+stairs(nt,htc,'k')
+xlabel('step time (ms)')
+maxtime=quantile(steptime,.98);
+% maxtime=100;
+xlim([0 maxtime])
+hold on
+%startp
+[htmax,imax]=max(ht);
+kstart=1/nt(imax);
+indt=nt<maxtime;
+indt=indt & nt>0;
+Ns=sum(ht(indt));
+
+
+
+%Hypoexp fit 16 nm
+fitf=@(k1,k2,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k2));
+fthyp=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
+plot(nt,fthyp(nt),'b')
+
+%Hypoexp fit 8 nm
+fitf=@(k1,k2,A,x) A*Ns*dt*cumsum(Hypoexponentialpdf(x,[k1,k2]));
+[htmax,imax]=max(ht);
+kstart=1/nt(imax);
+% plot(nt,fitf(kstart,kstart*8,1,nt),'m--')
+fthyp2=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,kstart*8,1]);
+plot(nt,fthyp2(nt),'m')
+
+
+%convolution of two exponentials with same rates, Peng dynein paper
+timefun=@(k1,A,x) A*Ns*dt*k1^2*cumsum(x.*exp(-k1*x));
+startp=[kstart,1];
+
+ft=fit(nt(indt)',htc(indt)',timefun,'StartPoint',startp);
+
+plot(nt,ft(nt),'g--')
+
+%exp
+ftx=fit(nt(imax:find(indt,1,'last'))',ht(imax:find(indt,1,'last'))','exp1');
+
+plot(nt(imax:find(indt,1,'last')),sum(ht(1:imax-1))+cumsum(ftx(nt(imax:find(indt,1,'last')))),'r')
+
+% title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff)...
+%     '; 4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff) ...
+%      '; 2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff) ...
+%      '; N = ' num2str(length(steptime),4)]);
+
+legend('data',...
+    ['4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
+    ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
+    ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
+    ['exp: 1/k = ' num2str(-1/ftx.b,ff)],'Location','southeast')
+
+title('Cumulative Probability Distribution')
+
+figure(188)
+subplot(2,2,4)
+hold off
+
+stairs(nt,htc*0,'k')
+xlabel('step time (ms)')
+xlim([0 maxtime])
+hold on
+
+%Hypoexp fit 16 nm
+plot(nt,htc'-fthyp(nt),'b')
+
+
+%Hypoexp fit 8 nm
+plot(nt,htc'-fthyp2(nt),'m')
+
+%convolution of two exponentials with same rates, Peng dynein paper
+plot(nt,htc'-ft(nt),'g--')
+
+plot(nt(imax:find(indt,1,'last')),htc(imax:find(indt,1,'last'))'-sum(ht(1:imax-1))-cumsum(ftx(nt(imax:find(indt,1,'last')))),'r')
+
+legend('data',...
+    ['4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
+    ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
+    ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
+    ['exp: 1/k = ' num2str(-1/ftx.b,ff)],'Location','southeast')
+
+title('residuals CPD')
