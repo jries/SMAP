@@ -1,7 +1,7 @@
 %Simulate kinetic processes, chain of events with kinetic constants ki
 
 N=100000; %number of data points
-ks=1./[10 10 10 10]; % list of kinetic constants
+ks=1./[30 10 30 10]; % list of kinetic constants
 dt=0.005;
 
 timet=zeros(N,length(ks));
@@ -14,15 +14,17 @@ end
 t2=sum(timet,2);
 figure(88);
 subplot(2,1,1)
-plotwithfit(t2,dt)
-title('16 nm steps')
+fp=plotwithfit(t2,dt);
+title(['16 nm steps, k=' num2str(fp.k1)])
 
 subplot(2,1,2)
-t8_1=sum(timet(:,1:2),2);
-t8_2=sum(timet(:,3:4),2);
-plotwithfit(vertcat(t8_1,t8_2),dt)
+l=size(timet,2); 
+midp=round(l/2);
+t8_1=sum(timet(:,1:midp),2);
+t8_2=sum(timet(:,end-midp+1:end),2);
+fp=plotwithfit(vertcat(t8_1,t8_2),dt);
 % histogram(vertcat(t8_1,t8_2),100)
-title('8 nm steps, individual stepping')
+title(['8 nm steps, k=' num2str(fp.k1)])
 
 function ft=plotwithfit(dat,dt)
 n=0:dt:max(dat);
