@@ -11,7 +11,8 @@ function [ax,finalImg] = plot(obj,locs,varargin)
 %   mPars
 %   plotType
 %   whichModel 
-%   Projection (character vectors): either 'xy', 'xz', or 'yz'.
+%   Projection (character vectors): either '' (default), 'xy', 'xz', or 'yz'.
+%   rotVizAlt (numeric vecotr): a vecotr of [az el], where az stands for azimuth and elevation angles.
 %   pixelSize (numeric scalar): the pixel size of the rendered image. Default: determined by the :obj:`SMLMModel`.
 %   axes
 %   movModel
@@ -142,18 +143,16 @@ end
 
 %% Get each model
 %         For the image type
-if isequal(results.plotType,'image')
-    % for an image model, use the method 'plot()' of image model class
-    % to generate the image
-    artBoard = zeros(imgSize);
-    for k = 1:obj.numOfModel
-        if ~isequal(obj.model{k}.modelType,'image')
-            obj.model{k}.deriveSigma(locs);
-        end
+modData = {};
+for k = 1:obj.numOfModel
+    if isequal(obj.model{k}.modelType,'image')
+        % for an image model, use the method 'plot()' of image model class
+        % to generate the image
+        artBoard = zeros(imgSize); % need to be removed
         if k==1
             oneMPars = obj.exportPars(k,'mPar');
             if ~results.movModel
-                modelImage{k} = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
+                modData{k} = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
             else %!!! only for the tac figures
                 oneLPars = obj.exportPars(k,'lPar');
                 img = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
@@ -172,16 +171,16 @@ if isequal(results.plotType,'image')
                 ind = sub2ind(imgSize, X(:),Y(:));
                 finalImg = artBoard;
                 finalImg(ind)=valNew;
-                modelImage{k} = finalImg;
-                
+                modData{k} = finalImg;
+
             end
         else
             oneMPars = obj.exportPars(k,'mPar');
             img = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
-            
+
             % translate lPar to mPar
             oneLPars = obj.exportPars(k,'lPar');          % get lPars
-            
+
             % get unit grid points
             if isfield(newLocs,'znm')
                 % for 3D
@@ -189,7 +188,7 @@ if isequal(results.plotType,'image')
                 zPos=oneLPars.z;
                 xrot=oneLPars.xrot;
                 yrot=oneLPars.yrot;
-                
+
                 ZMean = mean(Z(:));
                 cenZ = Z-ZMean;
             else
@@ -197,16 +196,16 @@ if isequal(results.plotType,'image')
                 [X,Y] = meshgrid(1:imgSize(1),1:imgSize(2));
             end
             F = griddedInterpolant(img,'cubic', 'nearest');
-            
+
             xPos=oneLPars.x;
             yPos=oneLPars.y;
             zrot=oneLPars.zrot;
-            
+
             XMean = mean(X(:)); YMean = mean(Y(:));
             cenX = X-XMean;
             cenY = Y-YMean;
-            
-            
+
+
             if isfield(newLocs,'znm')
                 % for 3D
                 [cenX, cenY, cenZ] = rotcoord3(cenX(:),cenY(:),cenZ(:),deg2rad(xrot),deg2rad(yrot),deg2rad(zrot),'XYZ');
@@ -220,15 +219,38 @@ if isequal(results.plotType,'image')
             end
             finalImg = artBoard;
             finalImg(ind) = valNew;
-            modelImage{k} = finalImg;
+            modData{k} = finalImg;
+        end
+    
+    else
+        obj.model{k}.deriveSigma(locs);
+        modData{k} = obj.getModPoint(results.modelSamplingFactor);
+    end
+end
+%% Render the models
+% For img models: generate for each model an image
+% For point models: do nothing
+
+img_imageModel = {};
+if isequal(results.plotType,'image')
+    for m = 1:length(modData)
+        if strcmp('image', obj.model{m}.modelType)
+            img_imageModel{m} = obj.getModImage(m);
         end
     end
 else
-    % For the point type
-%     modPoint = obj.getModPoint(results.modelSamplingFactor);
+    %!!! yet to be tested
+    if isempty(obj.modelLayer)
+        obj.updateLayer
+    end
+    layerPoint = obj.getLayerPoint(results.modelSamplingFactor);
 end
-%% Render the models
-% From models to layers: generate for each layer an image
+
+
+
+
+
+artBoard = zeros(imgSize);
 dataCol = {'r','g','b'};
 if isequal(results.plotType,'image')
 %     nameAllLut = mymakelut;

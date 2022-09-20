@@ -127,6 +127,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         modPoint = getModPoint(obj, modelSamplingFactor)
         layerPoint = getLayerPoint(obj, modSamplingF)
         modPoint = transModPoint(obj, modPoint,varargin)
+        img = getModImage(obj, modelID, varargin);
         fit(obj, locs, varargin)
         convertNow(obj, locs)
         stop = plotFreeRot(obj, varargin)
