@@ -394,7 +394,7 @@ function update_callback(a,b,obj, oneNp)
                     labels = {'ID','theta','curvature','radius','area'};
                     usedLabels = labels(p.labelOrder>0);
                     usedLabels((p.labelOrder(p.labelOrder>0))) = usedLabels;
-                    siteLabel = getLabels(subSites, usedLabels, s, fitterGUI_name);
+                    siteLabel = getLabels(subSites, usedLabels, s, fitterGUI_name, fitter);
                     posInPage = rem(s,nSitePage);
                     if posInPage==0
                         posInPage = nSitePage;
@@ -421,7 +421,7 @@ function update_callback(a,b,obj, oneNp)
     end
 end
 
-function siteLabel = getLabels(subSites, labels, siteInd, fitterGUI_name)
+function siteLabel = getLabels(subSites, labels, siteInd, fitterGUI_name, fitter)
 numOfUsedLabels = length(labels);
 for k = 1:numOfUsedLabels
     switch labels{k}
