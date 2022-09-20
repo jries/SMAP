@@ -9,7 +9,7 @@ fieldname1='steps';
 
 vel=[];
 tracklengthlocs=[];
-badind=[];
+badsteps=[];
 indstep=[];
 newtrack=[];
 for k=1:length(sites)
@@ -22,7 +22,7 @@ for k=1:length(sites)
     steptime(end+1:end+length(sh.dwelltime))=sh.dwelltime;
     vel(end+1)=sites(k).evaluation.(pluginname).stattrack.velocity;
     tracklengthlocs(end+1)=sites(k).evaluation.(pluginname).statall.nlocs;
-    badind(end+1:end+length(sh.badsteps))=sh.badsteps;
+    badsteps(end+1:end+length(sh.badsteps))=sh.badsteps;
     indstep(end+1:end+length(sh.indstepglobal))=sh.indstepglobal;
     nt=0*sh.indstepglobal;
     nt(1)=1;
@@ -36,11 +36,11 @@ end
 % 2. optionally: remove first step per track (it goes to boundary,
 % not necessarily a real step, last step already not taken into account)
 %instep refers to end of step
-removefirst=1;
+removefirst=0;
 removemintime=1;
 
 window=2; %+/- window
-mintime=6; %ms
+mintime=4; %ms
 
 badind=false(size(indstep));
 for k=1:length(indstep)
