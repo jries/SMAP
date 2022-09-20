@@ -9,7 +9,9 @@ fieldname1='steps';
 
 vel=[];
 tracklengthlocs=[];
-
+badind=[];
+indstep=[];
+newtrack=[];
 for k=1:length(sites)
     if ~isfield(sites(k).evaluation,pluginname) || ~isfield(sites(k).evaluation.(pluginname),fieldname1) % if no steps are found, look at next site
         k
@@ -20,7 +22,41 @@ for k=1:length(sites)
     steptime(end+1:end+length(sh.dwelltime))=sh.dwelltime;
     vel(end+1)=sites(k).evaluation.(pluginname).stattrack.velocity;
     tracklengthlocs(end+1)=sites(k).evaluation.(pluginname).statall.nlocs;
+    badind(end+1:end+length(sh.badsteps))=sh.badsteps;
+    indstep(end+1:end+length(sh.indstepglobal))=sh.indstepglobal;
+    nt=0*sh.indstepglobal;
+    nt(1)=1;
+    nt(end)=1;
+    newtrack(end+1:end+length(sh.indstepglobal))=nt;
+   
 end
+
+%identify bad steps
+% 1. bad time resolution
+% 2. optionally: remove first step per track (it goes to boundary,
+% not necessarily a real step, last step already not taken into account)
+%instep refers to end of step
+removefirst=1;
+removemintime=1;
+
+window=2; %+/- window
+mintime=6; %ms
+
+badind=false(size(indstep));
+for k=1:length(indstep)
+    if newtrack(k) && removefirstlast
+        badind(k)=true;
+    else
+        tstep=g.locData.loc.time(indstep(k)-window:indstep(k)+window);
+        if removemintime && any(diff(tstep)>mintime)
+            badind(k)=true;
+            badind(k+1)=true;
+        end
+    end
+end
+
+% stepsize(badind)=[];
+steptime(badind)=[];
 
 figure(188) %do the plotting
 subplot(2,2,1)
@@ -71,12 +107,12 @@ Ns=sum(ht(indt));
 
 %Hypoexp fit 16 nm
 fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k2);
-fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
+fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart*2,kstart*8,1]);
 plot(nt,fthyp(nt),'b')
 
 %16 nm, four equal constants
-fitf=@(k1,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k1+0.00013);
-fthyp4_1=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,1]);
+fitf=@(k1,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k1);
+fthyp4_1=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart*2,1]);
 plot(nt,fthyp4_1(nt),'c--')
 
 %Hypoexp fit 8 nm
@@ -84,7 +120,7 @@ fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexponentialpdf(x,[k1,k2]);
 [htmax,imax]=max(ht);
 kstart=1/nt(imax);
 % plot(nt,fitf(kstart,kstart*8,1,nt),'m--')
-fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*8,1]);
+fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
 plot(nt,fthyp2(nt),'m')
 
 %convolution of two exponentials with same rates, Peng dynein paper
@@ -157,7 +193,7 @@ fitf=@(k1,k2,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k2));
 fthypc=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
 plot(nt,fthypc(nt),'b')
 
-fitf=@(k1,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k1+0.001));
+fitf=@(k1,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k1));
 fthypc4_1=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,1]);
 plot(nt,fthypc4_1(nt),'c--')
 
