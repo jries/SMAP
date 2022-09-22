@@ -44,7 +44,7 @@ mintime=4; %ms
 
 badind=false(size(indstep));
 for k=1:length(indstep)
-    if newtrack(k) && removefirstlast
+    if newtrack(k) && removefirst
         badind(k)=true;
     else
         tstep=g.locData.loc.time(indstep(k)-window:indstep(k)+window);
