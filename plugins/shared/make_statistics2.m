@@ -391,7 +391,7 @@ for k=1:length(locs)
     tt=linspace(0,max(data.t),26);
     data.timewin(:,1)=tt(1:end-1);
     data.timewin(:,2)=tt(2:end)-1/100;
-    [corrdata, params] = spacetime_resolution(data, 'NTauBin', 10, 'Bootstrap', false,'R' ,0.5:1:250);
+    [corrdata, params] = spacetime_resolution(data, 'NTauBin', 10, 'Bootstrap', false,'R' ,0.5:1:250,'TEdgeMethod', 'unif');
     tau = corrdata.taubincenters;
     plot(axlsf1, corrdata.r, corrdata.nDg);
     lh = legend(axlsf1,arrayfun(@num2str, tau(1:end-1), 'UniformOutput', false));

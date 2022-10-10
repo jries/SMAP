@@ -27,7 +27,7 @@ switch W.type
     case 'polyshape'
         [interior, onedge] = isinterior(W.p, x,y);
         ind = interior | onedge;
-        ind=ind'; %XXXXX Jonas
+        ind = reshape(ind,size(x));
     case 'image'
         [r,c] = W.ref.worldToSubscript(x,y);
         i1 = ~isnan(r) & ~isnan(c);

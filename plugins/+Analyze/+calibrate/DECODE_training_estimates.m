@@ -149,7 +149,7 @@ end
 function makejsontable(obj)
 use.SMAP={'set_emitters_per_um2','zrange_nm','tensorboardport'};
 use.InOut={'calibration_file','experiment_out'};
-use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform'};
+use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform','PSF_min_mod_max'};
 use.Camera={'em_gain','e_per_adu','baseline','read_sigma','spur_noise','px_size'};
 use.Hardware={'device','device_simulation'};
 % use.Connect={'remote_workstation','local_decode_path','local_network_storage'};
@@ -352,8 +352,18 @@ function usecurrent_callback(a,b,obj)
     bgrange=bgminmax+ [-1, 1]*dbg*0.3;
     bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.0005)*0.9);
     js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
-
     
+%     PSF for 2D learning
+    if ~isempty(locsu.PSFxnm)
+        PSFminmax=quantile(locsu.PSFxnm,[0.02, 0.98]);
+        PSFmodal=stat.PSFsize.max;
+        js.Simulation.PSF_min_mod_max=double([PSFminmax(1) PSFmodal PSFminmax(2)]);
+    else
+        js.Simulation.PSF_min_mod_max=[];
+    end
+
+
+
     fi=obj.locData.files.file(1).info;
     js.Camera.em_gain=fi.emgain*fi.EMon;
     js.Camera.e_per_adu=fi.conversion;
@@ -436,8 +446,36 @@ saveyaml(obj.yamlpar,fout)
 end
 
 function saveyaml(yamlpar,fout)
+yamlpar=make2Dastig(yamlpar)
 yout=rmfield(yamlpar,'SMAP');
 WriteYamlSimple(fout, yout);
+end
+
+function yout=make2Dastig(yamlpar)
+if ~isempty(yamlpar.Simulation.PSF_min_mod_max)
+    % calculate PSF parameters
+    PSFmodal=yamlpar.Simulation.PSF_min_mod_max(2);
+    PSFmin=yamlpar.Simulation.PSF_min_mod_max(1);
+    pixelsize=mean(yamlpar.Camera.px_size);
+    w0=PSFmodal(1)*2;
+    dz=50; 
+    z=-dz+yamlpar.SMAP.zrange_nm(1):dz:yamlpar.SMAP.zrange_nm(2)+dz;
+    zR=pi*4*PSFmodal^2*1.4/600; % nm pi*w0^2+n/lambda, w0=2sigma,
+    zR=pi*4*(PSFmin+PSFmodal)^2/4*1.4/600;
+
+    wz=w0*sqrt(1+(z./zR).^2);
+    sigma_pix(1,1,:)=wz/2/pixelsize;
+
+    % calculate volume PSF
+    roisize=21;
+    n=-(roisize-1)/2:(roisize-1)/2;
+    [X,Y]=meshgrid(n);
+    PSFvol=exp(-(X.^2+Y.^2)/2./sigma_pix.^2)/pi/2./sigma_pix.^2;
+
+    % make splines
+    % Save PSF
+
+end
 end
 
 function finalizejson(obj)

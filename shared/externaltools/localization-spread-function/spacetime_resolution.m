@@ -19,6 +19,9 @@ function [out, params] = spacetime_resolution(varargin)
 %                               than nm.
 %               'Bootstrap' (default: false): Generate a bootstrapped confidence interval by resampling the
 %                               data. This is off by default because it takes a considerable amount of time.
+%               'TEdgeMethod', 'actual' or 'unif' (default: 'actual'): 
+%                               'actual': use density correction in the time edge correction.
+%                               'unif': assume uniform rate of localizations/frame
 
 % Copyright (C) 2021 Thomas Shaw, and Sarah Veatch
 % This file is part of SMLM SPACETIME RESOLUTION
@@ -117,8 +120,10 @@ g_diff_norm = g_diff./g_diff(1, :);
 %sigma startpoint is an optional parameter
 startpoint = [1 params.SigmaStartpoint];
 fitpts = r<100;
+sigma_lower_bound = sum(r([1 2]))/2; % set lower bound for sigma at upper edge of smallest radial bin
 for i=1:size(g_diff_norm, 2)
-    F = fit(r(fitpts)', g_diff_norm(fitpts, i), 'A*exp(-x.^2/4/s^2)', 'startpoint', startpoint, 'lower', [0 5]);
+    F = fit(r(fitpts)', g_diff_norm(fitpts, i), 'A*exp(-x.^2/4/s^2)',...
+            'startpoint', startpoint, 'lower', [0 sigma_lower_bound]);
     s(i) = F.s;
     ci = diff(confint(F, .68));
     
@@ -288,6 +293,7 @@ p.addParameter('NTauBin', 10, @(x) isnumeric(x) && isscalar(x))
 p.addParameter('TauEdges', [], @(x) isnumeric(x) && issorted(x))
 p.addParameter('SigmaStartpoint', 10, @(x) isnumeric(x) && isscalar(x))
 p.addParameter('Bootstrap', false)
+p.addParameter('TEdgeMethod', 'actual');
 %TODO: add more
 
 p.parse(args{:});

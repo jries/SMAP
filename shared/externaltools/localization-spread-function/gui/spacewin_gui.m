@@ -1,4 +1,33 @@
-% Copyright (C) 2021 Thomas Shaw
+function varargout = spacewin_gui(data,params)
+% SPACEWIN_GUI a helper gui for making spatial window objects for
+% point data
+%
+% SPACEWIN_GUI(DATA)    Start the gui using the data contained in DATA.
+%                       DATA should be a struct or struct array with fields
+%                       x, y, and t corresponding to the x, y coordinates
+%                       and time of observation of each point of the
+%                       dataset. Each struct in an array of structs is
+%                       interpreted as belonging to a different channel of
+%                       data. The gui provides options to save the resulting
+%                       spatial window struct to the base workspace or to a
+%                       MAT-file.
+%
+% SW = SPACEWIN_GUI(_)  As above, but the spatial window struct is returned
+%                       as the output arg SW.
+%
+% H = SPACEWIN_GUI(_,'FigHandle',true) 
+% [H,SW] = SPACEWIN_GUI(_,'FigHandle',true) In these forms, a figure handle
+%                                       for the gui is also returned as H.
+%
+% SPACEWIN_GUI(DATA,'Name',Value) Currently two name-value pairs are
+%                                 supported:
+%     'PixelSize' (scalar double)   pixel size to use to display the
+%                                   reconstructed image, in the same units
+%                                   as the x and y data.
+%     'Ref' (imref2d)               imref2d object to use for
+%                                   reconstructed image.
+
+% Copyright (C) 2022 Thomas R Shaw, Sarah L Veatch
 % This file is part of SMLM SPACETIME RESOLUTION
 % SMLM SPACETIME RESOLUTION is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -10,10 +39,8 @@
 % GNU General Public License for more details.
 % You should have received a copy of the GNU General Public License
 % along with SMLM SPACETIME RESOLUTION.  If not, see <https://www.gnu.org/licenses/>
-
-function varargout = spacewin_gui(data,params)
 arguments
-    data (1,1) struct {mustHaveXYFields}
+    data (1,:) struct {mustHaveXYFields}
     params.PixelSize (1,1) double = 12
     params.Ref = []
     params.FigHandle (1,1) logical = false;
@@ -37,18 +64,21 @@ handles.lpanel = uipanel(fig, 'Units', 'centimeters');
 ax = axes(handles.rpanel, 'Units', 'normalized', 'OuterPosition', [0.01 0.01 .98 .98]);
 handles.ax = ax;
 
+
+
 % Show the data
 handles.data = data;
 if isempty(params.Ref)
-    handles.ref = default_iref([data.x(:),data.y(:)],params.PixelSize);
+    handles.ref = default_iref([data(1).x(:),data(1).y(:)],params.PixelSize);
 else
     handles.ref = params.Ref;
     params.PixelSize = params.Ref.PixelExtentInWorldX;
 end
 handles.psize = handles.ref.PixelExtentInWorldX;
-handles.I = gausblur(reconstruct(data,handles.ref), 15/handles.psize);
+handles.I = gausblur(reconstruct(data(1),handles.ref), 15/handles.psize);
 
 handles.im_obj = imshow(handles.I,handles.ref, 'Parent', handles.ax);
+
 % make the axes nicer?
 caxis(ax,[0,1]);
 hold(ax, 'on');
@@ -69,8 +99,28 @@ handles.type_label = uicontrol(handles.lpanel, 'Style', 'text', ...
 handles.type_menu = uicontrol(handles.lpanel, 'Style', 'popupmenu',...
     'String',{'polyshape', 'image', 'polygon'}, 'Value', 2);
 
-handles.lpanel_uic_list = {'addbtn', 'rmbtn', 'break',...
-    'type_label','type_menu'};
+handles.cmax_label = uicontrol(handles.lpanel, 'Style', 'text', ...
+    'String', 'saturation intensity (cmax)');
+handles.cmax_edit = uicontrol(handles.lpanel, 'Style', 'edit', ...
+        'String', '1', 'Callback', @updatecmax);
+handles.channel_label = uicontrol(handles.lpanel, 'Style', 'text', ...
+    'String', 'channel number');
+
+Nchannels = numel(data);
+channelnames = cell(1,Nchannels);
+for i=1:Nchannels, channelnames{i} = num2str(i); end
+handles.channel_menu = uicontrol(handles.lpanel, 'Style', 'popupmenu',...
+    'String',channelnames, 'Value', 1, 'Callback', @updateimage);
+handles.timerange_label = uicontrol(handles.lpanel, 'Style', 'text', ...
+    'String', 'time range (min)');
+handles.timerange_min = uicontrol(handles.lpanel, 'Style', 'edit',...
+    'String',num2str(min(data(1).t)/60, 2),'Callback', @updateimage);
+handles.timerange_max = uicontrol(handles.lpanel, 'Style', 'edit',...
+    'String',num2str(max(data(1).t)/60, 2),'Callback', @updateimage);
+
+handles.lpanel_uic_list = {'addbtn', 'rmbtn', 'break', 'type_label',...
+    'type_menu', 'cmax_label', 'cmax_edit', 'channel_label',...
+    'channel_menu', 'timerange_label', 'timerange_min', 'timerange_max'};
 
 if show_save_btns
     handles.varname_label = uicontrol(handles.lpanel, 'Style', 'text', ...
@@ -142,8 +192,8 @@ end
         % just lay them out vertically, separated by dy, taking up (almost)
         % full width of panel
         ll = handles.lpanel_uic_list;
-        for i=1:numel(ll)
-            uiname = ll{i};
+        for j=1:numel(ll)
+            uiname = ll{j};
             switch uiname
                 case 'break'
                     y = y - dy_break;
@@ -196,7 +246,7 @@ end
         varname = handles.varname_edit.String;
         
         try
-            q = evalin('base', varname);
+            q = evalin('base', varname); %#ok<NASGU>
             %if you get to here, there is a var varname in base
             answer = questdlg(...
                 sprintf('Are you sure you want to overwrite variable %s in base workspace?', varname),...
@@ -257,4 +307,28 @@ end
 if hasx
     data.x = x; data.y = y;
 end
+end
+
+function updatecmax(obj, ~)
+        handles = guidata(obj);
+        cmax = str2double(handles.cmax_edit.String);
+        if isfinite(cmax)
+            caxis(handles.ax,[0,cmax]);
+        else
+            handles.cmax_edit.String = "1";
+        end
+end
+
+function updateimage(obj, ~)
+    handles = guidata(obj);
+    channel = handles.channel_menu.Value;
+    tmin = 60*str2double(handles.timerange_min.String);
+    tmax = 60*str2double(handles.timerange_max.String);
+    keep = handles.data(channel).t >= tmin & handles.data(channel).t <= tmax;
+    d.x = handles.data(channel).x(keep);
+    d.y = handles.data(channel).y(keep);
+    handles.I = gausblur(reconstruct(d,handles.ref), 15/handles.psize);
+    %handles.im_obj = imshow(handles.I,handles.ref, 'Parent', handles.ax);
+    set(handles.im_obj, 'CData', handles.I);
+    drawnow
 end

@@ -1,3 +1,6 @@
+function taufactor = time_edge_correction_unif(tau_edges, timewin)
+% TIME_EDGE_CORRECTION_UNIF temporal edge correction assuming uniform rate
+
 % Copyright (C) 2021 Thomas Shaw, and Sarah Veatch
 % This file is part of SMLM SPACETIME RESOLUTION
 % SMLM SPACETIME RESOLUTION is free software: you can redistribute it and/or modify
@@ -11,24 +14,14 @@
 % You should have received a copy of the GNU General Public License
 % along with SMLM SPACETIME RESOLUTION.  If not, see <https://www.gnu.org/licenses/>
 
-function taufactor = time_edge_correction_unif(tau, timewin)
-tmax = numel(timevec);
-timediffs = zeros(tmax*(tmax-1)/2, 1);
-count = 1;
-for i = 1:tmax-1
-    for j = i:tmax
-        timediffs(count) = timevec(j) - timevec(i);
-        count = count + 1;
-    end
+tau = tau_edges(2:end) - diff(tau_edges)/2;
+
+if ~timewin_isvalid(timewin)
+    error('time_edge_correction: invalid time window provided');
 end
 
-dt = tau(2)-tau(1);
+T = timewin_duration(timewin);
+overlap = arrayfun(@(t) timewin_overlap(timewin, timewin + t), tau);
 
-[~, ~, bin] = histcounts(timediffs, [tau]);% tau(end)+2*dt]);
-inds = bin>0 & bin <= tau(end)/dt + 1;
-exptauperbin = accumarray(bin(inds), 1, [ntout,1]);
-taufactor = exptauperbin/numel(timevec);
-taufactor = taufactor';
-
+taufactor = overlap/T;
 end
-
