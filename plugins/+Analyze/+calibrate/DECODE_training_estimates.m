@@ -354,7 +354,7 @@ function usecurrent_callback(a,b,obj)
     js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
     
 %     PSF for 2D learning
-    if ~isempty(locsu.PSFxnm)
+    if ~isempty(locsu.PSFxnm) && isempty(locsu.znm)
         PSFminmax=quantile(locsu.PSFxnm,[0.02, 0.98]);
         PSFmodal=stat.PSFsize.max;
         js.Simulation.PSF_min_mod_max=double([PSFminmax(1) PSFmodal PSFminmax(2)]);
