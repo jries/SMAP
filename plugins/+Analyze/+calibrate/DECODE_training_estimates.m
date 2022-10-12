@@ -26,7 +26,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                end
 
                [~,fname]=fileparts(obj.locData.files.file(1).name);
-               yamlpath=[obj.yamlpar.InOut.experiment_out  'DECODE_train_local_' fname '.yaml'];
+               yamlpath=[obj.yamlpar.InOut.experiment_out filesep 'DECODE_train_local_' fname '.yaml'];
                if ~exist(obj.yamlpar.InOut.experiment_out,'dir')
                    mkdir(obj.yamlpar.InOut.experiment_out);
                end
@@ -214,7 +214,7 @@ dat=obj.guihandles.parttable.Data;
 js=obj.yamlpar;
 for k=1:size(dat,1)
     vjs=js.(dat{k,1}).(dat{k,2});
-    if isnumeric(obj.jsontypes.(dat{k,1}).(dat{k,2}))
+    if isnumeric(obj.jsontypes.(dat{k,1}).(dat{k,2})) && ~isempty(dat{k,3})
        vh=str2num(dat{k,3});
        js.(dat{k,1}).(dat{k,2})=reshape(vh,obj.jsontypes.(dat{k,1}).(dat{k,2}));
     else
@@ -365,7 +365,11 @@ function usecurrent_callback(a,b,obj)
 
 
     fi=obj.locData.files.file(1).info;
-    js.Camera.em_gain=fi.emgain*fi.EMon;
+    if fi.EMon
+        js.Camera.em_gain=fi.emgain;
+    else
+        js.Camera.em_gain=[];
+    end
     js.Camera.e_per_adu=fi.conversion;
     js.Camera.px_size=fi.cam_pixelsize_um([2 1])*1000;
     js.Camera.baseline=fi.offset;
@@ -446,7 +450,7 @@ saveyaml(obj.yamlpar,fout)
 end
 
 function saveyaml(yamlpar,fout)
-yamlpar=make2Dastig(yamlpar)
+yamlpar=make2Dastig(yamlpar);
 yout=rmfield(yamlpar,'SMAP');
 WriteYamlSimple(fout, yout);
 end
@@ -460,8 +464,8 @@ if ~isempty(yamlpar.Simulation.PSF_min_mod_max)
     w0=PSFmodal(1)*2;
     dz=50; 
     z=-dz+yamlpar.SMAP.zrange_nm(1):dz:yamlpar.SMAP.zrange_nm(2)+dz;
-    zR=pi*4*PSFmodal^2*1.4/600; % nm pi*w0^2+n/lambda, w0=2sigma,
-    zR=pi*4*(PSFmin+PSFmodal)^2/4*1.4/600;
+%     zR=pi*4*PSFmodal^2*1.4/600; % nm pi*w0^2+n/lambda, w0=2sigma,
+    zR=pi*4*(PSFmin+PSFmodal)^2/4*1.4/600;% nm pi*w0^2+n/lambda, w0=2sigma,
 
     wz=w0*sqrt(1+(z./zR).^2);
     sigma_pix(1,1,:)=wz/2/pixelsize;
@@ -472,9 +476,25 @@ if ~isempty(yamlpar.Simulation.PSF_min_mod_max)
     [X,Y]=meshgrid(n);
     PSFvol=exp(-(X.^2+Y.^2)/2./sigma_pix.^2)/pi/2./sigma_pix.^2;
 
-    % make splines
+    %calculate cspline coefficients
+     coeffr = single(Spline3D_interp(PSFvol));
     % Save PSF
+    SXY.cspline.coeff{1}=coeffr;
+    SXY.cspline.dz=dz;
+    SXY.cspline.z0=ceil(size(PSFvol,3)/2);
+    SXY.cspline.x0=round((roisize+1)/2);
+    SXY.cspline.mirror=0;
 
+%     parameters.midpoint=ceil(size(PSFvol,3)/2);
+%     parameters.mirror=false;
+%     parameters.dz=dz;
+    parameters.zR=zR;
+    parameters.w0=w0;
+    fout=[yamlpar.InOut.experiment_out '/Gauss_3dcal.mat'];
+    save(fout,'SXY','parameters')
+    yout=yamlpar;
+    yout.InOut.calibration_file=fout;
+    yout.Simulation.emitter_extent{3}{1}=0;
 end
 end
 
