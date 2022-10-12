@@ -8,7 +8,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
     methods
         function obj=PeakCombiner(varargin)
             obj@interfaces.WorkflowModule(varargin{:});
-             obj.inputParameters={'loc_loc_filter_sigma','EMon','loc_ROIsize','loc_fileinfo','loc_multifile'};
+             obj.inputParameters={'loc_loc_filter_sigma','EMon','loc_ROIsize','loc_fileinfo','loc_multifile','loc_4Pichanneldrift'};
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -17,16 +17,38 @@ classdef PeakCombiner<interfaces.WorkflowModule
             initGui@interfaces.WorkflowModule(obj);
         end
         function prerun(obj,p)
-            l=load(p.Tfile);
-            if isfield(l,'transformation')
-                obj.transform=l.transformation;  
-            elseif isfield(l,'SXY')
-                obj.transform=l.SXY(1).cspline.global.transformation;
-            elseif isfield(l,'saveloc')
-                obj.transform=l.saveloc.file.transformation;
-            else
-                errordlg(['no transformation found in' p.Tfile])
+            [~,~,ext]=fileparts(p.Tfile);
+            switch ext
+                case '*.mat'
+                    l=load(p.Tfile);
+                    if isfield(l,'transformation')
+                        obj.transform=l.transformation;  
+                    elseif isfield(l,'SXY')
+                        obj.transform=l.SXY(1).cspline.global.transformation;
+                    elseif isfield(l,'saveloc')
+                        obj.transform=l.saveloc.file.transformation;
+                    elseif isfield(l,'T')
+                        obj.transform.T=double(cat(3,eye(3,3),permute(l.T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
+                        obj.transform.centercoord=l.imgcenter;
+                    else
+                        errordlg(['no transformation found in' p.Tfile])
+                    end
+                case '.h5'
+                    l=loadh5(p.Tfile);
+                    T=l.res.T;
+                    s=size(T);
+                    if length(s)==2 %2Ch
+                        obj.transform.T=double(cat(3,eye(3,3),permute(T,[2 ,1]))); % xXXX create transform with that matrix.
+                    elseif length(s)==3 %4Pi
+                        obj.transform.T=double(cat(3,eye(3,3),permute(T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
+                    end
+                    obj.transform.centercoord=l.res.imgcenter;
+                    
+                    obj.transform.params = jsondecode(h5readatt(p.Tfile,'/','params'));
+                    obj.transform.images_size=double(l.rois.image_size(end:-1:1));
+                  
             end
+                    
             obj.setPar('loc_globaltransform',obj.transform);
         end
         function dato=run(obj,data,p)
@@ -163,29 +185,10 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 ct(:,2,:)=ct(:,2,:)-roi(2);
                 %test dc XXXXX
                 ctt=ct;
-%                 offsettest=ones(size(ccombined,1),1);
-%                 ctt(:,1,2)=ctt(:,1,2)+offsettest*0;
-%             
             
                 ctr=round(ctt);
                 dc=ct-ctr;
-%                 dc(:,:,2)=dc(:,:,2)-dc(:,:,1);
-%                 dc(:,:,1)=dc(:,:,1)*0;
 
-                
-%                 cout=[];
-%                 dcout=[];
-%                 indout=[];
-%                 cref=[];
-                %sort alternating. This is inline with dual-channel
-                
-%                 for k=1:transform.channels
-%                     cout=vertcat(cout,ctr(:,:,k));
-%                     dcout=vertcat(dcout,dc(:,:,k));
-%                     indout=vertcat(indout,(1:size(ctr,1))');
-%                     cref=vertcat(cr,cr);
-%                     
-%                 end
 
                 cout=permute(ctr,[2 3 1]);
                 dcout=permute(dc,[2 3 1]);
@@ -201,23 +204,120 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 maxout.dy=squeeze(dyh(:));
                 dato=data;
                 dato.data=maxout;
+            elseif isfield(obj.transform,'T') %new 4Pi
+                if p.framecorrection
+                    drift=p.loc_4Pichanneldrift;
+                    s=size(drift.dx,1);
+                    driftx=drift.dx(min(s,data.frame),:);
+                    drifty=drift.dy(min(s,data.frame),:);
+                else
+                    driftx=zeros(1,4);drifty=zeros(1,4);
+                end
+                
+                if numel(maxima)==1 %all localizations on one chip
+                    maximas=splitlocschannels(maxima,obj.transform);
+                else
+                    maximas=maxima;
+                end
+
+                % plus or minus drift??
+                xpix=(maximas(1).xpix+roi(1))+driftx(1); %still x,y inconsistency! solve
+                ypix=(maximas(1).ypix+roi(2))+drifty(1); %put on camera chip
+                cref=[xpix,ypix,ones(size(xpix))];
+                
+                Nc=(maximas(1).phot);
+                ccombined=cref;
+%                 ct(:,:,1)=cref(:,1:2);
+% if 0
+                for k=2:length(maximas)    
+                    Nt=maximas(k).phot;
+                    T=obj.transform.T(:,:,k);
+                    Tinv=inv(T);
+                    cN=[maximas(k).xpix+roi(1),maximas(k).ypix+roi(2),ones(size(maximas(k).ypix))];
+                    ctarget=transformT4Pi(cN,Tinv,obj.transform.centercoord);
+%                     ctarget=(Tinv*cN')';
+
+%                     if p.framecorrection
+%                         ctarget=transform.transformToReferenceFramecorrection(k,cpix(indch,:)-multioffsetpix,data.frame);
+%                     else
+%                         ctarget=transform.transformToReference(k,cpix(indch,:)-multioffsetpix);
+%                     end
+                    ctarget(:,1)=ctarget(:,1)-driftx(k);
+                    ctarget(:,2)=ctarget(:,2)-drifty(k);
+                    
+                    [iA,iB,uiA,uiB]=matchlocs(ccombined(:,1),ccombined(:,2),ctarget(:,1),ctarget(:,2),[0 0],6);
+                    if isempty(iA)
+                        cnew=[];
+                    else
+                        cnew=(ccombined(iA,:).*Nc(iA)+ctarget(iB,:).*Nt(iB))./(Nc(iA)+Nt(iB));
+                    end
+                    ccombined=vertcat(ccombined(uiA,:),ctarget(uiB,:),cnew);
+                    Nc=vertcat(Nc(uiA),Nt(uiB),(Nc(iA)+Nt(iB)));
+%                     ctar=(T*ccombined')';
+%                     ct(end+1:end+size(ctar,1),:,k)=ctar(:,1:2);
+                end
+% end
+
+                %
+                ccombined=round(ccombined);
+
+                for k=length(maximas):-1:1
+                    T=obj.transform.T(:,:,k);
+                    ct=transformT4Pi(ccombined,T,obj.transform.centercoord);
+%                     ct=(T*ccombined')';
+                    ct(:,1)=ct(:,1)-roi(1)+driftx(k); %bring back to ROI on camera
+                    ct(:,2)=ct(:,2)-roi(2)+drifty(k);
+                    ctt=ct(:,1:2);
+                    ctr=round(ctt);
+                    dc=ct(:,1:2)-ctr;
+
+                    maxout(k).xpix=ct(:,1);
+                    maxout(k).ypix=ct(:,2);
+    
+                    maxout(k).ID=k*ones(size(maxout(k).xpix));
+                    maxout(k).dx=dc(:,1);
+                    maxout(k).dy=dc(:,2);
+                end
+           
+
+% %                 ct(:,:,2)=ct(:,:,2);
+%                 ct(:,1,:)=ct(:,1,:)-roi(1); %bring back to ROI on camera
+%                 ct(:,2,:)=ct(:,2,:)-roi(2);
+%                 %test dc XXXXX
+%                 ctt=ct;
+%             
+%                 ctr=round(ctt);
+%                 dc=ct-ctr;
+% 
+% 
+%                 cout=permute(ctr,[2 3 1]);
+%                 dcout=permute(dc,[2 3 1]);
+%                 indout=repmat((1:size(ctr,1)),1,length(maxima));
+%                 xh=cout(1,:,:);yh=cout(2,:,:);
+%                 dxh=dcout(1,:,:);dyh=dcout(2,:,:);
+                
+    
+                dato=data;
+                dato.data=maxout;
+
             else
+
                 adslf
             end
         end
         function loadbutton(obj,a,b)
             fn=obj.guihandles.Tfile.String;
             path=fileparts(fn);
+            filter={'*3Dcal.mat;psfmodel*.h5'};
             if ~exist(path,'file')
                 fn=[fileparts(obj.getPar('loc_outputfilename')) filesep '*.mat'];
             end
-            [f,path]=uigetfile(fn,'Select transformation file _T.mat');
+            [f,path]=uigetfile(filter,'Select transformation file _T.mat',fn);
             if f
-                Tload=load([path f],'transformation');
-                if ~isfield(Tload,'transformation')
-                    msgbox('could not find transformation in file. Load other file?')
-                end
-                
+%                 Tload=load([path f],'transformation');
+%                 if ~isfield(Tload,'transformation')
+%                     msgbox('could not find transformation in file. Load other file?')
+%                 end
                 obj.guihandles.Tfile.String=[path f];
                 obj.setPar('transformationfile',[path f]);
             end      
@@ -225,7 +325,33 @@ classdef PeakCombiner<interfaces.WorkflowModule
     end
 end
 
+function cto=transformT4Pi(ccombined,T,centercoord)
+% ccombinedh=ccombined(:,[2 1 3]);
+ccombinedh=ccombined;
+ct=(T*(ccombinedh-centercoord)')'+centercoord;
+% cto=ct(:,[2 1 3]);
+cto=ct;
+end
 
+function  maximao=splitlocschannels(maxima,t)
+switch t.params.channel_arrange
+    case 'up-down'
+        direction='ypix';
+        mp=t.images_size(1);
+
+    case 'right-left'
+        direction='xpix';
+        mp=t.images_size(2);
+end
+ind=maxima.(direction)<=mp;
+maximao(1)=copystructReduce(maxima,ind);
+maximao(2)=copystructReduce(maxima,~ind);
+if strcmp(t.params.mirrortype,'none')
+    maximao(2).(direction)=maximao(2).(direction)-mp;
+else
+    maximao(2).(direction)=2*mp-maximao(2).(direction);
+end
+end
 
 function pard=guidef(obj)
 pard.Tfile.object=struct('Style','edit','String','*_T.mat');

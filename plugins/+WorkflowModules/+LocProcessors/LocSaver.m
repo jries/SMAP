@@ -16,6 +16,7 @@ classdef LocSaver<interfaces.WorkflowModule
 %         saveframes=100;
         savefields=struct('fieldnames',{{''}},'tosave',{{''}},'notsave',{{'PSFxerr','PSFyerr','bgerr','locpthompson','peakfindx','peakfindy'}});
         savefit
+        saveon=true;
         
     end
     methods
@@ -129,6 +130,10 @@ classdef LocSaver<interfaces.WorkflowModule
                 templocs=[];numlocs=[];
                 return
             end
+%             if ~obj.saveon %no saving required
+%                 output=data;
+%                 return;
+%             end
             output=[];
             if obj.getPar('loc_preview')
                 try 
@@ -237,25 +242,26 @@ classdef LocSaver<interfaces.WorkflowModule
                 obj.locDatatemp.files.file.savefit=obj.savefit;
                 obj.locDatatemp.files.file.imagetags=obj.getPar('loc_imagetags');
                 try
-                displayimagetags(obj,obj.locDatatemp.files.file.imagetags)
+                    displayimagetags(obj,obj.locDatatemp.files.file.imagetags)
+                    if ~contains(filename,'nosave') && obj.saveon
+                        try
+                             obj.locDatatemp.savelocs(filename,[],struct('fitparameters',fitpar));
+                        catch err
+                            [~,name,ext]=fileparts(filename);
+                            filenamenew=[pwd filesep name ext];
+                            obj.locDatatemp.savelocs(filenamenew,[],struct('fitparameters',fitpar));
+                            warndlg('could not save sml file. Saved in local directory')
+                            err
+                        end
+                        
+                        if p.savelocal
+                            movefile(filename,filenameremote);
+                        end
+                    end
                 catch err
                     disp('could not read all image tags')
                 end
-                if ~contains(filename,'nosave')
-                try
-                     obj.locDatatemp.savelocs(filename,[],struct('fitparameters',fitpar));
-                catch err
-                    [~,name,ext]=fileparts(filename);
-                    filenamenew=[pwd filesep name ext];
-                    obj.locDatatemp.savelocs(filenamenew,[],struct('fitparameters',fitpar));
-                    warndlg('could not save sml file. Saved in local directory')
-                    err
-                end
-                
-                if p.savelocal
-                    movefile(filename,filenameremote);
-                end
-                end
+        
 %               write to main GUI
 %                 obj.locData.clear;
                 obj.locData.setLocData(obj.locDatatemp);
@@ -263,6 +269,7 @@ classdef LocSaver<interfaces.WorkflowModule
                 initGuiAfterLoad(obj);
                 obj.setPar('mainfile',mainfile);
                 [path,file]=fileparts(filename);
+
                 try
                 imageout=makeSRimge(obj,obj.locDatatemp);
                 options.comp='jpeg';
