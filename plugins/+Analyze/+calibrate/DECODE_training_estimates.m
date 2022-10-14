@@ -462,6 +462,7 @@ WriteYamlSimple(fout, yout);
 end
 
 function yout=make2Dastig(yamlpar)
+yout=yamlpar;
 if ~isempty(yamlpar.Simulation.PSF_min_mod_max)
     % calculate PSF parameters
     PSFmodal=yamlpar.Simulation.PSF_min_mod_max(2);
@@ -542,12 +543,15 @@ function setz(obj)
     if isempty(obj.yamlpar.InOut.experiment_out)
         obj.yamlpar.InOut.experiment_out=fileparts(calf);
     end
+    if isfield(l,'parameters')
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
     zminmax(2)=min(zminmax(2),zr);
+    end
     
  end
  obj.yamlpar.SMAP.zrange_nm=zminmax;
+ 
 end
 
 function stoplearning_callback(a,b,obj)
