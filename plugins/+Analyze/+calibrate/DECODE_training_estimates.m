@@ -218,8 +218,9 @@ function table2json(obj)
 dat=obj.guihandles.parttable.Data;
 js=obj.yamlpar;
 for k=1:size(dat,1)
-    vjs=js.(dat{k,1}).(dat{k,2});
-    if isnumeric(obj.jsontypes.(dat{k,1}).(dat{k,2})) && ~isempty(dat{k,3})
+    if ~isfield(js.(dat{k,1}),(dat{k,2}))
+        js.(dat{k,1}).(dat{k,2})='';
+    elseif isnumeric(obj.jsontypes.(dat{k,1}).(dat{k,2})) && ~isempty(dat{k,3})
        vh=str2num(dat{k,3});
        js.(dat{k,1}).(dat{k,2})=reshape(vh,obj.jsontypes.(dat{k,1}).(dat{k,2}));
     else
