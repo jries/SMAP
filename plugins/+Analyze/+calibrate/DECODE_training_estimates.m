@@ -171,7 +171,12 @@ for f=1:length(fnu)
     for k=1:length(fnh)
         tab{ind,1}=fnu{f};
         tab{ind,2}=fnh{k};
-        vh=js.(fnu{f}).(fnh{k});
+        if isfield(js.(fnu{f}),fnh{k})
+            vh=js.(fnu{f}).(fnh{k});
+        else
+            vh='';
+        end
+        
         if isempty(vh)
             vh='';
         end
