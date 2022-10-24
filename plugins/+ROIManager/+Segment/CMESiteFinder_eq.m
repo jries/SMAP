@@ -6,7 +6,8 @@ classdef CMESiteFinder_eq<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         
         function out=run(obj,p)  
-          run_CMESiteFinder_eq(obj,p)
+%           run_CMESiteFinder_eq(obj,p)
+          run_CMESiteFinder_eq_new(obj,p)
           out=[];
         end
         function pard=guidef(obj)
