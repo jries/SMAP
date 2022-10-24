@@ -41,7 +41,7 @@ classdef sphericalCap3D_surfaceArea<geometricModel
             closeAngle = par.closeAngle;
             lNeg = closeAngle<0;
             if lNeg
-                closeAngle = deg2rad(abs(closeAngle));
+                closeAngle = abs(closeAngle)-180;
             end
             closeAngle = deg2rad(closeAngle);
             
