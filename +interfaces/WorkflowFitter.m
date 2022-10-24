@@ -103,6 +103,7 @@ classdef WorkflowFitter<interfaces.WorkflowModule
             end
             
             persistent reporttimer
+%             numch=length(dstruc.info);
             out=[];
             passbg=(obj.inputChannels==2);%~isempty(fitterbgstack);
             fninfo=fieldnames(fitterstackinfo{1});
@@ -148,10 +149,10 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                 for X=1:sxy(1)
                     for Y=1:sxy(2)
                         if obj.spatial3Dcal&&numberInBlockh>1  %later: dont rearrange, but use instack pointer.
-                            inblock=find(stackinf.xpix+roi(1)>=xrange{X,Y}(1) & stackinf.xpix+roi(1)<=xrange{X,Y}(2) & stackinf.ypix+roi(2)>=yrange{X,Y}(1) & stackinf.ypix+roi(2)<=yrange{X,Y}(2)); 
+                            inblock=find(stackinf(1).xpix+roi(1)>=xrange{X,Y}(1) & stackinf(1).xpix+roi(1)<=xrange{X,Y}(2) & stackinf(1).ypix+roi(2)>=yrange{X,Y}(1) & stackinf(1).ypix+roi(2)<=yrange{X,Y}(2)); 
 %                             inblock=find(stackinf.x>=xrange(X) & stackinf.x<=xrange(X+1) & stackinf.y>=yrange(Y) & stackinf.y<=yrange(Y+1)); 
                         else
-                            inblock=1:length(stackinf.xpix);
+                            inblock=1:length(stackinf(1).xpix);
                         end
                         fitstack
 %                         if eof
@@ -186,16 +187,20 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                      imagestowrite=numberInBlockh-stackindh(X,Y)+1;
 
                      %images
-                     fitterimagestack{X,Y}(:,:,stackindh(X,Y):end)=imgstack(:,:,inblock(startinstack:startinstack+imagestowrite-1));
+                     fitterimagestack{X,Y}(:,:,stackindh(X,Y):end,:)=imgstack(:,:,inblock(startinstack:startinstack+imagestowrite-1),:);
                      if passbg %background
-                        fitterbgstack{X,Y}(:,:,stackindh(X,Y):end)=bgstack(:,:,inblock(startinstack:startinstack+imagestowrite-1));
+                        fitterbgstack{X,Y}(:,:,stackindh(X,Y):end,:)=bgstack(:,:,inblock(startinstack:startinstack+imagestowrite-1),:);
                      end
                      for fsi=1:length(fninfo) %stackinfor
-                        fitterstackinfo{X,Y}.(fninfo{fsi})(stackindh(X,Y):end)=stackinf.(fninfo{fsi})(inblock(startinstack:startinstack+imagestowrite-1));
+                         for ch=1:length(stackinf)
+                            fitterstackinfo{X,Y}(ch).(fninfo{fsi})(stackindh(X,Y):end)=stackinf(ch).(fninfo{fsi})(inblock(startinstack:startinstack+imagestowrite-1));
+                         end
                      end
 
                      %do fitting
-                     stackinfoout=copyfields(fitterstackinfo{X,Y},struct('X',X,'Y',Y));
+                     for ch=length(stackinf):-1:1
+                        stackinfoout(ch)=copyfields(fitterstackinfo{X,Y}(ch),struct('X',X,'Y',Y));
+                     end
                      if passbg
                         locs=obj.fit(fitterimagestack{X,Y},fitterbgstack{X,Y},stackinfoout);
                      else
@@ -210,12 +215,14 @@ classdef WorkflowFitter<interfaces.WorkflowModule
                      stackindh(X,Y)=1;
                      newstackind=imagesleft;
                  end
-                 fitterimagestack{X,Y}(:,:,stackindh(X,Y):stackindh(X,Y)+imagesleft-1)=imgstack(:,:,inblock(startinstack:end));
+                 fitterimagestack{X,Y}(:,:,stackindh(X,Y):stackindh(X,Y)+imagesleft-1,:)=imgstack(:,:,inblock(startinstack:end),:);
                  if passbg
-                    fitterbgstack{X,Y}(:,:,stackindh(X,Y):stackindh(X,Y)+imagesleft-1)=bgstack(:,:,inblock(startinstack:end));
+                    fitterbgstack{X,Y}(:,:,stackindh(X,Y):stackindh(X,Y)+imagesleft-1,:)=bgstack(:,:,inblock(startinstack:end),:);
                  end
                  for fsi=1:length(fninfo) %stackinfor
-                        fitterstackinfo{X,Y}.(fninfo{fsi})(stackindh(X,Y):stackindh(X,Y)+imagesleft-1)=stackinf.(fninfo{fsi})(inblock(startinstack:end));
+                     for ch=1:length(stackinf)
+                        fitterstackinfo{X,Y}(ch).(fninfo{fsi})(stackindh(X,Y):stackindh(X,Y)+imagesleft-1)=stackinf(ch).(fninfo{fsi})(inblock(startinstack:end));
+                     end
                  end
                  obj.stackind(X,Y)=stackindh(X,Y)+imagesleft-1;
 
@@ -236,13 +243,17 @@ classdef WorkflowFitter<interfaces.WorkflowModule
 %                 if eof
                     if obj.numberInBlock>1
                         for fsi=1:length(fninfo) %stackinfor
-                            fitterstackinfo{X,Y}.(fninfo{fsi})=fitterstackinfo{X,Y}.(fninfo{fsi})(1:obj.stackind(X,Y));
+                            for ch=1:length(fitterstackinfo{1,1})
+                                fitterstackinfo{X,Y}(ch).(fninfo{fsi})=fitterstackinfo{X,Y}(ch).(fninfo{fsi})(1:obj.stackind(X,Y));
+                            end
                         end
-                        stackinfoout=copyfields(fitterstackinfo{X,Y},struct('X',X,'Y',Y));
+                        for ch=length(fitterstackinfo{1,1}):-1:1
+                            stackinfoout(ch)=copyfields(fitterstackinfo{X,Y}(ch),struct('X',X,'Y',Y));
+                        end
                         if passbg
-                            locs=obj.fit(fitterimagestack{X,Y}(:,:,1:obj.stackind(X,Y)),fitterbgstack{X,Y}(:,:,1:obj.stackind(X,Y)),stackinfoout);
+                            locs=obj.fit(fitterimagestack{X,Y}(:,:,1:obj.stackind(X,Y),:),fitterbgstack{X,Y}(:,:,1:obj.stackind(X,Y),:),stackinfoout);
                         else
-                            locs=obj.fit(fitterimagestack{X,Y}(:,:,1:obj.stackind(X,Y)),stackinfoout);
+                            locs=obj.fit(fitterimagestack{X,Y}(:,:,1:obj.stackind(X,Y),:),stackinfoout);
                         end
 %                         if obj.stackind(X,Y)>0
 %                         [locs.asymmetry,locs.asymmdiag,locs.asymangle]=asymmetry(fitterimagestack{X,Y}(:,:,1:obj.stackind(X,Y)),true);
@@ -262,7 +273,7 @@ end
 
 function initstacks(obj,info)
 global fitterstackinfo fitterimagestack fitterbgstack
-
+numch=length(info);
  roisize=obj.getPar('loc_ROIsize');
 %             obj.numberInBlock=round(5500*100/roisize^2);
             sxy=size(obj.spatialXrange);
@@ -277,16 +288,18 @@ global fitterstackinfo fitterimagestack fitterbgstack
             addfields=setdiff(fieldnames(info),[obj.infofields,{'frame'}]);
                 for X=numx:-1:1
                     for Y=numy:-1:1
-                        fitterimagestack{X,Y}=zeros(roisize,roisize,obj.numberInBlock,'single');
-                        fitterstackinfo{X,Y}.frame=zeros(obj.numberInBlock,1,'double');
-                        for k=1:length(obj.infofields)
-                            fitterstackinfo{X,Y}.(obj.infofields{k})=zeros(obj.numberInBlock,1,'single');
-                        end
-                        for k=1:length(addfields)
-                            if iscell(info.(addfields{k}))
-                                fitterstackinfo{X,Y}.(addfields{k}){obj.numberInBlock,1}=[];
-                            else
-                            fitterstackinfo{X,Y}.(addfields{k})=zeros(obj.numberInBlock,1,'single');
+                        fitterimagestack{X,Y}=zeros(roisize,roisize,obj.numberInBlock,numch,'single');
+                        for ch=numch:-1:1
+                            fitterstackinfo{X,Y}(ch).frame=zeros(obj.numberInBlock,1,'double');
+                            for k=1:length(obj.infofields)
+                                fitterstackinfo{X,Y}(ch).(obj.infofields{k})=zeros(obj.numberInBlock,1,'single');
+                            end
+                            for k=1:length(addfields)
+                                if iscell(info(ch).(addfields{k}))
+                                    fitterstackinfo{X,Y}(ch).(addfields{k}){obj.numberInBlock,1}=[];
+                                else
+                                    fitterstackinfo{X,Y}(ch).(addfields{k})=zeros(obj.numberInBlock,1,'single');
+                                end
                             end
                         end
          

@@ -1,6 +1,7 @@
 function plotvibrationanalysis(dir, file,cor,p)
-dt=0.001; %1 ms
-if iscell(file)
+
+if iscell(file)% 
+    dt=0.001; %1 ms
     traw=readtable([dir, file{1}]);
     for k=2:length(file)
         th=readtable([dir, file{k}]);
@@ -18,6 +19,7 @@ if ~isfield(p,'linepar')
 end
 
 time=traw.Time;
+dt=time(2)-time(1)
 
 fdetect=1/dt;
 %play with Acc_Z;
@@ -67,7 +69,7 @@ flog=logspace(log10(f_start),log10(f_stop),octaves*30+1);
 %octave band
 f_to=logspace(log10(f_start),log10(f_stop),octaves*3+1);
 [vzm,fm]=bindata(fout,vzPSD,flog,'mean');
-loglog(flog,vzm,p.linepar{:})
+% loglog(flog,vzm,p.linepar{:})
 xlabel('frequency (Hz)')
 
 ylabel('v PSD ((µm/s)^2/Hz)')
@@ -111,4 +113,11 @@ xlabel('frequency (Hz)')
 
 ylabel('acc PSD ((µm/s^2)^2/Hz)')
 grid on
+
+subplot(2,3,2)
+vzPSDa=azPSD./(2*pi*fout).^2;
+[vzma,fm]=bindata(fout,vzPSDa,flog,'mean');
+loglog(flog,vzma,p.linepar{:})
+
+
 end

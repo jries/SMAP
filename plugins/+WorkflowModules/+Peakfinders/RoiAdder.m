@@ -56,7 +56,7 @@ classdef RoiAdder<interfaces.WorkflowModule
         end
         
         function setrim(obj)
-            dn=round((obj.getPar('loc_ROIsize')-1)/2);
+            dn=ceil((obj.getPar('loc_ROIsize')-1)/2)+1;
             obj.maskrun(1:end,1:dn)=false;
             obj.maskrun(1:end,end-dn+1:end)=false;
             obj.maskrun(1:dn,1:end)=false;

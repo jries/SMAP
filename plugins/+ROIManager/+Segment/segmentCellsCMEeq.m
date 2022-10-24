@@ -13,8 +13,9 @@ classdef segmentCellsCMEeq<interfaces.DialogProcessor&interfaces.SEProcessor
             obj.inputParameters={};
         end
         
-        function out=run(obj,p)  
-          run_segmentCellsCMEeq(obj,p)
+        function out=run(obj,p)
+            run_segmentCellsCMEeq_new(obj,p)
+%           run_segmentCellsCMEeq(obj,p)
           out=[];
         end
         function pard=guidef(obj)
