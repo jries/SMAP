@@ -634,8 +634,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             obj.fitter.setAllModelInternalSetting(allModIntSetting)      %IC220907 -Moved 3 lines up  
             obj.fitter.allParsArg = obj.site.evaluation.(obj.name).written.allParsArg;
             obj.guihandles.anchorConvert.Data = obj.site.evaluation.(obj.name).written.data_convert;
-            
-        
+                    
         %     obj.updateGUI_convert_fromLocMoFitObj
             obj.updateGUI_fromLocMoFitObj
         end

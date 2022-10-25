@@ -219,7 +219,7 @@ try
     out.fitInfo.guiInfo = 'Normal.';
 
     if strcmp(obj.fitter.getAdvanceSetting('siteSpecificMode'), 'on')&&~anyGUI_previewMode
-        resetPar(obj)
+        resetPar(obj)   
     end
 catch ME
     if isfield(obj.site.evaluation, obj.name)
