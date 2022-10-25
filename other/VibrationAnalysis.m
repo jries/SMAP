@@ -46,13 +46,39 @@ dir='/Users/ries/Data_local/ViennaVibrations/';
 file='MP_0513_29_June.txt';
 % file='MP_2UG_8_30Jun.txt';
 file = 'MP_VBC2_2UG_19.4.txt';
-
+tvar='Time';
+coord={'X','Y','Z'};
 % dir='/Volumes/Lacie/DataLacie/ViennaVibrations/'; 
 % file='MP_VBC4_Raum_1105.txt';
 
+%
+dir = '/Users/jonasries/Library/Mobile Documents/com~apple~CloudDocs/mEMBL/Applications/Position/020_MaxPerutz/Negotiations/documents/vibrations/JonasRiesVibrations/EMBL/';
+file='minflux.txt';
+file='4pi_frueh.txt';
+tvar='Var1';
+coord={'Z'};
 
 dt=300; %s=5min
-traw=readtable([dir, file]);
+trawf=readtable([dir, file]);
+% traw=trawf;
+
+% EMBL
+trawf=renamevars(trawf,{'Var1','Var2'},{'Time','Acc_Z'});
+%%
+traw2=trawf;
+nfilt=round(1/(trawf.Time(2)-trawf.Time(1)));
+a=1; b=ones(nfilt,1)/nfilt;
+avacc=movmean(trawf.Acc_Z,nfilt);
+traw2.Acc_Z=traw2.Acc_Z-avacc;
+t2=table;
+t2.Time=trawf.Time(1:10:end);
+t2.Acc_Z=traw2.Acc_Z(1:10:end);
+traw=t2;
+% file=traw;
+
+
+%%
+dt=30
 tx=1:dt:traw.Time(end);
 ind1=1;
 ttime={};
@@ -72,7 +98,7 @@ end
 files=ttime;
 %%
 
-coord={'X','Y','Z'};
+
 p.dtplot=60;
 
 for c=1:length(coord)
@@ -87,7 +113,7 @@ for c=1:length(coord)
     end
     p.linepar={'Color',[0 0 0],'LineWidth',2};
     p.plottrace=false;
-    plotvibrationanalysis(dir, file,coord{c},p);
+    plotvibrationanalysis(dir, traw,coord{c},p);
 %     legend({'0513','4615','2UG'})
     subplot(2,3,2)
     title(coord{c})

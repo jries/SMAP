@@ -9,6 +9,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         range
         index
         stats
+        id;
     end
     methods
         function obj=StepsMINFLUX(varargin)        
@@ -42,6 +43,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            id=mode(locs.(fid));
            index=obj.locData.loc.(fid)==id;
            obj.index=index;
+           obj.id=id;
             
            %get coordinates
            x=obj.locData.loc.xnm(index);
@@ -235,6 +237,8 @@ dt=diff(time);
 out.dtmin=min(dt);
 out.dtmedian=median(dt);
 out.dtmean=mean(dt);
+
+out.id=obj.id;
 
 out.efo=median(obj.locData.loc.efo(index));
 out.cfr=median(obj.locData.loc.cfr(index));
@@ -665,6 +669,10 @@ y=obj.coord.yr(indtime);
 tv=obj.coord.timeplot(indtime);  
 [stepv,nval]=stepvalue(x,stepindex,mfun);
 steps.indstep=stepindex;
+fhi=find(obj.index);
+fh=fhi(indtime);
+steps.indstepglobal=fh(stepindex(2:end));
+steps.allindices=fh;
 steps.steptime=tv(stepindex);
 steps.stepvalue=stepv;
 steps.stepsize=diff(stepv);
@@ -700,6 +708,20 @@ if ~isempty(obj.coord.xfr)
     steps.stddetrend.yf=stepvalue(diff(yf),stepindex,@std)/sqrt(2);
 end
 
+%find outliers: bad time resolution
+mint=2;
+window=2;
+badtime=steptimeresolution(diff(tv),stepindex,mint,window);
+
+bi=find(badtime);
+bi2=bi+badtime(bi);
+biall=union(bi,bi2);
+biall(biall<1)=[];
+biall(biall>length(badtime))=[];
+badsteps=false(size(badtime));
+badsteps(biall)=true;
+steps.badsteps=badsteps;
+
 steps.numlocsstep=nval;
 out.steps=steps;
 obj.steps=steps;
@@ -707,9 +729,18 @@ out.statall=calculatestatistics(obj,obj.index);
 out.stattrack=calculatestatistics(obj,obj.index,obj.coord.indtime);
 out.range=obj.range;
 obj.site.evaluation.(obj.name)=out;
+end
 
-
-
+function out=steptimeresolution(t,stepindex,mint,window)
+out=zeros(length(stepindex)-1,1);
+for k=1:length(stepindex)-1
+    if any(t(stepindex(k)+1-1:min(length(stepindex),stepindex(k)+1+window-1))>mint)
+        out(k,1)=-1;
+    end
+    if any(t(max(1,stepindex(k+1)-window):stepindex(k+1))>mint)
+        out(k,1)=+1;
+    end
+end
 end
 
 function makemovie(a,b,obj)

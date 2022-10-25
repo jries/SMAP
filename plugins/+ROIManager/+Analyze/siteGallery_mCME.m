@@ -425,7 +425,11 @@ for k = 1:numOfUsedLabels
         case 'ID'
             oneLabel = ['Site ' num2str(siteInd)];
         case 'theta'
-            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.closingAngle_pub;
+            if isa(fitter.model{1}.modelObj, 'sphericalCap3D_surfaceArea')
+                val = subSites(siteInd).evaluation.(fitterGUI_name).allParsArg.value(13);
+            elseif isa(fitter.model{1}.modelObj, 'CME3DSphereCoverageArea_discrete')
+                val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.closingAngle_pub;
+            end
             oneLabel = ['\theta = '  num2str(val, '%.1f') char(176)];
         case 'curvature'
             val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.curvature;
