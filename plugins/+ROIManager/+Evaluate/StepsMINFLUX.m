@@ -30,7 +30,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
 
            %identify all localizations in track
-           locs=obj.getLocs({'xnm','ynm','groupindex','tid'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2);
+           locs=obj.getLocs({'xnm','ynm','groupindex','tid','time'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2);
            if isempty(locs.xnm)
                 disp('no localizations')
                 return
@@ -40,7 +40,25 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            else
                fid='tid';
            end
-           id=mode(locs.(fid));
+            
+           times=str2num(obj.site.annotation.comments)*1000;
+           if isempty(times)
+               id=mode(locs.(fid));
+           else
+               timemin=obj.site.image.parameters.layerparameters{1}.colorfield_min;
+               timemax=obj.site.image.parameters.layerparameters{1}.colorfield_max;
+               if max(times)<1000
+                   times=timemin+(timemax-timemin)*times/1000;
+               end
+               
+               if length(times)==1 % one element
+                   timewinselect=(timemax-timemin)*0.05;
+                   times=times+[-timewinselect timewinselect];
+               end
+               ind=locs.time > times(1) & locs.time < times(2);
+               id=mode(locs.(fid)(ind));
+           end
+           
            index=obj.locData.loc.(fid)==id;
            obj.index=index;
            obj.id=id;
