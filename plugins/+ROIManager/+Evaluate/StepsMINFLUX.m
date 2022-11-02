@@ -216,6 +216,35 @@ plotsimple(obj,'cfr')
 plotsimple(obj,'eco')
 plotsimple(obj,'ecc')
 
+%MSD
+amsd=obj.setoutput('MSD');
+hold(amsd,'off')
+x=obj.coord.xr;
+y=obj.coord.yr;
+t=obj.coord.timeplot;
+
+msd=(x-x').^2+(y-y').^2;
+dt=abs(t-t');
+% dscatter(dt(:),msd(:))
+
+
+tres=2;
+tb=(0:tres:max(dt(:)))';
+
+[dtsort,indsort]=sort(dt(:));
+msdb=bindata(dtsort,msd(indsort),tb,'mean');
+msds=bindata(dtsort,msd(indsort),tb,'std');
+plot(amsd,tb,msdb,tb,msdb+msds,tb,msdb-msds)
+xlabel(amsd,'dt(ms)')
+ylabel(amsd,'msd (nm^2)')
+tmax=100;
+indmax=round(tmax/tres);
+mfit=msdb(1:indmax);
+tfit=tb(1:indmax);
+fmsd=fit(double(tfit),double(mfit),'poly1');
+hold(amsd,'on')
+plot(amsd,tfit,fmsd(tfit));
+title(amsd,['D = ' num2str(fmsd.p1/4) ' nm^2/ms, offset = ' num2str(sqrt(fmsd.p2)) ' nm']);
 end
 
 function plotsimple(obj,field)
@@ -386,6 +415,7 @@ end
 
 %xy plot
 goff=median(mod(obj.steps.stepvalue,16),'omitnan');
+% goff=0; %switch off shift 
 axxy=obj.setoutput('xy');
 hold(axxy,'off')
 plot(axxy, obj.coord.xr-goff, obj.coord.yr)

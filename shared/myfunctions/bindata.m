@@ -24,9 +24,11 @@ switch mode
         fh=mode;
 end
 
-% [xs,sind]=sort(x);
-% x=xs;
-% y=y(sind);
+if ~issorted(x)
+    [xs,sind]=sort(x);
+    x=xs;
+    y=y(sind);
+end
 
 badind=isnan(x)|isnan(y)|isinf(x)|isinf(y);
 x(badind)=[];

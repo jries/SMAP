@@ -22,12 +22,14 @@ for k=1:length(sites)
     steptime(end+1:end+length(sh.dwelltime))=sh.dwelltime;
     vel(end+1)=sites(k).evaluation.(pluginname).stattrack.velocity;
     tracklengthlocs(end+1)=sites(k).evaluation.(pluginname).statall.nlocs;
+    if isfield(sh,'badstes')
     badsteps(end+1:end+length(sh.badsteps))=sh.badsteps;
     indstep(end+1:end+length(sh.indstepglobal))=sh.indstepglobal;
     nt=0*sh.indstepglobal;
     nt(1)=1;
     nt(end)=1;
     newtrack(end+1:end+length(sh.indstepglobal))=nt;
+    end
    
 end
 
@@ -106,46 +108,57 @@ Ns=sum(ht(indt));
 
 
 %Hypoexp fit 16 nm
-fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k2);
-fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart*2,kstart*8,1]);
-plot(nt,fthyp(nt),'b')
+% fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k2);
+fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexponentialpdf(x,[k1,k2,k1,k2]);
+fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*18,1]);
+plot(nt,fthyp(nt),'r')
 
 %16 nm, four equal constants
-fitf=@(k1,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k1);
-fthyp4_1=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart*2,1]);
-plot(nt,fthyp4_1(nt),'c--')
+% fitf=@(k1,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k1);
+fitf=@(k1,A,x) A*Ns*dt*Erlangdistribution(x,k1,4);
+fthyp4_1=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,1]);
+plot(nt,fthyp4_1(nt),'b-.')
+
+
+
+%convolution of two exponentials with same rates, Peng dynein paper
+% timefun=@(k1,A,x) A*Ns*dt*k1^2*x.*exp(-k1*x);
+timefun=@(k1,A,x) A*Ns*dt*Erlangdistribution(x,k1,2);
+startp=[kstart,1];
+ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
+plot(nt,ft(nt),'b--')
 
 %Hypoexp fit 8 nm
 fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexponentialpdf(x,[k1,k2]);
 [htmax,imax]=max(ht);
 kstart=1/nt(imax);
 % plot(nt,fitf(kstart,kstart*8,1,nt),'m--')
-fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
+% fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart/2,kstart*2,1]);
+fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[ft.k1*.9,ft.k1*1.1,1]);
 plot(nt,fthyp2(nt),'m')
 
-%convolution of two exponentials with same rates, Peng dynein paper
-timefun=@(k1,A,x) A*Ns*dt*k1^2*x.*exp(-k1*x);
+%3 exp
+timefun=@(k1,A,x) A*Ns*dt*Erlangdistribution(x,k1,3);
 startp=[kstart,1];
-
-ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
-
-plot(nt,ft(nt),'g--')
+ft3=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
+plot(nt,ft3(nt),'b:')
 
 %exp
 ftx=fit(nt(imax:find(indt,1,'last'))',ht(imax:find(indt,1,'last'))','exp1');
-plot(nt(imax:find(indt,1,'last')),ftx(nt(imax:find(indt,1,'last'))),'r')
+plot(nt(imax:find(indt,1,'last')),ftx(nt(imax:find(indt,1,'last'))),'c')
 
 title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff)...
     '; 4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff) ...
      '; 2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff) ...
      '; N = ' num2str(length(steptime),4)]);
 
-legend('data',...
+legend('data, shown is 1/k',...
     ['4exp 2 k: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
     ['4exp 1 k: ' num2str(1/fthyp4_1.k1,ff)],...
+    ['2exp 1 k: ' num2str(1/ft.k1,ff)],...
     ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
-    ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
-    ['exp: 1/k = ' num2str(-1/ftx.b,ff)])
+    ['3exp 1 k: ' num2str(1/ft3.k1,ff)],...
+    ['1exp: ' num2str(-1/ftx.b,ff)])
 
 
 
@@ -189,30 +202,33 @@ Ns=sum(ht(indt));
 
 
 %Hypoexp fit 16 nm
-fitf=@(k1,k2,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k2));
+fitf=@(k1,k2,A,x) A*Ns*dt*cumsum(Hypoexponentialpdf(x,[k1,k2,k1,k2]));
 fthypc=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,kstart*4,1]);
 plot(nt,fthypc(nt),'b')
 
-fitf=@(k1,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k1));
+% fitf=@(k1,A,x) A*Ns*dt*cumsum(Hypoexp4fit(x,k1,k1));
+fitf=@(k1,A,x) A*Ns*dt*cumsum(Erlangdistribution(x,k1,4));
 fthypc4_1=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,1]);
 plot(nt,fthypc4_1(nt),'c--')
+
+%convolution of two exponentials with same rates, Peng dynein paper
+% timefun=@(k1,A,x) A*Ns*dt*k1^2*cumsum(x.*exp(-k1*x));
+timefun=@(k1,A,x) A*Ns*dt*cumsum(Erlangdistribution(x,k1,2));
+startp=[kstart,1];
+ft=fit(nt(indt)',htc(indt)',timefun,'StartPoint',startp);
+plot(nt,ft(nt),'g')
+
 
 %Hypoexp fit 8 nm
 fitf=@(k1,k2,A,x) A*Ns*dt*cumsum(Hypoexponentialpdf(x,[k1,k2]));
 [htmax,imax]=max(ht);
 kstart=1/nt(imax);
 % plot(nt,fitf(kstart,kstart*8,1,nt),'m--')
-fthyp2=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[kstart,kstart*8,1]);
-plot(nt,fthyp2(nt),'m')
+fthyp2=fit(nt(indt)',htc(indt)',fitf,'StartPoint',[ft.k1*0.9,ft.k1*1.1,1]);
+plot(nt,fthyp2(nt),'m--')
 
 
-%convolution of two exponentials with same rates, Peng dynein paper
-timefun=@(k1,A,x) A*Ns*dt*k1^2*cumsum(x.*exp(-k1*x));
-startp=[kstart,1];
 
-ft=fit(nt(indt)',htc(indt)',timefun,'StartPoint',startp);
-
-plot(nt,ft(nt),'g--')
 
 %exp
 ftx=fit(nt(imax:find(indt,1,'last'))',ht(imax:find(indt,1,'last'))','exp1');
@@ -227,8 +243,8 @@ plot(nt(imax:find(indt,1,'last')),sum(ht(1:imax-1))+cumsum(ftx(nt(imax:find(indt
 legend('data',...
     ['4exp 2 k: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthypc.k2,ff)],...
     ['4exp 1 k: ' num2str(1/fthypc4_1.k1,ff)],...
-    ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
     ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
+    ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
     ['exp: 1/k = ' num2str(-1/ftx.b,ff)],'Location','southeast')
 
 title('Cumulative Probability Distribution')
@@ -247,19 +263,21 @@ plot(nt,htc'-fthypc(nt),'b')
 
 plot(nt,htc'-fthypc4_1(nt),'c--')
 
-%Hypoexp fit 8 nm
-plot(nt,htc'-fthyp2(nt),'m')
-
 %convolution of two exponentials with same rates, Peng dynein paper
-plot(nt,htc'-ft(nt),'g--')
+plot(nt,htc'-ft(nt),'g')
+
+%Hypoexp fit 8 nm
+plot(nt,htc'-fthyp2(nt),'m--')
+
+
 
 plot(nt(imax:find(indt,1,'last')),htc(imax:find(indt,1,'last'))'-sum(ht(1:imax-1))-cumsum(ftx(nt(imax:find(indt,1,'last')))),'r')
 
 legend('data',...
     ['4exp 2 k: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthypc.k2,ff)],...
     ['4exp 1 k: ' num2str(1/fthypc4_1.k1,ff)],...
+     ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
     ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
-    ['Peng: 1/k = ' num2str(1/ft.k1,ff)],...
     ['exp: 1/k = ' num2str(-1/ftx.b,ff)],'Location','southeast')
 
 title('residuals CPD')
