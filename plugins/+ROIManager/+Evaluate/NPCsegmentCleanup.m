@@ -184,6 +184,7 @@ if isfield(locs, 'PSFxnm')&& ~isempty(locs.PSFxnm)
     goodpsf=mpsf<=p.maxPSF;
 else
     goodpsf = true;
+    mpsf=0;
 end
 usethis=goodradius&goodout&goodin&goodsize&goodlocs & goodpsf;
     savefield='list4';
