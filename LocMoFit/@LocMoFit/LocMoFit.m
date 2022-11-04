@@ -412,16 +412,27 @@ classdef LocMoFit<matlab.mixin.Copyable
         end
         
         %% Parameter related methods
-        function parsArg = subParsArg(obj, model, varargin)
+        function parsArg = subParsArg(obj, modelId, varargin)
+            % This method subsets the :attr:allParsArg list.
+            %
+            % Usage:
+            %   subParsArg(obj, model, varargin)
+            %
+            % Args:
+            %   obj(:class:LocMoFit): a LocMoFit object.
+            %   modelId: the ID of a loaded model. 
+            %   Name-value pairs:
+            %       * 'Type': one of 'lPar' and 'mPar'.
+
             p = inputParser;
             p.addParameter('Type', []);
             parse(p, varargin{:})
             results = p.Results;
            
-            if isempty(model)% for layer settings
+            if isempty(modelId)% for layer settings
                 lModel = obj.allParsArg.model > 90;
             else
-                lModel = obj.allParsArg.model == model;
+                lModel = obj.allParsArg.model == modelId;
             end
             
             if isempty(results.Type)
@@ -761,15 +772,33 @@ classdef LocMoFit<matlab.mixin.Copyable
             results = p.Results;
             
             switch results.type
+                % flag: a two-element logical vector. If element 1 is true
+                % , the IDs of 'main parameters' will be returned; if
+                % element 2 is true, the IDs of 'auxiliary parameters' will
+                % be returned.
+                %
+                % typeFlag: a two-element logical vector. If element 1 is
+                % true, the IDs of 'lPar' will be returned; if element 2 is
+                % true, the IDs of 'mPar' will be returned.
+                case 'lPar'
+                    flag = [1 0];
+                    typeFlag = [1 0];
+                case 'mPar'
+                    flag = [1 0];
+                    typeFlag = [0 1];
                 case 'main'
                     flag = [1 0];
-                case 'all'
-                    flag = [1 1];
+                    typeFlag = [1 1];
                 case 'auxiliary'
                     flag = [0 1];
+                    typeFlag = [0 0];
+                case 'all'
+                    flag = [1 1];
+                    typeFlag = [1 1];
             end
             
             parId = [];
+            parType = [];
             if flag(1)
                 % Main parameters
                 if exist('modelnumber','var')&&~isempty(modelnumber)
@@ -785,12 +814,29 @@ classdef LocMoFit<matlab.mixin.Copyable
                     end
 
                     for l = length(subParsArg.model):-1:1
+                        parType{l} = subParsArg.type{l};
                         parId{l} = ['m' modelnumberStr '.' subParsArg.type{l} '.' subParsArg.name{l}];
                     end
                 else
+                    parType = obj.allParsArg.type;
                     parId = strcat('m', cellstr(string(obj.allParsArg.model)), '.', obj.allParsArg.type, '.', obj.allParsArg.name);
                     subParsArgTemp = obj.allParsArg;
-                end 
+                end
+
+                % Keep the specified parameter type(s)
+                l_lPar = strcmp(parType,'lPar');
+                l_mPar = strcmp(parType,'mPar');
+                parId_lPar = parId(l_lPar);
+                parId_mPar = parId(l_mPar);
+                parId = [];
+
+                if typeFlag(1)
+                    parId = [parId; parId_lPar];
+                end
+                
+                if typeFlag(2)
+                    parId = [parId; parId_mPar];
+                end
             end
             
             if flag(2)
