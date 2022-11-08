@@ -219,32 +219,13 @@ plotsimple(obj,'ecc')
 %MSD
 amsd=obj.setoutput('MSD');
 hold(amsd,'off')
-x=obj.coord.xr;
-y=obj.coord.yr;
-t=obj.coord.timeplot;
-
-msd=(x-x').^2+(y-y').^2;
-dt=abs(t-t');
-% dscatter(dt(:),msd(:))
-
-
-tres=2;
-tb=(0:tres:max(dt(:)))';
-
-[dtsort,indsort]=sort(dt(:));
-msdb=bindata(dtsort,msd(indsort),tb,'mean');
-msds=bindata(dtsort,msd(indsort),tb,'std');
-plot(amsd,tb,msdb,tb,msdb+msds,tb,msdb-msds)
+msd=obj.stats.msd;
+plot(amsd,msd.dt,msd.mean,'b',msd.dt,msd.mean+msd.std,'c',msd.dt,msd.mean-msd.std,'c')
 xlabel(amsd,'dt(ms)')
 ylabel(amsd,'msd (nm^2)')
-tmax=100;
-indmax=round(tmax/tres);
-mfit=msdb(1:indmax);
-tfit=tb(1:indmax);
-fmsd=fit(double(tfit),double(mfit),'poly1');
 hold(amsd,'on')
-plot(amsd,tfit,fmsd(tfit));
-title(amsd,['D = ' num2str(fmsd.p1/4) ' nm^2/ms, offset = ' num2str(sqrt(fmsd.p2)) ' nm']);
+plot(amsd,msd.tfit,msd.fit(msd.tfit),'r');
+title(amsd,['D = ' num2str(msd.D) ' nm^2/ms, offset = ' num2str(msd.off) ' nm']);
 end
 
 function plotsimple(obj,field)
@@ -314,6 +295,34 @@ if ~isempty(obj.coord.xfr)
     out.stdalldetmean.xf=(sum(obj.steps.stddetrend.xf.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
     out.stdalldetmean.yf=(sum(obj.steps.stddetrend.yf.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
 end
+
+%MSD
+x=obj.coord.xr;
+y=obj.coord.yr;
+t=obj.coord.timeplot;
+
+msdc=(x-x').^2+(y-y').^2;
+dt=abs(t-t');
+tres=2;
+tmax=100;
+tmaxplot=min(max(dt(:),tmax*5));
+tb=(0:tres:tmaxplot)';
+[dtsort,indsort]=sort(dt(:));
+msd.mean=bindata(dtsort,msdc(indsort),tb,'mean');
+msd.std=bindata(dtsort,msdc(indsort),tb,'std');
+msd.dt=tb;
+
+indmax=round(tmax/tres);
+msd.mfit=msd.mean(1:indmax);
+msd.tfit=tb(1:indmax);
+msd.fit=fit(double(msd.tfit),double(msd.mfit),'poly1');
+msd.D=msd.fit.p1/4;
+msd.off=sqrt(msd.fit.p2);
+% hold(amsd,'on')
+% plot(amsd,tfit,fmsd(tfit));
+% title(amsd,['D = ' num2str(fmsd.p1/4) ' nm^2/ms, offset = ' num2str(sqrt(fmsd.p2)) ' nm']);
+out.msd=msd;
+
 obj.stats=out;
 end
 
