@@ -30,7 +30,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
 
            %identify all localizations in track
-           locs=obj.getLocs({'xnm','ynm','groupindex','tid','time'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2);
+           locs=obj.getLocs({'xnm','ynm','groupindex','tid','time'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
            if isempty(locs.xnm)
                 disp('no localizations')
                 return
