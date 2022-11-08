@@ -431,7 +431,7 @@ switch fitpar.fitmode
             case '.h5'
                 val=loadh5(calfile);
                 params = jsondecode(h5readatt(calfile,'/','params'));
-                fitpar.splinefit{1}.cspline.dz=params.pixelsize_z*1000;
+                fitpar.splinefit{1}.cspline.dz=params.pixel_size.z*1000;
                 fitpar.splinefit{1}.cspline.coeff=permute(val.locres.coeff,[4,3,2,1]);
 %                 fitpar.splinefit{1}.cspline.coeff=permute(val.locres.coeff,[3,4,2,1]); %XXXXXXXX
                 fitpar.splinefit{1}.cspline.z0=ceil(size(val.locres.coeff,2)/2);
