@@ -80,8 +80,9 @@ np=0:ds/5:mn;
 plot(np,fs(np),'r')
 hold off
 ff='%2.1f';
+ffv='%2.0f';
 title(['fit: <step>=' num2str(fs.b1,ff) ', sigma=' num2str(fs.c1,ff) ',mean(step)=' num2str(mean(stepsize),ff) ', std=' num2str(std(stepsize),ff)])
-
+stepsizemean=fs.b1;
 dt=2;
 
 n=0:dt:max(steptime);
@@ -112,13 +113,16 @@ Ns=sum(ht(indt));
 fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexponentialpdf(x,[k1,k2,k1,k2]);
 fthyp=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,kstart*18,1]);
 plot(nt,fthyp(nt),'r')
+meandtfit4e2=sum(fthyp(nt).*nt')/sum(fthyp(nt));
+v4e2=stepsizemean/meandtfit4e2*1000; %um/ms
 
 %16 nm, four equal constants
 % fitf=@(k1,A,x) A*Ns*dt*Hypoexp4fit(x,k1,k1);
 fitf=@(k1,A,x) A*Ns*dt*Erlangdistribution(x,k1,4);
 fthyp4_1=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart,1]);
 plot(nt,fthyp4_1(nt),'b-.')
-
+meandtfit4e1=sum(fthyp4_1(nt).*nt')/sum(fthyp4_1(nt));
+v4e1=stepsizemean/meandtfit4e1*1000; %um/ms
 
 
 %convolution of two exponentials with same rates, Peng dynein paper
@@ -127,6 +131,8 @@ timefun=@(k1,A,x) A*Ns*dt*Erlangdistribution(x,k1,2);
 startp=[kstart,1];
 ft=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 plot(nt,ft(nt),'b--')
+meandtfit2e1=sum(ft(nt).*nt')/sum(ft(nt));
+v2e1=stepsizemean/meandtfit2e1*1000; %um/ms
 
 %Hypoexp fit 8 nm
 fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexponentialpdf(x,[k1,k2]);
@@ -136,29 +142,35 @@ kstart=1/nt(imax);
 % fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart/2,kstart*2,1]);
 fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[ft.k1*.9,ft.k1*1.1,1]);
 plot(nt,fthyp2(nt),'m')
+meandtfit2e2=sum(fthyp2(nt).*nt')/sum(fthyp2(nt));
+v2e2=stepsizemean/meandtfit2e2*1000; %um/ms
 
 %3 exp
 timefun=@(k1,A,x) A*Ns*dt*Erlangdistribution(x,k1,3);
 startp=[kstart,1];
 ft3=fit(nt(indt)',ht(indt)',timefun,'StartPoint',startp);
 plot(nt,ft3(nt),'b:')
+meandtfit3e1=sum(ft3(nt).*nt')/sum(ft3(nt));
+v3e1=stepsizemean/meandtfit3e1*1000; %um/ms
 
 %exp
 ftx=fit(nt(imax:find(indt,1,'last'))',ht(imax:find(indt,1,'last'))','exp1');
 plot(nt(imax:find(indt,1,'last')),ftx(nt(imax:find(indt,1,'last'))),'c')
+meandtfit1e1=sum(ftx(nt).*nt')/sum(ftx(nt));
+v1e1=stepsizemean/meandtfit1e1*1000; %um/ms
 
 title(['Peng: 1/k = ' num2str(1/ft.k1,ff) ' ms, exp: 1/k = ' num2str(-1/ftx.b,ff)...
     '; 4exp: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff) ...
      '; 2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff) ...
      '; N = ' num2str(length(steptime),4)]);
 
-legend('data, shown is 1/k',...
-    ['4exp 2 k: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff)],...
-    ['4exp 1 k: ' num2str(1/fthyp4_1.k1,ff)],...
-    ['2exp 1 k: ' num2str(1/ft.k1,ff)],...
-    ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff)],...
-    ['3exp 1 k: ' num2str(1/ft3.k1,ff)],...
-    ['1exp: ' num2str(-1/ftx.b,ff)])
+legend('data, shown is 1/k, v in nm/s',...
+    ['4exp 2 k: ' num2str(1/fthyp.k1,ff) ',' num2str(1/fthyp.k2,ff) ', v=' num2str(v4e2,ffv)],...
+    ['4exp 1 k: ' num2str(1/fthyp4_1.k1,ff) ', v=' num2str(v4e1,ffv)],...
+    ['2exp 1 k: ' num2str(1/ft.k1,ff) ', v=' num2str(v2e1,ffv)],...
+    ['2exp: ' num2str(1/fthyp2.k1,ff) ',' num2str(1/fthyp2.k2,ff) ', v=' num2str(v2e2,ffv)],...
+    ['3exp 1 k: ' num2str(1/ft3.k1,ff) ', v=' num2str(v3e1,ffv)],...
+    ['1exp: ' num2str(-1/ftx.b,ff) ', v=' num2str(v1e1,ffv)])
 
 
 
