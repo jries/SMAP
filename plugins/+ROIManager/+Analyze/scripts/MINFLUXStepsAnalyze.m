@@ -61,6 +61,7 @@ end
 steptime(badind)=[];
 
 figure(188) %do the plotting
+f=gcf;f.Renderer='painters';
 subplot(2,3,1)
 ds=.5;
 n=round(min(stepsize)):ds:max(stepsize);
