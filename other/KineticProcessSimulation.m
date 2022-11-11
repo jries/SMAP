@@ -1,13 +1,15 @@
 %Simulate kinetic processes, chain of events with kinetic constants ki
 
-N=1000000; %number of data points
+
+N=100000; %number of data points
 tausingle=[10 30];
 eps=0.01; % ki ~= kj for all i,j
 taus=[tausingle, tausingle+eps];
+% ks=1./taus;
 % taus=[10.001 30.0 10.0 30.001]; % list of kinetic constants
 dt=1;
 
-timet=zeros(N,length(ks));
+timet=zeros(N,length(taus));
 
 for k=1:length(taus)
     timet(:,k)=exprnd(taus(k),N,1);
@@ -23,15 +25,18 @@ title(['16 nm steps, tau=' num2str(1/fp.k1)])
 fx=Hypoexponentialpdf(nt,ks);
 plot(nt,fx*N*dt,'r')
 
+fI=Isojima(nt,1/taus(1),1/taus(2));
+plot(nt,N*dt*fI,'bx')
+ssfsafd
 %try fit
 % fitf=fittype('N*dt*Hypoexp4fit(x,k1,k2)');
-fitf=@(k1,k2,A,x) N*dt*Hypoexp4fit(x,k1,k2,A);
+fitf=@(k1,k2,A,x) A*N*dt*Hypoexponentialpdf(x,[k1,k2,k1,k2]);
 
 [htmax,imax]=max(ht);
 kstart=1/nt(imax);
-plot(nt,fitf(kstart*2,kstart*4,1,nt),'g--')
+% plot(nt,fitf(kstart*2,kstart*4,1,nt),'g--')
 fph=fit(nt',ht',fitf,'StartPoint',[kstart*2,kstart*4,1]);
-plot(nt,fph(nt),'b')
+plot(nt,fph(nt),'gx')
 
 
 subplot(2,1,2)
@@ -69,4 +74,10 @@ stairs(nt,ht,'k')
 hold on
 % plot(nt,timefun(startp(1),startp(2),nt))
 plot(nt,ft(nt),'r--')
+end
+
+
+function out=Isojima(x,k1,k2)
+out=(k1*k2/(k2-k1))^2*((x-(2/(k2-k1))).*exp(-k1*x) + (x+(2/(k2-k1))).*exp(-k2*x) );
+
 end
