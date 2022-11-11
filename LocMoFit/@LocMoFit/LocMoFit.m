@@ -826,17 +826,21 @@ classdef LocMoFit<matlab.mixin.Copyable
                 % Keep the specified parameter type(s)
                 l_lPar = strcmp(parType,'lPar');
                 l_mPar = strcmp(parType,'mPar');
+                l_offset = strcmp(parType,'offset');
                 parId_lPar = parId(l_lPar);
                 parId_mPar = parId(l_mPar);
+                parId_offset = parId(l_offset);
                 parId = [];
 
                 if typeFlag(1)
-                    parId = [parId; parId_lPar];
+                    parId = [parId parId_lPar];
                 end
                 
                 if typeFlag(2)
-                    parId = [parId; parId_mPar];
+                    parId = [parId parId_mPar];
                 end
+
+                parId = [parId parId_offset];
             end
             
             if flag(2)
