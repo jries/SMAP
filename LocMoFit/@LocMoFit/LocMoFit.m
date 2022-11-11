@@ -815,7 +815,7 @@ classdef LocMoFit<matlab.mixin.Copyable
 
                     for l = length(subParsArg.model):-1:1
                         parType{l} = subParsArg.type{l};
-                        parId{l} = ['m' modelnumberStr '.' subParsArg.type{l} '.' subParsArg.name{l}];
+                        parId{l,1} = ['m' modelnumberStr '.' subParsArg.type{l} '.' subParsArg.name{l}];
                     end
                 else
                     parType = obj.allParsArg.type;
@@ -833,14 +833,14 @@ classdef LocMoFit<matlab.mixin.Copyable
                 parId = [];
 
                 if typeFlag(1)
-                    parId = [parId parId_lPar];
+                    parId = [parId; parId_lPar];
                 end
                 
                 if typeFlag(2)
-                    parId = [parId parId_mPar];
+                    parId = [parId; parId_mPar];
                 end
 
-                parId = [parId parId_offset];
+                parId = [parId; parId_offset];
             end
             
             if flag(2)
