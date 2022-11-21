@@ -34,7 +34,12 @@ if ~any([isequal(obj.modelType, 'continuous') isequal(obj.modelType, 'background
         refLocs.xnm = refLocs.x; refLocs.ynm = refLocs.y; refLocs.znm = refLocs.z;
        
         for k = 1:length(lParRefSeries)
-            refLocs = obj.ParentObject.locsHandler(refLocs, lPars{lParRefSeries(k)}, 0, 'order_transform', 'RT', 'usedformalism', 'rotationMatrixRev');
+            if obj.ID == 1 && obj.ParentObject.getTemp('freeRot')
+                usedformalism = 'lieAlgebra';
+            else
+                usedformalism = 'rotationMatrixRev';
+            end
+            refLocs = obj.ParentObject.locsHandler(refLocs, lPars{lParRefSeries(k)}, 0, 'order_transform', 'RT', 'usedformalism', usedformalism);
         end
         refLocs.x = refLocs.xnm; refLocs.y = refLocs.ynm; refLocs.z = refLocs.znm;
     else

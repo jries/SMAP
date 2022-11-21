@@ -446,8 +446,54 @@ classdef LocMoFit<matlab.mixin.Copyable
             end
         end
         
-        function defineRotPar(obj)
-            
+        function preFittingConversion(obj)
+            switch obj.dataDim % This should be dimension
+                case 2
+                    % do nothing if 2D
+                    obj.setTemp('freeRot', false)
+                case 3
+                    v = zeros([1 3]);
+                    [~,v(1)] = obj.getVariable('m1.xrot');
+                    [~,v(2)] = obj.getVariable('m1.yrot');
+                    [~,v(3)] = obj.getVariable('m1.zrot');
+                    val_fix = obj.allParsArg.fix(v);
+                    val_min = obj.allParsArg.min(v);
+                    val_max = obj.allParsArg.max(v);
+                    val_lb = obj.allParsArg.lb(v);
+                    val_ub = obj.allParsArg.ub(v);
+                    if all([val_min;val_lb]==-inf) && all([val_max;val_ub]==inf) && all(~val_fix)
+                        obj.setParArg('m1.lPar.xrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
+                        obj.setParArg('m1.lPar.yrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
+                        obj.setParArg('m1.lPar.zrot', 'value', 2*pi, 'min', -8*pi, 'max', 8*pi)
+                        obj.setTemp('freeRot', true)
+                    else
+                        obj.setTemp('freeRot', false)
+                    end
+            end
+        end
+
+        function postFittingConversion(obj)
+            if obj.getTemp('freeRot')
+                switch obj.dataDim % This should be dimension
+                    case 2
+                        % do nothing if 2D
+                        obj.setTemp('freeRot', false)
+                    case 3
+                        xrot = obj.getVariable('m1.xrot');
+                        yrot = obj.getVariable('m1.yrot');
+                        zrot = obj.getVariable('m1.zrot');
+
+                        if all([val_min;val_lb]==-inf) && all([val_max;val_ub]==inf) && all(~val_fix)
+                            obj.setParArg('m1.lPar.xrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
+                            obj.setParArg('m1.lPar.yrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
+                            obj.setParArg('m1.lPar.zrot', 'value', 2*pi, 'min', -8*pi, 'max', 8*pi)
+                            obj.setTemp('freeRot', true)
+                        else
+                            
+                        end
+                        obj.setTemp('freeRot', false)
+                end
+            end
         end
         
         function [lb,ub,value, min, max] = prepFit(obj)
