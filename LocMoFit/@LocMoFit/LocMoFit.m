@@ -482,7 +482,11 @@ classdef LocMoFit<matlab.mixin.Copyable
                         xrot = obj.getVariable('m1.xrot');
                         yrot = obj.getVariable('m1.yrot');
                         zrot = obj.getVariable('m1.zrot');
-
+                        k = [xrot yrot zrot];
+                        theta = norm(k);
+                        k = k./theta;
+                        R = rodringues2rotMat(k,theta);
+                        R
                         if all([val_min;val_lb]==-inf) && all([val_max;val_ub]==inf) && all(~val_fix)
                             obj.setParArg('m1.lPar.xrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
                             obj.setParArg('m1.lPar.yrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
