@@ -5,20 +5,20 @@ function [xrot,yrot,zrot] = rotMat2Ang(R, par)
             switch R(1,3)
                 case -1
                     yrot = pi/2;
-                    xrot = atan2(a(2,1),a(3,1));
+                    xrot = atan2(R(2,1),R(3,1));
                     zrot = 0;
                 case 1
                     yrot = -pi/2;
-                    xrot = atan2(-a(2,1),-a(3,1));
+                    xrot = atan2(-R(2,1),-R(3,1));
                     zrot = 0;
                 otherwise
-                    yrot = asin(-a(1,3));
+                    yrot = asin(-R(1,3));
                     if -pi/2<yrot && yrot<pi/2
-                        xrot = atan2(a(2,3),a(3,3));
-                        zrot = atan2(a(1,2),a(1,1));
+                        xrot = atan2(R(2,3),R(3,3));
+                        zrot = atan2(R(1,2),R(1,1));
                     else
-                        xrot = atan2(-a(2,3),-a(3,3));
-                        zrot = atan2(-a(1,2),-a(1,1));
+                        xrot = atan2(-R(2,3),-R(3,3));
+                        zrot = atan2(-R(1,2),-R(1,1));
                     end
             end
         case 'rotationMatrixRev'
@@ -26,20 +26,20 @@ function [xrot,yrot,zrot] = rotMat2Ang(R, par)
             switch R(3,1)
                 case -1
                     yrot = pi/2;
-                    xrot = atan2(a(1,2),a(1,3));
+                    xrot = atan2(R(1,2),R(1,3));
                     zrot = 0;
                 case 1
                     yrot = -pi/2;
-                    xrot = atan2(-a(1,2),-a(1,3));
+                    xrot = atan2(-R(1,2),-R(1,3));
                     zrot = 0;
                 otherwise
-                    yrot = asin(-a(3,1));
+                    yrot = asin(-R(3,1));
                     if -pi/2<yrot && yrot<pi/2
-                        xrot = atan2(a(3,2),a(3,3));
-                        zrot = atan2(a(2,1),a(1,1));
+                        xrot = atan2(R(3,2),R(3,3));
+                        zrot = atan2(R(2,1),R(1,1));
                     else
-                        xrot = atan2(-a(3,2),-a(3,3));
-                        zrot = atan2(-a(2,1),-a(1,1));
+                        xrot = atan2(-R(3,2),-R(3,3));
+                        zrot = atan2(-R(2,1),-R(1,1));
                     end
             end
     end

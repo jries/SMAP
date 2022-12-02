@@ -206,7 +206,7 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
             case 'off'
 %               'Do nothing.'
         end
-        obj.postFittingConversion;
+        obj.postFittingConversion(parBestFit);
     else
         oldFitInfo = obj.fitInfo;
         parBestFit = obj.allParsArg.value(indFit)';

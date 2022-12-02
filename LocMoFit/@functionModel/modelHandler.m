@@ -34,7 +34,7 @@ if ~any([isequal(obj.modelType, 'continuous') isequal(obj.modelType, 'background
         refLocs.xnm = refLocs.x; refLocs.ynm = refLocs.y; refLocs.znm = refLocs.z;
        
         for k = 1:length(lParRefSeries)
-            if obj.ID == 1 && obj.ParentObject.getTemp('freeRot')
+            if obj.ID == 1 && ~isempty(obj.ParentObject.getTemp('freeRot')) && obj.ParentObject.getTemp('freeRot')
                 usedformalism = 'lieAlgebra';
             else
                 usedformalism = 'rotationMatrixRev';

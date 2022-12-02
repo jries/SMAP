@@ -407,7 +407,9 @@ classdef LocMoFit<matlab.mixin.Copyable
 
         function deriveSigma(obj, locs)
             for m = 1:obj.numOfModel
-                obj.model{m}.deriveSigma(locs);
+                if ~strcmp(obj.model{m}.modelType, 'image')
+                    obj.model{m}.deriveSigma(locs);
+                end
             end
         end
         
@@ -472,31 +474,34 @@ classdef LocMoFit<matlab.mixin.Copyable
             end
         end
 
-        function postFittingConversion(obj)
+        function postFittingConversion(obj, parBestFit)
             if obj.getTemp('freeRot')
                 switch obj.dataDim % This should be dimension
                     case 2
                         % do nothing if 2D
                         obj.setTemp('freeRot', false)
                     case 3
-                        xrot = obj.getVariable('m1.xrot');
-                        yrot = obj.getVariable('m1.yrot');
-                        zrot = obj.getVariable('m1.zrot');
-                        k = [xrot yrot zrot];
+                        indFit = ~obj.allParsArg.fix;
+                        values = obj.allParsArg.value;
+                        values(indFit) = parBestFit;
+                        obj.allParsArg.value(indFit)
+                        [~,ind_xrot] = obj.getVariable('m1.xrot');
+                        [~,ind_yrot] = obj.getVariable('m1.yrot');
+                        [~,ind_zrot] = obj.getVariable('m1.zrot');
+                        k = [values(ind_xrot) values(ind_yrot) values(ind_zrot)];
                         theta = norm(k);
                         k = k./theta;
                         R = rodringues2rotMat(k,theta);
-                        R
+                        [xrot,yrot,zrot] = rotMat2Ang(R, 'rotationMatrix');
                         if all([val_min;val_lb]==-inf) && all([val_max;val_ub]==inf) && all(~val_fix)
-                            obj.setParArg('m1.lPar.xrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
-                            obj.setParArg('m1.lPar.yrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
-                            obj.setParArg('m1.lPar.zrot', 'value', 2*pi, 'min', -8*pi, 'max', 8*pi)
-                            obj.setTemp('freeRot', true)
+                            obj.setParArg('m1.lPar.xrot', 'value', xrot, 'min', -inf, 'max', inf)
+                            obj.setParArg('m1.lPar.yrot', 'value', yrot, 'min', -inf, 'max', inf)
+                            obj.setParArg('m1.lPar.zrot', 'value', zrot, 'min', -inf, 'max', inf)
                         else
                             
                         end
-                        obj.setTemp('freeRot', false)
                 end
+                obj.setTemp('freeRot', false)
             end
         end
         
