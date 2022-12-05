@@ -464,9 +464,9 @@ classdef LocMoFit<matlab.mixin.Copyable
                     val_lb = obj.allParsArg.lb(v);
                     val_ub = obj.allParsArg.ub(v);
                     if all([val_min;val_lb]==-inf) && all([val_max;val_ub]==inf) && all(~val_fix)
-                        obj.setParArg('m1.lPar.xrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
-                        obj.setParArg('m1.lPar.yrot', 'value', 0, 'min', -8*pi, 'max', 8*pi)
-                        obj.setParArg('m1.lPar.zrot', 'value', 2*pi, 'min', -8*pi, 'max', 8*pi)
+                        obj.setParArg('m1.lPar.xrot', 'value', 1e-4, 'min', -4*pi, 'max', 4*pi)
+                        obj.setParArg('m1.lPar.yrot', 'value', 1e-4, 'min', -4*pi, 'max', 4*pi)
+                        obj.setParArg('m1.lPar.zrot', 'value', 1e-4, 'min', -4*pi, 'max', 4*pi)
                         obj.setTemp('freeRot', true)
                     else
                         obj.setTemp('freeRot', false)
@@ -474,7 +474,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             end
         end
 
-        function postFittingConversion(obj, parBestFit)
+        function parBestFit = postFittingConversion(obj, parBestFit)
             if obj.getTemp('freeRot')
                 switch obj.dataDim % This should be dimension
                     case 2
@@ -484,25 +484,23 @@ classdef LocMoFit<matlab.mixin.Copyable
                         indFit = ~obj.allParsArg.fix;
                         values = obj.allParsArg.value;
                         values(indFit) = parBestFit;
-                        obj.allParsArg.value(indFit)
                         [~,ind_xrot] = obj.getVariable('m1.xrot');
                         [~,ind_yrot] = obj.getVariable('m1.yrot');
                         [~,ind_zrot] = obj.getVariable('m1.zrot');
                         k = [values(ind_xrot) values(ind_yrot) values(ind_zrot)];
+                        obj.setTemp('k', k)
                         theta = norm(k);
                         k = k./theta;
                         R = rodringues2rotMat(k,theta);
-                        [xrot,yrot,zrot] = rotMat2Ang(R, 'rotationMatrix');
-                        if all([val_min;val_lb]==-inf) && all([val_max;val_ub]==inf) && all(~val_fix)
-                            obj.setParArg('m1.lPar.xrot', 'value', xrot, 'min', -inf, 'max', inf)
-                            obj.setParArg('m1.lPar.yrot', 'value', yrot, 'min', -inf, 'max', inf)
-                            obj.setParArg('m1.lPar.zrot', 'value', zrot, 'min', -inf, 'max', inf)
-                        else
-                            
-                        end
+                        [xrot,yrot,zrot] = rotMat2Ang(R, 'rotationMatrixRev');
+                        values([ind_xrot ind_yrot ind_zrot]) = [xrot yrot zrot];
+                        parBestFit = values(indFit)';
+                        obj.setParArg('m1.lPar.xrot', 'value', xrot, 'min', -inf, 'max', inf)
+                        obj.setParArg('m1.lPar.yrot', 'value', yrot, 'min', -inf, 'max', inf)
+                        obj.setParArg('m1.lPar.zrot', 'value', zrot, 'min', -inf, 'max', inf)
                 end
-                obj.setTemp('freeRot', false)
             end
+            obj.setTemp('freeRot', false)
         end
         
         function [lb,ub,value, min, max] = prepFit(obj)

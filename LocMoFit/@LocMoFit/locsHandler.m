@@ -113,13 +113,14 @@ switch action
                     z = z';
                     flag = 1;
                 case 'lieAlgebra'
-                    k = [xrot yrot zrot];
+                    k = [lParsVal.xrot lParsVal.yrot lParsVal.zrot];
+                    xyz = [x y z];
+                    xyz_o = xyz;
+                    xyz = rodriguesRot(xyz,k);
                     theta = norm(k);
                     k = k./theta;
-                    xyz = [x y z];
-                    nLocs = length(x);
-                    k = repmat(k,[nLocs 1]);
-                    xyz = xyz.*cosd(theta)+cross(k,xyz).*sind(theta)+k.*(dot(k,xyz,2)).*(1-cosd(theta));
+                    R = rodringues2rotMat(k,theta);
+                    xyz2 = R*xyz_o';
                     x = xyz(:,1);
                     y = xyz(:,2);
                     z = xyz(:,3);
