@@ -61,8 +61,8 @@ classdef Locstatistics<interfaces.DialogProcessor
                 th=sprintf([newFilename '\t' num2str(out.photons.Nloc(k)) '\t' num2str(out.photons.mu(k)) '\t'  num2str(out.locprec.max(k)) '\t'...
                     num2str(out.locprec.median(k)) '\t' num2str(out.locprec.rising(k)) '\t' num2str(out.lifetime.mu(k)) '\t'...
                     num2str(out.background.mean(k)) '\t' num2str(out.background.max(k))]);
-                if isfield(out,'PSFxnm')
-                    th=[th 9 num2str(out.PSFxnm.max(k))];
+                if isfield(out,'PSFsize')
+                    th=[th 9 num2str(out.PSFsize.max(k))];
                 end
                 if isfield(out,'locprecznm')
                     th=[th 9 num2str(out.locprecznm.max(k))];
