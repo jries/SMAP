@@ -1,11 +1,5 @@
 %% Tempalte-free particle fusion of NPC using LocMoFit
-% This script allows one to perform tempalte-free particle fusion of NPC
-% using LocMoFit. Please define the parameters in the section of **Basic
-% parameters** per task. After running through the analysis, you can find 
-% a the final average in the variable *finalAvg* in the _avg.mat file in 
-% ../analysis. finalAvg is a cell contains averages yeilded after all
-% iterations. In the _avg.mat, the variable indBest tells you that
-% finalAvg{indBest} is the best avarege, according to its mean log-likelihood 
+% This script allows one to perform tempalte-free particle fusion using LocMoFit. Please make a copy before using this script and only work on the copy. Please define the parameters in the section of **Basic parameters** per task. After running through the analysis, you can find a the final average in the variable *finalAvg* in the _avg.mat file in ../analysis. finalAvg is a cell contains averages yeilded after all iterations. In the _avg.mat, the variable indBest tells you that finalAvg{indBest} is the best avarege, according to its mean log-likelihood.
 %
 % Output files:
 %   * [anyIDYouLike]_preReg.mat: intermediate results of pre-registered pores.
@@ -14,10 +8,16 @@
 %   * [anyIDYouLike]_avg.mat: NPC averages.
 %
 % Last update:
-%   14.04.2022
+%   20.12.2022
 %
 % Version:
-%   v1.6.3
+%   v0.0.1
+%
+% Source:
+%   template_free_particle_fusion.m
+%
+% What's new
+%   The pre-registeration based on the dual-ring model is now disabled by default.
 
 %% Basic parameters
 % Note: the following parameters are optimized. Do not change them
@@ -39,6 +39,7 @@ par.save_name = 'anyIDYouLike';             % define the ID (used when saving) o
 par.parFu_rng = 211023;                     % seed for the RNG.
 par.parFu_path2Mod = "c:\whereTheSMAPFolderIs\SMAP\LocMoFit\models\NPCPointModel_flexible2.m"; % path to the dual-ring model.
 
+
 %% Advanced parameters
 % Note: the following parameters are optimized. Do not change them
 % unless necessary
@@ -51,12 +52,11 @@ par.parFu_minImprov = 0.1;                  % maximum effective improvement of t
 par.parFu_method_initSite = 'sumLL';        % metric used for building the intial model. Can be either 'sumLL' or 'sumRank'.
 par.parFu_useIsoLocprecnm = true;           % whether to use isotropic locprecnm (localization precision).
 par.parFu_correctOrientation = false;       % correct the orientation the average NPCs everytime after fusion. 
-par.parFu_preRegistration = true;           % determine the initial parameters of the registration based on the fit of the dual-ring model.
+par.parFu_preRegistration = false;           % determine the initial parameters of the registration based on the fit of the dual-ring model.
 
 % settings for the procedure control
 par.proc_autoFileLoading = true;            % whether to load the _sml.mat file automatically.
 par.proc_continueOldAvg = true;             % whether to continue the analysis from an old averaging.
-par.proc_preAlignment = true;               % whether to perform the pre-alignment.
 par.proc_arunSummarizeModFitNPC3D = false;  % whether to run SummarizeModFitNPC3D.
 
 
@@ -79,7 +79,6 @@ par = initProcCtrl(par);
 
 %% Correct tilt and tip.
 disp('Correctting tilts and tips...')
-% [fitting_step1,selectedSetInd,par_alignment,originalLocs,selectedSet, nUsedForAvg] = correctTiltNTip(par, g);
 [selectedSetInd,originalLocs, nUsedForAvg, preRegLocs, lPars_preReg, preRegFitPar_raw] = dataPrep(par, g);
 save([par.save_drive par.save_wd par.save_name '_preReg.mat'], 'originalLocs', 'preRegLocs', 'lPars_preReg', 'preRegFitPar_raw')
 
@@ -96,7 +95,11 @@ disp('Determine the initial site...')
 disp('Building the first data-driven template...')
 refLocs_ori = startSet{idxStart};
 refLocs = fuseLocsNearby(refLocs_ori,2);
-fitting_step2 = setUp_p2pFit(refLocs, 'eps', 5);
+if par.parFu_preRegistration
+    fitting_step2 = setUp_p2pFit(refLocs, 'eps', 5);
+else
+    fitting_step2 = setUp_p2pFit_free3Drot(refLocs, 'eps', 5);
+end
 fitting_step2.modelVerCascade = 1:3;
 
 %% Show initial site
@@ -238,70 +241,74 @@ timerVal = tic;
 
 if par.parFu_preRegistration
     preRegLocMoFitter = setUp_preRegFit(par);
+else
+    preRegLocMoFitter = [];
 end
 
-if par.proc_continueFrom<0
 preRegLocs = [];
 lPars_preReg = [];
 preRegFitPar_raw = [];
-for k = length(selectedSetInd):-1:1
-    % get locs for all sites
-    indSite = selectedSetInd(k);
-    pos = sites(indSite).pos;
-    file = sites(indSite).info.filenumber;
-    locs(k) = g.locData.getloc({'xnm','ynm','znm','locprecnm','channel','locprecznm','layer'},'grouping','grouped','position',[pos(1:2) 150 150],'filenumber',file, 'layer',1);
-    locs(k).xnm = locs(k).xnm-pos(1);
-    locs(k).ynm = locs(k).ynm-pos(2);
-    % assign layer
-    locs(k).layer = zeros(size(locs(k).xnm));
-    locs(k).layer(locs(k).channel==0) = 1;
 
-    if par.parFu_useIsoLocprecnm
-        locs(k).locprecznm = locs(k).locprecnm;
-    end
-end
-if ~license('test','Distrib_Computing_Toolbox')||length(selectedSetInd)<10
+if par.proc_continueFrom<0
+
     for k = length(selectedSetInd):-1:1
-        if par.parFu_preRegistration
-            [preRegLocs{k}, lPars_preReg{k}, preRegFitPar_raw{k}] = preReg(preRegLocMoFitter,locs(k));
-        else
-            locs(k).xnm = locs(k).xnm - median(locs(k).xnm);
-            locs(k).ynm = locs(k).ynm - median(locs(k).ynm);
-            locs(k).znm = locs(k).znm - median(locs(k).znm);
+        % get locs for all sites
+        indSite = selectedSetInd(k);
+        pos = sites(indSite).pos;
+        file = sites(indSite).info.filenumber;
+        locs(k) = g.locData.getloc({'xnm','ynm','znm','locprecnm','channel','locprecznm','layer'},'grouping','grouped','position',[pos(1:2) 150 150],'filenumber',file, 'layer',1);
+        locs(k).xnm = locs(k).xnm-pos(1);
+        locs(k).ynm = locs(k).ynm-pos(2);
+        % assign layer
+        locs(k).layer = zeros(size(locs(k).xnm));
+        locs(k).layer(locs(k).channel==0) = 1;
+
+        if par.parFu_useIsoLocprecnm
+            locs(k).locprecznm = locs(k).locprecnm;
         end
+    end
+    if ~license('test','Distrib_Computing_Toolbox')||length(selectedSetInd)<10
+        for k = length(selectedSetInd):-1:1
+            if par.parFu_preRegistration
+                [preRegLocs{k}, lPars_preReg{k}, preRegFitPar_raw{k}] = preReg(preRegLocMoFitter,locs(k));
+            else
+                locs(k).xnm = locs(k).xnm - median(locs(k).xnm);
+                locs(k).ynm = locs(k).ynm - median(locs(k).ynm);
+                locs(k).znm = locs(k).znm - median(locs(k).znm);
+            end
 
-        originalLocs{k} = locs(k);
-    %     selectedSet{k} = fitting_step1.locsHandler(locs, lParM1,1);
+            originalLocs{k} = locs(k);
+            %     selectedSet{k} = fitting_step1.locsHandler(locs, lParM1,1);
 
-        %
-        if toc(tic)>=5 % update every 15 sec
-            timerVal = tic;
+            %
+            if toc(tic)>=5 % update every 15 sec
+                timerVal = tic;
+                disp(['Site ' num2str(k) ' done!'])
+            end
+        end
+    else
+        if par.parFu_preRegistration
+            preRegLocs = cell(1,length(selectedSetInd));
+            lPars_preReg = cell(1,length(selectedSetInd));
+            preRegFitPar_raw = cell(1,length(selectedSetInd));
+        end
+        originalLocs = cell(1,length(selectedSetInd));
+        parfor k = 1:length(selectedSetInd)
+            if par.parFu_preRegistration
+                [preRegLocs{k}, lPars_preReg{k}, preRegFitPar_raw{k}] = preReg(preRegLocMoFitter,locs(k));
+            else
+                locs(k).xnm = locs(k).xnm - median(locs(k).xnm);
+                locs(k).ynm = locs(k).ynm - median(locs(k).ynm);
+                locs(k).znm = locs(k).znm - median(locs(k).znm);
+            end
+
+            originalLocs{k} = locs(k);
+            %     selectedSet{k} = fitting_step1.locsHandler(locs, lParM1,1);
+
+            %
             disp(['Site ' num2str(k) ' done!'])
         end
     end
-else
-    if par.parFu_preRegistration
-        preRegLocs = cell(1,length(selectedSetInd));
-        lPars_preReg = cell(1,length(selectedSetInd));
-        preRegFitPar_raw = cell(1,length(selectedSetInd));
-    end
-    originalLocs = cell(1,length(selectedSetInd));
-    parfor k = 1:length(selectedSetInd)
-        if par.parFu_preRegistration
-            [preRegLocs{k}, lPars_preReg{k}, preRegFitPar_raw{k}] = preReg(preRegLocMoFitter,locs(k));
-        else
-            locs(k).xnm = locs(k).xnm - median(locs(k).xnm);
-            locs(k).ynm = locs(k).ynm - median(locs(k).ynm);
-            locs(k).znm = locs(k).znm - median(locs(k).znm);
-        end
-
-        originalLocs{k} = locs(k);
-    %     selectedSet{k} = fitting_step1.locsHandler(locs, lParM1,1);
-
-        %
-        disp(['Site ' num2str(k) ' done!'])
-    end
-end
 else
     originalLocs = evalin('base', 'originalLocs');
     preRegLocs = evalin('base', 'preRegLocs');
@@ -334,10 +341,15 @@ if par.proc_continueFrom < 1
         locsRefOri = refSource{l};
         locsRef = locsRefOri;
         if l==1
-            fitting_step2 = setUp_p2pFit(locsRef);
+            if par.parFu_preRegistration
+                fitting_step2 = setUp_p2pFit(locsRef);
+            else
+                fitting_step2 = setUp_p2pFit_free3Drot(locsRef);
+            end
         end
         
         ind = orderInMatrix(orderInMatrix~=l);% for sites
+        % run particle to particle fitting
         [thisPars,thisLL] = p2pFit(fitting_step2, locsRef,targetSource, ind,'lPars_preReg', lPars_preReg_startSet, 'eps', 5);
         modelPars.iter1(l,ind) = thisPars;
 %                 fitInfo.iter1{l,k} = fitting_step2.fitInfo;
@@ -435,7 +447,7 @@ if par.proc_continueFrom < 3
     if par.parFu_preRegistration
         fitting_step2 = setUp_p2pFit(refLocs,'eps',5);
     else
-        fitting_step2 = setUp_p2pFit(refLocs);
+        fitting_step2 = setUp_p2pFit_free3Drot(refLocs,'eps',5);
     end
     refLocs(2) = fuseLocsNearby(allNodes{rank_sum(end)},5);
     refLocs(3) = fuseLocsNearby(allNodes{rank_sum(end)},2);
@@ -449,7 +461,7 @@ else
     if par.parFu_preRegistration
         fitting_step2 = setUp_p2pFit(refLocs,'eps',5);
     else
-        fitting_step2 = setUp_p2pFit(refLocs);
+        fitting_step2 = setUp_p2pFit_free3Drot(refLocs,'eps',5);
     end
     refLocs(2) = fuseLocsNearby(finalAvg{end},5);
     refLocs(3) = fuseLocsNearby(finalAvg{end},2);
@@ -615,7 +627,11 @@ else
     subStartSet = startSet(ind);
     dispalyStatus = p.dispalyStatus;
     lPreReg = ~isempty(p.lPars_preReg);
-    lPars_preReg = p.lPars_preReg(ind);
+    if lPreReg
+        lPars_preReg = p.lPars_preReg(ind);
+    else
+        lPars_preReg = cell(1,length(ind));
+    end
     parfor k = 1:length(ind)
         locs{k} = subStartSet{k};
         fitting_step2_ = fitting_step2;
@@ -778,6 +794,39 @@ fitting_step2.setParArg('m1.lPar.xrot','fix',false,'lb',-25,'ub',25)
 fitting_step2.setParArg('m1.lPar.yrot','fix',false,'lb',-25,'ub',25)
 fitting_step2.setParArg('m1.lPar.variation','fix',false,'value',p.eps,'lb',-inf,'ub',inf,'min',0,'max',p.eps)
 fitting_step2.setParArg('m1.lPar.zrot','fix',false,'lb',-180,'ub',180)
+fitting_step2.setParArg('m1.lPar.x','lb',-25,'ub',+25)
+fitting_step2.setParArg('m1.lPar.y','lb',-25,'ub',+25)
+fitting_step2.setParArg('m1.lPar.z','lb',-25,'ub',+25,'value',0)
+fitting_step2.setParArg('m1.lPar.weight','fix',true,'value',1)
+fitting_step2.setParArg('m91.offset.weight','fix',false, 'value', 0.1,'lb',-inf,'ub',inf,'min',1e-3,'max',0.999)
+
+fitting_step2.converter(fitting_step2, 'rand(1)*360', 'm1.lPar.zrot')
+
+fitting_step2.advanceSetting.gaussDistMode.value = 'fast';
+end
+
+function fitting_step2 = setUp_p2pFit_free3Drot(locsRef, varargin)
+p = inputParser;
+p.addParameter('eps',10);
+p.parse(varargin{:});
+p = p.Results;
+
+mod = locsModel(locsRef, 'layer', 1);
+mod.dimension = 3;
+mod.layer = 1;
+
+fitting_step2 = LocMoFit('SolverName', 'fminsearchbnd','SolverOptions',{'Display','off'});
+fitting_step2.objFunType = 'likelihood';
+fitting_step2.dataDim = 3;
+fitting_step2.addModel(mod);
+fitting_step2.sigmaCascade = [1 1 1; 0 0 0];
+fitting_step2.model{1}.sigmaFactor = [1 0];
+
+fitting_step2.roiSize = 300;
+fitting_step2.setParArg('m1.lPar.xrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf)
+fitting_step2.setParArg('m1.lPar.yrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf)
+fitting_step2.setParArg('m1.lPar.variation','fix',false,'value',p.eps,'lb',-inf,'ub',inf,'min',0,'max',p.eps)
+fitting_step2.setParArg('m1.lPar.zrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf)
 fitting_step2.setParArg('m1.lPar.x','lb',-25,'ub',+25)
 fitting_step2.setParArg('m1.lPar.y','lb',-25,'ub',+25)
 fitting_step2.setParArg('m1.lPar.z','lb',-25,'ub',+25,'value',0)
