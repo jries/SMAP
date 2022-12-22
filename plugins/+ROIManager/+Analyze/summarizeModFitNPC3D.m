@@ -63,27 +63,27 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             for k = find(lFailed)
                 usedSites(k).annotation.list3.value = 5;
             end
-
-            for k = find(lOneRing)'
-                % 7: one-ring detected by the z correction
-                % 8: one-ring detected by this plugin only
-                % 9: one-ring detected by both
-                if usedSites(k).annotation.list3.value == 7
-                    usedSites(k).annotation.list3.value = 9;
-                else
-                    usedSites(k).annotation.list3.value = 8;
-                end
-            end
-            for k = find(largRingSep)'
-                usedSites(k).annotation.list3.value = 4;
-            end
             list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
-
             if p.ringSepFiltering
-                lGood = list3 == 1;
-            else
-                lGood = true(size(list3));
+                lBad = list3 ~= 1;
             end
+            if p.ringSepFiltering
+                for k = find(lOneRing)'
+                    % 7: one-ring detected by the z correction
+                    % 8: one-ring detected by this plugin only
+                    % 9: one-ring detected by both
+                    if usedSites(k).annotation.list3.value == 7
+                        usedSites(k).annotation.list3.value = 9;
+                    else
+                        usedSites(k).annotation.list3.value = 8;
+                    end
+                end
+                for k = find(largRingSep)'
+                    usedSites(k).annotation.list3.value = 4;
+                end
+                list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
+            end
+            lGood = list3 == 1;
             disp(['numOfSites = ' num2str(sum(lGood))])
             %% Shift the athimuthal angle periodically 
             medAzi_0 = 0;
@@ -98,6 +98,13 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
                 azi_new(azi_new>azi_ub) = azi_new(azi_new>azi_ub)-45;
                 azi_new(azi_new<azi_lb) = azi_new(azi_new<azi_lb)+45;
             end
+
+            % transform also the bad ones
+            azi_ub = medAzi+22.5;
+            azi_lb = medAzi-22.5;
+            azi_new_all = azi;
+            azi_new_all(azi>azi_ub) = azi(azi>azi_ub)-45;
+            azi_new_all(azi<azi_lb) = azi(azi<azi_lb)+45;
 
             %%
             %% Ring separation

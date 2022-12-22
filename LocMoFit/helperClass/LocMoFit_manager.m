@@ -89,7 +89,7 @@ classdef LocMoFit_manager < handle
             % histogram for 1D data
             % integrated scatter plot for 2D data
             fn = fieldnames(obj.plotSettings);
-            lKept = obj.filtering;
+            lKept = obj.filtering(obj.useSites);
             for k = 1:length(fn)
                 onePlot = obj.plotSettings.(fn{k});
                 if length(onePlot) == 2
