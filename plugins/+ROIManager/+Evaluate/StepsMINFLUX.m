@@ -30,7 +30,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
 
            %identify all localizations in track
-           locs=obj.getLocs({'xnm','ynm','groupindex','tid'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2);
+           locs=obj.getLocs({'xnm','ynm','groupindex','tid','time'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
            if isempty(locs.xnm)
                 disp('no localizations')
                 return
@@ -40,7 +40,25 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            else
                fid='tid';
            end
-           id=mode(locs.(fid));
+            
+           times=str2num(obj.site.annotation.comments)*1000;
+           if isempty(times)
+               id=mode(locs.(fid));
+           else
+               timemin=obj.site.image.parameters.layerparameters{1}.colorfield_min;
+               timemax=obj.site.image.parameters.layerparameters{1}.colorfield_max;
+               if max(times)<1000
+                   times=timemin+(timemax-timemin)*times/1000;
+               end
+               
+               if length(times)==1 % one element
+                   timewinselect=(timemax-timemin)*0.05;
+                   times=times+[-timewinselect timewinselect];
+               end
+               ind=locs.time > times(1) & locs.time < times(2);
+               id=mode(locs.(fid)(ind));
+           end
+           
            index=obj.locData.loc.(fid)==id;
            obj.index=index;
            obj.id=id;
@@ -198,6 +216,17 @@ plotsimple(obj,'cfr')
 plotsimple(obj,'eco')
 plotsimple(obj,'ecc')
 
+if obj.getSingleGuiParameter('msdanalysis') %MSD
+    amsd=obj.setoutput('MSD');
+    hold(amsd,'off')
+    msd=obj.stats.msd;
+    plot(amsd,msd.dt,msd.mean,'b',msd.dt,msd.mean+msd.std,'c',msd.dt,msd.mean-msd.std,'c')
+    xlabel(amsd,'dt(ms)')
+    ylabel(amsd,'msd (nm^2)')
+    hold(amsd,'on')
+    plot(amsd,msd.tfit,msd.fit(msd.tfit),'r');
+    title(amsd,['D = ' num2str(msd.D) ' nm^2/ms, offset = ' num2str(msd.off) ' nm']);
+end
 end
 
 function plotsimple(obj,field)
@@ -267,6 +296,36 @@ if ~isempty(obj.coord.xfr)
     out.stdalldetmean.xf=(sum(obj.steps.stddetrend.xf.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
     out.stdalldetmean.yf=(sum(obj.steps.stddetrend.yf.*obj.steps.numlocsstep)/sum(obj.steps.numlocsstep));
 end
+
+
+if obj.getSingleGuiParameter('msdanalysis') %MSD
+    x=obj.coord.xr;
+    y=obj.coord.yr;
+    t=obj.coord.timeplot;
+    
+    msdc=(x-x').^2+(y-y').^2;
+    dt=abs(t-t');
+    tres=2;
+    tmax=100;
+    tmaxplot=min(max(dt(:),tmax*5));
+    tb=(0:tres:tmaxplot)';
+    [dtsort,indsort]=sort(dt(:));
+    msd.mean=bindata(dtsort,msdc(indsort),tb,'mean');
+    msd.std=bindata(dtsort,msdc(indsort),tb,'std');
+    msd.dt=tb;
+    
+    indmax=round(tmax/tres);
+    msd.mfit=msd.mean(1:indmax);
+    msd.tfit=tb(1:indmax);
+    msd.fit=fit(double(msd.tfit),double(msd.mfit),'poly1');
+    msd.D=msd.fit.p1/4;
+    msd.off=sqrt(msd.fit.p2);
+    % hold(amsd,'on')
+    % plot(amsd,tfit,fmsd(tfit));
+    % title(amsd,['D = ' num2str(fmsd.p1/4) ' nm^2/ms, offset = ' num2str(sqrt(fmsd.p2)) ' nm']);
+    out.msd=msd;
+end
+
 obj.stats=out;
 end
 
@@ -368,6 +427,7 @@ end
 
 %xy plot
 goff=median(mod(obj.steps.stepvalue,16),'omitnan');
+% goff=0; %switch off shift 
 axxy=obj.setoutput('xy');
 hold(axxy,'off')
 plot(axxy, obj.coord.xr-goff, obj.coord.yr)
@@ -879,7 +939,11 @@ pard.refine.Width=1;
 
 pard.showtext.object=struct('String','values','Style','checkbox');
 pard.showtext.position=[5,3];
-pard.showtext.Width=2;
+pard.showtext.Width=1;
+
+pard.msdanalysis.object=struct('String','MSD','Style','checkbox');
+pard.msdanalysis.position=[5,4];
+pard.msdanalysis.Width=1;
 
 %auto-fit
 p(1).value=0; p(1).on={}; p(1).off={'splitmerget','splitmergestep'};

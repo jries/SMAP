@@ -77,10 +77,25 @@ classdef LocMoFit_manager < handle
         end
         function IDs = variableIDs(obj, varargin)
             %% 
+            inp = inputParser;
+            inp.addParameter('type', 'all')
+            inp.addParameter('fitterNames', [])
+            inp.parse(varargin{:});
+            p = inp.Results;
             IDs = {};
-            for k = 1:obj.numOfFitter
-                fitterName = obj.fitterNames{k};
-                IDs = [IDs; strcat([fitterName '.'], obj.data(obj.currentData).fitter.(fitterName).getAllParId([],'type','all'))];
+            if isempty(p.fitterNames)
+                allFitterNames = obj.fitterNames;
+            else
+                if isa(p.fitterNames, 'cell')
+                    allFitterNames = p.fitterNames;
+                else
+                    allFitterNames = {p.fitterNames};
+                end
+            end
+
+            for k = 1:length(allFitterNames)
+                fitterName = allFitterNames{k};
+                IDs = [IDs; strcat([fitterName '.'], obj.data(obj.currentData).fitter.(fitterName).getAllParId([],'type',p.type))];
             end
         end
         

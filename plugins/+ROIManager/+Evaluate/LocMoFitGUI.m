@@ -1283,7 +1283,7 @@ end
 
 % Update the convert tab.
 hConvert = obj.guihandles.anchorConvert;
-optionTarget = unique([hConvert.ColumnFormat{3} parId]);
+optionTarget = unique([hConvert.ColumnFormat{3}'; parId])';
 hConvert.ColumnFormat{3} = optionTarget;
 obj.guihandles.anchorConvert=hConvert;
 

@@ -111,7 +111,9 @@ if ~p.skipFit
     end
 end
 
-obj.defineRotPar;
+if ~p.skipFit
+    obj.preFittingConversion;
+end
 
 for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
     obj.currentCascadeStep = sc;
@@ -134,8 +136,8 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
     %   and max meaningful values
     lSet2Min = finalLb<minVal';
     lSet2Max = finalUb>maxVal';
-    finalLb(lSet2Min)=minVal(lSet2Min);
-    finalUb(lSet2Max)=maxVal(lSet2Max);
+    finalLb(lSet2Min) = minVal(lSet2Min);
+    finalUb(lSet2Max) = maxVal(lSet2Max);
     
     %% Get locs info
     obj.getLocsInfo
@@ -165,6 +167,7 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
     
     indFit = ~obj.allParsArg.fix;
     if ~p.skipFit
+        
         switch obj.getAdvanceSetting('runtime')
             case 'on'
                 tic
@@ -203,6 +206,7 @@ for sc = 1:size(obj.sigmaCascade,2) % This is for the sigma cascading
             case 'off'
 %               'Do nothing.'
         end
+        parBestFit = obj.postFittingConversion(parBestFit);
     else
         oldFitInfo = obj.fitInfo;
         parBestFit = obj.allParsArg.value(indFit)';
