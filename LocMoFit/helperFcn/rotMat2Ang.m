@@ -1,4 +1,21 @@
 function [xrot,yrot,zrot] = rotMat2Ang(R, par)
+% :func:`rotMat2Ang` calcualtes the corresponding Tait–Bryan angles based on the rotation matrix :attr:`R`, given a specific parameterization :attr:`par`.
+%
+% Uasage:
+%   [xrot,yrot,zrot] = rotMat2Ang(R, par)
+%
+% Args:
+%   R (numeric matrix): a 3-by-3 rotation matrix.
+% 	par (string): either 'rotationMatrix' or 'rotationMatrixRev'.
+%
+% Returns:
+%   xrot (numeric scalar): rotation angle about the x-axis.
+%	yrot (numeric scalar): rotation angle about the y-axis.
+%	zrot (numeric scalar): rotation angle about the z-axis.
+%
+% Last update:
+%   06.12.2022
+%
     switch par
         case 'rotationMatrix'
             % extrinsic rotation (ZYX) (order: X->Y->Z)

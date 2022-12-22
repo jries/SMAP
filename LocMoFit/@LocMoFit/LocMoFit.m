@@ -463,10 +463,18 @@ classdef LocMoFit<matlab.mixin.Copyable
                     val_max = obj.allParsArg.max(v);
                     val_lb = obj.allParsArg.lb(v);
                     val_ub = obj.allParsArg.ub(v);
+                    val = obj.allParsArg.value(v);
                     if all([val_min;val_lb]==-inf) && all([val_max;val_ub]==inf) && all(~val_fix)
-                        obj.setParArg('m1.lPar.xrot', 'value', 1e-4, 'min', -4*pi, 'max', 4*pi)
-                        obj.setParArg('m1.lPar.yrot', 'value', 1e-4, 'min', -4*pi, 'max', 4*pi)
-                        obj.setParArg('m1.lPar.zrot', 'value', 1e-4, 'min', -4*pi, 'max', 4*pi)
+                        if any(val~=0)
+                            R = rotAng2rotMat(val(1), val(2), val(3), 'XYZ');
+                            k = rotMat2AxisAng(R(1:3,1:3));
+                            xrot = k(1); yrot = k(2); zrot = k(3);
+                        else
+                            xrot = 1e-6; yrot = xrot; zrot = xrot;
+                        end
+                        obj.setParArg('m1.lPar.xrot', 'value', xrot, 'min', -4*pi, 'max', 4*pi)
+                        obj.setParArg('m1.lPar.yrot', 'value', yrot, 'min', -4*pi, 'max', 4*pi)
+                        obj.setParArg('m1.lPar.zrot', 'value', zrot, 'min', -4*pi, 'max', 4*pi)
                         obj.setTemp('freeRot', true)
                     else
                         obj.setTemp('freeRot', false)

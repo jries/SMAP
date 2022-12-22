@@ -485,9 +485,9 @@ while iter <=par.parFu_maxIter && iterStall <= par.parFu_maxStall
     
     % fitting individual sites with the average generated in the last step
     if isempty(lPars_preReg)
-        [all2Avg_Par{iter}, all2Avg_LL{iter}] = p2pFit(fitting_step2, refLocs,originalLocs, 1:nUsedForAvg, 'dispalyStatus', true);
+        [all2Avg_Par{iter}, all2Avg_LL{iter}] = p2pFit(fitting_step2, refLocs, originalLocs, 1:nUsedForAvg, 'dispalyStatus', true, 'eps',20);
     else
-        [all2Avg_Par{iter}, all2Avg_LL{iter}] = p2pFit(fitting_step2, refLocs,originalLocs, 1:nUsedForAvg, 'dispalyStatus', true, 'lPars_preReg', lPars_preReg, 'eps',5);
+        [all2Avg_Par{iter}, all2Avg_LL{iter}] = p2pFit(fitting_step2, refLocs, originalLocs, 1:nUsedForAvg, 'dispalyStatus', true, 'lPars_preReg', lPars_preReg, 'eps',5);
     end
     % creating the new average by aligning all the sites to the previous
     % average followed by concatenating all localizations.
@@ -823,17 +823,19 @@ fitting_step2.sigmaCascade = [1 1 1; 0 0 0];
 fitting_step2.model{1}.sigmaFactor = [1 0];
 
 fitting_step2.roiSize = 300;
-fitting_step2.setParArg('m1.lPar.xrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf)
-fitting_step2.setParArg('m1.lPar.yrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf)
+fitting_step2.setParArg('m1.lPar.xrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf, 'value', 0)
+fitting_step2.setParArg('m1.lPar.yrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf, 'value', 0)
 fitting_step2.setParArg('m1.lPar.variation','fix',false,'value',p.eps,'lb',-inf,'ub',inf,'min',0,'max',p.eps)
-fitting_step2.setParArg('m1.lPar.zrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf)
+fitting_step2.setParArg('m1.lPar.zrot','fix',false,'lb',-inf,'ub',inf,'min',-inf,'max',inf, 'value', 0)
 fitting_step2.setParArg('m1.lPar.x','lb',-25,'ub',+25)
 fitting_step2.setParArg('m1.lPar.y','lb',-25,'ub',+25)
 fitting_step2.setParArg('m1.lPar.z','lb',-25,'ub',+25,'value',0)
 fitting_step2.setParArg('m1.lPar.weight','fix',true,'value',1)
 fitting_step2.setParArg('m91.offset.weight','fix',false, 'value', 0.1,'lb',-inf,'ub',inf,'min',1e-3,'max',0.999)
 
-fitting_step2.converter(fitting_step2, 'rand(1)*360', 'm1.lPar.zrot')
+fitting_step2.saveInit
+
+% fitting_step2.converter(fitting_step2, 'rand(1)*360', 'm1.lPar.zrot')
 
 fitting_step2.advanceSetting.gaussDistMode.value = 'fast';
 end
