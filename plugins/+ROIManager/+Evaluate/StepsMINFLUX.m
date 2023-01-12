@@ -83,7 +83,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
 
            [xr,yr,angle]=rotateCenterCoordinates(x,y,time,obj.range);
-            % if p.filtertrack
+            % if p.filtertrackmode
                 zf=z;
                 windowsize=p.filterwindow;
                 xf=runningWindowAnalysis(time,x,time,windowsize,p.filtermode.selection);     
@@ -347,7 +347,7 @@ else
 end
 obj.coord.indtime=indtime;
 
-if strcmp(obj.getSingleGuiParameter('filtertrack').selection,'smooth stepfind')
+if strcmp(obj.getSingleGuiParameter('filtertrackmode').selection,'smooth stepfind')
    xr=obj.coord.xr(indtime);
 else
    xr=obj.coord.xfr(indtime);
@@ -397,9 +397,9 @@ ax2=obj.setoutput('steps_x');
 hold(ax2,'off')
 
 
-plotfiltered=obj.getSingleGuiParameter('filtertrack').Value>1 ;
+plotfiltered=obj.getSingleGuiParameter('filtertrackmode').Value>1 ;
 if plotfiltered
-    colornotfiltered=[1 1 1]*0.7;
+    colornotfiltered=[1 1 1]*0.6;
     plot(ax2,obj.coord.timeplot,obj.coord.xr,'LineWidth',0.25,'Color',colornotfiltered,'HitTest','off');
     hold(ax2,'on')
     plot(ax2,obj.coord.timeplot,obj.coord.xfr,'k','HitTest','off');
@@ -689,7 +689,7 @@ function manualcurate(obj)
 f=figure(234);
 ax=gca;
 hold(ax,'off')
-if strcmp(obj.getSingleGuiParameter('filtertrack').selection,'smooth stepfind')
+if strcmp(obj.getSingleGuiParameter('filtertrackmode').selection,'smooth stepfind')
     xp=obj.coord.xr(obj.coord.indtime);
 else
     xp=obj.coord.xfr(obj.coord.indtime);
@@ -755,7 +755,7 @@ end
 obj.coord.indtime=indtime;
 mfun=str2func(obj.getSingleGuiParameter('fitmode').selection);
 
-if strcmp(obj.getSingleGuiParameter('filtertrack').selection,'smooth stepfind')
+if strcmp(obj.getSingleGuiParameter('filtertrackmode').selection,'smooth stepfind')
     x=obj.coord.xfr(indtime);
     y=obj.coord.yfr(indtime);
 else
@@ -859,13 +859,13 @@ y=obj.coord.yr(indt);
 % nmax=500;
 % nmin=10;
 % x=x(nmin:nmax);y=y(nmin:nmax);time=time(nmin:nmax);
-if obj.getSingleGuiParameter('filtertrack')  
+if obj.getSingleGuiParameter('filtertrackmode')  
     fmode=obj.getSingleGuiParameter('filtermode').selection;
     windowsize=obj.getSingleGuiParameter('filterwindow'); 
     xf=runningWindowAnalysis(time,x,time,windowsize,fmode); 
     yf=runningWindowAnalysis(time,y,time,windowsize,fmode); 
     linew=1;
-    filtertrack=true;
+    filtertrackmode=true;
 
 %     timen=min(time):fw:max(time);
 %     xx=bindata(time,x,timen,fmode);
@@ -874,7 +874,7 @@ if obj.getSingleGuiParameter('filtertrack')
 else
     xf=x;yf=y;
     linew=0.5;
-    filtertrack=false;
+    filtertrackmode=false;
 end
 
 
@@ -906,7 +906,7 @@ for k=1:length(ts)
     cx=obj.steps.possteps.x(indc);
     cy=obj.steps.possteps.y(indc);
     
-    if filtertrack
+    if filtertrackmode
          xr=x(indh);
          yr=y(indh);
          hr=plot(ax,xr,yr,'Color',[1 1 1]*0.7,'LineWidth',.5);
@@ -925,7 +925,7 @@ for k=1:length(ts)
     delete(hd)
     delete(hl)
     delete(ht)
-    if filtertrack
+    if filtertrackmode
     delete(hr)
     end
     if ~plotsimple
@@ -970,8 +970,8 @@ pard.currentrange.position=[1,1];
 pard.currentrange.Width=1.5;
 
 pard.refit.object=struct('String','Refit','Style','pushbutton','Callback',{{@refit,obj,1}});
-pard.refit.position=[4,2.5];
-pard.refit.Width=1;
+pard.refit.position=[4,2.7];
+pard.refit.Width=0.8;
 pard.refitalways.object=struct('String','always refit','Style','checkbox');
 pard.refitalways.position=[4,3.5];
 pard.refitalways.Width=1.5;
@@ -1008,7 +1008,7 @@ pard.split.Width=1.5;
 
 pard.filterlocs.object=struct('String','filter (Renderer)','Style','checkbox');
 pard.filterlocs.position=[4,1];
-pard.filterlocs.Width=1.5;
+pard.filterlocs.Width=2;
 
 
 % pard.merge.object=struct('String','Merge','Style','pushbutton','Callback',{{@splitmerge,obj,2}});
@@ -1041,12 +1041,12 @@ pard.simplemovie.position=[7,4];
 p(1).value=1; p(1).on={}; p(1).off={'filterwindowt','filterwindow','filtermode'};
 p(2).value=2; p(2).on=p(1).off; p(2).off={};
 p(3)=p(2); p(3).value=3;
-% pard.filtertrack.object=struct('String','Filter','Style','checkbox','Callback',{{@obj.switchvisible,p}});
-% pard.filtertrack.position=[6,1];
+% pard.filtertrackmode.object=struct('String','Filter','Style','checkbox','Callback',{{@obj.switchvisible,p}});
+% pard.filtertrackmode.position=[6,1];
 
-pard.filtertrack.object=struct('String',{{'no smooth','smooth plot','smooth stepfind'}},'Style','popupmenu','Callback',{{@obj.switchvisible,p}},'Value',2);
-pard.filtertrack.position=[6,1];
-pard.filtertrack.Width=1.7;
+pard.filtertrackmode.object=struct('String',{{'no smooth','smooth plot','smooth stepfind'}},'Style','popupmenu','Callback',{{@obj.switchvisible,p}},'Value',2);
+pard.filtertrackmode.position=[6,1];
+pard.filtertrackmode.Width=1.7;
 
 pard.filterwindowt.object=struct('String','dt ms:','Style','text');
 pard.filterwindowt.position=[6,2.7];
