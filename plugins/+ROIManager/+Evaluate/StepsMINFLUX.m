@@ -974,6 +974,10 @@ pard.currentrange.object=struct('String','Current Range','Style','pushbutton','C
 pard.currentrange.position=[1,1];
 pard.currentrange.Width=1.5;
 
+pard.filterlocs.object=struct('String','filter (Renderer)','Style','checkbox');
+pard.filterlocs.position=[4,1];
+pard.filterlocs.Width=2;
+
 pard.refit.object=struct('String','Refit','Style','pushbutton','Callback',{{@refit,obj,1}});
 pard.refit.position=[4,2.7];
 pard.refit.Width=0.8;
@@ -1011,9 +1015,7 @@ pard.split.position=[3,3.5];
 pard.split.Width=1.5;
 
 
-pard.filterlocs.object=struct('String','filter (Renderer)','Style','checkbox');
-pard.filterlocs.position=[4,1];
-pard.filterlocs.Width=2;
+
 
 
 % pard.merge.object=struct('String','Merge','Style','pushbutton','Callback',{{@splitmerge,obj,2}});
