@@ -31,7 +31,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
 
            %identify all localizations in track
-           usefields={'xnm','ynm','groupindex','tid','time','znm', 'efo', 'cfr', 'eco', 'ecc', 'efc'};
+           usefields={'xnm','ynm','groupindex','tid','time','znm', 'efo', 'cfr', 'eco', 'ecc', 'efc','filenumber'};
            locs=obj.getLocs(usefields,'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
            if isempty(locs.xnm)
                 disp('no localizations')
@@ -59,14 +59,19 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                end
                ind=locs.time > times(1) & locs.time < times(2);
                id=mode(locs.(fid)(ind));
+               
            end
+           filenumberh=mode(locs.filenumber);
            
            if p.filterlocs
+               locs=obj.locData.getloc(usefields,'layer',find(obj.getPar('sr_layerson')),'position','all','removeFilter',{'time','filenumber'});
                obj.locsuse=locs;
+               index=obj.locsuse.(fid) == id & obj.locsuse.filenumber ==filenumberh;
            else
                obj.locsuse=obj.locData.loc;
+               index=obj.locsuse.(fid)==id;
            end
-           index=obj.locsuse.(fid)==id;
+           
            obj.index=index;
            obj.id=id;
             
@@ -129,7 +134,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            out.stattrack=calculatestatistics(obj,index,obj.coord.indtime);
 
            filelist=obj.getPar('filelist_short');
-           out.filename=filelist.String{mode(locs.filenumber)};
+           out.filename=filelist.String{mode(obj.locsuse.filenumber)};
            
            plotstatistics(obj)
         end
@@ -238,11 +243,11 @@ end
 end
 
 function plotsimple(obj,field)
-if ~isempty(obj.locData.loc.(field))
-    time=obj.locData.loc.time(obj.index);
+if ~isempty(obj.locsuse.(field))
+    time=obj.locsuse.time(obj.index);
     ltime=time-min(time);
     axe=obj.setoutput(field);
-    yval=obj.locData.loc.(field)(obj.index);
+    yval=obj.locsuse.(field)(obj.index);
     hold(axe,'off')
     plot(axe,ltime,yval)
     hold(axe,'on')
