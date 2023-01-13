@@ -140,8 +140,8 @@ fitf=@(k1,k2,A,x) A*Ns*dt*Hypoexponentialpdf(x,[k1,k2]);
 [htmax,imax]=max(ht);
 kstart=1/nt(imax);
 % plot(nt,fitf(kstart,kstart*8,1,nt),'m--')
-% fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart/2,kstart*2,1]);
-fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[ft.k1*.9,ft.k1*1.1,1]);
+fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[kstart/2,kstart*2,1]);
+% fthyp2=fit(nt(indt)',ht(indt)',fitf,'StartPoint',[ft.k1*.9,ft.k1*1.1,1]);
 plot(nt,fthyp2(nt),'m')
 meandtfit2e2=sum(fthyp2(nt).*nt')/sum(fthyp2(nt));
 v2e2=stepsizemean/meandtfit2e2*1000; %um/ms
