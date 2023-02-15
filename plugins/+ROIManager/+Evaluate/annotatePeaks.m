@@ -20,9 +20,15 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
             case 'deviation'
                 dev=fs.deviation.value;
                 dsmooth=fs.deviation.value_smo;
+%             case 'polarization'
+%                 dev=fs.P.value;
+%                 dsmooth=fs.P.value_smo;
+%             case 'deviation'
+%                 dev=fs.deviation.value_substracted_centered;
+%                 dsmooth=fs.deviation.value_substracted_centered_smo;
             case 'polarization'
-                dev=fs.P.value;
-                dsmooth=fs.P.value_smo;
+                dev=fs.P.value_substracted_centered;
+                dsmooth=fs.P.value_substracted_centered_smo;
         end
         if isfield(fs,'P')
             indKeptCurve = fs.P.indKeptCurve;
@@ -45,6 +51,7 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
             addlistener(obj.roihandle,'ROIMoved',@(src,evt) obj.updateposition(src,evt));
             addlistener(obj.roihandle,'VertexAdded',@(src,evt) obj.updateposition(src,evt));
             addlistener(obj.roihandle,'VertexDeleted',@(src,evt) obj.updateposition(src,evt));
+            addlistener(obj.roihandle,'DeletingROI',@(src,evt) obj.deleteROI(src,evt));
             obj.plotdistances;
         end
 
@@ -62,6 +69,7 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
             addlistener(obj.roihandle,'ROIMoved',@(src,evt) obj.updateposition(src,evt));
             addlistener(obj.roihandle,'VertexAdded',@(src,evt) obj.updateposition(src,evt));
             addlistener(obj.roihandle,'VertexDeleted',@(src,evt) obj.updateposition(src,evt));
+            addlistener(obj.roihandle,'DeletingROI',@(src,evt) obj.deleteROI(src,evt));
             updateposition(obj,a,b)
         end
         function updateposition(obj,a,b)
@@ -73,6 +81,10 @@ classdef annotatePeaks<interfaces.SEEvaluationProcessor
             modality=obj.getSingleGuiParameter('modality').selection;
             obj.site.evaluation.(obj.name).(modality).Position=obj.roihandle.Position;
             obj.plotdistances;
+        end
+        function deleteROI(obj,a,b)
+            modality=obj.getSingleGuiParameter('modality').selection;
+            obj.site.evaluation.(obj.name).(modality).Position=[];
         end
         function plotdistances(obj)
             modality=obj.getSingleGuiParameter('modality').selection;

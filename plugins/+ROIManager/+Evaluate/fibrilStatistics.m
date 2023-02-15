@@ -104,9 +104,33 @@ function pard = guidef(obj)
     pard.old.position = [5 1];
     pard.old.Width = 1;
     
-    pard.locsSource.object = struct('Style','popupmenu','String',{{'Smooth_axis','Rough_axis'}},'Value', 1);
+    pard.locsSource.object = struct('Style','popupmenu','String',{{'Smooth_axis','Rough_axis','Median_axis'}},'Value', 1);
     pard.locsSource.position = [5 2];
     pard.locsSource.Width = 1;
+
+    pard.t_source_dev.object = struct('Style','text','String','Source_dev');
+    pard.t_source_dev.position = [6 1];
+    pard.t_source_dev.Width = 1;
+
+    pard.source_dev.object = struct('Style','popupmenu','String',{{'value','value_substracted_centered'}},'Value', 1);
+    pard.source_dev.position = [6 2];
+    pard.source_dev.Width = 1;
+
+    pard.t_auto_window.object = struct('Style','text','String','auto_window (bin)');
+    pard.t_auto_window.position = [7 1];
+    pard.t_auto_window.Width = 1;
+
+    pard.auto_window.object = struct('Style','edit','String', 12);
+    pard.auto_window.position = [7 2];
+    pard.auto_window.Width = 1;
+
+    pard.t_med_bgFiltering.object = struct('Style','text','String','Med_bg (100 nm)');
+    pard.t_med_bgFiltering.position = [8 1];
+    pard.t_med_bgFiltering.Width = 1;
+
+    pard.med_bgFiltering.object = struct('Style','edit','String', 50);
+    pard.med_bgFiltering.position = [8 2];
+    pard.med_bgFiltering.Width = 1;
 
     % check whether these is a fibrilDynamics before this module
     options = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);      % names of all mounted modules

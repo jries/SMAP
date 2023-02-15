@@ -34,7 +34,13 @@ for k=length(p):-1:1
     end
 
     if isarray||(numel(vh)==1 && (isnumeric(vh)||islogical(vh)))
-        v(k)=vh;
+        try
+            v(k)=vh;
+        catch
+            v(isnan(v))=0;
+            v = logical(v);
+            v(k)=false;
+        end
         isarray=true;
     else
         v{k}=vh;

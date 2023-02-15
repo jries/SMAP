@@ -104,16 +104,16 @@ classdef LocMoFit_manager < handle
             % histogram for 1D data
             % integrated scatter plot for 2D data
             fn = fieldnames(obj.plotSettings);
-            lKept = obj.filtering(obj.useSites);
+%             lKept = obj.filtering(obj.useSites);
             for k = 1:length(fn)
                 onePlot = obj.plotSettings.(fn{k});
                 if length(onePlot) == 2
                     xData = obj.getVariable(onePlot{1});
                     yData = obj.getVariable(onePlot{2});
-                    xData = xData(lKept);
-                    yData = yData(lKept);
+%                     xData = xData(lKept);
+%                     yData = yData(lKept);
                     grp = obj.grp(obj.useSites);
-                    grp = grp(lKept);
+%                     grp = grp(lKept);
                     fig = figure;
                     t = tiledlayout(fig, 3,3);
                     ax = nexttile(1,[2 2]);
@@ -133,7 +133,7 @@ classdef LocMoFit_manager < handle
                         grpScatter(ax, xData, yData, grp,3,-density, 'filled');
                     else
                         grpScatter(ax, xData, yData, grp,3,-density, 'filled');
-%                         plotSElink(ax, xData, yData, obj.IDSites(obj.useSites), obj.parentObj.SE,' ko');
+                        plotSElink(ax, xData, yData, obj.IDSites(obj.useSites), obj.parentObj.SE,' ko');
                     end
                     
                     % x-axis
@@ -278,7 +278,11 @@ classdef LocMoFit_manager < handle
         end
         
         function lFilter = get.filtering(obj)
-            lFilter = obj.filter(obj.filteringRule{:});
+            if ~isempty(obj.filteringRule)
+                lFilter = obj.filter(obj.filteringRule{:});
+            else
+                lFilter = 1:obj.numOfSites;
+            end
         end
         
         function grp = get.grp(obj)
