@@ -638,10 +638,10 @@ classdef LocMoFit<matlab.mixin.Copyable
                         lName = ismember(obj.allParsArg.name, name);
                         ind = find(lModel&lName);
                         val = obj.allParsArg.value(ind);
-                    elseif isfield(obj.fitInfo.modelPar_internal{str2num(model)}, name)
+                    elseif length(obj.fitInfo.modelPar_internal)>=str2num(model)&&isfield(obj.fitInfo.modelPar_internal{str2num(model)}, name)
                         val = obj.fitInfo.modelPar_internal{str2num(model)}.(name);
                         ind = ['.fitInfo.modelPar_internal{' model '}.' name];
-                    elseif isfield(obj.fitInfo.derivedPars{str2num(model)}, name)
+                    elseif length(obj.fitInfo.modelPar_internal)>=str2num(model)&&isfield(obj.fitInfo.derivedPars{str2num(model)}, name)
                         val = obj.fitInfo.derivedPars{str2num(model)}.(name);
                         ind = ['.fitInfo.derivedPars{' model '}.' name];
                     else
@@ -864,6 +864,9 @@ classdef LocMoFit<matlab.mixin.Copyable
                 case 'all'
                     flag = [1 1];
                     typeFlag = [1 1];
+                case 'nonLPar'
+                    flag = [1 1];
+                    typeFlag = [0 1];
             end
             
             parId = [];

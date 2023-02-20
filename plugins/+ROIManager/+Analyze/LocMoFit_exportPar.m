@@ -137,6 +137,8 @@ classdef LocMoFit_exportPar<interfaces.DialogProcessor&interfaces.SEProcessor
                     type = 'lPar';
                 case '0  0  1'
                     type = 'auxiliary';
+                case '1  0  1'
+                    type = 'nonLPar';
             end
             fitterName = p.which_LocMoFitGUI.selection;
             variableIDs = obj.fit_manager.variableIDs('fitterNames',fitterName,'type', type);

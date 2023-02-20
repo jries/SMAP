@@ -299,15 +299,25 @@ classdef LocMoFit_manager < handle
 %             grp = 
         end
                
-        function variableTable = get.variableTable(obj)
+        function variableTable = get.variableTable(obj, varargin)
+            p = inputParser;
+            p.addParameter('usedOnly', false)
+            p.parse(varargin{:})
+            p = p.Results;
             usedSites = logical(obj.useSites);
-            variableTable = obj.IDSites(usedSites)';
-            variableTable(:,2) = obj.fileNumberSites(usedSites)';
-            if obj.numOfCh==2
-                variableTable(:,3) = obj.NLayer2(usedSites)';
-                preColName = ["ID" "filenumber" "NLayer2"];
+            if p.usedOnly
+                selectedSites = usedSites;
             else
-                preColName = ["ID" "filenumber"];
+                selectedSites = true(size(obj.IDSites));
+            end
+            variableTable = obj.IDSites(selectedSites)';
+            variableTable(:,2) = obj.fileNumberSites(selectedSites)';
+            variableTable(:,3) = usedSites(selectedSites);
+            if obj.numOfCh==2
+                variableTable(:,4) = obj.NLayer2(selectedSites)';
+                preColName = ["ID" "filenumber" "use" "NLayer2"];
+            else
+                preColName = ["ID" "filenumber" "use"];
             end
             numPreCol = size(variableTable,2);
             for k = 1:length(obj.variableTableCol)
