@@ -79,6 +79,8 @@ classdef Analyse_Drift<interfaces.DialogProcessor
                 minframe=find(sum(norm(:,:,1),2)>0,1,'first');
                 timeplot=(framesall-minframe)*dt;
 
+                axall=obj.initaxis('average');
+
                 for pf=1:length(plotfields)
                     axx(pf)=obj.initaxis(plotfields{pf}(1));
                     hold(axx(pf),'off')
@@ -90,8 +92,15 @@ classdef Analyse_Drift<interfaces.DialogProcessor
                     plot(axx(pf),timeplot,dxav(:,:,pf),'k','LineWidth',2);
                     xlabel('time (s)')
                     ylabel('drift (nm)')
+
+                    plot(axall,timeplot,dxav(:,:,pf));
+                    hold(axall,'on')
+
                     
                 end
+                legend(axall,plotfields)
+                    xlabel(axall,'time (s)')
+                    ylabel(axall,'drift (nm)')
 
 
 %                 if ~isempty(locs.time) %MINFLUX or similar
