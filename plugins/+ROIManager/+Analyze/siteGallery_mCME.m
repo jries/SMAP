@@ -1,4 +1,8 @@
 classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
+    properties
+        fig = gobjects(1);
+        fitterGUI_name
+    end
     methods
         function obj=siteGallery_mCME(varargin)        
                 obj@interfaces.DialogProcessor(varargin{:});
@@ -8,13 +12,15 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
         end
         
         function out=run(obj,p)
-            global pan
+            global pan pantext
             pan = [];
+            pantext = [];
             % basic info.
             se = obj.locData.SE;
             roiSize = se.P.par.se_siteroi.content;
             sites = se.sites;
             sites2plot = p.sites;
+            spBtSites = 1;
             
             % hack an evaluate plug-in in order to use the obj.getLocs(...)
             fdcal=figure(233);
@@ -23,7 +29,9 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             dcal.makeGui;
             
             % [to-do] allow selection
-            fitterGUI_name = 'SMLMModelFitGUI_2';
+            fitterGUI_name = 'LocMoFitGUI_2';
+            obj.fitterGUI_name = fitterGUI_name;
+            %fitterGUI_name = 'LocMoFitGUI';
             eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             idxFitterGUI = strcmp(fitterGUI_name,eval);
             fitter = copy(se.processors.eval.processors{idxFitterGUI}.fitter);
@@ -32,7 +40,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             % check the model name (to differentiate mCME and NPC)
             fn = fieldnames(obj.locData.SE.processors.eval.children);
-            idx = strcmp(fn, 'SMLMModelFitGUI_2');
+            idx = strcmp(fn, fitterGUI_name);
             modelName = class(obj.locData.SE.processors.eval.processors{idx}.fitter.model{1}.modelObj);
                     
             % parameters
@@ -48,6 +56,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             else
                 [~,siteOrder] = ismember(sites2plot,siteID);
             end
+            obj.setPar('siteOrder', siteOrder)
             subSites = se.sites(siteOrder);
             numOfPickedSites = length(subSites);
             obj.setPar('numOfPickedSites',numOfPickedSites);
@@ -77,13 +86,43 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             end
             
             nPage = ceil(numOfPickedSites./nSitePage);
+            obj.setPar('nPage',nPage)
             nSiteLastPage = rem(numOfPickedSites,nSitePage);
-            
+            if ~isempty(obj.fig)
+                delete(obj.fig);
+            end
             for np = 1:nPage
-                f=figure;
+                
+                obj.fig(np) = figure;
+                f = obj.fig(np);
                 f.Name = 'siteGallery_mCME_result';
                 pan{np} = panel(f);
                 pan{np}.pack(dim(2), dim(1));
+                pan{np}.de.margin = 0;
+                pan{np}.margin = [2 2 2 2];
+                
+                pantext{np} = panel(f, 'add');
+                pantext{np}.pack(dim(2), dim(1));
+                pantext{np}.de.margin = 0;
+                pantext{np}.margin = [2 2 2 2];
+                
+                pan{np}.ch.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
+                ch = pan{np}.ch;
+                for j = 1:length(ch)
+                    chch = ch{j}.ch;
+                    for k = 1:length(chch)
+                        chch{k}.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
+                    end
+                end
+                
+                pantext{np}.ch.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
+                ch = pantext{np}.ch;
+                for j = 1:length(ch)
+                    chch = ch{j}.ch;
+                    for k = 1:length(chch)
+                        chch{k}.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
+                    end
+                end
                 % [current]
                 f.SizeChangedFcn = {@whenFSizeChanged, f.SizeChangedFcn, {}, @setFSize, {obj}};
                 f.CloseRequestFcn = {@closeAllFig,obj};
@@ -97,6 +136,8 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                 else
                     nSiteThisPage = nSitePage;
                 end
+                
+                 
                 for k = 1:nSiteThisPage
                     if ~strcmp(modelName, 'NPCPointModel_flexible2')
                         plotDirection = 'down';
@@ -107,6 +148,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                     siteInd = (np-1)*nSitePage+k;
                     panSite = pan{np}(panR,panC);
                     panSite.pack(panMode, numOfView+extraRow);  % for data
+                    panSite.de.margin = 0;
                     % Borrow the evaluate plug-in to use getLocs(obj,...)
                     dcal.site=subSites(siteInd);
                     dcal.site.image = se.plotsite(subSites(siteInd));
@@ -174,17 +216,22 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
                         ax.Tag = 'schematic';
                         close(tempFig);
                     end
-                    
-                    if ~strcmp(modelName, 'NPCPointModel_flexible2')
-                        theta = subSites(siteInd).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
-                        text(panSite(1).axis,20,20,['\theta=',num2str(theta,'%.1f')],'Color',[1 1 1],'VerticalAlignment','baseline')
-                    end
                 end
+                
+                %% Export each page
+                if p.realTimeSave
+                    update_callback([],[],obj,np);
+                    drawnow
+                    saveOnePage(obj,np);
+                end
+                
                 if np ~= nPage
                     f.Visible = 'off';
                 else
                     obj.setPar('currentPage', np)
                 end
+                
+                
             end
             update_callback([],[],obj);
             out = [];
@@ -208,9 +255,10 @@ function ax = makePlot(fitter, modViz, locsViz, view, section)
     end
 end
 
-function update_callback(a,b,obj)
-    global pan
-    
+function update_callback(a,b,obj, oneNp)
+    global pan pantext
+    fitterGUI_name = obj.fitterGUI_name;
+    se = obj.locData.SE;
     p = obj.getAllParameters;
     fitter = obj.getPar('fitter');
     roiSize = fitter.roiSize;
@@ -220,6 +268,18 @@ function update_callback(a,b,obj)
     layout = obj.getPar('layout');
     extraRow = obj.getPar('extraRow');
     dim = obj.getPar('dim');
+    siteOrder = obj.getPar('siteOrder');
+    subSites = se.sites(siteOrder);
+    
+    fn = fieldnames(obj.locData.SE.processors.eval.children);
+    idx = strcmp(fn, fitterGUI_name);
+    modelName = class(obj.locData.SE.processors.eval.processors{idx}.fitter.model{1}.modelObj);
+        
+    if ~strcmp(modelName, 'NPCPointModel_flexible2')
+        plotDirection = 'down';
+    else
+        plotDirection = 'right';
+    end
     
     spBtSites = 1;
     
@@ -239,10 +299,27 @@ function update_callback(a,b,obj)
         h_fig = p.fSize(2);
     end
     
-    for np = 1:length(pan)
-        pan{np}.de.margin = 0;
-        pan{np}.margin = [2 2 2 2];
-
+    nSitePage = prod(dim);
+    nSiteLastPage = rem(numOfPickedSites,nSitePage);
+    nPage = obj.getPar('nPage');
+    if exist('oneNp','var')
+       npRange = oneNp;
+    else
+       npRange = 1:nPage;
+    end
+    for np = npRange
+        if np == nPage
+            if nSiteLastPage==0
+                lastID = nSitePage*(np);
+            else
+                lastID = nSitePage*(np-1)+nSiteLastPage;
+            end
+        else
+            lastID = nSitePage*(np);
+        end
+                
+        
+        
         f = pan{np}.figure;
         f.Units = 'centimeters';
         f.Position(3:4) = [w_fig h_fig];
@@ -250,17 +327,24 @@ function update_callback(a,b,obj)
         p2 = findobj(pan{np}.de.axis, 'Tag', 'schematic');
 
         set(p1, 'Visible', 'off')
-        p1Line = findobj(p1,{'Type','line'},'-and',{'-not',{'Tag','scale bar'}});
+        p1Line = findobj(p1,{'Type','line'},'-and',{'-not',{'Tag','scale bar'}},'-and',{'-not',{'Tag','copy'}});
+        p1DashedLine = findobj(p1,'Tag','copy');
+        delete(p1DashedLine);
+        for ll = 1:length(p1Line)
+            oneCopy = copy(p1Line(ll));
+            oneCopy.Parent = p1Line(ll).Parent;
+            oneCopy.Tag = 'copy';
+        end
+        p1DashedLine = findobj(p1,'Tag','copy');
 
         p1SB = findobj(p1,'Tag','scale bar');
         delete(p1SB);
-        ax = pan{np}(1,1,1).axis;
-        addScalebar(ax,'top-left', [20 20]./p.pixelSize,100/p.pixelSize);
+        
     %     axis(p2, 'equal')
 
-        set(p1Line, 'Color', p.lineColor)
-        set(p1Line, 'LineWidth', p.lineWidth)
-
+        set(p1Line, 'Color', 'k')
+        set([p1Line p1DashedLine], 'LineWidth', p.lineWidth)
+        set(p1DashedLine, 'Color', p.lineColor, 'LineStyle','--')
         if ~isempty(p2)
             lineObj = findobj(p2, 'type', 'line');
             if isempty(lineObj)
@@ -289,19 +373,45 @@ function update_callback(a,b,obj)
         set(p1, 'YLim', [p.crop/pixelSize (roiSize-p.crop)/pixelSize]);
         set(p2, 'XLim', [p.crop/pixelSize (roiSize-p.crop)/pixelSize]);
     %     axis(p2, 'tight')
-
-
-        pan{np}.ch.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
-        ch = pan{np}.ch;
-        for j = 1:length(ch)
-            chch = ch{j}.ch;
-            for k = 1:length(chch)
-                chch{k}.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
-            end
-        end
+        ax = pan{np}(1,1,1).axis;
+        addScalebar(ax,'bottom-left', [40 40]./p.pixelSize,100/p.pixelSize);
+% 
+%         pan{np}.ch.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
+%         ch = pan{np}.ch;
+%         for j = 1:length(ch)
+%             chch = ch{j}.ch;
+%             for k = 1:length(chch)
+%                 chch{k}.margin = [spBtSites/2 spBtSites/2 spBtSites/2 spBtSites/2];
+%             end
+%         end
 %         findObj()
 %         labelOn
-        hAllText = findobj(pan{np}.de.axis,'type','text');
+        
+        if ~strcmp(modelName, 'NPCPointModel_flexible2')
+            firstLastID = [nSitePage*(np-1)+1 lastID];
+            if any(p.labelOrder>0)
+                for s = firstLastID(1):firstLastID(2)
+                    labels = {'ID','theta','curvature','radius','area'};
+                    usedLabels = labels(p.labelOrder>0);
+                    usedLabels((p.labelOrder(p.labelOrder>0))) = usedLabels;
+                    siteLabel = getLabels(subSites, usedLabels, s, fitterGUI_name, fitter);
+                    posInPage = rem(s,nSitePage);
+                    if posInPage==0
+                        posInPage = nSitePage;
+                    end
+                    [panR,panC] = tilePosition(posInPage, dim, plotDirection);
+                    onePantext = pantext{np}(panR,panC);
+                    delete(onePantext.axis)
+                    onePantext.select(axes('Color','none'))
+                    text(onePantext.axis,0.3, 0.05,siteLabel,'Color',[1 1 1],'VerticalAlignment','baseline')
+                    hold on
+                    text(onePantext.axis,0.01,0.85,num2str(siteOrder(s),'%04.f'),'Color',[1 1 1],'VerticalAlignment','baseline')
+                    hold off
+                end
+            end
+        end
+        axis(pantext{np}.de.axis,'off');
+        hAllText = findobj(pantext{np}.de.axis,'type','text');
         if p.labelOn
             textVisible = 'on';
         else
@@ -309,6 +419,37 @@ function update_callback(a,b,obj)
         end
         set(hAllText,'Visible',textVisible)
     end
+end
+
+function siteLabel = getLabels(subSites, labels, siteInd, fitterGUI_name, fitter)
+numOfUsedLabels = length(labels);
+for k = 1:numOfUsedLabels
+    switch labels{k}
+        case 'ID'
+            oneLabel = ['Site ' num2str(siteInd)];
+        case 'theta'
+            if isa(fitter.model{1}.modelObj, 'sphericalCap3D_surfaceArea')
+                val = subSites(siteInd).evaluation.(fitterGUI_name).allParsArg.value(13);
+            elseif isa(fitter.model{1}.modelObj, 'CME3DSphereCoverageArea_discrete')
+                val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.closingAngle_pub;
+            end
+            oneLabel = ['\theta = '  num2str(val, '%.1f') char(176)];
+        case 'curvature'
+            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.curvature;
+            oneLabel = ['\it1/R\rm = '  num2str(val, '%.1e') ' nm^{-1}'];
+        case 'radius'
+            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.radius;
+            oneLabel = ['\itR\rm = '  num2str(val, '%.0f') ' nm'];
+        case 'area'
+            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.realSurfaceArea;
+            oneLabel = ['\itA\rm = '  num2str(val, '%.0f') ' nm^2'];
+    end
+    if k == 1
+        siteLabel = oneLabel;
+    else
+        siteLabel = [siteLabel ', ' oneLabel];
+    end
+end
 end
 
 function whenFSizeChanged(a,b,varargin)
@@ -448,6 +589,19 @@ pard.saveAll.object=struct('String','Save all','Style','pushbutton','callback',{
 pard.saveAll.position=[rowUpdate+2.5,3.5];
 pard.saveAll.Width=1;
 
+pard.realTimeSave.object=struct('String','','Style','checkbox','value',1);
+pard.realTimeSave.position=[rowUpdate+3.5,3.5];
+pard.realTimeSave.Width=0.3;
+pard.realTimeSave.Tooltip='Check this box if you want to save a page once it is done.';
+
+pard.saveTo.object=struct('String','Save to','Style','pushbutton','callback',{{@saveTo_callback,obj}});
+pard.saveTo.position=[rowUpdate+3.5,3.7];
+pard.saveTo.Width=0.5;
+
+pard.saveToPath.object=struct('String','','Style','edit');
+pard.saveToPath.position=[rowUpdate+3.5,4.2];
+pard.saveToPath.Width=0.8;
+
 pard.t_crop.object=struct('String','Crop','Style','text');
 pard.t_crop.position=[rowUpdate,1];
 pard.t_crop.Width=1;
@@ -476,9 +630,19 @@ pard.t_fSize.object=struct('String','Figure size','Style','text');
 pard.t_fSize.position=[rowUpdate+3,1];
 pard.t_fSize.Width=1;
 
-pard.labelOn.object=struct('String','Show close angle','Value',1,'Style','checkbox');
-pard.labelOn.position=[rowUpdate+4,1];
-pard.labelOn.Width=1;
+pard.t_label.object=struct('String','ID/theta/curvature/radius/area','Style','text');
+pard.t_label.position=[rowUpdate+4,1];
+pard.t_label.Width=1.5;
+pard.t_label.Tooltip='The order of the types of labels. 0 for disable. "1 2 0 0 3" for ID/theta/area.';
+
+pard.labelOrder.object=struct('String','1 2 0 0 3','Style','edit');
+pard.labelOrder.position=[rowUpdate+4,2.3];
+pard.labelOrder.Width=0.8;
+pard.labelOrder.Tooltip='The order of the types of labels. 0 for disable. "1 2 0 0 3" for ID/theta/area.';
+
+pard.labelOn.object=struct('String','','Style','checkbox','value',1);
+pard.labelOn.position=[rowUpdate+4,3.1];
+pard.labelOn.Width=0.3;
 
 pard.fSize.object=struct('String','','Style','edit');
 pard.fSize.position=[rowUpdate+3,col2];
@@ -489,7 +653,7 @@ pard.fSize.Width=1;
 % pard.t2.Width=1;
 % 
 % eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
-% lFitter = startsWith(eval,'SMLMModelFitGUI');
+% lFitter = startsWith(eval,'LocMoFitGUI');
 % options = eval(lFitter);
 % 
 % pard.fitter.object=struct('String',{options},'value',1,'Style','popupmenu');
@@ -513,7 +677,7 @@ function set2_callback(a,b,obj)
     sites = se.sites;
     realCloseAngle = [];
     for k = se.numberOfSites:-1:1
-        realCloseAngle(k) = sites(k).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.realCloseAngle+90;
+        realCloseAngle(k) = sites(k).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.realCloseAngle+90;
     end
     ID = getFieldAsVector(sites,'ID');
     use = getFieldAsVector(sites,'annotation.use');
@@ -558,4 +722,21 @@ function saveFigs(a,b,obj)
     for k = 1:length(pan)
         exportgraphics(pan{k}.figure,[path fName '_' num2str(k) fExt],'ContentType','vector', 'Resolution', 600)
     end
+end
+
+function saveOnePage(obj,k)
+    global pan
+    p = obj.getGuiParameters;
+    [path,fName,fExt] = fileparts(p.saveToPath);
+    if isempty(fExt)
+        fExt = '.png';
+    end
+    exportgraphics(pan{k}.figure,[path filesep fName '_' num2str(k) fExt],'ContentType','vector', 'Resolution', 600)
+end
+
+function saveTo_callback(a,b,obj)
+    [file,path] = uiputfile({'*.pdf;*.png'},'Save all figures to...');
+    [~,fName,fExt] = fileparts(file);
+    p.saveToPath = [path fName];
+    obj.setGuiParameters(p)
 end

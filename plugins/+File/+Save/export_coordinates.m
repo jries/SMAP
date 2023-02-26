@@ -52,8 +52,12 @@ classdef export_coordinates<interfaces.DialogProcessor
             
 %             fn=p.filelist_long.selection;
             fn=obj.getPar('lastSMLFile');
+            if isempty(fn)
+                of=['*.' par.format.selection];
+            else
             [path,file,ext]=fileparts(fn);
             of=[path filesep file  '.' par.format.selection];
+            end
             
             if ~defaultfilename
                 [f,path]=uiputfile(of);

@@ -325,20 +325,26 @@ if isempty(p.cal_3Dfile)
     end  
     p.cal_3Dfile=[path filesep '*3dcal.mat'];
 end
-[f,p]=uigetfile(p.cal_3Dfile);
+filter={'*3Dcal.mat;psfmodel*.h5'};
+[f,pfad]=uigetfile(filter,'load 3D calibration file',p.cal_3Dfile);
 if f
-    l=load([p f]);
-    if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
-        msgbox('no 3D data recognized. Select other file.');
+    [~,~,ext]=fileparts(f);
+    switch ext
+        case '.mat'
+            l=load([pfad f]);
+            if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
+                msgbox('no 3D data recognized. Select other file.');
+            end
+
+            if isfield(l,'SXY') && length(l.SXY)>1
+                obj.guihandles.selectchannel.Visible='on';
+            else
+                obj.guihandles.selectchannel.Visible='off';
+            end
+        case '.h5'
     end
-    obj.setGuiParameters(struct('cal_3Dfile',[p f]));
-    obj.setPar('cal_3Dfile',[p f]);
-    if isfield(l,'SXY') && length(l.SXY)>1
-        obj.guihandles.selectchannel.Visible='on';
-    else
-        obj.guihandles.selectchannel.Visible='off';
-    end
-    
+    obj.setGuiParameters(struct('cal_3Dfile',[pfad f]));
+    obj.setPar('cal_3Dfile',[pfad f]);   
 end
 end
 
@@ -356,68 +362,86 @@ switch fitpar.fitmode
     case {3,5,6}
         fitpar.zstart=p.zstart;
         calfile=p.cal_3Dfile;
-        cal=load(calfile);
-        fitpar.objPos=0;
-        if isfield(cal,'outforfit')
-            fitpar.zpar{1,1}=cal.outforfit;
-        elseif isfield(cal,'SXY')
-            s=size(cal.SXY);
-            Z=1;
-            if p.selectchannel.Value==1 %spatial calibration
-                for X=s(1):-1:1
-                    for Y=s(2):-1:1
-        %                 zpar{X,Y}=cal.SXY(X,Y,Z).gauss_zfit;
-                        splinefit{X,Y}=cal.SXY(X,Y,Z);
+        [~,~,ext]=fileparts(calfile);
+        switch ext
+            case '.mat'
+                cal=load(calfile);
+                fitpar.objPos=0;
+                if isfield(cal,'outforfit')
+                    fitpar.zpar{1,1}=cal.outforfit;
+                elseif isfield(cal,'SXY')
+                    s=size(cal.SXY);
+                    Z=1;
+                    if p.selectchannel.Value==1 %spatial calibration
+                        for X=s(1):-1:1
+                            for Y=s(2):-1:1
+                %                 zpar{X,Y}=cal.SXY(X,Y,Z).gauss_zfit;
+                                splinefit{X,Y}=cal.SXY(X,Y,Z);
+                            end
+                        end
+                    else %for example dual cam: manually select the channel
+                        splinefit{1,1}=cal.SXY(p.selectchannel.Value-1);
                     end
+                    if ~isempty(splinefit{1})
+                        fitpar.dz=splinefit{1}.cspline.dz;
+                        fitpar.z0=splinefit{1}.cspline.z0;
+                        fitpar.splinefit=splinefit;
+                        coeffh=splinefit{1}.cspline.coeff;
+                        if iscell(coeffh)
+                            coeffh=coeffh{1};
+                        end
+                        fitpar.coeffsize=size(coeffh);
+                    end
+                    if numel(splinefit)>1
+                        obj.spatial3Dcal=true;
+                        transformation=cal.transformation;
+                        obj.setPar('loc_globaltransform3dcal',transformation);
+                    else
+                        obj.spatial3Dcal=false;
+                    end
+                    ssxy=size(splinefit);
+                    obj.spatialXrange={};
+                    obj.spatialYrange={};
+                    for xx=1:ssxy(1)
+                        for yy=1:ssxy(2)
+                            obj.spatialXrange{xx,yy}=splinefit{xx,yy}.Xrange;
+                            obj.spatialYrange{xx,yy}=splinefit{xx,yy}.Yrange;
+                        end
+                    end
+        %             xr=cal.SXY(1,1).Xrangeall;
+        %             xr(1)=-inf;xr(end)=inf;
+        %             yr=cal.SXY(1,1).Yrangeall;
+        %             yr(1)=-inf;yr(end)=inf;
+        %             obj.spatialXrange=xr;
+        %             obj.spatialYrange=yr;
+                    fitpar.EMon=cal.SXY(1).EMon;
+                elseif isfield(cal,'cspline')
+                    fitpar.zpar{1}=cal.gauss_zfit;
+                    fitpar.dz=cal.cspline.dz;
+                    fitpar.z0=cal.cspline.z0;
+                    fitpar.splinefit{1}=cal.cspline_all;
+                    if ~isfield(fitpar.splinefit{1}.cspline,'isEM')
+                        fitpar.splinefit{1}.cspline.isEM=false;
+                    end
+                    fitpar.EMon=false;
+        
+                else
+                    disp('no calibration found')
                 end
-            else %for example dual cam: manually select the channel
-                splinefit{1,1}=cal.SXY(p.selectchannel.Value-1);
-            end
-            if ~isempty(splinefit{1})
-                fitpar.dz=splinefit{1}.cspline.dz;
-                fitpar.z0=splinefit{1}.cspline.z0;
-                fitpar.splinefit=splinefit;
-                coeffh=splinefit{1}.cspline.coeff;
-                if iscell(coeffh)
-                    coeffh=coeffh{1};
-                end
-                fitpar.coeffsize=size(coeffh);
-            end
-            if numel(splinefit)>1
-                obj.spatial3Dcal=true;
-                transformation=cal.transformation;
-                obj.setPar('loc_globaltransform3dcal',transformation);
-            else
-                obj.spatial3Dcal=false;
-            end
-            ssxy=size(splinefit);
-            obj.spatialXrange={};
-            obj.spatialYrange={};
-            for xx=1:ssxy(1)
-                for yy=1:ssxy(2)
-                    obj.spatialXrange{xx,yy}=splinefit{xx,yy}.Xrange;
-                    obj.spatialYrange{xx,yy}=splinefit{xx,yy}.Yrange;
-                end
-            end
-%             xr=cal.SXY(1,1).Xrangeall;
-%             xr(1)=-inf;xr(end)=inf;
-%             yr=cal.SXY(1,1).Yrangeall;
-%             yr(1)=-inf;yr(end)=inf;
-%             obj.spatialXrange=xr;
-%             obj.spatialYrange=yr;
-            fitpar.EMon=cal.SXY(1).EMon;
-        elseif isfield(cal,'cspline')
-            fitpar.zpar{1}=cal.gauss_zfit;
-            fitpar.dz=cal.cspline.dz;
-            fitpar.z0=cal.cspline.z0;
-            fitpar.splinefit{1}=cal.cspline_all;
-            if ~isfield(fitpar.splinefit{1}.cspline,'isEM')
-                fitpar.splinefit{1}.cspline.isEM=false;
-            end
-            fitpar.EMon=false;
+            case '.h5'
+                val=loadh5(calfile);
+                params = jsondecode(h5readatt(calfile,'/','params'));
+                fitpar.splinefit{1}.cspline.dz=params.pixelsize_z*1000;
+                fitpar.splinefit{1}.cspline.coeff=permute(val.locres.coeff,[4,3,2,1]);
+%                 fitpar.splinefit{1}.cspline.coeff=permute(val.locres.coeff,[3,4,2,1]); %XXXXXXXX
+                fitpar.splinefit{1}.cspline.z0=ceil(size(val.locres.coeff,2)/2);
+                
+%                 if ~isfield(fitpar.splinefit{1}.cspline,'isEM')
+%                     fitpar.splinefit{1}.cspline.isEM=false;
+%                 end
+%                 fitpar.EMon=false;
 
-        else
-            disp('no calibration found')
+            
         end
 
         if p.userefractive_index_mismatch

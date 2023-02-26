@@ -17,7 +17,7 @@ function [locs, flag] = locsHandler(obj, locs, lParsVal, modelID, varargin)%!!! 
 %% Initiation
 p = inputParser;
 p.addParameter('usedformalism','rotationMatrix');
-p.addParameter('target','locs');                % can be either 'locs' or 'model'
+p.addParameter('target','locs');                % can be either 'locs' or 'model'; not used anymore
 p.addParameter('order_transform','TR');
 p.addParameter('onlyLocpre',false);
 
@@ -53,17 +53,17 @@ end
 
 switch p.Results.order_transform
     case 'TR'
-        allActions = {'translation','rotation'};
+        allActions = {'translation','scaling','rotation'};
         sign = -1;
     case 'RT'
-        allActions = {'rotation','translation'};
+        allActions = {'rotation','scaling','translation'};
         sign = 1;
 end
 
 %% Loop through twice: one for translation, on for rotation. The order of
 % these two depends on the cellstr allActions.
 l = 1;
-while l <= 2
+while l <= length(allActions)
     action = allActions{l};
 switch action
 % Translation
@@ -73,7 +73,14 @@ switch action
         if obj.dataDim == 3
             z = z+sign*lParsVal.z;
         end
-% Rotation
+%Scaling
+    case 'scaling'
+        x = x.*(lParsVal.xscale.^sign);
+        y = y.*(lParsVal.yscale.^sign);
+        if obj.dataDim == 3
+            z = z.*(lParsVal.zscale.^sign);
+        end
+%Rotation
     case 'rotation'
         usedformalism = p.Results.usedformalism;
         if obj.dataDim == 2
@@ -104,6 +111,19 @@ switch action
                     x = x';
                     y = y';
                     z = z';
+                    flag = 1;
+                case 'lieAlgebra'
+                    k = [lParsVal.xrot lParsVal.yrot lParsVal.zrot];
+                    xyz = [x y z];
+                    xyz_o = xyz;
+                    xyz = rodriguesRot(xyz,k);
+                    theta = norm(k);
+                    k = k./theta;
+                    R = rodringues2rotMat(k,theta);
+                    xyz2 = R*xyz_o';
+                    x = xyz(:,1);
+                    y = xyz(:,2);
+                    z = xyz(:,3);
                     flag = 1;
                 case 'quaternion'
                     qk = lParsVal.zrot;
@@ -175,7 +195,7 @@ end
 locs.xnm = x;
 locs.ynm = y;
 %% Variation
-if isfield(locs,'locprecnm')&&lParsVal.variation>0
+if isfield(locs,'locprecnm')&&any(lParsVal.variation>0)
     locs.locprecnm = sqrt(locs.locprecnm.^2+lParsVal.variation.^2);
     if isfield(locs,'locprecznm')
         locs.locprecznm = sqrt(locs.locprecznm.^2+lParsVal.variation.^2);

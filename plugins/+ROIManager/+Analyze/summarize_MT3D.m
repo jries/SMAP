@@ -21,30 +21,30 @@ classdef summarize_MT3D<interfaces.DialogProcessor&interfaces.SEProcessor
             lUsed = getFieldAsVector(sites, 'annotation.use');
             
             usedSites = sites(lUsed);
-            fitInfo = getFieldAsVector(usedSites, 'evaluation.SMLMModelFitGUI_2.fitInfo');
+            fitInfo = getFieldAsVector(usedSites, 'evaluation.LocMoFitGUI_2.fitInfo');
             lFailed = cellfun(@(x)strcmp(x.guiInfo,'Fit or plot failed.'), fitInfo);
             evalList = se.processors.eval.guihandles.modules.Data(:,2);
-            indProcessor = find(strcmp('SMLMModelFitGUI_2',evalList));
+            indProcessor = find(strcmp('LocMoFitGUI_2',evalList));
             
             ID = getFieldAsVector(usedSites, 'ID');
             
             [~,idxR] = se.processors.eval.processors{indProcessor}.fitter.wherePar('pars.m1.mPar.r');
-            r = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_2.allParsArg.value',idxR);
+            r = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI_2.allParsArg.value',idxR);
             
             [~,idxVar] = se.processors.eval.processors{indProcessor}.fitter.wherePar('pars.m1.lPar.variation');
-            var = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_2.allParsArg.value',idxVar);
+            var = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI_2.allParsArg.value',idxVar);
             
             [~,idxZMid] = se.processors.eval.processors{indProcessor}.fitter.wherePar('pars.m1.mPar.zMid');
-            zMid = getFieldAsVectorInd(usedSites, 'evaluation.SMLMModelFitGUI_2.allParsArg.value',idxZMid);
+            zMid = getFieldAsVectorInd(usedSites, 'evaluation.LocMoFitGUI_2.allParsArg.value',idxZMid);
                         
             if p.comp
                 fileNumber = getFieldAsVector(usedSites, 'info.filenumber');
                 grpLabel = p.grpTable.Data(:,2);
             end
             
-            if ~isempty(usedSites(1).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars)&&isfield(usedSites(1).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1},'avgCurvature')
+            if ~isempty(usedSites(1).evaluation.LocMoFitGUI_2.fitInfo.derivedPars)&&isfield(usedSites(1).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1},'avgCurvature')
                 for k = sum(lUsed):-1:1
-                    curvature(k) = usedSites(k).evaluation.SMLMModelFitGUI_2.fitInfo.derivedPars{1}.avgCurvature;
+                    curvature(k) = usedSites(k).evaluation.LocMoFitGUI_2.fitInfo.derivedPars{1}.avgCurvature;
                 end
             end
             %             [cutoffOneRing, bin_edges] = getOneRingCutoff(ringDistS1);
@@ -184,25 +184,25 @@ classdef summarize_MT3D<interfaces.DialogProcessor&interfaces.SEProcessor
             hNew.ColumnEditable = [false true];
             hNew.ColumnWidth = {400,50};
             
-            %     if isa(obj,'ROIManager.Evaluate.SMLMModelFitGUI')
+            %     if isa(obj,'ROIManager.Evaluate.LocMoFitGUI')
             %         colNames={'Source', 'Rule', 'Target_fit', 'Target_usr'};
-            %         % check the loaded modules and hook all the SMLMModelFitGUI
+            %         % check the loaded modules and hook all the LocMoFitGUI
             %         if length(obj.locData.SE.processors.eval.guihandles.modules.Data)>1
             %             loadedModuls = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
-            %             lSMLMModelFitGUI = contains(loadedModuls, 'SMLMModelFitGUI');
+            %             lLocMoFitGUI = contains(loadedModuls, 'LocMoFitGUI');
             %         else
-            %             lSMLMModelFitGUI = 0;
+            %             lLocMoFitGUI = 0;
             %         end
-            %         if sum(lSMLMModelFitGUI)>0
-            %             loadedSMLMModelFitGUI = loadedModuls(lSMLMModelFitGUI,:);
+            %         if sum(lLocMoFitGUI)>0
+            %             loadedLocMoFitGUI = loadedModuls(lLocMoFitGUI,:);
             %         else
-            %             loadedSMLMModelFitGUI = [];
+            %             loadedLocMoFitGUI = [];
             %         end
             %         htable.CellEditCallback = {@convertTable_callback,4};
-            %         colFormat = {[{'this step'}; loadedSMLMModelFitGUI]',[],{'none'},[]};
+            %         colFormat = {[{'this step'}; loadedLocMoFitGUI]',[],{'none'},[]};
             %     else
             %         colNames={'Rule', 'Target_fit', 'Target_usr'};
-            %         loadedSMLMModelFitGUI = [];
+            %         loadedLocMoFitGUI = [];
             %         htable.CellEditCallback = {@convertTable_callback,3};
             %         colFormat = {[],{'none'},[]};
             %     end
@@ -239,7 +239,7 @@ pard.t_by.object=struct('String','By','Style','text');
 pard.t_by.position=[3,1];
 pard.t_by.Width=0.5;
 
-pard.by.object=struct('String', 'file|SMLMModelFit','Style','popupmenu', 'Value',1);
+pard.by.object=struct('String', 'file|LocMoFit','Style','popupmenu', 'Value',1);
 pard.by.position=[3,1.5];
 pard.by.Width=1;
 

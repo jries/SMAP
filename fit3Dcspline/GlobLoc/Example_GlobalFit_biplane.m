@@ -2,8 +2,11 @@
 % author: Yiming Li
 % email: liym2019@sustech.edu.cn
 % date: 2021.08.27
-% Link of example  data: https://oc.embl.de/index.php/s/bs1ADBsc4t6aiVV
+% Download the calbration data from the followling link first: https://www.embl.de/download/ries/globLoc/
+% BP-combine_3dcal.mat
+% Tested with CUDA 11.3 (Express installation) and Matlab 2019a
 %% Load and make cspline PSF
+clearvars
 cal=load('BP-combine_3dcal.mat'); % PSF model from SMLM2016 challenge
 
 PSF1 = cal.SXY(1).PSF{1};

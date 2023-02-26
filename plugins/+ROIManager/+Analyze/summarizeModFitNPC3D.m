@@ -9,18 +9,14 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
         function out=run(obj,p)
             se = obj.locData.SE;
             sites = se.sites;
-            cutoffOneRing = 35;
+            cutoffOneRing = [35 100];
 
             lUsed = getFieldAsVector(sites, 'annotation.use');
             siteOrder = 1:se.numberOfSites;
 
             usedSites = sites(lUsed);
             fn = obj.SE.processors.eval.guihandles.modules.Data(:,2);
-            if ismember('LocMoFitGUI_5', fn)
-                whichLocMoFitGUI = '5';
-            else
-                whichLocMoFitGUI = '3';
-            end
+            whichLocMoFitGUI = num2str(p.whichLocMoFitGUI);
             fitInfo = getFieldAsVector(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo']);
             lFailed = cellfun(@(x)strcmp(x.guiInfo,'Fit or plot failed.'), fitInfo);
             evalList = se.processors.eval.guihandles.modules.Data(:,2);
@@ -61,7 +57,8 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             
             bgDensity_fitter = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo.BGDensity'],1);
             
-            lOneRing = ringDist<=cutoffOneRing;
+            lOneRing = ringDist<=cutoffOneRing(1);
+            largRingSep = ringDist>=cutoffOneRing(2);
             
             for k = find(lFailed)
                 usedSites(k).annotation.list3.value = 5;
@@ -77,9 +74,17 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
                     usedSites(k).annotation.list3.value = 8;
                 end
             end
+            for k = find(largRingSep)'
+                usedSites(k).annotation.list3.value = 4;
+            end
             list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
-            lGood = list3 == 1;
-            
+
+            if p.ringSepFiltering
+                lGood = list3 == 1;
+            else
+                lGood = true(size(list3));
+            end
+            disp(['numOfSites = ' num2str(sum(lGood))])
             %% Shift the athimuthal angle periodically 
             medAzi_0 = 0;
             medAzi = 90;
@@ -213,6 +218,16 @@ pard.showExampleMod.object=struct('String','Display example model','Style','chec
 pard.showExampleMod.position=[3,1];
 pard.showExampleMod.Width=1.5;
 
+pard.ringSepFiltering.object=struct('String','Ring sep filtering','Style','checkbox', 'Value',1);
+pard.ringSepFiltering.position=[4,1];
+pard.ringSepFiltering.Width=1.5;
+
+pard.t1.object=struct('Style','text','String','LocMoFitGUI_');
+pard.t1.position=[5,1];
+pard.t1.Width=1;
+pard.whichLocMoFitGUI.object=struct('Style','edit','String','3');
+pard.whichLocMoFitGUI.position=[5,2];
+pard.whichLocMoFitGUI.Width=1;
 pard.plugininfo.type='ROI_Analyze';
 
 end

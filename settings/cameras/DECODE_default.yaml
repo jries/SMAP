@@ -33,3 +33,9 @@ Simulation:
 Hardware:
     device: cuda:0
     device_simulation: cuda:0
+SMAP:
+    set_emitters_per_um2: 'HD'
+    zrange_nm:
+        - 0.0 
+        - 0.0
+    tensorboardport: 6007

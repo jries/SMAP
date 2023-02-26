@@ -84,7 +84,14 @@ classdef imageloaderOME<interfaces.imageloaderSMAP
         catch
         end
         f=getnumberofframes(allmd);
-        allmd(end+1,:)={'frames direct',(f)};        
+        allmd(end+1,:)={'frames direct',(f)};   
+        try
+        imw=allmd{find(contains(allmd(:,1),'ImageWidth'),1),2};
+        imh=allmd{find(contains(allmd(:,1),'ImageLength'),1),2};
+        allmd(end+1,:)={'roi direct',num2str([0 0 imw imh])}; 
+        catch err
+            disp('roi could not be set');
+        end
         obj.allmetadatatags=allmd;
         end
         

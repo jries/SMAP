@@ -1,0 +1,31 @@
+StepsMINFLUX is a ROI Manager evealutaion plugin to find steps in MINFLUX data. 
+
+It was used in Deguchi et al, bioRxiv 2022.07.25.500391 (2022) and has since been extended.
+
+It uses the AutoStepFinder 'A fast and automated step detection method for single-molecule analysis' from: Luuk Loeff, Jacob Kerssemakers, Chirlmin Joo & Cees Dekker.
+
+gui:Parameters:
+gui:currentrange Opens a window to select a range of the track that is used for further analysis.
+gui:filterlocs If checked, the filter settings from the Render tab are used (including filtering for something like localization precision, cfr etc). Otherwise, the entire track is analyzed.
+gui:filtermode Decide if to use median or mean filtering for smoothing
+gui:filtertrack 1: do not pefrom smoothing; 2: only visualize smoothed tracks; 3: perform all analysis on smoothed tracks.
+gui:filterwindow Window size (in ms) used for smoothing
+gui:filterwindowt=filterwindow
+gui:fitmode Decide if to use the median or mean to determine the value of the step position
+gui:fitmodet=fitmode 
+gui:frametime Duration of a frame (in ms) when rendering a movie
+gui:frametimet=frametime 
+gui:link Choose if to use the groupindex (from SMAP) or the id (from Abberior MINFLUX) to determine what is a single track.
+gui:linkt=link 
+gui:makemovie Render a movie of the track
+gui:msdanalysis Perform MSD analysis of the track (for diffusive motion)
+gui:overshoot 'Overshoot' parameter from the AutoStepFinder (<1). Smaller values result in fewer steps.
+gui:overshoott=overshoot 
+gui:refine Try to adjust the position of the steps
+gui:refitalways Always perform fitting again. Recommended if parameters are changed, but this overwrites any manual step curation.
+gui:showtext Show the values of the steps in the plot
+gui:simplemovie Make the movie only from the track, otherwise steps etc are rendered as well
+gui:split Manual curation of found steps. These are overwritten if have always refit selected and redraw the site.
+gui:splitmerge Apply custom algorithm together with an estimated step size to merge steps that are too small and to split steps that are too large. Recommended only if you want to quantify a defined step.
+gui:splitmergestep Expected step size (nm)
+gui:splitmerget=splitmergestep 

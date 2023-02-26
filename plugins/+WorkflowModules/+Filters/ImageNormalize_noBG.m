@@ -31,7 +31,13 @@ classdef ImageNormalize_noBG<interfaces.WorkflowModule
             
             if  ~isempty(data.data)
                 image=data.data;%get;  
-                imnorm=poissonNormalize(image);
+%                 if iscell(image)
+%                     for k=length(image):-1:1
+%                         imnorm{k}=poissonNormalize(image{k});
+%                     end
+%                 else
+                    imnorm=poissonNormalize(image);
+%                 end
                 dato=data;%{1}.copy;
                 dato.data=imnorm;%set(imnorm);
             else 

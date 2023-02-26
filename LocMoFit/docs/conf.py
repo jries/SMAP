@@ -20,8 +20,10 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'LocMoFit'
-copyright = '2021, Yu-Le Wu'
-author = 'Yu-Le Wu'
+version = '1.1.0'
+release = '1.1.0'
+copyright = '2022, Ries group, EMBL Heidelberg'
+author = 'Wu et al.'
 
 
 # -- General configuration ---------------------------------------------------
@@ -41,6 +43,8 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+highlight_language = 'matlab'
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -52,6 +56,19 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_theme_options = {
+    'prev_next_buttons_location': None
+}
+
+html_baseurl = 'index'
+
+# -- latex --------------------------------------------------------------------
+latex_documents = [
+    ('startdoc', 'LocMoFit_manual.tex', 'LocMoFit (Localization Model Fit)',
+     'Yu-Le Wu', 'manual')
+]
+latex_engine = 'xelatex'
 
 # -- matlab source code ------------------------------------------------------
 matlab_src_dir = os.path.abspath("..")

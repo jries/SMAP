@@ -22,6 +22,7 @@ classdef ImageFilter<interfaces.WorkflowModule
             pard=guidef(obj);
         end
         function prerun(obj,p)
+            obj.scmosfiltered=[];
             obj.scmosvariance=[];
             p=obj.getAllParameters;
             fs=p.loc_loc_filter_sigma(1);
@@ -119,12 +120,16 @@ classdef ImageFilter<interfaces.WorkflowModule
                 obj.scmosvariance=vmap;
                 switch p.filtermode.Value
                     case 1
-                        obj.scmosfiltered(:,:,1)=filter2(obj.filterkernel(:,:,1),1./obj.scmosvariance);
-                        obj.scmosfiltered(:,:,2)=filter2(obj.filterkernel(:,:,2),1./obj.scmosvariance);
+                        obj.scmosfiltered(:,:,1,:)=filterstack(1./obj.scmosvariance,obj.filterkernel(:,:,1),'filter2');
+                        obj.scmosfiltered(:,:,2,:)=filterstack(1./obj.scmosvariance,obj.filterkernel(:,:,2),'filter2'); 
+%                         obj.scmosfiltered(:,:,1)=filter2(obj.filterkernel(:,:,1),1./obj.scmosvariance);
+%                         obj.scmosfiltered(:,:,2)=filter2(obj.filterkernel(:,:,2),1./obj.scmosvariance);
                     case 2
-                        obj.scmosfiltered=filter2(obj.filterkernel,1./obj.scmosvariance);
+                        obj.scmosfiltered=filterstack(1./obj.scmosvariance,obj.filterkernel,'filter2');
+%                         obj.scmosfiltered=filter2(obj.filterkernel,1./obj.scmosvariance);
                     case 3
-                        obj.scmosfiltered=conv2(1./obj.scmosvariance,obj.filterkernel,'same');
+                        obj.scmosfiltered=filterstack(1./obj.scmosvariance,obj.filterkernel,'conv2');
+%                         obj.scmosfiltered=conv2(1./obj.scmosvariance,obj.filterkernel,'same');
                     case 4
                         disp('scmose noise correction in peak finder not implemented for MIP');
                 end
@@ -133,20 +138,22 @@ classdef ImageFilter<interfaces.WorkflowModule
             if p.correctsCMOS && p.filtermode.Value<4
                switch p.filtermode.Value
                    case 1
-                       imf=filter2(obj.filterkernel(:,:,1),(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered(:,:,1)-filter2(obj.filterkernel(:,:,2),(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered(:,:,2);
+                       imf=filterstack((data.data-offset)./obj.scmosvariance,obj.filterkernel(:,:,1),'filter2')./obj.scmosfiltered(:,:,1,:)-filterstack((data.data-offset)./obj.scmosvariance,obj.filterkernel(:,:,2),'filter2')./obj.scmosfiltered(:,:,2);
+%                        imf=filter2(obj.filterkernel(:,:,1),(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered(:,:,1)-filter2(obj.filterkernel(:,:,2),(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered(:,:,2);
                     case 2
-                        imf=filter2(obj.filterkernel,(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered;
+                        imf=filterstack((data.data-offset)./obj.scmosvariance,obj.filterkernel,'filter2')./obj.scmosfiltered;
+%                         imf=filter2(obj.filterkernel,(data.data-offset)./obj.scmosvariance)./obj.scmosfiltered;
                     case 3
                         dat=(data.data/2).^2-0.375;
-                        imf=conv2(dat./obj.scmosvariance,obj.filterkernel,'same').*obj.scmosfiltered;     
+                        imf=filterstack(dat./obj.scmosvariance,obj.filterkernel,'conv2').*obj.scmosfiltered;     
                 end
             else
                 switch p.filtermode.Value
                     case {1,2}
-                        imf=filter2(obj.filterkernel,data.data-offset);
+                        imf=filterstack(data.data-offset,obj.filterkernel,'filter2');
                     case 3
                         dat=(data.data/2).^2-0.375;
-                        imf=conv2(dat,obj.filterkernel,'same');
+                        imf=filterstack(dat,obj.filterkernel,'conv2');
                     case 4
                         h=obj.filterkernel;
                         psfstack=obj.filterkernelPSF.fitpsf;
@@ -154,11 +161,11 @@ classdef ImageFilter<interfaces.WorkflowModule
                         dat=data.data;
                         for k=1:size(psfstack,3)
                             dat=(data.data/2).^2-0.375;
-                            imh=conv2(dat,psfstack(:,:,k),'same');
+                            imh=filterstack(dat,psfstack(:,:,k),'conv2');
                             imf=max(imh,imf);
                         end
                         if ~isempty(obj.filterkernel)
-                            imf=filter2(obj.filterkernel,imf);
+                            imf=filterstack(imf,obj.filterkernel,'filter2');
                         end
                         imf=(2*sqrt(imf+0.3750));     
                 end
@@ -174,6 +181,25 @@ classdef ImageFilter<interfaces.WorkflowModule
     end
 end
 
+function imf=filterstack(dat,kernel,func)
+s=size(dat);
+if length(s)<3
+    s(3)=1;
+end
+if length(s)<4
+    s(4)=1;
+end
+for k=s(3):-1:1
+    for l=s(4):-1:1
+        switch func
+            case 'filter2'
+                imf(:,:,k,l)=filter2(kernel,dat(:,:,k,l));
+            case 'conv2'
+                imf(:,:,k,l)=conv2(dat(:,:,k,l),kernel,'same');
+        end
+    end
+end
+end
 
 function drawimage(obj,imnorm,imf)
 if isempty(imf)
@@ -185,36 +211,6 @@ imgbg=(imf/2).^2-0.375;
 
 imbg=((imnorm-imf)/2).^2-0.375;
 
-% outputfig=obj.getPar('loc_outputfig');
-% if ~isvalid(outputfig)
-%     outputfig=figure(209);
-%     obj.setPar('loc_outputfig',outputfig);
-% end
-
-% outputfig.Visible='on';
-% draw=~isempty(imnorm);
-% switch obj.getPar('loc_previewmode').Value
-%     case 1 %image-bg
-%         imd=imbg;
-%     case 2%image
-%         imd=img;
-%     case 3 %norm
-%         imd=imf;
-%     case 4 %bg
-%         imd=imgbg;
-%     otherwise 
-%         draw=false;
-% end
-        
-% if draw
-% figure(outputfig)
-% hold off
-% imagesc(imd);
-% colormap jet
-% colorbar;
-% axis equal
-% hold on
-% end
 obj.setPar('preview_filtered',imf);
 obj.setPar('preview_background',imgbg);
 obj.setPar('preview_image_background',imbg);

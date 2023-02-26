@@ -1,6 +1,20 @@
-function ax = rotCoordNMkImg(obj, varargin)
-% input arguments: ax, modCoord, locsCoord, rotVizAlt, pixelSize, mode,
-% section, lut
+function [ax, v, info] = rotCoordNMkImg(obj, varargin)
+% 
+% Usage:
+%   rotCoordNMkImg(obj, ax, modCoord, locsCoord, rotVizAlt, pixelSize, mode,
+% section, lut)
+%
+% Args:
+%   ax:
+%   modCoord:
+%   locsCoord:
+%   rotVizAlt: a vecotr of [az el], where az stands for azimuth and
+%   elevation angles.
+%   pixelSize:
+%   mode:
+%   section:
+%   lut:
+
 if isa(varargin{1},'matlab.graphics.axis.Axes')
     ax = varargin{1};
     modCoord = varargin{2};
@@ -10,6 +24,7 @@ if isa(varargin{1},'matlab.graphics.axis.Axes')
     mode = varargin{6};
     section = varargin{7};
     lut = varargin{8};
+    varargin = varargin(9:end);
 else
     fig = figure;
     ax = axes(fig);
@@ -20,17 +35,27 @@ else
     mode = varargin{5};
     section = varargin{6};
     lut = varargin{7};
+    varargin = varargin(8:end);
 end
 
+p = inputParser;
+p.addParameter('rotMov',false);
+p.addParameter('imax',nan);
+p.parse(varargin{:});
+p = p.Results;
+
+info = [];
+
 % Rotate coordiantes and make an image
-[locsCoord.xnm,locsCoord.ynm,locsCoord.znm] = rotAzEl(locsCoord.xnm,locsCoord.ynm,locsCoord.znm, rotVizAlt(1), -rotVizAlt(2));
+forRevY = 1; % this factor was introduced to make the reverse YDir also applies
+[locsCoord.xnm,locsCoord.ynm,locsCoord.znm] = rotAzEl(locsCoord.xnm,forRevY.*locsCoord.ynm,locsCoord.znm, rotVizAlt(1), -rotVizAlt(2));
 lSectionLocs = locsCoord.znm >= -section & locsCoord.znm <= section;
 
 % Either render an image of the data or the model based on what the user
 % selected.
 switch mode
     case 'Model'
-        v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
+        v = zeros(ceil([obj.roiSize./pixelSize obj.roiSize./pixelSize]));
         % Go through all models (layer-based)
         roiks = 2.7;
         if isempty(obj.getTemp('gausstemplate'))
@@ -39,28 +64,55 @@ switch mode
         else
             G = obj.getTemp('gausstemplate');
         end
-        
-        for k = 1:obj.numOfModel
+        for k = 1:obj.numOfLayer
            
-            [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
+            [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,forRevY.*modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
             if obj.model{k}.fixSigma
                 thisImg = getModelImg(modCoord{k}.x, modCoord{k}.y, 'roiSize', obj.roiSize, 'pixelSize', pixelSize, 'sigma', obj.model{k}.sigma, 'gausstemplate',G,'norm',modCoord{k}.n)';
             else
                 variation = obj.getVariable(['par.m' num2str(k) '.lPar.variation']);
                 thisImg = getModelImg(modCoord{k}.x, modCoord{k}.y, 'roiSize', obj.roiSize, 'pixelSize', pixelSize, 'sigma', (sqrt(median(locsCoord.locprecnm)^2+variation^2)+obj.model{k}.sigmaFactor(2)).*obj.model{k}.sigmaFactor(1), 'gausstemplate',G,'norm',modCoord{k}.n)';
             end
-            thisImg = thisImg/max(thisImg,[],1:2);
-            if obj.numOfLayer==1
-                thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut('cyan'));
-            else
-                thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut(obj.model{k}.displayLut));
+
+            modelWeight = obj.getVariable(['par.m' num2str(k) '.lPar.weight']);
+            v = v + thisImg./sum(thisImg,1:2).*modelWeight;
+            
+            % Deal with additional info from the model
+            items = obj.getThings2Plot;
+            oneItems = items{k};
+            for l = 1:length(oneItems)
+                oneItem = oneItems(l);
+                [oneItem.XData,oneItem.YData,oneItem.ZData] = rotAzEl(oneItem.XData,forRevY.*oneItem.YData,oneItem.ZData, rotVizAlt(1), -rotVizAlt(2));
+                oneItem.XData = (oneItem.XData+obj.roiSize/2+pixelSize)./pixelSize;
+                oneItem.YData = (oneItem.YData+obj.roiSize/2+pixelSize)./pixelSize;
+                oneItem.ZData = (oneItem.ZData+obj.roiSize/2+pixelSize)./pixelSize;
+
+                oneItem = rmfield(oneItem,'ZData');
+                fn = fieldnames(oneItem);
+                if l > 1
+                    hold(ax, 'on');
+                end
+                h = plot(ax,oneItem.XData,oneItem.YData);
+                if l > 1
+                    hold(ax, 'off');
+                end
+                for f = 1:length(fn)
+                    if ~any(strcmp(fn{f},{'YData','XData'}))
+                        set(h,fn{f},oneItem.(fn{f}));
+                    end
+                end
             end
-            v = v + thisImg;
+        if obj.numOfLayer==1
+            v = ind2rgb(round(v.*255./max(v,[],1:2)), mymakelut('cyan'));
+        else
+            v = ind2rgb(round(v.*255./max(v,[],1:2)), mymakelut(obj.model{k}.displayLut));
         end
-        hold on
+        end
+        
+%         hold(ax,'on')
         imagesc(ax, v);
         axis(ax,'equal')
-        hold off
+%         hold(ax,'off')
         
         % Deal with locs
         for k = 1:max(locsCoord.layer)
@@ -79,33 +131,15 @@ switch mode
             hold(ax, 'on');
             vizX = (locsCoord.xnm(lLayer&lSectionLocs)+obj.roiSize/2+pixelSize)./pixelSize;
             vizY = (locsCoord.ynm(lLayer&lSectionLocs)+obj.roiSize/2+pixelSize)./pixelSize;
-            plot(ax,  vizX,vizY,' or', 'MarkerEdgeColor','k','MarkerFaceColor',oneColor,'MarkerSize',3.5)
+            scatter(ax,  vizX,vizY,10,'o','filled', 'MarkerEdgeColor','k','MarkerFaceColor',oneColor, 'MarkerFaceAlpha',0.5, 'MarkerEdgeAlpha',0.5)
             hold(ax,'off')
         end
+        h_Img = findobj(ax.Children, 'type', 'image');
+        h_Others = findobj(ax.Children, '-not', 'type', 'image');
+        ax.Children = [h_Others; h_Img];
         
-        % Deal with additional info
-        items = obj.getThings2Plot;
-        oneItems = items{k};
-        for l = 1:length(oneItems)
-            oneItem = oneItems(l);
-            [oneItem.XData,oneItem.YData,oneItem.ZData] = rotAzEl(oneItem.XData,oneItem.YData,oneItem.ZData, rotVizAlt(1), -rotVizAlt(2));
-            oneItem.XData = (oneItem.XData+obj.roiSize/2+pixelSize)./pixelSize;
-            oneItem.YData = (oneItem.YData+obj.roiSize/2+pixelSize)./pixelSize;
-            oneItem.ZData = (oneItem.ZData+obj.roiSize/2+pixelSize)./pixelSize;
-            
-            oneItem = rmfield(oneItem,'ZData');
-            fn = fieldnames(oneItem);
-            hold(ax, 'on');
-            h = plot(ax,oneItem.XData,oneItem.YData);
-            hold(ax,'off')
-            for f = 1:length(fn)
-                if ~any(strcmp(fn{f},{'YData','XData'}))
-                    set(h,fn{f},oneItem.(fn{f}));
-                end
-            end
-        end
     case 'Data'
-        v = zeros([obj.roiSize./2 obj.roiSize./2]);
+        v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
         % Deal with locs
         for k = 1:max(locsCoord.layer)
             lLayer = locsCoord.layer==k;
@@ -132,56 +166,80 @@ switch mode
                 thisImg = ind2rgb(round(thisImg.*255./obj.numOfModel), mymakelut(lut{k}));
                 v = v + thisImg;
             else
-                p = obj.linkedGUI.getLayerParameters(k,renderSMAP);
-                p.sr_pos = [0 0 0];
-                p.sr_size = repelem(obj.roiSize./2,2);
-                p.sr_pixrec = pixelSize;
-                imageo = renderSMAP(locsCoordSub, p, k);
-                imageo = drawerSMAP(imageo,p);
+                % use the SMAP render when available
+                p_render = obj.linkedGUI.getLayerParameters(k,renderSMAP);
+                p_render.sr_pos = [0 0 0];
+                p_render.sr_size = repelem(obj.roiSize./2,2);
+                p_render.sr_pixrec = pixelSize;
+                if p.rotMov
+                    p_render.imaxtoggle = 1;
+                    imageo = renderSMAP(locsCoordSub, p_render, k);
+                    imageo = drawerSMAP(imageo,p_render);
+%                     factor = 1.8;
+                    factor = 1.2;
+                    imax = imageo.imax*factor;
+                    p_render.imaxtoggle = 0;
+                    p_render.imax_min = imax;
+                    imageo = renderSMAP(locsCoordSub, p_render, k);
+                    imageo = drawerSMAP(imageo,p_render);
+                    info.imax = imax;
+                else
+                    if ~isnan(p.imax)
+                        p_render.imax_min = p.imax;
+                        p_render.imaxtoggle = 0;
+                    end
+                    imageo = renderSMAP(locsCoordSub, p_render, k);
+                    imageo = drawerSMAP(imageo,p_render);
+                end
                 thisImg = imageo.image;
-                v = v + thisImg;
+                
+                if ~isempty(thisImg) % XXXX added by Jonas
+                    v = v + thisImg;
+                end
             end
         end
         imagesc(ax, v);
         axis(ax,'equal')
         
         % Here generate the outline of the model withi the given range of the slice
-        for k = 1:obj.numOfModel
-            [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
-            if rotVizAlt(2)<0
-                lSectionMod = modCoord{k}.z >= -5 & modCoord{k}.z <= 5;
-                modVizX = modCoord{k}.x(lSectionMod);
-                modVizY = modCoord{k}.y(lSectionMod);
-            else
-                modVizX = modCoord{k}.x;
-                modVizY = modCoord{k}.y;
-            end
-            
-            %% Get the outline of the model projecion
-            % The sorted index idx of the points assiged as the outline is
-            % created first for a closed boundary. If the the longest edge
-            % are edgeRatioTh-time longer than the second, the edge will be
-            % removed to create the open.
-            edgeRatioTh = 1.2;
-            idx = boundary(double(modVizX), double(modVizY),0);
-            if ~isempty(idx)
-                D = sqrt(diff(modVizX(idx)).^2 + diff(modVizY(idx)).^2);
-                [B,I] = sort(D, 'descend');
-                if B(1)/B(2)>edgeRatioTh
-                    idx = [idx(I(1)+1:end); idx(1:I(1))];
-                    idx = unique(idx,'stable');
+        if ~isempty(modCoord)
+            for k = 1:obj.numOfLayer
+                
+                [modCoord{k}.x,modCoord{k}.y,modCoord{k}.z] = rotAzEl(modCoord{k}.x,modCoord{k}.y,modCoord{k}.z, rotVizAlt(1), -rotVizAlt(2));
+                if rotVizAlt(2)<0
+                    lSectionMod = modCoord{k}.z >= -5 & modCoord{k}.z <= 5;
+                    modVizX = modCoord{k}.x(lSectionMod);
+                    modVizY = modCoord{k}.y(lSectionMod);
+                else
+                    modVizX = modCoord{k}.x;
+                    modVizY = modCoord{k}.y;
                 end
-            else
-                idx = 1:length(modVizX);
+                
+                %% Get the outline of the model projecion
+                % The sorted index idx of the points assiged as the outline is
+                % created first for a closed boundary. If the the longest edge
+                % are edgeRatioTh-time longer than the second, the edge will be
+                % removed to create the open.
+                edgeRatioTh = 1.2;
+                idx = boundary(double(modVizX), double(modVizY),0);
+                if ~isempty(idx)
+                    D = sqrt(diff(modVizX(idx)).^2 + diff(modVizY(idx)).^2);
+                    [B,I] = sort(D, 'descend');
+                    if B(1)/B(2)>edgeRatioTh
+                        idx = [idx(I(1)+1:end); idx(1:I(1))];
+                        idx = unique(idx,'stable');
+                    end
+                else
+                    idx = 1:length(modVizX);
+                end
+                
+                oneLut = mymakelut(obj.model{k}.displayLut);
+                oneColor = oneLut(150,:);
+                
+                hold(ax, 'on');
+                plot(ax,  modVizX(idx)./pixelSize+(obj.roiSize/pixelSize)./2,+modVizY(idx)./pixelSize+(obj.roiSize/pixelSize)./2,'- r', 'Color','w','LineWidth',5)
+                hold(ax,'off')
             end
-            
-            oneLut = mymakelut(obj.model{k}.displayLut);
-            oneColor = oneLut(150,:);
-            
-            hold(ax, 'on');
-            plot(ax,  (modVizX(idx)+obj.roiSize/2)./2,+(modVizY(idx)+obj.roiSize/2)./2,'- r', 'Color','w','LineWidth',5)
-            hold(ax,'off')
-            
             
         end
 end

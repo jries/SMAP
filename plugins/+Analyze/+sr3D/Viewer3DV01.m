@@ -106,7 +106,8 @@ classdef Viewer3DV01<interfaces.DialogProcessor
         function makelocDatacopy(obj)
 
             hroi=obj.getPar('sr_roihandle');
-            if ~isvalid(hroi)
+            if isempty(hroi) || ~isvalid(hroi)
+                disp('Could not run 3D viewer. Select ROI first')
                 return
             end
             posrx=hroi.getPosition;
@@ -663,7 +664,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             if nargin<4
                 savemovie=[];
             end
-            global SMAP_stopnow
+            global SMAP_stopnow frameratemp4
             bh=obj.guihandles.rotateb;
             if bh.Value
                 bh.FontWeight='bold';
@@ -771,13 +772,22 @@ classdef Viewer3DV01<interfaces.DialogProcessor
 %                 pause(0.01)
             end
             if ~isempty(savemovie)
-                options.color=true;
-                options.message=true;
-                options.comp='lzw';
 
                 imout=uint8(outim*(2^8-1));
-                mysavemovie(imout,savemovie.file,'FrameRate',20)
-%                 saveastiff(imout,savemovie.file,options)
+                switch p.savemoviemode.selection
+                    case 'tif'
+                        options.color=true;
+                        options.message=true;
+                        options.comp='lzw';
+                        saveastiff(imout,savemovie.file,options)
+                    case 'mp4'
+                        if isempty(frameratemp4)
+                            fr=30;
+                        else
+                            fr=frameratemp4;
+                        end
+                        mysavemovie(imout,savemovie.file,'FrameRate',fr, 'Quality', 100)
+                end           
             end
             
             obj.recpar={};

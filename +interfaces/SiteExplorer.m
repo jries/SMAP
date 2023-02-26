@@ -67,6 +67,12 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             
         end
         function addSites(obj, SEin,filenew,files)
+            
+            obj.addSites_(SEin,filenew,files);
+            
+            obj.setIndList;            
+        end
+        function addSites_(obj, SEin,filenew,files)
             if isempty(filenew)
                 filenew=1:max([SEin.files(:).ID]);
             end
@@ -144,13 +150,8 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             end
             if ~isempty(obj.sites)
               obj.currentsite=obj.sites(1);
+            end           
             end
-            
-            
-%             obj.currentsite=obj.sites(1);
-            obj.setIndList;
-            end
-            
         end
         function setIndList(obj)
             for k=1:length(obj.sites)
@@ -397,7 +398,20 @@ classdef SiteExplorer<interfaces.GuiModuleInterface & interfaces.LocDataInterfac
             
              %plot all site boxes
              if obj.locData.getPar('se_drawboxes')&&~isempty(obj.sites)&&~isempty(obj.sites(1).info)
-                 allsites=[obj.sites(:).info];
+                 try
+                    allsites=[obj.sites(:).info];
+                 catch err %fix connected sites
+                     err
+                     disp('fixing connected sites')
+                     for k=1:length(obj.sites)
+                        if ~isfield(obj.sites(k).info,'connectedsites')
+                            obj.sites(k).info.connectedsites=[];
+                        end
+                     end
+
+                     allsites=[obj.sites(:).info];
+                 end
+
                  ind=[allsites.cell]==cell.ID;
                  
                  if sum(ind)>0

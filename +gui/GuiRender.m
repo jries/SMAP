@@ -64,7 +64,7 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             %remove all layers
             fn=fieldnames(p.children);
             currentlayers=fieldnames(obj.children);
-            for k=2:length(currentlayers)-1
+            for k=length(currentlayers)-1:-1:2
                 obj.removelayer(k)
             end
             if isfield(p,'layernames') && ~isempty(p.layernames)

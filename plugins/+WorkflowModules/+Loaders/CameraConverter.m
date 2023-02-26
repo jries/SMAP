@@ -85,7 +85,9 @@ classdef CameraConverter<interfaces.WorkflowModule
             
             obj.setPar('loc_cameraSettings',obj.loc_cameraSettings);
             obj.setPar('EMon',obj.loc_cameraSettings.EMon);
+            mirrorem_callback(0,0,obj)
             obj.updatefileinfo;
+
 %             if obj.loc_cameraSettings.EMon
 %             	obj.EMexcessNoise=2;
 %             else
@@ -126,7 +128,7 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.rawaveragecounter=1;
             obj.rawaverage=[];
             obj.offsetmapuse=[];
-            
+            mirrorem_callback(0,0,obj);
             obj.setPar('cam_varmap',[]);
                
             
@@ -154,22 +156,41 @@ classdef CameraConverter<interfaces.WorkflowModule
                return
            end
            
-           imgp=makepositive(data.data);
-           if p.emmirror && obj.loc_cameraSettings.EMon  
-                    imgp=imgp(:,end:-1:1);
+           img=data.data;
+           if p.correctcamera %apply offset and brightfield correction
+               if isempty(obj.offsetmapuse)
+                    loadcamcalibrationfile(obj,p,img);
+               end
            end
 
-           if p.correctcamera %apply offset and brightfield correction
-               % scmosroi 
-               if isempty(obj.offsetmapuse)
-                    loadcamcalibrationfile(obj,p,imgp);
-               end
-               imphot=(single(imgp)-obj.offsetmapuse)*obj.gainuse;   
-%                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
-%                    ./obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
-           else
-               imphot=(single(imgp)-obj.offset)*obj.adu2phot;
-           end
+%            if iscell(img)
+%                for k=length(img):-1:1
+%                    imphot{k}=convertsingleimage(obj,img{k},p,obj.offsetmapuse);
+%                end
+%            else
+               imphot=convertsingleimage(obj,img,p,obj.offsetmapuse);
+%            end
+              
+%                imphot=(single(imgp)-obj.offsetmapuse)*obj.gainuse;   
+% %                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
+% %                    ./obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
+%            else
+%            imgp=makepositive(data.data);
+%            if p.emmirror && obj.loc_cameraSettings.EMon  
+%                     imgp=imgp(:,end:-1:1);
+%            end
+% 
+%            if p.correctcamera %apply offset and brightfield correction
+%                % scmosroi 
+%                if isempty(obj.offsetmapuse)
+%                     loadcamcalibrationfile(obj,p,imgp);
+%                end
+%                imphot=(single(imgp)-obj.offsetmapuse)*obj.gainuse;   
+% %                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
+% %                    ./obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
+%            else
+%                imphot=(single(imgp)-obj.offset)*obj.adu2phot;
+%            end
                datao=data;
                datao.data=imphot;  
            if obj.preview && ~isempty(imphot)
@@ -179,18 +200,18 @@ classdef CameraConverter<interfaces.WorkflowModule
            %save raw imageas
            if (mod(data.frame,p.diffrawframes)==0 || data.frame==1) && ~obj.preview && p.diffrawframes>0
                if obj.rawimagecounter>length(obj.rawimagestruct)
-                   obj.rawimagestruct(end+100).image=imphot*0;
+                   obj.rawimagestruct(end+100).image=getfirstimage(imphot)*0;
                    obj.rawimagestruct(end+100).frame=-1;
                end
-               obj.rawimagestruct(obj.rawimagecounter+1).image=imgp;
+               obj.rawimagestruct(obj.rawimagecounter+1).image=getfirstimage(imphot);
                obj.rawimagestruct(obj.rawimagecounter+1).frame=data.frame;
                obj.rawimagecounter=obj.rawimagecounter+1;
            end
            if isempty(obj.rawaverage)
-               obj.rawaverage=double(imgp);
-               obj.rawaveragetype=imgp;
+               obj.rawaverage=double(getfirstimage(imphot));
+               obj.rawaveragetype=getfirstimage(imphot);
            else
-               obj.rawaverage=obj.rawaverage+double(imgp);
+               obj.rawaverage=obj.rawaverage+double(getfirstimage(imphot));
            end
            obj.rawaveragecounter=obj.rawaveragecounter+1;
         end
@@ -198,7 +219,33 @@ classdef CameraConverter<interfaces.WorkflowModule
     end
 end
 
+function img= getfirstimage(imin)
+s=size(imin);
+if s>3
+    img=imin(:,:,1,1);
+else
+    img=imin;
+end
+end
 
+function imphot=convertsingleimage(obj,imin,p,offsetmap)
+imgp=makepositive(imin);
+if p.emmirror && obj.loc_cameraSettings.EMon  
+        imgp=imgp(:,end:-1:1);
+end
+if nargin>3 && ~isempty(offsetmap)
+% if p.correctcamera %apply offset and brightfield correction
+   % scmosroi 
+%    if isempty(obj.offsetmapuse)
+%         loadcamcalibrationfile(obj,p,imgp);
+%    end
+   imphot=(single(imgp)-offsetmap)*obj.gainuse;   
+%                imphot=(single(imgp)-obj.offsetmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)))... %*obj.adu2phot...
+%                    ./obj.gainmap(roi(1)+1:roi(1)+roi(3),roi(2)+1:roi(2)+roi(4)); %XXX correct or exchanged??? a: looks fine
+else
+   imphot=(single(imgp)-obj.offset)*obj.adu2phot;
+end
+end
 
 
 function calibrate_callback(a,b,obj)
@@ -305,10 +352,12 @@ function loadcamcalibrationfile(obj,p,imgp)
            disp('no scmos ROI specified but scmos calibration size equal to image size: assume it is the same ROI');
        else 
            roi=roiimg;
-           roi(1:2)=roi(1:2)-1; %zero based;
+           roi(1:2)=roi(1:2); %zero based;
            disp('no scmos ROI specified: assume entire chip used for calibration');
        end
-       if any(size(obj.gainmap)<roi(1:2)+roi(3:4)) %gainmap too small
+       sg=size(obj.gainmap);
+       if any(sg([2 1])<roi(1:2)+roi(3:4)) %gainmap too small
+           disp('scmos calibration map not compatible with image size.')
            roi(1:2)=0;
        end
 %        roi(1)=roi(1)+5 %test
@@ -327,7 +376,7 @@ function loadcamcalibrationfile(obj,p,imgp)
     
     else
         if obj.getSingleGuiParameter('correctcamera')
-            disp(['could not find camera correction file ' camfile])
+            disp(['could not find camera correction file ' obj.loc_cameraSettings.correctionfile])
         end
         obj.setPar('cam_varmap',[]);
     end

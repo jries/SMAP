@@ -167,7 +167,7 @@ p.resultstabgroup=obj.guihandles.resultstabgroup;
 if obj.processorgui
 obj.resultshandle.Visible=onoff(p.showresults);
 end
-if isempty(obj.locData.loc)
+if isempty(obj.locData.loc) && obj.getGlobalSetting('advancedoutput')
     warning('no localization data present')
 end
 

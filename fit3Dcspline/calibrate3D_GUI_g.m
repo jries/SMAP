@@ -110,6 +110,8 @@ classdef calibrate3D_GUI_g<handle
             obj.guihandles.dz=uicontrol('style','edit','String','10','Position',[xpos1+2*xw,top-9*vsep,xw*0.5,fieldheight],'FontSize',fontsize);
             obj.guihandles.dz.TooltipString=sprintf('Distance in nm between frames. By convention, these are objective positions (not corrected for refractive index mismatch). \n A spacing between 10 nm and 50 nm works well ');
             obj.guihandles.dzt.TooltipString=obj.guihandles.dz.TooltipString;
+            obj.guihandles.z0focus=uicontrol('style','checkbox','String','focus as z ref','Position',[xpos1+2.5*xw,top-9*vsep,xw*1.5,fieldheight],'FontSize',fontsize);
+           
             
             obj.guihandles.modalityt=uicontrol('style','text','String','3D modality ','Position',[xpos1,top-8*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha);
             obj.guihandles.modality=uicontrol('style','popupmenu','String',{'arbitrary','global 2 channel','4Pi'},'Value',1,'Position',[xpos1+2*xw,top-8*vsep,xw*1.3,fieldheight],'FontSize',fontsize,'Callback',@obj.modality_callback);
@@ -139,7 +141,7 @@ classdef calibrate3D_GUI_g<handle
  
             obj.guihandles.cutoffrelt=uicontrol('style','text','String','Relative cutoff','Position',[xpos1+2.5*xw,top-12*vsep,xw*1.,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha);
             obj.guihandles.cutoffrel=uicontrol('style','edit','String','1','Position',[xpos1+3.5*xw,top-12*vsep,xw*0.5,fieldheight],'FontSize',fontsize);
-            obj.guihandles.cutoffrel.TooltipString=sprintf('Sometimes, the automatically determined cutoff does not work. If beads are not found, increase this value, if too many beads are found, decrease it.');
+            obj.guihandles.cutoffrel.TooltipString=sprintf('Sometimes, the automatically determined cutoff does not work. If beads are not found, decrease this value, if too many beads are found, increase it.');
             obj.guihandles.cutoffrelt.TooltipString=obj.guihandles.cutoffrel.TooltipString;
             
             obj.guihandles.mindistancet=uicontrol('style','text','String','Minimum distance (pixels)','Position',[xpos1,top-13*vsep,xw*2,fieldheight],'FontSize',fontsize,'HorizontalAlignment',ha);
@@ -464,6 +466,7 @@ classdef calibrate3D_GUI_g<handle
             p.filelist=obj.guihandles.filelist.String;
             p.outputfile=obj.guihandles.outputfile.String;
             p.dz=str2double(obj.guihandles.dz.String);
+            p.z0focus=obj.guihandles.z0focus.Value;
             p.modality=obj.guihandles.modality.String{obj.guihandles.modality.Value};
             p.PSF2D=obj.guihandles.PSF2D.Value;
             p.zcorr=obj.guihandles.corrzselect.String{obj.guihandles.corrzselect.Value};

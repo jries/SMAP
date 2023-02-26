@@ -104,6 +104,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             initglobalsettings(obj);
             if ~isdeployed
                 addpath('shared');
+                addpath(genpath('LocMoFit'));
                 addpath(pwd);
                 if ~exist([settingsdir filesep 'temp'],'dir')
                     mkdir([settingsdir filesep 'temp'])
@@ -154,7 +155,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             %update plugin file if new plugins are saved
             makeplugincallfile('plugins');
-            
+            makeGeometricModelList;
             %add java path to bioformats
                 bfpath=obj.getGlobalSetting('bioformatspath');
                 bffile=[bfpath filesep 'bioformats_package.jar'];
@@ -163,7 +164,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 javaaddpath(bffile);
             else
                 disp('bioformats package not found. Please select path to bioformats_package.jar in the Preferences.')
-                disp('you can download the Matalb toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
+                disp('you can download the Matlab toolbox for bioformats at  https://www.openmicroscopy.org/bio-formats/downloads/')
             end
            
             
@@ -196,13 +197,16 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
   
             gfile=obj.getGlobalSetting('guiPluginConfigFile');
             if ~exist(gfile,'file')
-                gfile=strrep(gfile,'settings', settingsdir);
+                ind = strfind(gfile,'settings');
+                gfile=[settingsdir gfile(ind+8:end)];
+%                 gfile=strrep(gfile,'settings', settingsdir);
             end
                 
             if exist(gfile,'file')
                 guimodules=readstruct(gfile,[],true);
             else
-                guimodules=pmenu;
+%                 guimodules=pmenu;
+                guimodules=struct('File',[],'Analyze',[],'Process',[],'ROIManager',[]);
             end
             guimodulespure=myrmfield(guimodules,{'GuiParameters','globalGuiState'});
             obj.setPar('guimodules',guimodulespure);
@@ -249,6 +253,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             end
             h.status.Position(4)=hstatus;
             h.status.Position(2)=1;
+            h.status.Position(1)=10;
             obj.addSynchronization('status',h.status,{'String'})             
 
             

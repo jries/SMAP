@@ -75,7 +75,17 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             allmd(end+1,:)={'ROI direct',num2str(roih)};
             catch err
             end
-            possibleframes=[img.lastAcquiredFrame,summarymetadata.get('Slices'),summarymetadata.get('Frames'),summarymetadata.get('Positions')];
+            sl=0;fr=0;po=0;
+            try
+                sl=summarymetadata.get('Slices');
+            end
+            try
+                fr=summarymetadata.get('Frames');
+            end
+            try
+                po=summarymetadata.get('Positions');
+            end            
+            possibleframes=[img.lastAcquiredFrame,sl,fr,po];
             framesd=min(possibleframes(possibleframes>100));
             if isempty(framesd)
                 framesd=max(possibleframes);
@@ -91,64 +101,7 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
     
 end
 
-function initMM(obj)
-global SMAP_globalsettings
-% dirs={'ij.jar'
-% 'plugins/Micro-Manager/MMAcqEngine.jar'
-% 'plugins/Micro-Manager/MMCoreJ.jar'
-% 'plugins/Micro-Manager/MMJ_.jar'
-% 'plugins/Micro-Manager/clojure.jar'
-% 'plugins/Micro-Manager/bsh-2.0b4.jar'
-% 'plugins/Micro-Manager/swingx-0.9.5.jar'
-% 'plugins/Micro-Manager/swing-layout-1.0.4.jar'
-% 'plugins/Micro-Manager/commons-math-2.0.jar'
-%  'plugins/Micro-Manager/ome-xml.jar'
-%  'plugins/Micro-Manager/scifio.jar'
-%  'plugins/Micro-Manager/guava-17.0.jar'
-%  'plugins/Micro-Manager/loci-common.jar'
-%  'plugins/Micro-Manager/slf4j-api-1.7.1.jar'};
 
-%     if ispc
-%         MMpath='C:/Program Files/Fiji/scripts';
-%     else
-%         MMpath='/Applications/Fiji.app/scripts';
-%     end
-
-if isempty(SMAP_globalsettings)
-    disp('Micro-manager java path not added, as imageloader was not called from SMAP. add manually to javaclasspath');
-end
-try    
-
-MMpath=obj.getGlobalSetting('MMpath'); 
-catch
-    MMpath=SMAP_globalsettings.MMpath.object.String;
-end
-
-if ~exist(MMpath,'dir')       
-    errordlg('cannot find Micro-Manager, please select Micro-Manager directory in menu SMAP/Preferences/Directotries2...')
-    return
-end
-
-
-% for k=1:length(dirs)
-%     dirs{k}=[MMpath filesep strrep(dirs{k},'/',filesep)];
-% end
-plugindir=[MMpath filesep 'plugins' filesep 'Micro-Manager' filesep];
-allf=dir([plugindir '*.jar']);
-dirs={allf(:).name};
-
-for k=1:length(dirs)
-    dirs{k}=[MMpath filesep 'plugins' filesep 'Micro-Manager' filesep strrep(dirs{k},'/',filesep)];
-end
-
-dirs{end+1}=  [MMpath filesep 'ij.jar']; 
-jp=javaclasspath;
-diradd=dirs(~ismember(dirs,jp));
-if ~isempty(diradd)
-javaaddpath(diradd);
-end
-
-end
 
 
 
@@ -168,6 +121,9 @@ if isempty(img)
     return
 end
 image=img.pix;
+if isempty(image)
+    return
+end
 % if numel(image)==obj.metadata.Width*obj.metadata.Height
     image=reshape(image,obj.metadata.Width,obj.metadata.Height)';
     if isa(image,'int16')
@@ -193,7 +149,12 @@ if ~isempty(obj.readoutimgtags)
     end   
     
     for k=1:length(obj.readoutimgtags)
-        tag=imgmeta.get(obj.readoutimgtags{k});
+        try
+            tag=imgmeta.get(obj.readoutimgtags{k});
+        catch err
+            tag=NaN;
+            err
+        end
         if ischar(tag)
             obj.imtags(k,imagenumber)=str2double(tag);
         else
@@ -225,5 +186,7 @@ function initimagetags(obj)
             end
             obj.readoutimgtags=strtrim(obj.readoutimgtags);
             obj.init=true;
+        else 
+            obj.readoutimgtags={};
         end    
 end

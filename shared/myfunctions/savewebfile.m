@@ -1,7 +1,8 @@
 function worked=savewebfile(fout,url)
 worked=false;
 try
-    docbin=webread(url);
+    options = weboptions('Timeout', 2);
+    docbin=webread(url,options);
 catch err
     err
         disp(['could not download file ' url '. Please ensure you have internet connection'])

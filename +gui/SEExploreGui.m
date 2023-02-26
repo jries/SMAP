@@ -144,6 +144,14 @@ classdef SEExploreGui<interfaces.SEProcessor
 %                     fl=obj.getPar('filelist_long').String;
 %                     for k=1:length(
 %                 end
+                % if not all files in there, add
+%                 fl=obj.getPar('filelist_long').String;
+%                 if length(fl)>length(obj.SE.files)
+%                     obj.SE.numberOfFiles=0;
+%                     for k=1:length(fl)
+%                         obj.SE.addFile(obj.locData.files.file(k).name,obj.locData.files.file(k).number,obj.locData.files.file(k).info)
+%                     end
+%                 end
                 obj.guihandles.filelist.String={obj.SE.files.name};
                 obj.guihandles.filelist.Value=1;
             end
@@ -942,7 +950,10 @@ switch event.Key
             removecell_callback(0,0,obj);
         else
             removesite_callback(0,0,obj);
-        end        
+        end    
+    case 'slash'
+            toggleuse_callback(0,0,obj)
+
 end
 
 end

@@ -1,8 +1,10 @@
 classdef geometricModel<matlab.mixin.Copyable
-    % :class:`GeometricModel` is the superclass of any geometric model.
+    % :class:`geometricModel` is the superclass of any geometric model. It
+    % contains methods for building own geometric models.
     %
-    % Todo:
-    %    *Complete the parameter `designedFor`.
+    % Last update:
+    %   14.10.2021
+
     properties (SetObservable)
         ParentObject = [];
         name                 % names of model parameters
@@ -12,12 +14,13 @@ classdef geometricModel<matlab.mixin.Copyable
         ub                   % relative upper bounds of model parameters
         min                  % min values of model parameters
         max                  % max values of model parameters
-        internalSettings
+        internalSettings     % parameters that do not suit fitting
     end
     properties
-        modelType
-        modelTypeOption          % the type of SMLM model that this geometric model was designed for.
-        dimension
+        modelType            % selected model type
+        modelTypeOption      % possible model types of a specific geometric model
+        dimension            % a scalar indicating the dimensionality of the model. Either 2 or 3.
+        listed = false       % whether this model will be listed in the GUI.
     end
     properties (Hidden)
         parsArgName = {'name', 'fix', 'value', 'lb', 'ub', 'min', 'max'}';
@@ -32,13 +35,16 @@ classdef geometricModel<matlab.mixin.Copyable
             %   * 'Parent': parental obj.
             %
             % Returns:
-            %   obj: an :class:`geometricModel` object.
+            %   obj: a :class:`geometricModel` object.
                 
             if length(varargin)>0
                 p = inputParser;
                 p.addParameter('Parent', [])
                 parse(p,varargin{:});
                 obj.ParentObject = p.Results.Parent;
+            end
+            if isempty(obj.listed)
+                obj.listed = false;
             end
         end
         function setInternalSettings(obj,settingName,value)

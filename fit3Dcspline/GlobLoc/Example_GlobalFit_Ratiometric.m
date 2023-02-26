@@ -2,8 +2,11 @@
 % author: Yiming Li
 % email: liym2019@sustech.edu.cn
 % date: 2021.08.27
-% Link of example  data: https://oc.embl.de/index.php/s/bs1ADBsc4t6aiVV
+% Download the calbration data for the followling link first: https://www.embl.de/download/ries/globLoc/
+%000_AstigBeads_LP665_m1_1um_20nm_50ms_conv_640_50Percent_Empty_685-70_676-37_singleMode_Z-stack_1_MMStack_Pos0.ome_3dcal.mat
+% Tested with CUDA 11.3 (Express installation) and Matlab 2019a
 %% Load and make cspline PSF
+clearvars
 cal=load('000_AstigBeads_LP665_m1_1um_20nm_50ms_conv_640_50Percent_Empty_685-70_676-37_singleMode_Z-stack_1_MMStack_Pos0.ome_3dcal.mat');
 PSF1 = cal.SXY(1).PSF{1};
 rangex = 4:30;
@@ -486,7 +489,7 @@ goodnessALL_sep =[goodness1_sep;goodness2_sep;goodness3_sep;goodness4_sep];
 
 
 %% export
-
+% crosstalk of the 4 dyes under different fitting schemes
 cross_linkxyzP = [cross11_linkPF cross12_linkPF cross13_linkPF cross14_linkPF;cross21_linkPF cross22_linkPF cross23_linkPF cross24_linkPF;cross31_linkPF cross32_linkPF cross33_linkPF cross34_linkPF;cross41_linkPF cross42_linkPF cross43_linkPF cross44_linkPF];
 cross_linkxyz = [cross11_linkXYZ cross12_linkXYZ cross13_linkXYZ cross14_linkXYZ;cross21_linkXYZ cross22_linkXYZ cross23_linkXYZ cross24_linkXYZ;cross31_linkXYZ cross32_linkXYZ cross33_linkXYZ cross34_linkXYZ;cross41_linkXYZ cross42_linkXYZ cross43_linkXYZ cross44_linkXYZ];
 cross_separate = [cross11_separate cross12_separate cross13_separate cross14_separate;cross21_separate cross22_separate cross23_separate cross24_separate;cross31_separate cross32_separate cross33_separate cross34_separate;cross41_separate cross42_separate cross43_separate cross44_separate];

@@ -32,4 +32,5 @@ end
 header = FP.Properties.VariableNames;
 hGui_par.fittedPar.ColumnName = header;
 hGui_par.fittedPar.Data = table2cell(FP);
+hGui_par.fittedPar.ColumnWidth = num2cell(ones(1,10).*50);
 end

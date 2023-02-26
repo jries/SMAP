@@ -1,7 +1,42 @@
-function [ax,finalImg] = plot(obj,locs,varargin)          % visualize the best fit
+function [ax,finalImg] = plot(obj,locs,varargin)
+% :meth:`plot` visualize the fit result.
+%
+% Args:
+%   obj (:obj:`LocMoFit`): an object created by :meth:`LocMoFit`.
+%   locs (structure array): the typical localization structure array used
+%   in SMAP.
+%
+% Name-Value Arguments:
+%   bestPar
+%   lPars
+%   mPars
+%   plotType
+%   whichModel
+%   Projection
+%   pixelSize (numeric scalar): the pixel size of the rendered image. Default: determined by the :obj:`SMLMModel`.
+%   axes
+%   movModel
+%   normalizationMax
+%   shift
+%   color
+%   doNotPlot
+%   modelSamplingFactor
+%   displayLocs
+%   color_max
+%   MarkerFaceAlpha_Locs (numeric scalar): this determines the transparency of the locs points. Default: 0.5.
+%
+% Returns:
+%   ax (Axes object): the axes object where the fit is visualized.
+%   finalImg (structure array, numeric array): either a rendered image (numeric array) or a structure array representing the current model.
+%   
+% Last update:
+%   06.05.2022
+%
+
 %% PLOT Display the fit results
 % For a coordinate-based model in 3D, the fitted model can be displayed as points, 
 % projected images, or both simultaneously.
+
 %% Initiation
 p = inputParser;
 p.addParameter('bestPar',true);
@@ -19,6 +54,7 @@ p.addParameter('color', {});                          %!!! need to be further in
 p.addParameter('doNotPlot', false);
 p.addParameter('modelSamplingFactor', []);
 p.addParameter('displayLocs',1)
+p.addParameter('alpha_Locs', 0.2);
 p.addParameter('color_max',ones([1 obj.numOfLayer])*255)
 % If the first argument is an handle of axes, then use it as the parent
 if ~exist('locs',"var")
@@ -98,6 +134,8 @@ end
 if any(imgSize == 0)
     imgSize = repelem((obj.roiSize+2*obj.imgExtension), modelDim)./pixelSize;
 end
+
+%% Get each model
 %         For the image type
 if isequal(results.plotType,'image')
     % for an image model, use the method 'plot()' of image model class
@@ -180,51 +218,12 @@ if isequal(results.plotType,'image')
             modelImage{k} = finalImg;
         end
     end
-%         For the point type   
 else
-    for k = obj.numOfModel:-1:1
-        if k==1
-            oneMPars = obj.exportPars(k,'mPar');
-            if isempty(results.modelSamplingFactor)
-                modelPoint{k} = obj.model{k}.getPoint(oneMPars);
-            else
-                modelPoint{k} = obj.model{k}.getPoint(oneMPars,'factor',results.modelSamplingFactor);
-            end
-            
-        else
-            oneMPars = obj.exportPars(k,'mPar');
-            if isempty(results.modelSamplingFactor)
-                ref = obj.model{k}.getPoint(oneMPars);
-            else
-                ref = obj.model{k}.getPoint(oneMPars,'factor',results.modelSamplingFactor);
-            end
-            
-            % translate lPar to mPar
-            oneLPars = obj.exportPars(k,'lPar');          % get lPars
-            fn = fieldnames(oneLPars);
-            lFn2rm = ismember(fn,{'xscale','yscale'});
-            fn = fn(~lFn2rm);
-            for l = 1:length(fn)
-                oneLPars.(fn{l}) = -oneLPars.(fn{l});
-            end
-            
-            pseudoLocs.xnm = ref.x;
-            pseudoLocs.ynm = ref.y;
-            if obj.model{1}.dimension == 3
-                pseudoLocs.znm = ref.z;
-            end
-            newPseudoLocs = obj.locsHandler(pseudoLocs, oneLPars,[],'usedformalism','rotationMatrixRev');
-            ref.x = newPseudoLocs.xnm;
-            ref.y = newPseudoLocs.ynm;
-            if obj.model{1}.dimension == 3
-                ref.z = newPseudoLocs.znm;
-            end
-            modelPoint{k} = ref;
-        end
-    end
+    % For the point type
+%     modPoint = obj.getModPoint(results.modelSamplingFactor);
 end
 %% Render the models
-% Generate for each layer an image
+% From models to layers: generate for each layer an image
 dataCol = {'r','g','b'};
 if isequal(results.plotType,'image')
 %     nameAllLut = mymakelut;
@@ -278,23 +277,10 @@ if isequal(results.plotType,'image')
     end
     finalImg = img2disp; %%%quick and dirty
 else
-    for ch = 1:length(allModelLayers)
-        layerPoint{ch}.x = [];
-        layerPoint{ch}.y = [];
-        layerPoint{ch}.z = [];
-        layerPoint{ch}.n = [];
-        indModelOneCh = find(modelLayer == allModelLayers(ch));
-        for k = 1:length(indModelOneCh)
-            indOneModel = indModelOneCh(k);
-            onePoint = modelPoint{indOneModel};
-            layerPoint{ch}.x = [layerPoint{ch}.x; onePoint.x];
-            layerPoint{ch}.y = [layerPoint{ch}.y; onePoint.y];
-            if obj.model{1}.dimension == 3
-                layerPoint{ch}.z = [layerPoint{ch}.z; onePoint.z];
-            end
-            layerPoint{ch}.n = [layerPoint{ch}.n; onePoint.n];
-        end
+    if isempty(obj.modelLayer)
+        obj.updateLayer
     end
+    layerPoint = obj.getLayerPoint(results.modelSamplingFactor);
 end
 %% Display images
 if isequal(results.plotType,'image')&&~isempty(locs)
@@ -361,7 +347,9 @@ else
         newLocs.znm = zeros(size(newLocs.xnm));
     end
     for layer = 1:length(allModelLayers)
-        if isempty(layerPoint{layer}.z )
+        if ~isfield(layerPoint{layer},'z')
+            
+        elseif isempty(layerPoint{layer}.z )
             disp('Check here when getting error.')
             % 200610 modified:
 %             layerPoint{layer}.z = zeros(size(layerPoint{layer}.x));
@@ -369,8 +357,8 @@ else
         end
         if ~results.doNotPlot
             hold(ax, 'on')
-            plot3(ax,layerPoint{layer}.x,layerPoint{layer}.y,layerPoint{layer}.z, ' o', 'MarkerFaceColor', dataCol{layer}, 'MarkerEdgeColor','k', 'LineWidth',1.5,'MarkerSize',6)
-            plot3(ax,newLocs.xnm(locs.layer==layer),newLocs.ynm(locs.layer==layer),newLocs.znm(locs.layer==layer), ' o', 'MarkerFaceColor', dataCol{layer}, 'MarkerEdgeColor','w', 'LineWidth',1.5,'MarkerSize',6)
+            scatter3(ax,layerPoint{layer}.x,layerPoint{layer}.y,layerPoint{layer}.z, 16, 'filled', 'o', 'MarkerFaceColor', dataCol{layer}, 'MarkerEdgeColor','k', 'LineWidth',1)
+            scatter3(ax,newLocs.xnm(locs.layer==layer),newLocs.ynm(locs.layer==layer),newLocs.znm(locs.layer==layer),16, 'filled', 'o', 'MarkerFaceColor', dataCol{layer}, 'MarkerEdgeColor','w', 'LineWidth',0.5, 'MarkerFaceAlpha', results.alpha_Locs, 'MarkerEdgeAlpha', results.alpha_Locs)
             hold(ax, 'off')
         end
     end

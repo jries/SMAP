@@ -15,13 +15,13 @@ function result = WriteYaml(filename, data, flowstyle)
     try
         import('org.yaml.snakeyaml.*');
         javaObject('Yaml');
-    catch
+    catch err
         dp = [pth filesep 'external' filesep 'snakeyaml-1.9.jar'];
         if not(ismember(dp, javaclasspath ('-dynamic')))
         	javaaddpath(dp); % javaaddpath clears global variables...!?
         end
         import('org.yaml.snakeyaml.*');
-    end;
+    end
     javastruct = scan(data);
     dumperopts = DumperOptions();
     dumperopts.setLineBreak(...
@@ -79,7 +79,11 @@ function result = scan_numeric(r)
     if isempty(r)
         result = java.util.ArrayList();
     else
-        result = java.lang.Double(r);
+        if isinteger(r)
+            result = java.lang.Long(r);
+        else
+            result = java.lang.Double(r);
+        end
     end
 end
 

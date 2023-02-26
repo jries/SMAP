@@ -28,26 +28,32 @@ if ~any([isequal(obj.modelType, 'continuous') isequal(obj.modelType, 'background
     % This term determines the sampling rate of the model
     refLocs = obj.getPoint(mPars);
     
-    lParRefSeries = 1:obj.layer;
+    lParRefSeries = unique([1 obj.ID]);
     if obj.dimension == 3
         % sequentially apply the transformation
         refLocs.xnm = refLocs.x; refLocs.ynm = refLocs.y; refLocs.znm = refLocs.z;
        
         for k = 1:length(lParRefSeries)
-            refLocs = obj.ParentObject.locsHandler(refLocs, lPars{k}, 0, 'order_transform', 'RT', 'usedformalism', 'rotationMatrixRev');
+            if obj.ID == 1 && ~isempty(obj.ParentObject.getTemp('freeRot')) && obj.ParentObject.getTemp('freeRot')
+                usedformalism = 'lieAlgebra';
+            else
+                usedformalism = 'rotationMatrixRev';
+            end
+            refLocs = obj.ParentObject.locsHandler(refLocs, lPars{lParRefSeries(k)}, 0, 'order_transform', 'RT', 'usedformalism', usedformalism);
         end
         refLocs.x = refLocs.xnm; refLocs.y = refLocs.ynm; refLocs.z = refLocs.znm;
     else
         for k = 1:length(lParRefSeries)
-            zrot = deg2rad(lPars{k}.zrot);
+            zrot = deg2rad(lPars{lParRefSeries(k)}.zrot);
             [x,y] = rotcoord2(refLocs.x,refLocs.y,zrot');
             x = x';
             y = y';
-            refLocs.x = x'+lPars{k}.x;
-            refLocs.y = y'+lPars{k}.y;
+            refLocs.x = x'+lPars{lParRefSeries(k)}.x;
+            refLocs.y = y'+lPars{lParRefSeries(k)}.y;
+            refLocs.n = repelem(refLocs.n,1, size(lPars{lParRefSeries(k)}.y,2));
         end
-        lInRoi = refLocs.x.^2+refLocs.y.^2 <=(obj.ParentObject.roiSize/2)^2;
-        refLocs.x = refLocs.x(lInRoi); refLocs.y = refLocs.y(lInRoi); refLocs.n = refLocs.n(lInRoi);
+%         lInRoi = refLocs.x.^2+refLocs.y.^2 <=(obj.ParentObject.roiSize/2)^2;
+%         refLocs.x = refLocs.x(lInRoi); refLocs.y = refLocs.y(lInRoi); refLocs.n = refLocs.n(lInRoi);
     end
     
     % Deal with the gaussDistCutoff for the fast-mode gaussDist
@@ -66,7 +72,7 @@ if ~any([isequal(obj.modelType, 'continuous') isequal(obj.modelType, 'background
     
     if obj.dimension == 3
         % for 3D
-        intensityVal = gaussDist(refLocs,locs.ynm, locs.xnm, locs.znm, sigmaSet+sigmaFactor(2),sigmaSet+sigmaFactor(2),sigmaZSet, 'sigFactor', sigmaFactor(1), 'distMode',p.gaussDistMode,'distCutoff',p.gaussDistCutoff, 'sumIntensity',sumGaussIntensity)./size(refLocs.x,1);
+        intensityVal = gaussDist(refLocs,locs.ynm, locs.xnm, locs.znm, sigmaSet+sigmaFactor(2),sigmaSet+sigmaFactor(2),sigmaZSet, 'sigFactor', sigmaFactor(1), 'distMode',p.gaussDistMode,'distCutoff',p.gaussDistCutoff)./sum(refLocs.n,1);
         likelihoodBoun = 0;
     else
         % for 2D

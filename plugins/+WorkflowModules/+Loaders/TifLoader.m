@@ -15,6 +15,7 @@ classdef TifLoader<interfaces.WorkflowModule
         numberOfFrames
         timerfitstart
         edgesize
+        fileext='*.tif';
     end
     methods
         function obj=TifLoader(varargin)
@@ -26,7 +27,9 @@ classdef TifLoader<interfaces.WorkflowModule
             pard=guidef(obj);
         end
         function initGui(obj)
+            if isempty(obj.loaders)
              obj.loaders={'auto',@imageloaderAll;'MMStack',@imageloaderMM;'MMSingle',@imageloaderMMsingle;'OME',@imageloaderOME;'simple Tif',@imageloaderTifSimple};
+            end
             initGui@interfaces.WorkflowModule(obj);
             obj.inputParameters={'loc_subtractbg','loc_blocksize_frames'};            
             obj.guihandles.loadtifbutton.Callback={@loadtif_callback,obj};
@@ -85,16 +88,21 @@ classdef TifLoader<interfaces.WorkflowModule
             end
             obj.timerfitstart=tic;   
             obj.setPar('savefit',0) %delete, reset
+            obj.setPar('loc_multifile',p.ismultifile);
+            obj.setPar('loc_frames_fit',[obj.framestart obj.framestop]);
         end
-        function run(obj,data,p)
+        function output=run(obj,data,p)
+            output=[];
             global SMAP_stopnow
             if SMAP_stopnow
                 disp('STOP button pressed. To localize, unpress')
             end
             
             if nargin>1&& ~isempty(data)&&~isempty(data.data) %optional input channel
-                file=data.data;
-                obj.addFile(file)
+                if ischar(data.data) && exist(data.data,'file')
+                    file=data.data;
+                    obj.addFile(file)
+                end
             end
             obj.imloader.prefit;
             id=1;
@@ -226,7 +234,7 @@ classdef TifLoader<interfaces.WorkflowModule
              if p.onlineanalysis
                  obj.guihandles.framestop.String='inf';
              else
-                numf=obj.imloader.metadata.numberOfFrames+1;
+                numf=obj.imloader.metadata.numberOfFrames;
                 if isnan(numf)
                     numf=inf;
                 end
@@ -260,9 +268,9 @@ function loadtif_callback(a,b,obj)
 p=obj.getGuiParameters;
 
 if p.ismultifile %later: check filename (e.g. _q1 _q2 etc). Also make sure quadrants are not mixed /rearranged
-    if iscell(p.tiffile)
-        p.tiffile=p.tiffile{1};
-    end
+%     if iscell(p.tiffile)
+%         p.tiffile=p.tiffile{1};
+%     end
     sf=selectManyFiles(fileparts(p.tiffile));
     filelisth=obj.guihandles.tiffile.String;
     if ~iscell(filelisth)
@@ -271,17 +279,22 @@ if p.ismultifile %later: check filename (e.g. _q1 _q2 etc). Also make sure quadr
     sf.guihandles.filelist.String=filelisth;
     waitfor(sf.handle);
     f=sf.filelist;
+%     try
+%         f=strsplit(f{1},';');
+%     catch err
+%         err
+%     end
 else
-    try
-        fe=bfGetFileExtensions;
-    catch
-        fe='*.*';
-    end
+%     try
+%         fe=bfGetFileExtensions;
+%     catch
+        fe=obj.fileext;
+%     end
     filelisth=p.tiffile;
     if iscell(filelisth)
         filelisth=filelisth{1};
     end
-    [f,path]=uigetfile(fe,'select camera images',[fileparts(filelisth) filesep '*.tif']);
+    [f,path]=uigetfile(fe,'select camera images',[fileparts(filelisth) filesep fe]);
     if f
         f=[path f];
     else 

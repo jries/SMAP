@@ -59,9 +59,9 @@ if sum(isfinite(data(:))) < 4
     if isempty(dim)
         dim=1;
     end
-    finalMean = nanmean(data,dim);
+    finalMean = mean(data,dim,'omitnan');
 %     stdSample = NaN(size(finalMean));-
-    stdSample=nanstd(data,[],dim);
+    stdSample=std(data,[],dim,'omitnan');
     inlierIdx = find(isfinite(data));
     outlierIdx = [];
     return
@@ -90,17 +90,17 @@ if fit
     % minimize the median deviation from the mean
     medianData = fminsearch(@(x)(median(abs(data-x))),median(data));
 else
-    medianData = nanmedian(data,dim);
+    medianData = median(data,dim,'omitnan');
 end
 
 % calculate statistics
 res2 = (data-repmat(medianData,blowUpDataSize)).^2;
-medRes2 = max(nanmedian(res2,dim),eps);
+medRes2 = max(median(res2,dim,'omitnan'),eps);
 
 %testvalue to calculate weights
 testValue=res2./repmat(magicNumber2*medRes2,blowUpDataSize);
 
-if realDimensions == 1;
+if realDimensions == 1
     %goodRows: weight 1, badRows: weight 0
     inlierIdx=find(testValue<=k^2);
     outlierIdx = find(testValue>k^2);
@@ -140,7 +140,7 @@ else
         % standard deviation
         goodIdx = sum(isfinite(res2),dim) > 4;
         stdSample = NaN(size(goodIdx));
-        stdSample(goodIdx)=sqrt(nansum(res2(goodIdx),dim)./(nInliers(goodIdx)-4));
+        stdSample(goodIdx)=sqrt(sum(res2(goodIdx),dim,'omitnan')./(nInliers(goodIdx)-4));
     end
     
     %====END LMS=========
@@ -150,5 +150,5 @@ else
     %======
     
     data(outlierIdx) = NaN;
-    finalMean = nanmean(data,dim);
+    finalMean = mean(data,dim,'omitnan');
 end

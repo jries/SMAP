@@ -80,12 +80,22 @@ for k = 1:obj.numOfModel
         % this is for models in the functional form
         onlyLocpre = true;
     end
-    
-    newLocs = obj.locsHandler(locs, lPars{k}, k, 'onlyLocpre', onlyLocpre);  
-    
-    if k == 1
+
+    newLocs = obj.locsHandler(locs, lPars{k}, k, 'onlyLocpre', onlyLocpre);
+
+    if k==1
+        % This is to make sure that 'onlyLocpre' has been applied
         obj.setTemp('locsM1', newLocs);
     end
+%     if k == 1
+%         newLocs_ = newLocs;
+%         newLocs_.locprecnm = locs.locprecnm;
+%         if obj.model{1}.dimension == 3
+%             newLocs_.locprecznm = locs.locprecznm;
+%         end
+%         obj.setTemp('locsM1', newLocs_);
+%     end
+    
     % get the size of the largest vector(s) among locs related info
     fn = fieldnames(newLocs);
     numOfFn = length(fn);
@@ -230,9 +240,9 @@ offset = obj.convert2InteralOffset(oldOffset);
 for ch = 1:obj.numOfLayer
     %                 totalIntensity(locs.layer==layer,:) = (((1-offset{90+layer}.weight).*totalIntensity(locs.layer==layer,:) + offset{90+layer}.weight.*offsetUnit))*obj.weightLayer(layer);
 %     totalIntensity(locs.layer==layer,:) = (((1-offset{90+layer}.weight).*totalIntensity(locs.layer==layer,:) + (offset{90+layer}.weight.*offsetUnit).^obj.model{k}.weight))*0.5;
-    totalIntensity(locs.layer==layer,:) = (((1-offset{90+layer}.weight).*totalIntensity(locs.layer==layer,:) + (offset{90+layer}.weight.*offsetUnit)))*obj.weightLayer(layer);
+    totalIntensity(locs.layer==ch,:) = (((1-offset{90+ch}.weight).*totalIntensity(locs.layer==ch,:) + (offset{90+ch}.weight.*offsetUnit)))*obj.weightLayer(ch);
     % calculate the control
-    LLctrl(layer) = log(offsetUnit.*obj.weightLayer(layer))*sum(locs.layer==layer);
+    LLctrl(ch) = log(offsetUnit.*obj.weightLayer(ch))*sum(locs.layer==ch);
 end
 LLctrl = sum(LLctrl)/sum(ismember(locs.layer,obj.allModelLayer));
 % channel not used

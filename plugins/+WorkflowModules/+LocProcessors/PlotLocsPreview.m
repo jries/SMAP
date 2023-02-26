@@ -40,7 +40,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
             if obj.getPar('loc_preview') %&& ~obj.previewdone
                 locs=data.data;
                 previewlocs=obj.getPar('preview_locs');
-                if isempty(locs)
+                if isempty(locs) || ~isstruct(locs)
                     locs=previewlocs;
                 elseif ~isempty(previewlocs) 
                     fn=fieldnames(previewlocs);
@@ -84,7 +84,7 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                      error ('image could not be loaded for preview')
 %                     return
                 end
-                imagesc(ax,implot);
+                imagesc(ax,tileplots(implot));
                 title(ax,titletxt);
                 colorbar(ax);
 %                 colormap(ax,'jet');
@@ -101,26 +101,33 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
                 
                 % plot ROIs
                 maxima=obj.getPar('preview_peakfind');
-                if isempty(maxima)||isempty(maxima.xpix)
+                found=false;
+                for ch=1:length(maxima)
+                    col=[0.3 0.3 0.];
+                    dn=floor(obj.getPar('loc_ROIsize')/2);
+                    choff=(ch-1)*size(implot,2);
+                    if ~isempty(dn)
+                        for k=1:length(maxima(ch).xpix)
+                            pos=[maxima(ch).xpix(k)-dn+choff maxima(ch).ypix(k)-dn maxima(ch).xpix(k)+dn+choff  maxima(ch).ypix(k)+dn ];
+                            plotrect(ax,pos,col);
+                            found=true;
+                        end
+                    end
+                end
+                
+                if ~found
                      obj.setPar('status','no localizations found')
                      obj.setPar('errorindicator','no localizations found')
                      disp ('No localizations found. Use a different frame fore Preview, or reduce the cutoff parameter');
-                     warndlg('No localizations found. Use a different frame fore Preview, or reduce the cutoff parameter');
+                     warndlg('No localizations found. Use a different frame fore Preview, or reduce the cutoff parameter','modal');
                 end
-                col=[0.3 0.3 0.];
-                dn=floor(obj.getPar('loc_ROIsize')/2);
-                for k=1:length(maxima.xpix)
-                    pos=[maxima.xpix(k)-dn maxima.ypix(k)-dn maxima.xpix(k)+dn maxima.ypix(k)+dn ];
-                    plotrect(ax,pos,col);
-                end
-                
                 %plot locs
                 if ~isempty(locs)&&~isempty(locs.xpix)
                     
                     plot(ax,locs.xpix,locs.ypix,'k.','Parent',ax,'MarkerSize',4)
                     dn=ceil((obj.getPar('loc_ROIsize')-1)/2);
                     if isempty(dn)
-                        dn=3;
+                        dn=1;
                     end
                     for k=1:length(locs.xpix)
                         pos=[locs.xpix(k)-dn locs.ypix(k)-dn locs.xpix(k)+dn locs.ypix(k)+dn ];
@@ -137,4 +144,9 @@ classdef PlotLocsPreview<interfaces.WorkflowModule
         end
 
     end
+end
+
+function out=tileplots(in)
+out=reshape(in,size(in,1),[]);
+
 end

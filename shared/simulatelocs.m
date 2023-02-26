@@ -45,7 +45,9 @@ function [locsout,possites,parameters]=simulatelocs(p, colour)
                poslabels=addlinkage(poslabels,p.linkageerrorfix);
            end
            posreappear=getblinks(poslabels,p.model.selection,p.blinks,p.maxframes);
-           
+           if p.linkageerrorfree>0
+               posreappear=addlinkage(posreappear,p.linkageerrorfree);
+           end           
            posphot=getphotons(posreappear,p.photons,p.lifetime,p.photonsigma);
            
            locs=locsfrompos(posphot,p);
@@ -254,10 +256,12 @@ for k=numberofsites:-1:1
         switch p.obj.getPar('modelType')
             case 'Image'
                 locsh=locsfromContFun(p);
+                fitter.resetInit;
             case 'Point'
                 [locsd,ph]=locsfromDiscFun(p);
                 locsh=labelremove(locsd,p.labeling_efficiency);
                 phere.model=ph;
+                fitter.resetInit;
         end
     elseif ~isempty(locfun)
        
@@ -415,9 +419,14 @@ end
 function [locs,parameters]=locsfromDiscFun(p)
 % added by Yu-Le for LocMoFit:   
 fitter = p.obj.getPar('fitter');
-finalROISize = p.obj.getPar('finalROISize');
 fitter.roiSize = p.se_siteroi;
-modCoord = fitter.getSimRef('finalROISize',str2num(finalROISize)); % get point type visualization
+if p.obj.getPar('useDepth')
+    depth = p.obj.getPar('depth');
+    modCoord = fitter.getSimRef('depth',str2num(depth)); % get point type visualization
+else
+    finalROISize = p.obj.getPar('finalROISize');
+    modCoord = fitter.getSimRef('finalROISize',str2num(finalROISize)); % get point type visualization
+end
 parameters.allParsArg = fitter.allParsArg;
 parameters.model = fitter.model;
 % Export
@@ -558,9 +567,9 @@ function locs=locsfromposi(locsi,p)
         dx2=crlb(:,1).*pixelsize^2;
         dy2=crlb(:,2).*pixelsize^2;
         dz2=crlb(:,5);
-        locpreceffectx=sqrt(dx2+p.linkageerrorfree.^2);
-        locpreceffecty=sqrt(dy2+p.linkageerrorfree.^2);
-        locpreceffectz=sqrt(dz2+p.linkageerrorfree.^2);
+        locpreceffectx=sqrt(dx2);
+        locpreceffecty=sqrt(dy2);
+        locpreceffectz=sqrt(dz2);
         locprecnm=sqrt((dx2+dy2)/2);
         locprecznm=sqrt(dz2);
 
@@ -576,9 +585,9 @@ function locs=locsfromposi(locsi,p)
         locprecnm=locprecnm*sqrt(noisexcessfactor);
         locprecznm=locprecnm*zfactor;
         %include linkage error from free rotation
-        locpreceffectx=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
-        locpreceffecty=sqrt(locprecnm.^2+p.linkageerrorfree.^2);
-        locpreceffectz=sqrt(locprecnm.^2*zfactor^2+p.linkageerrorfree.^2);
+        locpreceffectx=sqrt(locprecnm.^2);
+        locpreceffecty=sqrt(locprecnm.^2);
+        locpreceffectz=sqrt(locprecnm.^2*zfactor^2);
     end
 
 

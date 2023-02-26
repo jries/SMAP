@@ -367,7 +367,9 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
         end
         function createGlobalSetting(obj,field,category,description,structure)
             global SMAP_globalsettings
-            if ~isfield(obj.P.globalSettings,field) %don't overwrite current settings
+            if ~isfield(obj.P.globalSettings,field) || ...%don't overwrite current settings
+                    ~strcmp(obj.P.globalSettings.(field).category, category) || ...
+                    ~strcmp(obj.P.globalSettings.(field).object.Style, structure.Style)
                 obj.P.globalSettings.(field).object=structure;
     %             obj.P.globalSettings.(field).name=name;
                 obj.P.globalSettings.(field).category=category;
@@ -402,7 +404,14 @@ classdef GuiParameterInterface<interfaces.ParameterInterface
             obj.P.loadGlobalSettings(file);
             SMAP_globalsettings=obj.P.globalSettings;
         end
-
+        function deleteGlobalSetting(obj,field) %when not needed any more, replace createGlobalSetting by this command to remove it from the parameter structure.
+            global SMAP_globalsettings
+            if myisfield(obj.P.globalSettings,field)
+                obj.P.globalSettings=myrmfield(obj.P.globalSettings,field);
+                SMAP_globalsettings=obj.P.globalSettings;
+                obj.saveGlobalSettings;
+            end
+        end
     end
     
     methods (Access=private)      
