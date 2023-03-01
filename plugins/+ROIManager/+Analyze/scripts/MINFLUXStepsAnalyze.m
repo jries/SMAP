@@ -1,4 +1,9 @@
 %analysis of MINFLUX tracks
+
+% Adjust the histogram time bin, dt, for best dwell time fit.
+dt=4;
+
+
 sites=g.locData.SE.sites;
 
 stepsize=[]; %define the variables you want to read out
@@ -6,22 +11,55 @@ steptime=[];
 
 pluginname='StepsMINFLUX';
 fieldname1='steps';
+fieldname2='statall';
 
 vel=[];
 tracklengthlocs=[];
 badsteps=[];
 indstep=[];
 newtrack=[];
+dtmedian = [];
+velocity = [];
+nlocs = [];
+tracklength = [];
+stddetrendx = [];
+stddetrendy = [];
+stddetrendz = [];
+msdall= [];
+dwelltime = {};
+timeall = {};
+deltaT = {};
+% efoall = {};
+
+
 for k=1:length(sites)
     if ~isfield(sites(k).evaluation,pluginname) || ~isfield(sites(k).evaluation.(pluginname),fieldname1) % if no steps are found, look at next site
         k
         continue
     end
     sh=sites(k).evaluation.(pluginname).(fieldname1);
+    sh2=sites(k).evaluation.(pluginname).(fieldname2);
+    
     stepsize(end+1:end+length(sh.stepsize))=sh.stepsize; %add values from current site to the list
     steptime(end+1:end+length(sh.dwelltime))=sh.dwelltime;
+    stddetrendx(end+1:end+length(sh.stddetrend.x))=sh.stddetrend.x;
+    stddetrendy(end+1:end+length(sh.stddetrend.y))=sh.stddetrend.y;
+    if isfield(sh.stddetrend, 'z')
+        stddetrendz(end+1:end+length(sh.stddetrend.z))=sh.stddetrend.z; 
+    end   
+    dtmedian(end+1:end+length(sh2.dtmedian))=sh2.dtmedian;
+    velocity(end+1:end+length(sh2.velocity))=sh2.velocity;
+    nlocs(end+1:end+length(sh2.nlocs))=sh2.nlocs;
+    tracklength(end+1:end+length(sh2.tracklength))=sh2.tracklength;
     vel(end+1)=sites(k).evaluation.(pluginname).stattrack.velocity;
     tracklengthlocs(end+1)=sites(k).evaluation.(pluginname).statall.nlocs;
+    id=g.locData.SE.sites(k).evaluation.StepsMINFLUX.statall.id;
+    index=g.locData.loc.groupindex==id;
+    dwelltime{k} = sh.dwelltime;
+    timeall{k} = g.locData.loc.time(index);
+    deltaT{k} = diff(timeall{k});
+%     efoall{k} = g.locData.loc.efo(index);
+    
     if isfield(sh,'badstes')
     badsteps(end+1:end+length(sh.badsteps))=sh.badsteps;
     indstep(end+1:end+length(sh.indstepglobal))=sh.indstepglobal;
@@ -32,6 +70,16 @@ for k=1:length(sites)
     end
    
 end
+
+
+loctime = [];
+for kk = 1:length(deltaT)
+    loctime = cat(1,loctime,double(deltaT{kk}));
+end
+% Saving statistical data to a clipboard of the system. Simply paste to e.g. Excel sheet.
+clipboard('copy', [sprintf([num2str(mean(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')/sqrt(length(stddetrendx))) '\t' num2str(mean(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')/sqrt(length(stddetrendy))) '\t' num2str(mean(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')/sqrt(length(stddetrendz))) '\t' num2str(mean(tracklength)) '\t' num2str(std(tracklength)) '\t' num2str(mean(vel)) '\t' num2str(std(vel))  '\t' num2str(median(loctime))  ])])
+display(sprintf('Precision x mean \t std \t sem \t Precision y mean \t std \t sem \t Precision z mean \t std \t sem \t Track length mean \t std \t Average walking speed \t std \t Median loaclization time (ms)'))
+
 
 %identify bad steps
 % 1. bad time resolution
@@ -84,7 +132,7 @@ ff='%2.1f';
 ffv='%2.0f';
 title(['fit: <step>=' num2str(fs.b1,ff) ', sigma=' num2str(fs.c1,ff) ',mean(step)=' num2str(mean(stepsize),ff) ', std=' num2str(std(stepsize),ff)])
 stepsizemean=fs.b1;
-dt=2;
+
 
 n=0:dt:max(steptime);
 
@@ -173,7 +221,8 @@ legend('data, shown is 1/k, v: nm/s, dt: ms',...
 
 figure(188)
 subplot(2,6,11)
-nv=0:0.05:max(vel);
+% nv=0:0.05:max(vel);
+nv=0:max(vel)/20:max(vel);
 histogram(vel,nv)
 xlabel('velocity (nm/s)')
 ff2='%2.0f';
@@ -181,7 +230,8 @@ title(['v = ' num2str(mean(vel)*1000,ff2) '±' num2str(std(vel)*1000,ff2) ' nm/s
 
 subplot(2,6,12)
 hold off
-nl=0:500:max(tracklengthlocs);
+% nl=0:500:max(tracklengthlocs);
+nl=0:max(tracklengthlocs)/20:max(tracklengthlocs);
 histogram(tracklengthlocs,nl)
 h=histcounts(tracklengthlocs,nl);
 fp=fit(nl(1:end-1)',h','exp1');
