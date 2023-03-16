@@ -64,8 +64,10 @@ for k=1:length(layers)
              s=size(fi.image);
              if s(2)>s(1)*1.3 
                  vertnext=true;
+                 fi.image(end,:,:)=.5;
                  allnext=vertcat(fi.image,allnext);
              else
+                 fi.image(:,end,:)=.5;
                  allnext=horzcat(allnext,fi.image);
                  vertnext=false;
              end

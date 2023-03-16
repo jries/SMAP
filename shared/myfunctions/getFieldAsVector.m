@@ -32,14 +32,19 @@ for k=length(p):-1:1
     else
         vh=NaN;
     end
+    
 
     if isarray||(numel(vh)==1 && (isnumeric(vh)||islogical(vh)))
-        try
+%         try
+%             v(k)=vh;
+%         catch
+%             v(isnan(v))=0;
+%             v = logical(v);
+%             v(k)=false;
+        if isempty(vh)
+            v(k)=NaN;
+        else
             v(k)=vh;
-        catch
-            v(isnan(v))=0;
-            v = logical(v);
-            v(k)=false;
         end
         isarray=true;
     else

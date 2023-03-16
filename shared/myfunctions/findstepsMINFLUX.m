@@ -5,6 +5,7 @@ p.splitmerge=pin.splitmerge;
 p.splitmergestep=pin.splitmergestep;
 p.estimatenoise=false;
 p.bootstraprepeats=0;
+p.overshoot=min(pin.overshoot,1);
 try
 steps=AutoStepfinderRies(x,p);
 catch err
