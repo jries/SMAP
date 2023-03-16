@@ -132,6 +132,23 @@ function pard = guidef(obj)
     pard.med_bgFiltering.position = [8 2];
     pard.med_bgFiltering.Width = 1;
 
+    pard.t_CWT_par.object = struct('Style','text','String','CWT min amp/portion');
+    pard.t_CWT_par.position = [9 1];
+    pard.t_CWT_par.Width = 2;
+
+    pard.CWT_amp.object = struct('Style','edit','String', '4 0.09');
+    pard.CWT_amp.position = [9 3];
+    pard.CWT_amp.Width = 1;
+
+    pard.CWT_portion.object = struct('Style','edit','String', 0.1);
+    pard.CWT_portion.position = [9 4];
+    pard.CWT_portion.Width = 0.5;
+
+    pard.CWT_minPeriod.object = struct('Style','edit','String', 60);
+    pard.CWT_minPeriod.position = [9 4.5];
+    pard.CWT_minPeriod.Width = 0.5;
+
+
     % check whether these is a fibrilDynamics before this module
     options = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);      % names of all mounted modules
     lFibrilDynamics = contains(options,'fibrilDynamics');                   % all fibrilDynamics modules
