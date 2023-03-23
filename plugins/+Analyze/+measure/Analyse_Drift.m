@@ -30,7 +30,7 @@ classdef Analyse_Drift<interfaces.DialogProcessor
             end
         
 
-                locs=obj.locData.getloc({'xnm','ynm','znm','locprecxnm','locprecznm','frame','filenumber','time','numberInGroup','groupindex'},'position','roi','layer',layers,'grouping','ungrouped');
+                locs=obj.locData.getloc({'phot','xnm','ynm','znm','locprecxnm','locprecznm','frame','filenumber','time','numberInGroup','groupindex'},'position','roi','layer',layers,'grouping','ungrouped');
                 beads=unique(locs.groupindex(locs.numberInGroup>p.minframes));
                 maxframes=max(locs.frame);
                 framesall=(1:maxframes)';
@@ -45,6 +45,7 @@ classdef Analyse_Drift<interfaces.DialogProcessor
                 dxall=zeros(maxframes,numbeads,3);
                 norm=zeros(maxframes,numbeads,3);
                 dxav=zeros(maxframes,1,3);
+                phot=zeros(maxframes,numbeads);
 
 
                 for b=1:length(beads)
@@ -73,6 +74,7 @@ classdef Analyse_Drift<interfaces.DialogProcessor
                     dxall(frameh,b,:)=dxh;
                     norm(frameh,b,:)=1;
                     dxav=sum(dxall.*norm,2)./sum(norm,2);
+                    phot(frameh,b)=locs.phot(thisbead);
 
                     
                 end
@@ -102,7 +104,19 @@ classdef Analyse_Drift<interfaces.DialogProcessor
                     xlabel(axall,'time (s)')
                     ylabel(axall,'drift (nm)')
 
+                    axxp=obj.initaxis('phot');
+                    hold(axxp,'off')
+                    for b=1:numbeads
+                        % isgood=norm(:,b,pf)>0;
+                        plot(axxp,timeplot,phot(:,b))
+                        hold(axxp,'on')
+                    end
+                    % plot(axxp,timeplot,photav(:,:,pf),'k','LineWidth',2);
+                    xlabel('time (s)')
+                    ylabel('drift (nm)')
 
+                    plot(axall,timeplot,dxav(:,:,pf));
+                    hold(axall,'on')
 %                 if ~isempty(locs.time) %MINFLUX or similar
 %                     locsplot=locs;
 %                     locsnew=locs;
