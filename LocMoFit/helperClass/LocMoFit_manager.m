@@ -45,13 +45,19 @@ classdef LocMoFit_manager < handle
             obj.data(1).sites = sites;
             obj.data(1).fitter = fitter;
         end
-        function [val, ID] = getVariable(obj, fitterAndID)
+        function [val, ID] = getVariable(obj, fitterAndID, varargin)
+            p = inputParser;
+            p.addParameter('useOnly', true)
+            p.parse;
+            p = p.Results;
             % Only get varibles of use sites
             [val, ID] = getVariable_allSites(obj, fitterAndID);
-            if ~isempty(obj.usedSites)
-                val = val(obj.usedSites);
-            elseif obj.lUseOnly
-                val = val(obj.useSites);
+            if p.useOnly
+                if ~isempty(obj.usedSites)
+                    val = val(obj.usedSites);
+                elseif obj.lUseOnly
+                    val = val(obj.useSites);
+                end
             end
         end
         function [val, ID] = getVariable_allSites(obj, fitterAndID)
@@ -322,7 +328,7 @@ classdef LocMoFit_manager < handle
             numPreCol = size(variableTable,2);
             for k = 1:length(obj.variableTableCol)
                 oneID = obj.variableTableCol{k};
-                variableTable(:,k+numPreCol) = obj.getVariable(oneID);
+                variableTable(:,k+numPreCol) = obj.getVariable(oneID, p.usedOnly);
             end
             
             % add col names
