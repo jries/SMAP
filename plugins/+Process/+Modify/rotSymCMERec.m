@@ -31,7 +31,7 @@ classdef rotSymCMERec<interfaces.DialogProcessor&interfaces.SEProcessor
             for m = 1:length(allAng)
                 for k = 1:p.binNumber
                     pos(1) = k*p.distBetweenBins+distFromOrigin;
-                    [locs,indLocs] = locData.getloc({'xnm','ynm', 'znm','locprecnm','layer','channel'},...
+                    [locs,indLocs] = locData.getloc({'xnm','ynm', 'znm','locprecnm','layer'},...
                         'grouping', 'grouped',...
                         'layer',find(locData.getPar('sr_layerson')),...
                         'position', [pos roiWidth./2],...
@@ -51,7 +51,7 @@ classdef rotSymCMERec<interfaces.DialogProcessor&interfaces.SEProcessor
                 end
 
                 for l = 1:length(sr_layerson)
-                    topView_ = renderSMAP(newlocs, p_render(l), l);
+                    topView_ = renderSMAP(subsetStruct(newlocs, newlocs.layer==l), p_render(l), l);
                     if l == 1
                         topView = zeros(size(topView_));
                     end
@@ -69,7 +69,7 @@ classdef rotSymCMERec<interfaces.DialogProcessor&interfaces.SEProcessor
                 newlocs.ynm = tempZ;
                 
                 for l = 1:length(sr_layerson)
-                    sideView_ = renderSMAP(newlocs, p_render_sideView(l), l);
+                    sideView_ = renderSMAP(subsetStruct(newlocs, newlocs.layer==l), p_render_sideView(l), l);
                     if l == 1
                         sideView = zeros(size(sideView_));
                     end
