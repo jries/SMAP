@@ -3,6 +3,8 @@
 % Adjust the histogram time bin, dt, for best dwell time fit.
 dt=4;
 
+% groupfield='groupindex'; %Choose either of the two depending on how you grouped locs into tracks
+groupfield='tid';
 
 sites=g.locData.SE.sites;
 
@@ -54,13 +56,15 @@ for k=1:length(sites)
     vel(end+1)=sites(k).evaluation.(pluginname).stattrack.velocity;
     tracklengthlocs(end+1)=sites(k).evaluation.(pluginname).statall.nlocs;
     id=g.locData.SE.sites(k).evaluation.StepsMINFLUX.statall.id;
-    index=g.locData.loc.groupindex==id;
+
+    index=g.locData.loc.(groupfield)==id;
+
     dwelltime{k} = sh.dwelltime;
     timeall{k} = g.locData.loc.time(index);
     deltaT{k} = diff(timeall{k});
 %     efoall{k} = g.locData.loc.efo(index);
     
-    if isfield(sh,'badstes')
+    if isfield(sh,'badsteps')
     badsteps(end+1:end+length(sh.badsteps))=sh.badsteps;
     indstep(end+1:end+length(sh.indstepglobal))=sh.indstepglobal;
     nt=0*sh.indstepglobal;
