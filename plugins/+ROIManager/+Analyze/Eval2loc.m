@@ -35,7 +35,12 @@ classdef Eval2loc<interfaces.DialogProcessor&interfaces.SEProcessor
                 assignedind=(sitenumbers>0) & indh;  %later populate manually if too slow
                 
                 site=sites(k);
-                vhere=eval(p.property);
+                try
+                    vhere=eval(p.property);
+                catch err %did not work, not assigned
+                    continue
+                    disp([num2str(k) ' did not have property, ' p.property])
+                end
 
                 if any(assignedind)
                     newindall=find(indh);
@@ -83,13 +88,13 @@ str=browsefields(ps,'site');
     val=eval(str);
     if isa(val,'double')&&length(val)>1
         numind=length(val(:));
-        for k=1:numind
-        numstr{k}=num2str(k);
-        end
-        answ=listdlg('ListString',numstr,'Name','Index','PromptString','select index','SelectionMode','single');
-        if ~isempty(answ)
-            str=[str '(' num2str(answ) ')'];
-        end     
+        % for k=1:numind
+        % numstr{k}=num2str(k);
+        % end
+        % answ=listdlg('ListString',numstr,'Name','Index','PromptString','select index','SelectionMode','single');
+        % if ~isempty(answ)
+        %     str=[str '(' num2str(answ) ')'];
+        % end     
     end
     obj.guihandles.property.String=str;
 
@@ -110,26 +115,47 @@ end
 function str=browsefields(prop,field)
 if isempty(field)
     fn=fieldnames(prop);
-    
+elseif iscell(prop.(field))    
+    v=prop.(field);
+    if numel(v)==1
+        index=1;
+    else
+        index=selectindexdialog(length(v));
+    end
+    fn=fieldnames(prop.(field){index});
+    nextprop=prop.(field){index};
+    field=[field '{' num2str(index) '}'];
 elseif isstruct(prop.(field))
     fn=fieldnames(prop.(field));
+    nextprop=prop.(field);
 else
     str=field;
     return;
 end
-    answ=listdlg('ListString',fn,'SelectionMode','single');
-    if isempty(answ)
-        str='';
-    else
+answ=listdlg('ListString',fn,'SelectionMode','single');
+if isempty(answ)
+    str='';
+else
     field2=fn{answ};
-
-    str=[field '.' browsefields(prop.(field),field2)];
-    end
+    str=[field '.' browsefields(nextprop,field2)];
+end
 
 % if isstruc(prop)
 % fn=fieldnames(prop)
 % selectfield(fieldnames(obj.
 end
+
+function index=selectindexdialog(num)
+for k=1:numind
+   numstr{k}=num2str(k);
+end
+answ=listdlg('ListString',numstr,'Name','Index','PromptString','select index','SelectionMode','single');
+if ~isempty(answ)
+    str=[str '(' num2str(answ) ')'];
+end     
+
+end
+
 
 
 function pard=guidef(obj)
