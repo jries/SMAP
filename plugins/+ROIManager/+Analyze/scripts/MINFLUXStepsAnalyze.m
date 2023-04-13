@@ -3,8 +3,8 @@
 % Adjust the histogram time bin, dt, for best dwell time fit.
 dt=4;
 
-% groupfield='groupindex'; %Choose either of the two depending on how you grouped locs into tracks
-groupfield='tid';
+% groupfield='groupindex' or 'tid'; %Choose either of the two depending on how you grouped locs into tracks
+groupfield='groupindex';
 
 sites=g.locData.SE.sites;
 
