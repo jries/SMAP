@@ -1,14 +1,14 @@
-function loc=minfluxmat2loc(jt, onlyvalid,loadall)
+function loc=minfluxmat2loc_alliter(jt, onlyvalid,loadall)
 numiter=size(jt.cfr,2);
 locs=single(jt.loc*1e9);
-if onlyvalid
-    valid=find(jt.vld);
-    indx=sub2ind(size(locs),valid,numiter*ones(size(valid)),ones(size(valid)));
-    indy=sub2ind(size(locs),valid,numiter*ones(size(valid)),2*ones(size(valid)));
-    indz=sub2ind(size(locs),valid,numiter*ones(size(valid)),3*ones(size(valid)));
-    ind2=sub2ind(size(jt.cfr),valid,numiter*ones(size(valid)));
-    ind1=jt.vld; 
-else  
+% if onlyvalid
+%     valid=find(jt.vld);
+%     indx=sub2ind(size(locs),valid,numiter*ones(size(valid)),ones(size(valid)));
+%     indy=sub2ind(size(locs),valid,numiter*ones(size(valid)),2*ones(size(valid)));
+%     indz=sub2ind(size(locs),valid,numiter*ones(size(valid)),3*ones(size(valid)));
+%     ind2=sub2ind(size(jt.cfr),valid,numiter*ones(size(valid)));
+%     ind1=jt.vld; 
+% else  
     lx=jt.loc(:,:,1);
     lxg=~isnan(lx);
     cols=1:numiter;
@@ -24,7 +24,7 @@ else
     ind1=goodind;
     
     loc.iterations(:,1)=g2;
-end
+% end
 
 loc.xnm(:,1)=locs(indx);
 loc.ynm(:,1)=locs(indy);
