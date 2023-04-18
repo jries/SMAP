@@ -273,7 +273,7 @@ classdef CME3D_manager < SMLMModelFit_manager
             
             settings.mainFitter = 'LocMoFitGUI_2';
             
-            settings.converter(1).rule = 'find.m1.zOffset+find.m1.radius*sin(deg2rad(find.m1.realCloseAngle))';
+            settings.converter(1).rule = 'find.m1.zOffset+find.m1.radius*sin(deg2rad(find.m1.realCloseAngle-90))';
             settings.converter(1).target = 'post_z';
         end
         
