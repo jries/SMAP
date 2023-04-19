@@ -31,7 +31,8 @@ msdall= [];
 dwelltime = {};
 timeall = {};
 deltaT = {};
-% efoall = {};
+efoall = {};
+cfrall = {};
 
 
 for k=1:length(sites)
@@ -62,7 +63,8 @@ for k=1:length(sites)
     dwelltime{k} = sh.dwelltime;
     timeall{k} = g.locData.loc.time(index);
     deltaT{k} = diff(timeall{k});
-%     efoall{k} = g.locData.loc.efo(index);
+    efoall{k} = g.locData.loc.efo(index);
+    cfrall{k} = g.locData.loc.cfr(index);
     
     if isfield(sh,'badsteps')
     badsteps(end+1:end+length(sh.badsteps))=sh.badsteps;
@@ -80,9 +82,13 @@ loctime = [];
 for kk = 1:length(deltaT)
     loctime = cat(1,loctime,double(deltaT{kk}));
 end
+cfrarray = [];
+for kk = 1:length(cfrall)
+    cfrarray = cat(1,cfrarray,double(cfrall{kk}));
+end
 % Saving statistical data to a clipboard of the system. Simply paste to e.g. Excel sheet.
-clipboard('copy', [sprintf([num2str(mean(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')/sqrt(length(stddetrendx))) '\t' num2str(mean(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')/sqrt(length(stddetrendy))) '\t' num2str(mean(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')/sqrt(length(stddetrendz))) '\t' num2str(mean(tracklength)) '\t' num2str(std(tracklength)) '\t' num2str(mean(vel)) '\t' num2str(std(vel))  '\t' num2str(median(loctime))  ])])
-display(sprintf('Precision x mean \t std \t sem \t Precision y mean \t std \t sem \t Precision z mean \t std \t sem \t Track length mean \t std \t Average walking speed \t std \t Median loaclization time (ms)'))
+clipboard('copy', [sprintf([num2str(mean(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')/sqrt(length(stddetrendx))) '\t' num2str(mean(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')/sqrt(length(stddetrendy))) '\t' num2str(mean(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')/sqrt(length(stddetrendz))) '\t' num2str(mean(tracklength)) '\t' num2str(std(tracklength)) '\t' num2str(mean(vel)) '\t' num2str(std(vel))  '\t' num2str(median(loctime))  '\t' num2str(median(cfrarray))  ])])
+display(sprintf('Precision x mean \t std \t sem \t Precision y mean \t std \t sem \t Precision z mean \t std \t sem \t Track length mean \t std \t Average walking speed \t std \t Median loaclization time (ms) \t Median CFR'))
 
 
 %identify bad steps
