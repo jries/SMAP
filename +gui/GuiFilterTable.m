@@ -58,6 +58,9 @@ classdef GuiFilterTable< interfaces.LayerInterface
 
         function selectedField_callback(obj)
             
+            js=findjobj(obj.guihandles.table);
+            scrollval=js.getVerticalScrollBar.getValue;
+
             sfield=obj.getPar('selectedField','layer',obj.layer);
             if isempty(sfield)
                 return
@@ -113,6 +116,8 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 if  s{indf,2}~=sold{indf,2} || s{indf,6}~=sold{indf,6}||s{indf,7}~=sold{indf,7}||s{indf,8}~=sold{indf,8}
                     refilter(obj,field)
                 end
+                drawnow 
+                js.getVerticalScrollBar.setValue(scrollval)
             end          
         end
         function updateGui(obj,object,event)
@@ -159,6 +164,15 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 %apply filter to all fields not auto   
                 obj.locData.layer(obj.layer).filter=[];
                 obj.locData.layer(obj.layer).groupfilter=[];
+                obj.locData.filter([],obj.layer);
+                
+                js=findjobj(obj.guihandles.table);
+                jtable=js.getViewport.getView;
+                jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
+                jtable.setAutoResort(true);
+                jtable.setMultiColumnSortable(true);
+                jtable.setPreserveSelectionsAfterSorting(true);
+
                 
 %                 allfields={'PSFxnm','znm','locprecznm','locprecnm','frame'};
 %                 for k=1:length(fn)
@@ -174,7 +188,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
 %                        obj.locData.filter(fn{k},obj.layer);
 %                    end
 %                end 
-                obj.locData.filter([],obj.layer);
+                
            end
             obj.status('filter locs done')
         end
