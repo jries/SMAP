@@ -59,7 +59,9 @@ classdef GuiFilterTable< interfaces.LayerInterface
         function selectedField_callback(obj)
             
             js=findjobj(obj.guihandles.table);
+            try
             scrollval=js.getVerticalScrollBar.getValue;
+            end
 
             sfield=obj.getPar('selectedField','layer',obj.layer);
             if isempty(sfield)
@@ -116,8 +118,10 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 if  s{indf,2}~=sold{indf,2} || s{indf,6}~=sold{indf,6}||s{indf,7}~=sold{indf,7}||s{indf,8}~=sold{indf,8}
                     refilter(obj,field)
                 end
+                try
                 drawnow 
                 js.getVerticalScrollBar.setValue(scrollval)
+                end
             end          
         end
         function updateGui(obj,object,event)
