@@ -170,12 +170,16 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 obj.locData.layer(obj.layer).groupfilter=[];
                 obj.locData.filter([],obj.layer);
                 
+                try
                 js=findjobj(obj.guihandles.table);
                 jtable=js.getViewport.getView;
                 jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
                 jtable.setAutoResort(true);
                 jtable.setMultiColumnSortable(true);
                 jtable.setPreserveSelectionsAfterSorting(true);
+                catch err
+                    
+                end
 
                 
 %                 allfields={'PSFxnm','znm','locprecznm','locprecnm','frame'};
