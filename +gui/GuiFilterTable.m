@@ -3,6 +3,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
     properties
         filter
         excludefields;
+        javaobj
     end
     methods
         function obj=GuiFilterTable(varargin)
@@ -22,6 +23,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
             'ColumnFormat', columnformat,...
             'ColumnEditable', columnedit,'FontSize',12,...
             'RowName',[],'CellSelectionCallback',{@cellSelect_callback,obj},'CellEditCallback',{@cellEdit_callback,obj});
+
            h.table.Position(3) = .95;
            h.table.Position(4) = .95;
            h.table.Position(2) = 0.025;
@@ -58,8 +60,8 @@ classdef GuiFilterTable< interfaces.LayerInterface
 
         function selectedField_callback(obj)
             
-            js=findjobj(obj.guihandles.table);
-            try
+            js=obj.javaobj;
+            if ~isempty(js)
             scrollval=js.getVerticalScrollBar.getValue;
             end
 
@@ -118,7 +120,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 if  s{indf,2}~=sold{indf,2} || s{indf,6}~=sold{indf,6}||s{indf,7}~=sold{indf,7}||s{indf,8}~=sold{indf,8}
                     refilter(obj,field)
                 end
-                try
+                if ~isempty(js)
                 drawnow 
                 js.getVerticalScrollBar.setValue(scrollval)
                 end
@@ -170,16 +172,28 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 obj.locData.layer(obj.layer).groupfilter=[];
                 obj.locData.filter([],obj.layer);
                 
-                try
-                js=findjobj(obj.guihandles.table);
+                if isempty(obj.javaobj)
+                    hovim=obj.getPar('ov_axes').Parent;
+                    hovvis=hovim.Visible;
+                    hovim.Visible='off';
+                    hfilter=obj.getPar('filterpanel');
+                    hfilter.Visible='on';
+                    drawnow
+                    js=findjobj(obj.guihandles.table);
+                    if strcmp(hovvis,'on')
+                        hovim.Visible='on';
+                        hfilter.Visible='off';
+                    end
+                    obj.javaobj=js;
+                else 
+                    js=obj.javaobj;
+                end
                 jtable=js.getViewport.getView;
                 jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
                 jtable.setAutoResort(true);
                 jtable.setMultiColumnSortable(true);
                 jtable.setPreserveSelectionsAfterSorting(true);
-                catch err
-                    
-                end
+        
 
                 
 %                 allfields={'PSFxnm','znm','locprecznm','locprecnm','frame'};
