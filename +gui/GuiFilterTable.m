@@ -114,7 +114,9 @@ classdef GuiFilterTable< interfaces.LayerInterface
                         obj.locData.removeFilter(field,obj.layer);
                     end
                 end
-
+                if isequaln(s,sold)
+                    return
+                end
                 obj.guihandles.table.Data=s;
                 obj.setPar('filtertable',s,'layer',obj.layer);
                 if  s{indf,2}~=sold{indf,2} || s{indf,6}~=sold{indf,6}||s{indf,7}~=sold{indf,7}||s{indf,8}~=sold{indf,8}
