@@ -161,8 +161,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             if model.dimension~=obj.dataDim
                 switch obj.dataDim
                     case 2
-                        error('Invalid: You are adding a 3D model for fitting 2D data.')
-                        return
+                        disp('You are adding a 3D model for fitting 2D data. The 2D projection of the model will be used as the PDF.')
                     case 3
                         obj.dataDim = 2;
                         disp('You are adding a 2D model for fitting 3D data. Switching to 2D fit.')
