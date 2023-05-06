@@ -7,51 +7,18 @@ classdef DisplayImageTagsTiff<interfaces.DialogProcessor
         function obj=DisplayImageTagsTiff(varargin)      
             obj@interfaces.DialogProcessor(varargin{:}) ;  
             obj.showresults=true;
+            initMM(obj);
         end
         
         function out=run(obj,p)
-            reader=obj.imageloader.reader;
-            img=reader.getImage(0,0,1,0);
-            imgposn=3;
-            if isempty(img)
-                img=reader.getImage(0,1,0,0);
-                imgposn=2;
-            end
-            if isempty(img)
-                img=reader.getImage(0,0,0,1);
-                imgposn=4;
-            end
-            
             readtags=split(obj.getSingleGuiParameter('fields'),',');
-
-            frame=1;
-            imgpos={0,0,0,0}; imgpos{imgposn}=frame-1;
-            imgmeta=reader.getImageTags(imgpos{:});
             disp('read data, this might take a while')
-            while ~isempty(imgmeta)
-                for k=1:length(readtags)
-                    val=imgmeta.get(readtags{k});
-                    if ischar(val)
-                        val=str2double(val);
-                    end
-                    data(k,frame)=val;
-                end
-                frame=frame+1;
-                imgpos{imgposn}=frame-1;
-                imgmeta=reader.getImageTags(imgpos{:});
-            end
+            md=getMetadataTifMM(obj.getSingleGuiParameter('filename'),readtags,true(1,length(readtags)));
             disp('meta data reading done')
             for k=1:length(readtags)
                     name=readtags{k}(1:min(length(readtags{k}),7));
                     ax=obj.initaxis([name ':' num2str(k)]);
-%                     tab=uitab(tg,'Title',imagetags.tags{k});
-%                     ax=axes('Parent',tab);
-                    dat=data(k,:);
-%                     if ischar(dat{1})
-%                         datm=str2double(dat);
-%                     else
-%                         datm=cell2mat(dat);
-%                     end
+                    dat=md{k};
                     frames=(1:length(dat))';
                     frameind=dat~=0;
                     plot(ax,frames(frameind), dat(frameind))
@@ -59,7 +26,7 @@ classdef DisplayImageTagsTiff<interfaces.DialogProcessor
                     ylabel(readtags{k})
                     xlim([min(frames(frameind)) max(frames(frameind))])
             end
-           out.data=data;
+           out.data=md;
            out.tags=readtags;
         end
         function pard=guidef(obj)
@@ -70,22 +37,25 @@ end
 
 
 function loadtiff_callback(a,b,obj)
-lastf=obj.getPar('lastSMLFile');
-if ~isempty(lastf)
-    path=fileparts(lastf);
+filename=obj.getSingleGuiParameter('filename');
+if isempty(filename)
+    lastf=obj.getPar('lastSMLFile');
+    if ~isempty(lastf)
+        path=fileparts(lastf);
+    else
+        path='';
+    end
 else
-    path='';
+    path=fileparts(filename);
 end
 [f path]=uigetfile([path filesep '*.tif']);
 if f
     obj.setGuiParameters(struct('filename',[path f]));
-     obj.imageloader=imageloaderAll(obj.getSingleGuiParameter('filename'));
 end
 end
 
 function selectfield_callback(a,b,obj)
-
-md=obj.imageloader.getmetadatatags;
+md=getMetadataTifMM(obj.getSingleGuiParameter('filename'));
 tag=gettag(md);
 
 if ~isempty(tag)

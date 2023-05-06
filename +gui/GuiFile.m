@@ -195,7 +195,13 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             obj.setPar('filelist_short',fs,'String');
             fsx=[{'layer','all'} fs];
             obj.setPar('filelist_short_ext',fsx,'String');
-        end     
+        end
+
+        function call_menu_callback(obj, action)
+            % action can be either 'clear', 'remove ', 'info'
+            menuobj.Label = action;
+            menu_callback(menuobj,[],obj)
+        end
         
         function setGuiParameters(obj,p,varargin)
             setGuiParameters@interfaces.GuiModuleInterface(obj,p,varargin{:});

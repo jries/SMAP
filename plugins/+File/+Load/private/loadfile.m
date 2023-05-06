@@ -8,7 +8,7 @@ filedat.filename=file;
 
 filenumber=obj.locData.files.filenumberEnd;
 switch mode
-    case 'sml'
+    case {'sml','se'}
         [templocData,GUIsettings,siteexplorer]=load_smlV3(filedat);
         obj.setPar('lastSMLFile',file);
     case 'fitpos'
@@ -109,13 +109,16 @@ se=obj.locData.SE;
 se.addSites(siteexplorer,newfilenumbers, templocData.files.file)
 
 % Yu-Le added
+% For LocMoFit compatibility
 for k = 1:length(se.sites)
-    fn = fieldnames(se.sites(k).evaluation);
-    lFn = startsWith(fn, 'SMLMModelFitGUI');
-    fn2rename = fn(lFn);
-    fn2renameNew = replace(fn2rename, 'SMLMModelFitGUI', 'LocMoFitGUI');
-    if ~isempty(fn2rename)
-        se.sites(k).evaluation = RenameField(se.sites(k).evaluation, fn2rename, fn2renameNew);
+    if ~isempty(se.sites(k).evaluation)
+        fn = fieldnames(se.sites(k).evaluation);
+        lFn = startsWith(fn, 'SMLMModelFitGUI');
+        fn2rename = fn(lFn);
+        fn2renameNew = replace(fn2rename, 'SMLMModelFitGUI', 'LocMoFitGUI');
+        if ~isempty(fn2rename)
+            se.sites(k).evaluation = RenameField(se.sites(k).evaluation, fn2rename, fn2renameNew);
+        end
     end
 end
 % Yu-Le added end/

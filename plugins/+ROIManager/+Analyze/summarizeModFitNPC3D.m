@@ -78,7 +78,12 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
                 usedSites(k).annotation.list3.value = 4;
             end
             list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
-            lGood = list3 == 1;
+
+            if p.ringSepFiltering
+                lGood = list3 == 1;
+            else
+                lGood = true(size(list3));
+            end
             disp(['numOfSites = ' num2str(sum(lGood))])
             %% Shift the athimuthal angle periodically 
             medAzi_0 = 0;
@@ -213,11 +218,15 @@ pard.showExampleMod.object=struct('String','Display example model','Style','chec
 pard.showExampleMod.position=[3,1];
 pard.showExampleMod.Width=1.5;
 
+pard.ringSepFiltering.object=struct('String','Ring sep filtering','Style','checkbox', 'Value',1);
+pard.ringSepFiltering.position=[4,1];
+pard.ringSepFiltering.Width=1.5;
+
 pard.t1.object=struct('Style','text','String','LocMoFitGUI_');
-pard.t1.position=[4,1];
+pard.t1.position=[5,1];
 pard.t1.Width=1;
 pard.whichLocMoFitGUI.object=struct('Style','edit','String','3');
-pard.whichLocMoFitGUI.position=[4,2];
+pard.whichLocMoFitGUI.position=[5,2];
 pard.whichLocMoFitGUI.Width=1;
 pard.plugininfo.type='ROI_Analyze';
 

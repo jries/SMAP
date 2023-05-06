@@ -9,7 +9,7 @@ classdef functionModel<SMLMModel
     %   14.10.2021
     %
     % See also:
-    %   :class:`SMLMModel`, :class:`LocMoFit`, :class:`geometricModel`
+    %   :class:`SMLMModel<@SMLMModel.SMLMModel>`, :class:`LocMoFit<@LocMoFit.LocMoFit>`, :class:`geometricModel<@geometricModel.geometricModel>`
     
     properties
         pixelSize = 5;          % Pixel size of the model
@@ -26,15 +26,21 @@ classdef functionModel<SMLMModel
     end
     methods
         intensityVal = modelHandler(obj, locs, mPars,varargin)
-        function obj = functionModel(filePath)
+        function obj = functionModel(model2load)
             % The constructor of the functional model object. This function
             % fetches the default values from the geometric model.
-            if exist('filePath','var')
-                obj.sourcePath = filePath;
-                [filePath, modelFun, ext] = fileparts(filePath);
-                addpath(filePath)
-                modelObj = str2func(modelFun);
-                modelObj = modelObj('Parent', obj);
+            if exist('model2load','var')
+                if isa(model2load,'geometricModel')
+                    modelObj = model2load;
+                else
+                    filePath = model2load;
+                    obj.sourcePath = filePath;
+                    [filePath, modelFun, ext] = fileparts(filePath);
+                    addpath(filePath)
+                    modelObj = str2func(modelFun);
+                    modelObj = modelObj('Parent', obj);
+                end
+                modelObj.ParentObject = obj;
                 obj.modelObj = modelObj;
 
                 % Fetches the default values
@@ -42,7 +48,7 @@ classdef functionModel<SMLMModel
                 obj.modelFun = @(mPars, dx)obj.modelObj.reference(mPars,dx);
                 obj.modelType = modelObj.modelType;
                 obj.dimension = modelObj.dimension;
-    %             obj.dimension = length(size(img));
+                %             obj.dimension = length(size(img));
                 if strcmp(modelObj.modelType,'discrete')
                     obj.pixelSize = 1;
                 end
@@ -53,12 +59,19 @@ classdef functionModel<SMLMModel
             addlistener(obj, 'mParsArgModified', @mParsArgModified_callback);
         end
         function updateMParsArg(obj)
-            % update the mPars' arguments based on the change of the
-            % geometric model
+            % This function updates the mPars' arguments based on the change of the
+            % geometric model.
             modelObj = obj.modelObj;
             for k = 1:length(modelObj.parsArgName)
                 obj.mPars.(modelObj.parsArgName{k}) = modelObj.(modelObj.parsArgName{k});
             end
+        end
+        function updateModelFun(obj)
+            obj.modelFun = @(mPars, dx)obj.modelObj.reference(mPars,dx);
+        end
+        function updateSourcePath(obj)
+            modelClass = class(obj.modelObj);
+            obj.sourcePath = which(modelClass);
         end
         function [ax, img] = plot(obj, mPars, varargin)
             if isempty(mPars)
@@ -395,7 +408,42 @@ classdef functionModel<SMLMModel
             obj.updateMParsArg
         end
         
-        function [sigmaFactor, sigmaSet, sigmaZSet] = deriveSigma(obj, locs)
+        function [sigmaFactor, sigmaSet, sigmaZSet] = deriveSigma(obj, locs, varargin)
+            % :meth:`deriveSigma` derives the final sigma used for
+            % fitting. When :attr:`fixSigma` is set as true, sigmas are
+            % derived based on pre-defined values. Otherwise, sigmas are
+            % derived based on localization precisions. For a continuous
+            % model, the minimum sigma is defined as the median of
+            % localization precisions.
+            % 
+            % Uasage:
+            %   obj.deriveSigma(locs)
+            %
+            % Inputs:
+            % 	* **obj** (:class:`functionModel`) – an object created by :func:`functionModel`.
+            %   * **locs** (structure array) – a typical localization structure array used in SMAP.
+            %
+            % Output:
+            %   * **sigmaFactor** (numeric vector) – a 1-by-2 vector that determines the fold of localization precisions used for fitting.
+            %   * **sigmaSet** (numeric vector | numeric scalar) – sigma used for fitting. A N-by-1 vector, where N is the number of localiztions when :attr:`fixSigma` is true.
+            %   * **sigmaZSet** (numeric vector | numeric scalar) – z sigma used for fitting. A N-by-1 vector, where N is the number of localiztions when :attr:`fixSigma` is true.
+            %
+            % Last update:
+            %   28.04.2022
+            %
+            % See also:
+            %   :class:`functionModel`
+
+            inp = inputParser;
+            minSigma = obj.ParentObject.getAdvanceSetting('minSigma');
+            if isempty(minSigma)
+                inp.addParameter('minSigma', 'median')
+            else
+                inp.addParameter('minSigma', minSigma)
+            end
+            inp.parse(varargin{:})
+            inp = inp.Results;
+
             if ~obj.fixSigma
                 sigmaFactor = obj.sigmaFactor;
                 
@@ -408,15 +456,21 @@ classdef functionModel<SMLMModel
                 if obj.dimension == 3
                     sigmaZSet = locs.locprecznm;
                 end
+
                 switch obj.modelType
                     case 'discrete'
                         % do nothing here if discrete
                     otherwise
-                        medSig = median(locs.locprecnm);
-                        sigmaSet(sigmaSet<medSig)=medSig;
-                        if obj.dimension == 3
-                            medSigz = median(locs.locprecznm);
-                            sigmaZSet(sigmaZSet<medSigz) = medSigz;
+                        if strcmp(inp.minSigma,'median')
+                            % define the median locprec as the minimum
+                            medSig = median(locs.locprecnm);
+                            sigmaSet(sigmaSet<medSig)=medSig;
+                            if obj.dimension == 3
+                                medSigz = median(locs.locprecznm);
+                                sigmaZSet(sigmaZSet<medSigz) = medSigz;
+                            end
+                        elseif strcmp(inp.minSigma,'off')
+                            % do nothing here if off
                         end
                 end
             else
@@ -443,13 +497,16 @@ classdef functionModel<SMLMModel
                 locsPrecFactor = min(obj.sigmaSet);
             end
         end
-        
     end
     methods(Access = protected)
         function cp = copyElement(obj)
             cp = copyElement@matlab.mixin.Copyable(obj);
             cp.modelObj = copy(cp.modelObj);
             cp.modelObj.ParentObject = cp;
+        end
+        function respond2ModelObjChange(obj) % call to the "update" method of subclass
+            obj.updateModelFun;
+            obj.updateSourcePath;
         end
     end
 end

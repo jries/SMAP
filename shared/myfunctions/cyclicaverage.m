@@ -2,8 +2,10 @@ function midpn=cyclicaverage(dat,period,weights)
 if nargin<3
     weights=ones(size(dat));
 end
-dat=mod(dat,period);
 maxerr=mean(dat)*1e-6;
+
+if 0
+dat=mod(dat,period);
 dat2=dat; 
 l=length(dat);
 dat2(l+1:2*l)=dat+period;
@@ -38,6 +40,39 @@ for k=1:50
     midp=midpn;
 end
 midpn=mod(midpn,period);
+end
+% alternative approach
+
+ntest=5;
+midps=0:period/ntest:period*(1-1/ntest);
+for k=length(midps):-1:1
+    dath=mod(dat-midps(k)+period/2,period);
+    ssdh(k)=sqrt(sum((dath-period/2).^2));
+end
+[~, startcase]=min(ssdh,[],'omitnan');
+midp=midps(startcase);
+
+% midp=0;
+error=zeros(50,1);
+maxk=20;
+for k=1:maxk
+    dath=mod(dat-midp+period/2,period);
+    midpn=meanw(dath,weights)-period/2+midp;
+    error(k)=midpn-midp;
+    if abs(midpn-midp)<maxerr
+        break
+    end
+    midp=midpn;
+    
+end
+midpn=mod(midpn,period);
+if k==maxk
+    disp('cyclic average did not converge')
+end
+
+
+
+
 
 function o=meanw(d,w)
 o=sum(d.*w)/sum(w);

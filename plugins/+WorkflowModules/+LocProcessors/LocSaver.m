@@ -243,6 +243,9 @@ classdef LocSaver<interfaces.WorkflowModule
                 obj.locDatatemp.files.file.imagetags=obj.getPar('loc_imagetags');
                 try
                     displayimagetags(obj,obj.locDatatemp.files.file.imagetags)
+                catch err
+                end
+                try
                     if ~contains(filename,'nosave') && obj.saveon
                         try
                              obj.locDatatemp.savelocs(filename,[],struct('fitparameters',fitpar));

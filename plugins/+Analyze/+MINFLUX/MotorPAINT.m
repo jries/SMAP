@@ -13,9 +13,10 @@ classdef MotorPAINT<interfaces.DialogProcessor
         function out=run(obj,p)  
             out=[];
 
-            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','znm','time'},'layer',1,'Position','fov');
+            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','znm','time','frame','tid'},'layer',1,'Position','fov');
             findin=find(indin);
-            gn=unique(locs.groupindex(locs.numberInGroup>=p.minlen));
+            gn=unique(locs.tid(locs.numberInGroup>=p.minlen));
+%             gn=unique(locs.groupindex(locs.numberInGroup>=p.minlen));
             isz=~isempty(locs.znm);
             
             locsout.xnm=[];
@@ -36,7 +37,8 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 obj.locData.setloc('tracklength',0*obj.locData.loc.xnm)
             end
             for k=1:length(gn)
-                indh=locs.groupindex==gn(k);
+                indh=locs.tid==gn(k);
+%                 indh=locs.groupindex==gn(k);
 
                 if p.skipfirst>0
                     outn=find(indh,p.skipfirst,'first');
@@ -48,6 +50,7 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 
                 x=locs.xnm(indh);
                 y=locs.ynm(indh);
+                frame1=locs.frame(find(indh,1,'first'));
 
 
                 lennm=sqrt(diff(quantile(x,[.1,0.9]))^2+diff(quantile(y,[.1,0.9]))^2);
@@ -96,10 +99,13 @@ classdef MotorPAINT<interfaces.DialogProcessor
                     zs=stepvalue(z,istep);
                     locsout.znm(end+1:end+length(zs))=single(zs);
                     zsall{tind}=zs;
+                    zrawall{tind}=z;
                 end
 
                 xsall{tind}=xs;ysall{tind}=ys;
+                xrawall{tind}=x;yrawall{tind}=y;
                 angleall(tind)=angle;
+                frameall(tind)=frame1;
                 tind=tind+1;
 
                 obj.locData.loc.trackangle(findin(indh))=angle;
@@ -149,17 +155,35 @@ classdef MotorPAINT<interfaces.DialogProcessor
             axc.XLim=axall.XLim;
             axc.YLim=axall.YLim;
             if isz
+                r=rand(length(xsall),1);
+                [~,p.indsort]=sort(r);
+
                 ax3Dt=obj.initaxis('track 3D');
-                hold(ax3Dt,'off')
-                for k=1:length(xsall)
-                    plot3(ax3Dt,xsall{k},ysall{k},zsall{k})
-                    hold(ax3Dt,'on')
-                end
-                axis(ax3Dt,"equal")
-                axis(ax3Dt,"ij")
-                grid(ax3Dt,"on")
-                ax3Dt.XLim=axall.XLim;
-                ax3Dt.YLim=axall.YLim;
+                p.plotsides=true;
+                p.use=[];
+                plot3Dtracks(ax3Dt,xsall,ysall,zsall,[-100 100 -100],p)
+                
+                p.use=frameall>157000 & frameall<213000;
+                p.plotsides=false;
+                ax3Dtr=obj.initaxis('track 3D raw');
+                plot3Dtracks(ax3Dtr,xrawall,yrawall,zrawall,[-100 100 -100],p)
+%                 hold(ax3Dtr,'off')
+%                 skipfirst=10;
+%                 c=jet(length(xrawall));
+%                 for tr=1:length(xrawall)
+%                     xh=xrawall{tr}(skipfirst+1:end);
+%                     yh=yrawall{tr}(skipfirst+1:end);
+%                     zh=zrawall{tr}(skipfirst+1:end);
+% 
+%                     hl=plot3(ax3Dtr,xh,yh,zh,'Color',c(tr,:),'LineWidth',.5);
+%                     hold(ax3Dtr,'on')
+% 
+%                 end
+%                 axis(ax3Dtr,'tight')
+%                 axis(ax3Dtr,'equal');
+%                 view(ax3Dtr,70,27)
+                
+
             end
 
         end

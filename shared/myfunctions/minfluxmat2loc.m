@@ -13,9 +13,10 @@ else
     lxg=~isnan(lx);
     cols=1:numiter;
     lxgc=cols.*lxg;
-    lm=max(lxgc,[],2);
+    lm=max(lxgc,[],2); %last iteration
     goodind=lm>0;
-    g1=find(goodind);g2=lm(goodind);
+    g1=find(goodind);
+    g2=lm(goodind); %take only last iteration
     indx=sub2ind(size(locs),g1,g2,ones(size(g1)));
     indy=sub2ind(size(locs),g1,g2,2*ones(size(g1)));
     indz=sub2ind(size(locs),g1,g2,3*ones(size(g1)));

@@ -15,6 +15,9 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
 
             [~,fName] = fileparts({obj.locData.files.file.name});
             sym = regexp(fName,'_(\d+)f_', 'tokens');
+            if isempty(sym{1})
+                sym = regexp(fName,'^(\d+)f_', 'tokens');
+            end
             sym = [sym{:}];
             sym = [sym{:}];
             sym = str2double(sym);
@@ -81,6 +84,8 @@ classdef summarize_NPCModelSelectionSim<interfaces.DialogProcessor&interfaces.SE
             hold(axMix, 'off')
             xlabel(axMix, 'Eight-fold symmetry')
             ylabel(axMix, 'Six-fold symmetry')
+
+            disp(sum(normAICc.('sym6f')(sym==8)<normAICc.('sym8f')(sym==8))./sum(sym==8))
         end
         function pard=guidef(obj)
             pard=guidef(obj);

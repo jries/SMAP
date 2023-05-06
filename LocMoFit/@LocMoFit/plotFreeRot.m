@@ -1,5 +1,12 @@
 function plotFreeRot(obj, varargin)
-%% PLOTFREEROT Image rotation triggered by the rotatoin of points visulization
+% :func:`plotFreeRot` creates the GUI for a user to explore data in 3D with
+% free rotations.
+% 
+% Uasage:
+%   obj.plotFreeRot(ax, locs)
+%   obj.plotFreeRot(ax, locs)
+
+% PLOTFREEROT Image rotation triggered by the rotatoin of points visulization
 % Different layers should have different colours. The lut should be based on 
 % what user defined or based on the setting in SMAP.
     % allow user to define the axes
@@ -64,7 +71,11 @@ function plotFreeRot(obj, varargin)
         end
         guihandles.playback = uicontrol(uip ,'Style','pushbutton','String','|>','Position',[3.8 1 0.3 1],'Callback',{@playback_callBack,obj,ax,locs,results,bg, guihandles.section},'Enable',lEnable);
         guihandles.timeLine = uicontrol(uip ,'Style','slider','Position',[4.1 1 0.9 1],'Callback',{@timeLine_callBack,obj,ax,locs, results,bg, guihandles.section, guihandles.section},'Enable',lEnable);
-        
+        if ~isfield(obj.display, 'plotFreeRot')
+            obj.display.plotFreeRot.disable = 0;
+            obj.display.plotFreeRot.target2Render = 'Model';
+            obj.display.plotFreeRot.View = [0 0];
+        end
         if isfield(obj.display.plotFreeRot, 'target2Render')
             switch obj.display.plotFreeRot.target2Render
                 case 'Model'
@@ -100,6 +111,7 @@ function plotFreeRot(obj, varargin)
             ax.View = [0 0];
         end
         
+        % Create the scatter plot
         locsViz = pointViz(ax, locs, obj);
         obj.setTemp('subViz', subViz);
         obj.setTemp('axViz', ax);
@@ -117,8 +129,8 @@ function plotFreeRot(obj, varargin)
 
         % Buttons for the rotation
         guihandles.t_zrot = uicontrol(uip ,'Style','text','String','Rotation about z','Position',[1 1 1 1]);
-        guihandles.zrot_slow = uicontrol(uip ,'Style','pushbutton','String','>','Position',[1.9 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 5, obj,results,bg, guihandles.section});
-        guihandles.zrot_fast = uicontrol(uip ,'Style','pushbutton','String','>>','Position',[2.2 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 20, obj,results,bg, guihandles.section});
+        guihandles.zrot_slow = uicontrol(uip ,'Style','pushbutton','String','>','Position',[1.9 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 5, obj,results,bg, guihandles.section, guihandles.t_section});
+        guihandles.zrot_fast = uicontrol(uip ,'Style','pushbutton','String','>>','Position',[2.2 1 0.3 0.8],'Callback',{@azimuthalRot_callBack, ax, 20, obj,results,bg, guihandles.section, guihandles.t_section});
         guiStyle(guihandles, fieldnames(guihandles));
      end
 end
@@ -164,7 +176,7 @@ function rotate_callBack(a,b,obj, results,bg, section,t_section)
         case 'Model'
             obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, pixelSize, 'Model', str2double(section.String)./t_section.Value, results.lutLocs);
         case 'Data'
-            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, 2, 'Data', str2double(section.String)./t_section.Value, results.lutLocs);
+            obj.rotCoordNMkImg(subViz, modViz, locsViz, rotVizAlt, pixelSize, 'Data', str2double(section.String)./t_section.Value, results.lutLocs);
     end
     title(subViz,'2D Projection of the left panel')
     set(subViz,'YDir','normal')

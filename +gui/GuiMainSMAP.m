@@ -104,6 +104,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             initglobalsettings(obj);
             if ~isdeployed
                 addpath('shared');
+                addpath(genpath('LocMoFit'));
                 addpath(pwd);
                 if ~exist([settingsdir filesep 'temp'],'dir')
                     mkdir([settingsdir filesep 'temp'])
@@ -154,7 +155,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             %update plugin file if new plugins are saved
             makeplugincallfile('plugins');
-            
+            makeGeometricModelList;
             %add java path to bioformats
                 bfpath=obj.getGlobalSetting('bioformatspath');
                 bffile=[bfpath filesep 'bioformats_package.jar'];
