@@ -26,7 +26,7 @@ classdef DECODE_training_estimates<interfaces.DialogProcessor
                end
 
                [~,fname]=fileparts(obj.locData.files.file(1).name);
-               yamlpath=[obj.yamlpar.InOut.experiment_out  'DECODE_train_local_' fname '.yaml'];
+               yamlpath=[obj.yamlpar.InOut.experiment_out filesep 'DECODE_train_local_' fname '.yaml'];
                if ~exist(obj.yamlpar.InOut.experiment_out,'dir')
                    mkdir(obj.yamlpar.InOut.experiment_out);
                end
@@ -149,7 +149,7 @@ end
 function makejsontable(obj)
 use.SMAP={'set_emitters_per_um2','zrange_nm','tensorboardport'};
 use.InOut={'calibration_file','experiment_out'};
-use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform'};
+use.Simulation={'intensity_mu_sig','lifetime_avg','bg_uniform','PSF_min_mod_max'};
 use.Camera={'em_gain','e_per_adu','baseline','read_sigma','spur_noise','px_size'};
 use.Hardware={'device','device_simulation'};
 % use.Connect={'remote_workstation','local_decode_path','local_network_storage'};
@@ -171,7 +171,12 @@ for f=1:length(fnu)
     for k=1:length(fnh)
         tab{ind,1}=fnu{f};
         tab{ind,2}=fnh{k};
-        vh=js.(fnu{f}).(fnh{k});
+        if isfield(js.(fnu{f}),fnh{k})
+            vh=js.(fnu{f}).(fnh{k});
+        else
+            vh='';
+        end
+        
         if isempty(vh)
             vh='';
         end
@@ -213,8 +218,9 @@ function table2json(obj)
 dat=obj.guihandles.parttable.Data;
 js=obj.yamlpar;
 for k=1:size(dat,1)
-    vjs=js.(dat{k,1}).(dat{k,2});
-    if isnumeric(obj.jsontypes.(dat{k,1}).(dat{k,2}))
+    if ~isfield(js.(dat{k,1}),(dat{k,2}))
+        js.(dat{k,1}).(dat{k,2})='';
+    elseif isnumeric(obj.jsontypes.(dat{k,1}).(dat{k,2})) && ~isempty(dat{k,3})
        vh=str2num(dat{k,3});
        js.(dat{k,1}).(dat{k,2})=reshape(vh,obj.jsontypes.(dat{k,1}).(dat{k,2}));
     else
@@ -227,7 +233,11 @@ end
 function last3d=get3dcalfile(obj)
  last3d=obj.getPar('cal_3Dfile');
      if isempty(last3d)
-     calftest=obj.locData.files.file.savefit.fitparameters.MLE_GPU_Yiming.cal_3Dfile;
+         if isfield(obj.locData.files.file.savefit.fitparameters,'MLE_GPU_Yiming')
+            calftest=obj.locData.files.file.savefit.fitparameters.MLE_GPU_Yiming.cal_3Dfile;
+         else
+             calftest=obj.locData.files.file.savefit.fitparameters.MLE_global_spline.cal_3Dfile;
+         end
         if exist(calftest,'file')
             last3d=calftest;
         end
@@ -348,10 +358,24 @@ function usecurrent_callback(a,b,obj)
     bgrange=bgminmax+ [-1, 1]*dbg*0.3;
     bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.0005)*0.9);
     js.Simulation.bg_uniform=bgrange; %set a bit lower to allow for varying background
-
     
+%     PSF for 2D learning
+    if ~isempty(locsu.PSFxnm) && isempty(locsu.znm)
+        PSFminmax=quantile(locsu.PSFxnm,[0.02, 0.98]);
+        PSFmodal=stat.PSFsize.max;
+        js.Simulation.PSF_min_mod_max=double([PSFminmax(1) PSFmodal PSFminmax(2)]);
+    else
+        js.Simulation.PSF_min_mod_max=[];
+    end
+
+
+
     fi=obj.locData.files.file(1).info;
-    js.Camera.em_gain=fi.emgain*fi.EMon;
+    if fi.EMon
+        js.Camera.em_gain=fi.emgain;
+    else
+        js.Camera.em_gain=[];
+    end
     js.Camera.e_per_adu=fi.conversion;
     js.Camera.px_size=fi.cam_pixelsize_um([2 1])*1000;
     js.Camera.baseline=fi.offset;
@@ -432,8 +456,53 @@ saveyaml(obj.yamlpar,fout)
 end
 
 function saveyaml(yamlpar,fout)
+yamlpar=make2Dastig(yamlpar);
 yout=rmfield(yamlpar,'SMAP');
 WriteYamlSimple(fout, yout);
+end
+
+function yout=make2Dastig(yamlpar)
+yout=yamlpar;
+if ~isempty(yamlpar.Simulation.PSF_min_mod_max)
+    % calculate PSF parameters
+    PSFmodal=yamlpar.Simulation.PSF_min_mod_max(2);
+    PSFmin=yamlpar.Simulation.PSF_min_mod_max(1);
+    pixelsize=mean(yamlpar.Camera.px_size);
+    w0=PSFmodal(1)*2;
+    dz=50; 
+    z=-dz+yamlpar.SMAP.zrange_nm(1):dz:yamlpar.SMAP.zrange_nm(2)+dz;
+%     zR=pi*4*PSFmodal^2*1.4/600; % nm pi*w0^2+n/lambda, w0=2sigma,
+    zR=pi*4*(PSFmin+PSFmodal)^2/4*1.4/600;% nm pi*w0^2+n/lambda, w0=2sigma,
+
+    wz=w0*sqrt(1+(z./zR).^2);
+    sigma_pix(1,1,:)=wz/2/pixelsize;
+
+    % calculate volume PSF
+    roisize=21;
+    n=-(roisize-1)/2:(roisize-1)/2;
+    [X,Y]=meshgrid(n);
+    PSFvol=exp(-(X.^2+Y.^2)/2./sigma_pix.^2)/pi/2./sigma_pix.^2;
+
+    %calculate cspline coefficients
+     coeffr = single(Spline3D_interp(PSFvol));
+    % Save PSF
+    SXY.cspline.coeff{1}=coeffr;
+    SXY.cspline.dz=dz;
+    SXY.cspline.z0=ceil(size(PSFvol,3)/2);
+    SXY.cspline.x0=round((roisize+1)/2);
+    SXY.cspline.mirror=0;
+
+%     parameters.midpoint=ceil(size(PSFvol,3)/2);
+%     parameters.mirror=false;
+%     parameters.dz=dz;
+    parameters.zR=zR;
+    parameters.w0=w0;
+    fout=[yamlpar.InOut.experiment_out '/Gauss_3dcal.mat'];
+    save(fout,'SXY','parameters')
+    yout=yamlpar;
+    yout.InOut.calibration_file=fout;
+    yout.Simulation.emitter_extent{3}{1}=0;
+end
 end
 
 function finalizejson(obj)
@@ -474,12 +543,15 @@ function setz(obj)
     if isempty(obj.yamlpar.InOut.experiment_out)
         obj.yamlpar.InOut.experiment_out=fileparts(calf);
     end
+    if isfield(l,'parameters')
     zr=(l.parameters.fminmax(2)-l.parameters.fminmax(1))*l.parameters.dz/2;
     zminmax(1)=max(zminmax(1),-zr);
     zminmax(2)=min(zminmax(2),zr);
+    end
     
  end
  obj.yamlpar.SMAP.zrange_nm=zminmax;
+ 
 end
 
 function stoplearning_callback(a,b,obj)

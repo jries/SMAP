@@ -508,7 +508,113 @@ classdef LocalizationData<interfaces.GuiParameterInterface
 %                 save(filename,'saveloc','-v7.3')
             end
         end
-        
+        function saveloc=saveSE(obj,filename,goodind,additionalsave,grouping,excludesavefields,filenumber)
+            %saves localization data to specific filename.  Returns saved structure:
+            %saveloc=savelocs(filename,goodind)
+            %goodind (optional): indices which to save (applies to all
+            %fields). Default: save all localizations.
+            %grouping: if true, saves grouped data.
+            %excludesavefields: those fields not to save
+            %filenumber: only save specific filenumber
+            
+            if nargin<5||isempty(grouping)
+                grouping=false;
+            end
+            if grouping
+                locext='grouploc';
+            else
+                locext='loc';
+            end
+            saveloc.loc=obj.(locext);
+            saveloc.file=obj.files.file;
+            saveloc.history=obj.history;
+            
+            fieldsremove={'original_channel','groupindex','numberInGroup','colorfield'};
+            if nargin>5 && ~isempty(fieldsremove)
+                fieldsremove=union(fieldsremove,excludesavefields);
+            end
+            saveloc.loc=myrmfield(saveloc.loc,fieldsremove);
+            
+            if nargin>6 && ~isempty(filenumber)%filenumber
+                    saveloc.file=saveloc.file(filenumber);
+                    saveloc.history=saveloc.history(filenumber);
+                    saveloc.loc.filenumber=ones(size(obj.loc.filenumber)); % yu-le mod
+                    if isempty(goodind)
+                        goodind=obj.loc.filenumber==filenumber;
+                    else
+                        goodind=goodind&obj.loc.filenumber==filenumber;
+                    end       
+            end
+            
+            if nargin>2&&~isempty(goodind)
+                fields=fieldnames(saveloc.loc);
+                for k=1:length(fields)
+                    saveloc.loc.(fields{k})=saveloc.loc.(fields{k})(goodind);
+                end
+            end
+            if nargin>3&&~isempty(additionalsave)
+                saveloc=copyfields(saveloc,additionalsave);
+            end
+            if ~isempty(obj.SE)
+                if nargin>6 && ~isempty(filenumber) && ~isempty(obj.SE.sites)%filenumber
+                    SEtemp = obj.SE.copy;
+                    siteFilenumber = getFieldAsVector(SEtemp.sites,'info.filenumber');
+                    lsiteFilenumber = siteFilenumber == filenumber;
+                    SEtemp.sites = SEtemp.sites(lsiteFilenumber);
+                    
+                    cellFilenumber = getFieldAsVector(SEtemp.cells,'info.filenumber');
+                    lcellFilenumber = cellFilenumber == filenumber;
+                    SEtemp.cells = SEtemp.cells(lcellFilenumber);
+                    
+                    allFilenumber = getFieldAsVector(SEtemp.files,'ID');
+                    loneFilenumber = allFilenumber == filenumber;
+                    SEtemp.files = SEtemp.files(loneFilenumber);
+                    saveloc.siteexplorer=SEtemp.save;
+                else
+                    saveloc.siteexplorer=obj.SE.save;
+                end
+            end
+            saveloc=concentratefilelist(saveloc);
+            try
+                rg=obj.getPar('mainGui');
+                parameters=rg.saveParameters;
+            catch err
+                err
+                parameters=[];
+            end
+            fileformat.name='se';
+            out=struct('saveloc',saveloc,'fileformat',fileformat,'parameters',parameters);
+            if isfield(obj.files.file(1),'transformation')
+                for k=length(obj.files.file):-1:1
+                    if ~isempty(obj.files.file(k).transformation)
+                        out.transformation=obj.files.file(k).transformation;
+                        break
+                    end
+                end
+            end
+            
+            if nargin>1&&~isempty(filename)
+                if ~contains(filename,'_se.mat')
+                    [path,file]=fileparts(filename);
+                    filename=[path filesep file '_se.mat'];
+                end
+
+%                 if 1 %obj.getGlobalSetting('saveas73') %now I use this to save with the old saver: large files are saved as v7.3, not as small parts.
+                if obj.getGlobalSetting('saveas7')  
+                    ver='-v7';
+                else
+                    ver='-v7.3';
+                end
+                v=saverightversion(filename,out,ver);
+                    disp(['saved as version ' v])
+%                 else
+%                     savematparts(filename,out,{'saveloc','loc'});
+%                 end
+%                 out=struct('saveloc',saveloc);
+%                 saverightversion(filename,out);
+%                 save(filename,'saveloc','-v7.3')
+            end
+        end
         function setLocData(obj,locData)
             %sets localizations to those from interfaces.LocalizationData object
             %setLocData(locData:interfaces.LocalizationData)

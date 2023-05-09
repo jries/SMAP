@@ -19,7 +19,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
         function prerun(obj,p)
             [~,~,ext]=fileparts(p.Tfile);
             switch ext
-                case '*.mat'
+                case '.mat'
                     l=load(p.Tfile);
                     if isfield(l,'transformation')
                         obj.transform=l.transformation;  

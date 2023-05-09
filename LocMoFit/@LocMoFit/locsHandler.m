@@ -17,7 +17,7 @@ function [locs, flag] = locsHandler(obj, locs, lParsVal, modelID, varargin)%!!! 
 %% Initiation
 p = inputParser;
 p.addParameter('usedformalism','rotationMatrix');
-p.addParameter('target','locs');                % can be either 'locs' or 'model'
+p.addParameter('target','locs');                % can be either 'locs' or 'model'; not used anymore
 p.addParameter('order_transform','TR');
 p.addParameter('onlyLocpre',false);
 
@@ -111,6 +111,19 @@ switch action
                     x = x';
                     y = y';
                     z = z';
+                    flag = 1;
+                case 'lieAlgebra'
+                    k = [lParsVal.xrot lParsVal.yrot lParsVal.zrot];
+                    xyz = [x y z];
+                    xyz_o = xyz;
+                    xyz = rodriguesRot(xyz,k);
+                    theta = norm(k);
+                    k = k./theta;
+                    R = rodringues2rotMat(k,theta);
+                    xyz2 = R*xyz_o';
+                    x = xyz(:,1);
+                    y = xyz(:,2);
+                    z = xyz(:,3);
                     flag = 1;
                 case 'quaternion'
                     qk = lParsVal.zrot;

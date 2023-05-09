@@ -1,4 +1,5 @@
 function meanfitpar=meanexp(v,dq,rangev,ax,fac)
+v=double(v);
 q=myquantilefast(abs(v),[0.005,0.995],1000000);
 if nargin<2||isempty(dq)
     dq=min((q(2)-q(1))/1000,max(max(q(2)/1000,q(1)),q(2)/length(v)*5));
@@ -12,6 +13,7 @@ end
 if nargin <5||isempty(fac)
     fac=1;
 end
+dq=double(dq);rangev=double(rangev);
 %histogram: center at integer positions
 rangev(2)=max(rangev(2),rangev(1)+12*dq);
 nh=ceil(rangev(1)):dq:rangev(2);
