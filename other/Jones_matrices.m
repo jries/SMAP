@@ -9,7 +9,7 @@ phases(1,1,:)=-pi/2:0.01:pi/2;
 [vout1, dangle1]=EomSLM(vstart,phases,pi/2*1.9);
 [vout2, dangle2]=EomSLM(vstart,phases,-pi/2*1.9);
 sphases=squeeze(phases);
-
+outchannel=1;
 figure(88);subplot(1,2,1);hold off;
 
 plot(sphases,squeeze(dangle),'r',sphases,squeeze(abs(vout(outchannel,:,:)).^2/2),'b',sphases,0*sphases,'k')
@@ -20,7 +20,7 @@ plot(sphases,squeeze(dangle1),'r--',sphases,squeeze(abs(vout1(outchannel,:)).^2/
 plot(sphases,squeeze(dangle2),'r--',sphases,squeeze(abs(vout2(outchannel,:)).^2/2),'b--')
 title('EOM delay for 3 lateral phases')
 
-dp(1,1,:)=0:0.1:2*pi;
+dp(1,1,:)=-2*pi:0.1:2*pi;
 [voutd, dangled]=EomSLM(vstart,-pi/4,dp);
 [voutd1, dangled1]=EomSLM(vstart,0,dp);
 [voutd2, dangled2]=EomSLM(vstart,pi/4,dp);
