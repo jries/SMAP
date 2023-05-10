@@ -41,8 +41,8 @@ function [vout, dangle]=EomSLM(vstart,phases,dphi)
 if nargin<3
     dphi=0;
 end
-vphase=pagemtimes(phaseplate(phases),vstart);
- % vphase=pagemtimes(QWP(phases),vstart);
+%vphase=pagemtimes(phaseplate(phases),vstart);
+vphase=pagemtimes(QWP(phases),vstart);
 vphase=pagemtimes(addphase(dphi),vphase);
 vrot=pagemtimes(addphase(-dphi),pagemtimes(HWP45,vphase));
 vsum=(vrot+vphase);
