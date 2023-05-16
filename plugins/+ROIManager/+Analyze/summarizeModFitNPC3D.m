@@ -56,6 +56,8 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             bgDensity = numOfLocsLayer1.*bg./(pi*(p.se_siteroi/2)^2/1000^2);
             
             bgDensity_fitter = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo.BGDensity'],1);
+
+            Nloc = getFieldAsVectorInd(usedSites, 'evaluation.generalStatistics.Nlayers',1);
             
             lOneRing = ringDist<=cutoffOneRing(1);
             largRingSep = ringDist>=cutoffOneRing(2);
@@ -144,7 +146,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             binWidth = 2;
             bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
             histogram(ax3, par, bin_Edge)
-            title(ax3, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
+            title(ax3, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par)) ', median ' num2str(median(par),'%.1f')])
             xlabel(ax3, 'Radius (nm)')
             ylabel(ax3, 'Count')
             
@@ -185,6 +187,27 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
                 grid(ax5, 'off')
                 
             end
+
+            ax5 = obj.initaxis('r vs z');
+            rp = r(lGood);
+            zp= z(lGood);
+
+            scatter(ax5, zp, rp)
+            % title(ax5, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par)) ', median ' num2str(median(par),'%.1f')])
+            ylabel(ax5, 'Radius (nm)')
+            xlabel(ax5, 'z (nm)')
+
+
+            ax6 = obj.initaxis('Locs/pore');
+            par = Nloc(lGood);
+            binWidth = 2;
+            bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
+            histogram(ax6, par, bin_Edge)
+            title(ax6, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par)) ,', median ' num2str(median(par),'%.1f')])
+            xlabel(ax6, 'Localizations / pore')
+            ylabel(ax6, 'Count')
+            out = [];
+
             
             clipboard('copy', sprintf('%.1f',medAzi))
         end
