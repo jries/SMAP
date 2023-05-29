@@ -149,6 +149,26 @@ else
     [imfinal,lennm]=addscalebar(imfinal,p.sr_pixrec(1));
    
 end
+
+
+
+if isfield(p,'sr_plotlayernames')&&~isempty(p.sr_plotlayernames)&&p.sr_plotlayernames
+    dxy=0;
+     for k=1:(length(layers))
+         if p.sr_layerson(k)&&~isempty(layers(k).images)
+             lut=layers(k).images.finalImages.lut;
+             imfinal=addlayertext(imfinal,p.layernames{k},lut,layers(k).images.srimage.rangex,layers(k).images.srimage.rangey,...
+                 dxy,p.sr_pixrec,layersnext,vertnext);
+             dxy=dxy+1;
+         end
+     end
+     if layersnext && plotcomposite
+         imfinal=addlayertext(imfinal,'composite',[1,1,1],layers(k).images.srimage.rangex,layers(k).images.srimage.rangey,...
+                 dxy,p.sr_pixrec,layersnext,vertnext);
+     end
+    
+end
+
     
 colorpos=1;
 for k=1:(length(layers))
@@ -183,43 +203,43 @@ end
         imout.handle=sr_imagehandle;
         drawnow limitrate nocallbacks
         
-        dxy=0;
-        fontsize=15;
-        extent=0;
-        if isfield(p,'sr_plotlayernames')&&~isempty(p.sr_plotlayernames)&&p.sr_plotlayernames
-             for k=1:(length(layers))
-                 if p.sr_layerson(k)&&~isempty(layers(k).images)
-
-        
-                     lut=layers(k).images.finalImages.lut;
-
-                     
-                     if layersnext
-                        dx=(layers(k).images.srimage.rangex(2)-layers(k).images.srimage.rangex(1))/1000*dxy;
-                        dy=0;
-                     else
-                        dx=0;
-                        dy=dxy;
-                     end
-                     px=double(layers(k).images.srimage.rangex(1)/1000+dx+p.sr_pixrec/1000*5);
-                     py=double(layers(k).images.srimage.rangey(1)/1000);
-                     lutm=mean(lut,1);lutm=lutm/max(lutm);
-                     th=text(p.sr_axes,px,py,p.layernames{k},'Color',lutm,'FontSize',fontsize,'BackgroundColor','k','Units','data');
-%                      th.Units='pixels';
-                     th.Position(2)=th.Position(2)+th.Extent(4)*(dy+.6)*1.2;
-                     
-                     dxy=dxy+1;
-                 end
-             end
-             if layersnext && plotcomposite
-                 dx=(layers(k).images.srimage.rangex(2)-layers(k).images.srimage.rangex(1))/1000*dxy;
-                 px=layers(k).images.srimage.rangex(1)/1000+dx+p.sr_pixrec/1000*5;
-                 py=layers(k).images.srimage.rangey(1)/1000;
-                 th=text(p.sr_axes,px,py,'composite','Color','w','FontSize',fontsize,'BackgroundColor','k','Units','data');
-                 th.Position(2)=th.Position(2)+th.Extent(4)*(dy+.6)*1.2;
-             end
-            
-        end
+%         dxy=0;
+%         fontsize=15;
+%         extent=0;
+%         if isfield(p,'sr_plotlayernames')&&~isempty(p.sr_plotlayernames)&&p.sr_plotlayernames
+%              for k=1:(length(layers))
+%                  if p.sr_layerson(k)&&~isempty(layers(k).images)
+% 
+% 
+%                      lut=layers(k).images.finalImages.lut;
+% 
+% 
+%                      if layersnext
+%                         dx=(layers(k).images.srimage.rangex(2)-layers(k).images.srimage.rangex(1))/1000*dxy;
+%                         dy=0;
+%                      else
+%                         dx=0;
+%                         dy=dxy;
+%                      end
+%                      px=double(layers(k).images.srimage.rangex(1)/1000+dx+p.sr_pixrec/1000*5);
+%                      py=double(layers(k).images.srimage.rangey(1)/1000);
+%                      lutm=mean(lut,1);lutm=lutm/max(lutm);
+%                      th=text(p.sr_axes,px,py,p.layernames{k},'Color',lutm,'FontSize',fontsize,'BackgroundColor','k','Units','data');
+% %                      th.Units='pixels';
+%                      th.Position(2)=th.Position(2)+th.Extent(4)*(dy+.6)*1.2;
+% 
+%                      dxy=dxy+1;
+%                  end
+%              end
+%              if layersnext && plotcomposite
+%                  dx=(layers(k).images.srimage.rangex(2)-layers(k).images.srimage.rangex(1))/1000*dxy;
+%                  px=layers(k).images.srimage.rangex(1)/1000+dx+p.sr_pixrec/1000*5;
+%                  py=layers(k).images.srimage.rangey(1)/1000;
+%                  th=text(p.sr_axes,px,py,'composite','Color','w','FontSize',fontsize,'BackgroundColor','k','Units','data');
+%                  th.Position(2)=th.Position(2)+th.Extent(4)*(dy+.6)*1.2;
+%              end
+% 
+%         end
     else
         sr_imagehandle=[];
     end
@@ -288,3 +308,30 @@ end
    imin(end-thickness-1:end-2,end-10-lenpix+1:end-10,:)=1;
    end
 end
+
+
+function imout=addlayertext(imin,text,lut,rangex,rangey,dxy,sr_pixrec,layersnext,vertnext)            
+ if layersnext
+     if vertnext
+        dy=(rangey(2)-rangey(1))/1000*dxy;
+        dx=0;
+     else
+        dx=(rangex(2)-rangex(1))/1000*dxy;
+        dy=0;
+     end
+ else
+    dx=0;
+    dy=dxy*sr_pixrec*0.01;
+ end
+ px=dx/sr_pixrec*1000+5;
+ py=dy/sr_pixrec*1000+5;
+ % px=double(layers(k).images.srimage.rangex(1)/1000+dx+p.sr_pixrec/1000*5);
+ % py=double(layers(k).images.srimage.rangey(1)/1000);
+ lutm=mean(lut,1);lutm=lutm/max(lutm);
+ color(1,1,:)=lutm;
+ textim=~text2im(text).*color;
+ textim=imresize(textim,0.5,"nearest");
+ % textim=imresize(textim,2,"bicubic");
+ imout=imin;
+ imout(floor(py)+1:floor(py)+size(textim,1),floor(px)+1:floor(px)+size(textim,2),:)=textim;
+ end
