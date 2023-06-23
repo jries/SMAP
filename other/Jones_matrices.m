@@ -1,12 +1,11 @@
 %Jones martrices
 v=[0;1];
  vlin45=linear(-pi/4);  
-
+ eomqwp=1;
 
 vstart=v;
 clear phases dp
-vstart=pagemtimes(QWP(pi/4),vstart); %QWP bias
-
+% vstart=pagemtimes(QWP(pi/4),vstart); %QWP bias
 
 
 dd=1/32;
@@ -21,7 +20,7 @@ sphases=squeeze(phases);
 col=lines(length(dphi));
 legends={};
 for k=1:length(dphi)
-    [vout, dangle]=EomSLM(vstart,phases*pi,dphi(k)*pi);
+    [vout, dangle]=EomSLM(vstart,phases*pi,dphi(k)*pi,eomqwp);
     int0=squeeze(abs(vout(outchannel,:,:)).^2/2);
     plot(sphases,int0,'Color',col(k,:))
     [~,ind]=min(int0);
@@ -45,7 +44,7 @@ sphi=squeeze(dphi);
 col=lines(length(dphi));
 legends={};
 for k=1:length(phases)
-    [vout, dangle]=EomSLM(vstart,phases(k)*pi,dphi*pi);
+    [vout, dangle]=EomSLM(vstart,phases(k)*pi,dphi*pi,eomqwp);
     int0=squeeze(abs(vout(outchannel,:,:)).^2/2);
     plot(sphi,int0,'Color',col(k,:))
     [~,ind]=min(int0);
@@ -61,34 +60,63 @@ xlabel('lateral position / pi')
 ylabel('intensity')
 
 
- figure(89);hold off
- [vout, dangle,vplot]=EomSLM(vstart,pi/2,0);
+ figure(85);hold off
+ latpos=0;
+ eomphase=0;
+ useqwp=0;
+ qwpEOM=true;
+
+ dx=1.7;
+ vstart=[0;1];
+ txtqwp='No QWP bias. ';
+ if useqwp
+    vstart=pagemtimes(QWP(pi/4),vstart); %QWP bias
+     txtqwp='QWP bias. ';
+ end
+
+ [vout, dangle,vplot]=EomSLM(vstart,eomphase,0,qwpEOM);
+
  for k=1:length(vplot)
-     plotpolstate(vplot(k).state,2*k,0)
-     text(2*k-1,2,vplot(k).label)
+     plotpolstate(vplot(k).state,dx*k,0)
+     text(dx*k-dx/2,dx,vplot(k).label)
      hold on
  end
 axis equal
-xlim([0 16])
+xlim([0 dx*k+dx])
+title([txtqwp 'phase ' num2str(eomphase/pi) '\pi, lat pos ' num2str(latpos/pi) '\pi'])
 
 
-function [vout, dangle,vplot]=EomSLM(vstart,phases,dphi) %EOM at 45°
+
+
+function [vout, dangle,vplot]=EomSLM(vstart,phases,dphi,useqwp) %EOM at 45°
+if nargin <4
+    useqwp=false;
+end
 if nargin<3
     dphi=0;
 end
 vplot(1).state=vstart; vplot(1).label='in';
 vphase=pagemtimes(waveplate(phases,pi/4),vstart); %EOM 45  
 vplot(2).state=vphase; vplot(2).label='EOM 45°';
+
+if useqwp
+    vphase=pagemtimes(QWP(pi/4),vphase); 
+    vplot(3).state=vphase; vplot(3).label='EOM QWP 45°';
+else
+    vplot(3).state=vphase; vplot(3).label='nothing';
+end
+
+
 vphase=pagemtimes(HWP(pi/8),vphase); %HWP
-vplot(3).state=vphase; vplot(3).label='HWP 22.5°';
+vplot(4).state=vphase; vplot(4).label='HWP 22.5°';
 vrot=pagemtimes(addphase(-dphi),pagemtimes(HWP45,vphase)); %SLM+lat pos
-vplot(4).state=vrot; vplot(4).label='SLM+latpos';
+vplot(5).state=vrot; vplot(5).label='SLM+latpos';
 vphase=pagemtimes(addphase(dphi),vphase); %lat pos
-vplot(5).state=vphase; vplot(5).label='only latpos';
+vplot(6).state=vphase; vplot(6).label='only latpos';
 vsum=(vrot+vphase);
-vplot(6).state=vsum; vplot(6).label='sum';
+vplot(7).state=vsum; vplot(7).label='sum';
 vout=pagemtimes(polarizer(0),vsum); %polarizer
-vplot(7).state=vout; vplot(7).label='polarizer';
+vplot(8).state=vout; vplot(8).label='polarizer';
 outchannel=1;
 dangle=mod(angle(vrot(outchannel,:))-angle(vphase(outchannel,:))+pi,2*pi)-pi;
 end
@@ -131,6 +159,12 @@ end
 
 
 function plotpolstate(vin,dx,dy)
+if nargin<3
+    dy=0;
+end
+if nargin <2
+    dx=0;
+end
 dd=0.1;
 phases=0:dd:2*pi+dd;
 p1=angle(vin(1));
