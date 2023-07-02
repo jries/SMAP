@@ -140,7 +140,10 @@ switch mode
     case 'Data'
         v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
         % Deal with locs
-        locsCoord = rmfield(locsCoord, {'filenumber','xnmr','xnmrot','ynmr','ynmrot'});
+        % Remove unwanted fields
+        fn = fieldnames(locsCoord);
+        l_fn2rm = ismember(fn,{'xnm','ynm','znm','locprecnm','locprecznm','layer'});
+        locsCoord = rmfield(locsCoord, fn(~l_fn2rm));
         for k = 1:max(locsCoord.layer)
             lLayer = locsCoord.layer==k;
             locsCoordSub = subsetStruct(locsCoord, lLayer&lSectionLocs);
