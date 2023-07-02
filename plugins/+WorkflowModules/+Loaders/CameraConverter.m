@@ -130,6 +130,9 @@ classdef CameraConverter<interfaces.WorkflowModule
             obj.offsetmapuse=[];
             mirrorem_callback(0,0,obj);
             obj.setPar('cam_varmap',[]);
+            obj.loc_cameraSettings.pix2phot=obj.adu2phot;
+            obj.setPar('loc_cameraSettings',obj.loc_cameraSettings);
+           
                
             
             %             if fileinf.EMon && p.mirrorem  %if em gain on and mirrorem on: switch roi

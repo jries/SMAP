@@ -9,6 +9,9 @@ if nargin<2
     p.lifetimerange=[1,quantile(locs{1}.numberInGroup,.95)];
     p.lsf=false;
 end
+if ~isfield(p, 'lsf')
+    p.lsf=false;
+end
 
 if p.filter
     modetxt=p.layernames(logical(p.sr_layerson));

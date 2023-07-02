@@ -15,7 +15,7 @@ classdef export_coordinates<interfaces.DialogProcessor
         
         function out=save(obj,p,defaultfilename)
             if nargin < 3
-                defaultfilename=false;
+                defaultfilename=[];
             end
             
             obj.status('export localizations')
@@ -59,13 +59,15 @@ classdef export_coordinates<interfaces.DialogProcessor
             of=[path filesep file  '.' par.format.selection];
             end
             
-            if ~defaultfilename
+            if isempty(defaultfilename)
                 [f,path]=uiputfile(of);
                 if ~f
                     out=0;
                     return
                 end
                 of=[path f];
+            else
+                of=defaultfilename;
             end
             out=of;
             writetable(taball,of);
