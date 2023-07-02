@@ -1,0 +1,9 @@
+Calculates histograms and statistics for any localization attribute (field)
+
+gui:Parameters:
+gui:binwidth 
+gui:locfield 
+gui:plotformat 
+gui:quantile 
+gui:setbinwidth 
+gui:setrange 

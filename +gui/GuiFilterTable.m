@@ -3,6 +3,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
     properties
         filter
         excludefields;
+        javaobj
     end
     methods
         function obj=GuiFilterTable(varargin)
@@ -22,6 +23,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
             'ColumnFormat', columnformat,...
             'ColumnEditable', columnedit,'FontSize',12,...
             'RowName',[],'CellSelectionCallback',{@cellSelect_callback,obj},'CellEditCallback',{@cellEdit_callback,obj});
+
            h.table.Position(3) = .95;
            h.table.Position(4) = .95;
            h.table.Position(2) = 0.025;
@@ -58,6 +60,11 @@ classdef GuiFilterTable< interfaces.LayerInterface
 
         function selectedField_callback(obj)
             
+            js=obj.javaobj;
+            if ~isempty(js)
+            scrollval=js.getVerticalScrollBar.getValue;
+            end
+
             sfield=obj.getPar('selectedField','layer',obj.layer);
             if isempty(sfield)
                 return
@@ -107,11 +114,17 @@ classdef GuiFilterTable< interfaces.LayerInterface
                         obj.locData.removeFilter(field,obj.layer);
                     end
                 end
-
+                if isequaln(s,sold)
+                    return
+                end
                 obj.guihandles.table.Data=s;
                 obj.setPar('filtertable',s,'layer',obj.layer);
                 if  s{indf,2}~=sold{indf,2} || s{indf,6}~=sold{indf,6}||s{indf,7}~=sold{indf,7}||s{indf,8}~=sold{indf,8}
                     refilter(obj,field)
+                end
+                if ~isempty(js)
+                drawnow 
+                js.getVerticalScrollBar.setValue(scrollval)
                 end
             end          
         end
@@ -159,6 +172,31 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 %apply filter to all fields not auto   
                 obj.locData.layer(obj.layer).filter=[];
                 obj.locData.layer(obj.layer).groupfilter=[];
+                obj.locData.filter([],obj.layer);
+                
+                if isempty(obj.javaobj)
+                    hovim=obj.getPar('ov_axes').Parent;
+                    hovvis=hovim.Visible;
+                    hovim.Visible='off';
+                    hfilter=obj.getPar('filterpanel');
+                    hfilter.Visible='on';
+                    drawnow
+                    js=findjobj(obj.guihandles.table);
+                    if strcmp(hovvis,'on')
+                        hovim.Visible='on';
+                        hfilter.Visible='off';
+                    end
+                    obj.javaobj=js;
+                else 
+                    js=obj.javaobj;
+                end
+                jtable=js.getViewport.getView;
+                jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
+                jtable.setAutoResort(true);
+                jtable.setMultiColumnSortable(true);
+                jtable.setPreserveSelectionsAfterSorting(true);
+        
+
                 
 %                 allfields={'PSFxnm','znm','locprecznm','locprecnm','frame'};
 %                 for k=1:length(fn)
@@ -174,7 +212,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
 %                        obj.locData.filter(fn{k},obj.layer);
 %                    end
 %                end 
-                obj.locData.filter([],obj.layer);
+                
            end
             obj.status('filter locs done')
         end

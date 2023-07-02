@@ -30,6 +30,11 @@ classdef driftcorrectionXYZ<interfaces.DialogProcessor
                 return
             end
 
+            if ~isfield(p,'resultstabgroup')  || isempty(p.resultstabgroup)
+                obj.makeResultsWindow;
+                p.resultstabgroup=obj.guihandles.resultstabgroup;
+            end
+
             %batch: many sml files loaded:
                 %do it per file, save only file.
                 %locData.copy, remove other filenames from .loc, .grouploc,
@@ -110,10 +115,12 @@ classdef driftcorrectionXYZ<interfaces.DialogProcessor
                     end
                     obj.locData.files.file(k).driftinfo=driftinfoh;
                     fn=lochere.files.file(1).name;
-                    if strfind(fn,'_sml')
+                    if contains(fn,'_sml')
                         fnn=strrep(fn,'_sml','_driftc_sml');
-                    else
+                    elseif contains(fn,'fitpos')
                         fnn=strrep(fn,'fitpos','driftc_sml');
+                    else
+                        fnn=fn;
                     end
                     if p.save_dc
                         obj.addhistory;
