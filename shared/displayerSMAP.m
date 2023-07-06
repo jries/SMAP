@@ -12,7 +12,7 @@ layersnext=isfield(p,'sr_layersseparate')&&~isempty(p.sr_layersseparate)&&p.sr_l
 tiffthere=0;
 txtN='';
 allnext=[];
-
+vertnext=false;
 
 
 for k=1:length(layers)
