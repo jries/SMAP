@@ -4,7 +4,7 @@
 dt=4;
 
 % groupfield='groupindex' or 'tid'; %Choose either of the two depending on how you grouped locs into tracks
-groupfield='groupindex';
+groupfield='tid';
 
 sites=g.locData.SE.sites;
 
@@ -87,7 +87,7 @@ for kk = 1:length(cfrall)
     cfrarray = cat(1,cfrarray,double(cfrall{kk}));
 end
 % Saving statistical data to a clipboard of the system. Simply paste to e.g. Excel sheet.
-clipboard('copy', [sprintf([num2str(mean(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')/sqrt(length(stddetrendx))) '\t' num2str(mean(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')/sqrt(length(stddetrendy))) '\t' num2str(mean(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')/sqrt(length(stddetrendz))) '\t' num2str(mean(tracklength)) '\t' num2str(std(tracklength)) '\t' num2str(mean(vel)) '\t' num2str(std(vel))  '\t' num2str(median(loctime))  '\t' num2str(median(cfrarray))  ])])
+clipboard('copy', [sprintf([num2str(mean(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')) '\t' num2str(std(stddetrendx, 'omitnan')/sqrt(length(stddetrendx))) '\t' num2str(mean(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')) '\t' num2str(std(stddetrendy, 'omitnan')/sqrt(length(stddetrendy))) '\t' num2str(mean(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')) '\t' num2str(std(stddetrendz, 'omitnan')/sqrt(length(stddetrendz))) '\t' num2str(mean(tracklength)) '\t' num2str(std(tracklength)) '\t' num2str(mean(vel)) '\t' num2str(std(vel))  '\t' num2str(median(loctime))  '\t' num2str(median(cfrarray(cfrarray>0)))  ])])
 display(sprintf('Precision x mean \t std \t sem \t Precision y mean \t std \t sem \t Precision z mean \t std \t sem \t Track length mean \t std \t Average walking speed \t std \t Median loaclization time (ms) \t Median CFR'))
 
 
@@ -116,7 +116,7 @@ for k=1:length(indstep)
 end
 
 % stepsize(badind)=[];
-steptime(badind)=[];
+steptime(badind(1:length(indstep)))=[];
 
 figure(188) %do the plotting
 f=gcf;f.Renderer='painters';
