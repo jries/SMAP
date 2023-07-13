@@ -4,6 +4,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         peakline
         roihandle
         axstep
+        axxy
+        xyplotoffset
         steps
         coord
         range
@@ -452,6 +454,7 @@ end
 
 %xy plot
 goff=median(mod(obj.steps.stepvalue,16),'omitnan');
+obj.xyplotoffset=goff;
 % goff=0; %switch off shift 
 axxy=obj.setoutput('xy');
 hold(axxy,'off')
@@ -464,13 +467,22 @@ hold(axxy,'on')
 if plotfiltered
     plot(axxy, obj.coord.xfr-goff, obj.coord.yfr,'k')
 end
-
+obj.axxy=axxy;
 
 scatter(axxy,obj.steps.stepvalue-goff,obj.steps.possteps.y,'r')
 grid(axxy,'on')
 axm=-16:-16:axxy.XLim(1);
 axxy.XTick=[axm(end:-1:1) 0:16:axxy.XLim(2)];
 axxy.YTick=round((axxy.YLim(1):6:axxy.YLim(2))/6)*6;
+
+%plot selection box
+if ~isempty(obj.range)
+indmin=find(obj.coord.timeplot>=obj.range(1),1,'first');
+indmax=find(obj.coord.timeplot<=obj.range(2),1,'last');
+ylims=obj.axxy.YLim;
+plot(axxy,(obj.coord.xr(indmin)-goff)*[1 1],ylims,'k--')
+plot(axxy,(obj.coord.xr(indmax)-goff)*[1 1],ylims,'k--')
+end
 
 sigmax=std(obj.coord.xr);sigmay=std(obj.coord.yr);
 sxdetrend=std(diff(obj.coord.xr))/sqrt(2);sydetrend=std(diff(obj.coord.yr))/sqrt(2);
@@ -555,7 +567,22 @@ end
 end
 
 function selectrange(a,b,obj)
-obj.range=obj.axstep.XLim;
+if strcmp(obj.axstep.Parent.Parent.SelectedTab.Title,'xy')
+    rangex=obj.axxy.XLim;
+    x=obj.coord.xr;
+    indmin=find(x-obj.xyplotoffset<rangex(1),1,'last')+1;
+    if isempty(indmin)
+        indmin=1;
+    end
+    indmax=find(x-obj.xyplotoffset>rangex(2),1,'first')-1;
+    if isempty(indmax)
+        indmax=length(x);
+    end
+    t=obj.coord.timeplot;
+    obj.range=[t(indmin) t(indmax)];
+else
+    obj.range=obj.axstep.XLim;
+end
 refit(a,b,obj,1)
  plotstatistics(obj)
 end

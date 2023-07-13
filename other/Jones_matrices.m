@@ -62,9 +62,9 @@ ylabel('intensity')
 
  figure(85);hold off
  latpos=0;
- eomphase=0;
+ eomphase=pi/2-pi/8;
  useqwp=0;
- qwpEOM=1;
+ qwpEOM=0;
 
  dx=1.7;
  % vstart=[0;1];
