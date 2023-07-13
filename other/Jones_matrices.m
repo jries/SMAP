@@ -1,9 +1,9 @@
 %Jones martrices
 v=[0;1];
- vlin45=linear(-pi/4);  
- eomqwp=1;
+vlin45=linear(-pi/4);  
+eomqwp=1;
 
-vstart=v;
+vstart=vlin45;
 clear phases dp
 % vstart=pagemtimes(QWP(pi/4),vstart); %QWP bias
 
@@ -64,13 +64,14 @@ ylabel('intensity')
  latpos=0;
  eomphase=0;
  useqwp=0;
- qwpEOM=true;
+ qwpEOM=1;
 
  dx=1.7;
- vstart=[0;1];
+ % vstart=[0;1];
+ vstart=vlin45;
  txtqwp='No QWP bias. ';
  if useqwp
-    vstart=pagemtimes(QWP(pi/4),vstart); %QWP bias
+    vstart=pagemtimes(QWP(0),vstart); %QWP bias
      txtqwp='QWP bias. ';
  end
 
@@ -78,7 +79,7 @@ ylabel('intensity')
 
  for k=1:length(vplot)
      plotpolstate(vplot(k).state,dx*k,0)
-     text(dx*k-dx/2,dx,vplot(k).label)
+     text(dx*k-dx/2,dx,vplot(k).label,"HorizontalAlignment","center")
      hold on
  end
 axis equal
@@ -95,20 +96,24 @@ end
 if nargin<3
     dphi=0;
 end
-vplot(1).state=vstart; vplot(1).label='in';
-vphase=pagemtimes(waveplate(phases,pi/4),vstart); %EOM 45  
-vplot(2).state=vphase; vplot(2).label='EOM 45°';
+vplot(1).state=vstart; vplot(1).label='in 45°';
+vphase=pagemtimes(waveplate(phases,0),vstart); %EOM 0  
+vplot(2).state=vphase; vplot(2).label='EOM 0°';
 
 if useqwp
-    vphase=pagemtimes(QWP(pi/4),vphase); 
-    vplot(3).state=vphase; vplot(3).label='EOM QWP 45°';
+    vphase=pagemtimes(QWP(0),vphase); 
+    % vphase=pagemtimes(waveplate(pi/4,0),vphase); %EOM 0  
+    % vphase=pagemtimes(waveplate(pi/4,0),vphase); 
+    vplot(3).state=vphase; vplot(3).label='EOM QWP 0°';
 else
-    vplot(3).state=vphase; vplot(3).label='nothing';
+    vplot(3).state=vphase; vplot(3).label='-';
 end
 
 
-vphase=pagemtimes(HWP(pi/8),vphase); %HWP
-vplot(4).state=vphase; vplot(4).label='HWP 22.5°';
+% vphase=pagemtimes(HWP(pi/8),vphase); %HWP
+% vplot(4).state=vphase; vplot(4).label='HWP 22.5°';
+vplot(4).state=vphase; vplot(4).label='-';
+
 vrot=pagemtimes(addphase(-dphi),pagemtimes(HWP45,vphase)); %SLM+lat pos
 vplot(5).state=vrot; vplot(5).label='SLM+latpos';
 vphase=pagemtimes(addphase(dphi),vphase); %lat pos
