@@ -35,15 +35,20 @@ classdef imageModel<SMLMModel
             p = inputParser;
             p.addParameter('pixelSize', 2);
             p.addParameter('roiSize', 500);
+            p.addParameter('matchDataDim', true);
             parse(p,varargin{:});
             results = p.Results;
             pixelSize = results.pixelSize;
             roiSize = results.roiSize;
             
-            img = obj.img;
-            
+            if results.matchDataDim
+                img = obj.img_dataDim;
+            else
+                img = obj.img;
+            end
+            nd = ndims(img);
             if 1/pixelSize~=1
-                if obj.dimension == 2
+                if nd == 2
                     img = imresize(img, 1/(pixelSize/obj.pixelSize));
                 else
                     img = imresize3(img, 1/(pixelSize/obj.pixelSize));

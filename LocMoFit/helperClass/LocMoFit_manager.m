@@ -45,13 +45,19 @@ classdef LocMoFit_manager < handle
             obj.data(1).sites = sites;
             obj.data(1).fitter = fitter;
         end
-        function [val, ID] = getVariable(obj, fitterAndID)
+        function [val, ID] = getVariable(obj, fitterAndID, varargin)
+            p = inputParser;
+            p.addParameter('useOnly', true)
+            p.parse;
+            p = p.Results;
             % Only get varibles of use sites
             [val, ID] = getVariable_allSites(obj, fitterAndID);
-            if ~isempty(obj.usedSites)
-                val = val(obj.usedSites);
-            elseif obj.lUseOnly
-                val = val(obj.useSites);
+            if p.useOnly
+                if ~isempty(obj.usedSites)
+                    val = val(obj.usedSites);
+                elseif obj.lUseOnly
+                    val = val(obj.useSites);
+                end
             end
         end
         function [val, ID] = getVariable_allSites(obj, fitterAndID)
@@ -77,10 +83,25 @@ classdef LocMoFit_manager < handle
         end
         function IDs = variableIDs(obj, varargin)
             %% 
+            inp = inputParser;
+            inp.addParameter('type', 'all')
+            inp.addParameter('fitterNames', [])
+            inp.parse(varargin{:});
+            p = inp.Results;
             IDs = {};
-            for k = 1:obj.numOfFitter
-                fitterName = obj.fitterNames{k};
-                IDs = [IDs; strcat([fitterName '.'], obj.data(obj.currentData).fitter.(fitterName).getAllParId([],'type','all'))];
+            if isempty(p.fitterNames)
+                allFitterNames = obj.fitterNames;
+            else
+                if isa(p.fitterNames, 'cell')
+                    allFitterNames = p.fitterNames;
+                else
+                    allFitterNames = {p.fitterNames};
+                end
+            end
+
+            for k = 1:length(allFitterNames)
+                fitterName = allFitterNames{k};
+                IDs = [IDs; strcat([fitterName '.'], obj.data(obj.currentData).fitter.(fitterName).getAllParId([],'type',p.type))];
             end
         end
         
@@ -89,16 +110,16 @@ classdef LocMoFit_manager < handle
             % histogram for 1D data
             % integrated scatter plot for 2D data
             fn = fieldnames(obj.plotSettings);
-            lKept = obj.filtering;
+%             lKept = obj.filtering(obj.useSites);
             for k = 1:length(fn)
                 onePlot = obj.plotSettings.(fn{k});
                 if length(onePlot) == 2
                     xData = obj.getVariable(onePlot{1});
                     yData = obj.getVariable(onePlot{2});
-                    xData = xData(lKept);
-                    yData = yData(lKept);
+%                     xData = xData(lKept);
+%                     yData = yData(lKept);
                     grp = obj.grp(obj.useSites);
-                    grp = grp(lKept);
+%                     grp = grp(lKept);
                     fig = figure;
                     t = tiledlayout(fig, 3,3);
                     ax = nexttile(1,[2 2]);
@@ -118,7 +139,7 @@ classdef LocMoFit_manager < handle
                         grpScatter(ax, xData, yData, grp,3,-density, 'filled');
                     else
                         grpScatter(ax, xData, yData, grp,3,-density, 'filled');
-%                         plotSElink(ax, xData, yData, obj.IDSites(obj.useSites), obj.parentObj.SE,' ko');
+                        plotSElink(ax, xData, yData, obj.IDSites(obj.useSites), obj.parentObj.SE,' ko');
                     end
                     
                     % x-axis
@@ -263,7 +284,11 @@ classdef LocMoFit_manager < handle
         end
         
         function lFilter = get.filtering(obj)
-            lFilter = obj.filter(obj.filteringRule{:});
+            if ~isempty(obj.filteringRule)
+                lFilter = obj.filter(obj.filteringRule{:});
+            else
+                lFilter = 1:obj.numOfSites;
+            end
         end
         
         function grp = get.grp(obj)
@@ -280,20 +305,30 @@ classdef LocMoFit_manager < handle
 %             grp = 
         end
                
-        function variableTable = get.variableTable(obj)
+        function variableTable = get.variableTable(obj, varargin)
+            p = inputParser;
+            p.addParameter('usedOnly', false)
+            p.parse(varargin{:})
+            p = p.Results;
             usedSites = logical(obj.useSites);
-            variableTable = obj.IDSites(usedSites)';
-            variableTable(:,2) = obj.fileNumberSites(usedSites)';
-            if obj.numOfCh==2
-                variableTable(:,3) = obj.NLayer2(usedSites)';
-                preColName = ["ID" "filenumber" "NLayer2"];
+            if p.usedOnly
+                selectedSites = usedSites;
             else
-                preColName = ["ID" "filenumber"];
+                selectedSites = true(size(obj.IDSites));
+            end
+            variableTable = obj.IDSites(selectedSites)';
+            variableTable(:,2) = obj.fileNumberSites(selectedSites)';
+            variableTable(:,3) = usedSites(selectedSites);
+            if obj.numOfCh==2
+                variableTable(:,4) = obj.NLayer2(selectedSites)';
+                preColName = ["ID" "filenumber" "use" "NLayer2"];
+            else
+                preColName = ["ID" "filenumber" "use"];
             end
             numPreCol = size(variableTable,2);
             for k = 1:length(obj.variableTableCol)
                 oneID = obj.variableTableCol{k};
-                variableTable(:,k+numPreCol) = obj.getVariable(oneID);
+                variableTable(:,k+numPreCol) = obj.getVariable(oneID, p.usedOnly);
             end
             
             % add col names

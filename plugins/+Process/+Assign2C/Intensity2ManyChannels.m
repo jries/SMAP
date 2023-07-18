@@ -24,7 +24,7 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
             field1=p.assignfield1.selection;
             field2=p.assignfield2.selection;
             dx=obj.imparameters.dx;
-            Nmax=double(ceil(obj.imparameters.max/dx));
+            Nmax=double(ceil(obj.imparameters.max/dx)-2);
             if p.usegrouped
                 n1r=obj.locData.grouploc.(field1);
                 n2r=obj.locData.grouploc.(field2);
@@ -32,12 +32,12 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
                 n1r=obj.locData.loc.(field1);
                 n2r=obj.locData.loc.(field2);
             end
-            n1r(n1r<1)=1;
-            n2r(n2r<1)=1;
+            n1r(n1r<1)=1.5;
+            n2r(n2r<1)=1.5;
             n1=log10(n1r)/dx;
             n2=log10(n2r)/dx;
-            n1(n1<1)=1;
-            n2(n2<1)=1;
+            n1(n1<1)=1.5;
+            n2(n2<1)=1.5;
             n1(n1>Nmax)=Nmax;
             n2(n2>Nmax)=Nmax;
 
@@ -49,7 +49,7 @@ classdef Intensity2ManyChannels<interfaces.DialogProcessor
                     ypol=obj.rois{k}.Position(:,2)/dx;
                     
                     imbw=poly2mask(xpol,ypol,Nmax,Nmax);
-                    linind=sub2ind(size(imbw),round(n1),round(n2));
+                    linind=sub2ind(size(imbw),ceil(n1),ceil(n2));
                     outside=isnan(linind);
                     linind(outside)=1;
                     ischannel=imbw(linind);

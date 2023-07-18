@@ -100,7 +100,7 @@ classdef Histograms<interfaces.DialogProcessor
             
             pard.plugininfo.name='Histograms';
             pard.plugininfo.description='Calculates histograms and statistics for any localization attribute (field)';
-            pard.plugininfo.type='Histograms'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
+            pard.plugininfo.type='ProcessorPlugin'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
   
             pard.syncParameters={{'locFields','locfield',{'String'}}};
             

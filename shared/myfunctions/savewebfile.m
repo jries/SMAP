@@ -1,7 +1,7 @@
 function worked=savewebfile(fout,url)
 worked=false;
 try
-    options = weboptions('Timeout', 2);
+    options = weboptions('Timeout', 1);
     docbin=webread(url,options);
 catch err
     err

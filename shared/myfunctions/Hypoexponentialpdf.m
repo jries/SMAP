@@ -1,6 +1,7 @@
 function fs=Hypoexponentialpdf(x,l)
+%https://en.wikipedia.org/wiki/Hypoexponential_distribution
 if size(unique(l))<length(l)
-l=l+min(l)/100*(0:length(l)-1);
+    l=l+min(l)/200*(0:length(l)-1);
 end
 fs=0;
 for ii=1:length(l)
@@ -15,5 +16,5 @@ for ii=1:length(l)
                
         end
     end
-    fs=fs+l(ii)*exp(-x*l(ii))*prod;
+    fs=fs+l(ii)*exp(-x*l(ii))*prod; %checked again, as in Wiki
 end

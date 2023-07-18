@@ -150,7 +150,7 @@ try
     end
     if ~lPassOnDataOnly
         if obj.getPar('se_display')||forceDisplay
-            if fitter.model{1}.dimension == 2
+            if fitter.dataDim == 2
                 vis = obj.setoutput('Plot');
                 fitter.showFitResult(vis, locs);
             else

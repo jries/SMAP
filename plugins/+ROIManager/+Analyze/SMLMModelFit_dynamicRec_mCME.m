@@ -50,7 +50,7 @@ classdef SMLMModelFit_dynamicRec_mCME<interfaces.DialogProcessor&interfaces.SEPr
             h.Position(3:4)=[300 150];
             obj.guihandles.convertTable = h;
             h.Data = {'find.scalingFactor','post_scale','';...
-                'find.scalingFactor*(150*sin(deg2rad(find.binCloseAng)))','post_z',''};
+                'find.scalingFactor*(150*sin(deg2rad(find.binCloseAng-90)))','post_z',''};
         end
               
         function pard=guidef(obj)

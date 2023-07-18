@@ -20,6 +20,10 @@ classdef SMLMModel<matlab.mixin.Copyable
         displayLut = 'red hot'; % The lookup table for the model.
         layer = 1;              % The layer that this model is fitted to.
     end
+
+    properties (Dependent)
+        img_dataDim             % The image used for the fitting given the dataDim.
+    end
     
     methods
         function obj = SMLMModel()
@@ -35,11 +39,22 @@ classdef SMLMModel<matlab.mixin.Copyable
                 mPars.(obj.mPars.name{k})=obj.mPars.value(k);
             end
         end
-     function set.modelObj(obj,val)
-           obj.modelObj = val; % updates the property
-           respond2ModelObjChange(obj) % calls the protected method
-        end 
-     end 
+        function set.modelObj(obj,val)
+            obj.modelObj = val; % updates the property
+            respond2ModelObjChange(obj) % calls the protected method
+        end
+        
+        function img = get.img_dataDim(obj)
+            if ~isempty(obj.ParentObject)
+                if obj.dimension == 3 && obj.ParentObject.dataDim == 2
+                    img = sum(obj.img, 3);
+                end
+            else
+                img = obj.img;
+            end
+        end
+    end 
+    
      methods(Access = protected)
         function respond2ModelObjChange(obj, value) % no function definition here
         end

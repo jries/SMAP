@@ -21,6 +21,7 @@ classdef seSaver<interfaces.DialogProcessor
             fnMeasurement = {'deviation','P','intensity','intensity_rescaled','P_m','deviation_m'};
             for k = 1:length(fibrilStatistics)
                 singleSites{k}.pos = subSites(k).pos;
+                singleSites{k}.ID = subSites(k).ID;
                 singleSites{k}.annotation = subSites(k).annotation;
                 singleSites{k}.fibrilStatistics = fibrilStatistics{k};
                 singleSites{k}.fibrilStatistics.kymograph = [];
@@ -29,13 +30,27 @@ classdef seSaver<interfaces.DialogProcessor
                     singleSites{k}.fibrilStatistics.measurement.(fnMeasurement{l}).raw = [];
                     singleSites{k}.fibrilStatistics.measurement.(fnMeasurement{l}).fft = [];
                 end
-                singleSites{k}.fibrilDynamics = fibrilDynamics{k};
-                singleSites{k}.fibrilDynamics.GuiParameters = [];
+                if iscell(fibrilDynamics)
+                    singleSites{k}.fibrilDynamics = fibrilDynamics{k};
+                    singleSites{k}.fibrilDynamics.GuiParameters = [];
+                end
                 singleSites{k}.fibrilStraightener = fibrilStraightener{k};
                 singleSites{k}.fibrilStraightener.indFibrilLocs = [];
-                singleSites{k}.annotatePeaks = annotatePeaks{k};
+                if (~iscell(annotatePeaks(k))&&isnan(annotatePeaks(k)))||isempty(annotatePeaks(k))||isempty(annotatePeaks{k})||isnan(annotatePeaks{k})
+                    singleSites{k}.annotatePeaks = [];
+                else
+                    singleSites{k}.annotatePeaks = annotatePeaks{k};
+                end
             end
-            uisave('singleSites', defaultFn)
+            if isfield(p, 'saveTo')
+                [path,f,ext]=fileparts(p.saveTo);
+                path = [path filesep];
+                f = [f ext];
+                save([path f], 'singleSites')
+            else
+                uisave('singleSites', defaultFn)
+            end
+            
             obj.status('save done')
             out = [];
         end

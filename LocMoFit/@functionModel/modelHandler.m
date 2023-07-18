@@ -14,7 +14,7 @@ lPars = p.Results.lPars;
 p = p.Results;
 
 %% here for setting the sigma
-switch obj.dimension
+switch obj.ParentObject.dataDim
     case 2
         [sigmaFactor, sigmaSet] = obj.deriveSigma(locs);
     case 3
@@ -34,7 +34,12 @@ if ~any([isequal(obj.modelType, 'continuous') isequal(obj.modelType, 'background
         refLocs.xnm = refLocs.x; refLocs.ynm = refLocs.y; refLocs.znm = refLocs.z;
        
         for k = 1:length(lParRefSeries)
-            refLocs = obj.ParentObject.locsHandler(refLocs, lPars{lParRefSeries(k)}, 0, 'order_transform', 'RT', 'usedformalism', 'rotationMatrixRev');
+            if obj.ID == 1 && ~isempty(obj.ParentObject.getTemp('freeRot')) && obj.ParentObject.getTemp('freeRot')
+                usedformalism = 'lieAlgebra';
+            else
+                usedformalism = 'rotationMatrixRev';
+            end
+            refLocs = obj.ParentObject.locsHandler(refLocs, lPars{lParRefSeries(k)}, 0, 'order_transform', 'RT', 'usedformalism', usedformalism);
         end
         refLocs.x = refLocs.xnm; refLocs.y = refLocs.ynm; refLocs.z = refLocs.znm;
     else
@@ -65,7 +70,7 @@ if ~any([isequal(obj.modelType, 'continuous') isequal(obj.modelType, 'background
     end
     sumGaussIntensity = fitter.getTemp('sumGaussIntensity');
     
-    if obj.dimension == 3
+    if obj.ParentObject.dataDim == 3
         % for 3D
         intensityVal = gaussDist(refLocs,locs.ynm, locs.xnm, locs.znm, sigmaSet+sigmaFactor(2),sigmaSet+sigmaFactor(2),sigmaZSet, 'sigFactor', sigmaFactor(1), 'distMode',p.gaussDistMode,'distCutoff',p.gaussDistCutoff)./sum(refLocs.n,1);
         likelihoodBoun = 0;
@@ -98,7 +103,7 @@ else
         end
     end
     
-    if obj.dimension == 3
+    if obj.ParentObject.dataDim == 3
         img = zeros([imgDim imgDim imgDim max(numOfParSet)]);
     else
         img = zeros([imgDim imgDim max(numOfParSet)]);
@@ -130,7 +135,7 @@ else
         end
     end
     % normalization of the image
-    img = (img./sum(img,1:obj.dimension))./obj.pixelSize^obj.dimension;                  % normalize the images
+    img = (img./sum(img,1:ndims(oneImg)))./obj.pixelSize^ndims(oneImg);                  % normalize the images
     if ndims(oneImg) == 3
         %             img = img./sum(img,1:3).*(1-obj.ParentObject.roiSize^2*obj.eps);
         zeroInd = abs(locs.xnm)>bound|abs(locs.ynm)>bound|abs(locs.znm)>bound;

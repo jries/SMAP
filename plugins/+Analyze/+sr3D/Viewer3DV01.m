@@ -460,6 +460,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                                 obj.currentimage.imax(k)=layer(k).images.finalImages.imax;
                             end
                         catch err
+                            err
                              disp(['could not render layer ' num2str(k)]);
                          end
                      end
@@ -963,7 +964,6 @@ switch p.stereo.Value
             p.lut.selection='red';
         end
         
-    case 3
     case 4
 end
 end

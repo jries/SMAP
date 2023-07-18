@@ -8,3 +8,4 @@ autosave_*
 External/bfmatlab/*
 *.docx
 Documentation/pdf/*
+LocMoFit/modelList.m

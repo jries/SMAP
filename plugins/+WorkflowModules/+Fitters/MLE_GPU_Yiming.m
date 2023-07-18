@@ -364,7 +364,7 @@ switch fitpar.fitmode
         calfile=p.cal_3Dfile;
         [~,~,ext]=fileparts(calfile);
         switch ext
-            case '*.mat'
+            case '.mat'
                 cal=load(calfile);
                 fitpar.objPos=0;
                 if isfield(cal,'outforfit')

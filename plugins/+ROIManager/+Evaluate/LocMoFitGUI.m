@@ -1282,7 +1282,7 @@ end
 
 % Update the convert tab.
 hConvert = obj.guihandles.anchorConvert;
-optionTarget = unique([hConvert.ColumnFormat{3} parId]);
+optionTarget = unique([hConvert.ColumnFormat{3}'; parId])';
 hConvert.ColumnFormat{3} = optionTarget;
 obj.guihandles.anchorConvert=hConvert;
 
@@ -1596,6 +1596,8 @@ function setDefPar_callback(a,b,obj)
     obj.fitter.lockInit;
     obj.setPar('allModIntSetting_default', obj.fitter.getAllModelInternalSetting)
     obj.setPar('data_convert', obj.guihandles.anchorConvert.Data)
+    
+    obj.setPar('status', 'The current settings are successfully set as default.');
 end
 
 %
