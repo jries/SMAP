@@ -5,11 +5,11 @@ classdef continousRibbon_PL_xyzs<geometricModel
             obj@geometricModel(varargin{:});
             % Define the default argument values here in the constructor.
             obj.name = {'r','cx1','cy1','cz1','s1', 'cx2', 'cy2','cz2','s2', 'cx3', 'cy3','cz3','s3'};
-            obj.fix = [1 1 1 1 0 1 1 1 0 1 1 1 0] ;
+            obj.fix = [1 0 0 0 0 0 0 0 0 0 0 0 0] ;
             obj.value = [65 0 0 0 0 100 0 0 0 200 0 0 0];
-            obj.lb = [-20 -50 -50 -50 -30 -50 -50 -50 -30 -50 -50 -50 -30];
-            obj.ub = [20 50 50 50 30 50 50 50 30 50 50 50 30];
-            obj.min = [30 -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf];
+            obj.lb = [20 -inf -inf -inf 0 -inf -inf -inf 0 -inf -inf -inf 0];
+            obj.ub = [150 inf inf inf inf inf inf inf inf inf inf inf inf];
+            obj.min = [30 -inf -inf -inf 0 -inf -inf -inf 0 -inf -inf -inf 0];
             obj.max = [150 inf inf inf inf inf inf inf inf inf inf inf inf];
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized', 'continuous'};
@@ -43,7 +43,7 @@ classdef continousRibbon_PL_xyzs<geometricModel
             for l = 1:size(ctrlZ,2)% vecterization
                 arcLen = arclength(ctrlX(:,l), ctrlY(:,l), ctrlZ(:,l),'linear');
                 samplingFactor = round(arcLen/minD);
-                [pt,diffVector] = interparc(size(ctrlX,1), ctrlX(:,l), ctrlY(:,l), ctrlZ(:,l),'makima') ; %samplingFactor
+                [pt,diffVector] = interparc(samplingFactor, ctrlX(:,l), ctrlY(:,l), ctrlZ(:,l),'pchip') ; %samplingFactor
             end
             
             if par.r > 0
@@ -52,12 +52,12 @@ classdef continousRibbon_PL_xyzs<geometricModel
                 nOnRing = 2;
                 theta = [0 pi];
                 axes = zeros(nOnRing, 3, [size(diffVector,1)]);
-
+                ptS=spline(1:size(ctrlS,1),ctrlS,linspace(1,size(ctrlS,1),size(diffVector,1)));
                 for k = 1:size(diffVector,1)
-                    [x,y] = pol2cart(theta+(pi*ctrlS(k)/180),par.r);
+                    [x,y] = pol2cart(theta+(pi*ptS(k)/180),par.r);
                     xyRing = [zeros(size(x')) x' y'];
                     T = getRotMat(diffVector(k,:),pt(k,:));
-                    temp = T*[xyRing'; ones(1,length(xyRing))];
+                    temp = T*[xyRing.'; ones(1,size(xyRing,1))];
                     axes(:,:,k)= temp(1:end-1,:)';
                 end
                 axes = permute(axes, [1 3 2]);
@@ -106,7 +106,7 @@ classdef continousRibbon_PL_xyzs<geometricModel
             minD = locsPrecFactor*0.75;
             arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
             samplingFactor = round(arcLen/minD);
-            pt = interparc(round(samplingFactor/2), ctrlX, ctrlY, ctrlZ);
+            pt = interparc(samplingFactor, ctrlX, ctrlY, ctrlZ,'pchip');
             
             items(2).XData = pt(:,1);
             items(2).YData = pt(:,2);
@@ -135,11 +135,16 @@ classdef continousRibbon_PL_xyzs<geometricModel
             
             arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
             samplingFactor = round(arcLen/minD);
-            pt = interparc(round(samplingFactor/2), ctrlX, ctrlY, ctrlZ);
+            [pt,dudt,funthd] = interparc(samplingFactor, ctrlX, ctrlY, ctrlZ,'pchip');
             
             [L,R,K] = curvature(pt);
             derivedPars.curvature = 1./R;
-            
+            derivedPars.ctrlpoints.ctrlX = ctrlX;
+            derivedPars.ctrlpoints.ctrlY = ctrlY;
+            derivedPars.ctrlpoints.ctrlZ = ctrlZ;
+            derivedPars.pt = pt;
+            derivedPars.dudt = dudt;
+            derivedPars.funthd = funthd;
             derivedPars.curvatureVector = K;
             
             derivedPars.avgCurvature = mean(derivedPars.curvature,'omitnan');
@@ -180,7 +185,7 @@ classdef continousRibbon_PL_xyzs<geometricModel
                 elseif obj.getInternalSettings('numOfCtrlPointSet')<lastCtrlPoint_ori
                     % when the last control point number is larger than the
                     % numOfCtrlPoint
-                    obj.ParentObject.ParentObject.resetInit;
+                    %obj.ParentObject.ParentObject.resetInit;
                     for k = obj.getInternalSettings('numOfCtrlPointSet')+1:lastCtrlPoint_ori
                         if lastCtrlPoint_ori~=obj.getInternalSettings('numOfCtrlPointSet')
                             obj.rmMPar(defaultParsArgNewCtrlPoint(k).name);
@@ -193,6 +198,10 @@ classdef continousRibbon_PL_xyzs<geometricModel
                 notify(obj.ParentObject.ParentObject,'mParsArgModified',evtdata);
                 notify(obj.ParentObject.ParentObject.linkedGUI,'mParsArgModified',evtdata);
                 obj.ParentObject.ParentObject.saveInit;
+                 % IC220907 addition
+                if isfield(obj.ParentObject.ParentObject.parsInit, 'init_locked')
+                    obj.ParentObject.ParentObject.lockInit;
+                end
             end
         end
     end
@@ -202,9 +211,9 @@ function struct = defaultParsArgNewCtrlPoint(number)
 struct.name = {['cx' num2str(number)],['cy' num2str(number)],['cz' num2str(number)],['s' num2str(number)]};
 struct.fix = [0 0 0 0] ;
 struct.value = [100*(number-1) 0 0 0];
-struct.lb = [-50 -50 -50 -10];
-struct.ub = [50 50 50 10];
-struct.min = [-inf -inf -inf -inf];
+struct.lb = [-inf -inf -inf 0];
+struct.ub = [inf inf inf inf];
+struct.min = [-inf -inf -inf 0];
 struct.max = [inf inf inf inf];
 end
 
@@ -212,7 +221,7 @@ function T = getRotMat(p1,t)
 p0 = [1 0 0];
 p1 = p1./sqrt(p1*p1');
 C = cross(p0', p1') ;
-D = dot(p0', p1') ;
+D = -dot(p0', p1') ;
 NP0 = norm(p0) ; % used for scaling
 if ~all(C==0) % check for colinearity
     Z = [0 -C(3) C(2); C(3) 0 -C(1); -C(2) C(1) 0] ;
@@ -222,6 +231,25 @@ else
     R = eye(3);
 end
 T = [[R;[0 0 0]] [t'; 1]];
+end
+
+
+function T=getTransmat(r,shift)%,idx,mth
+axis=[1 0 0];
+r=r/norm(r);
+angle= -acosd(dot(r,axis));%- means rotate clockwise!! %atan2d(norm(cross(r,axis)),dot(r,axis)) %LINK missing to matlab and wiki page explaining this
+u=cross(axis,r);
+if norm(u)==0
+    u=u;
+    % elseif dot(r,axis)==0
+    % angle=angle+1;
+    rotMat=eye(3);
+else
+    u=u/norm(u);
+    rotMat=eye(3)*cosd(angle(1))+sind(angle(1))*[0,-u(3), u(2);u(3),0,-u(1);-u(2),u(1) 0]+(1-cosd(angle(1)))*  [u(1)^2, u(1)*u(2), u(1)*u(3); u(1)*u(2), u(2)^2, u(2)*u(3); u(1)*u(3), u(2)*u(3), u(3)^2 ];
+
+end
+T=[[rotMat;[0 0 0]] [shift'; 1]];
 end
 
 function [ctrlX,ctrlY,ctrlZ,ctrlS] = getCtrlPointsXYZS(par, numOfCtrlPointSet)

@@ -7,14 +7,15 @@ classdef continousLinearModel_PL_xyz<geometricModel
             obj.name = {'cx1','cy1','cz1', 'cx2', 'cy2','cz2', 'cx3', 'cy3','cz3', 'cx4', 'cy4', 'cz4'};
             obj.fix = [0 0 0 0 0 0 0 0 0 0 0 0] ;
             obj.value = [0 0 0 100 0 0 200 0 0 300 0 0];
-            obj.lb = [-50 -50 -50 -50 -50 -50 -50 -50 -50 -50 -50 -50];
-            obj.ub = [50 50 50 50 50 50 50 50 50 50 50 50];
+            obj.lb = [-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf];
+            obj.ub = [inf inf inf inf inf inf inf inf inf inf inf inf];
             obj.min = [-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf];
             obj.max = [inf inf inf inf inf inf inf inf inf inf inf inf];
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized', 'continuous'};
             obj.dimension = 3;
             obj.internalSettings.numOfCtrlPointSet = 4;
+            %obj.internalSettings.minD = 50;
         end
         function [model, p]= reference(obj, par, dx)
             % set additional parameters of the model
@@ -37,14 +38,18 @@ classdef continousLinearModel_PL_xyz<geometricModel
             else
                 locsPrecFactor = obj.ParentObject.locsPrecFactor;
             end
-            
             minD = locsPrecFactor*dx;
-            
+%             if pResults.sampling==0
+%                 minD = locsPrecFactor*dx;
+%             else
+%                 minD=pResults.sampling;
+%             end
+%             minD=50; %pResults.minD;
             % vecterization
             for l = 1:size(ctrlZ,2)
-                arcLen = arclength(ctrlX(:,l), ctrlY(:,l), ctrlZ(:,l),'linear');
+                arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
                 samplingFactor = round(arcLen/minD);
-                [pt,diffVector] = interparc(double(samplingFactor), double(ctrlX(:,l)), double(ctrlY(:,l)), double(ctrlZ(:,l))) ;
+                [pt,diffVector] = interparc(double(samplingFactor), double(ctrlX(:,l)), double(ctrlY(:,l)), double(ctrlZ(:,l)),'pchip') ;
             end
             
             model.x = pt(:,1);
@@ -89,11 +94,11 @@ classdef continousLinearModel_PL_xyz<geometricModel
                 locsPrecFactor = obj.ParentObject.locsPrecFactor;
             end
             
-            minD = locsPrecFactor*0.75;
+            minD = 50;%locsPrecFactor*0.75; %obj.internalSettings.minD;
             
             arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
-            samplingFactor = round(arcLen/minD);
-            [pt,dudt]= interparc(round(samplingFactor/2), ctrlX, ctrlY, ctrlZ);
+            samplingFactor = round(arcLen/minD);%/2
+            [pt,dudt,funthd]= interparc(samplingFactor, ctrlX, ctrlY, ctrlZ,'pchip');
             
             [L,R,K] = curvature(pt);
             derivedPars.curvature = 1./R;
@@ -103,8 +108,8 @@ classdef continousLinearModel_PL_xyz<geometricModel
             %derivedPars.curvatureVector = K;
             %derivedPars.arcLen = L;
             derivedPars.pt = pt;
-            %derivedPars.dudt = dudt;
-            
+            derivedPars.dudt = dudt;
+            derivedPars.funthd = funthd;
             derivedPars.avgCurvature = mean(derivedPars.curvature,'omitnan');
             derivedPars.p75Curvature = prctile(derivedPars.curvature, 75);
 %             figure; plot3(pt(:,1),pt(:,2),pt(:,3))
@@ -140,7 +145,7 @@ classdef continousLinearModel_PL_xyz<geometricModel
                 elseif obj.getInternalSettings('numOfCtrlPointSet')<lastCtrlPoint_ori
                     % when the last control point number is larger than the
                     % numOfCtrlPoint
-                    %obj.ParentObject.ParentObject.resetInit; IC220907
+                    %obj.ParentObject.ParentObject.resetInit; %IC220907
                     %removed
                     for k = obj.getInternalSettings('numOfCtrlPointSet')+1:lastCtrlPoint_ori
                         if lastCtrlPoint_ori~=obj.getInternalSettings('numOfCtrlPointSet')
@@ -168,8 +173,8 @@ function struct = defaultParsArgNewCtrlPoint(number)
 struct.name = {['cx' num2str(number)],['cy' num2str(number)],['cz' num2str(number)]};
 struct.fix = [0 0 0] ;
 struct.value = [100*(number-1) 0 0];
-struct.lb = [-50 -50 -50];
-struct.ub = [50 50 50];
+struct.lb = [-inf -inf -inf];
+struct.ub = [inf inf inf];
 struct.min = [-inf -inf -inf];
 struct.max = [inf inf inf];
 end
