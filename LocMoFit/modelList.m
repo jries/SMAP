@@ -21,6 +21,8 @@ case 'dualEllipse3D_discrete'
 modelObj = dualEllipse3D_discrete;
 case 'dualRing3D_discrete'
 modelObj = dualRing3D_discrete;
+case 'ellipse2D'
+modelObj = ellipse2D;
 case 'ellipse3D'
 modelObj = ellipse3D;
 case 'gaussianCluster2D'
@@ -45,6 +47,6 @@ case 'thickRing2D'
 modelObj = thickRing2D;
 end
 else
-modelObj = {'arc2D','arc2D_arcLen','bucket2D','cspline3D_midPoint','csplineClosedTube3D_midPoint','csplineTube3D_midPoint','csplineTube3D_xyz','dualEllipse3D_avgR_discrete','dualEllipse3D_discrete','dualRing3D_discrete','ellipse3D','gaussianCluster2D','hemispheroid2D','locsBG3D','ring2D','ring3D','sphericalCap3D_surfaceArea','sphericalCap3Dp_surfaceArea','spheroid3Dp_surfaceArea','spheroidCap3Dp_surfaceArea','thickRing2D'};
+modelObj = {'arc2D','arc2D_arcLen','bucket2D','cspline3D_midPoint','csplineClosedTube3D_midPoint','csplineTube3D_midPoint','csplineTube3D_xyz','dualEllipse3D_avgR_discrete','dualEllipse3D_discrete','dualRing3D_discrete','ellipse2D','ellipse3D','gaussianCluster2D','hemispheroid2D','locsBG3D','ring2D','ring3D','sphericalCap3D_surfaceArea','sphericalCap3Dp_surfaceArea','spheroid3Dp_surfaceArea','spheroidCap3Dp_surfaceArea','thickRing2D'};
 end
 end
