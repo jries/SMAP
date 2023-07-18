@@ -138,7 +138,8 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             disp(header)
             results=sprintf([num2str(nlocs)  '\t' num2str(ontime)  '\t' num2str(dtmin)  '\t' num2str(dtmedian) '\t' num2str(dtmean) tsig '\t' num2str(efo) '\t' ...
                  num2str(cfr) '\t' num2str(eco) '\t' num2str(ecc) '\t' num2str(efc) '\t' filename]  );
-            out.clipboard=results;
+            clipboard("copy",results)
+            % out.clipboard=results;
 
         end
         function pard=guidef(obj)

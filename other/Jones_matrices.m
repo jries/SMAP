@@ -1,16 +1,27 @@
 %Jones martrices
 v=[0;1];
 vlin45=linear(-pi/4);  
+% vlin45=linear(-pi/4-0.25); 
 eomqwp=1;
 
 vstart=vlin45;
+vstart=v;
 clear phases dp
 % vstart=pagemtimes(QWP(pi/4),vstart); %QWP bias
+
+figure(22);
+phases(1,1,:)=0:0.1:pi;
+hold off
+out=pagemtimes(waveplate(pi*0.7,pi/4),v)+1*v;
+plotpolstate(out,0,0)
+axis equal
+asfadf
 
 
 dd=1/32;
 phases(1,1,:)=-1+dd:dd:1; 
 dphi=-1/4:1/4:1/2; %pi
+% dphi=[-0.3 0 0.3];
 
 outchannel=1;
 figure(88);
@@ -26,7 +37,7 @@ for k=1:length(dphi)
     [~,ind]=min(int0);
     text(phases(ind),0.03,num2str(dphi(k)),"HorizontalAlignment","center","Color",'b')
     hold on
-    legends{end+1}=['latpos = ' num2str(dphi(k)) ' pi'];
+    legends{end+1}=['latpos = ' num2str(dphi(k)) ' pi, C = ' num2str(min(int0)/max(int0)*100,2) '%'];
 end
 plot(sphases,0*sphases,'k')
 text(min(phases),0.03,'lateral pos',"HorizontalAlignment","right","Color",'b')
@@ -50,7 +61,7 @@ for k=1:length(phases)
     [~,ind]=min(int0);
     text(dphi(ind),0.03,num2str(phases(k)),"HorizontalAlignment","center","Color",'b')        
     hold on
-    legends{end+1}=['phase = ' num2str(phases(k)) ' pi'];
+    legends{end+1}=['phase = ' num2str(phases(k)) ' pi, C = ' num2str(min(int0)/max(int0),2)];
 end
 text(min(dphi),0.03,'EOM phase',"HorizontalAlignment","right","Color",'b')
 plot(sphi,0*sphi,'k')
@@ -62,16 +73,17 @@ ylabel('intensity')
 
  figure(85);hold off
  latpos=0;
- eomphase=pi/2-pi/8;
- useqwp=0;
+ eomphase=pi;
+ useqwp=1;
  qwpEOM=0;
 
  dx=1.7;
  % vstart=[0;1];
  vstart=vlin45;
+ vstart=v;
  txtqwp='No QWP bias. ';
  if useqwp
-    vstart=pagemtimes(QWP(0),vstart); %QWP bias
+    vstart=pagemtimes(QWP(pi/4),vstart); %QWP bias
      txtqwp='QWP bias. ';
  end
 
@@ -97,24 +109,30 @@ if nargin<3
     dphi=0;
 end
 vplot(1).state=vstart; vplot(1).label='in 45°';
-vphase=pagemtimes(waveplate(phases,0),vstart); %EOM 0  
-vplot(2).state=vphase; vplot(2).label='EOM 0°';
+vphase=vstart;
 
 if useqwp
-    vphase=pagemtimes(QWP(0),vphase); 
+    % vphase=pagemtimes(QWP(0),vphase); 
+    vphase=pagemtimes(QWP(-pi/4),vphase); 
     % vphase=pagemtimes(waveplate(pi/4,0),vphase); %EOM 0  
     % vphase=pagemtimes(waveplate(pi/4,0),vphase); 
-    vplot(3).state=vphase; vplot(3).label='EOM QWP 0°';
+    vplot(2).state=vphase; vplot(2).label='EOM QWP 0°';
 else
-    vplot(3).state=vphase; vplot(3).label='-';
+    vplot(2).state=vphase; vplot(2).label='-';
 end
+
+vphase=pagemtimes(waveplate(phases,0),vphase); %EOM 0  
+vplot(3).state=vphase; vplot(3).label='EOM 0°';
 
 
 % vphase=pagemtimes(HWP(pi/8),vphase); %HWP
+% vphase=pagemtimes(QWP(0.41),vphase); %HWP
+
 % vplot(4).state=vphase; vplot(4).label='HWP 22.5°';
 vplot(4).state=vphase; vplot(4).label='-';
 
 vrot=pagemtimes(addphase(-dphi),pagemtimes(HWP45,vphase)); %SLM+lat pos
+% vrot=pagemtimes(addphase(-dphi),pagemtimes(waveplate(pi/2-0*pi/8,pi/4),vphase)); %SLM broken+lat pos
 vplot(5).state=vrot; vplot(5).label='SLM+latpos';
 vphase=pagemtimes(addphase(dphi),vphase); %lat pos
 vplot(6).state=vphase; vplot(6).label='only latpos';
