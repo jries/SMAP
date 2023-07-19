@@ -7,10 +7,10 @@ classdef continousRibbon_PL_xyzs<geometricModel
             obj.name = {'r','cx1','cy1','cz1','s1', 'cx2', 'cy2','cz2','s2', 'cx3', 'cy3','cz3','s3'};
             obj.fix = [1 0 0 0 0 0 0 0 0 0 0 0 0] ;
             obj.value = [65 0 0 0 0 100 0 0 0 200 0 0 0];
-            obj.lb = [20 -inf -inf -inf 0 -inf -inf -inf 0 -inf -inf -inf 0];
-            obj.ub = [150 inf inf inf inf inf inf inf inf inf inf inf inf];
-            obj.min = [30 -inf -inf -inf 0 -inf -inf -inf 0 -inf -inf -inf 0];
-            obj.max = [150 inf inf inf inf inf inf inf inf inf inf inf inf];
+            obj.lb = [-10 -50 -50 -50 -pi -50 -50 -50 -pi -50 -50 -50 -pi];
+            obj.ub = [20 50 50 50 pi 50 50 50 50 pi 50 50 50 pi];
+            obj.min = [30 -5000 -5000 -5000 -pi -5000 -5000 -5000 -pi -5000 -5000 -5000 -pi];
+            obj.max = [150 5000 5000 5000 inf 5000 5000 5000 inf 5000 5000 5000 inf];
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized', 'continuous'};
             obj.dimension = 3;
@@ -38,7 +38,7 @@ classdef continousRibbon_PL_xyzs<geometricModel
                 locsPrecFactor = obj.ParentObject.locsPrecFactor;
             end
             
-            minD = locsPrecFactor*dx;
+            minD = locsPrecFactor*1; %%0.75 dx
             
             for l = 1:size(ctrlZ,2)% vecterization
                 arcLen = arclength(ctrlX(:,l), ctrlY(:,l), ctrlZ(:,l),'linear');
@@ -52,11 +52,19 @@ classdef continousRibbon_PL_xyzs<geometricModel
                 nOnRing = 2;
                 theta = [0 pi];
                 axes = zeros(nOnRing, 3, [size(diffVector,1)]);
-                ptS=spline(1:size(ctrlS,1),ctrlS,linspace(1,size(ctrlS,1),size(diffVector,1)));
+                %%FIX:Do notconnect the angle between segment - keep  them
+                %%indep
+                distances=pdist2([ctrlX ctrlY ctrlZ],pt,'euclidean');
+                [local_minD,local_idx] = min(distances,[],2);
+                ptS=zeros(1,size(diffVector,1));
+                for i_seg=1:(size(local_idx,1)-1)
+                    ptS(1,local_idx(i_seg):local_idx(i_seg+1))=ctrlS(i_seg);
+                end
+                %ptS=spline(1:size(ctrlS,1),ctrlS,linspace(1,size(ctrlS,1),size(diffVector,1)));
                 for k = 1:size(diffVector,1)
-                    [x,y] = pol2cart(theta+(pi*ptS(k)/180),par.r);
+                    [x,y] = pol2cart(theta+(ptS(k)),par.r);%pi*/180
                     xyRing = [zeros(size(x')) x' y'];
-                    T = getRotMat(diffVector(k,:),pt(k,:));
+                    T = getTransmat(diffVector(k,:),pt(k,:));
                     temp = T*[xyRing.'; ones(1,size(xyRing,1))];
                     axes(:,:,k)= temp(1:end-1,:)';
                 end
@@ -103,14 +111,37 @@ classdef continousRibbon_PL_xyzs<geometricModel
             else
                 locsPrecFactor = obj.ParentObject.locsPrecFactor;
             end
-            minD = locsPrecFactor*0.75;
+            minD = locsPrecFactor*1;%%0.75
             arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
             samplingFactor = round(arcLen/minD);
-            pt = interparc(samplingFactor, ctrlX, ctrlY, ctrlZ,'pchip');
-            
-            items(2).XData = pt(:,1);
-            items(2).YData = pt(:,2);
-            items(2).ZData = pt(:,3);
+            [pt,diffVector] = interparc(samplingFactor, ctrlX, ctrlY, ctrlZ,'pchip');
+            if par.r > 0
+                nOnRing = 2;
+                theta = [0 pi];
+                axes = zeros(nOnRing, 3, [size(diffVector,1)]);
+                distances=pdist2([ctrlX ctrlY ctrlZ],pt,'euclidean');
+                [local_minD,local_idx] = min(distances,[],2);
+                ptS=zeros(1,size(diffVector,1));
+                for i_seg=1:(size(local_idx,1)-1)
+                    ptS(1,local_idx(i_seg):local_idx(i_seg+1))=ctrlS(i_seg);
+                end
+                for k = 1:size(diffVector,1)
+                    [x,y] = pol2cart(theta+(ptS(k)),par.r);%pi*/180
+                    xyRing = [zeros(size(x')) x' y'];
+                    T = getTransmat(diffVector(k,:),pt(k,:));
+                    temp = T*[xyRing.'; ones(1,size(xyRing,1))];
+                    axes(:,:,k)= temp(1:end-1,:)';
+                end
+                axes = permute(axes, [1 3 2]);
+                axes = reshape(axes, [],3);
+                items(2).XData = axes(:,1);
+                items(2).YData = axes(:,2);
+                items(2).ZData = axes(:,3);
+            else
+                items(2).XData = pt(:,1);
+                items(2).YData = pt(:,2);
+                items(2).ZData = pt(:,3);
+            end
             items(2).Marker = 'none';
             items(2).MarkerSize = 1;
             items(2).MarkerEdgeColor = 'w';
@@ -131,7 +162,7 @@ classdef continousRibbon_PL_xyzs<geometricModel
                 locsPrecFactor = obj.ParentObject.locsPrecFactor;
             end
             
-            minD = locsPrecFactor*0.75;
+            minD = locsPrecFactor*1; %%0.75
             
             arcLen = arclength(ctrlX, ctrlY, ctrlZ,'linear');
             samplingFactor = round(arcLen/minD);
@@ -142,6 +173,7 @@ classdef continousRibbon_PL_xyzs<geometricModel
             derivedPars.ctrlpoints.ctrlX = ctrlX;
             derivedPars.ctrlpoints.ctrlY = ctrlY;
             derivedPars.ctrlpoints.ctrlZ = ctrlZ;
+            derivedPars.ctrlpoints.ctrlS = ctrlS;
             derivedPars.pt = pt;
             derivedPars.dudt = dudt;
             derivedPars.funthd = funthd;
@@ -149,7 +181,7 @@ classdef continousRibbon_PL_xyzs<geometricModel
             
             derivedPars.avgCurvature = mean(derivedPars.curvature,'omitnan');
             derivedPars.p75Curvature = prctile(derivedPars.curvature, 75);
-            derivedPars.axesRot=ctrlS;
+            derivedPars.axesRot=ctrlS*180/pi;
 %             figure; plot3(pt(:,1),pt(:,2),pt(:,3))
 %             % plot3([pt(:,1) pt(:,1)+50000*K(:,1)]',[pt(:,2) pt(:,2)+50000*K(:,2)]',[pt(:,3) pt(:,3)+50000*K(:,3)]')
 %             axis equal
@@ -211,10 +243,10 @@ function struct = defaultParsArgNewCtrlPoint(number)
 struct.name = {['cx' num2str(number)],['cy' num2str(number)],['cz' num2str(number)],['s' num2str(number)]};
 struct.fix = [0 0 0 0] ;
 struct.value = [100*(number-1) 0 0 0];
-struct.lb = [-inf -inf -inf 0];
-struct.ub = [inf inf inf inf];
-struct.min = [-inf -inf -inf 0];
-struct.max = [inf inf inf inf];
+struct.lb = [-50 -50 -50 -pi];
+struct.ub = [50 50 50 pi];
+struct.min = [-5000 -5000 -5000 -pi];
+struct.max = [5000 5000 5000 inf];
 end
 
 function T = getRotMat(p1,t)
@@ -244,6 +276,9 @@ if norm(u)==0
     % elseif dot(r,axis)==0
     % angle=angle+1;
     rotMat=eye(3);
+    if dot(axis,r)<0
+        rotMat(1,1)=-1;
+    end
 else
     u=u/norm(u);
     rotMat=eye(3)*cosd(angle(1))+sind(angle(1))*[0,-u(3), u(2);u(3),0,-u(1);-u(2),u(1) 0]+(1-cosd(angle(1)))*  [u(1)^2, u(1)*u(2), u(1)*u(3); u(1)*u(2), u(2)^2, u(2)*u(3); u(1)*u(3), u(2)*u(3), u(3)^2 ];

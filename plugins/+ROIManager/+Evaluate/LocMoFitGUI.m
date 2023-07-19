@@ -435,7 +435,7 @@ classdef LocMoFitGUI<interfaces.SEEvaluationProcessor
             parId = obj.loadParTable(htable, obj.fitter, b.modelID);
             % here the target options in the converter table are defined.
             hConvert = obj.guihandles.anchorConvert;
-            optionTarget = unique([hConvert.ColumnFormat{3} parId]);
+            optionTarget = unique([hConvert.ColumnFormat{3} parId.']);%IC230728
             hConvert.ColumnFormat{3} = optionTarget;
             obj.guihandles.anchorConvert=hConvert;
         end

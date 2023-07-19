@@ -7,10 +7,10 @@ classdef continousLinearModel_PL_xyz<geometricModel
             obj.name = {'cx1','cy1','cz1', 'cx2', 'cy2','cz2', 'cx3', 'cy3','cz3', 'cx4', 'cy4', 'cz4'};
             obj.fix = [0 0 0 0 0 0 0 0 0 0 0 0] ;
             obj.value = [0 0 0 100 0 0 200 0 0 300 0 0];
-            obj.lb = [-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf];
-            obj.ub = [inf inf inf inf inf inf inf inf inf inf inf inf];
-            obj.min = [-inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf -inf];
-            obj.max = [inf inf inf inf inf inf inf inf inf inf inf inf];
+            obj.lb = [-50 -50 -50 -50 -50 -50 -50 -50 -50 -50 -50 -50];
+            obj.ub = [50 50 50 50 50 50 50 50 50 50 50 50];
+            obj.min = [-5000 -5000 -5000 -5000 -5000 -5000 -5000 -5000 -5000 -5000 -5000 -5000];
+            obj.max = [5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000];
             obj.modelType = 'discretized';
             obj.modelTypeOption = {'discretized', 'continuous'};
             obj.dimension = 3;
@@ -173,10 +173,10 @@ function struct = defaultParsArgNewCtrlPoint(number)
 struct.name = {['cx' num2str(number)],['cy' num2str(number)],['cz' num2str(number)]};
 struct.fix = [0 0 0] ;
 struct.value = [100*(number-1) 0 0];
-struct.lb = [-inf -inf -inf];
-struct.ub = [inf inf inf];
-struct.min = [-inf -inf -inf];
-struct.max = [inf inf inf];
+struct.lb = [-50 -50 -50];
+struct.ub = [50 50 50];
+struct.min = [-5000 -5000 -5000];
+struct.max = [5000 5000 5000];
 end
 
 function T = getRotMat(p1,t)
