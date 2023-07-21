@@ -9,13 +9,13 @@ vstart=v;
 clear phases dp
 % vstart=pagemtimes(QWP(pi/4),vstart); %QWP bias
 
-figure(22);
-phases(1,1,:)=0:0.1:pi;
-hold off
-out=pagemtimes(waveplate(pi*0.7,pi/4),v)+1*v;
-plotpolstate(out,0,0)
-axis equal
-asfadf
+% figure(22);
+% phases(1,1,:)=0:0.1:pi;
+% hold off
+% out=pagemtimes(waveplate(pi*0.7,pi/4),v)+1*v;
+% plotpolstate(out,0,0)
+% axis equal
+% asfadf
 
 
 dd=1/32;
@@ -73,9 +73,9 @@ ylabel('intensity')
 
  figure(85);hold off
  latpos=0;
- eomphase=pi;
- useqwp=1;
- qwpEOM=0;
+ eomphase=0.15*pi;
+ useqwp=0;
+ qwpEOM=1;
 
  dx=1.7;
  % vstart=[0;1];
@@ -113,7 +113,7 @@ vphase=vstart;
 
 if useqwp
     % vphase=pagemtimes(QWP(0),vphase); 
-    vphase=pagemtimes(QWP(-pi/4),vphase); 
+    vphase=pagemtimes(QWP(pi/4),vphase); 
     % vphase=pagemtimes(waveplate(pi/4,0),vphase); %EOM 0  
     % vphase=pagemtimes(waveplate(pi/4,0),vphase); 
     vplot(2).state=vphase; vplot(2).label='EOM QWP 0°';
@@ -125,16 +125,18 @@ vphase=pagemtimes(waveplate(phases,0),vphase); %EOM 0
 vplot(3).state=vphase; vplot(3).label='EOM 0°';
 
 
-% vphase=pagemtimes(HWP(pi/8),vphase); %HWP
-% vphase=pagemtimes(QWP(0.41),vphase); %HWP
+vphase=pagemtimes(HWP(-0.15),vphase); %HWP
+% vphase=pagemtimes(QWP(-0.2),vphase); %HWP
 
 % vplot(4).state=vphase; vplot(4).label='HWP 22.5°';
 vplot(4).state=vphase; vplot(4).label='-';
 
-vrot=pagemtimes(addphase(-dphi),pagemtimes(HWP45,vphase)); %SLM+lat pos
+vrot=pagemtimes(addphase(-dphi),pagemtimes(waveplate(pi*555/640,33.5/180*pi),vphase)); %realistic SLM: angle 33.5, retardance= pi*555/640
+% vrot=pagemtimes(addphase(-dphi),pagemtimes(HWP45,vphase)); %SLM+lat pos
 % vrot=pagemtimes(addphase(-dphi),pagemtimes(waveplate(pi/2-0*pi/8,pi/4),vphase)); %SLM broken+lat pos
 vplot(5).state=vrot; vplot(5).label='SLM+latpos';
 vphase=pagemtimes(addphase(dphi),vphase); %lat pos
+% vphase=pagemtimes(waveplate(pi*555/640*0,0),vphase); % realistic SLM: off pixel: optical axis vertical
 vplot(6).state=vphase; vplot(6).label='only latpos';
 vsum=(vrot+vphase);
 vplot(7).state=vsum; vplot(7).label='sum';

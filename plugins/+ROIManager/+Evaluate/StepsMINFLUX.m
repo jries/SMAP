@@ -13,6 +13,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         stats
         id;
         locsuse;
+        manualcuration
     end
     methods
         function obj=StepsMINFLUX(varargin)        
@@ -720,6 +721,10 @@ function manualcurate(obj)
 
 f=figure(234);
 ax=gca;
+if ~isempty(obj.manualcuration)
+    obj.manualcuration=ax.XLim;
+end
+
 hold(ax,'off')
 if strcmp(obj.getSingleGuiParameter('filtertrackmode').selection,'smooth stepfind')
     xp=obj.coord.xr(obj.coord.indtime);
@@ -728,6 +733,11 @@ else
 end
 plot(ax,obj.coord.timeplot(obj.coord.indtime),xp,'k','HitTest','off')
 hold(ax,'on')
+
+if isempty(obj.manualcuration)
+    obj.manualcuration=ax.XLim;
+end
+ax.XLim=obj.manualcuration;
 
 stairs(ax,obj.steps.steptime,obj.steps.stepvalue,'r','LineWidth',2,'HitTest','off')
 stepv2=[obj.steps.stepvalue(1);(obj.steps.stepvalue(2:end)+obj.steps.stepvalue(1:end-1))/2];
@@ -748,6 +758,7 @@ end
 end
 
 function splitmerge(a,b,obj,what)
+obj.manualcuration=[];
 manualcurate(obj)
 return
 
