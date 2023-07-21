@@ -14,6 +14,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         id;
         locsuse;
         manualcuration
+        steps_x_range
+        xy_range
     end
     methods
         function obj=StepsMINFLUX(varargin)        
@@ -21,6 +23,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         end
         function out=run(obj, p)
            obj.steps=[];obj.range=[];obj.coord=[];
+           obj.steps_x_range=[];
+           obj.xy_range=[];
            if isfield(obj.site.evaluation,obj.name) 
                 out=obj.site.evaluation.(obj.name);
                 if isfield(obj.site.evaluation.(obj.name),'steps')
@@ -404,6 +408,9 @@ end
 ax2=obj.setoutput('steps_x');
 hold(ax2,'off')
 
+if ~isempty(obj.steps_x_range)
+    obj.steps_x_range=ax2.XLim;
+end
 
 plotfiltered=obj.getSingleGuiParameter('filtertrackmode').Value>1 ;
 if plotfiltered
@@ -445,7 +452,11 @@ dmv=diff(mv);
 
 showvalues(obj,ax2,obj.steps.steptime(2:end),(mv(1:end-1)+mv(2:end))/2,dmv);
 
-
+if isempty(obj.steps_x_range)
+    obj.steps_x_range=ax2.XLim;
+else
+    ax2.XLim=obj.steps_x_range;
+end
 obj.axstep=ax2;
 
 if ~isempty(info)
@@ -458,6 +469,11 @@ goff=median(mod(obj.steps.stepvalue,16),'omitnan');
 obj.xyplotoffset=goff;
 % goff=0; %switch off shift 
 axxy=obj.setoutput('xy');
+
+if ~isempty(obj.xy_range)
+    obj.xy_range=axxy.XLim;
+end
+
 hold(axxy,'off')
 plot(axxy, obj.coord.xr-goff, obj.coord.yr,'Color',colornotfiltered)
 axis(axxy,'equal')
@@ -476,6 +492,12 @@ axm=-16:-16:axxy.XLim(1);
 axxy.XTick=[axm(end:-1:1) 0:16:axxy.XLim(2)];
 axxy.YTick=round((axxy.YLim(1):6:axxy.YLim(2))/6)*6;
 
+if isempty(obj.xy_range)
+    obj.xy_range=axxy.XLim;
+else
+    axxy.XLim=obj.xy_range;
+end
+
 %plot selection box
 if ~isempty(obj.range)
 indmin=find(obj.coord.timeplot>=obj.range(1),1,'first');
@@ -489,6 +511,8 @@ sigmax=std(obj.coord.xr);sigmay=std(obj.coord.yr);
 sxdetrend=std(diff(obj.coord.xr))/sqrt(2);sydetrend=std(diff(obj.coord.yr))/sqrt(2);
 [~, sxrobust]=robustMean(obj.coord.xr); [~, syrobust]=robustMean(obj.coord.yr);
 title(axxy,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.' ' std(y) = ' num2str(sigmay,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
+
+
 
 if ~isempty(obj.coord.z)
     ax3D=obj.setoutput('zxy');
@@ -746,6 +770,7 @@ roi=images.roi.Polyline(ax,'Position',horzcat(obj.steps.steptime,stepv2),'LineWi
 addlistener(roi,'ROIMoved',@obj.updateroiposition);
 addlistener(roi,'VertexAdded',@obj.addvertexroi);
 addlistener(roi,'VertexDeleted',@obj.deletevertexroi);
+plotsteps(obj)
 end
 
 
@@ -989,6 +1014,12 @@ if file
 end 
 end
 
+function resetview(a,b,obj)
+obj.steps_x_range=[];
+obj.xy_range=[];
+plotsteps(obj)
+end
+
 function pard=guidef(obj)
 pard.linkt.object=struct('String','Link','Style','text');
 pard.linkt.position=[1,3];
@@ -1102,6 +1133,10 @@ pard.filterwindow.Width=0.4;
 pard.filtermode.object=struct('String',{{'mean','median'}},'Style','popupmenu');
 pard.filtermode.position=[6,3.7];
 pard.filtermode.Width=1.3;
+
+pard.resetview.object=struct('String','Reset view','Style','pushbutton','Callback',{{@resetview,obj}});
+pard.resetview.position=[8,1];
+pard.resetview.Width=1.3;
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};
 pard.plugininfo.type='ROI_Evaluate';
