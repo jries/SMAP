@@ -28,14 +28,14 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             filelist=obj.getPar('filelist_short');
             filename=filelist.String{mode(locs.filenumber(ind))};
             dt=diff(locs.time(ind));
-            dtmin=min(dt);
+            dtmin=min(dt(dt>0));
             dtmedian=median(dt);
             dtmean=mean(dt);
-            efo=median(locs.efo(ind));
-            cfr=median(locs.cfr(ind));
-            eco=median(locs.eco(ind));
-            ecc=median(locs.ecc(ind));
-            efc=median(locs.efc(ind));
+            efo=median(locs.efo(ind),'omitnan');
+            cfr=median(locs.cfr(ind),'omitnan');
+            eco=median(locs.eco(ind),'omitnan');
+            ecc=median(locs.ecc(ind),'omitnan');
+            efc=median(locs.efc(ind),'omitnan');
             nlocs=length(locs.time(ind));
             ontime=max(locs.time(ind))-min(locs.time(ind));
 
