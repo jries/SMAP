@@ -16,7 +16,7 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
             filelist=obj.getPar('filelist_short');
             filename=filelist.String{mode(locs.filenumber)};
             dt=diff(locs.time);
-            dtmin=min(dt);
+            dtmin=min(dt(dt>0));
             dtmedian=median(dt);
             dtmean=mean(dt);
             efo=median(locs.efo,'omitnan');

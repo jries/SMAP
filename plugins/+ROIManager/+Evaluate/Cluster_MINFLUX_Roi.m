@@ -12,9 +12,9 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj,p)      
-            usefields={'xnm','ynm','znm','time','groupindex','numberInGroup','filenumber','efo','cfr','eco','ecc','efc','tid'};
+            usefields={'xnm','ynm','znm','time','groupindex','numberInGroup','filenumber','efo','cfr','eco','ecc','efc','tid','fbg'};
             locsfind=obj.getLocs({'tid','groupindex'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
-            locs=obj.locData.getloc(usefields,'layer',find(obj.getPar('sr_layerson')),'Position','all','removeFilter',{'time'});
+            locs=obj.locData.getloc(usefields,'layer',find(obj.getPar('sr_layerson')),'Position','all','removeFilter',{'filenumber','time'});
             switch p.link.selection
                 case 'StepsMINFLUX'
                     ind=obj.site.evaluation.StepsMINFLUX.steps.allindices;
@@ -36,6 +36,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             eco=median(locs.eco(ind),'omitnan');
             ecc=median(locs.ecc(ind),'omitnan');
             efc=median(locs.efc(ind),'omitnan');
+            fbg=median(locs.fbg(ind),'omitnan');
             nlocs=length(locs.time(ind));
             ontime=max(locs.time(ind))-min(locs.time(ind));
 
@@ -83,11 +84,11 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 xlabel(axz,'time (ms)')
                 ylabel(axz,'z (nm)')
                 title(axz,['std(z) = ' num2str(sigmaz,ff) ' nm, std(z) robust = ' num2str(szrobust,ff) ' nm, std(z) detrend = ' num2str(szdetrend,ff) ' nm.'])
-                tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmaz \t sigmax robust \t sigmay robust \t sigmaz robust \t sigmax detrend \t sigmay detrend \t sigmaz detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t filename';
+                tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmaz \t sigmax robust \t sigmay robust \t sigmaz robust \t sigmax detrend \t sigmay detrend \t sigmaz detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t fbg med  \t filename';
                 tsig=['\t' num2str(sigmax) '\t' num2str(sigmay) '\t' num2str(sigmaz)  '\t' num2str(sxrobust)  '\t' num2str(syrobust) '\t' num2str(szrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend) '\t' num2str(szdetrend)];
                 outsig.sigmax=sigmax;outsig.sigmay=sigmay;outsig.sigmaz=sigmaz;outsig.sxrobust=sxrobust;outsig.syrobust=syrobust;outsig.szrobust=szrobust;outsig.sxdetrend=sxdetrend;outsig.sydetrend=sydetrend;outsig.szdetrend=szdetrend;
             else
-                tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmax robust \t sigmay robust \t sigmax detrend \t sigmay detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t filename' ;
+                tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmax robust \t sigmay robust \t sigmax detrend \t sigmay detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t fbg med \t filename' ;
                 tsig=['\t' num2str(sigmax) '\t' num2str(sigmay)  '\t' num2str(sxrobust)  '\t' num2str(syrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend)];
                 outsig.sigmax=sigmax;outsig.sigmay=sigmay;outsig.sxrobust=sxrobust;outsig.syrobust=syrobust;outsig.sxdetrend=sxdetrend;outsig.sydetrend=sydetrend;
             end
@@ -130,14 +131,15 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 xlabel(axcc,'time (ms)')
                 ylabel(axcc,'ecc')
             end
-
+            
             out.nocs=nlocs;out.ontime=ontime;out.dtmin=dtmin; out.dtmedian=dtmedian;out.dtmean=dtmean;
             out.sigmas=outsig;
             out.efo=efo;out.cfr=cfr;out.eco=eco;out.ecc=ecc;out.efc=efc;out.filename=filename;
+            out.fbg=fbg;
             header=sprintf(tz);
             disp(header)
             results=sprintf([num2str(nlocs)  '\t' num2str(ontime)  '\t' num2str(dtmin)  '\t' num2str(dtmedian) '\t' num2str(dtmean) tsig '\t' num2str(efo) '\t' ...
-                 num2str(cfr) '\t' num2str(eco) '\t' num2str(ecc) '\t' num2str(efc) '\t' filename]  );
+                 num2str(cfr) '\t' num2str(eco) '\t' num2str(ecc) '\t' num2str(efc) '\t' num2str(fbg) '\t' filename]  );
             clipboard("copy",results)
             % out.clipboard=results;
 
