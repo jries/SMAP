@@ -19,11 +19,11 @@ classdef Cluster_MINFLUX<interfaces.DialogProcessor
             dtmin=min(dt);
             dtmedian=median(dt);
             dtmean=mean(dt);
-            efo=median(locs.efo);
-            cfr=median(locs.cfr);
-            eco=median(locs.eco);
-            ecc=median(locs.ecc);
-            efc=median(locs.efc);
+            efo=median(locs.efo,'omitnan');
+            cfr=median(locs.cfr,'omitnan');
+            eco=median(locs.eco,'omitnan');
+            ecc=median(locs.ecc,'omitnan');
+            efc=median(locs.efc,'omitnan');
             nlocs=length(locs.time);
             ontime=max(locs.time)-min(locs.time);
 
