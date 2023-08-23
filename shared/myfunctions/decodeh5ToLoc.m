@@ -19,7 +19,13 @@ zd=zeros(size(locs.x),'single');
 loc.ynm=single(locs.x*pix2nm(1));
 loc.xnm=single(locs.y*pix2nm(2));
 loc.znm=single(locs.z);
-loc.phot=single(locs.phot);
+if ndims(locs.phot) == 1
+    loc.phot=single(locs.phot);
+else
+    loc.phot = single(locs.phot(1, :))';
+    loc.phot1 = single(locs.phot(1, :))';
+    loc.phot2 = single(locs.phot(2, :))';
+end
 loc.frame=double(locs.frame_ix+1);
 loc.prob=single(locs.prob);
 loc.LLrel=single(locs.prob)-1; %to fit in the -inf to zero range...
@@ -30,9 +36,24 @@ loc.channel=zd;
 if ~info.thin
     loc.ynmerr=single(locs.x_sig*pix2nm(1));
     loc.xnmerr=single(locs.y_sig*pix2nm(2));
+    loc.znmerr=single(locs.z_sig);
     loc.locprecznm=single(locs.z_sig);
-    loc.bg=single(locs.bg);
-    loc.phot_err=single(locs.phot_sig);
+    
+    
+    if ndims(locs.phot_sig) == 1
+        loc.phot_err=single(locs.phot_sig);
+    else
+        loc.phot_err1=single(locs.phot_sig(1, :))';
+        loc.phot_err2=single(locs.phot_sig(2, :))';
+    end
+
+    if ndims(locs.bg) == 1
+        loc.bg=single(locs.bg);
+    else
+        loc.bg=single(locs.bg(1, :))';
+        loc.bg1=single(locs.bg(1, :))';
+        loc.bg2=single(locs.bg(2, :))';
+    end
     loc.locprecnm=(loc.xnmerr+loc.ynmerr)/2;
 else
     loc.bg=zd;
