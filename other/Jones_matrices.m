@@ -125,7 +125,7 @@ vphase=pagemtimes(waveplate(phases,0),vphase); %EOM 0
 vplot(3).state=vphase; vplot(3).label='EOM 0°';
 
 
-vphase=pagemtimes(HWP(-0.15),vphase); %HWP
+vphase=pagemtimes(HWP(-0.15),vphase); %HWP to compensate for non-ideal slm
 % vphase=pagemtimes(QWP(-0.2),vphase); %HWP
 
 % vplot(4).state=vphase; vplot(4).label='HWP 22.5°';
