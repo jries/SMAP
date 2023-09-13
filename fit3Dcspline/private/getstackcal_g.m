@@ -146,7 +146,7 @@ sstack=size(beads(1).stack.image);
     % intglobalr=mean(sum(sum(corrPSFnr(rangex,rangey,z-1:z+1),1,'omitnan'),2,'omitnan'),'omitnan');
 %request from Yiming 19.8.23: use max
 %     intglobalr=max(sum(sum(corrPSFnr(rangex,rangey,:),1,'omitnan'),2,'omitnan'),'omitnan');
-    intglobalr=max(sum(corrpsFnr(rangex,rangey,:),[1 2],'omitnan'),[], 'omitnan');
+    intglobalr=max(sum(corrPSFnr(rangex,rangey,:),[1 2],'omitnan'),[], 'omitnan');
     corrPSFnr=corrPSFnr/intglobalr;   
     shiftedstack(1:size(allrois,1),:,:,:)=(shiftedstack(1:size(allrois,1),:,:,:)-minPSFr)/intglobalr;
     corrPSFnr(isnan(corrPSFnr))=0;
