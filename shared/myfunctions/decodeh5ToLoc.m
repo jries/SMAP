@@ -91,7 +91,7 @@ end
 end
 
 function [locso,io]=loadcsv(file)
-locs=readtable(file,'NumHeaderLines',3);
+locs=readtable(file,'NumHeaderLines',4);
 fid=fopen(file);
 fgetl(fid);
 l2=fgetl(fid);
