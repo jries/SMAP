@@ -15,17 +15,18 @@ classdef rotSymCMERec<interfaces.DialogProcessor&interfaces.SEProcessor
             pos(2) = 0;
             roiSize = obj.getPar('se_siteroi');
             roiWidth = roiSize-p.spatialTrimXY(1)*2;
+            sr_layerson = find(locData.getPar('sr_layerson'));
+            for l = 1:length(sr_layerson)
+                p_render(l) = obj.getLayerParameters(l,renderSMAP);
+                p_render(l).sr_pos = [distFromOrigin+((p.binNumber+1)./2)*roiWidth 0 0];
+                p_render(l).sr_size = [roiWidth*p.binNumber roiWidth]./2;
+                p_render(l).sr_pixrec = 1;
             
-            
-            p_render = obj.getLayerParameters(1,renderSMAP);
-            p_render.sr_pos = [distFromOrigin+((p.binNumber+1)./2)*roiWidth 0 0];
-            p_render.sr_size = [roiWidth*p.binNumber roiWidth]./2;
-            p_render.sr_pixrec = 1;
-            
-            p_render_sideView = p_render;
-            p_render_sideView.sr_pos = [distFromOrigin+((p.binNumber+1)./2)*roiWidth 65 0];
-            p_render_sideView.sr_size = [roiWidth*p.binNumber roiWidth*4/5]./2;
-            
+                p_render_sideView(l) = p_render(l);
+                p_render_sideView(l).sr_pos = [distFromOrigin+((p.binNumber+1)./2)*roiWidth 65 0];
+                p_render_sideView(l).sr_size = [roiWidth*p.binNumber roiWidth*4/5]./2;
+            end
+
             allAng = 0:p.rotAng:359;
             for m = 1:length(allAng)
                 for k = 1:p.binNumber
@@ -48,8 +49,15 @@ classdef rotSymCMERec<interfaces.DialogProcessor&interfaces.SEProcessor
                         newlocs = mergeStruct(locs,newlocs);
                     end
                 end
-                topView = renderSMAP(newlocs, p_render, 1);
-                topView = drawerSMAP(topView, p_render);
+
+                for l = 1:length(sr_layerson)
+                    topView_ = renderSMAP(subsetStruct(newlocs, newlocs.layer==l), p_render(l), l);
+                    if l == 1
+                        topView = zeros(size(topView_));
+                    end
+                    topView_ = drawerSMAP(topView_, p_render(l));
+                    topView = topView + topView_.image;
+                end
                 
                 % get cross section
                 lSection = newlocs.ynm > -30 & newlocs.ynm < 30;
@@ -60,14 +68,20 @@ classdef rotSymCMERec<interfaces.DialogProcessor&interfaces.SEProcessor
                 newlocs.znm = newlocs.ynm;
                 newlocs.ynm = tempZ;
                 
-                sideView = renderSMAP(newlocs, p_render_sideView, 1);
-                sideView = drawerSMAP(sideView, p_render_sideView);
+                for l = 1:length(sr_layerson)
+                    sideView_ = renderSMAP(subsetStruct(newlocs, newlocs.layer==l), p_render_sideView(l), l);
+                    if l == 1
+                        sideView = zeros(size(sideView_));
+                    end
+                    sideView_ = drawerSMAP(sideView_, p_render_sideView(l));
+                    sideView = sideView + sideView_.image;
+                end
                 if m == 1
-                    finalTopView = topView.image;
-                    finalSideView = sideView.image;
+                    finalTopView = topView;
+                    finalSideView = sideView;
                 else
-                    finalTopView = finalTopView + topView.image;
-                    finalSideView = finalSideView + sideView.image;
+                    finalTopView = finalTopView + topView;
+                    finalSideView = finalSideView + sideView;
                 end
             end
             

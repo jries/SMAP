@@ -212,6 +212,11 @@ classdef LocSaver<interfaces.WorkflowModule
                 fitpar.processfittime=obj.getPar('tiffloader_fittime');
                 fitpar.loc_globaltransform=obj.getPar('loc_globaltransform');
                 fitpar.fitinfo=obj.getPar('loc_fitinfo');
+                try
+                [~, fitpar.gitbranch]= system('git rev-parse HEAD');
+                catch err
+                    err
+                end
 %                 fitpar.imagetags=obj.getPar('loc_imagetags');
                 obj.setPar('savefit',struct('fitparameters',fitpar)); obj.savefit_callback;
                 try

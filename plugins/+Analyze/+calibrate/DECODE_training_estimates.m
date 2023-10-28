@@ -353,7 +353,7 @@ function usecurrent_callback(a,b,obj)
     if stat.lifetime.mu<0.8 %if most fluorophores in1 frame only, but we simulate with longer on-time, increase brightness
         js.Simulation.intensity_mu_sig=js.Simulation.intensity_mu_sig*1.3;
     end
-    bgminmax=quantile(locsu.bg,[0.01, 0.95]);
+    bgminmax=quantile(locsu.bg,[0.01, 0.98]);
     dbg=bgminmax(2)-bgminmax(1);
     bgrange=bgminmax+ [-1, 1]*dbg*0.3;
     bgrange(1)=max(bgrange(1), quantile(locsu.bg,0.0005)*0.9);

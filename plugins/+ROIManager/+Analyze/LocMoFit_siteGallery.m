@@ -386,7 +386,7 @@ function update_callback(a,b,obj, oneNp)
                     labels = {'ID','theta','curvature','radius','area'};
                     usedLabels = labels(p.labelOrder>0);
                     usedLabels((p.labelOrder(p.labelOrder>0))) = usedLabels;
-                    siteLabel = getLabels(subSites, usedLabels, s);
+                    siteLabel = getLabels(subSites, usedLabels, s, p);
                     posInPage = rem(s,nSitePage);
                     if posInPage==0
                         posInPage = nSitePage;
@@ -413,14 +413,14 @@ function update_callback(a,b,obj, oneNp)
     end
 end
 
-function siteLabel = getLabels(subSites, labels, siteInd)
+function siteLabel = getLabels(subSites, labels, siteInd, p)
 numOfUsedLabels = length(labels);
 for k = 1:numOfUsedLabels
     switch labels{k}
         case 'ID'
             oneLabel = ['Site ' num2str(siteInd)];
         case 'theta'
-            val = subSites(siteInd).evaluation.(p.fitterGUI_name.selection).fitInfo.derivedPars{1}.closingAngle_pub;
+            val = subSites(siteInd).evaluation.(p.fitterGUI_name.selection).fitInfo.derivedPars{1}.realCloseAngle;
             oneLabel = ['\theta = '  num2str(val, '%.1f') char(176)];
         case 'curvature'
             val = subSites(siteInd).evaluation.(p.fitterGUI_name.selection).fitInfo.derivedPars{1}.curvature;

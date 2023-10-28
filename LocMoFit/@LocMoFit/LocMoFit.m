@@ -161,8 +161,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             if model.dimension~=obj.dataDim
                 switch obj.dataDim
                     case 2
-                        error('Invalid: You are adding a 3D model for fitting 2D data.')
-                        return
+                        disp('You are adding a 3D model for fitting 2D data. The 2D projection of the model will be used as the PDF.')
                     case 3
                         obj.dataDim = 2;
                         disp('You are adding a 2D model for fitting 3D data. Switching to 2D fit.')
@@ -638,10 +637,10 @@ classdef LocMoFit<matlab.mixin.Copyable
                         lName = ismember(obj.allParsArg.name, name);
                         ind = find(lModel&lName);
                         val = obj.allParsArg.value(ind);
-                    elseif isfield(obj.fitInfo.modelPar_internal{str2num(model)}, name)
+                    elseif length(obj.fitInfo.modelPar_internal)>=str2num(model)&&isfield(obj.fitInfo.modelPar_internal{str2num(model)}, name)
                         val = obj.fitInfo.modelPar_internal{str2num(model)}.(name);
                         ind = ['.fitInfo.modelPar_internal{' model '}.' name];
-                    elseif isfield(obj.fitInfo.derivedPars{str2num(model)}, name)
+                    elseif length(obj.fitInfo.modelPar_internal)>=str2num(model)&&isfield(obj.fitInfo.derivedPars{str2num(model)}, name)
                         val = obj.fitInfo.derivedPars{str2num(model)}.(name);
                         ind = ['.fitInfo.derivedPars{' model '}.' name];
                     else
@@ -811,6 +810,14 @@ classdef LocMoFit<matlab.mixin.Copyable
         function saveInit(obj)
             obj.parsInit.init = obj.allParsArg.value;
         end
+
+        function lockInit(obj)
+            obj.parsInit.init_locked = obj.parsInit.init;
+        end
+
+        function unlockInit(obj)
+            obj.parsInit = rmfield(obj.parsInit, 'init_locked');
+        end
         
         function [parId,subParsArgTemp] = getAllParId(obj, modelnumber, varargin)
             % Export Id for all parameters given a model number
@@ -856,6 +863,9 @@ classdef LocMoFit<matlab.mixin.Copyable
                 case 'all'
                     flag = [1 1];
                     typeFlag = [1 1];
+                case 'nonLPar'
+                    flag = [1 1];
+                    typeFlag = [0 1];
             end
             
             parId = [];
@@ -1407,7 +1417,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             modCoord = transModPoint(obj, modCoord);
             
             for l = 1:length(obj.allModelLayer)                
-                if any(modCoord{l}.n>1)
+                if any(modCoord{l}.n~=1)
                     % locs.n scales to the number of labels at
                     % corresponding positions
                     repeatLabel = round(modCoord{l}.n./min(modCoord{l}.n));
@@ -1639,10 +1649,9 @@ classdef LocMoFit<matlab.mixin.Copyable
             obj.handles = rmfield(obj.handles,fn);
         end
         
-        function LLfit = loglikelihoodFun(obj, fitPars, compensationFactor, locs, varargin)
+        function [LLfit, prob] = loglikelihoodFun(obj, fitPars, compensationFactor, locs, varargin)
             % loglikelihoodFun computes the log-likelihood value of the
             % fit.
-            obj.currentFitPars = fitPars;
             p = inputParser;
             p.addParameter('expected',false);
             p.addParameter('dx',1);
@@ -1652,6 +1661,8 @@ classdef LocMoFit<matlab.mixin.Copyable
             if ~exist('fitPars', 'var')||isempty(fitPars)
                 fitPars = obj.allParsArg.value(~obj.allParsArg.fix)';
             end
+
+            obj.currentFitPars = fitPars;
             
             if ~exist('locs', 'var')||isempty(locs)
                 locs = obj.locs;
@@ -1811,6 +1822,46 @@ classdef LocMoFit<matlab.mixin.Copyable
                 settings = fieldnames(obj.model{modelID}.modelObj.internalSettings);
             else
                 settings = [];
+            end
+        end
+        function settings = getAllModelInternalSetting(obj)
+            % Get the list of the internal settings' name.
+            %
+            % --- Syntax ---
+            % settings = getModelInternalSettingList(obj, modelInd).
+            % 
+            % --- Description---
+            % settings: a list (string array) of the internal settings' name.
+            % obj: an LocMoFit object.
+            % modelID: the ID of the model.
+            settings = {};
+            for m = 1:obj.numOfModel
+                list_modIntSettings = obj.getModelInternalSettingList(m);
+                modIntSettings_currentMod = [];
+                for k = 1:length(list_modIntSettings)
+                    fn = list_modIntSettings{k};
+                    modIntSettings_currentMod.(fn) = obj.getModelInternalSetting(m, fn);
+                end
+                settings{m} = modIntSettings_currentMod;
+            end
+        end
+        function setAllModelInternalSetting(obj, settings)
+            % Get the list of the internal settings' name.
+            %
+            % --- Syntax ---
+            % settings = getModelInternalSettingList(obj, modelInd).
+            % 
+            % --- Description---
+            % settings: a list (string array) of the internal settings' name.
+            % obj: an LocMoFit object.
+            % modelID: the ID of the model.
+            for m = 1:obj.numOfModel
+                oneModSettings = settings{m};
+                fn = fieldnames(oneModSettings);
+                for k = 1:length(fn)
+                    val = oneModSettings.(fn{k});
+                    obj.setModelInternalSetting(m, fn{k}, val);
+                end
             end
         end
         function setModelInternalSetting(obj, modelInd, setting, value)
@@ -2029,6 +2080,12 @@ function out = defaultAdvanceSettings
     out.compiledMode.name = 'Compiled mode';
     out.compiledMode.description = 'Activate the compiled mode or not.';
     out.compiledMode.developer = true;
+
+    out.siteSpecificMode.option = {'on','off'};
+    out.siteSpecificMode.value = 'off';
+    out.siteSpecificMode.name = 'Site specific mode';
+    out.siteSpecificMode.description = 'Set to "on" to enable site specific parameter settings.';
+    out.siteSpecificMode.developer = true;
 end
 
 function [out,allOptions] = defaultLParSelection(parameterType)

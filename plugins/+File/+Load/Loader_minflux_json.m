@@ -43,21 +43,25 @@ function loadfile(obj,p,file)
 switch ext
     case '.mat'
         jt=load(file);
-        if ~isfield(jt,'loc') && isfield(jt,'itr')
-            
-            jt.itr.tim=jt.tim;
-            jt.itr.vld=jt.vld;
-            jt.itr.tid=jt.tid;
-            jt.itr.act=jt.act;
-            jt.itr.sky=jt.sky;
-            jt=jt.itr;
-        end
-        if p.alliter
-             loc=minfluxmat2loc_alliter(jt);
+        if isfield(jt,'bot') %new format
+            loc=minfluxmat2loc_mf3(jt);
         else
-            loc=minfluxmat2loc(jt,p.onlyvalid,~p.simple);
+            if ~isfield(jt,'loc') && isfield(jt,'itr')
+                
+                jt.itr.tim=jt.tim;
+                jt.itr.vld=jt.vld;
+                jt.itr.tid=jt.tid;
+                jt.itr.act=jt.act;
+                jt.itr.sky=jt.sky;
+                jt=jt.itr;
+            end
+            if p.alliter
+                 loc=minfluxmat2loc_alliter(jt);
+            else
+                loc=minfluxmat2loc(jt,p.onlyvalid,~p.simple);
+            end
         end
-       
+           
         xoff=min(loc.xnm(loc.vld));yoff=min(loc.ynm(loc.vld));
         loc.xnm=loc.xnm-xoff;
         loc.ynm=loc.ynm-yoff;
@@ -65,6 +69,7 @@ switch ext
             loc.xncnm=loc.xncnm-xoff;
             loc.yncnm=loc.yncnm-yoff;
         end
+        
     case '.json'
         txt=fileread(file);
         jt=jsondecode(txt);

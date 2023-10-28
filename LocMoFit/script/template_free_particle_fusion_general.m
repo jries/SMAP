@@ -1,5 +1,5 @@
-%% Tempalte-free particle fusion of NPC using LocMoFit
-% This script allows one to perform tempalte-free particle fusion using LocMoFit. Please make a copy before using this script and only work on the copy. Please define the parameters in the section of **Basic parameters** per task. After running through the analysis, you can find a the final average in the variable *finalAvg* in the _avg.mat file in ../analysis. finalAvg is a cell contains averages yeilded after all iterations. In the _avg.mat, the variable indBest tells you that finalAvg{indBest} is the best avarege, according to its mean log-likelihood.
+%% Template-free particle fusion of NPC using LocMoFit
+% This script allows one to perform template-free particle fusion using LocMoFit. Please make a copy before using this script and only work on the copy. Please define the parameters in the section of **Basic parameters** per task. After running through the analysis, you can find the final average in the variable *finalAvg* in the _avg.mat file in ../analysis. finalAvg is a cell contains averages yeilded after all iterations. In the _avg.mat, the variable indBest tells you that finalAvg{indBest} is the best avarege, according to its mean log-likelihood.
 %
 % Output files:
 %   * [anyIDYouLike]_preReg.mat: intermediate results of pre-registered pores.
@@ -8,16 +8,16 @@
 %   * [anyIDYouLike]_avg.mat: NPC averages.
 %
 % Last update:
-%   20.12.2022
+%   12.07.2023
 %
 % Version:
-%   v0.0.1
+%   v0.0.2
 %
 % Source:
 %   template_free_particle_fusion.m
 %
 % What's new
-%   The pre-registeration based on the dual-ring model is now disabled by default.
+%   The pre-registration based on the dual-ring model is now disabled by default.
 
 %% Basic parameters
 % Note: the following parameters are optimized. Do not change them
@@ -30,7 +30,7 @@ par.sml_dirPath = ':\path\to\the\folder\where\the\file\is\saved\'; % the path to
 par.sml_fileName = '_theFile_sml.mat';       % the name of the _sml.mat file.
 
 % data save related
-% locprecnm: localization presicion in the unit of nanometer.
+% locprecnm: localization precision in the unit of nanometer.
 par.save_wd = ':\template\analysis\';       % working directory without its drive letter
 par.save_drive = 'd';                       % the letter of the drive where the working directory is.
 par.save_name = 'anyIDYouLike';             % define the ID (used when saving) of the analysis here.
@@ -51,7 +51,7 @@ par.parFu_maxStall = 10;                    % maximum stall of improvement on th
 par.parFu_minImprov = 0.1;                  % maximum effective improvement of the LL.
 par.parFu_method_initSite = 'sumLL';        % metric used for building the intial model. Can be either 'sumLL' or 'sumRank'.
 par.parFu_useIsoLocprecnm = true;           % whether to use isotropic locprecnm (localization precision).
-par.parFu_correctOrientation = false;       % correct the orientation the average NPCs everytime after fusion. 
+par.parFu_correctOrientation = false;       % correct the orientation of the average NPCs every time after fusion. 
 par.parFu_preRegistration = false;           % determine the initial parameters of the registration based on the fit of the dual-ring model.
 
 % settings for the procedure control
@@ -119,7 +119,7 @@ disp('Interative registration starts...')
 [finalAvg, all2Avg_Par, all2Avg_LL, indBest] = iterReg(par, fitting_step2, refLocs, originalLocs, nUsedForAvg, iter, iterStall, lPars_preReg);
 
 %% Load the final average to SMAP
-loadAvg2SMAP(g, fitting_step1, fitting_step2, indBest, selectedSetInd,all2Avg_Par)
+loadAvg2SMAP
 disp('Particle fusion done.')
 
 
@@ -528,44 +528,6 @@ end
 end
 
 
-function loadAvg2SMAP(g, fitting_step1, fitting_step2, avg2show, selectedSetInd,all2Avg_Par)
-g.locData.loc.xnm_fusion = zeros(size(g.locData.loc.xnm));
-g.locData.loc.ynm_fusion = zeros(size(g.locData.loc.xnm));
-g.locData.loc.znm_fusion = zeros(size(g.locData.loc.xnm));
-offSetFromZero = 1000;
-se = g.locData.SE;
-for k = length(selectedSetInd):-1:1
-    indSite = selectedSetInd(k);
-    pos = se.sites(indSite).pos;
-    file = se.sites(indSite).info.filenumber;
-    
-    [locs, locsInd] = g.locData.getloc({'xnm','ynm','znm','locprecnm','channel','locprecznm'},'grouping','ungrouped','position',[pos(1:2) 150 150],'filenumber',file);
-    if k == length(selectedSetInd)
-        finalParInd = false(size(locsInd));
-    end
-    finalParInd = finalParInd|locsInd;
-    
-    locs.xnm = locs.xnm-pos(1);
-    locs.ynm = locs.ynm-pos(2);
-    
-    fitting_step2.allParsArg = all2Avg_Par{avg2show}{k};
-    locs = fitting_step2.locsHandler(locs,fitting_step2.exportPars(1,'lPar'),1);
-
-    g.locData.loc.xnm_fusion(locsInd) = locs.xnm;
-    g.locData.loc.ynm_fusion(locsInd) = locs.ynm;
-    g.locData.loc.znm_fusion(locsInd) = locs.znm;
-    
-    disp(['Site ' num2str(k) ' done!'])
-end
-[locs, ~] = g.locData.getloc({'xnm_fusion','ynm_fusion','znm_fusion','locprecnm','channel','locprecznm'},'grouping','ungrouped');
-locs = subsetStruct(locs, finalParInd);
-locs = RenameField(locs,{'xnm_fusion','ynm_fusion','znm_fusion','channel'},{'xnm','ynm','znm','layer'});
-locs.layer = locs.layer+1;
-locs = correctOrientation(fitting_step1, locs);
-g.locData.loc.xnm_fusion(finalParInd) = locs.xnm + offSetFromZero;
-g.locData.loc.ynm_fusion(finalParInd) = locs.ynm + offSetFromZero;
-g.locData.loc.znm_fusion(finalParInd) = locs.znm;
-end
 %%
 %
 function locs = transByp2pFit(fitter2, locs, modelPar)

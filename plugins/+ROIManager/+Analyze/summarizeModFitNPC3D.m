@@ -56,6 +56,8 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             bgDensity = numOfLocsLayer1.*bg./(pi*(p.se_siteroi/2)^2/1000^2);
             
             bgDensity_fitter = getFieldAsVectorInd(usedSites, ['evaluation.LocMoFitGUI_' whichLocMoFitGUI '.fitInfo.BGDensity'],1);
+
+            Nloc = getFieldAsVectorInd(usedSites, 'evaluation.generalStatistics.Nlayers',1);
             
             lOneRing = ringDist<=cutoffOneRing(1);
             largRingSep = ringDist>=cutoffOneRing(2);
@@ -63,27 +65,27 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             for k = find(lFailed)
                 usedSites(k).annotation.list3.value = 5;
             end
-
-            for k = find(lOneRing)'
-                % 7: one-ring detected by the z correction
-                % 8: one-ring detected by this plugin only
-                % 9: one-ring detected by both
-                if usedSites(k).annotation.list3.value == 7
-                    usedSites(k).annotation.list3.value = 9;
-                else
-                    usedSites(k).annotation.list3.value = 8;
-                end
-            end
-            for k = find(largRingSep)'
-                usedSites(k).annotation.list3.value = 4;
-            end
             list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
-
             if p.ringSepFiltering
-                lGood = list3 == 1;
-            else
-                lGood = true(size(list3));
+                lBad = list3 ~= 1;
             end
+            if p.ringSepFiltering
+                for k = find(lOneRing)'
+                    % 7: one-ring detected by the z correction
+                    % 8: one-ring detected by this plugin only
+                    % 9: one-ring detected by both
+                    if usedSites(k).annotation.list3.value == 7
+                        usedSites(k).annotation.list3.value = 9;
+                    else
+                        usedSites(k).annotation.list3.value = 8;
+                    end
+                end
+                for k = find(largRingSep)'
+                    usedSites(k).annotation.list3.value = 4;
+                end
+                list3 = getFieldAsVector(usedSites, 'annotation.list3.value');
+            end
+            lGood = list3 == 1;
             disp(['numOfSites = ' num2str(sum(lGood))])
             %% Shift the athimuthal angle periodically 
             medAzi_0 = 0;
@@ -98,6 +100,13 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
                 azi_new(azi_new>azi_ub) = azi_new(azi_new>azi_ub)-45;
                 azi_new(azi_new<azi_lb) = azi_new(azi_new<azi_lb)+45;
             end
+
+            % transform also the bad ones
+            azi_ub = medAzi+22.5;
+            azi_lb = medAzi-22.5;
+            azi_new_all = azi;
+            azi_new_all(azi>azi_ub) = azi(azi>azi_ub)-45;
+            azi_new_all(azi<azi_lb) = azi(azi<azi_lb)+45;
 
             %%
             %% Ring separation
@@ -144,7 +153,7 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
             binWidth = 2;
             bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
             histogram(ax3, par, bin_Edge)
-            title(ax3, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
+            title(ax3, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par)) ', median ' num2str(median(par),'%.1f')])
             xlabel(ax3, 'Radius (nm)')
             ylabel(ax3, 'Count')
             
@@ -185,6 +194,27 @@ classdef summarizeModFitNPC3D<interfaces.DialogProcessor&interfaces.SEProcessor
                 grid(ax5, 'off')
                 
             end
+
+            ax5 = obj.initaxis('r vs z');
+            rp = r(lGood);
+            zp= z(lGood);
+
+            scatter(ax5, zp, rp)
+            % title(ax5, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par)) ', median ' num2str(median(par),'%.1f')])
+            ylabel(ax5, 'Radius (nm)')
+            xlabel(ax5, 'z (nm)')
+
+
+            ax6 = obj.initaxis('Locs/pore');
+            par = Nloc(lGood);
+            binWidth = 2;
+            bin_Edge = floor(min(par)/binWidth)*binWidth:binWidth:ceil(max(par)/binWidth)*binWidth;
+            histogram(ax6, par, bin_Edge)
+            title(ax6, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par)) ,', median ' num2str(median(par),'%.1f')])
+            xlabel(ax6, 'Localizations / pore')
+            ylabel(ax6, 'Count')
+            out = [];
+
             
             clipboard('copy', sprintf('%.1f',medAzi))
         end

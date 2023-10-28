@@ -9,11 +9,7 @@ classdef sphericalCap3D_surfaceArea<geometricModel
     %   * mammalian endocytic coat
 	%
     % Preview:
-	% 	.. note::
-	% 		It will be available soon.
-	%
-	% ..
-    %   .. image:: ./images/models/sphericalCap3D_surfaceArea.PNG
+    %   .. image:: ./images/models/sphericalCap3D_surfaceArea.png
     %       :width: 400
     %   Scale bar: 50 nm.
 
@@ -45,7 +41,7 @@ classdef sphericalCap3D_surfaceArea<geometricModel
             closeAngle = par.closeAngle;
             lNeg = closeAngle<0;
             if lNeg
-                closeAngle = deg2rad(abs(closeAngle));
+                closeAngle = abs(closeAngle);
             end
             closeAngle = deg2rad(closeAngle);
             
@@ -127,11 +123,11 @@ classdef sphericalCap3D_surfaceArea<geometricModel
         end
         
         function derivedPars = getDerivedPars(obj, pars)
-		% For details, see :meth:`getDerivedPars`.
-
+            % Get extra parameters derived from the fit parameters.
+            %
             % Exports a empty variable when no derived parameters.
             % Last update:
-            %   08.11.2021
+            %   02.07.2023
             derivedPars.realSurfaceArea = pars.surfaceArea.*1e+4;
             derivedPars.curvature = 1./sqrt(derivedPars.realSurfaceArea./(2.*pi.*(1-cos(deg2rad(pars.closeAngle)))));
             if pars.closeAngle < 0
@@ -142,8 +138,8 @@ classdef sphericalCap3D_surfaceArea<geometricModel
             end
             derivedPars.radius = 1/derivedPars.curvature;
             
-            if derivedPars.realCloseAngle <= 90
-                derivedPars.projectionArea = pi*(derivedPars.radius*sin(deg2rad(derivedPars.realCloseAngle)))^2;
+            if derivedPars.realCloseAngle <= 0
+                derivedPars.projectionArea = pi*(derivedPars.radius*cos(deg2rad(-derivedPars.realCloseAngle-90)))^2;
             else
                 derivedPars.projectionArea = pi*derivedPars.radius^2;
             end
@@ -155,11 +151,12 @@ classdef sphericalCap3D_surfaceArea<geometricModel
             derivedPars.areaOneSideFree = radiusOneSideFree.^2*(2.*pi.*(1-cos(deg2rad(pars.closeAngle))));
             
             %% Final version used in publication
-            derivedPars.openRadius = abs(derivedPars.radius*sin(deg2rad(180-derivedPars.realCloseAngle)));
+            derivedPars.closingAngle_pub = derivedPars.realCloseAngle;
+            derivedPars.openRadius = abs(derivedPars.radius*sin(deg2rad(180-derivedPars.closingAngle_pub)));
             if ~isempty(obj.ParentObject)&&~isempty(obj.ParentObject.ParentObject)
                 locMoFitter = obj.ParentObject.ParentObject;
                 modID = obj.ParentObject.ID;
-                derivedPars.basePos = derivedPars.radius*sin(deg2rad(derivedPars.realCloseAngle))';
+                derivedPars.basePos = derivedPars.radius*sin(deg2rad(derivedPars.realCloseAngle-90))';
             end
         end
     end

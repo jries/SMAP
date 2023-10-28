@@ -214,6 +214,8 @@ classdef functionModel<SMLMModel
         function img = getImage(obj, mPars, varargin)
             saveCache = false;
             mode = 'regular';
+
+            % Make it compatible when no parent LocMoFit assigned
             if ~isempty(obj.ParentObject)
                 if isempty(obj.modelObj)
                     modelType = '';
@@ -241,7 +243,12 @@ classdef functionModel<SMLMModel
             % parse varargin
             p = inputParser;
             p.addParameter('pixelSize', obj.pixelSize);
-            p.addParameter('projection', 'none');
+            if obj.ParentObject.dataDim == 2 && obj.dimension == 3
+                p.addParameter('projection', 'xy');
+            else
+                p.addParameter('projection', 'none');
+            end
+
             if ~isempty(obj.ParentObject)
                 p.addParameter('roiSize', obj.ParentObject.roiSize);
             else
@@ -453,7 +460,7 @@ classdef functionModel<SMLMModel
                     sigmaFactor(1,2) = 0;
                 end
                 sigmaSet = locs.locprecnm;
-                if obj.dimension == 3
+                if obj.ParentObject.dataDim == 3
                     sigmaZSet = locs.locprecznm;
                 end
 
@@ -465,7 +472,7 @@ classdef functionModel<SMLMModel
                             % define the median locprec as the minimum
                             medSig = median(locs.locprecnm);
                             sigmaSet(sigmaSet<medSig)=medSig;
-                            if obj.dimension == 3
+                            if obj.ParentObject.dataDim == 3
                                 medSigz = median(locs.locprecznm);
                                 sigmaZSet(sigmaZSet<medSigz) = medSigz;
                             end
@@ -476,13 +483,13 @@ classdef functionModel<SMLMModel
             else
                 sigmaFactor = [1 0];
                 sigmaSet = obj.sigma;
-                if obj.dimension == 3
+                if obj.ParentObject.dataDim == 3
                     sigmaZSet = sigmaSet*obj.sigmaZFactor;
                 end
             end
             obj.sigmaFactor = sigmaFactor;
             obj.sigmaSet = sigmaSet;
-            if obj.dimension == 3
+            if obj.ParentObject.dataDim == 3
                 obj.sigmaZSet = sigmaZSet;
             end
         end

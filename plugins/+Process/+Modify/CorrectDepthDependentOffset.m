@@ -116,6 +116,37 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             xlabel(axRO, 'z position (nm)')
             ylabel(axRO, 'Relative offset (%)')
             legend([h h1 h3 h2],{'Cutoff','Move mean','Move robustMean','Move median'})
+
+            %% Reletive differece
+            axRD=obj.initaxis('Reletive difference');
+            relMeasuredDiff = (ringDistS1Z-expectSepZ)./expectSepZ;
+            lUpRight = rad2deg(sphEle)>-10;
+            
+            plotSElink(axRD, z(lUpRight),relMeasuredDiff(lUpRight)*100,ID(lUpRight)',se,' ob');
+            hold(axRD, 'on');
+            plot(axRD, z(~lUpRight),relMeasuredDiff(~lUpRight)*100,' or')
+            hold(axRD, 'off');
+            xlabel(axRD, 'z position (nm)')
+            ylabel(axRD, 'Relative different (%)')
+
+%             
+%             xx = getHistogramEdge(z,10);
+%             yy=bindata(z,relMeasuredOffset*100,xx,'mean');
+%             yy2=bindata(z,relMeasuredOffset*100,xx,'median');
+%             yy3=bindata(z,relMeasuredOffset*100,xx,'robustmean');
+%             
+%             plot(axRO, z,relMeasuredOffset*100,' ob') 
+% %             plotSElink(axRO, z,relMeasuredOffset*100,ID,se,' ob') 
+%             axRO.YLim = [-100 100];
+%             hold(axRO,'on')
+%             h1 = plot(axRO, xx,yy);
+%             h2 = plot(axRO, xx,yy2);
+%             h3 = plot(axRO, xx,yy3);
+%             h = yline(axRO, 100*(twoRingCutoff-expectSep)/twoRingCutoff);
+%             hold(axRO,'off')
+%             xlabel(axRO, 'z position (nm)')
+%             ylabel(axRO, 'Relative offset (%)')
+%             legend([h h1 h3 h2],{'Cutoff','Move mean','Move robustMean','Move median'})
             
             %% Correction factor
             axCF=obj.initaxis('Correction factor');

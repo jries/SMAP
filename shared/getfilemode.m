@@ -8,7 +8,7 @@ if strcmpi(ext,'.tif')
     emptylocs=false;
     return
 end
-if strcmpi(ext,'.mat')&& ((strcmp(f(end-3:end),'_sml') || contains(f,'_sml')) || ~isempty(regexp(file,'_sml_p\d*.mat')))
+if strcmpi(ext,'.mat')&& (contains(f,'_sml') || ~isempty(regexp(file,'_sml_p\d*.mat')))
     mode='sml';
     emptylocs=true;
     return
