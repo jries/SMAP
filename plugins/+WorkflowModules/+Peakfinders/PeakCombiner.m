@@ -334,7 +334,7 @@ cto=ct;
 end
 
 function  maximao=splitlocschannels(maxima,t)
-switch t.params.channel_arrange
+switch t.params.dual.channel_arrange
     case 'up-down'
         direction='ypix';
         mp=t.images_size(1);
@@ -346,7 +346,7 @@ end
 ind=maxima.(direction)<=mp;
 maximao(1)=copystructReduce(maxima,ind);
 maximao(2)=copystructReduce(maxima,~ind);
-if strcmp(t.params.mirrortype,'none')
+if strcmp(t.params.dual.mirrortype,'none')
     maximao(2).(direction)=maximao(2).(direction)-mp;
 else
     maximao(2).(direction)=2*mp-maximao(2).(direction);

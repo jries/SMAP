@@ -73,12 +73,12 @@ classdef RoiCutterWF<interfaces.WorkflowModule
             %also separated by (x,y,1,ch). 
              if size(image,4)~=length(maxima)
                  trafo=obj.getPar('loc_globaltransform');
-                 switch trafo.params.channel_arrange
+                 switch trafo.params.dual.channel_arrange
                      case 'up-down'
                         mp=trafo.images_size(1);
                         imnew(:,:,1,1)=image(1:mp,:);
                         imh=image(mp+1:end,:);
-                        if ~strcmp(trafo.params.mirrortype,'none')
+                        if ~strcmp(trafo.params.dual.mirrortype,'none')
                             imh=imh(end:-1:1,:);
                         end
                         imnew(:,:,1,2)=imh;  
@@ -86,7 +86,7 @@ classdef RoiCutterWF<interfaces.WorkflowModule
                          mp=trafo.images_size(2);
                         imnew(:,:,1,1)=image(:,1:mp);
                         imh=image(:,mp+1:end);
-                        if ~strcmp(trafo.params.mirrortype,'none')
+                        if ~strcmp(trafo.params.dual.mirrortype,'none')
                             imh=imh(:,end:-1:1);
                         end
                         imnew(:,:,1,2)=imh;  
