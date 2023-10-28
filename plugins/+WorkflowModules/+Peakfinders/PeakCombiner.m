@@ -42,7 +42,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                     elseif length(s)==3 %4Pi
                         obj.transform.T=double(cat(3,eye(3,3),permute(T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
                     end
-                    obj.transform.centercoord=l.res.imgcenter;
+                    obj.transform.centercoord=l.res.imgcenter([2,1,3]);
                     
                     obj.transform.params = jsondecode(h5readatt(p.Tfile,'/','params'));
                     obj.transform.images_size=double(l.rois.image_size(end:-1:1));
