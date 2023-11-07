@@ -18,6 +18,7 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
             ld=obj.locData.loc;
             sitenumbers=0*ld.xnm;
             cellnumbers=0*ld.xnm;
+            locMoFitPar = sitenumbers;
             siteorder=0*ld.xnm;
             roisize=obj.getPar('se_siteroi');
             fovsize=obj.getPar('se_sitefov');
@@ -40,6 +41,11 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
                 % look for overlapping sites, then use closest 
                 assignedind=(sitenumbers>0) & indh;  %later populate manually if too slow
                 
+                if p.lLocMoFitPar
+                    mp = 12;
+                    parName = 'ringDistance';
+                end
+
                 if any(assignedind)
                     newindall=find(indh);
                     oldsites=sitenumbers(assignedind);
@@ -58,10 +64,12 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
                     sitenumbers(newindall)=sites(k).ID;
                     siteorder(newindall)=k;
                     cellnumbers(newindall)=sites(k).info.cell;
+                    locMoFitPar(newindall)=sites(k).evaluation.LocMoFitGUI_3.allParsArg.value(mp);
                 else
                     sitenumbers(indh)=sites(k).ID;
                     siteorder(indh)=k;
                     cellnumbers(indh)=sites(k).info.cell;
+                    locMoFitPar(indh)=sites(k).evaluation.LocMoFitGUI_3.allParsArg.value(mp);
                 end
 
 
@@ -76,6 +84,9 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
             end
             if p.lSiteOrder
                 obj.locData.setloc('siteorder',siteorder);
+            end
+            if p.lLocMoFitPar
+                obj.locData.setloc([parName '_LocMoFitGUI_3'],locMoFitPar);
             end
             obj.locData.regroup;
           
@@ -110,6 +121,10 @@ pard.lSiteOrder.Width=1;
 pard.lCellNumber.object=struct('String','cell number','value',1,'Style','checkbox');
 pard.lCellNumber.position=[3,3];
 pard.lCellNumber.Width=1;
+
+pard.lLocMoFitPar.object=struct('String','LocMoFit','value',0,'Style','checkbox');
+pard.lLocMoFitPar.position=[3,4];
+pard.lLocMoFitPar.Width=1;
 
 pard.plugininfo.description='Adds two field to the localization data containing the site number and the cell number, respectively.';
 pard.plugininfo.type='ROI_Analyze';

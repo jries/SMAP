@@ -19,10 +19,10 @@ classdef summarize_MT3D<interfaces.DialogProcessor&interfaces.SEProcessor
             sites = se.sites;
             
             lUsed = getFieldAsVector(sites, 'annotation.use');
-            
             usedSites = sites(lUsed);
             fitInfo = getFieldAsVector(usedSites, 'evaluation.LocMoFitGUI_2.fitInfo');
             lFailed = cellfun(@(x)strcmp(x.guiInfo,'Fit or plot failed.'), fitInfo);
+            lGood = getFieldAsVector(sites,'annotation.list3.value')==1;
             evalList = se.processors.eval.guihandles.modules.Data(:,2);
             indProcessor = find(strcmp('LocMoFitGUI_2',evalList));
             
@@ -82,8 +82,8 @@ classdef summarize_MT3D<interfaces.DialogProcessor&interfaces.SEProcessor
                 hold(ax1, 'off')
                 legend(ax1,finalLabel(~cellfun(@isempty, finalLabel)))
             else
-                histogram(ax1, par, bin_Edge);
-                title(ax1, [sprintf('%.1f',mean(par)) '\pm' sprintf('%.1f', std(par))])
+                histogram(ax1, par(lGood), bin_Edge);
+                title(ax1, [sprintf('%.1f',mean(par(lGood))) '\pm' sprintf('%.1f', std(par(lGood)))])
             end
                 xlabel(ax1, 'Radius (nm)')
                 ylabel(ax1, 'Count')

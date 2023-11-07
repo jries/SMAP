@@ -1,18 +1,17 @@
 function [ax,finalImg] = plot(obj,locs,varargin)
-% :meth:`plot` visualize the fit result.
+% :meth:`plot` visualize the fitted model.
 %
 % Args:
 %   obj (:obj:`LocMoFit`): an object created by :meth:`LocMoFit`.
-%   locs (structure array): the typical localization structure array used
-%   in SMAP.
+%   locs (structure array): the typical localization structure array used in SMAP.
 %
 % Name-Value Arguments:
-%   bestPar
+%   bestPar (logical value): if true, the final parameter estimates will be used.
 %   lPars
 %   mPars
 %   plotType
-%   whichModel
-%   Projection
+%   whichModel 
+%   Projection (character vectors): either 'xy', 'xz', or 'yz'.
 %   pixelSize (numeric scalar): the pixel size of the rendered image. Default: determined by the :obj:`SMLMModel`.
 %   axes
 %   movModel
@@ -28,9 +27,15 @@ function [ax,finalImg] = plot(obj,locs,varargin)
 % Returns:
 %   ax (Axes object): the axes object where the fit is visualized.
 %   finalImg (structure array, numeric array): either a rendered image (numeric array) or a structure array representing the current model.
-%   
+%
+% Important:
+% 	For developers: currently this function can also export coordinates. This is somehow confusing. For compatibility, this function should keep the same input and output. However, in the future, it should be based on two parts: 1) exporting model points and 2) ploting based on the exported points. The second part is already there (see :meth:`rotCoordNMkImg`).
+%
+% Todo:
+%   Consider to combine this method with the :meth:`rotCoordNMkImg`.
+%
 % Last update:
-%   06.05.2022
+%   07.09.2022
 %
 
 %% PLOT Display the fit results
@@ -70,7 +75,7 @@ results = p.Results;
 whichModel = results.whichModel;
 projection = results.Projection;
 pixelSize = results.pixelSize;
-%% Check the model types and the number of layers
+%% [1] Check the model types and the number of layers
 % If any of the model is an image then display an image at the end.
 for k = obj.numOfModel:-1:1
     modelType{k} = obj.model{k}.modelType;
@@ -80,7 +85,7 @@ if ismember({'image'}, modelType)
     results.plotType = 'image';
 end
 allModelLayers = unique(modelLayer);
-%% Transform lPars to the shared coordinates system
+%% [2] Transforming lPars to the shared coordinates system
 % Only do lPars have additionality always move the model rather than the locs
 if results.bestPar
     lPars = {};
@@ -105,15 +110,18 @@ if results.bestPar
 else
     lPars = results.lPars;
 end
-%% Get images of the models
+%% [3] Getting images of the models
 % Image model should always display image visulization, while point model can 
 % display either image or point visulization.
 % Determine the image size
 modelType = obj.model{1}.modelType;
 modelDim = obj.model{1}.dimension;
-imgSize = size(obj.model{1}.img);
-if ~strcmp(modelType,'image')
+
+if strcmp(modelType,'image')
+    imgSize = size(obj.model{1}.img_dataDim);
     imgSize = imgSize./pixelSize;
+else
+    imgSize = repelem((obj.roiSize+2*obj.imgExtension), obj.dataDim)./pixelSize;
 end
 lParM1 = obj.exportPars(1,'lPar');
 if strcmp(modelType,'image')
@@ -131,9 +139,6 @@ if ~isempty(locs)
         newLocs = locs;
     end
 end
-if any(imgSize == 0)
-    imgSize = repelem((obj.roiSize+2*obj.imgExtension), modelDim)./pixelSize;
-end
 
 %% Get each model
 %         For the image type
@@ -150,30 +155,70 @@ if isequal(results.plotType,'image')
             if ~results.movModel
                 modelImage{k} = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
             else %!!! only for the tac figures
-                oneLPars = obj.exportPars(k,'lPar');
-                img = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
-                [X,Y] = meshgrid(1:imgSize(1),1:imgSize(2));
+                img = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize, 'projection', 'none');
+                artBoard_oneModel = zeros(size(img));
+
+                % copied from the code below
+                % translate lPar to mPar
+                oneLPars = obj.exportPars(k,'lPar');          % get lPars
+
+                % get unit grid points
+                if obj.model{k}.dimension == 3
+                    % for 3D
+                    imgSize_model = size(img);
+                    [X,Y,Z] = meshgrid(1:imgSize_model(1),1:imgSize_model(2),1:imgSize_model(3));
+                    oneLPars.z = oneLPars.z./pixelSize;
+
+                    ZMean = mean(Z(:));
+                    cenZ = Z-ZMean;
+                else
+                    % for 2D
+                    [X,Y] = meshgrid(1:imgSize(1),1:imgSize(2));
+                end
                 F = griddedInterpolant(img,'cubic', 'nearest');
-                xPos=oneLPars.x;
-                yPos=oneLPars.y;
-                zrot=oneLPars.zrot;
+
+                oneLPars.y = oneLPars.y./pixelSize;
+                oneLPars.x = oneLPars.x./pixelSize;
+
                 XMean = mean(X(:)); YMean = mean(Y(:));
                 cenX = X-XMean;
                 cenY = Y-YMean;
-                cenX = cenX-(xPos)./pixelSize;
-                cenY = cenY-(yPos)./pixelSize;
-                [cenX, cenY] = rotcoord(cenX(:),cenY(:),-zrot*pi/180);
-                valNew = F(cenX+XMean + results.shift(2)/pixelSize , cenY+YMean+results.shift(1)/pixelSize);
-                ind = sub2ind(imgSize, X(:),Y(:));
-                finalImg = artBoard;
-                finalImg(ind)=valNew;
+
+
+                if obj.model{k}.dimension == 3
+                    % for 3D
+                    cen.xnm = cenX(:);
+                    cen.ynm = cenY(:);
+                    cen.znm = cenZ(:);
+                    cen = obj.locsHandler(cen, oneLPars, [], 'usedformalism', 'rotationMatrixRev','order_transform', 'RT','dim',3);
+                    valNew = F(cen.xnm+XMean, cen.ynm+YMean, cen.znm+ZMean);
+                    ind = sub2ind(imgSize_model, X(:),Y(:),Z(:));
+                else
+                    % for 2D
+                    cen.xnm = cenX(:);
+                    cen.ynm = cenY(:);
+                    cen = obj.locsHandler(cen, oneLPars, [], 'dim',2);
+                    valNew = F(cen.xnm+XMean + results.shift(2)/pixelSize , cen.ynm+YMean+results.shift(1)/pixelSize);
+                    ind = sub2ind(imgSize, X(:),Y(:));
+                end
+
+                if obj.model{k}.dimension == 3 && obj.dataDim == 2
+                    artBoard_oneModel(ind) = valNew;
+                    valNew = sum(artBoard_oneModel, 3);
+                else
+                    artBoard_oneModel(ind) = valNew;
+                    valNew = artBoard_oneModel;
+                end
+                finalImg = artBoard+valNew;
                 modelImage{k} = finalImg;
+                
                 
             end
         else
             oneMPars = obj.exportPars(k,'mPar');
             img = obj.model{k}.getImage(oneMPars,'pixelSize', pixelSize,'roiSize',obj.roiSize);
-            
+            artBoard_oneModel = zeros(size(img));
+
             % translate lPar to mPar
             oneLPars = obj.exportPars(k,'lPar');          % get lPars
             
@@ -202,7 +247,7 @@ if isequal(results.plotType,'image')
             cenY = Y-YMean;
             
             
-            if isfield(newLocs,'znm')
+            if obj.model{k}.dimension == 3
                 % for 3D
                 [cenX, cenY, cenZ] = rotcoord3(cenX(:),cenY(:),cenZ(:),deg2rad(xrot),deg2rad(yrot),deg2rad(zrot),'XYZ');
                 valNew = F(cenX+XMean-(xPos)./pixelSize, cenY+YMean-(yPos)./pixelSize, cenZ+ZMean-(zPos)./pixelSize);
@@ -213,8 +258,14 @@ if isequal(results.plotType,'image')
                 valNew = F(cenX+XMean-(xPos)./pixelSize + results.shift(2)/pixelSize , cenY+YMean-(yPos)./pixelSize+results.shift(1)/pixelSize);
                 ind = sub2ind(imgSize, X(:),Y(:));
             end
-            finalImg = artBoard;
-            finalImg(ind) = valNew;
+            
+            if obj.model{k}.dimension == 3 && obj.dataDim == 2
+                artBoard_oneModel(ind) = valNew;
+                valNew = sum(artBoard_oneModel, 3);
+            else
+                valNew(ind) = valNew;
+            end
+            finalImg = artBoard+valNew;
             modelImage{k} = finalImg;
         end
     end
@@ -365,6 +416,7 @@ else
     % display all others
     %         newLocs.xnm(~ismember(locs.layer, allModelLayers))
     finalImg = layerPoint;
+    warning('Exporting model points using obj.plot() is not recommended anymore. Please use obj.getLayerPoint() instead.')
 end
 if ~results.doNotPlot
     axis(ax,'equal')

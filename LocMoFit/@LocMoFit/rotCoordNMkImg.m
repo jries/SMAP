@@ -1,16 +1,15 @@
 function [ax, v, info] = rotCoordNMkImg(obj, varargin)
+% :meth:`rotCoordNMkImg` rotates model points :param:`modCoord` and localziations :param:`locsCoord` based on the user-specified angles :param:`rotVizAlt` and then plot the rendered image into the axes :param:`ax`.
 % 
 % Usage:
-%   rotCoordNMkImg(obj, ax, modCoord, locsCoord, rotVizAlt, pixelSize, mode,
-% section, lut)
+%   rotCoordNMkImg(obj, ax, modCoord, locsCoord, rotVizAlt, pixelSize, mode, section, lut)
 %
 % Args:
-%   ax:
-%   modCoord:
-%   locsCoord:
-%   rotVizAlt: a vecotr of [az el], where az stands for azimuth and
-%   elevation angles.
-%   pixelSize:
+%   ax (axes object): axes to plot into.
+%   modCoord (structure array): it should have fields of 'x', 'y', 'z' and 'n'. The size of the array corresponds to the number of models.
+%   locsCoord (structure array): a typical locs structure arrary. It should include fields of 'xnm', 'ynm', 'znm', 'locprecnm' and 'locprecznm'. 
+%   rotVizAlt (numeric vecotr): a vecotr of [az el], where az stands for azimuth and elevation angles.
+%   pixelSize (numeric scalar): the pixel size of the image to be rendered.
 %   mode:
 %   section:
 %   lut:
@@ -141,6 +140,10 @@ switch mode
     case 'Data'
         v = zeros([obj.roiSize./pixelSize obj.roiSize./pixelSize]);
         % Deal with locs
+        % Remove unwanted fields
+        fn = fieldnames(locsCoord);
+        l_fn2rm = ismember(fn,{'xnm','ynm','znm','locprecnm','locprecznm','layer'});
+        locsCoord = rmfield(locsCoord, fn(~l_fn2rm));
         for k = 1:max(locsCoord.layer)
             lLayer = locsCoord.layer==k;
             locsCoordSub = subsetStruct(locsCoord, lLayer&lSectionLocs);

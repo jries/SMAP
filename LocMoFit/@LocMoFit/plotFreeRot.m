@@ -138,8 +138,8 @@ end
 % 
 function locsViz = pointViz(ax, locs, obj)
     cla(ax)
-    [~,modViz] = obj.plot(ax, locs,'plotType','point','modelSamplingFactor',0.3); % get point type visualization
-%     modViz = obj.getLayerPoint(0.75); % get point type visualization
+    obj.plot(ax, locs,'plotType','point','modelSamplingFactor',0.3); % point plot of the model
+    modViz = obj.getLayerPoint(0.3); % get point type visualization
     axes(ax)
     legend({'Model','Data'})
     lPars = obj.exportPars(1,'lPar');

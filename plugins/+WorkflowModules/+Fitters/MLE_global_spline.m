@@ -80,8 +80,12 @@ classdef MLE_global_spline<interfaces.WorkflowFitter
                      out=fitwrapper_4pi(imstack,obj.fitpar,stackinfo,varstack);
                      locs=fit2locs_4pi(out,stackinfo,obj.fitpar,imstack);
                 otherwise
-            out=fitwrapper_global(imstack,obj.fitpar,stackinfo,varstack);
-            locs=fit2locs_global(out,stackinfo,obj.fitpar,imstack);
+                    if length(stackinfo)>1
+                        out=fitwrapper_global_newT(imstack,obj.fitpar,stackinfo,varstack);
+                    else
+                        out=fitwrapper_global(imstack,obj.fitpar,stackinfo,varstack);
+                    end
+                    locs=fit2locs_global(out,stackinfo,obj.fitpar,imstack);
             end
         end
 
@@ -138,9 +142,9 @@ dn=ceil((s(1)-1)/2)*v1;
 
 shiftx=0;%-0.5; %deviation from ground truth
 shifty=0;%-0.5;
-posx=stackinfo.xpix(results.indused)+shiftx;
-posy=stackinfo.ypix(results.indused)+shifty;
-frame=stackinfo.frame(results.indused);
+posx=stackinfo(1).xpix(results.indused)+shiftx;
+posy=stackinfo(1).ypix(results.indused)+shifty;
+frame=stackinfo(1).frame(results.indused);
 P=results.P;
 EMexcess=fitpar.EMexcessNoise;
 CRLB=results.CRLB;
@@ -178,6 +182,9 @@ switch fitpar.mode
         namesav={'ypix','xpix','PSFxpix','phot'};
     
     case {'Spline','cspline'}
+        if ~isfield(fitpar.splinefithere,'normf')
+            fitpar.splinefithere.normf=[1 1];
+        end
         fac{4}=EMexcess*fitpar.splinefithere.normf;
         fac{5}=EMexcess;
         faccrlb{4}=EMexcess;
@@ -511,6 +518,133 @@ out.color=color;
 out.llsecond=llsecond;
 end
  
+function out=fitwrapper_global_newT(imstack,fitpar,stackinfo,varstack)
+numberOfChannels=length(stackinfo);
+nfits=size(imstack,3);
+imfit=imstack;
+
+EMexcess=fitpar.EMexcessNoise;
+if isempty(EMexcess)
+    EMexcess=1;
+end
+         
+channelshift=zeros(2,2,(nfits)); %only pass on for x,y
+channelshift(1,1,:)=stackinfo(1).dy; %for nonrounding
+channelshift(2,1,:)=stackinfo(1).dx;
+channelshift(1,2,:)=stackinfo(2).dy;
+channelshift(2,2,:)=stackinfo(2).dx;
+
+% imfit(:,:,:,1)=imstack(:,:,1:numberOfChannels:end);
+% if isfield(fitpar,'mirrorud') && fitpar.mirrorud
+%     imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
+%     channelshift(1,2,:)=-channelshift(1,2,:);
+%     mirr=2;
+% elseif isfield(fitpar,'mirror')  %now only mirror channel two!
+%     mirr=fitpar.mirror{2};
+%     if length(mirr)>1
+%         mirr=mirr(1)+2*mirr(2);
+%     end
+%     switch mirr
+%         case 0 %no mirror
+%             imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
+%         case 1 %righ-left mirror
+%             imfit(:,:,:,2)=imstack(:,end:-1:1,2:numberOfChannels:end);
+%             channelshift(2,2,:)=-channelshift(2,2,:);
+%         case 2 %up-down mirror
+%             imfit(:,:,:,2)=imstack(end:-1:1,:,2:numberOfChannels:end);
+%             channelshift(1,2,:)=-channelshift(1,2,:);
+%     end
+% else
+%     imfit(:,:,:,2)=imstack(:,:,2:numberOfChannels:end);
+% end
+
+% if fitpar.isscmos %mirror varmap if required
+%     varfit(:,:,:,1)=varstack(:,:,1:numberOfChannels:end);
+%     mirr=fitpar.mirror{2};
+%     if length(mirr)>1
+%         mirr=mirr(1)+2*mirr(2);
+%     end
+%     switch mirr
+%         case 0 %no mirror
+%             varfit(:,:,:,2)=varstack(:,:,2:numberOfChannels:end);
+%         case 1 %righ-left mirror
+%             varfit(:,:,:,2)=varstack(:,end:-1:1,2:numberOfChannels:end);
+%         case 2 %up-down mirror
+%             varfit(:,:,:,2)=varstack(end:-1:1,:,2:numberOfChannels:end);
+%     end
+% else 
+    varfit=[];
+% end
+
+
+if fitpar.weightsch(1)~=1
+    imfit(:,:,:,1)=imfit(:,:,:,1)*fitpar.weightsch(1);
+%     varfit(:,:,:,1)=varfit(:,:,:,1)*fitpar.weightsch(1);
+end
+if fitpar.weightsch(2)~=1
+    imfit(:,:,:,2)=imfit(:,:,:,2)*fitpar.weightsch(2);
+%     varfit(:,:,:,2)=varfit(:,:,:,2)*fitpar.weightsch(2);
+end
+
+numframes=size(imfit,3); 
+sharedA=fitpar.link(1:5)';
+out.indused=1:numframes;   
+%imstack, fittype, sharedflag, iterations, spline coefficients, channelshift,
+%cmos varmap, silent,zstart,photratios
+
+arguments{1}=imfit/EMexcess; %imagestack
+arguments{3}=uint32(sharedA);
+arguments{4}=uint32(fitpar.iterations);
+arguments{6}=single(channelshift);
+arguments{7}=varfit; %sCMOS varmap
+arguments{8}=1; %silent
+
+
+switch fitpar.mode
+    case 'Gauss'
+        arguments{2}=uint32(1);
+        arguments{5}=single(fitpar.PSFx0);
+        arguments{9}=[];
+        arguments{10}=fitpar.PhotonRatios;
+    case {'Spline','cspline'}
+        arguments{2}=uint32(2);
+        arguments{5}=single(fitpar.splinefithere.coeff);    
+        arguments{9}=fitpar.zstart/fitpar.dz;
+        if ~isfield(fitpar.splinefithere,'normf')
+            fitpar.splinefithere.normf=[1 1];
+        end
+        arguments{10}=fitpar.PhotonRatios/fitpar.splinefithere.normf(2);
+    otherwise
+        disp('fitmode not implemented for global fitting')
+end
+
+[P, CRLB, LogL, color,llsecond]=fitpar.fitfunction(arguments{:});
+
+%subtract dT for y
+if fitpar.link(1)
+    P(:,1)=P(:,1)+squeeze(channelshift(1,1,:));
+    ind2=1;
+else
+    P(:,1)=P(:,1)+squeeze(channelshift(1,1,:));
+    P(:,2)=P(:,2)+squeeze(channelshift(1,1,:));
+    ind2=2;
+end
+
+%subtract dT for x
+if fitpar.link(2)
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(channelshift(2,1,:));
+else
+    P(:,ind2+1)=P(:,ind2+1)+squeeze(channelshift(2,1,:));
+    P(:,ind2+2)=P(:,ind2+2)+squeeze(channelshift(2,1,:));
+end
+
+out.P=P;
+out.CRLB=CRLB;
+out.LogL=LogL;
+out.color=color;
+out.llsecond=llsecond;
+end
+ 
 function out=fitwrapper_4pi(imstack,fitpar,stackinfo,varstack)
 numberOfChannels=size(fitpar.splinefithere.coeff.phaseshifts,2);
 nfits=ceil(size(imstack,3)/numberOfChannels);
@@ -637,14 +771,15 @@ ph=fileparts(p.cal_3Dfile);
 if ~exist(ph,'file')
     p.cal_3Dfile= [fileparts(obj.getPar('loc_outputfilename')) filesep '*.mat'];
 end
-[f,p]=uigetfile(p.cal_3Dfile);
+filter={'*3Dcal.mat;psfmodel*.h5'};
+[f,pfad]=uigetfile(filter,'load 3D calibration file',p.cal_3Dfile);
 if f
-    l=load([p f]);
-    if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
-        msgbox('no 3D data recognized. Select other file.');
-    end
-    obj.setGuiParameters(struct('cal_3Dfile',[p f]));
-     obj.setPar('cal_3Dfile',[p f]); 
+%     l=load([p f]);
+%     if ~isfield(l,'outforfit') && ~isfield(l,'SXY') && ~isfield(l,'cspline')
+%         msgbox('no 3D data recognized. Select other file.');
+%     end
+    obj.setGuiParameters(struct('cal_3Dfile',[pfad f]));
+     obj.setPar('cal_3Dfile',[pfad f]); 
 end
 end
 
@@ -677,80 +812,101 @@ if fitpar.fitmode==2 %calibration file
      fitpar.isscmos= p.isscmos;
   
     calfile=p.cal_3Dfile;
-    cal=load(calfile);
-
-    fitpar.objPos=0;
-    if isfield(cal,'outforfit')
-        fitpar.zpar{1,1}=cal.outforfit;
-        fitpar.mode='zcal';
-    elseif isfield(cal,'SXY')
-        if p.isglobal 
-            SS=cal.SXY_g;
-        else
-            SS=cal.SXY;
-        end
-        s=size(SS);
-        Z=1;
-
-        for X=s(1):-1:1
-            for Y=s(2):-1:1
-                    if isfield(cal.SXY(X,Y,Z),'gauss_zfit')
-                        zpar{X,Y}=SS(X,Y,Z).gauss_zfit;
-                    else
-                        zpar{X,Y}=[];
-                    end
-
-                cs=SS(X,Y,Z).cspline;
-                if iscell(cs.coeff)
-                    coeff(:,:,:,:,1)=cs.coeff{1};
-                    coeff(:,:,:,:,2)=cs.coeff{2};
-                    cs.coeff=single(coeff);
-                end
-                splinefit{X,Y}=cs;
-                obj.spatialXrange{X,Y}=SS(X,Y).Xrange;
-                obj.spatialYrange{X,Y}=SS(X,Y).Yrange;
-            end
-        end
-        if ~isempty(splinefit{1})
-            fitpar.dz=splinefit{1}.dz;
-            fitpar.z0=splinefit{1}.z0;
-            fitpar.splinefit=splinefit;
-        end
-        fitpar.zpar=zpar;
-
-        if numel(SS)>1
-            obj.spatial3Dcal=true;
-        else
-            obj.spatial3Dcal=false;
-        end
-
-        fitpar.EMon=SS(1).EMon;
-        fitpar.mode='cspline';
-    elseif isfield(cal,'cspline')
-        fitpar.zpar{1}=cal.gauss_zfit;
-        fitpar.dz=cal.cspline.dz;
-        fitpar.z0=cal.cspline.z0;
-        fitpar.splinefit{1}=cal.cspline_all;
-        if ~isfield(fitpar.splinefit{1}.cspline,'isEM')
-            fitpar.splinefit{1}.cspline.isEM=false;
-        end
-        fitpar.EMon=false;
-        fitpar.mode='csplineold';
-    elseif isfield(cal,'cal4pi')
-        fitpar.mode='4pi';
-        fitpar.splinefit{1}=cal.cal4pi;
-        fitpar.EMon=cal.EMon;
-        fitpar.dz=cal.cal4pi.dz;
-        fitpar.z0=cal.cal4pi.z0;
+    [~,~,ext]=fileparts(calfile);
+    switch ext
+        case '.mat'
+            cal=load(calfile);
         
-        savefit=copyfields([],cal.cal4pi,{'dz','z0','x0','transformation'});
-        savefit=copyfields(savefit,cal.cal4pi.coeff,{'frequency','phaseshifts'});
-        savefit.cal_3Dfile=p.cal_3Dfile;
-        obj.setPar('savefit',struct('cal3D',savefit));
-    else
-        disp('no calibration found')
-
+            fitpar.objPos=0;
+            if isfield(cal,'outforfit')
+                fitpar.zpar{1,1}=cal.outforfit;
+                fitpar.mode='zcal';
+            elseif isfield(cal,'SXY')
+                if p.isglobal 
+                    SS=cal.SXY_g;
+                else
+                    SS=cal.SXY;
+                end
+                s=size(SS);
+                Z=1;
+        
+                for X=s(1):-1:1
+                    for Y=s(2):-1:1
+                            if isfield(cal.SXY(X,Y,Z),'gauss_zfit')
+                                zpar{X,Y}=SS(X,Y,Z).gauss_zfit;
+                            else
+                                zpar{X,Y}=[];
+                            end
+        
+                        cs=SS(X,Y,Z).cspline;
+                        if iscell(cs.coeff)
+                            coeff(:,:,:,:,1)=cs.coeff{1};
+                            coeff(:,:,:,:,2)=cs.coeff{2};
+                            cs.coeff=single(coeff);
+                        end
+                        splinefit{X,Y}=cs;
+                        obj.spatialXrange{X,Y}=SS(X,Y).Xrange;
+                        obj.spatialYrange{X,Y}=SS(X,Y).Yrange;
+                    end
+                end
+                if ~isempty(splinefit{1})
+                    fitpar.dz=splinefit{1}.dz;
+                    fitpar.z0=splinefit{1}.z0;
+                    fitpar.splinefit=splinefit;
+                end
+                fitpar.zpar=zpar;
+        
+                if numel(SS)>1
+                    obj.spatial3Dcal=true;
+                else
+                    obj.spatial3Dcal=false;
+                end
+        
+                fitpar.EMon=SS(1).EMon;
+                fitpar.mode='cspline';
+            elseif isfield(cal,'cspline')
+                fitpar.zpar{1}=cal.gauss_zfit;
+                fitpar.dz=cal.cspline.dz;
+                fitpar.z0=cal.cspline.z0;
+                fitpar.splinefit{1}=cal.cspline_all;
+                if ~isfield(fitpar.splinefit{1}.cspline,'isEM')
+                    fitpar.splinefit{1}.cspline.isEM=false;
+                end
+                fitpar.EMon=false;
+                fitpar.mode='csplineold';
+            elseif isfield(cal,'cal4pi')
+                fitpar.mode='4pi';
+                fitpar.splinefit{1}=cal.cal4pi;
+                fitpar.EMon=cal.EMon;
+                fitpar.dz=cal.cal4pi.dz;
+                fitpar.z0=cal.cal4pi.z0;
+                
+                savefit=copyfields([],cal.cal4pi,{'dz','z0','x0','transformation'});
+                savefit=copyfields(savefit,cal.cal4pi.coeff,{'frequency','phaseshifts'});
+                savefit.cal_3Dfile=p.cal_3Dfile;
+                obj.setPar('savefit',struct('cal3D',savefit));
+            else
+                disp('no calibration found')
+        
+            end
+        case '.h5'
+            val=loadh5(calfile);
+            params = jsondecode(h5readatt(calfile,'/','params'));
+%             nch=1:size(val.locres.coeff,1);
+%             for k=nch
+                fitpar.splinefit{1}.dz=params.pixel_size.z*1000;
+%                 coeffh=squeeze(val.locres.coeff(k,:,:,:,:));
+                fitpar.splinefit{1}.coeff=squeeze(permute(val.locres.coeff,[5,4,3,2,1]));
+    %                 fitpar.splinefit{1}.cspline.coeff=permute(val.locres.coeff,[3,4,2,1]); %XXXXXXXX
+                fitpar.splinefit{1}.z0=ceil(size(val.locres.coeff,3)/2);
+%             end
+            fitpar.dz=params.pixel_size.z*1000;
+            fitpar.z0=fitpar.splinefit{1}.z0;
+            fitpar.mode='cspline';
+            %XXXX 4Pi: set to
+%             fitpar.mode='4pi';
     end
+            
 
     %load sCMOS
     if p.isscmos

@@ -7,6 +7,11 @@ classdef dualRing3D_discrete<geometricModel
     %   * `radius`: (nm) the radius of the rings.
 	%   * `cornerDegree`: (°) the rotational offset between two copies per corner.
 	%
+	% Internal settings:
+	%	* copyPerCorner: (integer values) the copy number of the protein per corner. For example, *2* (default).
+	% 	* cornerNum: (integer values) the number of corners. For example, *8* (default).
+	% 	* useSecondRing: (logical) *true* if the second ring is to be used in the model. For example, *true* (default).
+	%
     % Relavent biological structure:
     %   * the nuclear pore complex
 	%

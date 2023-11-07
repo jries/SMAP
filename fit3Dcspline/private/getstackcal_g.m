@@ -143,7 +143,10 @@ sstack=size(beads(1).stack.image);
     centpsfr=corrPSFr(rangex,rangey,z-1:z+1); %cut out rim from shift    
     minPSFr=min(centpsfr(:),[],'omitnan');
     corrPSFnr=corrPSFr-minPSFr;
-    intglobalr=mean(sum(sum(corrPSFnr(rangex,rangey,z-1:z+1),1,'omitnan'),2,'omitnan'),'omitnan');
+    % intglobalr=mean(sum(sum(corrPSFnr(rangex,rangey,z-1:z+1),1,'omitnan'),2,'omitnan'),'omitnan');
+%request from Yiming 19.8.23: use max
+%     intglobalr=max(sum(sum(corrPSFnr(rangex,rangey,:),1,'omitnan'),2,'omitnan'),'omitnan');
+    intglobalr=max(sum(corrPSFnr(rangex,rangey,:),[1 2],'omitnan'),[], 'omitnan');
     corrPSFnr=corrPSFnr/intglobalr;   
     shiftedstack(1:size(allrois,1),:,:,:)=(shiftedstack(1:size(allrois,1),:,:,:)-minPSFr)/intglobalr;
     corrPSFnr(isnan(corrPSFnr))=0;
@@ -194,7 +197,8 @@ sstack=size(beads(1).stack.image);
         centpsft=corrPSFt(rangex,rangey,z-1:z+1);
         minPSFt=min(centpsft(:),[],'omitnan');
         corrPSFnt=corrPSFt-minPSFt;
-        intglobalt=mean(sum(sum(corrPSFnt(rangex,rangey,z-1:z+1),1,'omitnan'),2,'omitnan'),'omitnan');
+        % intglobalt=mean(sum(sum(corrPSFnt(rangex,rangey,z-1:z+1),1,'omitnan'),2,'omitnan'),'omitnan');
+                intglobalt=max(sum(sum(corrPSFnt(rangex,rangey,:),1,'omitnan'),2,'omitnan'),'omitnan');
         %normalize also by the same as reference!
 %         intglobalt=intglobalr;
         corrPSFnt=corrPSFnt/intglobalr;

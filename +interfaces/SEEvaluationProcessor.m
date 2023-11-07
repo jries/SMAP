@@ -126,7 +126,12 @@ classdef SEEvaluationProcessor<interfaces.GuiModuleInterface & interfaces.LocDat
             else
                 pos=p.position;
             end
-            [locsh, indloc]=obj.locData.getloc(fields,parameters{:},'removeFilter',{'filenumber'});
+            if ~iscell(p.removeFilter)
+                p.removeFilter={p.removeFilter};
+            end
+            p.removeFilter{end+1}='filenumber';
+
+            [locsh, indloc]=obj.locData.getloc(fields,parameters{:},'removeFilter',p.removeFilter);
         
             inroi=true;
             if ischar(p.size)&&contains(p.size,'freeroi')
@@ -198,6 +203,7 @@ addParameter(p,'channel',[]);
 addParameter(p,'rotate',false);
 addParameter(p,'size',[]);
 addParameter(p,'position',[]);
+addParameter(p,'removeFilter',{});
    parse(p,args{:});
    pres=p.Results;
 end

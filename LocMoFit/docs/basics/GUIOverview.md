@@ -68,7 +68,7 @@ Here you will see the following:
 :::
 
 ### Tab _[Settings]_
-![settings](../images/LocMoFit_settings.PNG)
+![settings](../images/LocMoFit_settings.png)
 
 In this tab, you can set up settings beyond specific models and have a global control of the current LocMoFitGUI instance.
 Here you will see the following:
@@ -77,7 +77,7 @@ Here you will see the following:
  * buttons **load** and **save** allow you to load and save the entire settings.
  * a button **advanced** for advanced settings. Usually you don't have to touch this part. If you click it, you will get a list of advanced settings in a new pop-up window.
  * a checkbox _Review only_. Check it if you have fitted the current site and just want to review the fit.
- * a checkbox _Transform_. Check it if you would like to transform the site based on the model with the final parameter estimates.
+ * a checkbox _Register_. Check it if you would like to register the site based on the model with the final parameter estimates.
  * a table of _Layer background_. This is similar to a general {doc}`parameter table<../basics/parTable>`.
 
 ### Tab _[Convert]_

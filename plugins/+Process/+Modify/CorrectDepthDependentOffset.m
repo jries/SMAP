@@ -13,7 +13,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             %% internal parameters
             expectSep = 49.3;
             fixTwoRingCutoff = true;    % true for fixing the cutoff at twoRingCutoff; false for calculating the cutoff using getOneRingCutoff().
-            twoRingCutoff = 35;
+            twoRingCutoff = p.ringSep;
             
             %% Get info from LocMoFit
             se = obj.SE;
@@ -46,10 +46,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             
             % convert the rotation to the same as in the spherical
             % coordinate system
-            [x,y,z] = rotcoord3(0,0,-1, deg2rad(xrot), deg2rad(yrot), 0, 'XYZ');
-            [~,eleOri,~] = cart2sph(0,0,-1);
-            [azi,ele,~] = cart2sph(x,y,z);
-            sphEle = -(ele-eleOri);
+            sphEle = getEleAngle(xrot, yrot);
             
             % z component of the ring distance
             ringDistS1Z = ringDistS1.*cos(sphEle');
@@ -74,7 +71,7 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
                 twoRingCutoff = intersection;
             end
             lTwoRing = ringDistS1>twoRingCutoff;
-            lGood = lTwoRing&abs(z)<150;
+            lGood = lTwoRing&abs(z)<p.depth & -rad2deg(sphEle')<p.tilt;
             
             %% measured relative offset
             relMeasuredOffset = (ringDistS1Z-expectSepZ)./ringDistS1Z;
@@ -119,6 +116,37 @@ classdef CorrectDepthDependentOffset<interfaces.DialogProcessor&interfaces.SEPro
             xlabel(axRO, 'z position (nm)')
             ylabel(axRO, 'Relative offset (%)')
             legend([h h1 h3 h2],{'Cutoff','Move mean','Move robustMean','Move median'})
+
+            %% Reletive differece
+            axRD=obj.initaxis('Reletive difference');
+            relMeasuredDiff = (ringDistS1Z-expectSepZ)./expectSepZ;
+            lUpRight = rad2deg(sphEle)>-10;
+            
+            plotSElink(axRD, z(lUpRight),relMeasuredDiff(lUpRight)*100,ID(lUpRight)',se,' ob');
+            hold(axRD, 'on');
+            plot(axRD, z(~lUpRight),relMeasuredDiff(~lUpRight)*100,' or')
+            hold(axRD, 'off');
+            xlabel(axRD, 'z position (nm)')
+            ylabel(axRD, 'Relative different (%)')
+
+%             
+%             xx = getHistogramEdge(z,10);
+%             yy=bindata(z,relMeasuredOffset*100,xx,'mean');
+%             yy2=bindata(z,relMeasuredOffset*100,xx,'median');
+%             yy3=bindata(z,relMeasuredOffset*100,xx,'robustmean');
+%             
+%             plot(axRO, z,relMeasuredOffset*100,' ob') 
+% %             plotSElink(axRO, z,relMeasuredOffset*100,ID,se,' ob') 
+%             axRO.YLim = [-100 100];
+%             hold(axRO,'on')
+%             h1 = plot(axRO, xx,yy);
+%             h2 = plot(axRO, xx,yy2);
+%             h3 = plot(axRO, xx,yy3);
+%             h = yline(axRO, 100*(twoRingCutoff-expectSep)/twoRingCutoff);
+%             hold(axRO,'off')
+%             xlabel(axRO, 'z position (nm)')
+%             ylabel(axRO, 'Relative offset (%)')
+%             legend([h h1 h3 h2],{'Cutoff','Move mean','Move robustMean','Move median'})
             
             %% Correction factor
             axCF=obj.initaxis('Correction factor');
@@ -351,6 +379,14 @@ function val = rotConversion(x,v)
     val = sqrt((v(1)-x)^2+(v(2)-y)^2+(v(3)-z)^2);
 end
 
+function sphEle = getEleAngle(xrot, yrot)
+% get the elevation angle based on the intrinsic paramters
+    [x,y,z] = rotcoord3(0,0,-1, deg2rad(xrot), deg2rad(yrot), 0, 'XYZ');
+    [~,eleOri,~] = cart2sph(0,0,-1);
+    [~,ele,~] = cart2sph(x,y,z);
+    sphEle = -(ele-eleOri);
+end
+
 function pard=guidef
 
 pard.preview.object=struct('String','Preview','Style','checkbox');
@@ -362,6 +398,28 @@ pard.t_highlight.position=[3,1];
 
 pard.highlight.object=struct('String','','Style','edit');
 pard.highlight.position=[3,2];
+
+pard.t_criteria.object=struct('String','Criteria (NPC exclusion):','Style','text');
+pard.t_criteria.position=[5,1];
+pard.t_criteria.Width=1.5;
+
+pard.t_ringSep.object=struct('String','Ring separation (nm)','Style','text');
+pard.t_ringSep.position=[6,1];
+
+pard.ringSep.object=struct('String','35','Style','edit');
+pard.ringSep.position=[6,2];
+
+pard.t_depth.object=struct('String','Depth (nm)','Style','text');
+pard.t_depth.position=[7,1];
+
+pard.depth.object=struct('String','150','Style','edit');
+pard.depth.position=[7,2];
+
+pard.t_tilt.object=struct('String','Tilt (degree)','Style','text');
+pard.t_tilt.position=[8,1];
+
+pard.tilt.object=struct('String','inf','Style','edit');
+pard.tilt.position=[8,2];
 
 pard.plugininfo.type='ProcessorPlugin';
 

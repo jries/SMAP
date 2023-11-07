@@ -35,6 +35,18 @@ function pard=guidef(obj)
 
     pard.flip.object = struct('Style','pushbutton','String', 'Flip','Callback', {{@flip_callback,obj}});
     pard.flip.position=[1,1];
+    
+    pard.t_smoothFactor.object = struct('Style','text','String', 'Smooth factor');
+    pard.t_smoothFactor.position=[2,1];
+
+    pard.smoothFactor.object = struct('Style','edit','String', 1e-5);
+    pard.smoothFactor.position=[2,2];
+
+    pard.t_window.object = struct('Style','text','String', 'Window');
+    pard.t_window.position=[3,1];
+
+    pard.window.object = struct('Style','edit','String', 500);
+    pard.window.position=[3,2];
 
     pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi'};
     pard.plugininfo.type='ROI_Evaluate';

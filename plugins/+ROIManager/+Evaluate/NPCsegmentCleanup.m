@@ -177,9 +177,15 @@ smav=sqrt(prod(sm));
 
 goodsize=smav>p.minsize;
 goodlocs=length(xm)>p.minlocs;
-mpsf=mean(locs.PSFxnm);
 
-goodpsf=mpsf<=p.maxPSF;
+if isfield(locs, 'PSFxnm')&& ~isempty(locs.PSFxnm)
+    mpsf=mean(locs.PSFxnm);
+    
+    goodpsf=mpsf<=p.maxPSF;
+else
+    goodpsf = true;
+    mpsf=0;
+end
 usethis=goodradius&goodout&goodin&goodsize&goodlocs & goodpsf;
     savefield='list4';
 obj.site.annotation.(savefield).value=usethis+1;

@@ -32,3 +32,9 @@ if ~isdeployed
     writelines(output, [folder_LocMoFit 'modelList.m'])
 end
 end
+
+function writelines(lines, filename)
+    fid = fopen(filename,'wt');
+    fprintf(fid, lines);
+    fclose(fid);
+end

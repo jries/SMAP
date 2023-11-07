@@ -84,7 +84,8 @@ classdef csplineClosedTube3D_midPoint<geometricModel
                     end
                     if ismember(k, [1 size(diffVector,1)])
                         % add hemisphere to the ends of the tube
-                        [x,y,z] = hemisphere(par.r, locsPrecFactor,dx);
+                        [x,y,z] = hemisphere(par.r, locsPrecFactor,dx*0.95);
+                        z = z-0.5;
                         temp = T*[z; y; x; ones(size(z))];
                         point_hs= [point_hs; temp(1:end-1,:)'];
                     else

@@ -13,9 +13,10 @@ classdef MotorPAINT<interfaces.DialogProcessor
         function out=run(obj,p)  
             out=[];
 
-            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','znm','time','frame'},'layer',1,'Position','fov');
+            [locs,indin]=obj.locData.getloc({'numberInGroup','groupindex','xnm','ynm','znm','time','frame','tid'},'layer',1,'Position','fov');
             findin=find(indin);
-            gn=unique(locs.groupindex(locs.numberInGroup>=p.minlen));
+            gn=unique(locs.tid(locs.numberInGroup>=p.minlen));
+%             gn=unique(locs.groupindex(locs.numberInGroup>=p.minlen));
             isz=~isempty(locs.znm);
             
             locsout.xnm=[];
@@ -36,7 +37,8 @@ classdef MotorPAINT<interfaces.DialogProcessor
                 obj.locData.setloc('tracklength',0*obj.locData.loc.xnm)
             end
             for k=1:length(gn)
-                indh=locs.groupindex==gn(k);
+                indh=locs.tid==gn(k);
+%                 indh=locs.groupindex==gn(k);
 
                 if p.skipfirst>0
                     outn=find(indh,p.skipfirst,'first');

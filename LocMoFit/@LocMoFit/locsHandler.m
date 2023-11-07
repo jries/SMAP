@@ -20,18 +20,19 @@ p.addParameter('usedformalism','rotationMatrix');
 p.addParameter('target','locs');                % can be either 'locs' or 'model'; not used anymore
 p.addParameter('order_transform','TR');
 p.addParameter('onlyLocpre',false);
+p.addParameter('dim', obj.dataDim)
 
 parse(p, varargin{:});
 % need to implement scaling and weight            % !!! this might not be necessary
 zrot = deg2rad(lParsVal.zrot);                      % from degree to radians
-if obj.dataDim == 3
+if p.Results.dim == 3
     xrot = deg2rad(lParsVal.xrot);                  % the same
     yrot = deg2rad(lParsVal.yrot);
 end
 
 if isfield(locs, 'locprecnm')
     locs.locprecnm = sqrt(locs.locprecnm.^2+lParsVal.variation.^2);
-    if obj.dataDim == 3
+    if p.Results.dim == 3
         if any(locs.locprecznm==0)
             locs.locprecznm = locs.locprecnm*3;
             disp('locprecznm is missing: locprecnm*3 is used as locprecznm.')
@@ -47,7 +48,7 @@ end
 % shift the coordinates
 x = locs.xnm;
 y = locs.ynm;
-if obj.dataDim == 3
+if p.Results.dim == 3
     z = locs.znm;
 end
 
@@ -70,25 +71,25 @@ switch action
     case 'translation'
         x = x+sign*lParsVal.x;
         y = y+sign*lParsVal.y;
-        if obj.dataDim == 3
+        if p.Results.dim == 3
             z = z+sign*lParsVal.z;
         end
 %Scaling
     case 'scaling'
         x = x.*(lParsVal.xscale.^sign);
         y = y.*(lParsVal.yscale.^sign);
-        if obj.dataDim == 3
+        if p.Results.dim == 3
             z = z.*(lParsVal.zscale.^sign);
         end
 %Rotation
     case 'rotation'
         usedformalism = p.Results.usedformalism;
-        if obj.dataDim == 2
+        if p.Results.dim == 2
             [x,y] = rotcoord2(x,y,sign*zrot');
         else
             switch usedformalism
                 case 'legacy'
-                    if obj.dataDim == 3
+                    if p.Results.dim == 3
                         xrot = deg2rad(lParsVal.xrot);                  % the same
                         yrot = deg2rad(lParsVal.yrot);
                         z = locs.znm;
@@ -111,6 +112,19 @@ switch action
                     x = x';
                     y = y';
                     z = z';
+                    flag = 1;
+                case 'lieAlgebra'
+                    k = [lParsVal.xrot lParsVal.yrot lParsVal.zrot];
+                    xyz = [x y z];
+                    xyz_o = xyz;
+                    xyz = rodriguesRot(xyz,k);
+                    theta = norm(k);
+                    k = k./theta;
+                    R = rodringues2rotMat(k,theta);
+                    xyz2 = R*xyz_o';
+                    x = xyz(:,1);
+                    y = xyz(:,2);
+                    z = xyz(:,3);
                     flag = 1;
                 case 'quaternion'
                     qk = lParsVal.zrot;
@@ -176,7 +190,7 @@ end
 l = l+1;
 end
 %% Output
-if obj.dataDim == 3
+if p.Results.dim == 3
     locs.znm = z;
 end
 locs.xnm = x;

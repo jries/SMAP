@@ -1,6 +1,7 @@
 classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
     properties
         fig = gobjects(1);
+        fitterGUI_name
     end
     methods
         function obj=siteGallery_mCME(varargin)        
@@ -29,6 +30,7 @@ classdef siteGallery_mCME<interfaces.DialogProcessor&interfaces.SEProcessor
             
             % [to-do] allow selection
             fitterGUI_name = 'LocMoFitGUI_2';
+            obj.fitterGUI_name = fitterGUI_name;
             %fitterGUI_name = 'LocMoFitGUI';
             eval = obj.locData.SE.processors.eval.guihandles.modules.Data(:,2);
             idxFitterGUI = strcmp(fitterGUI_name,eval);
@@ -255,6 +257,7 @@ end
 
 function update_callback(a,b,obj, oneNp)
     global pan pantext
+    fitterGUI_name = obj.fitterGUI_name;
     se = obj.locData.SE;
     p = obj.getAllParameters;
     fitter = obj.getPar('fitter');
@@ -391,7 +394,7 @@ function update_callback(a,b,obj, oneNp)
                     labels = {'ID','theta','curvature','radius','area'};
                     usedLabels = labels(p.labelOrder>0);
                     usedLabels((p.labelOrder(p.labelOrder>0))) = usedLabels;
-                    siteLabel = getLabels(subSites, usedLabels, s);
+                    siteLabel = getLabels(subSites, usedLabels, s, fitterGUI_name, fitter);
                     posInPage = rem(s,nSitePage);
                     if posInPage==0
                         posInPage = nSitePage;
@@ -418,14 +421,18 @@ function update_callback(a,b,obj, oneNp)
     end
 end
 
-function siteLabel = getLabels(subSites, labels, siteInd)
+function siteLabel = getLabels(subSites, labels, siteInd, fitterGUI_name, fitter)
 numOfUsedLabels = length(labels);
 for k = 1:numOfUsedLabels
     switch labels{k}
         case 'ID'
             oneLabel = ['Site ' num2str(siteInd)];
         case 'theta'
-            val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.closingAngle_pub;
+            if isa(fitter.model{1}.modelObj, 'sphericalCap3D_surfaceArea')
+                val = subSites(siteInd).evaluation.(fitterGUI_name).allParsArg.value(13);
+            elseif isa(fitter.model{1}.modelObj, 'CME3DSphereCoverageArea_discrete')
+                val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.closingAngle_pub;
+            end
             oneLabel = ['\theta = '  num2str(val, '%.1f') char(176)];
         case 'curvature'
             val = subSites(siteInd).evaluation.(fitterGUI_name).fitInfo.derivedPars{1}.curvature;

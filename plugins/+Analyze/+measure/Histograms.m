@@ -56,7 +56,7 @@ classdef Histograms<interfaces.DialogProcessor
                 [~, indmax]=max(h.Values);
                 fitr=2; range=(max(1,indmax-fitr):min(length(h.Values),indmax+fitr))';
                 nrange=n(range)+BinWidth/2;hrange=h.Values(range)';
-                fitp=fit(nrange,hrange,'poly2');
+                fitp=fit(double(nrange),double(hrange),'poly2');
                 maxval=-fitp.p2/fitp.p1/2;    
                 plot(axis1,nrange,fitp(nrange))
                 legends{2*k}=['fit ' num2str(maxval,2)];
@@ -100,7 +100,7 @@ classdef Histograms<interfaces.DialogProcessor
             
             pard.plugininfo.name='Histograms';
             pard.plugininfo.description='Calculates histograms and statistics for any localization attribute (field)';
-            pard.plugininfo.type='Histograms'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
+            pard.plugininfo.type='ProcessorPlugin'; %type of plugin. Currently: ProcessorPlugin, WorkflowModule, WorkflowFitter, Renderer, LoaderPlugin, SaverPlugin, ROI_Analyze, ROI_Evaluate,WorkflowIntensity
   
             pard.syncParameters={{'locFields','locfield',{'String'}}};
             

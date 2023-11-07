@@ -161,8 +161,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             if model.dimension~=obj.dataDim
                 switch obj.dataDim
                     case 2
-                        error('Invalid: You are adding a 3D model for fitting 2D data.')
-                        return
+                        disp('You are adding a 3D model for fitting 2D data. The 2D projection of the model will be used as the PDF.')
                     case 3
                         obj.dataDim = 2;
                         disp('You are adding a 2D model for fitting 3D data. Switching to 2D fit.')
@@ -407,21 +406,34 @@ classdef LocMoFit<matlab.mixin.Copyable
 
         function deriveSigma(obj, locs)
             for m = 1:obj.numOfModel
-                obj.model{m}.deriveSigma(locs);
+                if ~strcmp(obj.model{m}.modelType, 'image')
+                    obj.model{m}.deriveSigma(locs);
+                end
             end
         end
         
         %% Parameter related methods
-        function parsArg = subParsArg(obj, model, varargin)
+        function parsArg = subParsArg(obj, modelId, varargin)
+            % This method subsets the :attr:allParsArg list.
+            %
+            % Usage:
+            %   subParsArg(obj, model, varargin)
+            %
+            % Args:
+            %   obj(:class:LocMoFit): a LocMoFit object.
+            %   modelId: the ID of a loaded model. 
+            %   Name-value pairs:
+            %       * 'Type': one of 'lPar' and 'mPar'.
+
             p = inputParser;
             p.addParameter('Type', []);
             parse(p, varargin{:})
             results = p.Results;
            
-            if isempty(model)% for layer settings
+            if isempty(modelId)% for layer settings
                 lModel = obj.allParsArg.model > 90;
             else
-                lModel = obj.allParsArg.model == model;
+                lModel = obj.allParsArg.model == modelId;
             end
             
             if isempty(results.Type)
@@ -435,8 +447,67 @@ classdef LocMoFit<matlab.mixin.Copyable
             end
         end
         
-        function defineRotPar(obj)
-            
+        function preFittingConversion(obj)
+            switch obj.dataDim % This should be dimension
+                case 2
+                    % do nothing if 2D
+                    obj.setTemp('freeRot', false)
+                case 3
+                    v = zeros([1 3]);
+                    [~,v(1)] = obj.getVariable('m1.xrot');
+                    [~,v(2)] = obj.getVariable('m1.yrot');
+                    [~,v(3)] = obj.getVariable('m1.zrot');
+                    val_fix = obj.allParsArg.fix(v);
+                    val_min = obj.allParsArg.min(v);
+                    val_max = obj.allParsArg.max(v);
+                    val_lb = obj.allParsArg.lb(v);
+                    val_ub = obj.allParsArg.ub(v);
+                    val = obj.allParsArg.value(v);
+                    if all([val_min;val_lb]==-inf) && all([val_max;val_ub]==inf) && all(~val_fix)
+                        if any(val~=0)
+                            R = rotAng2rotMat(val(1), val(2), val(3), 'XYZ');
+                            k = rotMat2AxisAng(R(1:3,1:3));
+                            xrot = k(1); yrot = k(2); zrot = k(3);
+                        else
+                            xrot = 1e-6; yrot = xrot; zrot = xrot;
+                        end
+                        obj.setParArg('m1.lPar.xrot', 'value', xrot, 'min', -4*pi, 'max', 4*pi)
+                        obj.setParArg('m1.lPar.yrot', 'value', yrot, 'min', -4*pi, 'max', 4*pi)
+                        obj.setParArg('m1.lPar.zrot', 'value', zrot, 'min', -4*pi, 'max', 4*pi)
+                        obj.setTemp('freeRot', true)
+                    else
+                        obj.setTemp('freeRot', false)
+                    end
+            end
+        end
+
+        function parBestFit = postFittingConversion(obj, parBestFit)
+            if obj.getTemp('freeRot')
+                switch obj.dataDim % This should be dimension
+                    case 2
+                        % do nothing if 2D
+                        obj.setTemp('freeRot', false)
+                    case 3
+                        indFit = ~obj.allParsArg.fix;
+                        values = obj.allParsArg.value;
+                        values(indFit) = parBestFit;
+                        [~,ind_xrot] = obj.getVariable('m1.xrot');
+                        [~,ind_yrot] = obj.getVariable('m1.yrot');
+                        [~,ind_zrot] = obj.getVariable('m1.zrot');
+                        k = [values(ind_xrot) values(ind_yrot) values(ind_zrot)];
+                        obj.setTemp('k', k)
+                        theta = norm(k);
+                        k = k./theta;
+                        R = rodringues2rotMat(k,theta);
+                        [xrot,yrot,zrot] = rotMat2Ang(R, 'rotationMatrixRev');
+                        values([ind_xrot ind_yrot ind_zrot]) = [xrot yrot zrot];
+                        parBestFit = values(indFit)';
+                        obj.setParArg('m1.lPar.xrot', 'value', xrot, 'min', -inf, 'max', inf)
+                        obj.setParArg('m1.lPar.yrot', 'value', yrot, 'min', -inf, 'max', inf)
+                        obj.setParArg('m1.lPar.zrot', 'value', zrot, 'min', -inf, 'max', inf)
+                end
+            end
+            obj.setTemp('freeRot', false)
         end
         
         function [lb,ub,value, min, max] = prepFit(obj)
@@ -566,10 +637,10 @@ classdef LocMoFit<matlab.mixin.Copyable
                         lName = ismember(obj.allParsArg.name, name);
                         ind = find(lModel&lName);
                         val = obj.allParsArg.value(ind);
-                    elseif isfield(obj.fitInfo.modelPar_internal{str2num(model)}, name)
+                    elseif length(obj.fitInfo.modelPar_internal)>=str2num(model)&&isfield(obj.fitInfo.modelPar_internal{str2num(model)}, name)
                         val = obj.fitInfo.modelPar_internal{str2num(model)}.(name);
                         ind = ['.fitInfo.modelPar_internal{' model '}.' name];
-                    elseif isfield(obj.fitInfo.derivedPars{str2num(model)}, name)
+                    elseif length(obj.fitInfo.modelPar_internal)>=str2num(model)&&isfield(obj.fitInfo.derivedPars{str2num(model)}, name)
                         val = obj.fitInfo.derivedPars{str2num(model)}.(name);
                         ind = ['.fitInfo.derivedPars{' model '}.' name];
                     else
@@ -739,6 +810,14 @@ classdef LocMoFit<matlab.mixin.Copyable
         function saveInit(obj)
             obj.parsInit.init = obj.allParsArg.value;
         end
+
+        function lockInit(obj)
+            obj.parsInit.init_locked = obj.parsInit.init;
+        end
+
+        function unlockInit(obj)
+            obj.parsInit = rmfield(obj.parsInit, 'init_locked');
+        end
         
         function [parId,subParsArgTemp] = getAllParId(obj, modelnumber, varargin)
             % Export Id for all parameters given a model number
@@ -761,15 +840,36 @@ classdef LocMoFit<matlab.mixin.Copyable
             results = p.Results;
             
             switch results.type
+                % flag: a two-element logical vector. If element 1 is true
+                % , the IDs of 'main parameters' will be returned; if
+                % element 2 is true, the IDs of 'auxiliary parameters' will
+                % be returned.
+                %
+                % typeFlag: a two-element logical vector. If element 1 is
+                % true, the IDs of 'lPar' will be returned; if element 2 is
+                % true, the IDs of 'mPar' will be returned.
+                case 'lPar'
+                    flag = [1 0];
+                    typeFlag = [1 0];
+                case 'mPar'
+                    flag = [1 0];
+                    typeFlag = [0 1];
                 case 'main'
                     flag = [1 0];
-                case 'all'
-                    flag = [1 1];
+                    typeFlag = [1 1];
                 case 'auxiliary'
                     flag = [0 1];
+                    typeFlag = [0 0];
+                case 'all'
+                    flag = [1 1];
+                    typeFlag = [1 1];
+                case 'nonLPar'
+                    flag = [1 1];
+                    typeFlag = [0 1];
             end
             
             parId = [];
+            parType = [];
             if flag(1)
                 % Main parameters
                 if exist('modelnumber','var')&&~isempty(modelnumber)
@@ -785,12 +885,33 @@ classdef LocMoFit<matlab.mixin.Copyable
                     end
 
                     for l = length(subParsArg.model):-1:1
-                        parId{l} = ['m' modelnumberStr '.' subParsArg.type{l} '.' subParsArg.name{l}];
+                        parType{l} = subParsArg.type{l};
+                        parId{l,1} = ['m' modelnumberStr '.' subParsArg.type{l} '.' subParsArg.name{l}];
                     end
                 else
+                    parType = obj.allParsArg.type;
                     parId = strcat('m', cellstr(string(obj.allParsArg.model)), '.', obj.allParsArg.type, '.', obj.allParsArg.name);
                     subParsArgTemp = obj.allParsArg;
-                end 
+                end
+
+                % Keep the specified parameter type(s)
+                l_lPar = strcmp(parType,'lPar');
+                l_mPar = strcmp(parType,'mPar');
+                l_offset = strcmp(parType,'offset');
+                parId_lPar = parId(l_lPar);
+                parId_mPar = parId(l_mPar);
+                parId_offset = parId(l_offset);
+                parId = [];
+
+                if typeFlag(1)
+                    parId = [parId; parId_lPar];
+                end
+                
+                if typeFlag(2)
+                    parId = [parId; parId_mPar];
+                end
+
+                parId = [parId; parId_offset];
             end
             
             if flag(2)
@@ -1296,7 +1417,7 @@ classdef LocMoFit<matlab.mixin.Copyable
             modCoord = transModPoint(obj, modCoord);
             
             for l = 1:length(obj.allModelLayer)                
-                if any(modCoord{l}.n>1)
+                if any(modCoord{l}.n~=1)
                     % locs.n scales to the number of labels at
                     % corresponding positions
                     repeatLabel = round(modCoord{l}.n./min(modCoord{l}.n));
@@ -1528,10 +1649,9 @@ classdef LocMoFit<matlab.mixin.Copyable
             obj.handles = rmfield(obj.handles,fn);
         end
         
-        function LLfit = loglikelihoodFun(obj, fitPars, compensationFactor, locs, varargin)
+        function [LLfit, prob] = loglikelihoodFun(obj, fitPars, compensationFactor, locs, varargin)
             % loglikelihoodFun computes the log-likelihood value of the
             % fit.
-            obj.currentFitPars = fitPars;
             p = inputParser;
             p.addParameter('expected',false);
             p.addParameter('dx',1);
@@ -1541,6 +1661,8 @@ classdef LocMoFit<matlab.mixin.Copyable
             if ~exist('fitPars', 'var')||isempty(fitPars)
                 fitPars = obj.allParsArg.value(~obj.allParsArg.fix)';
             end
+
+            obj.currentFitPars = fitPars;
             
             if ~exist('locs', 'var')||isempty(locs)
                 locs = obj.locs;
@@ -1700,6 +1822,46 @@ classdef LocMoFit<matlab.mixin.Copyable
                 settings = fieldnames(obj.model{modelID}.modelObj.internalSettings);
             else
                 settings = [];
+            end
+        end
+        function settings = getAllModelInternalSetting(obj)
+            % Get the list of the internal settings' name.
+            %
+            % --- Syntax ---
+            % settings = getModelInternalSettingList(obj, modelInd).
+            % 
+            % --- Description---
+            % settings: a list (string array) of the internal settings' name.
+            % obj: an LocMoFit object.
+            % modelID: the ID of the model.
+            settings = {};
+            for m = 1:obj.numOfModel
+                list_modIntSettings = obj.getModelInternalSettingList(m);
+                modIntSettings_currentMod = [];
+                for k = 1:length(list_modIntSettings)
+                    fn = list_modIntSettings{k};
+                    modIntSettings_currentMod.(fn) = obj.getModelInternalSetting(m, fn);
+                end
+                settings{m} = modIntSettings_currentMod;
+            end
+        end
+        function setAllModelInternalSetting(obj, settings)
+            % Get the list of the internal settings' name.
+            %
+            % --- Syntax ---
+            % settings = getModelInternalSettingList(obj, modelInd).
+            % 
+            % --- Description---
+            % settings: a list (string array) of the internal settings' name.
+            % obj: an LocMoFit object.
+            % modelID: the ID of the model.
+            for m = 1:obj.numOfModel
+                oneModSettings = settings{m};
+                fn = fieldnames(oneModSettings);
+                for k = 1:length(fn)
+                    val = oneModSettings.(fn{k});
+                    obj.setModelInternalSetting(m, fn{k}, val);
+                end
             end
         end
         function setModelInternalSetting(obj, modelInd, setting, value)
@@ -1918,6 +2080,12 @@ function out = defaultAdvanceSettings
     out.compiledMode.name = 'Compiled mode';
     out.compiledMode.description = 'Activate the compiled mode or not.';
     out.compiledMode.developer = true;
+
+    out.siteSpecificMode.option = {'on','off'};
+    out.siteSpecificMode.value = 'off';
+    out.siteSpecificMode.name = 'Site specific mode';
+    out.siteSpecificMode.description = 'Set to "on" to enable site specific parameter settings.';
+    out.siteSpecificMode.developer = true;
 end
 
 function [out,allOptions] = defaultLParSelection(parameterType)

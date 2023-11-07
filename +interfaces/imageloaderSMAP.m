@@ -123,7 +123,7 @@ classdef imageloaderSMAP<interfaces.GuiParameterInterface
                     for k=length(numbers):-1:1
                         imh=loadfun(numbers(k));
                         if ~isempty(imh)
-                        images(:,:,k)=imh;
+                        images(:,:,k,:)=imh;
                         else
                             loadfun=@obj.getimage;
                         end

@@ -17,12 +17,6 @@
 load('sampledata_npc.mat'); % The data is stored in a struct called 'data'
 data
 
-polygon=data.spacewin;
-ps.p=polyshape(polygon.x,polygon.y);
-ps.type='polyshape';
-data.spacewin=ps;
-
-
 %% Optionally draw a new spatial window / ROI. Skip this step to use the one from the paper.
 % spacewin_gui is a helper gui for drawing spatial windows that may have
 % holes or multiple disjoint segments. Press 'save and close' when
