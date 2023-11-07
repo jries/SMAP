@@ -136,7 +136,7 @@ for phot=1:length(PhotonRatios)
     end
     LogLp(:,phot)=LogLh;
 end
-
+clear GPUmleFit_LM_MultiChannel CPUmleFit_LM_MultiChannel
 if photonratiofixed
     if fittype >1
         zstarth=P(:,3);

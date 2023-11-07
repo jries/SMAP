@@ -115,8 +115,8 @@ classdef driftcorrectionXYZ<interfaces.DialogProcessor
                     end
                     obj.locData.files.file(k).driftinfo=driftinfoh;
                     fn=lochere.files.file(1).name;
-                    if contains(fn,'_sml')
-                        fnn=strrep(fn,'_sml','_driftc_sml');
+                    if contains(fn,'_sml.mat')
+                        fnn=strrep(fn,'_sml.mat','_driftc_sml.mat');
                     elseif contains(fn,'fitpos')
                         fnn=strrep(fn,'fitpos','driftc_sml');
                     else

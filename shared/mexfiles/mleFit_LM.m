@@ -114,6 +114,9 @@ if narginh>6 && ~isempty(varargin{7}) && (fitmode==5 || fitmode==6) %only for sp
     zstart=single(z0+coeffsize(3)/2);
 elseif (fitmode==5 || fitmode==6) 
     zstart=single(coeffsize(3)/2);
+    Nz = coeffsize(3);
+    pixelsize_z = 0.05;
+    zstart = linspace(-Nz*pixelsize_z/2,Nz*pixelsize_z/2,round(Nz*pixelsize_z/0.5))*0.8/pixelsize_z+Nz/2;
 else
     zstart=0;
 end

@@ -894,13 +894,13 @@ if fitpar.fitmode==2 %calibration file
             params = jsondecode(h5readatt(calfile,'/','params'));
 %             nch=1:size(val.locres.coeff,1);
 %             for k=nch
-                fitpar.splinefit{1}.dz=params.pixelsize_z*1000;
+                fitpar.splinefit{1}.dz=params.pixel_size.z*1000;
 %                 coeffh=squeeze(val.locres.coeff(k,:,:,:,:));
                 fitpar.splinefit{1}.coeff=squeeze(permute(val.locres.coeff,[5,4,3,2,1]));
     %                 fitpar.splinefit{1}.cspline.coeff=permute(val.locres.coeff,[3,4,2,1]); %XXXXXXXX
                 fitpar.splinefit{1}.z0=ceil(size(val.locres.coeff,3)/2);
 %             end
-            fitpar.dz=params.pixelsize_z*1000;
+            fitpar.dz=params.pixel_size.z*1000;
             fitpar.z0=fitpar.splinefit{1}.z0;
             fitpar.mode='cspline';
             %XXXX 4Pi: set to
