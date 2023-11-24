@@ -93,8 +93,13 @@ if p.makeT || isempty(p.Tfile)
 else
     l=load(p.Tfile);
     transform=l.transformation;
-    p.Tmode=transform.tinfo.mirror.targetmirror;
-    p.Tsplitpos=transform.tinfo.separator;
+    % p.Tmode=transform.tinfo.mirror.targetmirror;
+    p.Tmode='right-left';% XXXX for biplane
+    if isfield(transform.tinfo,'separator')
+        p.Tsplitpos=transform.tinfo.separator;
+    else
+        p.Tsplitpos=(transform.info{1}.xrange(end)+transform.info{2}.xrange(1))/2;
+    end
     pr=getranges(p) ;
 %     split= transform.mirror;
 end

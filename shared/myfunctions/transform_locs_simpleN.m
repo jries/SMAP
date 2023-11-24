@@ -7,7 +7,10 @@ else
 end
 
 if isfield(p,'Tfile') && exist(p.Tfile,'file')
-    Tinitial=load(p.tfile);
+    Tinitial=load(p.Tfile);
+    if isfield(Tinitial,'transformation')
+        Tinitial=Tinitial.transformation; %XXX 
+    end
     locT=Tinitial.transform2Reference(loctarget);
 else %all initial estimation:
     inforef=transform.info{channelref};
