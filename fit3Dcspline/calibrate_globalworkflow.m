@@ -95,11 +95,11 @@ else
     transform=l.transformation;
     % p.Tmode=transform.tinfo.mirror.targetmirror;
     p.Tmode='right-left';% XXXX for biplane
-    if isfield(transform.tinfo,'separator')
-        p.Tsplitpos=transform.tinfo.separator;
-    else
+    % if isfield(transform.tinfo,'separator')
+    %     p.Tsplitpos=transform.tinfo.separator;
+    % else
         p.Tsplitpos=(transform.info{1}.xrange(end)+transform.info{2}.xrange(1))/2;
-    end
+    % end
     pr=getranges(p) ;
 %     split= transform.mirror;
 end
