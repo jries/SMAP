@@ -927,7 +927,7 @@ y=obj.coord.yr(indt);
 % nmax=500;
 % nmin=10;
 % x=x(nmin:nmax);y=y(nmin:nmax);time=time(nmin:nmax);
-if obj.getSingleGuiParameter('filtertrackmode')  
+if obj.getSingleGuiParameter('filtertrackmode').Value>1  
     fmode=obj.getSingleGuiParameter('filtermode').selection;
     windowsize=obj.getSingleGuiParameter('filterwindow'); 
     xf=runningWindowAnalysis(time,x,time,windowsize,fmode); 
