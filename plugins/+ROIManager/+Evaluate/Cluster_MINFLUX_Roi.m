@@ -24,6 +24,10 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 case 'group'
                     ind=locs.groupindex==mode(locsfind.groupindex);
             end
+            if p.skipfirst>0
+                ind=find(ind);
+                ind=ind(p.skipfirst+1:end);
+            end
             
             filelist=obj.getPar('filelist_short');
             filename=filelist.String{mode(locs.filenumber(ind))};
@@ -48,8 +52,20 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             
             %graphs
                  ff='%2.1f';
+                 mx=mean(locs.xnm(ind));
+                 my=mean(locs.ynm(ind));
+
+            axy=obj.setoutput('xy');
+            plot(axy,locs.xnm(ind)-mx,locs.ynm(ind)-my,'ro','MarkerSize',5)
+            hold(axy,'on')
+            plot(axy,locs.xnm(ind)-mx,locs.ynm(ind)-my,'k')
+            hold(axy,'off')
+            xlabel(axy,'x (nm)')
+            ylabel(axy,'y (nm)')
+            axis(axy,'equal')
+
             axx=obj.setoutput('x');
-            mx=mean(locs.xnm(ind));
+            
             plot(axx,ltime,locs.xnm(ind)-mx,ltime,0*locs.time(ind),'k', ...
                 ltime,0*ltime+sigmax,'c',ltime,0*ltime-sigmax,'r',...
                 ltime,0*locs.time(ind)+sxrobust,'r',ltime,0*locs.time(ind)-sxrobust,'c',...
@@ -160,6 +176,13 @@ pard.linkt.position=[1,1];
 pard.link.object=struct('String',{{'StepsMINFLUX','group','id'}},'Style','popupmenu','Value',2);
 pard.link.position=[1,2];
 pard.link.Width=1.5;
+
+
+pard.skipt.object=struct('String','Skip first','Style','text');
+pard.skipt.position=[2,1];
+pard.skipfirst.object=struct('String',0,'Style','edit');
+pard.skipfirst.position=[2,2];
+pard.skipfirst.Width=1;
 
 
 
