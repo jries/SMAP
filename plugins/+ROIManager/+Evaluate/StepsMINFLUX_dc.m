@@ -184,10 +184,10 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            % end
            % calculatestepparameters(obj, obj.steps.indstep);
            % plotsteps(obj)
-           out=obj.site.evaluation.(obj.name);
+%            out=obj.site.evaluation.(obj.name);
            % 
            % out.statall=calculatestatistics(obj,index1);
-           % out.stattrack=calculatestatistics(obj,index1,obj.coord1.indtime);
+%            % out.stattrack=calculatzestatistics(obj,index1,obj.coord1.indtime);
            % 
            % filelist=obj.getPar('filelist_short');
            % out.filename=filelist.String{mode(obj.locsuse.filenumber)};
