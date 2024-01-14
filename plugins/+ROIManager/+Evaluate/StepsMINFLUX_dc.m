@@ -117,21 +117,22 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            [xr2,yr2]=rotcoord(x2-mean(x1),y2-mean(y1),angle);
            [xr1,yr1]=rotcoord(x1-mean(x1),y1-mean(y1),angle);
 
-           axxy=obj.setoutput('xyr');
-           plot(axxy,xr1,yr1,'r.-', xr2,yr2,'b.-');
-           axis(axxy,'equal')
+           axxyr=obj.setoutput('xyr');
+           plot(axxyr,xr1,yr1,'r.-', xr2,yr2,'b.-');
+           axis(axxyr,'equal')
 
-           axxt=obj.setoutput('xtr');
-           plot(axxt,time1,xr1,'r.-', time2,xr2,'b.-');
+           axxtr=obj.setoutput('xtr');
+           plot(axxtr,time1,xr1,'r.-', time2,xr2,'b.-');
            % axis(axxt,'equal')
 
-           axyt=obj.setoutput('ytr');
-           plot(axyt,time1,yr1,'r.-', time2,yr2,'b.-');
+           axytr=obj.setoutput('ytr');
+           plot(axytr,time1,yr1,'r.-', time2,yr2,'b.-');
            % axis(axyt,'equal')
 
            axxy=obj.setoutput('xy');
            plot(axxy,x1,y1,'r.-', x2,y2,'b.-');
            axis(axxy,'equal')
+           obj.axxy=axxy;
 
            axxt=obj.setoutput('xt');
            plot(axxt,time1,x1,'r.-', time2,x2,'b.-');
@@ -171,8 +172,11 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
             
 %            xr=x;yr=y;  %XXXX to not rotate
 
-           % obj.coord1.xr=xr;obj.coord1.yr=yr;obj.coord1.time=time1;obj.coord1.timeplot=time1-min(time1);
-           % obj.coord1.x=x1;obj.coord1.y=y1;obj.coord1.xfr=xfr;obj.coord1.yfr=yfr;
+           obj.coord1.xr=xr1;obj.coord1.yr=yr1;obj.coord1.time=time1;obj.coord1.timeplot=time1-min(time1);
+           obj.coord1.x=x1;obj.coord1.y=y1;
+           obj.coord2.xr=xr2;obj.coord2.yr=yr2;obj.coord2.time=time2;obj.coord2.timeplot=time2-min(time1);
+           obj.coord2.x=x2;obj.coord2.y=y2;
+
            % obj.coord1.z=z;  obj.coord1.zf=zf;
            % 
            % if  isempty(obj.steps) || p.refitalways
@@ -180,7 +184,7 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            % end
            % calculatestepparameters(obj, obj.steps.indstep);
            % plotsteps(obj)
-           % out=obj.site.evaluation.(obj.name);
+           out=obj.site.evaluation.(obj.name);
            % 
            % out.statall=calculatestatistics(obj,index1);
            % out.stattrack=calculatestatistics(obj,index1,obj.coord1.indtime);
@@ -637,9 +641,11 @@ end
 end
 
 function selectrange(a,b,obj)
-if strcmp(obj.axstep.Parent.Parent.SelectedTab.Title,'xy')
-    rangex=obj.axxy.XLim;
-    x=obj.coord.xr;
+tabt=obj.axxy.Parent.Parent.SelectedTab.Title;
+axt=obj.axxy.Parent.Parent.SelectedTab.Children;
+if strcmp(tabt,'xy') || strcmp(tabt,'xyr')
+    rangex=axt.XLim;
+    x=obj.coord1.xr;
     indmin=find(x-obj.xyplotoffset<rangex(1),1,'last')+1;
     if isempty(indmin)
         indmin=1;
@@ -651,10 +657,10 @@ if strcmp(obj.axstep.Parent.Parent.SelectedTab.Title,'xy')
     t=obj.coord.timeplot;
     obj.range=[t(indmin) t(indmax)];
 else
-    obj.range=obj.axstep.XLim;
+    obj.range=axt.XLim;
 end
-refit(a,b,obj,1)
- plotstatistics(obj)
+% refit(a,b,obj,1)
+ % plotstatistics(obj)
 end
 
 % function [istepfit,svalfit]=splitmergefit(x,stepsize,p,steps)
@@ -956,42 +962,48 @@ end
 end
 
 function makemovie(a,b,obj)
-plotsimple=obj.getSingleGuiParameter('simplemovie');
-indt=obj.coord.indtime;
-time=obj.coord.timeplot(indt);
+% plotsimple=obj.getSingleGuiParameter('simplemovie');
+% indt=obj.coord.indtime;
+
+indt1=obj.coord1.time>=obj.range(1) & obj.coord1.time<=obj.range(2);
+time1=obj.coord1.timeplot(indt1);
+
+indt2=obj.coord2.time>=obj.range(1) & obj.coord2.time<=obj.range(2);
+time2=obj.coord2.timeplot(indt2);
+
+
 frametime=obj.getSingleGuiParameter('frametime');
 if isempty(frametime)
     frametime=mode(diff(time));
 end
 
 %XXX filter
-x=obj.coord.xr(indt);
-y=obj.coord.yr(indt);
-
+x1=obj.coord1.xr(indt1);y1=obj.coord1.yr(indt1);
+x2=obj.coord2.xr(indt2);y2=obj.coord2.yr(indt2);
 % % XXXXXX 
 % nmax=500;
 % nmin=10;
 % x=x(nmin:nmax);y=y(nmin:nmax);time=time(nmin:nmax);
-if obj.getSingleGuiParameter('filtertrackmode').Value>1  
-    fmode=obj.getSingleGuiParameter('filtermode').selection;
-    windowsize=obj.getSingleGuiParameter('filterwindow'); 
-    xf=runningWindowAnalysis(time,x,time,windowsize,fmode); 
-    yf=runningWindowAnalysis(time,y,time,windowsize,fmode); 
-    linew=1;
-    filtertrackmode=true;
-
-%     timen=min(time):fw:max(time);
-%     xx=bindata(time,x,timen,fmode);
-%     yy=bindata(time,y,timen,fmode);
-%     x=xf;y=yf;
-else
-    xf=x;yf=y;
+% if obj.getSingleGuiParameter('filtertrackmode').Value>1  
+%     fmode=obj.getSingleGuiParameter('filtermode').selection;
+%     windowsize=obj.getSingleGuiParameter('filterwindow'); 
+%     xf=runningWindowAnalysis(time,x,time,windowsize,fmode); 
+%     yf=runningWindowAnalysis(time,y,time,windowsize,fmode); 
+%     linew=1;
+%     filtertrackmode=true;
+% 
+% %     timen=min(time):fw:max(time);
+% %     xx=bindata(time,x,timen,fmode);
+% %     yy=bindata(time,y,timen,fmode);
+% %     x=xf;y=yf;
+% else
+%     xf=x;yf=y;
     linew=0.5;
-    filtertrackmode=false;
-end
+%     filtertrackmode=false;
+% end
 
 
-ts=min(time):frametime:max(time);
+ts=min(time1):frametime:max(time1);
 f=figure(99);
 f.Position(1)=1;f.Position(3)=1280;
 ax=gca;
@@ -1001,50 +1013,61 @@ delete(ax.Children)
 axis(ax,'equal');
 axis(ax,'ij');
 
-xlim(ax,[min(x)-10 max(x)+10])
-ylim(ax,[min(y)-10 max(y)+10])
+xm=min([x1; x2]);ym=min([y1; y2]);
+xx=max([x1; x2]); yx=max([y1; y2]);
+
+xlim(ax,[xm-10 xx+10])
+ylim(ax,[ym-10 yx+10])
 hold(ax,'on')
-plot(ax,[min(x)-5 min(x)+10-5], [max(y) max(y)],'k','LineWidth',3)
+plot(ax,[xm-5 xm+10-5], [yx yx],'k','LineWidth',3)
 ax.XTick=[];
 ax.YTick=[];
 for k=1:length(ts)
-    indh=time<=ts(k);
-    xh=xf(indh);
-    yh=yf(indh);
-    th=time(indh);
+    indh1=time1<=ts(k); xh1=x1(indh1); yh1=y1(indh1);th1=time1(indh1);
+    indh2=time2<=ts(k); xh2=x2(indh2); yh2=y2(indh2);th2=time2(indh2);
     tpassed=ts(k)-ts(1);
-    ht=text(ax,double(min(xf)),double(min(yf)),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
+    ht=text(ax,double(xm),double(ym),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
         
-    indc=obj.steps.steptime<ts(k);
-    cx=obj.steps.possteps.x(indc);
-    cy=obj.steps.possteps.y(indc);
+    % indc=obj.steps.steptime<ts(k);
+    % cx=obj.steps.possteps.x(indc);
+    % cy=obj.steps.possteps.y(indc);
     
-    if filtertrackmode
-         xr=x(indh);
-         yr=y(indh);
-         hr=plot(ax,xr,yr,'Color',[1 1 1]*0.7,'LineWidth',.5);
-         hold(ax,'on')
-    end
-    hd=plot(ax,xh(end),yh(end),'ro','MarkerFaceColor','r','MarkerSize',15);
+    % if filtertrackmode
+    %      xr=x(indh);
+    %      yr=y(indh);
+    %      hr=plot(ax,xr,yr,'Color',[1 1 1]*0.7,'LineWidth',.5);
+    %      hold(ax,'on')
+    % end
+    hd1=plot(ax,xh1(end),yh1(end),'ro','MarkerFaceColor','r','MarkerSize',15);
     hold(ax,'on')
-   
-    if ~plotsimple
-        hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
-        hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
+    hl1=plot(ax,xh1,yh1,'r.-','LineWidth',linew);
+     
+    if ~isempty(xh2)
+    hd2=plot(ax,xh2(end),yh2(end),'bo','MarkerFaceColor','b','MarkerSize',15);
+    hl2=plot(ax,xh2,yh2,'b.-','LineWidth',linew);
     end
-    hl=plot(ax,xh,yh,'k','LineWidth',linew);
+   
+    % if ~plotsimple
+    %     hb=plot(ax,xh,yh,'bo','MarkerSize',5,'MarkerFaceColor','b'); 
+    %     hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
+    % end
+   
+    
     drawnow
     Fr(k)=getframe(ax);
-    delete(hd)
-    delete(hl)
+    delete(hd1);
+    delete(hl1);
     delete(ht)
-    if filtertrackmode
-    delete(hr)
+    if ~isempty(xh2)
+        delete(hl2);delete(hd2)
     end
-    if ~plotsimple
-        delete(hb)
-        delete(hc)
-    end
+    % if filtertrackmode
+    % delete(hr)
+    % end
+    % if ~plotsimple
+    %     delete(hb)
+    %     delete(hc)
+    % end
 end
 smlfile=obj.getPar('lastSMLFile');
 if ~isempty(smlfile)
@@ -1055,7 +1078,7 @@ end
 
 [file,pfad]=uiputfile([pfad filesep '*.mp4']);
 if file
-    mysavemovie(Fr,[pfad  file],'FrameRate',30)
+    mysavemovie(Fr,[pfad  file],'FrameRate',30,'profile','MPEG-4')
 end 
 end
 
