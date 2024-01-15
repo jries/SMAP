@@ -1,4 +1,4 @@
-classdef ClusterStatistics<interfaces.DialogProcessor
+classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
 %  pair correlation functions calculated according to:
 %  Sengupta, Prabuddha, Tijana Jovanovic-Talisman, Dunja Skoko, Malte Renz, 
 %  Sarah L Veatch, and Jennifer Lippincott-Schwartz. “Probing Protein Heterogeneity 
@@ -8,7 +8,7 @@ classdef ClusterStatistics<interfaces.DialogProcessor
         resultstable
     end
     methods
-        function obj=ClusterStatistics(varargin)    
+        function obj=ClusterStatistics_MINFLUX(varargin)    
             obj@interfaces.DialogProcessor(varargin{:}) ;
             obj.inputParameters={'sr_pixrec','numberOfLayers','sr_pos','sr_size','layers','sr_layerson'};
 %             obj.history=true;    
@@ -37,23 +37,20 @@ classdef ClusterStatistics<interfaces.DialogProcessor
            end
            clusterinds=unique(locs.(cfield)(locs.(cfield)>0));
            cind=1;
-           if p.advanced
-               ax=obj.initaxis('boundaries');
-               hold(ax,'off')
-               plot(ax,locs.xnm,locs.ynm,'b.');
-           end
+           
            stdsall=zeros(size(obj.locData.loc.xnm),'single');
            stdlall=stdsall;
            angleall=stdsall;
            exts=stdsall;
            extl=stdsall;
            if dcminflux
-               previous.tend=0;
+               previous.time=0;
                previous.cind=0;
                previous.color=0;
                previous.ndc=0;
                previous.indall=[];
-               c_dcn1=stdsall;
+               c_dcind=stdsall;
+               c_toverlap=stdsall;
                dcind=0;
            end
            for k=1:length(clusterinds)
@@ -75,45 +72,38 @@ classdef ClusterStatistics<interfaces.DialogProcessor
                if dcminflux
                    th=locs.(tfield)(inc);
                    thih=locs.thi(inc);
-                   if previous.tend>th(1) %overlapping time     
-                       % c_dcn1(indall)=sum(inc);
-                       % c_dcn1(previous.indall)=previous.ndc;
-                       c_dcn1(indall)=dcind;
-                       c_dcn1(previous.indall)=dcind;
-                       dcind=dcind+1;
+                   if previous.time(end)>th(1) && thih(1)==1 %overlapping time and other color
+                       % if 1 %sufficiently close?
+                           if sum(inc)>lencol1 %find longest
+                               lencol1=sum(inc); 
+
+                               % time overlap
+                               time0=locs.(tfield)(previous.indall);
+                               toverlap=min(time0(end),th(end))-max(time0(1),th(1));
+                               ttotal=max(time0(end),th(end))-min(time0(1),th(1));
+                           % c_dcn1(indall)=sum(inc);
+                           % c_dcn1(previous.indall)=previous.ndc;
+                               c_toverlap(indall)=toverlap/ttotal;
+                               c_toverlap(previous.indall)=toverlap/ttotal;
+                               c_dcind(indall)=dcind;
+                               c_dcind(previous.indall)=dcind;
+                               dcind=dcind+1;
+                           end
+                       % end
                    end
-                   previous.tend=th(end);
-                   previous.cind=clusterinds(k);
-                   previous.color=thih(1);
-                   previous.ndc=sum(inc);
-                   previous.indall=indall;
+                   if thih(1)==0 %main color again, go to next
+                       previous.time=th;
+                       previous.cind=clusterinds(k);
+                       previous.color=thih(1);
+                       previous.ndc=sum(inc);
+                       previous.indall=indall;
+                       lencol1=0;
+                   end
                    
                end
                xpos(cind,1)=mean(xh);
                ypos(cind,1)=mean(yh);
                
-               if p.advanced
-                   if ~isempty(locs.znm)
-                       zh=double(locs.znm(inc));
-                       zpos(cind,1)=mean(zh);
-                       [kc3,volumeCHull(cind,1)]=convhull(xh,yh,zh);
-                       [kb3,volumeB(cind,1)]=boundary(xh,yh,zh);
-                   else
-                       volumeCHull(cind,1)=0;
-                       volumeB(cind,1)=0;
-                       zpos(cind,1)=0;
-                   end
-                   [kc2,areaCHull(cind,1)]=convhull(xh,yh);
-                   [kb2,areaB(cind,1)]=boundary(xh,yh);
-                   cID(cind,1)=clusterinds(k);
-                   cind=cind+1;
-                   hold(ax,'on')
-                   plot(ax,xh,yh,'+')
-                   
-                   plot(ax,xh(kc2),yh(kc2),'r')
-                   plot(ax,xh(kb2),yh(kb2),'m')
-               end
-                
                
                c = cov(xh-mean(xh), yh-mean(yh));
                [a, ev] = eig(c);
@@ -129,10 +119,6 @@ classdef ClusterStatistics<interfaces.DialogProcessor
                extl(indall)=max(xr)-min(xr);
                exts(indall)=max(yr)-min(yr);
            end
-           if p.advanced
-            obj.resultstable=table(cID,numlocs,areaCHull,volumeCHull,areaB,volumeB,xpos,ypos,zpos);
-           else
-           end
            if p.addf
                obj.locData.setloc('c_stds',stdsall)
                obj.locData.setloc('c_stdl',stdlall)
@@ -140,7 +126,8 @@ classdef ClusterStatistics<interfaces.DialogProcessor
                obj.locData.setloc('c_extl',extl)
                obj.locData.setloc('c_exts',exts)
                if dcminflux
-                   obj.locData.setloc('c_dcn1',c_dcn1)
+                   obj.locData.setloc('c_toverlap',c_toverlap)
+                   obj.locData.setloc('c_dcind',c_dcind)
                end
 
                obj.locData.regroup;
@@ -183,7 +170,7 @@ pard.minloc.Width=0.5;
 
 pard.linkt.object=struct('String','Selection','Style','text');
 pard.linkt.position=[1,1];
-pard.link.object=struct('String',{{'clusterindex','groupindex','tid'}},'Style','popupmenu','Value',2);
+pard.link.object=struct('String',{{'clusterindex','groupindex','tid'}},'Style','popupmenu','Value',3);
 pard.link.position=[1,1.7];
 pard.link.Width=1.5;
 
@@ -193,9 +180,9 @@ pard.filter.position=[1,3];
 pard.filter.Width=1.5;
 
 
-pard.advanced.object=struct('String','advanced analysis','Style','checkbox','Value',0);
-pard.advanced.position=[2,1];
-pard.advanced.Width=1.5;
+% pard.advanced.object=struct('String','advanced analysis','Style','checkbox','Value',0);
+% pard.advanced.position=[2,1];
+% pard.advanced.Width=1.5;
 
 pard.addf.object=struct('String','add results to locs','Style','checkbox','Value',0);
 pard.addf.position=[2,3];
@@ -214,7 +201,7 @@ pard.export.position=[5,1];
 pard.export.Width=1;
 
 
-pard.plugininfo.name='Cluster Statistics';
+pard.plugininfo.name='Cluster Statistics MINFLUX';
 pard.plugininfo.description= 'Calculates spatial statistics based on pair correlation and Ripleys K function. pair correlation functions calculated according to: Sengupta, Prabuddha, Tijana Jovanovic-Talisman, Dunja Skoko, Malte Renz, Sarah L Veatch, and Jennifer Lippincott-Schwartz. â€œProbing Protein Heterogeneity  Nature Methods 8 (September 18, 2011): 969.';
 pard.plugininfo.type='ProcessorPlugin';
 
