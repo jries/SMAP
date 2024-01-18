@@ -54,13 +54,15 @@ end
 
 
 function updateplugin(a,b,obj)
+if ~ isempty(obj.locData.SE.sites)
 pluginnames=fieldnames(obj.locData.SE.sites(1).evaluation);
 obj.guihandles.pluginselection.String=pluginnames;
+end
 end
 
 function pard=guidef(obj)
 
-pard.pluginselection.object=struct('String',{{}},'Style','popupmenu');
+pard.pluginselection.object=struct('String',{{"0"}},'Style','popupmenu');
 pard.pluginselection.position=[1,1];
 pard.pluginselection.Width=2;
 pard.updateplugins.object=struct('String','update','Style','pushbutton','Callback',{{@updateplugin,obj}});
