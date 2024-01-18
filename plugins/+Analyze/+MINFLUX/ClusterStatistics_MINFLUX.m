@@ -12,7 +12,7 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
             obj@interfaces.DialogProcessor(varargin{:}) ;
             obj.inputParameters={'sr_pixrec','numberOfLayers','sr_pos','sr_size','layers','sr_layerson'};
 %             obj.history=true;    
-            obj.showresults=true;
+            obj.showresults=false;
         end
         
         function out=run(obj,p)
