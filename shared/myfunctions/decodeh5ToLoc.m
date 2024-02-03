@@ -8,7 +8,7 @@ switch ext
 end
 % locData=interfaces.LocalizationData;
 if strcmp(info.unit,'px')
-    pix2nm=info.px_size;
+    pix2nm=single(info.px_size);
 else
     pix2nm=[1 1];
 end
