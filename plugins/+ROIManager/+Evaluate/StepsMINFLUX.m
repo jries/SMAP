@@ -76,7 +76,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                index=obj.locsuse.(fid) == id & obj.locsuse.filenumber ==filenumberh;
            else
                obj.locsuse=obj.locData.loc;
-               index=obj.locsuse.(fid)==id;
+               index=obj.locsuse.(fid)==id & obj.locsuse.filenumber ==filenumberh;
            end
            
            obj.index=index;
