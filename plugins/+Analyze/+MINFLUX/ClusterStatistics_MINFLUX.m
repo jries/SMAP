@@ -171,13 +171,13 @@ pard.minloc.Width=0.5;
 pard.linkt.object=struct('String','Selection','Style','text');
 pard.linkt.position=[1,1];
 pard.link.object=struct('String',{{'clusterindex','groupindex','tid'}},'Style','popupmenu','Value',3);
-pard.link.position=[1,1.7];
+pard.link.position=[1,1.5];
 pard.link.Width=1.5;
 
 
-pard.filter.object=struct('String','filter (Renderer)','Style','checkbox','Value',0);
+pard.filter.object=struct('String','filtered locs (Renderer)','Style','checkbox','Value',0);
 pard.filter.position=[1,3];
-pard.filter.Width=1.5;
+pard.filter.Width=2;
 
 
 % pard.advanced.object=struct('String','advanced analysis','Style','checkbox','Value',0);
