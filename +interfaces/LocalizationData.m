@@ -421,8 +421,8 @@ classdef LocalizationData<interfaces.GuiParameterInterface
             saveloc.loc=obj.(locext);
             saveloc.file=obj.files.file;
             saveloc.history=obj.history;
-            
-            fieldsremove={'original_channel','groupindex','numberInGroup','colorfield'};
+           
+            fieldsremove={'original_channel','colorfield'};
             if nargin>5 && ~isempty(fieldsremove)
                 fieldsremove=union(fieldsremove,excludesavefields);
             end
