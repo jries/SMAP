@@ -118,28 +118,29 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            [xr1,yr1]=rotcoord(x1-mean(x1),y1-mean(y1),angle);
 
            axxyr=obj.setoutput('xyr');
-           plot(axxyr,xr1,yr1,'r.-', xr2,yr2,'b.-');
+           plot(axxyr,xr1,yr1,[p.col1 '.-'], xr2,yr2,[p.col2 '.-']);
            axis(axxyr,'equal')
 
            axxtr=obj.setoutput('xtr');
-           plot(axxtr,time1,xr1,'r.-', time2,xr2,'b.-');
+           plot(axxtr,time1,xr1,[p.col1 '.-'], time2,xr2,[p.col2 '.-']);
            % axis(axxt,'equal')
 
            axytr=obj.setoutput('ytr');
-           plot(axytr,time1,yr1,'r.-', time2,yr2,'b.-');
+           plot(axytr,time1,yr1,[p.col1 '.-'], time2,yr2,[p.col2 '.-']);
            % axis(axyt,'equal')
 
            axxy=obj.setoutput('xy');
-           plot(axxy,x1,y1,'r.-', x2,y2,'b.-');
+           plot(axxy,x1,y1,[p.col1 '.-'], x2,y2,[p.col2 '.-']);
            axis(axxy,'equal')
            obj.axxy=axxy;
 
            axxt=obj.setoutput('xt');
-           plot(axxt,time1,x1,'r.-', time2,x2,'b.-');
+           plot(axxt,time1,x1,[p.col1 '.-'], time2,x2,[p.col2 '.-']);
            % axis(axxt,'equal')
 
            axyt=obj.setoutput('yt');
-           plot(axyt,time1,y1,'r.-', time2,y2,'b.-');
+           plot(axyt,time1,y1,[p.col1 '.-'], time2,y2,[p.col2 '.-']);
+         
            % axis(axyt,'equal')
             % if p.filtertrackmode
 %                 zf=z;
@@ -962,6 +963,7 @@ end
 end
 
 function makemovie(a,b,obj)
+p=obj.getAllParameters;
 % plotsimple=obj.getSingleGuiParameter('simplemovie');
 % indt=obj.coord.indtime;
 
@@ -1011,7 +1013,7 @@ ax=gca;
 delete(ax.Children)
 
 axis(ax,'equal');
-axis(ax,'ij');
+axis(ax,'xy');
 
 xm=min([x1; x2]);ym=min([y1; y2]);
 xx=max([x1; x2]); yx=max([y1; y2]);
@@ -1019,14 +1021,14 @@ xx=max([x1; x2]); yx=max([y1; y2]);
 xlim(ax,[xm-10 xx+10])
 ylim(ax,[ym-10 yx+10])
 hold(ax,'on')
-plot(ax,[xm-5 xm+10-5], [yx yx],'k','LineWidth',3)
+plot(ax,[xm-5 xm+10-5], [ym ym],'k','LineWidth',3)
 ax.XTick=[];
 ax.YTick=[];
 for k=1:length(ts)
     indh1=time1<=ts(k); xh1=x1(indh1); yh1=y1(indh1);th1=time1(indh1);
     indh2=time2<=ts(k); xh2=x2(indh2); yh2=y2(indh2);th2=time2(indh2);
     tpassed=ts(k)-ts(1);
-    ht=text(ax,double(xm),double(ym),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
+    ht=text(ax,double(xm)-5,double(yx),[num2str(tpassed,'%3.0f') ' ms'],'FontSize',15);
         
     % indc=obj.steps.steptime<ts(k);
     % cx=obj.steps.possteps.x(indc);
@@ -1038,13 +1040,13 @@ for k=1:length(ts)
     %      hr=plot(ax,xr,yr,'Color',[1 1 1]*0.7,'LineWidth',.5);
     %      hold(ax,'on')
     % end
-    hd1=plot(ax,xh1(end),yh1(end),'ro','MarkerFaceColor','r','MarkerSize',15);
+    hd1=plot(ax,xh1(end),yh1(end),[p.col1 'o'],'MarkerFaceColor',p.col1,'MarkerSize',15);
     hold(ax,'on')
-    hl1=plot(ax,xh1,yh1,'r.-','LineWidth',linew);
+    hl1=plot(ax,xh1,yh1,[p.col1 '.-'],'LineWidth',linew);
      
     if ~isempty(xh2)
-    hd2=plot(ax,xh2(end),yh2(end),'bo','MarkerFaceColor','b','MarkerSize',15);
-    hl2=plot(ax,xh2,yh2,'b.-','LineWidth',linew);
+    hd2=plot(ax,xh2(end),yh2(end),[p.col2 'o'],'MarkerFaceColor',p.col2,'MarkerSize',15);
+    hl2=plot(ax,xh2,yh2,[p.col2 '.-'],'LineWidth',linew);
     end
    
     % if ~plotsimple
@@ -1189,6 +1191,16 @@ pard.offx.object=struct('String','0','Style','edit');
 pard.offx.position=[8,3];
 pard.offy.object=struct('String','0','Style','edit');
 pard.offy.position=[8,4];
+
+pard.colt.object=struct('String','Color (rgbycmk...) (ch1, ch2)','Style','text');
+pard.colt.position=[9,1];
+pard.colt.Width=2;
+pard.col1.object=struct('String','b','Style','edit');
+pard.col1.position=[9,3];
+pard.col2.object=struct('String','r','Style','edit');
+pard.col2.position=[9,4];
+
+
 
 % p(1).value=1; p(1).on={}; p(1).off={'filterwindowt','filterwindow','filtermode'};
 % p(2).value=2; p(2).on=p(1).off; p(2).off={};
