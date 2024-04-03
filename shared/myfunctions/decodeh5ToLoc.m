@@ -38,7 +38,7 @@ if isfield(locs, 'prob_code')
     end
 end
 
-if isfield(locs, 'code') && size(locs.code) ~= 0
+if isfield(locs, 'code') && size(locs.code, 1) ~= 0
     loc.channel = single(locs.code);
 else
     loc.channel=zd;
