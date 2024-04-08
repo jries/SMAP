@@ -21,9 +21,18 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
                 layers=find(obj.getPar('sr_layerson'));
                 locs=obj.locData.getloc({'xnm','ynm','znm','clusterindex','tid','groupindex','time','frame','thi'},'layer',layers,'Position','roi');
            else
-               locs=obj.locData.getloc({'xnm','ynm','znm','clusterindex','tid','groupindex','time','frame','thi'},'Position','all','grouping','ungrouped');
+               % locs=obj.locData.getloc({'xnm','ynm','znm','clusterindex','tid','groupindex','time','frame','thi'},'Position','all','grouping','ungrouped');
+               locs=obj.locData.loc;
            end
+           
+
            cfield=p.link.selection;
+           if strcmp(cfield,'tid')
+               mt=max(locs.tid)+1;
+               cfieldv=locs.tid+(single(locs.filenumber)-1)*mt;
+           else
+               cfieldv=locs.(cfield);
+           end
            if isempty(locs.thi)
                dcminflux=false;
            else
@@ -35,7 +44,7 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
            else
                tfield='time';
            end
-           clusterinds=unique(locs.(cfield)(locs.(cfield)>0));
+           clusterinds=unique(cfieldv(cfieldv>0)); %does not work for multiple files.
            cind=1;
            
            stdsall=zeros(size(obj.locData.loc.xnm),'single');
@@ -54,11 +63,11 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
                dcind=0;
            end
            for k=1:length(clusterinds)
-               inc=locs.(cfield)==clusterinds(k);
+               inc=cfieldv==clusterinds(k);
                if sum(inc)<p.minloc || sum(inc)-2<=p.skipfirst
                    continue
                end
-               indall=obj.locData.loc.(cfield)==clusterinds(k);
+               indall=cfieldv==clusterinds(k);
 
                if p.skipfirst>0
                    indo=find(inc,p.skipfirst,'first');
