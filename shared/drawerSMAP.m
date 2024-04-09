@@ -13,7 +13,7 @@ if isfield(p,'normalizeFoV')&&~isempty(p.normalizeFoV)&&p.normalizeFoV>0
     s=size(img)/2;
     normalizeFoV=min(p.normalizeFoV,floor(s)-1);
     x=round(s(1)-normalizeFoV(1):s(1)+normalizeFoV(1));
-    y=round(s(2)-normalizeFoV(end):s(2)+normalizeFoV(end));
+    y=round(s(2)-normalizeFoV(2):s(2)+normalizeFoV(2));
     imgnorm=img(x,y,:);
 else
     imgnorm=img;
