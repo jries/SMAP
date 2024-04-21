@@ -280,6 +280,7 @@ y=1:ll;
 [X,~]=meshgrid(x,y);
 lutim=ind2rgb(uint8(X),lut);
 imout=imin;
+if all(rim/2<size(imout(:,:,1)))
 switch layer
     case 3
         imout(rim/2+1:end-rim/2,1:ll,:)=permute(lutim,[2 1 3]);
@@ -292,7 +293,7 @@ switch layer
 %         imout(1:6,rim/2+1:end-rim/2,:)=lutim;
         imout(end-ll+1:end,rim/2+1:end-rim/2,:)=lutim;
 end
-
+end
 end
 
 function [imin,lennm]=addscalebar(imin,pixrec,fac)
