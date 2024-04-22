@@ -42,38 +42,45 @@ p.axy=obj.initaxis('y');
 p.axdx=obj.initaxis('dx');
 p.axdy=obj.initaxis('dy');
 sites=obj.SE.sites;
+layers=find(obj.getPar('sr_layerson'));
+subx=p.subtractx*p.subtractmed;suby=p.subtracty*p.subtractmed;
+
 for k=1:length(sites)
     if ~sites(k).annotation.use
         continue
     end
     % mainch=0;
     followch=~p.mainch;
-    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi'},'Position',site);
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi'},'layer',layers,'Position',sites(k));
     indmain=locs.thi==p.mainch;
     tid1=mode(locs.tid(indmain));
     ind1=locs.tid==tid1;
     id2=findch2(locs, ind1, followch);
     ind2=locs.tid==id2;
-    mx1=median(locs.xnm(ind1))*p.subtractmed;
-    mx2=median(locs.xnm(ind2))*p.subtractmed;
-    my1=median(locs.ynm(ind1))*p.subtractmed;
-    my2=median(locs.ynm(ind2))*p.subtractmed;
+
+    x1h=locs.xnm(ind1)-subx;x2h=locs.xnm(ind2);y1h=locs.ynm(ind1)-suby;y2h=locs.ynm(ind2);
+    t1h=locs.time(ind1);t2h=locs.time(ind2);
+
+    dx=distancedc(t1h, x1h, t2h, x2h);
+    dy=distancedc(t1h, y1h, t2h, y2h);
+
+
     
-    dx=distancedc(locs.time(ind1), locs.xnm(ind1)-mx1, locs.time(ind2), locs.xnm(ind2)-mx2);
-    plot(p.axdx, locs.time(ind1), dx)
-    plot(p.axx, locs.time(ind1), locs.xnm(ind1)-mx1, locs.time(ind2), locs.xnm(ind2)-mx2)
-    dy=distancedc(locs.time(ind1), locs.ynm(ind1)-my1, locs.time(ind2), locs.ynm(ind2)-my2);
-    plot(p.axdy, locs.time(ind1), dy)
-    plot(p.axy, locs.time(ind1), locs.ynm(ind1)-my1, locs.time(ind2), locs.ynm(ind2)-my2)
-        hold(p.axdx,"on")
+    plot(p.axdx, t1h(p.skip+1:end), dx(p.skip+1:end))
+    plot(p.axx,t1h(p.skip+1:end), x1h(p.skip+1:end), t2h(p.skip+1:end), x2h(p.skip+1:end))
+    
+    plot(p.axdy, t1h(p.skip+1:end), dy(p.skip+1:end))
+    plot(p.axy, t1h(p.skip+1:end), y1h(p.skip+1:end), t2h(p.skip+1:end), y2h(p.skip+1:end))
+
+    hold(p.axdx,"on")
     hold(p.axdy,"on")
     hold(p.axx,"on")
     hold(p.axy,"on")
 end
 xlabel(p.axx,'time (ms)'); ylabel(p.axx,'x (nm)')
 xlabel(p.axy,'time (ms)'); ylabel(p.axy,'y (nm)')
-xlabel(p.axdx,'time (ms)'); ylabel(p.axx,'dx (nm)')
-xlabel(p.axdy,'time (ms)'); ylabel(p.axx,'dy (nm)')
+xlabel(p.axdx,'time (ms)'); ylabel(p.axdx,'dx (nm)')
+xlabel(p.axdy,'time (ms)'); ylabel(p.axdy,'dy (nm)')
 end
 
 function driftoffset(obj,p)
@@ -81,16 +88,23 @@ p.axdx=obj.initaxis('dx');
 p.axdy=obj.initaxis('dy');
 p.axdxn=obj.initaxis('dx norm');
 p.axdyn=obj.initaxis('dy norm');
+
+subx=p.subtractx*p.subtractmed;suby=p.subtracty*p.subtractmed;
+layers=find(obj.getPar('sr_layerson'));
+
 sites=obj.SE.sites;
 for ss=1:length(sites)
     if ~sites(ss).annotation.use
         continue
     end
     followch=~p.mainch;
-    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'Position',sites(ss));
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'layer',layers,'Position',sites(ss));
     indmain=locs.thi==p.mainch;
     hc=histcounts(locs.tid(indmain),1:max(locs.tid)+1);
     tidgood=find(hc>=p.minlen);
+    if isempty(tidgood)
+        continue
+    end
 
     dx=zeros(length(tidgood),1);dy=dx; ti=dx;x1=dx;x2=dx; y1=dx;y2=dy;
  
@@ -102,12 +116,12 @@ for ss=1:length(sites)
             dx(k)=NaN; dy(k)=NaN;
             continue
         end
-        x1h=locs.xnm(ind1);x2h=locs.xnm(ind2);y1h=locs.ynm(ind1);y2h=locs.ynm(ind2);
+        x1h=locs.xnm(ind1)-subx;x2h=locs.xnm(ind2);y1h=locs.ynm(ind1)-suby;y2h=locs.ynm(ind2);
         t1h=locs.time(ind1);t2h=locs.time(ind2);
-        mx1=median(x1h(p.skip+1:end));
-        mx2=median(x2h(p.skip+1:end));
-        my1=median(y1h(p.skip+1:end));
-        my2=median(y2h(p.skip+1:end));
+        % mx1=median(x1h(p.skip+1:end));
+        % mx2=median(x2h(p.skip+1:end));
+        % my1=median(y1h(p.skip+1:end));
+        % my2=median(y2h(p.skip+1:end));
         dx(k)=median(distancedc(t1h(p.skip+1:end), x1h(p.skip+1:end), t2h(p.skip+1:end), x2h(p.skip+1:end)));
         dy(k)=median(distancedc(t1h(p.skip+1:end), y1h(p.skip+1:end), t2h(p.skip+1:end), y2h(p.skip+1:end)));
         ti(k)=t1h(p.skip);
@@ -136,23 +150,30 @@ end
 function driftfov(obj,p)
 p.dxim=obj.initaxis('dx');
 p.dyim=obj.initaxis('dy');
+p.dxims=obj.initaxis('dx s');
+p.dyims=obj.initaxis('dy s');
 % p.axdxn=obj.initaxis('dx norm');
 % p.axdyn=obj.initaxis('dy norm');
 sites=obj.SE.sites;
 dx=zeros(length(sites),1);dy=dx; x1=dx;x2=dx;y1=dx; y2=dx; ti=dx;
+layers=find(obj.getPar('sr_layerson'));
+subx=p.subtractx*p.subtractmed;suby=p.subtracty*p.subtractmed;
 for k=1:length(sites)
     if ~sites(k).annotation.use
         continue
     end
     followch=~p.mainch;
-    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi'},'Position',sites(k));
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi'},'layer',layers,'Position',sites(k));
     indmain=locs.thi==p.mainch;
     tid1=mode(locs.tid(indmain));
     ind1=find(locs.tid==tid1);
     id2=findch2(locs, ind1, followch);
     ind2=find(locs.tid==id2);
+    if length(ind1)<p.minlen || length(ind2)<p.minlen
+        continue
+    end
 
-    x1h=locs.xnm(ind1);x2h=locs.xnm(ind2);y1h=locs.ynm(ind1);y2h=locs.ynm(ind2);
+    x1h=locs.xnm(ind1)-subx;x2h=locs.xnm(ind2);y1h=locs.ynm(ind1)-suby;y2h=locs.ynm(ind2);
     t1h=locs.time(ind1);t2h=locs.time(ind2);
     dx(k)=median(distancedc(t1h(p.skip+1:end), x1h(p.skip+1:end), t2h(p.skip+1:end), x2h(p.skip+1:end)));
     dy(k)=median(distancedc(t1h(p.skip+1:end), y1h(p.skip+1:end), t2h(p.skip+1:end), y2h(p.skip+1:end)));
@@ -168,6 +189,9 @@ colorbar(p.dxim)
 dys=scatteredInterpolant(x1,y1,dy);
 imagesc(p.dyim, dys(X,Y));
 colorbar(p.dyim)
+
+scatter(x1,y1,50,dx,'filled','Parent',p.dxims); colorbar(p.dxims)
+scatter(x1,y1,50,dy,'filled','Parent',p.dyims); colorbar(p.dyims)
 end
 
 function tails2c(obj,p)
@@ -178,7 +202,7 @@ p.tails2=obj.initaxis('tails ch1');
 p.taillength1=obj.initaxis('taillength ch0');
 p.taillength2=obj.initaxis('taillength ch1');
 p.taildurations=obj.initaxis('tailduration ch0 - ch1');
-
+layers=find(obj.getPar('sr_layerson'));
 sites=obj.SE.sites;
 tailsall1=[];tailind=1; phot1=[];tailsall2=[]; phot2=[];
 
@@ -187,7 +211,7 @@ for ss=1:length(sites)
         continue
     end
     followch=~p.mainch;
-    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'Position',sites(ss));
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'layer',layers,'Position',sites(ss));
     indmain=locs.thi==p.mainch;
     hc=histcounts(locs.tid(indmain),1:max(locs.tid)+1);
     tidgood=find(hc>=p.minlen);
@@ -298,9 +322,16 @@ pard.modet.position=[1,1];
 pard.mode.object=struct('String',{{'fast','drift','FoV','tails'}},'Style','popupmenu');
 pard.mode.position=[1,2];
 
-pard.subtractmed.object=struct('String','subtract median pos','Style','checkbox','Value',true);
+pard.subtractmed.object=struct('String','subtract pos [x,y] (nm)','Style','checkbox','Value',true);
 pard.subtractmed.position=[2,1];
 pard.subtractmed.Width = 2;
+pard.subtractx.object=struct('String','0','Style','edit');
+pard.subtractx.position=[2,3];
+pard.subtractx.Width=0.5;
+pard.subtracty.object=struct('String','0','Style','edit');
+pard.subtracty.position=[2,3.5];
+pard.subtracty.Width=0.5;
+
 
 pard.skipt.object=struct('String','skip first','Style','text');
 pard.skipt.position=[3,1];
