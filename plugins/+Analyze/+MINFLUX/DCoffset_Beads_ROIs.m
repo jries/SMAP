@@ -88,12 +88,15 @@ p.axdx=obj.initaxis('dx');
 p.axdy=obj.initaxis('dy');
 p.axdxn=obj.initaxis('dx norm');
 p.axdyn=obj.initaxis('dy norm');
-
+p.axarrow=obj.initaxis('distance');
+% p.dyims=obj.initaxis('dy s');
+colorsarrow=jet(256)*0.9;
+maxt=max(obj.locData.loc.time);
 subx=p.subtractx*p.subtractmed;suby=p.subtracty*p.subtractmed;
 layers=find(obj.getPar('sr_layerson'));
 
 sites=obj.SE.sites;
-for ss=1:length(sites)
+for ss=length(sites):-1:1
     if ~sites(ss).annotation.use
         continue
     end
@@ -108,7 +111,7 @@ for ss=1:length(sites)
 
     dx=zeros(length(tidgood),1);dy=dx; ti=dx;x1=dx;x2=dx; y1=dx;y2=dy;
  
-    for k=1:length(tidgood)
+    for k=length(tidgood):-1:1
         ind1=locs.tid==tidgood(k);
         id2=findch2(locs, ind1, followch);
         ind2=locs.tid==id2;
@@ -127,6 +130,10 @@ for ss=1:length(sites)
         ti(k)=t1h(p.skip);
         x1(k)=median(x1h(p.skip+1:end)); x2(k)=median(x2h(p.skip+1:end));
         y1(k)=median(y1h(p.skip+1:end)); y2(k)=median(y2h(p.skip+1:end));
+        x1a(ss,k)=x1(k);y1a(ss,k)=y1(k);dxa(ss,k)=dx(k);dya(ss,k)=dy(k);
+        trel=ceil(t1h(1)/maxt*255);
+        plot(p.axarrow, [x1(k) x1(k)+dx(k)* p.vectorlength],[y1(k) y1(k)+dy(k)* p.vectorlength],'Color',colorsarrow(trel,:));
+        hold(p.axarrow,"on")
     end
         plot(p.axdx, ti, dx,'.')
         plot(p.axdy, ti, dy, '.')
@@ -140,10 +147,20 @@ for ss=1:length(sites)
     % any(locs.tid'==tidgood');
 end
 
+% scatter(x1a(:),y1a(:),5,dxa(:),'filled','Parent',p.dxims); colorbar(p.dxims)
+% scatter(x1a(:),y1a(:),5,dya(:),'filled','Parent',p.dyims); colorbar(p.dyims)
+% plot(p.dxims,dxa(:))
+
 xlabel(p.axdxn,'time (ms)'); ylabel(p.axdxn,'dx-dx(1) (nm)')
 xlabel(p.axdyn,'time (ms)'); ylabel(p.axdyn,'dy-dy(1) (nm)')
 xlabel(p.axdx,'time (ms)'); ylabel(p.axdx,'dx (nm)')
 xlabel(p.axdy,'time (ms)'); ylabel(p.axdy,'dy (nm)')
+colormap(p.axarrow,'jet')
+colorbar(p.axarrow)
+title(p.axarrow,'d (t)')
+dxx=quantile(dxa(dxa>0),[.99]);
+xlim(p.axarrow,quantile(x1a(x1a>0),[.01 .99])+[-1 1]*dxx*p.vectorlength)
+ylim(p.axarrow,quantile(y1a(y1a>0),[.01 .99])+[-1 1]*dxx*p.vectorlength)
 end
 
 
@@ -154,6 +171,7 @@ p.dxims=obj.initaxis('dx s');
 p.dyims=obj.initaxis('dy s');
 % p.axdxn=obj.initaxis('dx norm');
 % p.axdyn=obj.initaxis('dy norm');
+
 sites=obj.SE.sites;
 dx=zeros(length(sites),1);dy=dx; x1=dx;x2=dx;y1=dx; y2=dx; ti=dx;
 layers=find(obj.getPar('sr_layerson'));
@@ -352,6 +370,12 @@ pard.maxplottailst.object=struct('String','max number of plots','Style','text');
 pard.maxplottailst.position=[4,3];
 pard.maxplottails.object=struct('String','100','Style','edit');
 pard.maxplottails.position=[4,4];
+
+pard.vectorlengtht.object=struct('String','factor distance arrow plot','Style','text');
+pard.vectorlengtht.position=[5,1];
+pard.vectorlength.object=struct('String','10','Style','edit');
+pard.vectorlength.position=[5,2];
+
 
 pard.plugininfo.type='ROI_Analyze';
 pard.plugininfo.description=' ';
