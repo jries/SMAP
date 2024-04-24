@@ -42,14 +42,14 @@ if contains(p.source.selection, 'ROI') %use ROI manager
             continue
         end
         locs=obj.locData.getloc({'xnm','ynm','time','tid','filenumber'},'layer',layers,'Position',obj.SE.sites(ss),'grouping','ungrouped');
-        tidfn=locs.tid+maxtid*locs.filenumber;
+        tidfn=locs.tid+maxtid*double(locs.filenumber);
         hc=histcounts(tidfn,1:max(tidfn)+1);
         tidgoodh=find(hc>=p.minlen);
         tidgood(end+1:end+length(tidgoodh))=tidgoodh;
     end
 else %look at all valid IDs
     locs=obj.locData.getloc({'xnm','ynm','time','tid','filenumber'},'layer',layers,'Position','all','grouping','ungrouped');
-    tidfn=locs.tid+maxtid*locs.filenumber;
+    tidfn=locs.tid+maxtid*double(locs.filenumber);
     hc=histcounts(tidfn,1:max(tidfn)+1);
     tidgood=find(hc>=p.minlen);
 end
@@ -61,9 +61,9 @@ tskip=zeros(length(tidgood),1);xskipmed=zeros(length(tidgood),1); yskipmed=zeros
 taillen=zeros(length(tidgood),1);taillocs=zeros(length(tidgood),1);
 
 locs=obj.locData.getloc({'xnm','ynm','time','tid','ecc','eco','filenumber'},'layer',layers,'Position','all','grouping','ungrouped');
-tidfn=locs.tid+maxtid*locs.filenumber;
+tidfn=locs.tid+maxtid*double(locs.filenumber);
 locsall=obj.locData.getloc({'tid','ecc','eco','time','filenumber'},'Position','all','grouping','ungrouped');
-tidfnall=locsall.tid+maxtid*locsall.filenumber;
+tidfnall=locsall.tid+maxtid*double(locsall.filenumber);
 for k=1:length(tidgood)
     ind=find(tidfn==tidgood(k));
 
@@ -71,10 +71,11 @@ for k=1:length(tidgood)
     th=locs.time(ind);
 
     tskip(k)=th(p.skip);
-    xskipmed(k)=median(xh(p.skip+1:end)); 
-    yskipmed(k)=median(yh(p.skip+1:end)); 
+    endl=min(length(xh),p.maxlen);
+    xskipmed(k)=median(xh(p.skip+1:endl)); 
+    yskipmed(k)=median(yh(p.skip+1:endl)); 
 
-    dist=sqrt((xh-xskipmed(k)).^2 +(yh-yskipmed(k)).^2);
+    dist=sqrt((xh(1:endl)-xskipmed(k)).^2 +(yh(1:endl)-yskipmed(k)).^2);
     taillen(k)=max(dist);
 
     tl1=find(dist<p.prec,1,'first');
@@ -89,7 +90,7 @@ for k=1:length(tidgood)
     %
     inda=find(tidfnall==tidgood(k));
     ino=1;
-    for m=1:length(ind)
+    for m=1:endl
         phota=0;
         while ino<=length(inda) && locsall.time(inda(ino))<=th(m)
             phota = phota + locsall.ecc(inda(ino))+locsall.eco(inda(ino));
@@ -151,6 +152,8 @@ pard.minlt.position=[3,3];
 pard.minlen.object=struct('String','50','Style','edit');
 pard.minlen.position=[3,4];
 
+
+
 pard.prect.object=struct('String','Convergence: ','Style','text');
 pard.prect.position=[4,1];
 pard.precmode.object=struct('String',{{'first d < ', 'last d > '}},'Style','popupmenu');
@@ -161,11 +164,17 @@ pard.prec.Width=0.5;
 pard.prect2.object=struct('String','nm','Style','text');
 pard.prect2.position=[4,3.5];
 
+
+
 pard.maxplottailst.object=struct('String','max number of plots','Style','text');
 pard.maxplottailst.position=[5,1];
 pard.maxplottails.object=struct('String','100','Style','edit');
 pard.maxplottails.position=[5,2];
 
+pard.maxlt.object=struct('String','max length analysis','Style','text');
+pard.maxlt.position=[5,3];
+pard.maxlen.object=struct('String','50','Style','edit');
+pard.maxlen.position=[5,4];
 
 pard.plugininfo.type='ROI_Analyze';
 pard.plugininfo.description=' ';
