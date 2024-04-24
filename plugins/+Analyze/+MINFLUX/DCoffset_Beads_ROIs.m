@@ -135,10 +135,15 @@ for ss=length(sites):-1:1
         plot(p.axarrow, [x1(k) x1(k)+dx(k)* p.vectorlength],[y1(k) y1(k)+dy(k)* p.vectorlength],'Color',colorsarrow(trel,:));
         hold(p.axarrow,"on")
     end
-        plot(p.axdx, ti, dx,'.')
-        plot(p.axdy, ti, dy, '.')
-        plot(p.axdxn, ti, dx-dx(1),'.',ti,0*ti,'k')
-        plot(p.axdyn, ti, dy-dy(1), '.',ti,0*ti,'k')
+    if p.plotline
+        linest='-';
+    else
+        linest='.';
+    end
+        plot(p.axdx, ti, dx,linest)
+        plot(p.axdy, ti, dy, linest)
+        plot(p.axdxn, ti, dx-dx(1),linest,ti,0*ti,'k')
+        plot(p.axdyn, ti, dy-dy(1), linest,ti,0*ti,'k')
          hold(p.axdx,"on")
         hold(p.axdy,"on")
         hold(p.axdxn,"on")
@@ -379,6 +384,8 @@ pard.vectorlengtht.position=[5,1];
 pard.vectorlength.object=struct('String','10','Style','edit');
 pard.vectorlength.position=[5,2];
 
+pard.plotline.object=struct('String','plot line','Style','checkbox');
+pard.plotline.position=[5,3];
 
 pard.plugininfo.type='ROI_Analyze';
 pard.plugininfo.description=' ';

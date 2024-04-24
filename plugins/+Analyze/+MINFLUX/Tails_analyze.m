@@ -34,20 +34,23 @@ p.duration=obj.initaxis('duration');
 layers=find(obj.getPar('sr_layerson'));
 
 tidgood=[];
+maxtid=max(obj.locData.loc.tid);
 if contains(p.source.selection, 'ROI') %use ROI manager
 % make a collection of tids
     for ss=1:length(obj.SE.sites)
         if ~obj.SE.sites(ss).annotation.use
             continue
         end
-        locs=obj.locData.getloc({'xnm','ynm','time','tid'},'layer',layers,'Position',obj.SE.sites(ss),'grouping','ungrouped');
-        hc=histcounts(locs.tid,1:max(locs.tid)+1);
+        locs=obj.locData.getloc({'xnm','ynm','time','tid','filenumber'},'layer',layers,'Position',obj.SE.sites(ss),'grouping','ungrouped');
+        tidfn=locs.tid+maxtid*locs.filenumber;
+        hc=histcounts(tidfn,1:max(tidfn)+1);
         tidgoodh=find(hc>=p.minlen);
         tidgood(end+1:end+length(tidgoodh))=tidgoodh;
     end
 else %look at all valid IDs
-    locs=obj.locData.getloc({'xnm','ynm','time','tid'},'layer',layers,'Position','all','grouping','ungrouped');
-    hc=histcounts(locs.tid,1:max(locs.tid)+1);
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','filenumber'},'layer',layers,'Position','all','grouping','ungrouped');
+    tidfn=locs.tid+maxtid*locs.filenumber;
+    hc=histcounts(tidfn,1:max(tidfn)+1);
     tidgood=find(hc>=p.minlen);
 end
 
@@ -57,10 +60,12 @@ tailsall(1,length(tidgood))=0;phot(1,length(tidgood))=0;
 tskip=zeros(length(tidgood),1);xskipmed=zeros(length(tidgood),1); yskipmed=zeros(length(tidgood),1);
 taillen=zeros(length(tidgood),1);taillocs=zeros(length(tidgood),1);
 
-locs=obj.locData.getloc({'xnm','ynm','time','tid','ecc','eco'},'layer',layers,'Position','all','grouping','ungrouped');
-locsall=obj.locData.getloc({'tid','ecc','eco','time'},'Position','all','grouping','ungrouped');
+locs=obj.locData.getloc({'xnm','ynm','time','tid','ecc','eco','filenumber'},'layer',layers,'Position','all','grouping','ungrouped');
+tidfn=locs.tid+maxtid*locs.filenumber;
+locsall=obj.locData.getloc({'tid','ecc','eco','time','filenumber'},'Position','all','grouping','ungrouped');
+tidfnall=locsall.tid+maxtid*locsall.filenumber;
 for k=1:length(tidgood)
-    ind=find(locs.tid==tidgood(k));
+    ind=find(tidfn==tidgood(k));
 
     xh=locs.xnm(ind);yh=locs.ynm(ind);
     th=locs.time(ind);
@@ -82,7 +87,7 @@ for k=1:length(tidgood)
     tailsall(1:length(dist),k)=dist;
     
     %
-    inda=find(locsall.tid==tidgood(k));
+    inda=find(tidfnall==tidgood(k));
     ino=1;
     for m=1:length(ind)
         phota=0;
