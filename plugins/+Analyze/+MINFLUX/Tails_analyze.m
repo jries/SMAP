@@ -1,0 +1,168 @@
+classdef Tails_analyze<interfaces.DialogProcessor&interfaces.SEProcessor
+    properties
+    end
+    methods
+        function obj=Tails_analyze(varargin)        
+            obj@interfaces.DialogProcessor(varargin{:});
+            obj.inputParameters={};
+            obj.showresults=true;
+        end
+        
+        function out=run(obj,p)  
+            tic
+            out=runintern(obj,p);
+            toc
+            
+        end
+        function pard=guidef(obj)
+            pard=guidef(obj);
+        end
+
+    end
+end
+
+
+function out=runintern(obj,p)
+out=[];
+
+p.meantails=obj.initaxis('meantails');
+p.tails=obj.initaxis('tails');
+p.taillengthduration=obj.initaxis('length vs duration');
+p.taillength=obj.initaxis('length');
+p.duration=obj.initaxis('duration');
+
+layers=find(obj.getPar('sr_layerson'));
+
+tidgood=[];
+if contains(p.source.selection, 'ROI') %use ROI manager
+% make a collection of tids
+    for ss=1:length(obj.SE.sites)
+        if ~obj.SE.sites(ss).annotation.use
+            continue
+        end
+        locs=obj.locData.getloc({'xnm','ynm','time','tid'},'layer',layers,'Position',obj.SE.sites(ss),'grouping','ungrouped');
+        hc=histcounts(locs.tid,1:max(locs.tid)+1);
+        tidgoodh=find(hc>=p.minlen);
+        tidgood(end+1:end+length(tidgoodh))=tidgoodh;
+    end
+else %look at all valid IDs
+    locs=obj.locData.getloc({'xnm','ynm','time','tid'},'layer',layers,'Position','all','grouping','ungrouped');
+    hc=histcounts(locs.tid,1:max(locs.tid)+1);
+    tidgood=find(hc>=p.minlen);
+end
+
+tailsall=[];phot=[];
+tailsall(1,length(tidgood))=0;phot(1,length(tidgood))=0;
+
+tskip=zeros(length(tidgood),1);xskipmed=zeros(length(tidgood),1); yskipmed=zeros(length(tidgood),1);
+taillen=zeros(length(tidgood),1);taillocs=zeros(length(tidgood),1);
+
+locs=obj.locData.getloc({'xnm','ynm','time','tid','ecc','eco'},'layer',layers,'Position','all','grouping','ungrouped');
+locsall=obj.locData.getloc({'tid','ecc','eco','time'},'Position','all','grouping','ungrouped');
+for k=1:length(tidgood)
+    ind=find(locs.tid==tidgood(k));
+
+    xh=locs.xnm(ind);yh=locs.ynm(ind);
+    th=locs.time(ind);
+
+    tskip(k)=th(p.skip);
+    xskipmed(k)=median(xh(p.skip+1:end)); 
+    yskipmed(k)=median(yh(p.skip+1:end)); 
+
+    dist=sqrt((xh-xskipmed(k)).^2 +(yh-yskipmed(k)).^2);
+    taillen(k)=max(dist);
+
+    tl1=find(dist<p.prec,1,'first');
+    % tl1=find(dist>p.prec,1,'last');
+    if ~isempty(tl1)
+        taillocs(k)=tl1;
+    else
+        taillocs(k)=NaN;
+    end
+    tailsall(1:length(dist),k)=dist;
+    
+    %
+    inda=find(locsall.tid==tidgood(k));
+    ino=1;
+    for m=1:length(ind)
+        phota=0;
+        while ino<=length(inda) && locsall.time(inda(ino))<=th(m)
+            phota = phota + locsall.ecc(inda(ino))+locsall.eco(inda(ino));
+            ino=ino+1;
+        end
+        phot(m,k)=phota;
+    end
+    % photo(1:length(dist),k)=locs.ecc(ind)+locs.eco(ind);
+end
+
+
+plot(p.taillengthduration,taillocs+ (rand(length(taillocs),1))*0.5,taillen,'.');  hold(p.taillengthduration,"on")
+
+
+ylim([0, quantile(taillen,.99)])
+
+n=0:5:quantile(taillen,.99);
+histogram(taillen,n,'Parent',p.taillength)
+xlabel(p.taillength,'length of tail (nm)')
+n=1:max(taillocs)+1;
+histogram(taillocs,n,'Parent',p.duration)
+xlabel(p.duration,'localizations until convergence')
+% plot(p.taillength,h)
+
+
+
+tailsall(tailsall==0)=NaN;
+phottot=cumsum(mean(phot,2,'omitnan'));
+
+
+plot(p.meantails,phottot,mean(tailsall,2,'omitnan'),'-+')
+hold(p.meantails,"on")
+plot(p.meantails, phottot, 120./sqrt(phottot),'k')
+legend(p.meantails,'MINFLUX','PSF/sqrt(N)')
+xlabel(p.meantails,'total photons'); ylabel(p.meantails,'localization error (nm)')
+p.meantails.YAxis.Scale="log";
+
+xlabel(p.taillengthduration,'duration of tails (localizations)'); ylabel(p.taillengthduration,'length of tails (nm)')
+
+plotevery=length(tidgood)/p.maxplottails;
+plot(p.tails, tailsall(:,1:plotevery:end));
+xlabel(p.tails,'localization'); ylabel(p.tails,'distance to average final position (nm)')
+end
+
+
+function pard=guidef(obj)
+pard.sourcet.object=struct('String','Localizations from: ','Style','text');
+pard.sourcet.position=[1,1];
+pard.source.object=struct('String',{{'All filtered','ROI manager'}},'Style','popupmenu');
+pard.source.position=[1,2];
+
+pard.skipt.object=struct('String','skip first','Style','text');
+pard.skipt.position=[3,1];
+pard.skip.object=struct('String','20','Style','edit');
+pard.skip.position=[3,2];
+
+pard.minlt.object=struct('String','min length','Style','text');
+pard.minlt.position=[3,3];
+pard.minlen.object=struct('String','50','Style','edit');
+pard.minlen.position=[3,4];
+
+pard.prect.object=struct('String','Convergence: ','Style','text');
+pard.prect.position=[4,1];
+pard.precmode.object=struct('String',{{'first d < ', 'last d > '}},'Style','popupmenu');
+pard.precmode.position=[4,2];
+pard.prec.object=struct('String','2','Style','edit');
+pard.prec.position=[4,3];
+pard.prec.Width=0.5;
+pard.prect2.object=struct('String','nm','Style','text');
+pard.prect2.position=[4,3.5];
+
+pard.maxplottailst.object=struct('String','max number of plots','Style','text');
+pard.maxplottailst.position=[5,1];
+pard.maxplottails.object=struct('String','100','Style','edit');
+pard.maxplottails.position=[5,2];
+
+
+pard.plugininfo.type='ROI_Analyze';
+pard.plugininfo.description=' ';
+
+end

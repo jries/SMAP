@@ -51,7 +51,7 @@ for k=1:length(sites)
     end
     % mainch=0;
     followch=~p.mainch;
-    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi'},'layer',layers,'Position',sites(k));
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi'},'layer',layers,'Position',sites(k),'grouping','ungrouped');
     indmain=locs.thi==p.mainch;
     tid1=mode(locs.tid(indmain));
     ind1=locs.tid==tid1;
@@ -101,7 +101,7 @@ for ss=length(sites):-1:1
         continue
     end
     followch=~p.mainch;
-    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'layer',layers,'Position',sites(ss));
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'layer',layers,'Position',sites(ss),'grouping','ungrouped');
     indmain=locs.thi==p.mainch;
     hc=histcounts(locs.tid(indmain),1:max(locs.tid)+1);
     tidgood=find(hc>=p.minlen);
@@ -181,7 +181,7 @@ for k=1:length(sites)
         continue
     end
     followch=~p.mainch;
-    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi'},'layer',layers,'Position',sites(k));
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi'},'layer',layers,'Position',sites(k),'grouping','ungrouped');
     indmain=locs.thi==p.mainch;
     tid1=mode(locs.tid(indmain));
     ind1=find(locs.tid==tid1);
@@ -229,7 +229,7 @@ for ss=1:length(sites)
         continue
     end
     followch=~p.mainch;
-    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'layer',layers,'Position',sites(ss));
+    locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'layer',layers,'Position',sites(ss),'grouping','ungrouped');
     indmain=locs.thi==p.mainch;
     hc=histcounts(locs.tid(indmain),1:max(locs.tid)+1);
     tidgood=find(hc>=p.minlen);
@@ -263,12 +263,15 @@ for ss=1:length(sites)
         %     plot(p.tails,  sqrt((x1h-mx1).^2+(y1h-my1).^2));hold(p.tails,"on")
         % end
 
-        tl1=find(d1>p.prec,1,'last');
+        % tl1=find(d1>p.prec,1,'last');
+        tl1=find(d1<p.prec,1,'first');
         if ~isempty(tl1)
             taillocs1(k)=tl1;
         end
        
-        tl2=find(d2>p.prec,1,'last');
+        % tl2=find(d2>p.prec,1,'last');
+        tl2=find(d2<p.prec,1,'first');
+
         if ~isempty(tl2)
             taillocs2(k)=tl2;
         end
