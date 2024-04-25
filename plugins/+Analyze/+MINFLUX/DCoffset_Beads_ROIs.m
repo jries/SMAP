@@ -143,6 +143,7 @@ for ss=length(sites):-1:1
         hold(p.axarrow,"on")
 
         dtstart(k)=t2h(1)-t1h(1);
+        dtstarta(ss,k)=dtstart(k);
         dtstop(k)=t1h(end)-t2h(end);
         tfraction(k)=(t2h(end)-t2h(1))/(t1h(end)-t1h(1));
     end
@@ -171,8 +172,8 @@ xlabel(p.axdy,'time (ms)'); ylabel(p.axdy,'dy (nm)')
 xlabel(p.t1,'dt start (ms)'); ylabel(p.t1,'dt stop (ms)')
 xlabel(p.t2,'dt start (ms)'); ylabel(p.t2,'fraction ch1/ch0')
 
-xlim(p.t1,quantile(dtstart(dtstart>0),[0. .98]))
-xlim(p.t2,quantile(dtstart(dtstart>0),[0. .98]))
+xlim(p.t1,quantile(dtstarta(dtstarta>0),[0. .98]))
+xlim(p.t2,quantile(dtstarta(dtstarta>0),[0. .98]))
 
 colormap(p.axarrow,'jet')
 colorbar(p.axarrow)
