@@ -64,7 +64,7 @@ for k=1:length(sites)
     dx=distancedc(t1h, x1h, t2h, x2h);
     dy=distancedc(t1h, y1h, t2h, y2h);
 
-
+   
     
     plot(p.axdx, t1h(p.skip+1:end), dx(p.skip+1:end))
     plot(p.axx,t1h(p.skip+1:end), x1h(p.skip+1:end), t2h(p.skip+1:end), x2h(p.skip+1:end))
@@ -89,6 +89,11 @@ p.axdy=obj.initaxis('dy');
 p.axdxn=obj.initaxis('dx norm');
 p.axdyn=obj.initaxis('dy norm');
 p.axarrow=obj.initaxis('distance');
+
+p.t1=obj.initaxis('dt start vs stop');
+p.t2=obj.initaxis('dt fraction vs start');
+
+
 % p.dyims=obj.initaxis('dy s');
 colorsarrow=jet(256)*0.9;
 maxt=max(obj.locData.loc.time);
@@ -110,6 +115,7 @@ for ss=length(sites):-1:1
     end
 
     dx=zeros(length(tidgood),1);dy=dx; ti=dx;x1=dx;x2=dx; y1=dx;y2=dy;
+    dtstart=dx; dtstop=dx; tfraction=dx;
  
     for k=length(tidgood):-1:1
         ind1=locs.tid==tidgood(k);
@@ -117,6 +123,7 @@ for ss=length(sites):-1:1
         ind2=locs.tid==id2;
         if sum(ind2)==0
             dx(k)=NaN; dy(k)=NaN;
+            dtstart=NaN; dtstop=NaN; tfraction=NaN;
             continue
         end
         x1h=locs.xnm(ind1)-subx;x2h=locs.xnm(ind2);y1h=locs.ynm(ind1)-suby;y2h=locs.ynm(ind2);
@@ -134,22 +141,22 @@ for ss=length(sites):-1:1
         trel=ceil(t1h(1)/maxt*255);
         plot(p.axarrow, [x1(k) x1(k)+dx(k)* p.vectorlength],[y1(k) y1(k)+dy(k)* p.vectorlength],'Color',colorsarrow(trel,:));
         hold(p.axarrow,"on")
+
+        dtstart(k)=t2h(1)-t1h(1);
+        dtstop(k)=t1h(end)-t2h(end);
+        tfraction(k)=(t2h(end)-t2h(1))/(t1h(end)-t1h(1));
     end
     if p.plotline
         linest='-';
     else
         linest='.';
     end
-        plot(p.axdx, ti, dx,linest)
-        plot(p.axdy, ti, dy, linest)
-        plot(p.axdxn, ti, dx-dx(1),linest,ti,0*ti,'k')
-        plot(p.axdyn, ti, dy-dy(1), linest,ti,0*ti,'k')
-         hold(p.axdx,"on")
-        hold(p.axdy,"on")
-        hold(p.axdxn,"on")
-        hold(p.axdyn,"on")
-    % plot(p.axy, ti, taillen2,'.')
-    % any(locs.tid'==tidgood');
+        plot(p.axdx, ti, dx,linest); hold(p.axdx,"on")
+        plot(p.axdy, ti, dy, linest); hold(p.axdy,"on")
+        plot(p.axdxn, ti, dx-dx(1),linest,ti,0*ti,'k'); hold(p.axdxn,"on")
+        plot(p.axdyn, ti, dy-dy(1), linest,ti,0*ti,'k'); hold(p.axdyn,"on")
+        plot(p.t1, dtstart+(rand(length(dtstart),1))*0.25,dtstop+(rand(length(dtstart),1))*0.25, linest); hold(p.t1,"on")
+        plot(p.t2, dtstart+(rand(length(dtstart),1))*0.25,tfraction, linest); hold(p.t2,"on")
 end
 
 % scatter(x1a(:),y1a(:),5,dxa(:),'filled','Parent',p.dxims); colorbar(p.dxims)
@@ -160,6 +167,13 @@ xlabel(p.axdxn,'time (ms)'); ylabel(p.axdxn,'dx-dx(1) (nm)')
 xlabel(p.axdyn,'time (ms)'); ylabel(p.axdyn,'dy-dy(1) (nm)')
 xlabel(p.axdx,'time (ms)'); ylabel(p.axdx,'dx (nm)')
 xlabel(p.axdy,'time (ms)'); ylabel(p.axdy,'dy (nm)')
+
+xlabel(p.t1,'dt start (ms)'); ylabel(p.t1,'dt stop (ms)')
+xlabel(p.t2,'dt start (ms)'); ylabel(p.t2,'fraction ch1/ch0')
+
+xlim(p.t1,quantile(dtstart(dtstart>0),[0. .98]))
+xlim(p.t2,quantile(dtstart(dtstart>0),[0. .98]))
+
 colormap(p.axarrow,'jet')
 colorbar(p.axarrow)
 title(p.axarrow,'d (t)')
