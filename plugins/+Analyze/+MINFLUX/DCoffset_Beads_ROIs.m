@@ -147,11 +147,7 @@ for ss=length(sites):-1:1
         dtstop(k)=t1h(end)-t2h(end);
         tfraction(k)=(t2h(end)-t2h(1))/(t1h(end)-t1h(1));
     end
-    if p.plotline
-        linest='-';
-    else
-        linest='.';
-    end
+    linest=p.plotline;
         plot(p.axdx, ti, dx,linest); hold(p.axdx,"on")
         plot(p.axdy, ti, dy, linest); hold(p.axdy,"on")
         plot(p.axdxn, ti, dx-dx(1),linest,ti,0*ti,'k'); hold(p.axdxn,"on")
@@ -399,8 +395,10 @@ pard.vectorlengtht.position=[5,1];
 pard.vectorlength.object=struct('String','10','Style','edit');
 pard.vectorlength.position=[5,2];
 
-pard.plotline.object=struct('String','plot line','Style','checkbox');
-pard.plotline.position=[5,3];
+pard.plotlinet.object=struct('String','Line style','Style','text');
+pard.plotlinet.position=[5,3];
+pard.plotline.object=struct('String','-','Style','edit');
+pard.plotline.position=[5,4];
 
 pard.plugininfo.type='ROI_Analyze';
 pard.plugininfo.description=' ';

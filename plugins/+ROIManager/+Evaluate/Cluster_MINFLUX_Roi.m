@@ -13,14 +13,14 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
         
         function out=run(obj,p)      
             usefields={'xnm','ynm','znm','time','groupindex','numberInGroup','filenumber','efo','cfr','eco','ecc','efc','tid','fbg'};
-            locsfind=obj.getLocs({'tid','groupindex'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
+            locsfind=obj.getLocs({'tid','groupindex','filenumber'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
             locs=obj.locData.getloc(usefields,'layer',find(obj.getPar('sr_layerson')),'Position','all','removeFilter',{'filenumber','time'});
             switch p.link.selection
                 case 'StepsMINFLUX'
                     ind=obj.site.evaluation.StepsMINFLUX.steps.allindices;
                     locs=obj.locData.loc;
                 case 'id'
-                    ind=locs.tid==mode(locsfind.tid);
+                    ind=locs.tid==mode(locsfind.tid) & locs.filenumber==mode(locsfind.filenumber);
                 case 'group'
                     ind=locs.groupindex==mode(locsfind.groupindex);
             end
