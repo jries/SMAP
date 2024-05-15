@@ -15,7 +15,7 @@ classdef Loader_minflux_json<interfaces.DialogProcessor
         function pard=guidef(obj)
             pard=guidef(obj);
         end
-        function run(obj,p)
+        function out=run(obj,p)
             [f,path]=uigetfile(obj.info.extensions);
             if exist([path f],'file')
                 obj.load(p,[path f]);
@@ -61,13 +61,16 @@ switch ext
                 loc=minfluxmat2loc(jt,p.onlyvalid,~p.simple);
             end
         end
-           
-        xoff=min(loc.xnm(loc.vld));yoff=min(loc.ynm(loc.vld));
-        loc.xnm=loc.xnm-xoff;
-        loc.ynm=loc.ynm-yoff;
-        if isfield(loc,'xncnm')
-            loc.xncnm=loc.xncnm-xoff;
-            loc.yncnm=loc.yncnm-yoff;
+        
+        if p.center
+            xoff=min(loc.xnm(loc.vld));yoff=min(loc.ynm(loc.vld));
+            loc.xnm=loc.xnm-xoff;
+            loc.ynm=loc.ynm-yoff;
+        
+            if isfield(loc,'xncnm')
+                loc.xncnm=loc.xncnm-xoff;
+                loc.yncnm=loc.yncnm-yoff;
+            end
         end
         
     case '.json'
@@ -118,8 +121,14 @@ filestruc=locData.files.file;
 filestruc.name=file;
 mx=ceil(max(locData.loc.xnm)/pixnm(1));
 my=ceil(max(locData.loc.ynm)/pixnm(end));
+if p.center
+    mix=0; miy=0;
+else
+    mix=floor(min(locData.loc.xnm)/pixnm(1));
+    miy=floor(min(locData.loc.ynm)/pixnm(end));
+end
 
-filestruc.info=struct('Width',mx,'Height',my,'roi',[0 0 mx my],'cam_pixelsize_um',pixnm/1000);
+filestruc.info=struct('Width',mx,'Height',my,'roi',[mix miy mx my],'cam_pixelsize_um',pixnm/1000);
 if obj.locData.files.filenumberEnd==0
     obj.locData.files.file=filestruc;
     
@@ -169,6 +178,11 @@ pard.alliter.object=struct('Style','checkbox','String','load all iterations','Va
 pard.alliter.position=[1,1];
 pard.alliter.Width=2;
 pard.alliter.TooltipString='Load all iterations, not only final iteration.';
+
+pard.center.object=struct('Style','checkbox','String','center','Value',1);
+pard.center.position=[1,3];
+pard.center.Width=2;
+
 
 
 pard.simple.object=struct('Style','checkbox','String','load only main fields','Value',1);
