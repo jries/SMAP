@@ -74,7 +74,7 @@ classdef driftcorrectionXYZ<interfaces.DialogProcessor
 %                     locs=lochere.getloc({'frame','xnm','ynm','znm'},'position','all','grouping',groupcheck);
 %                      locs=lochere.getloc({'frame','xnm','ynm','znm'},'position','all','grouping',groupcheck,'layer',1,'removeFilter',{'filenumber'});
                     locs=lochere.getloc({'frame','xnm','ynm','znm'},'position',region,'layer',layers,'removeFilter',rmfilter);
-                    if length(locs.xnm)/p.drift_timepoints<500
+                    if ~p.singlebead && length(locs.xnm)/p.drift_timepoints<500
                         out.error='Too few localizations. Remove ROI?';
 %                         answ=questdlg(['Only ' num2str(length(locs.xnm)/p.drift_timepoints) ' localizations per time window. Abort drift correction?']); %htis is modal: no way to see output.
 %                         if ~contains(answ,'No') %not use this
@@ -366,6 +366,11 @@ pard.drift_ask.object=struct('String','?','Style','checkbox','Value',0);
 pard.drift_ask.position=[8,2.6];
 pard.drift_ask.Width=.4;
 pard.drift_ask.Optional=true;
+
+pard.singlebead.object=struct('String','1bead','Style','checkbox','Value',0);
+pard.singlebead.position=[7,4.5];
+pard.singlebead.Width=.6;
+pard.singlebead.Optional=true;
 
 pard.save_dc.object=struct('String','Save driftcorrected SML','Style','checkbox','Value',1);
 pard.save_dc.position=[8,3];
