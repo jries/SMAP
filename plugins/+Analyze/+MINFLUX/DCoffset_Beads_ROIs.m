@@ -181,9 +181,9 @@ xlim(p.t2,quantile(dtstarta(dtstarta>0),[0. .98]))
 colormap(p.axarrow,'jet')
 colorbar(p.axarrow)
 title(p.axarrow,'d (t)')
-dxx=quantile(dxa(dxa>0),[.99]);
-xlim(p.axarrow,quantile(x1a(x1a>0),[.01 .99])+[-1 1]*dxx*p.vectorlength)
-ylim(p.axarrow,quantile(y1a(y1a>0),[.01 .99])+[-1 1]*dxx*p.vectorlength)
+dxx=quantile(dxa(dx~=0),[.99]);
+xlim(p.axarrow,quantile(x1a(x1a~=0),[.01 .99])+[-1 1]*dxx*p.vectorlength)
+ylim(p.axarrow,quantile(y1a(y1a~=0),[.01 .99])+[-1 1]*dxx*p.vectorlength)
 end
 
 
