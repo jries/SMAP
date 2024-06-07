@@ -76,11 +76,18 @@ for k=1:length(sites)
     hold(p.axdy,"on")
     hold(p.axx,"on")
     hold(p.axy,"on")
+
+    xm(k)=mean(dx); ym(k)=mean(dx);
+    stx(k)=std(dx);sty(k)=std(dy);
+   
 end
 xlabel(p.axx,'time (ms)'); ylabel(p.axx,'x (nm)')
 xlabel(p.axy,'time (ms)'); ylabel(p.axy,'y (nm)')
 xlabel(p.axdx,'time (ms)'); ylabel(p.axdx,'dx (nm)')
 xlabel(p.axdy,'time (ms)'); ylabel(p.axdy,'dy (nm)')
+
+title(p.axdx,['dx: ' num2str(xm,'%2.1f, ') ' std: ' num2str(stx, '%2.1f, ')] )
+title(p.axdy,['dy: ' num2str(ym,'%2.1f, ') ' std: ' num2str(sty, '%2.1f, ')] )
 end
 
 function driftoffset(obj,p)
