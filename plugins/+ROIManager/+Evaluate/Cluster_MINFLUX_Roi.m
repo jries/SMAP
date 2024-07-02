@@ -23,6 +23,8 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                     ind=locs.tid==mode(locsfind.tid) & locs.filenumber==mode(locsfind.filenumber);
                 case 'group'
                     ind=locs.groupindex==mode(locsfind.groupindex);
+                case 'all'
+                    ind=true(size(locs.tid));
             end
             if p.skipfirst>0
                 ind=find(ind);
@@ -74,7 +76,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             xlabel(axx,'time (ms)')
             ylabel(axx,'x (nm)')
                title(axx,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) robust = ' num2str(sxrobust,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.'])
-
+            
 
             axy=obj.setoutput('y');
             tzero=ltime*0;
@@ -173,7 +175,7 @@ function pard=guidef(obj)
 
 pard.linkt.object=struct('String','Selection','Style','text');
 pard.linkt.position=[1,1];
-pard.link.object=struct('String',{{'StepsMINFLUX','group','id'}},'Style','popupmenu','Value',2);
+pard.link.object=struct('String',{{'StepsMINFLUX','group','id','all'}},'Style','popupmenu','Value',3);
 pard.link.position=[1,2];
 pard.link.Width=1.5;
 
@@ -184,7 +186,18 @@ pard.skipfirst.object=struct('String',0,'Style','edit');
 pard.skipfirst.position=[2,2];
 pard.skipfirst.Width=1;
 
-
+pard.avtraceon.object=struct('String','average trace','Style','checkbox');
+pard.avtraceon.position=[3,1];
+pard.avtraceon.Width=2;
+pard.avmode.object=struct('String',{{'median','mean'}},'Style','popupmenu');
+pard.avmode.position=[3,3];
+pard.avmode.Width=2;
+pard.avwint.object=struct('String','window size (locs)','Style','text');
+pard.avwint.position=[4,2];
+pard.avwint.Width=2;
+pard.avwin.object=struct('String','20','Style','edit');
+pard.avwin.position=[4,4];
+pard.avwin.Width=1;
 
 pard.plugininfo.description=sprintf('');
 pard.plugininfo.type='ROI_Evaluate';
