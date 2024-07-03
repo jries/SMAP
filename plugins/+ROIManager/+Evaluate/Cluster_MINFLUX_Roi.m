@@ -183,13 +183,15 @@ function plotavtrace(p,axx, time, x)
     if p.avtraceon
         oldhold=ishold(axx);
         hold(axx, 'on')
+        fun=@(x) median(x(:));
+        % y=nlfilter(x,[p.avwin 1], fun);
         % switch p.avmode.selection
         %     case 'median'
-                y=runningWindowAnalysis(time,x,time,p.avwin,p.avmode.selection);
+                y=runningWindowAnalysisPoints(x,p.avwin,p.avmode.selection);
         %     case 'mean'
         %         y=runningaverage(x,p.avwin);
         % end
-        plot(axx, time, y,'k')
+        plot(axx, time, y,'k','LineWidth',1.)
         if ~oldhold
             hold(axx,"off")
         end

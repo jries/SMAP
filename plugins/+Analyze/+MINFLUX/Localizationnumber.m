@@ -5,7 +5,7 @@ classdef Localizationnumber<interfaces.DialogProcessor&interfaces.SEProcessor
         function obj=Localizationnumber(varargin)        
             obj@interfaces.DialogProcessor(varargin{:});
             obj.inputParameters={};
-            obj.showresults=true;
+            obj.showresults=false;
         end
         
         function out=run(obj,p)  
@@ -25,18 +25,28 @@ end
 function out=runintern(obj,p)
 out=[];
 tid=obj.locData.loc.tid;
-time=obj.locData.loc.time;
-file=obj.locData.loc.filenumber;
-allid=unique(tid);
-allfiles=unique(file);
+% time=obj.locData.loc.time;
+% file=obj.locData.loc.filenumber;
+% allid=unique(tid);
+% allfiles=unique(file);
 locintrack=0*tid;
-for f=1:length(allfiles)
-    for id=1:length(allid)
-        ixh=allfiles(f)==file & allid(id)==tid;
-        numloc=sum(ixh);
-        locintrack(ixh)=1:numloc;
+count=1;
+tc=tid(1);
+for k=1:length(tid)
+    if tid(k)~=tc
+        count=1;
+        tc=tid(k);
     end
+    locintrack(k)=count;
+    count=count+1;
 end
+% for f=1:length(allfiles)
+%     for id=1:length(allid)
+%         ixh=allfiles(f)==file & allid(id)==tid;
+%         numloc=sum(ixh);
+%         locintrack(ixh)=1:numloc;
+%     end
+% end
 obj.locData.loc.locintrack=locintrack;
 obj.locData.regroup;
 end
