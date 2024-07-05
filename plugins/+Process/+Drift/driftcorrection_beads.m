@@ -79,7 +79,7 @@ classdef driftcorrection_beads<interfaces.DialogProcessor
                     % obj.locData.files.file(k).driftinfo=driftinfoh;
                     fn=obj.locData.files.file(1).name;
                     if contains(fn,'_sml.mat')
-                        fnn=strrep(fn,'_sml.mat','_dme_sml.mat');
+                        fnn=strrep(fn,'_sml.mat','_driftbeads_sml.mat');
                     end
                     if p.save_dc
                         obj.addhistory;

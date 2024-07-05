@@ -32,7 +32,11 @@ y(badind)=[];
 % xn(1)=-inf; xn(end+1)=inf;
 yy=zeros(size(xx));
 for k=1:length(xx)
-    ind=x>=xx(k)-windowsize/2&x<xx(k)+windowsize/2;
+    if windowsize==0
+        ind=x==xx(k);
+    else
+        ind=x>=xx(k)-windowsize/2&x<xx(k)+windowsize/2;
+    end
     try
     yy(k)=fh(y(ind));
     catch
