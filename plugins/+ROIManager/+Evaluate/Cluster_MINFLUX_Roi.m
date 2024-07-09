@@ -12,7 +12,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
         end
         
         function out=run(obj,p)      
-            usefields={'xnm','ynm','znm','time','groupindex','numberInGroup','filenumber','efo','cfr','eco','ecc','efc','tid','fbg'};
+            usefields={'xnm','ynm','znm','time','groupindex','numberInGroup','filenumber','efo','cfr','eco','ecc','efc','tid','fbg','phot'};
             [locsfind,indr]=obj.getLocs({'tid','groupindex','filenumber'},'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
             locs=obj.locData.getloc(usefields,'layer',find(obj.getPar('sr_layerson')),'Position','all','removeFilter',{'filenumber','time'});
             switch p.link.selection
@@ -60,9 +60,9 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                  my=mean(locs.ynm(ind));
 
             axy=obj.setoutput('xy');
-            plot(axy,locs.xnm(ind)-mx,locs.ynm(ind)-my,'ro','MarkerSize',5)
+            plot(axy,locs.xnm(ind)-mx,locs.ynm(ind)-my,'c')
             hold(axy,'on')
-            plot(axy,locs.xnm(ind)-mx,locs.ynm(ind)-my,'k')
+            plot(axy,locs.xnm(ind)-mx,locs.ynm(ind)-my,'k.')
             hold(axy,'off')
             xlabel(axy,'x (nm)')
             ylabel(axy,'y (nm)')
@@ -79,7 +79,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             ylabel(axx,'x (nm)')
                title(axx,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) robust = ' num2str(sxrobust,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.'])
 
-            plotavtrace(p,axx, ltime,locs.xnm(ind)-mx);
+             plotavtrace(p,axx, ltime,locs.xnm(ind)-mean(locs.xnm(ind)));
 
 
             axy=obj.setoutput('y');
@@ -93,6 +93,11 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             ylabel(axy,'y (nm)')
             title(axy,['std(y) = ' num2str(sigmay,ff) ' nm, std(y) robust = ' num2str(syrobust,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
             plotavtrace(p,axy, ltime,locs.ynm(ind)-mean(locs.ynm(ind)));
+            
+            axbb=obj.setoutput('xbin');
+            plotstdbin(p,locs.xnm(ind)-mx, locs.phot(ind), axbb)
+            axbby=obj.setoutput('ybin');
+            plotstdbin(p,locs.ynm(ind)-my, locs.phot(ind), axbby)
 
             if isfield(locs,'znm') && ~isempty(locs.znm)
                 sigmaz=std(locs.znm(ind));
@@ -111,6 +116,9 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmaz \t sigmax robust \t sigmay robust \t sigmaz robust \t sigmax detrend \t sigmay detrend \t sigmaz detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t fbg med  \t filename';
                 tsig=['\t' num2str(sigmax) '\t' num2str(sigmay) '\t' num2str(sigmaz)  '\t' num2str(sxrobust)  '\t' num2str(syrobust) '\t' num2str(szrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend) '\t' num2str(szdetrend)];
                 outsig.sigmax=sigmax;outsig.sigmay=sigmay;outsig.sigmaz=sigmaz;outsig.sxrobust=sxrobust;outsig.syrobust=syrobust;outsig.szrobust=szrobust;outsig.sxdetrend=sxdetrend;outsig.sydetrend=sydetrend;outsig.szdetrend=szdetrend;
+
+                axbbz=obj.setoutput('zbin');
+                plotstdbin(p,locs.znm(ind)-mz, locs.phot(ind), axbbz)
             else
                 tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmax robust \t sigmay robust \t sigmax detrend \t sigmay detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t fbg med \t filename' ;
                 tsig=['\t' num2str(sigmax) '\t' num2str(sigmay)  '\t' num2str(sxrobust)  '\t' num2str(syrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend)];
@@ -198,6 +206,36 @@ function plotavtrace(p,axx, time, x)
     end
 end
 
+function plotstdbin(p,x, phot, axx)
+xh=x;photh=phot;
+nump=20;
+xb=zeros(nump,1);photb=xb;
+for k=1:nump
+    xb(k)=std(xh);
+    photb(k)=mean(photh);
+    xh=sumbintrace2(xh)/2;
+    if length(xh)<10
+        break
+    end
+    photh=sumbintrace2(photh);
+end
+hold(axx,'off')
+semilogx(axx,photb(1:k), xb(1:k),'ko-')
+hold(axx,'on')
+sigsmlm=120./sqrt(photb(1:k));
+
+sigminflux=p.L./sqrt(8*photb(1:k));
+semilogx(axx,photb(1:k), sigsmlm,'m--')
+semilogx(axx,photb(1:k), sigminflux,'b-.')
+ylabel(axx,'std pos (nm)')
+xlabel(axx,'photons')
+legend(axx,'std','SMLM','MINFLUX')
+end
+
+function xb=sumbintrace2(x)
+len=floor(length(x)/2)*2;
+xb=x(1:2:len-1)+x(2:2:len);
+end
 
 function pard=guidef(obj)
 
@@ -226,6 +264,13 @@ pard.avwint.Width=2;
 pard.avwin.object=struct('String','20','Style','edit');
 pard.avwin.position=[4,4];
 pard.avwin.Width=1;
+
+pard.Lt.object=struct('String','scan size L (nm)','Style','text');
+pard.Lt.position=[5,1];
+pard.Lt.Width=2;
+pard.L.object=struct('String','75','Style','edit');
+pard.L.position=[5,3];
+pard.L.Width=1;
 
 pard.plugininfo.description=sprintf('');
 pard.plugininfo.type='ROI_Evaluate';
