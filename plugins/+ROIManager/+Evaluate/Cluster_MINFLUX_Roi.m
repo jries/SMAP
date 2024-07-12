@@ -36,6 +36,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             filelist=obj.getPar('filelist_short');
             filename=filelist.String{mode(locs.filenumber(ind))};
             dt=diff(locs.time(ind));
+            timedt=locs.time(ind);
             dtmin=min(dt(dt>0));
             dtmedian=median(dt);
             dtmean=mean(dt);
@@ -48,7 +49,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             nlocs=length(locs.time(ind));
             ontime=max(locs.time(ind))-min(locs.time(ind));
 
-            ltime=locs.time(ind)-min(locs.time(ind));
+            
 
             sigmax=std(locs.xnm(ind));sigmay=std(locs.ynm(ind));
             sxdetrend=std(diff(locs.xnm(ind)))/sqrt(2);sydetrend=std(diff(locs.ynm(ind)))/sqrt(2);
@@ -59,10 +60,37 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                  mx=mean(locs.xnm(ind));
                  my=mean(locs.ynm(ind));
 
+            dxplot=locs.xnm(ind)-mx;
+            dyplot=locs.ynm(ind)-my;
+            ltime=locs.time(ind)-min(locs.time(ind));
+            
+            
+            if p.groupon && strcmp(p.link.selection,'all')
+                ids=(locs.tid(ind));
+                allids=unique(ids);
+                dxph=zeros(length(allids),1); dyph=dxph; lth=dxph;sxh=dxph;syh=dxph;
+                for k=1:length(allids)
+                    indh=(ids==allids(k));
+                    dxph(k)=mean(dxplot(indh));
+                    dyph(k)=mean(dyplot(indh));
+                    sxh(k)=std(dxplot(indh))/sqrt(sum(indh));
+                    syh(k)=std(dyplot(indh))/sqrt(sum(indh));
+                    lth(k)=mean(ltime(indh));
+                end
+                dxplot=dxph;
+                dyplot=dyph;
+                ltime=lth;
+            else
+                sxh=[]; syh=[];
+            end
+
+           
+            tzero=ltime*0;
+
             axy=obj.setoutput('xy');
-            plot(axy,locs.xnm(ind)-mx,locs.ynm(ind)-my,'c')
+            plot(axy,dxplot,dyplot,'c')
             hold(axy,'on')
-            plot(axy,locs.xnm(ind)-mx,locs.ynm(ind)-my,'k.')
+            plot(axy,dxplot,dyplot,'k.')
             hold(axy,'off')
             xlabel(axy,'x (nm)')
             ylabel(axy,'y (nm)')
@@ -70,10 +98,14 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
 
             axx=obj.setoutput('x');
             
-            plot(axx,ltime,locs.xnm(ind)-mx,ltime,0*locs.time(ind),'k', ...
-                ltime,0*ltime+sigmax,'c',ltime,0*ltime-sigmax,'r',...
-                ltime,0*locs.time(ind)+sxrobust,'r',ltime,0*locs.time(ind)-sxrobust,'c',...
-                ltime,0*locs.time(ind)+sxdetrend,'m',ltime,0*locs.time(ind)-sxdetrend,'m')
+            plot(axx,ltime,dxplot,'k',ltime,tzero,'k', ...
+                ltime,tzero+sigmax,'c',ltime,tzero-sigmax,'c',...
+                ltime,tzero+sxdetrend,'m',ltime,tzero-sxdetrend,'m')
+            if ~isempty(sxh)
+                hold(axx,'on')
+                errorbar(axx,ltime, dxplot,sxh,'k.')
+                 hold(axx,'off')
+            end
             legend(axx,'data','','std','','robust std','','detrend std','')
             xlabel(axx,'time (ms)')
             ylabel(axx,'x (nm)')
@@ -83,11 +115,17 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
 
 
             axy=obj.setoutput('y');
-            tzero=ltime*0;
-            plot(axy,ltime,locs.ynm(ind)-mean(locs.ynm(ind)),ltime,tzero,'k', ...
-                ltime,tzero+sigmay,'c',ltime,tzero-sigmay,'r',...
-                ltime,tzero+syrobust,'r',ltime,tzero-syrobust,'c',...
+            
+            plot(axy,ltime,dyplot,ltime,tzero,'k', ...
+                ltime,tzero+sigmay,'c',ltime,tzero-sigmay,'c',...
                 ltime,tzero+sydetrend,'m',ltime,tzero-sydetrend,'m')
+
+            if ~isempty(syh)
+                hold(axy,'on')
+                errorbar(axy,ltime, dyplot,syh,'k.')
+                 hold(axy,'off')
+            end
+
             legend(axy,'data','','std','','robust std','','detrend std','')
             xlabel(axy,'time (ms)')
             ylabel(axy,'y (nm)')
@@ -135,38 +173,38 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             title(axt,['dtmin = ' num2str(dtmin,ff) ' ms, dtmedian = ' num2str(dtmedian,ff) ' ms, dtmean = ' num2str(dtmean,ff) ' ms.'])
             
             axdt=obj.setoutput('dt');
-            plot(axdt,ltime(2:end),dt)
+            plot(axdt,timedt(2:end),dt)
             xlabel(axdt,'time (ms)')
             ylabel(axdt,'dt (ms)')
             plotavtrace(p,axdt, ltime(2:end),dt);
             
             if ~isempty(locs.efo)
                 axe=obj.setoutput('efo');
-                plot(axe,ltime,locs.efo(ind))
+                plot(axe,timedt,locs.efo(ind))
                 xlabel(axe,'time (ms)')
                 ylabel(axe,'efo')
-                plotavtrace(p,axe, ltime,locs.efo(ind));
+                plotavtrace(p,axe, timedt,locs.efo(ind));
             end
             if ~isempty(locs.cfr)
                 axc=obj.setoutput('cfr');
-                plot(axc,ltime,locs.cfr(ind))
+                plot(axc,timedt,locs.cfr(ind))
                 xlabel(axc,'time (ms)')
                 ylabel(axc,'cfr')
-                plotavtrace(p,axc, ltime,locs.cfr(ind));
+                plotavtrace(p,axc, timedt,locs.cfr(ind));
             end
             if ~isempty(locs.eco)
                 axec=obj.setoutput('eco');
-                plot(axec,ltime,locs.eco(ind))
+                plot(axec,timedt,locs.eco(ind))
                 xlabel(axec,'time (ms)')
                 ylabel(axec,'eco')
-                plotavtrace(p,axec, ltime,locs.eco(ind));
+                plotavtrace(p,axec, timedt,locs.eco(ind));
             end
             if ~isempty(locs.ecc)
                 axcc=obj.setoutput('ecc');
-                plot(axcc,ltime,locs.ecc(ind))
+                plot(axcc,timedt,locs.ecc(ind))
                 xlabel(axcc,'time (ms)')
                 ylabel(axcc,'ecc')
-                plotavtrace(p,axcc, ltime,locs.ecc(ind));
+                plotavtrace(p,axcc, timedt,locs.ecc(ind));
             end
             
             out.nocs=nlocs;out.ontime=ontime;out.dtmin=dtmin; out.dtmedian=dtmedian;out.dtmean=dtmean;
@@ -271,6 +309,12 @@ pard.Lt.Width=2;
 pard.L.object=struct('String','75','Style','edit');
 pard.L.position=[5,3];
 pard.L.Width=1;
+
+
+pard.groupon.object=struct('String','group individual tracks (selection all)','Style','checkbox','Value',1);
+pard.groupon.position=[6,1];
+pard.groupon.Width=4;
+
 
 pard.plugininfo.description=sprintf('');
 pard.plugininfo.type='ROI_Evaluate';
