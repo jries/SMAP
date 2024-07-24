@@ -28,8 +28,8 @@ classdef driftcorrection_beads<interfaces.DialogProcessor
             
             maxframe=max(obj.locData.loc.frame);
             framerange=(1:maxframe)';
-            drift.xy.x=runningWindowAnalysis([frames{:}],[dx{:}],framerange,p.filterwin,'mean');
-            drift.xy.y=runningWindowAnalysis([frames{:}],[dy{:}],framerange,p.filterwin,'mean');
+            drift.xy.x=runningWindowAnalysis(vertcat(frames{:}),vertcat(dx{:}),framerange,p.filterwin,'mean');
+            drift.xy.y=runningWindowAnalysis(vertcat(frames{:}),vertcat(dy{:}),framerange,p.filterwin,'mean');
             
             axd=obj.initaxis('drift'); 
             plot(axd, framerange, drift.xy.x,framerange,drift.xy.y)
