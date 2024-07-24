@@ -107,7 +107,7 @@ function [drifto,driftinfo,fieldc]=getxyzdrift(locs,p)
 end
 
 function [dx,dy,dz,frames,isz]=getbeads(obj,p,suff)
-lochere=obj.locData.getloc({'xnm','ynm','znm','frame','numberInGroup','groupindex'},'layer',find(obj.getPar('sr_layerson')),'position','roi');
+lochere=obj.locData.getloc({'xnm','ynm','znm','frame','numberInGroup','groupindex'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
     if p.beadsource_minlocsuse
         beadid=unique(lochere.groupindex(lochere.numberInGroup>p.beadsource_minlocs));
     else
@@ -120,6 +120,9 @@ lochere=obj.locData.getloc({'xnm','ynm','znm','frame','numberInGroup','groupinde
     end
     for k=1:length(beadid)
         indh=lochere.groupindex==beadid(k);
+        if sum(indh)<p.beadsource_minlocs
+            continue
+        end
         plot(axx1,lochere.frame(indh),lochere.xnm(indh)-mean(lochere.xnm(indh)));
         hold(axx1,'on')
         plot(axy1,lochere.frame(indh),lochere.ynm(indh)-mean(lochere.ynm(indh)));
