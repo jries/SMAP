@@ -38,7 +38,7 @@ classdef intensityTiff<interfaces.SEEvaluationProcessor
             
             sfit=round((p.roisize-1)/2);
             
-            coim=file.tif(1).image(pospixr(2)-sfit:pospixr(2)+sfit,pospixr(1)-sfit:pospixr(1)+sfit,:);
+            coim=double(file.tif(1).image(pospixr(2)-sfit:pospixr(2)+sfit,pospixr(1)-sfit:pospixr(1)+sfit,:));
         
             pr=round(pos([1,2])./pixcam([1,2]));
             rangex=(pr(1)-sfit:pr(1)+sfit)*pixcam(1);
@@ -256,7 +256,8 @@ dx=rangex(end)-rangex(1);
 meanposx=mean(rangex); meanposy=mean(rangey);
 n=1;
 lb=double([0 0 meanposx-n*dx meanposy-n*dx 150 0]);ub=double([inf inf meanposx+n*dx meanposy+n*dx  750 inf]);
-fit=lsqnonlin(@dgaussforfiterr,double(startp),lb,ub,[],double(img),X,Y,fixp);
+fh=@(x)dgaussforfiterr(x,double(img),X,Y,fixp);
+fit=lsqnonlin(fh,double(startp),lb,ub);
 
 [fit(3),fit(4)]=restrictcoordiantes(fit(3),fit(4),fixp(1),fixp(2),fixp(4));
 end
@@ -291,7 +292,8 @@ n=.5;
 lb=double([0 0 meanposx-n*dx meanposy-n*dx 150 0 0 meanposx-n*dx meanposy-n*dx  150]);ub=double([inf inf meanposx+n*dx meanposy+n*dx  250 inf inf meanposx+n*dx meanposy+n*dx 250]);
 startp(startp>ub)=ub(startp>ub);
 startp(startp<lb)=lb(startp<lb);
-fit=lsqnonlin(@triplegaussforfiterr,double(startp),lb,ub,[],double(img),X,Y,fixp);
+fh=@(x)triplegaussforfiterr(x,double(img),X,Y,fixp);
+fit=lsqnonlin(fh,double(startp),lb,ub);
 [fit(3),fit(4)]=restrictcoordiantes(fit(3),fit(4),fixp(1),fixp(2),fixp(4));
 [fit(8),fit(9)]=restrictcoordiantes(fit(8),fit(9),fixp(1),fixp(2),fixp(4));
 end
@@ -363,7 +365,8 @@ meanposx=mean(rangex); meanposy=mean(rangey);
 % is maximum distance from center in [ROI size]s
 n=.5;
 lb=double([0 0 meanposx-n*dx meanposy-n*dx 150 0 0 meanposx-n*dx meanposy-n*dx  150 meanposx-d meanposy-d]);ub=double([inf inf meanposx+n*dx meanposy+n*dx  250 inf inf meanposx+n*dx meanposy+n*dx 250 meanposx+d meanposy+d]);
-fit=lsqnonlin(@triplegaussforfiterrfree,double(startp),lb,ub,[],double(img),X,Y,fixp);
+fh=@(x)triplegaussforfiterrfree(x,double(img),X,Y,fixp);
+fit=lsqnonlin(fh,double(startp),lb,ub);
 [fit(3),fit(4)]=restrictcoordiantes(fit(3),fit(4),fit(11),fit(12),fixp(2));
 [fit(8),fit(9)]=restrictcoordiantes(fit(8),fit(9),fit(11),fit(12),fixp(2));
 end
