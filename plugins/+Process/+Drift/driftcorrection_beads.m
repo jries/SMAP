@@ -107,15 +107,25 @@ function [drifto,driftinfo,fieldc]=getxyzdrift(locs,p)
 end
 
 function [dx,dy,dz,frames,isz]=getbeads(obj,p,suff)
-lochere=obj.locData.getloc({'xnm','ynm','znm','frame','numberInGroup','groupindex'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
+if contains(p.beadsource.selection,'View')
+    lochere=obj.locData.getloc({'xnm','ynm','znm','frame','numberInGroup','groupindex'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
     if p.beadsource_minlocsuse
         beadid=unique(lochere.groupindex(lochere.numberInGroup>p.beadsource_minlocs));
     else
         beadid=unique(lochere.groupindex);
     end
+else
+    sites=obj.locData.SE.sites;
+    for k=length(sites):-1:1
+        lochere=obj.locData.getloc({'xnm','ynm','znm','frame','numberInGroup','groupindex'},'layer',find(obj.getPar('sr_layerson')),'position',sites(k),'grouping','ungrouped');
+        beadid(k)=mode(lochere.groupindex);
+    end
+    
+end
+lochere=obj.locData.loc;
     axx1=obj.initaxis(['x' suff]); hold(axx1,'off')
     axy1=obj.initaxis(['y' suff]); hold(axy1,'off')
-    if ~isempty(lochere.znm)
+    if isfield(lochere,'znm') && ~isempty(lochere.znm)
         axz1=obj.initaxis(['z' suff]); hold(axz1,'off')
     end
     for k=1:length(beadid)
@@ -129,7 +139,7 @@ lochere=obj.locData.getloc({'xnm','ynm','znm','frame','numberInGroup','groupinde
         hold(axy1,'on')
         dx{k}=lochere.xnm(indh)-mean(lochere.xnm(indh));
         dy{k}=lochere.ynm(indh)-mean(lochere.ynm(indh));
-        if ~isempty(lochere.znm)
+        if isfield(lochere,'znm') && ~isempty(lochere.znm)
             dz{k}=lochere.znm(indh)-mean(lochere.znm(indh));
             plot(axz1,lochere.frame(indh),lochere.znm(indh)-mean(lochere.znm(indh)));
             hold(axz1,'on')
@@ -145,22 +155,22 @@ lochere=obj.locData.getloc({'xnm','ynm','znm','frame','numberInGroup','groupinde
 end
 
 function pard=guidef(obj)
-% pard.beadsourcet.object=struct('String','Beads from ','Style','text');
-% pard.beadsourcet.position=[2,1];
-% pard.beadsource.object=struct('String',{{'View/Roi','Roi manager'}},'Style','popupmenu');
-% pard.beadsource.position=[2,2];
-% pard.beadsource.Width=1.5;
+pard.beadsourcet.object=struct('String','Beads from ','Style','text');
+pard.beadsourcet.position=[2,1];
+pard.beadsource.object=struct('String',{{'View/Roi','Roi manager'}},'Style','popupmenu');
+pard.beadsource.position=[2,2];
+pard.beadsource.Width=1.5;
 pard.beadsource_minlocsuse.object=struct('String','#locs >','Style','checkbox');
-pard.beadsource_minlocsuse.position=[2,1];
+pard.beadsource_minlocsuse.position=[3,1];
 pard.beadsource_minlocs.object=struct('String','100','Style','edit');
-pard.beadsource_minlocs.position=[2,2];
+pard.beadsource_minlocs.position=[3,2];
 pard.beadsource_minlocs.Width=0.5;
 
 
 pard.filtert.object=struct('String','Filter window (frames)','Style','text');
-pard.filtert.position=[3,1];
+pard.filtert.position=[4,1];
 pard.filterwin.object=struct('String','5','Style','edit');
-pard.filterwin.position=[3,2];
+pard.filterwin.position=[4,2];
 pard.filterwin.Width=0.5;
 
 % pard.drift_reference.object=struct('String','reference is last frame','Style','checkbox');
