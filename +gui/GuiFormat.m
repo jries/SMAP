@@ -308,13 +308,21 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 lineh.handle2=line([0 0],[0 0],'Parent',ax);
                 lineh.ax=ax;
                 lineh.text=text(0,0,' ','Color',[1 1 1]*0.7,'FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);
-            end  
+            end 
+            lay=find(obj.getPar('sr_layerson'));
+            for k=length(lay):-1:1
+                l=obj.locData.getloc({'xnm'},'Position','roi','layer',lay(k));
+                N(1,k)=length(l.xnm);
+            end
+            Ntxt=num2str(N,'%i,');
+            Ntxt(end)=[];
+
             switch roimodecallback
                 case {4,'imline'}
                     lw=obj.getPar('linewidth_roi');
                     len=sqrt((pos(2,1)-pos(1,1))^2+(pos(2,2)-pos(1,2))^2);                   
                     mpos=mean(pos,1);
-                    set(lineh.text,'String',[ num2str(len*1000,'%4.0f') ' nm'],'Position',mpos);
+                    set(lineh.text,'String',[ num2str(len*1000,'%4.0f') ' nm' ', N=' Ntxt],'Position',mpos);
                     roivec=pos(2,:)-pos(1,:);
                     roivecp(2)=roivec(1);
                     roivecp(1)=-roivec(2);
@@ -330,11 +338,11 @@ classdef GuiFormat<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 w=pos(3);
                 l=pos(4);
 %                 linetexth=text(pos(1),pos(2)+pos(4),[ num2str(w*1000,'%4.0f') ' x ' num2str(l*1000,'%4.0f') ' nm'],'Color','w','FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);
-                set(lineh.text,'Position',[pos(1),pos(2)+pos(4)],'String',[ num2str(w*1000,'%4.0f') ' x ' num2str(l*1000,'%4.0f') ' nm'],'Color','w','FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);
+                set(lineh.text,'Position',[pos(1),pos(2)+pos(4)],'String',[ num2str(w*1000,'%4.0f') ' x ' num2str(l*1000,'%4.0f') ' nm' ', N=' Ntxt],'Color','w','FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);
                 case {3,6,'imfreehand','impoly'} %free
                     w=max(pos(:,1))-min(pos(:,1));
                     l=max(pos(:,2))-min(pos(:,2));
-                    set(lineh.text,'Position',[min(pos(:,1)),min(pos(:,2))],'String',[ num2str(w*1000,'%4.0f') ' x ' num2str(l*1000,'%4.0f') ' nm'],'Color','w','FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);
+                    set(lineh.text,'Position',[min(pos(:,1)),min(pos(:,2))],'String',[ num2str(w*1000,'%4.0f') ' x ' num2str(l*1000,'%4.0f') ' nm' ', N=' Ntxt],'Color','w','FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);
 %                     linetexth=text(min(pos(:,1)),min(pos(:,2)),[ num2str(w*1000,'%4.0f') ' x ' num2str(l*1000,'%4.0f') ' nm'],'Color','w','FontSize',16,'VerticalAlignment','bottom','HitTest','off','Parent',ax);   
             end
             obj.setPar('sr_roiposition',pos);
