@@ -450,6 +450,7 @@ else %use all values, plot for unconnected and connected
 end
 
 function [his,mmo,slegend]=plothist(v,quantile,dphot,hmin,ax,modetxt,qfac)
+mmo=[];
 if nargin<7
     qfac=5;
 end
