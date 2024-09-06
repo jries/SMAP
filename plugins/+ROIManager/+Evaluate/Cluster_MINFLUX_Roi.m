@@ -208,9 +208,10 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             end
             
             out.nocs=nlocs;out.ontime=ontime;out.dtmin=dtmin; out.dtmedian=dtmedian;out.dtmean=dtmean;
-            out.sigmas=outsig;
-            out.efo=efo;out.cfr=cfr;out.eco=eco;out.ecc=ecc;out.efc=efc;out.filename=filename;
-            out.fbg=fbg;
+            out.sigmax=sigmax;out.sigmay=sigmay;out.sxrobust=sxrobust;out.syrobust=syrobust;out.sxdetrend=sxdetrend;out.sydetrend=sydetrend;
+            out.efo=efo;out.cfr=cfr;out.eco=eco;out.ecc=ecc;out.efc=efc;out.fbg=fbg;
+            % [~,filenamep]=fileparts(filename);
+            out.filenames=filename;
             header=sprintf(tz);
             disp(header)
             results=sprintf([num2str(nlocs)  '\t' num2str(ontime)  '\t' num2str(dtmin)  '\t' num2str(dtmedian) '\t' num2str(dtmean) tsig '\t' num2str(efo) '\t' ...
