@@ -26,6 +26,7 @@ classdef dyeblinking<interfaces.DialogProcessor
             ax5=obj.initaxis('blinks');               
             ax6=obj.initaxis('photdT');
             ax7=obj.initaxis('ondT');
+            ax10=obj.initaxis('blinkdT');
 
             switch p.showwhat.Value
                 case 1
@@ -48,88 +49,49 @@ classdef dyeblinking<interfaces.DialogProcessor
                 obj.locData.files.file(f).name
                 exposuret=obj.locData.files.file(f).info.exposure/1000; %s
                 maxdTf=p.maxdt/exposuret;
-                locd=obj.locData.copy;
-                thisf=locd.loc.filenumber==files(f);
-                locd.removelocs(~thisf);
-                locd.regroup([30 75],maxdTf,2);
-                locd.sort('groupindex');
-                %%
-                gi=locd.loc.groupindex;
-                % maxg=gi(end);
-                ind1=1;
-                gih=gi(1);
-                newtrace=false(length(gi),1); newblink=false(length(gi),1);
-                ontime=zeros(length(gi),1);offtime=zeros(length(gi),1);
-                tracetime=zeros(length(gi),1);numberOfBlinks=zeros(length(gi),1);onfraction=zeros(length(gi),1);
-                % dframe=diff(locd.loc.frame);
-                for k=1:length(gi) 
-                    if gi(k)>gih || k==length(gi) % new track. we lose last localization...
-                        indh=ind1:k-1;
-                        framesh=locd.loc.frame(indh);
-                        newtrace(ind1)=true;
-                        tracetime(ind1)=framesh(end)-framesh(1)+1;
-                        onfraction(ind1)=length(framesh)/tracetime(ind1);
-                        % numberOfBlinks(ind1)=sum(diff(framesh)>1)+1;
-                        dfh=[diff(framesh); -1];
-                        dfh1=[true;dfh>1];
-                        numberOfBlinks(ind1)=sum(dfh1);
-                        fdfh=[find(dfh1); length(framesh)+1];
-                        for l=1:length(fdfh)-1
-                            indbl=indh(fdfh(l));
-                            newblink(indbl)=true;
-                
-                            ontime(indbl)=fdfh(l+1)-fdfh(l);
-                            offtime(indbl)=dfh(fdfh(l+1)-1);
-                            
-                
-                        end
-                
-                        findh=find(indh);
-                        gih=gi(k);
-                        ind1=k;
-                    end
-                end
-                %%
-                % figure(88)
-                
+                [newtrace,newblink,ontime,offtime,tracetime,numberOfBlinks,onfraction,locd]=getstatistics(obj, files(f), maxdTf);
+
                 histogram(ax1,ontime(newblink),1:quantile(ontime,0.99),"DisplayStyle","stairs",Normalization="probability")
                 xlabel(ax1,'on-times (frames)')
                 ax1.YScale=p.yscale.selection;ax1.XLim(1)=0;hold(ax1,'on');
                 
                
                 offt=offtime(newblink);
-                histogram(ax2,offt(offt>0)*exposuret,(0:exposuret:max(offt)*exposuret)+exposuret/20,"DisplayStyle","stairs",Normalization="probability")
+                histogram(ax2,offt(offt>0)*exposuret,(0:exposuret:max(offt)*exposuret)+exposuret/5,"DisplayStyle","stairs",Normalization="probability")
                 xlabel(ax2,'off-times (s)')
                 ax2.YScale=p.yscale.selection;ax2.XLim(1)=0;hold(ax2,'on');
                 
-                histogram(ax3,tracetime(newtrace)*exposuret,0:exposuret:10,"DisplayStyle","stairs",Normalization="probability")
+                histogram(ax3,tracetime(newtrace)*exposuret,0:exposuret:quantile(tracetime(newtrace)*exposuret,0.98)+exposuret/2,"DisplayStyle","stairs",Normalization="probability")
                 xlabel(ax3,'duration of trace (s)')
-                ax3.YScale=p.yscale.selection;ax3.XLim(1)=0;ax3.XLim(2)=quantile(tracetime(newtrace)*exposuret,.9);hold(ax3,'on');
+                ax3.YScale=p.yscale.selection;ax3.XLim(1)=0;hold(ax3,'on');
           
                 histogram(ax4,onfraction(newtrace&numberOfBlinks>1),"DisplayStyle","stairs",Normalization="probability")
                 xlabel(ax4,'on fraction')
                 hold(ax4,'on');
                 
-                histogram(ax5,numberOfBlinks(newtrace)-1,0:quantile(numberOfBlinks(newtrace)-1,.99),"DisplayStyle","stairs",Normalization="probability")
+                histogram(ax5,numberOfBlinks(newtrace)-1,0:quantile(numberOfBlinks(newtrace)-1,.95),"DisplayStyle","stairs",Normalization="probability")
                 xlabel(ax5,'number of blinks')
                 ax5.YScale=p.yscale.selection;ax5.XLim(1)=0;hold(ax5,'on');
-                
                 
                 
                 %%
                 dT=[0 1 3 10 30 100 300 1000 3000 ];
                 % dT=[0 1 10  100  1000 10000];
                 % dT=0
-                locd2=obj.locData.copy;
-                thisf=locd2.loc.filenumber==files(f);
-                locd2.removelocs(~thisf);
+                % locd2=obj.locData.copy;
+                % thisf=locd2.loc.filenumber==files(f);
+                % locd2.removelocs(~thisf);
                 ax8=obj.initaxis(['photdT' num2str(f)]);
                 ax9=obj.initaxis(['ondT' num2str(f)]);
                 
-                clear mp dTtxt mon
+                clear mp dTtxt mon blinkt
                 for k=1:length(dT)
-                    disp(['file ' num2str(f) ', dT ' num2str(dT(k))])
-                    locd2.regroup([30 100],dT(k),2);
+                     disp(['file ' num2str(f) ', dT ' num2str(dT(k))])
+                    [newtrace,newblink,ontime,offtime,tracetime,numberOfBlinks,onfraction,locd2]=getstatistics(obj, files(f), dT(k));
+                    blinkt(k)=mean(numberOfBlinks(newtrace));
+
+                    
+                    % locd2.regroup([30 100],dT(k),2);
                     
                     pmax=15000;
                     histogram(ax8,locd2.grouploc.phot,0:100:pmax,"DisplayStyle","stairs",Normalization="probability")
@@ -160,15 +122,65 @@ classdef dyeblinking<interfaces.DialogProcessor
                 xlabel(ax7,'dT (frames)')
                 ylabel(ax7,'mean on time (frames)')
                 hold(ax7,'on');
+                
+                
+                plot(ax10,dT,blinkt)
+                ax10.XScale=p.yscale.selection;
+                xlabel(ax10,'dT (frames)')
+                ylabel(ax10,'number of blinks')
+                hold(ax10,'on');
             end
 
-            legend(ax1,leg);legend(ax2,leg);legend(ax3,leg);legend(ax4,leg);legend(ax5,leg);
+            legend(ax1,leg);legend(ax2,leg);legend(ax3,leg);legend(ax4,leg);legend(ax5,leg);legend(ax6,leg);legend(ax7,leg);legend(ax10,leg);
         end
         function pard=guidef(obj)
             pard=guidef(obj);
         end
     end
 end
+
+
+function [newtrace,newblink,ontime,offtime,tracetime,numberOfBlinks,onfraction,locd]=getstatistics(obj, filenumber, dTf)
+locd=obj.locData.copy;
+thisf=locd.loc.filenumber==filenumber;
+locd.removelocs(~thisf);
+locd.regroup([30 75],dTf,2);
+locd.sort('groupindex');
+%%
+gi=locd.loc.groupindex;
+% maxg=gi(end);
+ind1=1;
+gih=gi(1);
+newtrace=false(length(gi),1); newblink=false(length(gi),1);
+ontime=zeros(length(gi),1);offtime=zeros(length(gi),1);
+tracetime=zeros(length(gi),1);numberOfBlinks=zeros(length(gi),1);onfraction=zeros(length(gi),1);
+% dframe=diff(locd.loc.frame);
+for k=1:length(gi) 
+    if gi(k)>gih || k==length(gi) % new track. we lose last localization...
+        indh=ind1:k-1;
+        framesh=locd.loc.frame(indh);
+        newtrace(ind1)=true;
+        tracetime(ind1)=framesh(end)-framesh(1)+1;
+        onfraction(ind1)=length(framesh)/tracetime(ind1);
+        % numberOfBlinks(ind1)=sum(diff(framesh)>1)+1;
+        dfh=[diff(framesh); -1];
+        dfh1=[true;dfh>1];
+        numberOfBlinks(ind1)=sum(dfh1);
+        fdfh=[find(dfh1); length(framesh)+1];
+        for l=1:length(fdfh)-1
+            indbl=indh(fdfh(l));
+            newblink(indbl)=true;
+
+            ontime(indbl)=fdfh(l+1)-fdfh(l);
+            offtime(indbl)=dfh(fdfh(l+1)-1);
+        end
+        % findh=find(indh);
+        gih=gi(k);
+        ind1=k;
+    end
+end
+end
+
 
 
 function pard=guidef(obj)
