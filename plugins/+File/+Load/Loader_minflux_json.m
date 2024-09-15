@@ -44,7 +44,7 @@ switch ext
     case '.mat'
         jt=load(file);
         if isfield(jt,'bot') %new format
-            loc=minfluxmat2loc_mf3(jt);
+            loc=minfluxmat2loc_mf3(jt,p.onlyvalid);
         else
             if ~isfield(jt,'loc') && isfield(jt,'itr')
                 

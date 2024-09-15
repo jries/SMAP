@@ -136,7 +136,7 @@ classdef GuiFile< interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 obj.setPar('ROIrestore',[]);
                 for k=1:length(f)
                     [~,~,ext]=fileparts(f{k});
-                    if ~isempty(strfind(f{k},'_sml'))||~isempty(strfind(f{k},'.csv'))
+                    if ~isempty(strfind(f{k},'_sml'))||~isempty(strfind(f{k},'.csv'))||~isempty(strfind(f{k},'.mat'))
                         obj.setPar('mainfile',[pfad filesep f{k}]);
                     end
                     obj.status(['load: ' f{k}])
