@@ -93,6 +93,9 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
                index2=obj.locsuse.(fid)==id2;
            end
            
+            trackid1=mode(obj.locsuse.tid(index1));
+            trackid2=mode(obj.locsuse.tid(index2));
+
            obj.index1=index1;
            obj.id1=id;
            obj.index2=index2;
@@ -120,6 +123,7 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            axxyr=obj.setoutput('xyr');
            plot(axxyr,xr1,yr1,[p.col1 '.-'], xr2,yr2,[p.col2 '.-']);
            axis(axxyr,'equal')
+           title(axxyr,['tid: ' num2str(trackid1) ', ' num2str(trackid2)])
 
            axxtr=obj.setoutput('xtr');
            plot(axxtr,time1,xr1,[p.col1 '.-'], time2,xr2,[p.col2 '.-']);

@@ -81,6 +81,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            
            obj.index=index;
            obj.id=id;
+           
             
            % XX decide if to get filtered or real coordinates 
            %get coordinates
@@ -197,7 +198,8 @@ end
 
 function plotstatistics(obj)
 index=obj.index;
-time=obj.locData.loc.time(index);
+% time=obj.locData.loc.time(index);
+time=obj.locsuse.time(index);
 dt=diff(time);
 dtmin=min(dt(dt>0));
 dtmedian=median(dt);
@@ -412,6 +414,8 @@ if ~isempty(obj.steps_x_range)
     obj.steps_x_range=ax2.XLim;
 end
 
+trackid=mode(obj.locsuse.tid(obj.index));
+
 plotfiltered=obj.getSingleGuiParameter('filtertrackmode').Value>1 ;
 if plotfiltered
     colornotfiltered=[1 1 1]*0.6;
@@ -438,6 +442,8 @@ if ~isempty(obj.range)
 else
     tm=max(obj.coord.timeplot);
 end
+
+legend(ax2,['tid: ' num2str(trackid)])
 
 mv=obj.steps.stepvalue;
 hstep=stairs(ax2,[obj.steps.steptime ;tm],[mv ;mv(end)],'r');
