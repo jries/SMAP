@@ -38,7 +38,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            end
 
            %identify all localizations in track
-           usefields={'xnm','ynm','groupindex','tid','time','znm', 'efo', 'cfr', 'eco', 'ecc', 'efc','filenumber'};
+           usefields={'xnm','ynm','groupindex','tid','time','znm', 'efo', 'cfr', 'eco', 'ecc', 'efc','filenumber','vld','sta'};
            locs=obj.getLocs(usefields,'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
            if isempty(locs.xnm)
                 disp('no localizations')
@@ -78,7 +78,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                obj.locsuse=obj.locData.loc;
                index=obj.locsuse.(fid)==id & obj.locsuse.filenumber ==filenumberh;
            end
-           
+           index=index & obj.locsuse.vld==1;
            obj.index=index;
            obj.id=id;
            
@@ -237,6 +237,7 @@ plotsimple(obj,'efo')
 plotsimple(obj,'cfr')
 plotsimple(obj,'eco')
 plotsimple(obj,'ecc')
+plotsimple(obj,'sta')
 
 if obj.getSingleGuiParameter('msdanalysis') %MSD
     amsd=obj.setoutput('MSD');
@@ -296,6 +297,7 @@ out.cfr=median(obj.locsuse.cfr(index));
 out.eco=median(obj.locsuse.eco(index));
 out.ecc=median(obj.locsuse.ecc(index));
 out.efc=median(obj.locsuse.efc(index));
+out.sta=median(obj.locsuse.sta(index));
 out.nlocs=length((index));
 out.tracktime=max(time)-min(time);
 xh=obj.coord.xr(indind);
