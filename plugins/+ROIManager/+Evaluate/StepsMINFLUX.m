@@ -10,6 +10,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         coord
         range
         index
+        
         stats
         id;
         locsuse;
@@ -78,19 +79,23 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                obj.locsuse=obj.locData.loc;
                index=obj.locsuse.(fid)==id & obj.locsuse.filenumber ==filenumberh;
            end
-           index=index & obj.locsuse.vld==1;
+           if p.onlyvld
+                index=index & obj.locsuse.vld==1;
+           end
            obj.index=index;
            obj.id=id;
            
             
+           indexvld=index & obj.locsuse.vld==1;
+     
            % XX decide if to get filtered or real coordinates 
            %get coordinates
-           x=obj.locsuse.xnm(index);
-           y=obj.locsuse.ynm(index);
-           time=obj.locsuse.time(index);
+           x=obj.locsuse.xnm(indexvld);
+           y=obj.locsuse.ynm(indexvld);
+           time=obj.locsuse.time(indexvld);
 
            if isfield(obj.locData.loc,'znm')
-               z=obj.locsuse.znm(index);
+               z=obj.locsuse.znm(indexvld);
            else
                z=[];
            end
@@ -300,7 +305,8 @@ out.efc=median(obj.locsuse.efc(index));
 out.sta=median(obj.locsuse.sta(index));
 out.nlocs=length((index));
 out.tracktime=max(time)-min(time);
-xh=obj.coord.xr(indind);
+% xh=obj.coord.xr(indind);
+xh=obj.coord.xr;
 out.tracklength=xh(end)-xh(1);
 out.velocity=out.tracklength/out.tracktime;
 
@@ -902,6 +908,7 @@ out.steps=steps;
 obj.steps=steps;
 out.statall=calculatestatistics(obj,obj.index);
 out.stattrack=calculatestatistics(obj,obj.index,obj.coord.indtime);
+out.tracklength=x(end)-x(1);
 out.range=obj.range;
 obj.site.evaluation.(obj.name)=out;
 end
@@ -1145,6 +1152,11 @@ pard.filtermode.Width=1.3;
 pard.resetview.object=struct('String','Reset view','Style','pushbutton','Callback',{{@resetview,obj}});
 pard.resetview.position=[8,1];
 pard.resetview.Width=1.3;
+
+pard.onlyvld.object=struct('String','only vld','Style','checkbox','Value',1);
+pard.onlyvld.position=[8,3];
+pard.onlyvld.Width=2;
+
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};
 pard.plugininfo.type='ROI_Evaluate';
