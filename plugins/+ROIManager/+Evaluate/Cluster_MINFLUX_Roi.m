@@ -137,7 +137,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             axbby=obj.setoutput('ybin');
             plotstdbin(p,locs.ynm(ind)-my, locs.phot(ind), axbby)
 
-            if isfield(locs,'znm') && ~isempty(locs.znm)
+            if isfield(locs,'znm') && ~isempty(locs.znm) & any(locs.znm ~= 0)
                 sigmaz=std(locs.znm(ind));
                 szdetrend=std(diff(locs.znm(ind)))/sqrt(2);
                 [~, szrobust]=robustMean(locs.znm(ind)); 
