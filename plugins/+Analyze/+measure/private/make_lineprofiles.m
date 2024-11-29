@@ -28,6 +28,9 @@ else
     binwidth=p.sr_pixrec;
 end
 
+% fushuang, storage the lengends for xyz profile
+legends_for_profiles = {};
+
 for layer=1:length(p.sr_layerson)
     if p.sr_layerson(layer)
         [locs,~, hroi]=locD.getloc({'xnm','ynm','znm','locprecnm','locprecznm','xnmline','ynmline'},'layer',layer,'position','roi');
@@ -86,12 +89,20 @@ for layer=1:length(p.sr_layerson)
     t2{end+1}=p.layernames{layer};
     t3{end+1}=p.layernames{layer};  
     
+    % fushuang, add legends for xyz profile bars
+    legends_for_profiles{end+1}=p.layernames{layer};
+    legends_for_profiles{end+1}='';
+    
     n=my-linew-binwidth:binwidth:my+linew+binwidth;
     profy=hist(y,n);profy([1 end])=[];n([1 end])=[];
     jervistemp.ny=n;
     jervistemp.profy=profy;
     axes(ax2)
-    plot(ax2,n,profy);
+
+    % fushuang, change plot to bar
+%     plot(ax2,n,profy);
+    bar_tmp=bar(ax2,n,profy,'edgecolor','none','facealpha',0.5); 
+    bar_color=bar_tmp.CData(1, :);
     hold(ax2,'on')
     
     xlabel(ax2,'Position perpendicular to line ROI (nm)')
@@ -102,9 +113,13 @@ for layer=1:length(p.sr_layerson)
     
     sigma=median(locprecnm);
     [fitp,fitprof,fittxt]=fitgeneralprofile(profy,n,p,sigma);
-    plot(ax2,n,fitprof,'k--')
+
+    % fushuang, vislually better plot
+%     plot(ax2,n,fitprof,'k--')
+    plot(ax2,n,fitprof,'linewidth',2,'color',bar_color)
+
     t1(end+1:end+length(fittxt))=fittxt;
-    
+
 
     n=mx-linel-binwidth:binwidth:mx+linel+binwidth;
     jervistemp.binwidth=binwidth;
@@ -112,7 +127,12 @@ for layer=1:length(p.sr_layerson)
     jervistemp.profx=profx;
     jervistemp.nx=n;
     axes(ax3)
-    plot(ax3,n,profx);
+
+    % fushuang, change plot to bar
+%     plot(ax3,n,profx);
+    bar_tmp=bar(ax3,n,profx,'edgecolor','none','facealpha',0.5); 
+    bar_color=bar_tmp.CData(1, :);
+
     hold(ax3,'on')
     xlabel(ax3,'Position along line ROI (nm)')
     ylabel(ax3,'counts')
@@ -121,23 +141,40 @@ for layer=1:length(p.sr_layerson)
     fwhm=getFWHM(profx,n);
 %     t2{end+1}=['FWHM: ' 9 num2str(fwhm)];
      [fitp,fitprof,fittxt]=fitgeneralprofile(profx,n,p,sigma);
-    plot(ax3,n,fitprof,'k--')
+
+     % fushuang, vislually better plot
+%     plot(ax3,n,fitprof,'k--')
+    plot(ax3,n,fitprof,'linewidth',2,'color',bar_color)
+
     t2(end+1:end+length(fittxt))=fittxt;
     
+    % fushuang, remove the following restriction (for large-DOF PSFs)
     if ~isempty(locs.znm)
-        minzh=max(-750,min(z));
-        maxzh=min(750,max(z));
+%         minzh=max(-750,min(z));
+%         maxzh=min(750,max(z));
+        minzh=min(z);
+        maxzh=max(z);
+
     n=minzh-3*binwidth:binwidth:maxzh+3*binwidth;
     profz=hist(z,n);profz([1 end])=[];n([1 end])=[];
     axes(ax4)
-    plot(ax4,n,profz);
+
+    % fushuang, change plot to bar
+%     plot(ax4,n,profz);
+    bar_tmp=bar(ax4,n,profz,'edgecolor','none','facealpha',0.5); 
+    bar_color=bar_tmp.CData(1, :);
+
     hold(ax4,'on')
     xlabel(ax4,'z (nm)')
     ylabel(ax4,'counts')
     fwhm=getFWHM(profz,n);
 %     t3{end+1}=['FWHM: ' 9  num2str(fwhm)];
     [fitp,fitprof,fittxt]=fitgeneralprofile(profz,n,p,fwhm/2.6);
-    plot(ax4,n,fitprof,'k--')
+
+    % fushuang, vislually better plot
+%     plot(ax4,n,fitprof,'k--') 
+    plot(ax4,n,fitprof,'linewidth',2,'color',bar_color)
+
     t3(end+1:end+length(fittxt))=fittxt;
     
     jervistemp.profz=profz;jervistemp.nz=n;
@@ -155,6 +192,11 @@ for layer=1:length(p.sr_layerson)
     t3{end+1}='';
     end
 end
+
+% fushuang, add legends to all bars
+legend(ax2, legends_for_profiles{:},'edgecolor','none');
+legend(ax3, legends_for_profiles{:},'edgecolor','none');
+legend(ax4, legends_for_profiles{:},'edgecolor','none');
 
 fontsize=15;
 pos=[.65,0.025,.4,.95];
