@@ -155,7 +155,8 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             
             %update plugin file if new plugins are saved
             makeplugincallfile('plugins');
-            makeGeometricModelList;
+            makeGeometricModelList; %XXXX did not owrk removed on the
+            % 5.7.24
             %add java path to bioformats
                 bfpath=obj.getGlobalSetting('bioformatspath');
                 bffile=[bfpath filesep 'bioformats_package.jar'];

@@ -55,7 +55,8 @@ classdef generalStatistics<interfaces.SEEvaluationProcessor
                     end
                 end
             end
-            
+            out.locs_layer1=out.('layers1').N;
+
             out.Nch=[];
             out.Nchg=[];
             

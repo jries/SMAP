@@ -278,7 +278,7 @@ set(obj.guihandles.histax,'NextPlot','replace')
 stairs(x,his,'k','Parent',obj.guihandles.histax,'LineWidth',1)
 
 set(obj.guihandles.histax,'NextPlot','add')
-bar(x2,h2,1,'Parent',obj.guihandles.histax,'g')
+bar(x2,h2,1,'g','Parent',obj.guihandles.histax)
 if q(1)~=q(2)&&~isnan(q(1))
     obj.guihandles.histax.XLim=[q(1) q(2)];
 end

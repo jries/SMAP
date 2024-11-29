@@ -31,7 +31,7 @@ function p=convert2polyshape(roiin, lw)
 
      elseif isa(roiin,'imrect')
          p=rect2poly(roiin.getPosition*1000);
-    elseif isa(roiin,'polyshape')
+    elseif isa(roiin,'polyshape') || isa(roiin,'impoly')|| isa(roiin,'imfreehand')
         p=roiin;
 %         coord=roih.getPosition*1000;
 %         p=polyshape(coord(:,1),coord(:,2));

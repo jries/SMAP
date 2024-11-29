@@ -247,6 +247,9 @@ if ploton
 xlabel(ax3,'on-time (frames)')
 legend(ax3,slegend3)
 end
+stat.lifetime.meanrange=mean(lifetime{k}(inrange));
+stat.lifetime.meanall=mean(lifetime{k});
+
 
 %background
 bg=getFieldAsVector(locs,'bg');
@@ -447,6 +450,7 @@ else %use all values, plot for unconnected and connected
 end
 
 function [his,mmo,slegend]=plothist(v,quantile,dphot,hmin,ax,modetxt,qfac)
+mmo=[];
 if nargin<7
     qfac=5;
 end

@@ -1,7 +1,7 @@
 classdef SMLMsaver<interfaces.DialogProcessor
 %     saves localizations in SMAP proprietary _sml.mat MATLAB format
     properties
-        excludesavefields={'groupindex','numberInGroup','colorfield'};
+        excludesavefields={'colorfield'};
     end
     methods
         function obj=SMLMsaver(varargin)  

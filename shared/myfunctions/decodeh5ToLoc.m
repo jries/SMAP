@@ -8,7 +8,7 @@ switch ext
 end
 % locData=interfaces.LocalizationData;
 if strcmp(info.unit,'px')
-    pix2nm=info.px_size;
+    pix2nm=single(info.px_size);
 else
     pix2nm=[1 1];
 end
@@ -26,12 +26,27 @@ else
     loc.phot1 = single(locs.phot(1, :))';
     loc.phot2 = single(locs.phot(2, :))';
 end
+
+% flatten out prob_code
+if isfield(locs, 'prob_code')
+    if ndims(locs.prob_code) == 1
+        loc.prob_code = single(locs.prob_code);
+    else
+        for i = 1:size(locs.prob_code, 1)
+            loc.(['prob_code' num2str(i)]) = single(locs.prob_code(i, :))';
+        end
+    end
+end
+
+if isfield(locs, 'code') && size(locs.code, 1) ~= 0
+    loc.channel = single(locs.code);
+else
+    loc.channel=zd;
+end
+
 loc.frame=double(locs.frame_ix+1);
 loc.prob=single(locs.prob);
 loc.LLrel=single(locs.prob)-1; %to fit in the -inf to zero range...
-
-% loc.filenumber=zd+1;
-loc.channel=zd;
 
 if ~info.thin
     loc.ynmerr=single(locs.x_sig*pix2nm(1));

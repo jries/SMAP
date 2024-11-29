@@ -63,8 +63,8 @@ for k=1:length(l2)
     loco.roinumber(ind+1:ind+numl)=locmh.moleculeID3*0+k;
 end
 
-loco.xnm=loco.xnm-min(loco.xnm);
-loco.ynm=loco.ynm-min(loco.ynm);
+% loco.xnm=loco.xnm-min(loco.xnm);
+% loco.ynm=loco.ynm-min(loco.ynm);
 
 
 indbad=isnan(loco.xnm) | isnan(loco.ynm);
@@ -117,7 +117,10 @@ filestruc.name=file;
 mx=ceil(max(locData.loc.xnm)/pixnm);
 my=ceil(max(locData.loc.ynm)/pixnm);
 
-filestruc.info=struct('Width',mx,'Height',my,'roi',[0 0 mx my],'cam_pixelsize_um',pixnm/1000);
+mix=floor(min(locData.loc.xnm)/pixnm);
+miy=floor(min(locData.loc.ynm)/pixnm);
+
+filestruc.info=struct('Width',mx,'Height',my,'roi',[mix miy mx my],'cam_pixelsize_um',pixnm/1000);
 if obj.locData.files.filenumberEnd==0
     obj.locData.files.file=filestruc;
     

@@ -1,11 +1,18 @@
-function loc=minfluxmat2loc_mf3(jt)
+function loc=minfluxmat2loc_mf3(jt,onlyvalid)
 numlocs=size(jt.cfr,2);
 locs=single(jt.loc*1e9);
 locx=locs(:,1);
 locy=locs(:,2);
 locz=locs(:,3);
 
-indgood=~isnan(locx);
+% indgood=~isnan(locx);
+if onlyvalid
+    indgood=jt.vld;
+else
+    indnan=isnan(locx);
+    indgood = true (size(locx));
+    locx(indnan)=-1; locy(indnan)=-1; locz(indnan)=-1;
+end
 
 % numlocs=size(locs,1);
 locnums=(1:numlocs)';
@@ -82,5 +89,6 @@ end
         % L=median(extx(indgood),2);
         L=100; %xxxx nots sure where to find this
 loc.locprecnm(:,1)=L./2./sqrt(2*loc.phot);
+loc.locprecnm(indnan)=100; %to avoid inf and weird behaviour when grouping.
 loc.LLrel=loc.cfr;
 end

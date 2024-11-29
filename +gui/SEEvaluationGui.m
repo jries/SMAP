@@ -210,7 +210,7 @@ function preview_callback(a,b,obj)
 %for ttesting:
 try
  evaluatesite(obj,obj.SE.currentsite,1)
-catch
+catch err
     disp('Nothing is evaluated. Please click on one site in the ROI list first.')
 end
 end
