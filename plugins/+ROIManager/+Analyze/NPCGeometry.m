@@ -283,7 +283,6 @@ q=quantile(R0,[0.05,0.95]);
 qr=round(q/5)*5+[-5 5];
 rn=qr(1):0.5:qr(2);
 histogram(ax,abs(R0),rn); xlabel('R (nm)')
-title(ax,['fitted radius: ' num2str(mean(R0),ff) '\pm' num2str(std(R0),ff) '\pm' num2str(std(R0)/length(R0),2)])
 xlabel(ax,'radius (nm)')
 xlim(ax,[rn(1) rn(end)])
 ylabel(ax,'counts')
@@ -291,6 +290,8 @@ hh=histcounts(R0,rn);
 fitp=fit(rn(1:end-1)'+(rn(2)-rn(1))/2,hh','gauss1');
 hold(ax, 'on')
 plot(ax,rn,fitp(rn))
+title(ax,['mean radius: ' num2str(mean(R0),ff) '\pm' num2str(std(R0),ff) '\pm' num2str(std(R0)/length(R0),2), ...
+    ', gauss fit: ',num2str(fitp.b1,ff),'\pm',num2str(fitp.c1,ff)])
 end
 
 function pard=guidef(obj)

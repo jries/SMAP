@@ -187,7 +187,11 @@ else
     mpsf=0;
 end
 usethis=goodradius&goodout&goodin&goodsize&goodlocs & goodpsf;
-    savefield='list4';
+
+% fushuang, change the list4 to list1 according to the SMAP_manual_NPC
+%     savefield='list4';
+savefield = 'list1';
+
 obj.site.annotation.(savefield).value=usethis+1;
 obj.site.annotation.use=usethis;
 
