@@ -98,6 +98,8 @@ classdef driftcorrection_dme<interfaces.DialogProcessor
                     fn=lochere.files.file(1).name;
                     if contains(fn,'_sml.mat')
                         fnn=strrep(fn,'_sml.mat','_dme_sml.mat');
+                    else
+                        fnn=fn;
                     end
                     if p.save_dc
                         obj.addhistory;
