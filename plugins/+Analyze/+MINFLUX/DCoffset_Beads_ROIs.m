@@ -170,8 +170,9 @@ end
 xlabel(p.axdxn,'time (ms)'); ylabel(p.axdxn,'dx-dx(1) (nm)')
 xlabel(p.axdyn,'time (ms)'); ylabel(p.axdyn,'dy-dy(1) (nm)')
 xlabel(p.axdx,'time (ms)'); ylabel(p.axdx,'dx (nm)')
+title(p.axdx,median(abs(dxa(dx~=0))))
 xlabel(p.axdy,'time (ms)'); ylabel(p.axdy,'dy (nm)')
-
+title(p.axdy,median(abs(dya(dx~=0))))
 xlabel(p.t1,'dt start (ms)'); ylabel(p.t1,'dt stop (ms)')
 xlabel(p.t2,'dt start (ms)'); ylabel(p.t2,'fraction ch1/ch0')
 
