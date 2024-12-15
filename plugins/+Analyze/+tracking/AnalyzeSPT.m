@@ -17,12 +17,12 @@ classdef AnalyzeSPT<interfaces.DialogProcessor
 end
 function out=analyzei(obj,p)
 out=[];
-[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','frame','track_id','diffusionCoefficient'},'layer',1,'position','roi','grouping','ungrouped');
+[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','frame','track_id','diffusionCoefficient'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
 intrack=find(locs.track_id>0);
 trackid=locs.track_id(intrack);
 %maybe filter with minimum length here: histogram 1:N
 hc=histcounts(trackid,1:max(trackid)+1);
-minlen=10;
+minlen=p.lentracks;
 goodids=(hc>minlen);
 longtrack=goodids(trackid);
 inindin=intrack(longtrack);
