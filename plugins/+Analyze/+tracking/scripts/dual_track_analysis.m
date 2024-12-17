@@ -102,6 +102,8 @@ cols=[1 0 1
       .5 0 .5
       0 .5 .5];
 
+roi=obj.locData.files.file(locs.filenumber(1)).info.roi;
+pixelsize=obj.locData.files.file(locs.filenumber(1)).info.cam_pixelsize_um*1000;
 
 for k=1:length(usetracks)
     idh=usetracks(k);
@@ -155,7 +157,9 @@ for k=1:length(usetracks)
     %     end
     % end
     
-    hp=plot(ax,locs.xnm(indtr),locs.ynm(indtr),'.-','Color',cols(colind,:),'LineWidth',lw,'Tag','test');
+    hp=plot(ax,locs.xnm(indtr)/pixelsize(1)-roi(1),locs.ynm(indtr)/pixelsize(2)-roi(2),'.-','Color',cols(colind,:),'LineWidth',lw,'Tag','test');
+      % hp=plot(ax,locs.xnm(indtr),locs.ynm(indtr),'.-','Color',cols(colind,:),'LineWidth',lw,'Tag','test');
+
     hold(ax,"on")
     % hp.DataTipTemplate.DataTipRows(1).Label = "X";
     % hp.DataTipTemplate.DataTipRows(2).Label = "Y"; 
