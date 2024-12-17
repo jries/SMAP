@@ -1,11 +1,11 @@
 % analyze dual-color tracks
 
 %filters
-minlenframes=5;
-maxd=350; %max distance to associate localizations
+minlenframes=3;
+maxd=200; % nm max distance to associate localizations
 
 cotracklength=2; %minimum data poits associated between tracks
-cotrackfraction = 0.0; %minimum fraction of localizations associated
+cotrackfraction = 0; %minimum fraction of localizations associated
 
 % test directed movement
 aspectratio=1; %should be below this for directed motion.
@@ -16,7 +16,7 @@ lennmmin=200; %minimum of largest extenstion
 
 
 obj=g;
-[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','frame','track_id','channel','track_length'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
+[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','frame','track_id','channel','track_length','layer','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
 
 % test directed movement, calculate statistics
 usetracks=unique(locs.track_id(locs.track_id>0));
@@ -69,6 +69,7 @@ locr.track_id=locs.track_id(indr);
 
 
 inchannel2=locs.channel==2;
+sum(inchannel2)
 indt=find((intrack&longtracks&inchannel2));
 loct.x=locs.xnm(indt);
 loct.y=locs.ynm(indt);
@@ -92,6 +93,7 @@ usetracks=unique(locs.track_id(intrack&longtracks));
 figure(88)
 hold off
 ax=gca;
+
 
 cols=[1 0 1
       0 1 1
@@ -124,7 +126,9 @@ for k=1:length(usetracks)
         partnerind=partner(indtr);
         partnerids=locs.track_id(partnerind(partnerind>0));
         [pid,npart]=mode(partnerids);
-        if npart>cotracklength && npart/sum(indtr)>cotrackfraction
+        lenpartner=sum(locs.track_id==pid);
+        minduallength=min(sum(indtr),lenpartner);
+        if npart>cotracklength && npart/minduallength>cotrackfraction
             validcotrack=true;
             lw=6;
             colind=colind+2;
@@ -166,6 +170,7 @@ for k=1:length(usetracks)
 end
 
 
-
+    axis(ax,'ij');
+    axis(ax,'equal');
 
 % Plot surviving tracks

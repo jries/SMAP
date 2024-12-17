@@ -4,7 +4,7 @@ classdef SimpleTracking<interfaces.DialogProcessor
         function obj=SimpleTracking(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;
             obj.inputParameters={'sr_pixrec','numberOfLayers','sr_pos','sr_size','layers','sr_layerson'};
-            obj.showresults=true;
+            obj.showresults=false;
         end
         function out=run(obj,p)
             

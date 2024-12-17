@@ -1,8 +1,8 @@
 %overlay dual color tracking images
 
 obj=g;
-datafile='/Users/ries/Downloads/2color_kinesin/25_50ms_561nm01_640nm02_600w52_676w37_1_MMStack_Default.ome.tif';
-Tfile='/Users/ries/Downloads/2color_kinesin/beads/78_50ms_561nm01_640nm02_600w52_676w37_1_T.mat';
+datafile='/Users/ries/datalocal/2color_kinesin/25_50ms_561nm01_640nm02_600w52_676w37_1_MMStack_Default.ome.tif';
+Tfile='/Users/ries/datalocal/2color_kinesin/75_50ms_561nm01_640nm02_600w52_676w37_1_T.mat';
 
 tt=load(Tfile).transformation;
 il=imageloaderMM; il.attachPar(g.P);
