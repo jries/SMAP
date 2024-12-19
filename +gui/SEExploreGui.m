@@ -499,6 +499,7 @@ for k=length(sites):-1:1
         end
     end
         
+    sites(k).indList=k; %XXXX try to fix list when deleting sites.
     
 %     list=[num2str(sites(k).annotation.list1.value) num2str(sites(k).annotation.list2.value)...
 %         num2str(sites(k).annotation.list3.value) num2str(sites(k).annotation.list4.value)];
