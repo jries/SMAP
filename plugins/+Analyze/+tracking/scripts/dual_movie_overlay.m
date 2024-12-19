@@ -26,7 +26,7 @@ end
 
 ih=imx(imcomb);
 
-fout=strrep(datafile,'.ome.tif','_combined.tif');
+fout=strrep(datafile,'.ome.tif','_combined.tif')
 options.color=true;
 saveastiff(squeeze(single(imcomb)),fout,options);
 % fout2=strrep(datafile,'.ome.tif','_combined2.tif');

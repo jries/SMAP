@@ -14,7 +14,11 @@ lennmmin=0; %minimum of largest extenstion standard deviation (not so useful)
 minvelocity=200; %nm/s
 maxvelocity=1500;
 
-
+% visualizing co-tracks
+onlyprogressivecotracks=true; %only when both partners are progressive
+markintiffile=true;
+tiffile=fout;
+% tiffile='/Users/ries/datalocal/2color_kinesin/25_50ms_561nm01_640nm02_600w52_676w37_1_MMStack_Default_combined.tif';
 
 obj=g;
 [locs,indin]=obj.locData.getloc({'xnm','ynm','znm','frame','track_id','channel','track_length','layer','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
