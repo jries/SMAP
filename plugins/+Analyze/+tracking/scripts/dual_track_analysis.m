@@ -18,10 +18,10 @@ maxvelocity=1500;
 onlyprogressivecotracks=true; %only when both partners are progressive
 markintiffile=true;
 tiffile=fout;
-% tiffile='/Users/ries/datalocal/2color_kinesin/25_50ms_561nm01_640nm02_600w52_676w37_1_MMStack_Default_combined.tif';
+tiffile='/Users/ries/datalocal/2color_kinesin/25_50ms_561nm01_640nm02_600w52_676w37_1_MMStack_Default_combined.tif';
 
 obj=g;
-[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','frame','track_id','channel','track_length','layer','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
+[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','xpix','ypix','frame','track_id','channel','track_length','layer','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
 
 
 exposuretime=obj.locData.files.file(locs.filenumber(1)).info.exposure;
@@ -116,7 +116,7 @@ validstats = validstats & trackstat.velocity < maxvelocity;
 
 trackstat.progressive=validstats;
 
-comovement=true(size(trackstat.velocity));
+comovement=false(size(trackstat.velocity));
 progressivepartner=false(size(trackstat.velocity));
 trackstat.channel=zeros(size(trackstat.velocity));
 
@@ -183,17 +183,13 @@ for k=1:length(usetracks)
                 lw=2;            
         end
     end
-
     hp=plot(ax,locs.xnm(indtr)/pixelsize(1)-roi(1),locs.ynm(indtr)/pixelsize(2)-roi(2),symb,'Color',cols(colind(idh),:),'LineWidth',lw,'Tag','test','MarkerSize',msize);
-
     hold(ax,"on")
-        pidlabel=0*locs.track_id(indtr)+pid;
-
-        dtRows = [dataTipTextRow("frame",locs.frame(indtr)),...
-        dataTipTextRow("ID",locs.track_id(indtr)),...
-        dataTipTextRow("partnerID",pidlabel)];
-        hp.DataTipTemplate.DataTipRows(end+1:end+3) = dtRows;
-    
+    pidlabel=0*locs.track_id(indtr)+pid;
+    dtRows = [dataTipTextRow("frame",locs.frame(indtr)),...
+    dataTipTextRow("ID",locs.track_id(indtr)),...
+    dataTipTextRow("partnerID",pidlabel)];
+    hp.DataTipTemplate.DataTipRows(end+1:end+3) = dtRows;   
 end
 
 
@@ -201,5 +197,62 @@ end
     axis(ax,'equal');
 
 % Plot cotracks vs time
+%%
+%only both good
+trackstat.coprogressive=(trackstat.color==1 & trackstat.comovement & trackstat.progressive & trackstat.progressivepartner);
+goodpairs=find(trackstat.coprogressive);
+figure(102)
+clf
+for k=1:length(goodpairs)
+    subplot(5,5,k)
+    hold off
+    id1=locs.track_id==goodpairs(k);
+    pid=trackstat.partnerids(goodpairs(k));
+    id2=locs.track_id==pid;
+    tmin=min(min(locs.frame(id1)),min(locs.frame(id2)));
+
+    [x1,y1]=rotcoord(locs.xnm(id1)-mean(locs.xnm(id1)),locs.ynm(id1)-mean(locs.ynm(id1)),trackstat.angle(goodpairs(k)));
+    [x2,y2]=rotcoord(locs.xnm(id2)-mean(locs.xnm(id2)),locs.ynm(id2)-mean(locs.ynm(id2)),trackstat.angle(pid));
+    plot(locs.frame(id1),x1,'.-',locs.frame(id2),x2,'.-')
+    hold on
+    title(['frame: ' num2str(tmin) ', x: ' num2str(mean(locs.xpix(id1)),'%3.0f') ', y: ' num2str(mean(locs.ypix(id1)),'%3.0f')])  
+end
 
 % Calculate statistics
+disp(sprintf('ch1\tch2\tch1prog\tch2prog\tdualcol\tch12progr'));
+output=(sprintf([num2str(sum(trackstat.channel==1)), '\t' num2str(sum(trackstat.channel==2)),...
+    '\t' num2str(sum(trackstat.channel==1 & trackstat.progressive)), ...
+    '\t' num2str(sum(trackstat.channel==2 & trackstat.progressive)), ...
+    '\t' num2str(sum(trackstat.partnertrackid>0)/2), ...
+    '\t' num2str(sum(trackstat.coprogressive))]));
+disp(output)
+clipboard('copy',output)
+
+%%
+%add to movie
+dx=3;
+dimmark=3;
+if markintiffile
+    imstack=tiffreadVolume(tiffile);
+    imstack=permute(imstack,[1 2 4 3]);
+    immax=max(imstack(:));
+    [lenx,leny]=size(imstack,[1,2]);
+    idcoprogress=find(trackstat.coprogressive);
+    for k=1:length(idcoprogress)
+        ind=locs.track_id==idcoprogress(k);
+        x=round(locs.xnm(ind)/pixelsize(1)-roi(1)); y=round(locs.ynm(ind)/pixelsize(2)-roi(2)); frame=locs.frame(ind);
+        x=min(lenx-dx,x);x=max(dx+1,x);y=min(leny-dx,y);y=max(dx+1,y);
+        for l=1:length(x)
+            imstack(y(l)+dx, x(l)-dx:x(l)+dx,dimmark,frame(l))=immax;
+            imstack(y(l)-dx, x(l)-dx:x(l)+dx,dimmark,frame(l))=immax;
+            imstack(y(l)-dx:y(l)+dx, x(l)+dx,dimmark,frame(l))=immax;
+            imstack(y(l)-dx:y(l)+dx, x(l)-dx,dimmark,frame(l))=immax;
+
+        end
+
+    end
+fout2=strrep(tiffile,'_combined.tif','_mark.tif');
+options.color=true;
+saveastiff(squeeze(single(imstack)),fout2,options);
+end
+
