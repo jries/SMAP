@@ -73,10 +73,15 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            if isfield(p,'fromdc') && p.fromdc
                switch p.dcch
                    case 1
-                        id=obj.site.evaluation.StepsMINFLUX_dc.id1;
+                       idname='id1';   
                    case 2
-                       id=obj.site.evaluation.StepsMINFLUX_dc.id2;
+                       idname='id2';
                end
+               if ~isfield(obj.site.evaluation.StepsMINFLUX_dc,idname)
+                   out=[];
+                   return
+               end
+               id=obj.site.evaluation.StepsMINFLUX_dc.(idname);
                % obj.locData.SE.sites(1).evaluation
            end
            filenumberh=mode(locs.filenumber);

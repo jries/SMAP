@@ -77,6 +77,9 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
 
            %get id for second channel
            indexh=locs.(fid)==id;
+           if sum(indexh)==0
+               return
+           end
            tmin=min(locs.time(indexh));
            tmax=max(locs.time(indexh));
            indt=(locs.time>=tmin & locs.time<=tmax);
