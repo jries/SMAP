@@ -92,7 +92,10 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
                index1=obj.locsuse.(fid)==id;
                index2=obj.locsuse.(fid)==id2;
            end
-           
+           if p.onlyvld
+                index1=index1 & obj.locsuse.vld==1;
+                index2=index2 & obj.locsuse.vld==1;
+           end           
             trackid1=mode(obj.locsuse.tid(index1));
             trackid2=mode(obj.locsuse.tid(index2));
 
@@ -181,7 +184,9 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            obj.coord1.x=x1;obj.coord1.y=y1;
            obj.coord2.xr=xr2;obj.coord2.yr=yr2;obj.coord2.time=time2;obj.coord2.timeplot=time2-min(time1);
            obj.coord2.x=x2;obj.coord2.y=y2;
-
+            
+           out.id2=id2;
+           out.id1=id;
            % obj.coord1.z=z;  obj.coord1.zf=zf;
            % 
            % if  isempty(obj.steps) || p.refitalways
@@ -1204,7 +1209,9 @@ pard.col1.position=[9,3];
 pard.col2.object=struct('String','r','Style','edit');
 pard.col2.position=[9,4];
 
-
+pard.onlyvld.object=struct('String','only vld','Style','checkbox','Value',1);
+pard.onlyvld.position=[4,3];
+pard.onlyvld.Width=2;
 
 % p(1).value=1; p(1).on={}; p(1).off={'filterwindowt','filterwindow','filtermode'};
 % p(2).value=2; p(2).on=p(1).off; p(2).off={};

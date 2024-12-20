@@ -69,6 +69,16 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                id=mode(locs.(fid)(ind));
                
            end
+
+           if isfield(p,'fromdc') && p.fromdc
+               switch p.dcch
+                   case 1
+                        id=obj.site.evaluation.StepsMINFLUX_dc.id1;
+                   case 2
+                       id=obj.site.evaluation.StepsMINFLUX_dc.id2;
+               end
+               % obj.locData.SE.sites(1).evaluation
+           end
            filenumberh=mode(locs.filenumber);
            
            if p.filterlocs
@@ -1156,6 +1166,14 @@ pard.resetview.Width=1.3;
 pard.onlyvld.object=struct('String','only vld','Style','checkbox','Value',1);
 pard.onlyvld.position=[8,3];
 pard.onlyvld.Width=2;
+
+pard.fromdc.object=struct('String','display only second color, ch:','Style','checkbox','Value',0);
+pard.fromdc.position=[9,1];
+pard.fromdc.Width=3;
+
+pard.dcch.object=struct('String','1','Style','edit');
+pard.dcch.position=[9,4];
+pard.dcch.Width=1;
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};
