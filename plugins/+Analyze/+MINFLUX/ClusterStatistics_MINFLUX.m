@@ -12,14 +12,14 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
             obj@interfaces.DialogProcessor(varargin{:}) ;
             obj.inputParameters={'sr_pixrec','numberOfLayers','sr_pos','sr_size','layers','sr_layerson'};
 %             obj.history=true;    
-            obj.showresults=false;
+            obj.showresults=true;
         end
         
         function out=run(obj,p)
            out=[];          
            if p.filter
                 layers=find(obj.getPar('sr_layerson'));
-                locs=obj.locData.getloc({'xnm','ynm','znm','clusterindex','tid','groupindex','time','frame','thi'},'layer',layers,'Position','roi');
+                locs=obj.locData.getloc({'xnm','ynm','znm','clusterindex','tid','groupindex','time','frame','thi','filenumber','phot'},'layer',layers,'Position','roi');
            else
                % locs=obj.locData.getloc({'xnm','ynm','znm','clusterindex','tid','groupindex','time','frame','thi'},'Position','all','grouping','ungrouped');
                locs=obj.locData.loc;
@@ -45,7 +45,6 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
                tfield='time';
            end
            clusterinds=unique(cfieldv(cfieldv>0)); %does not work for multiple files.
-           cind=1;
            
            stdsall=zeros(size(obj.locData.loc.xnm),'single');
            stdlall=stdsall;
@@ -62,21 +61,43 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
                c_toverlap=stdsall;
                dcind=0;
            end
+
+           % statistics per cluster cstat.xxx. 
+           maxid=max(clusterinds);
+           cstat.numlocs=zeros(maxid,1);
+           cstat.stdx=zeros(maxid,1);
+           cstat.stdy=zeros(maxid,1);
+           cstat.xpos=zeros(maxid,1);
+           cstat.ypos=zeros(maxid,1);
+           cstat.binx=zeros(maxid,15);
+           cstat.biny=zeros(maxid,15);
+           cstat.taillength=zeros(maxid,1);
+           cstat.extl=zeros(maxid,1);
+           cstat.exts=zeros(maxid,1);
+           cstat.stdlong=zeros(maxid,1);
+           cstat.stdshort=zeros(maxid,1);
+           cstat.timediffmedian=zeros(maxid,1);
+           cstat.binrelx=zeros(maxid,15);
+           cstat.binrely=zeros(maxid,15); 
+           cstat.binphot=zeros(maxid,15);
+
            for k=1:length(clusterinds)
-               inc=cfieldv==clusterinds(k);
-               if sum(inc)<p.minloc || sum(inc)-2<=p.skipfirst
+               cind=clusterinds(k);
+               indall=cfieldv==cind; %all track
+               inc=indall; % 
+               if sum(indall)<p.minloc || sum(indall)-2<=p.skipfirst
                    continue
                end
-               indall=cfieldv==clusterinds(k);
 
                if p.skipfirst>0
                    indo=find(inc,p.skipfirst,'first');
                    inc(indo)=false;
                end
 
-               numlocs(cind,1)=sum(inc);
+               cstat.numlocs(cind,1)=sum(inc);
 
                xh=double(locs.xnm(inc));yh=double(locs.ynm(inc));
+               photh=double(locs.phot(inc));
 
                if dcminflux
                    th=locs.(tfield)(inc);
@@ -110,8 +131,13 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
                    end
                    
                end
-               xpos(cind,1)=mean(xh);
-               ypos(cind,1)=mean(yh);
+               th=double(locs.time(inc));
+               dt=diff(th);
+               cstat.timediffmedian(cind)=median(dt);
+
+
+               cstat.xpos(cind,1)=mean(xh);
+               cstat.ypos(cind,1)=mean(yh);
                
                
                c = cov(xh-mean(xh), yh-mean(yh));
@@ -120,13 +146,33 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
                [xa, ya] = deal(a(1,ind(end)), a(2,ind(end)));
                angle = cart2pol(xa, ya);
 
-               
-               stdsall(indall)=sqrt(ev(1));
-               stdlall(indall)=sqrt(ev(2));
+               stds=sqrt(ev(1));
+               stdl=sqrt(ev(2));
+
+               stdsall(indall)=stds;
+               stdlall(indall)=stdl;
                angleall(indall)=mod(angle,pi);
                [xr,yr]=rotcoord(xh-mean(xh),yh-mean(yh),angle);
-               extl(indall)=max(xr)-min(xr);
-               exts(indall)=max(yr)-min(yr);
+               cstat.extl(cind)=max(xr)-min(xr);
+               cstat.exts(cind)=max(yr)-min(yr);
+
+               cstat.stdx(cind)=std(xh);
+               cstat.stdy(cind)=std(yh);
+               cstat.stdlong(cind)=stdl;
+               cstat.stdshort(cind)=stds;
+
+               %binning
+               L=75;%?
+               [stdx,photb,sigminflux]=bintraceMINFLUX(xh, photh, L);
+               sxrel=stdx./sigminflux;
+               cstat.binx(cind,1:min(15,length(stdx)))=stdx(1:min(15,length(stdx)));
+               cstat.binrelx(cind,1:min(15,length(stdx)))=sxrel(1:min(15,length(stdx)));
+               [stdy,~]=bintraceMINFLUX(yh, photh, L);
+               syrel=stdy./sigminflux;
+               cstat.biny(cind,1:min(15,length(stdy)))=stdy(1:min(15,length(stdy)));
+               cstat.binrely(cind,1:min(15,length(stdy)))=syrel(1:min(15,length(stdy)));
+               cstat.binphot(cind,1:min(15,length(stdy)))=photb(1:min(15,length(stdy)));
+
            end
            if p.addf
                obj.locData.setloc('c_stds',stdsall)
@@ -142,6 +188,43 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
                obj.locData.regroup;
            end
 
+           %plotting
+           axstdx=obj.initaxis('stdx');
+           stdxp=cstat.stdx(cstat.numlocs>0);
+           stdyp=cstat.stdy(cstat.numlocs>0);
+           
+           nhist=0:1:max(quantile(stdxp,0.95),quantile(stdyp,0.95));
+           
+           ff='%2.1f';
+           histogram(axstdx,stdxp,nhist);
+           title(axstdx,['median ' num2str(median(stdxp),ff)])
+           axstdx.XLim(1)=0;
+           xlabel(axstdx,'std(x) nm')
+
+           axstdy=obj.initaxis('stdy');
+           histogram(axstdy,stdyp,nhist);
+           title(axstdy,['median ' num2str(median(stdyp),ff)])
+           axstdy.XLim(1)=0;
+           xlabel(axstdy,'std(y) nm')
+
+           axdt=obj.initaxis('dt');
+           histogram(axdt,cstat.timediffmedian(cstat.numlocs>0));
+           title(axdt,['median ' num2str(median(cstat.timediffmedian(cstat.numlocs>0)),ff)])
+           axdt.XLim(1)=0;
+           xlabel(axdt,'median time diff (ms)')
+
+           axbx=obj.initaxis('binx');
+
+           semilogx(axbx,cstat.binphot(:),cstat.binrelx(:) ,'.')
+    %        hold(axx,'on')
+    % sigsmlm=120./sqrt(photb(1:k));
+    % 
+    % 
+    % semilogx(axx,photb(1:k), sigsmlm,'m--')
+    % semilogx(axx,photb(1:k), sigminflux,'b-.')
+    % ylabel(axx,'std pos (nm)')
+    % xlabel(axx,'photons')
+    % legend(axx,'std','SMLM','MINFLUX')
            
         end
         function pard=guidef(obj)
