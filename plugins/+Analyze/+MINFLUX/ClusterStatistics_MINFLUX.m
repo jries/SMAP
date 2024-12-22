@@ -80,6 +80,7 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
            cstat.binrelx=zeros(maxid,15);
            cstat.binrely=zeros(maxid,15); 
            cstat.binphot=zeros(maxid,15);
+           cstat.sigminflux=zeros(maxid,15);
 
            for k=1:length(clusterinds)
                cind=clusterinds(k);
@@ -172,6 +173,7 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
                cstat.biny(cind,1:min(15,length(stdy)))=stdy(1:min(15,length(stdy)));
                cstat.binrely(cind,1:min(15,length(stdy)))=syrel(1:min(15,length(stdy)));
                cstat.binphot(cind,1:min(15,length(stdy)))=photb(1:min(15,length(stdy)));
+               cstat.sigminflux(cind,1:min(15,length(sigminflux)))=sigminflux(1:min(15,length(sigminflux)));
 
            end
            if p.addf
@@ -192,6 +194,7 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
            axstdx=obj.initaxis('stdx');
            stdxp=cstat.stdx(cstat.numlocs>0);
            stdyp=cstat.stdy(cstat.numlocs>0);
+           numlocs=cstat.numlocs(cstat.numlocs>0);
            
            nhist=0:1:max(quantile(stdxp,0.95),quantile(stdyp,0.95));
            
@@ -207,24 +210,66 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
            axstdy.XLim(1)=0;
            xlabel(axstdy,'std(y) nm')
 
+           axstdy=obj.initaxis('locs');
+           histogram(axstdy,numlocs);
+           title(axstdy,['median ' num2str(median(numlocs),ff)])
+           axstdy.XLim(1)=0;
+           xlabel(axstdy,'localizations / track')
+
            axdt=obj.initaxis('dt');
            histogram(axdt,cstat.timediffmedian(cstat.numlocs>0));
            title(axdt,['median ' num2str(median(cstat.timediffmedian(cstat.numlocs>0)),ff)])
            axdt.XLim(1)=0;
            xlabel(axdt,'median time diff (ms)')
 
-           axbx=obj.initaxis('binx');
 
-           semilogx(axbx,cstat.binphot(:),cstat.binrelx(:) ,'.')
-    %        hold(axx,'on')
-    % sigsmlm=120./sqrt(photb(1:k));
-    % 
-    % 
-    % semilogx(axx,photb(1:k), sigsmlm,'m--')
-    % semilogx(axx,photb(1:k), sigminflux,'b-.')
-    % ylabel(axx,'std pos (nm)')
-    % xlabel(axx,'photons')
-    % legend(axx,'std','SMLM','MINFLUX')
+           quantvals=[0.25, 0.5, 0.75];
+           for k=size(cstat.binrelx,2):-1:1
+               v=cstat.binrelx(:,k);
+               if sum(v>0)<5
+                   continue
+               end
+               temp=quantile(v(v>0),quantvals,1);
+               binxmed(k)=temp(2); binxrel05(k)=temp(1); binxrel95(k)=temp(3);
+               v=cstat.binrely(:,k);
+               temp=quantile(v(v>0),quantvals,1);
+               binymed(k)=temp(2); binyrel05(k)=temp(1); binyrel95(k)=temp(3);
+               v=cstat.binphot(:,k);
+               temp=quantile(v(v>0),quantvals,1);
+               binphotmed(k)=temp(2);
+
+               v=cstat.binx(:,k);
+               temp=quantile(v(v>0),quantvals,1);
+               binx(k)=temp(2); binx05(k)=temp(1); binx95(k)=temp(3);
+               v=cstat.biny(:,k);
+               temp=quantile(v(v>0),quantvals,1);
+               biny(k)=temp(2); biny05(k)=temp(1); biny95(k)=temp(3);
+               v=cstat.sigminflux(:,k);
+               temp=quantile(v(v>0),quantvals,1);
+               sigminfluxmed(k)=temp(2); 
+
+           end
+           axbx=obj.initaxis('binrel');
+           hold(axbx,'off')
+           semilogx(axbx,binphotmed,binxmed,'b+-',binphotmed,binxrel05,'b--',binphotmed,binxrel95,'b--')
+           hold(axbx,'on')
+           semilogx(axbx,binphotmed,binymed,'r+-',binphotmed,binyrel05,'r--',binphotmed,binyrel95,'r--')
+           xlabel(axbx,'median photons')
+           ylabel(axbx,'std/locprec')
+           legend(axbx,'x: median',[num2str(quantvals(1)*100) '%'],[num2str(quantvals(3)*100) '%'],'y median')
+
+           axbin=obj.initaxis('bin');
+           hold(axbin,'off')
+           semilogx(axbin,binphotmed,binx,'b+-',binphotmed,binx05,'b--',binphotmed,binx95,'b--')
+           hold(axbin,'on')
+           semilogx(axbin,binphotmed,sigminfluxmed,'k')
+           semilogx(axbin,binphotmed,biny,'r+-',binphotmed,biny05,'r--',binphotmed,biny95,'r--')
+           
+
+
+           xlabel(axbin,'median photons')
+           ylabel(axbin,'std (nm)')
+           legend(axbin,'x: median',[num2str(quantvals(1)*100) '%'],[num2str(quantvals(3)*100) '%'],'locprec MF', 'y median')
            
         end
         function pard=guidef(obj)
