@@ -206,6 +206,14 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 ylabel(axcc,'ecc')
                 plotavtrace(p,axcc, timedt,locs.ecc(ind));
             end
+
+            if p.dofft
+                axftx=obj.setoutput('fftx');
+                plotfft(dxplot,median(dt),axftx)
+                axfty=obj.setoutput('ffty');
+                plotfft(dyplot,median(dt),axfty)        
+                median(dt)
+            end
             
             out.nocs=nlocs;out.ontime=ontime;out.dtmin=dtmin; out.dtmedian=dtmedian;out.dtmean=dtmean;
             out.sigmax=sigmax;out.sigmay=sigmay;out.sxrobust=sxrobust;out.syrobust=syrobust;out.sxdetrend=sxdetrend;out.sydetrend=sydetrend;
@@ -224,6 +232,29 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             pard=guidef(obj);
         end
     end
+end
+
+function plotfft(x,dt,axfx)
+    Fs=1e3/dt;
+    L=length(x);
+    xf=abs(fft(x)/L);
+    xfp=2*xf(1:floor(L/2)+1);
+    xfp(1)=0;
+    freq=(Fs*(0:(L/2))/L)';
+    hold(axfx,'off')
+    semilogy(axfx,freq,xfp,'r');
+    
+    
+    if length(freq)>2500
+        dfh=round(length(freq)/2000);
+        f2=freq(round(dfh/2):dfh:end);
+        xfpb=bindata(freq,xfp,f2);
+        hold(axfx,'on')
+        semilogy(axfx,f2,xfpb,'b');
+        ylim(axfx,[1e-5 1])
+    end
+    xlabel(axfx,'frequency (Hz)')
+    ylabel(axfx,'Amplitude (nm), 2*fft (x)');
 end
 
 function plotavtrace(p,axx, time, x)
@@ -315,6 +346,10 @@ pard.L.Width=1;
 pard.groupon.object=struct('String','group individual tracks (selection all)','Style','checkbox','Value',1);
 pard.groupon.position=[6,1];
 pard.groupon.Width=4;
+
+pard.dofft.object=struct('String','FFT','Style','checkbox','Value',0);
+pard.dofft.position=[7,1];
+pard.dofft.Width=1;
 
 
 pard.plugininfo.description=sprintf('');

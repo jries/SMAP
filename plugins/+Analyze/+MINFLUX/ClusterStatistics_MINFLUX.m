@@ -196,7 +196,7 @@ classdef ClusterStatistics_MINFLUX<interfaces.DialogProcessor
            stdyp=cstat.stdy(cstat.numlocs>0);
            numlocs=cstat.numlocs(cstat.numlocs>0);
            
-           nhist=0:1:max(quantile(stdxp,0.95),quantile(stdyp,0.95));
+           nhist=0:.25:max(quantile(stdxp,0.95),quantile(stdyp,0.95));
            
            ff='%2.1f';
            histogram(axstdx,stdxp,nhist);
