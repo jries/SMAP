@@ -35,38 +35,75 @@ classdef FRCresolution<interfaces.DialogProcessor
                ax1=obj.initaxis(['frc']);
             end
             for layer=layers
-    %             lochere.filter('FRCblocks',[],'minmax',[-.1 .5])
-                image1=getimage(lochere,p,[-.1 .5],layer);
-    %             lochere.filter('FRCblocks',[],'minmax',[.5 1.1])
-                image2=getimage(lochere,p,[.5 1.1],layer);
+                if ~p.fsc_3D
+                    % compute FRC 2D resolution
+        %             lochere.filter('FRCblocks',[],'minmax',[-.1 .5])
+                    image1=getimage(lochere,p,[-.1 .5],layer);
+        %             lochere.filter('FRCblocks',[],'minmax',[.5 1.1])
+                    image2=getimage(lochere,p,[.5 1.1],layer);
+    
+                    image1f=filterimage(image1);
+                    image2f=filterimage(image2);
+                    [frc_curve,frc_nom]=getFRC(image1f,image2f);
+                    [FRC_resolutionp,rl,rh]=frctoresolution(frc_curve,size(image1));
+                    FRC_resolution=FRC_resolutionp*p.pixrec_frc;
+                    errres=(rh-rl)/2*p.pixrec_frc;
+                    if ~p.sameimage
+                        ax1=obj.initaxis(['frc, Layer ' num2str(layer)]);
+                        hold off
+                    end
+                    qmax = 0.5/(p.pixrec_frc);
+    
+                    plot([0 qmax],[0 0],'k')
+                    hold on
+                    plot(linspace(0,qmax, length(frc_curve)), frc_curve,'-')
+        %             plot(linspace(0,qmax*sqrt(2), length(frc_curve)), frc_curve,'-')
+                    plot([0 qmax],[1/7 1/7],'m')
+                    plot(1/(FRC_resolution),1/7,'rx')
+                    plot(1/(FRC_resolution)*[1 1],[-0.2 1/7],'r')
+                    
+                    xlim([0,qmax]);
+                    ylim([-0.2 1.2])
+                    xlabel('Spatial frequency (nm^{-1})');
+                    ylabel('FRC')
+                    title(['FRC resolution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
+                    drawnow
+                    outtxt=[outtxt newline 'FRC resolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f') 9 'Layer' 9 num2str(layer)];
+                else
+                    % compute FSC 3D resolution
 
-                image1f=filterimage(image1);
-                image2f=filterimage(image2);
-                [frc_curve,frc_nom]=getFRC(image1f,image2f);
-                [FRC_resolutionp,rl,rh]=frctoresolution(frc_curve,size(image1));
-                FRC_resolution=FRC_resolutionp*p.pixrec_frc;
-                errres=(rh-rl)/2*p.pixrec_frc;
-                if ~p.sameimage
-                    ax1=obj.initaxis(['frc, Layer ' num2str(layer)]);
-                    hold off
+                    image1=getimage3D(lochere,p,[-.1 .5],layer);
+                    image2=getimage3D(lochere,p,[.5 1.1],layer);
+    
+                    image1f=filterimage(image1);
+                    image2f=filterimage(image2);
+                    [frc_curve,frc_nom]=getFSC(image1f,image2f);
+                    [FRC_resolutionp,rl,rh]=frctoresolution(frc_curve,size(image1));
+                    FRC_resolution=FRC_resolutionp*p.pixrec_frc;
+                    errres=(rh-rl)/2*p.pixrec_frc;
+                    if ~p.sameimage
+                        ax1=obj.initaxis(['frc, Layer ' num2str(layer)]);
+                        hold off
+                    end
+                    qmax = 0.5/(p.pixrec_frc);
+    
+                    plot([0 qmax],[0 0],'k')
+                    hold on
+                    plot(linspace(0,qmax, length(frc_curve)), frc_curve,'-')
+        %             plot(linspace(0,qmax*sqrt(2), length(frc_curve)), frc_curve,'-')
+                    plot([0 qmax],[1/7 1/7],'m')
+                    plot(1/(FRC_resolution),1/7,'rx')
+                    plot(1/(FRC_resolution)*[1 1],[-0.2 1/7],'r')
+                    
+                    xlim([0,qmax]);
+                    ylim([-0.2 1.2])
+                    xlabel('Spatial frequency (nm^{-1})');
+                    ylabel('FSC')
+                    title(['FSC resolution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
+                    drawnow
+                    outtxt=[outtxt newline 'FSC resolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f') 9 'Layer' 9 num2str(layer)];
                 end
-                qmax = 0.5/(p.pixrec_frc);
-
-                plot([0 qmax],[0 0],'k')
-                hold on
-                plot(linspace(0,qmax, length(frc_curve)), frc_curve,'-')
-    %             plot(linspace(0,qmax*sqrt(2), length(frc_curve)), frc_curve,'-')
-                plot([0 qmax],[1/7 1/7],'m')
-                plot(1/(FRC_resolution),1/7,'rx')
-                plot(1/(FRC_resolution)*[1 1],[-0.2 1/7],'r')
-                
-                xlim([0,qmax]);
-                ylim([-0.2 1.2])
-                xlabel('Spatial frequency (nm^{-1})');
-                ylabel('FRC')
-                title(['FRC resolution (nm): ' num2str(FRC_resolution,'%4.1f') ' +/- ' num2str(errres,'%4.1f')])
-                drawnow
-                outtxt=[outtxt newline 'FRC resolution (nm): ' 9 num2str(FRC_resolution,'%4.1f') 9 ' +/- ' 9 num2str(errres,'%4.1f') 9 'Layer' 9 num2str(layer)];
+                    
             end
             
             out.clipboard=outtxt;
@@ -109,6 +146,18 @@ frc_out = double(frc_num)./double(frc_denom);                               % FR
 frc_out(isnan(frc_out)) = 0;  
 end
 
+function [frc_out,frc_num]=getFSC(image1,image2)
+in1=fftshift(fftn(image1));
+in2=fftshift(fftn(image2));
+inc=in1.*conj(in2);
+frc_num=real( radialsum_3d(inc) );
+in1 = abs(in1).^2;
+in2 = abs(in2).^2;
+frc_denom = sqrt(abs(radialsum_3d(in1).*radialsum_3d(in2)));             % Denominator 
+frc_out = double(frc_num)./double(frc_denom);                          % FSC
+frc_out(isnan(frc_out)) = 0;  
+end
+
 function rs=radialsum(img)
 s=size(img);
 center=floor((s+1)/2);
@@ -123,6 +172,24 @@ for k=1:s(1)
     end
 end
 end
+
+function rs = radialsum_3d(img)
+s=size(img);
+center=floor((s+1)/2);
+rs=zeros(ceil(s(1)/2)+1,1);
+for k=1:s(1)
+    for l=1:s(2)
+        for m=1:s(3)
+            d=sqrt((k-center(1)).^2+(l-center(2)).^2+(m-center(2)).^2);
+            ind=round(d)+1;
+            if ind<=length(rs)
+                rs(ind)=rs(ind)+img(k,l,m);
+            end
+        end
+    end
+end
+end
+
 function imageo=filterimage(imagei)
 sz=size(imagei);
 nfac = 8;    
@@ -152,6 +219,31 @@ end
 s=size(image);
 if s(2)~=s(1)
     image(max(s(1:2)),max(s(1:2)))=0;
+end
+if isfield(p,'saturation')
+    cutoff=quantile(image(:),p.saturation);
+    image(image>cutoff)=cutoff;
+end
+end
+
+function image=getimage3D(lochere,p,frcrange,layer)
+if p.takeimage
+    p.sr_axes=[];
+    imt=anyRender(lochere,p);
+    image=sum(imt.composite,3);
+else
+    locs=lochere.getloc({'xnm','ynm','znm','FRCblocks'},'position','roi','layer',layer);
+    goodlocs=locs.FRCblocks>frcrange(1) & locs.FRCblocks<frcrange(2);
+    rx=p.sr_pos(1)+p.sr_size(1)*[-1 1];
+    ry=p.sr_pos(2)+p.sr_size(2)*[-1 1];
+    rz=max(abs(locs.znm))*[-1 1];
+    image=myhist3(locs.xnm(goodlocs),locs.ynm(goodlocs),locs.znm(goodlocs),...
+        p.pixrec_frc,rx,ry,rz);
+
+end
+s=size(image);
+if (s(2)~=s(1)) || (s(2)~=s(3))
+    image(max(s),max(s),max(s))=0;
 end
 if isfield(p,'saturation')
     cutoff=quantile(image(:),p.saturation);
@@ -348,4 +440,7 @@ pard.blockassignment.position=[4,4];
 pard.plugininfo.name='FRC resolution';
 pard.plugininfo.description='FRC resolution. Uses ROI or FoV (if rendered image is ticked). implementation based on the matlab code provided with: [1]	R. P. J. Nieuwenhuizen, K. A. Lidke, M. Bates, D. L. Puig, D. Gr?nwald, S. Stallinga, and B. Rieger, ?Measuring image resolution in optical nanoscopy.,? Nat Methods, vol. 10, no. 6, pp. 557?562, Jun. 2013.';
 pard.plugininfo.type='ProcessorPlugin';
+
+pard.fsc_3D.object=struct('String','FSC 3D','Style','checkbox','Value',0);
+pard.fsc_3D.position=[5,1];
 end

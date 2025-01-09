@@ -43,3 +43,4 @@ gui:t3
 gui:t4=frc_blocks 
 gui:takeimage If checked, the pixel size of the current rendering is used. Othwerwise you can specify
 the pixel size. It should be several times smaller than the FRC resolution.
+gui:fsc_3D If checked, calculate the Fourier shell correlation instead of FRC, this can take a lot of memory
