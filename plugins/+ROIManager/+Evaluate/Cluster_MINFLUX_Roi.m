@@ -236,6 +236,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 f=figure(123);
                 clf
                 f.Position(3:4)=[1000,630];
+                f.Position(2)=100;
                 
                 axcopy={axx,axx,axbb,axy,axy,axbby,axftx,axfty};
 
