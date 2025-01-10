@@ -8,6 +8,7 @@ locz=locs(:,3);
 % indgood=~isnan(locx);
 if onlyvalid
     indgood=jt.vld;
+    indnan=false(size(locx));
 else
     indnan=isnan(locx);
     indgood = true (size(locx));

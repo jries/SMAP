@@ -45,6 +45,10 @@ switch ext
         jt=load(file);
         if isfield(jt,'bot') %new format
             loc=minfluxmat2loc_mf3(jt,p.onlyvalid);
+            if ~p.alliter
+                lastitr=loc.itr==max(loc.itr);
+                loc=copystructReduce(loc,lastitr);
+            end
         else
             if ~isfield(jt,'loc') && isfield(jt,'itr')
                 
@@ -172,9 +176,9 @@ pard.plugininfo.type='LoaderPlugin';
 pard.plugininfo.description='loades localzation data from a variety of files including text (.csv, .txt), hdf5 or MATLAB files. Localization data properties can be converted to those used in SMAP, and conversions can be saved for repeated use.';
 
 
-p(1).value=0; p(1).off={}; p(1).on={'simple','onlyvalid'};
-p(2).value=1; p(2).on={}; p(2).off={'simple','onlyvalid'};
-pard.alliter.object=struct('Style','checkbox','String','load all iterations','Value',0,'Callback',{{@obj.switchvisible,p}});
+p(1).value=0; p(1).off={}; p(1).on={'onlyvalid'};
+p(2).value=1; p(2).on={}; p(2).off={'onlyvalid'};
+pard.alliter.object=struct('Style','checkbox','String','load all iterations','Value',0);%,'Callback',{{@obj.switchvisible,p}});
 pard.alliter.position=[1,1];
 pard.alliter.Width=2;
 pard.alliter.TooltipString='Load all iterations, not only final iteration.';
@@ -184,11 +188,11 @@ pard.center.position=[1,3];
 pard.center.Width=2;
 
 
-
-pard.simple.object=struct('Style','checkbox','String','load only main fields','Value',1);
-pard.simple.position=[2,1];
-pard.simple.Width=2;
-pard.simple.TooltipString='Only load main localization attributes needed for rendering.';
+% 
+% pard.simple.object=struct('Style','checkbox','String','load only main fields','Value',0);
+% pard.simple.position=[2,1];
+% pard.simple.Width=2;
+% pard.simple.TooltipString='Only load main localization attributes needed for rendering.';
 
 pard.onlyvalid.object=struct('Style','checkbox','String','load only valid','Value',0);
 pard.onlyvalid.position=[2,3];
