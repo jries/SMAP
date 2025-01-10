@@ -109,7 +109,8 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             legend(axx,'data','','std','','robust std','','detrend std','')
             xlabel(axx,'time (ms)')
             ylabel(axx,'x (nm)')
-               title(axx,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) robust = ' num2str(sxrobust,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.'])
+               title(axx,['std(x) = ' num2str(sigmax,ff)  ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.'])
+               % title(axx,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) robust = ' num2str(sxrobust,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.'])
 
              plotavtrace(p,axx, ltime,locs.xnm(ind)-mean(locs.xnm(ind)));
 
@@ -129,7 +130,9 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             legend(axy,'data','','std','','robust std','','detrend std','')
             xlabel(axy,'time (ms)')
             ylabel(axy,'y (nm)')
-            title(axy,['std(y) = ' num2str(sigmay,ff) ' nm, std(y) robust = ' num2str(syrobust,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
+            % title(axy,['std(y) = ' num2str(sigmay,ff) ' nm, std(y) robust = ' num2str(syrobust,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
+            title(axy,['std(y) = ' num2str(sigmay,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
+      
             plotavtrace(p,axy, ltime,locs.ynm(ind)-mean(locs.ynm(ind)));
             
             axbb=obj.setoutput('xbin');
@@ -227,6 +230,38 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             clipboard("copy",results)
             % out.clipboard=results;
 
+            if p.plotov
+                % x,y,xzoom,yzoom,xbin,ybin,fftx, ffty
+                % time,efo
+                f=figure(123);
+                clf
+                f.Position(3:4)=[1000,630];
+                
+                axcopy={axx,axx,axbb,axy,axy,axbby,axftx,axfty};
+
+                
+                for k=1:length(axcopy)
+                    subplot(3,3,k)
+                    ax=gca;
+                    axch=axcopy{k}.copy;
+                    axch.Parent=f;
+                    axch.Position=ax.Position;
+                    ax.Parent=[];
+                    axcall{k}=axch;
+                    axis(axch,"tight")
+                end
+                axcall{2}.XLim(2)=200;
+                axcall{5}.XLim(2)=200;
+                axcall{7}.XLim(2)=min(axcall{7}.XLim(2),500);
+                axcall{8}.XLim(2)=min(axcall{8}.XLim(2),500);
+                subplot(3,3,9)
+                text(0,0.5,{"dtmean: "+num2str(dtmean,'%2.2f')+"ms", "efomean: "+num2str(mean(locs.efo(ind))/1000,'%3.1f')+"Hz",...
+                    filename},"FontSize",12,"Interpreter","none")
+                ax=gca;
+                axis(ax,"off")
+                
+            end
+
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -300,6 +335,9 @@ semilogx(axx,photb(1:k), sigminflux,'b-.')
 ylabel(axx,'std pos (nm)')
 xlabel(axx,'photons')
 legend(axx,'std','SMLM','MINFLUX')
+ylim(axx,[0 (xb(1)*1.1)])
+
+title(axx,"level off: "+num2str(xb(k),'%2.2f')+" nm")
 end
 
 function xb=sumbintrace2(x)
@@ -347,9 +385,14 @@ pard.groupon.object=struct('String','group individual tracks (selection all)','S
 pard.groupon.position=[6,1];
 pard.groupon.Width=4;
 
-pard.dofft.object=struct('String','FFT','Style','checkbox','Value',0);
+pard.dofft.object=struct('String','FFT','Style','checkbox','Value',1);
 pard.dofft.position=[7,1];
 pard.dofft.Width=1;
+
+pard.plotov.object=struct('String','Show overview','Style','checkbox','Value',0);
+pard.plotov.position=[7,3];
+pard.plotov.Width=2;
+
 
 
 pard.plugininfo.description=sprintf('');

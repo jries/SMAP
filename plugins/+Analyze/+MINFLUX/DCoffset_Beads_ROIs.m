@@ -115,11 +115,16 @@ for ss=length(sites):-1:1
     followch=~p.mainch;
     locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'layer',layers,'Position',sites(ss),'grouping','ungrouped');
     indmain=locs.thi==p.mainch;
-    hc=histcounts(locs.tid(indmain),1:max(locs.tid)+1);
+    if isempty(locs.tid)
+        continue
+    end
+    hc=histcounts(locs.tid(indmain),1:(max(locs.tid))+1);
+    
     tidgood=find(hc>=p.minlen);
     if isempty(tidgood)
         continue
     end
+    hc(tidgood)
 
     dx=zeros(length(tidgood),1);dy=dx; ti=dx;x1=dx;x2=dx; y1=dx;y2=dy;
     dtstart=dx; dtstop=dx; tfraction=dx;
