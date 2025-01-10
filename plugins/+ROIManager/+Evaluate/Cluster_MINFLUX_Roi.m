@@ -248,15 +248,17 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                     axch.Position=ax.Position;
                     ax.Parent=[];
                     axcall{k}=axch;
-                    axis(axch,"tight")
+                    % axis(axch,"tight")
+                    % axch.YLim=ax.YLim;
                 end
                 axcall{2}.XLim(2)=200;
                 axcall{5}.XLim(2)=200;
                 axcall{7}.XLim(2)=min(axcall{7}.XLim(2),500);
                 axcall{8}.XLim(2)=min(axcall{8}.XLim(2),500);
                 subplot(3,3,9)
+                sigminflux=p.L./sqrt(8*mean(locs.phot(ind)));
                 text(0,0.5,{"dtmean: "+num2str(dtmean,'%2.2f')+"ms", "efomean: "+num2str(mean(locs.efo(ind))/1000,'%3.1f')+"Hz",...
-                    filename},"FontSize",12,"Interpreter","none")
+                    "locprec: "+num2str(sigminflux,'%2.2f')+" nm",filename},"FontSize",12,"Interpreter","none")
                 ax=gca;
                 axis(ax,"off")
                 
@@ -290,6 +292,8 @@ function plotfft(x,dt,axfx)
     end
     xlabel(axfx,'frequency (Hz)')
     ylabel(axfx,'Amplitude (nm), 2*fft (x)');
+    axis(axfx,'tight')
+    axfx.YLim(1)=quantile(xfp,0.01);
 end
 
 function plotavtrace(p,axx, time, x)
