@@ -214,10 +214,12 @@ for k=1:length(usetracks)
     hp=plot(ax,locs.xnm(indtr)/pixelsize(1)-roi(1),locs.ynm(indtr)/pixelsize(2)-roi(2),symb,'Color',cols(colind(idh),:),'LineWidth',lw,'Tag','test','MarkerSize',msize);
     hold(ax,"on")
     pidlabel=0*locs.track_id(indtr)+trackstat.partnerids(idh);
-    dtRows = [dataTipTextRow("frame",locs.frame(indtr)),...
-    dataTipTextRow("ID",locs.track_id(indtr)),...
-    dataTipTextRow("partnerID",pidlabel)];
-    hp.DataTipTemplate.DataTipRows(end+1:end+3) = dtRows;   
+    dtRows = [dataTipTextRow("frame",double(locs.frame(indtr))),...
+    dataTipTextRow("ID",double(locs.track_id(indtr))),...
+    dataTipTextRow("partnerID",double(pidlabel))];
+    alldatatip=vertcat(hp.DataTipTemplate.DataTipRows,dtRows');
+    %hp.DataTipTemplate.DataTipRows(end+1:end+3) = dtRows;   
+    hp.DataTipTemplate.DataTipRows=alldatatip;
 end
 
 
