@@ -1,26 +1,54 @@
-% analyze dual-color tracks
+classdef Dual_tracking_analysis<interfaces.DialogProcessor
+    %Links molecules in consecutive frames for SPT analysis
+    methods
+        function obj=Dual_tracking_analysis(varargin)        
+            obj@interfaces.DialogProcessor(varargin{:}) ;
+            obj.showresults=true;
+        end
+        function out=run(obj,p)
+            
+            out=runi(obj,p);
+        end
+        function pard=guidef(obj)
+            pard=guidef(obj);
+        end
+        function loadtiff(obj,a,b,field,sstr)
+            oldf=obj.getSingleGuiParameter(field);
+            if isempty(oldf)
+                oldf=sstr;
+            end
 
+            [newf,newpath]=uigetfile(oldf);
+            if newf
+                obj.setGuiParameters(struct(field,[newpath newf]));
+            end
+        
+        end
+    end
+end
+function out=runi(obj,p)
+out=[];
 %filters
-minlenframes=5;
-maxd=200; % nm max distance to associate localizations
+minlenframes=p.minlenframes;
+maxd=p.maxd; % nm max distance to associate localizations
 
-cotracklength=4; %minimum data poits associated between tracks
-cotrackfraction = 0.0; %minimum fraction of localizations associated
+cotracklength=p.cotracklength; %minimum data poits associated between tracks
+cotrackfraction = p.cotrackfraction; %minimum fraction of localizations associated
 
 % test directed movement
-aspectratio=1; %should be below this for directed motion.
-lennmstartend=300; % minimum endpoint- startpoint
+aspectratio=p.aspectratio; %should be below this for directed motion.
+lennmstartend=p.lennmstartend; % minimum endpoint- startpoint
 lennmmin=0; %minimum of largest extenstion standard deviation (not so useful)
-minvelocity=200; %nm/s
-maxvelocity=1500;
+minvelocity=p.velocitymin; %nm/s
+maxvelocity=p.velocitymax;
 
 % visualizing co-tracks
-onlyprogressivecotracks=true; %only when both partners are progressive
-markintiffile=false;
+% onlyprogressivecotracks=true; %only when both partners are progressive
+% markintiffile=false;
 % tiffile=fout;
-tiffile='/Users/ries/datalocal/2color_kinesin/25_50ms_561nm01_640nm02_600w52_676w37_1_MMStack_Default_combined.tif';
+% tiffile='/Users/ries/datalocal/2color_kinesin/25_50ms_561nm01_640nm02_600w52_676w37_1_MMStack_Default_combined.tif';
 
-obj=g;
+% obj=g;
 [locs,indin]=obj.locData.getloc({'xnm','ynm','znm','xpix','ypix','frame','track_id','channel','track_length','layer','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
 
 
@@ -38,6 +66,7 @@ trackstat.lenframe=zeros(max(usetracks),1);
 trackstat.partnertrackid=zeros(max(usetracks),1);
 trackstat.velocity=zeros(max(usetracks),1);
 locs.track_length_new=zeros(size(locs.xnm));
+trackstat.partnerids=zeros(max(usetracks),1);
 
 for k=1:length(usetracks)
     iduset=usetracks(k);
@@ -150,9 +179,8 @@ trackstat.progressivepartner=progressivepartner;
 
 
 % plot tracks
-figure(88)
-hold off
-ax=gca;
+
+ax=obj.initaxis('xy');
 
 cols=[1 0 1
       0 1 1
@@ -185,7 +213,7 @@ for k=1:length(usetracks)
     end
     hp=plot(ax,locs.xnm(indtr)/pixelsize(1)-roi(1),locs.ynm(indtr)/pixelsize(2)-roi(2),symb,'Color',cols(colind(idh),:),'LineWidth',lw,'Tag','test','MarkerSize',msize);
     hold(ax,"on")
-    pidlabel=0*locs.track_id(indtr)+pid;
+    pidlabel=0*locs.track_id(indtr)+trackstat.partnerids(idh);
     dtRows = [dataTipTextRow("frame",locs.frame(indtr)),...
     dataTipTextRow("ID",locs.track_id(indtr)),...
     dataTipTextRow("partnerID",pidlabel)];
@@ -199,23 +227,25 @@ end
 % Plot cotracks vs time
 %%
 %only both good
-trackstat.coprogressive=(trackstat.channel==1 & trackstat.comovement & trackstat.progressive & trackstat.progressivepartner);
-goodpairs=find(trackstat.coprogressive);
-figure(102)
-clf
-for k=1:length(goodpairs)
-    subplot(5,5,k)
-    hold off
-    id1=locs.track_id==goodpairs(k);
-    pid=trackstat.partnerids(goodpairs(k));
-    id2=locs.track_id==pid;
-    tmin=min(min(locs.frame(id1)),min(locs.frame(id2)));
-
-    [x1,y1]=rotcoord(locs.xnm(id1)-mean(locs.xnm(id1)),locs.ynm(id1)-mean(locs.ynm(id1)),trackstat.angle(goodpairs(k)));
-    [x2,y2]=rotcoord(locs.xnm(id2)-mean(locs.xnm(id2)),locs.ynm(id2)-mean(locs.ynm(id2)),trackstat.angle(pid));
-    plot(locs.frame(id1),x1,'.-',locs.frame(id2),x2,'.-')
-    hold on
-    title(['frame: ' num2str(tmin) ', x: ' num2str(mean(locs.xpix(id1)),'%3.0f') ', y: ' num2str(mean(locs.ypix(id1)),'%3.0f')])  
+if contains(p.showtraces.selection,'progressive co-tracks')
+    trackstat.coprogressive=(trackstat.channel==1 & trackstat.comovement & trackstat.progressive & trackstat.progressivepartner);
+    goodpairs=find(trackstat.coprogressive);
+    figure(102)
+    clf
+    for k=1:length(goodpairs)
+        subplot(5,5,k)
+        hold off
+        id1=locs.track_id==goodpairs(k);
+        pid=trackstat.partnerids(goodpairs(k));
+        id2=locs.track_id==pid;
+        tmin=min(min(locs.frame(id1)),min(locs.frame(id2)));
+    
+        [x1,y1]=rotcoord(locs.xnm(id1)-mean(locs.xnm(id1)),locs.ynm(id1)-mean(locs.ynm(id1)),trackstat.angle(goodpairs(k)));
+        [x2,y2]=rotcoord(locs.xnm(id2)-mean(locs.xnm(id2)),locs.ynm(id2)-mean(locs.ynm(id2)),trackstat.angle(pid));
+        plot(locs.frame(id1),x1,'.-',locs.frame(id2),x2,'.-')
+        hold on
+        title(['frame: ' num2str(tmin) ', x: ' num2str(mean(locs.xpix(id1)),'%3.0f') ', y: ' num2str(mean(locs.ypix(id1)),'%3.0f')])  
+    end
 end
 
 % Calculate statistics
@@ -232,8 +262,8 @@ clipboard('copy',output)
 %add to movie
 dx=3;
 dimmark=3;
-if markintiffile
-    imstack=tiffreadVolume(tiffile);
+if p.addtracksmovie && ~isempty(p.tiffile)
+    imstack=tiffreadVolume(p.tiffile);
     imstack=permute(imstack,[1 2 4 3]);
     immax=max(imstack(:));
     [lenx,leny]=size(imstack,[1,2]);
@@ -254,5 +284,118 @@ if markintiffile
 fout2=strrep(tiffile,'_combined.tif','_mark.tif');
 options.color=true;
 saveastiff(squeeze(single(imstack)),fout2,options);
+end
+
+
+
+end
+             
+function pard=guidef(obj)
+
+pard.minlenframest.object=struct('String','Min length track (frames)','Style','text');
+pard.minlenframest.position=[1,1];
+pard.minlenframest.Width=1.5;
+
+pard.minlenframes.object=struct('String','5','Style','edit');
+pard.minlenframes.position=[1,2.5];
+pard.minlenframes.Width=.5;
+
+pard.maxdt.object=struct('String','Max distance (nm)','Style','text');
+pard.maxdt.position=[1,3];
+pard.maxdt.Width=1.5;
+
+pard.maxd.object=struct('String','200','Style','edit');
+pard.maxd.position=[1,4.5];
+pard.maxd.Width=.5;
+
+pard.dmt.object=struct('String','directed movement:','Style','text');
+pard.dmt.position=[2,1];
+
+pard.aspectratiot.object=struct('String','aspect ratio <','Style','text');
+pard.aspectratiot.position=[2,2];
+pard.aspectratiot.Width=1.;
+pard.aspectratio.object=struct('String','1','Style','edit');
+pard.aspectratio.position=[2,2.7];
+pard.aspectratio.Width=.5;
+
+
+pard.lennmstartendt.object=struct('String','start-end (nm) >','Style','text');
+pard.lennmstartendt.position=[2,3.5];
+pard.lennmstartendt.Width=1.;
+pard.lennmstartend.object=struct('String','300','Style','edit');
+pard.lennmstartend.position=[2,4.5];
+pard.lennmstartend.Width=.5;
+
+pard.cotracklenght.object=struct('String','co track length (frames) >','Style','text');
+pard.cotracklenght.position=[3,1];
+pard.cotracklenght.Width=1.5;
+pard.cotracklength.object=struct('String','4','Style','edit');
+pard.cotracklength.position=[3,2.5];
+pard.cotracklength.Width=.5;
+
+pard.cotrackfractiont.object=struct('String','co track fraction >','Style','text');
+pard.cotrackfractiont.position=[3,3];
+pard.cotrackfractiont.Width=1.5;
+pard.cotrackfraction.object=struct('String','0','Style','edit');
+pard.cotrackfraction.position=[3,4.5];
+pard.cotrackfraction.Width=.5;
+
+
+
+pard.velocityt.object=struct('String','velocity (nm/s) min','Style','text');
+pard.velocityt.position=[4,1];
+pard.velocityt.Width=1.5;
+pard.velocitymin.object=struct('String','200','Style','edit');
+pard.velocitymin.position=[4,2.5];
+pard.velocitymin.Width=.5;
+pard.velocitymt.object=struct('String','max','Style','text');
+pard.velocitymt.position=[4,4];
+pard.velocitymt.Width=0.5;
+pard.velocitymax.object=struct('String','1500','Style','edit');
+pard.velocitymax.position=[4,4.5];
+pard.velocitymax.Width=.5;
+
+pard.showt.object=struct('String','Show:','Style','text');
+pard.showt.position=[5,1];
+pard.showt.Width=0.5;
+pard.showtraces.object=struct('String',{{'progressive co-tracks','none'}},'Style','popupmenu');
+pard.showtraces.position=[5,1.5];
+pard.showtraces.Width=1.5;
+
+pard.makemovie.object=struct('String','make movie','Style','checkbox');
+pard.makemovie.position=[6,1];
+pard.makemovie.Width=1.5;
+
+pard.addtracksmovie.object=struct('String','add tracks to movie','Style','checkbox');
+pard.addtracksmovie.position=[6,3];
+pard.addtracksmovie.Width=1.3;
+
+pard.tiffilet.object=struct('String','tif:','Style','text');
+pard.tiffilet.position=[7,1];
+pard.tiffilet.Width=0.5;
+
+pard.tiffile.object=struct('String','','Style','edit');
+pard.tiffile.position=[7,1.5];
+pard.tiffile.Width=3.;
+
+pard.tiffload.object=struct('String','load','Style','pushbutton','Callback',{{@obj.loadtiff,'tiffile','*.tif'}});
+pard.tiffload.position=[7,4.5];
+pard.tiffload.Width=0.5;
+
+pard.Tfilet.object=struct('String','trafo:','Style','text');
+pard.Tfilet.position=[8,1];
+pard.Tfilet.Width=0.5;
+
+pard.Tfile.object=struct('String','','Style','edit');
+pard.Tfile.position=[8,1.5];
+pard.Tfile.Width=3.;
+
+pard.Tfload.object=struct('String','load','Style','pushbutton','Callback',{{@obj.loadtiff,'Tfile','*.mat'}});
+pard.Tfload.position=[8,4.5];
+pard.Tfload.Width=0.5;
+
+
+pard.plugininfo.description=sprintf('co-tracking analysis');
+pard.plugininfo.type='ProcessorPlugin';
 end
 
