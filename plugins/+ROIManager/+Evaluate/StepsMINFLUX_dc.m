@@ -92,8 +92,8 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
                index2=obj.locsuse.(fid) == id2 & obj.locsuse.filenumber ==filenumberh;
            else
                obj.locsuse=obj.locData.loc;
-               index1=obj.locsuse.(fid)==id;
-               index2=obj.locsuse.(fid)==id2;
+               index1=obj.locsuse.(fid)==id & obj.locsuse.filenumber ==filenumberh;
+               index2=obj.locsuse.(fid)==id2 & obj.locsuse.filenumber ==filenumberh;
            end
            if p.onlyvld
                 index1=index1 & obj.locsuse.vld==1;
@@ -122,6 +122,8 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            % end
 
            [xr,yr,angle]=rotateCenterCoordinates(x1,y1,time1,obj.range);
+           out.angle=angle;
+           out.rotcenter=[mean(x1),mean(y1)];
 
            [xr2,yr2]=rotcoord(x2-mean(x1),y2-mean(y1),angle);
            [xr1,yr1]=rotcoord(x1-mean(x1),y1-mean(y1),angle);
@@ -130,26 +132,37 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            plot(axxyr,xr1,yr1,[p.col1 '.-'], xr2,yr2,[p.col2 '.-']);
            axis(axxyr,'equal')
            title(axxyr,['tid: ' num2str(trackid1) ', ' num2str(trackid2)])
+           xlabel(axxyr,'xrot (nm)')
+           ylabel(axxyr,'yrot (nm)')
 
            axxtr=obj.setoutput('xtr');
            plot(axxtr,time1,xr1,[p.col1 '.-'], time2,xr2,[p.col2 '.-']);
            % axis(axxt,'equal')
+           xlabel(axxtr,'time ')
+           ylabel(axxtr,'xrot (nm)')
 
            axytr=obj.setoutput('ytr');
            plot(axytr,time1,yr1,[p.col1 '.-'], time2,yr2,[p.col2 '.-']);
+           xlabel(axytr,'time ')
+           ylabel(axytr,'yrot (nm)')
            % axis(axyt,'equal')
 
            axxy=obj.setoutput('xy');
            plot(axxy,x1,y1,[p.col1 '.-'], x2,y2,[p.col2 '.-']);
            axis(axxy,'equal')
            obj.axxy=axxy;
+           xlabel(axxy,'x (nm)')
+           ylabel(axxy,'y (nm)')
 
            axxt=obj.setoutput('xt');
            plot(axxt,time1,x1,[p.col1 '.-'], time2,x2,[p.col2 '.-']);
            % axis(axxt,'equal')
-
+           xlabel(axxt,'time ')
+           ylabel(axxt,'y (nm)')
            axyt=obj.setoutput('yt');
            plot(axyt,time1,y1,[p.col1 '.-'], time2,y2,[p.col2 '.-']);
+           xlabel(axyt,'time ')
+           ylabel(axyt,'y (nm)')
          
            % axis(axyt,'equal')
             % if p.filtertrackmode

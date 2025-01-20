@@ -69,7 +69,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                id=mode(locs.(fid)(ind));
                
            end
-
+            
            if isfield(p,'fromdc') && p.fromdc
                switch p.dcch
                    case 1
@@ -82,6 +82,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                    return
                end
                id=obj.site.evaluation.StepsMINFLUX_dc.(idname);
+               angle=obj.site.evaluation.StepsMINFLUX_dc.angle;
+               rotcenter=obj.site.evaluation.StepsMINFLUX_dc.rotcenter;
                % obj.locData.SE.sites(1).evaluation
            end
            filenumberh=mode(locs.filenumber);
@@ -114,8 +116,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            else
                z=[];
            end
+            
 
-           [xr,yr,angle]=rotateCenterCoordinates(x,y,time,obj.range);
             % if p.filtertrackmode
                 zf=z;
                 windowsize=p.filterwindow;
@@ -124,8 +126,17 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                 if ~isempty(z)
                     zf=runningWindowAnalysis(time,z,time,windowsize,p.filtermode.selection);  
                 end
+
+           if isfield(p,'fromdc') && p.fromdc
+               [xr,yr,angle]=rotateCenterCoordinates(x,y,time,obj.range,angle,rotcenter);
+               [xfr,yfr,angle]=rotateCenterCoordinates(xf,yf,time,obj.range,angle,rotcenter);
+           else
+
+                [xr,yr,angle,rotcenter]=rotateCenterCoordinates(x,y,time,obj.range);
+                [xfr,yfr,angle]=rotateCenterCoordinates(xf,yf,time,obj.range,angle,rotcenter);
+           end
 %                 plot(axx,timeplot,xf,'b');
-                [xfr,yfr,angle]=rotateCenterCoordinates(xf,yf,time,obj.range,angle);
+                
             % else
                 
                 % xfr=[]; yfr=[]; zf=[];
