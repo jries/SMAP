@@ -47,10 +47,12 @@ maxvelocity=p.velocitymax;
 % markintiffile=false;
 % tiffile=fout;
 % tiffile='/Users/ries/datalocal/2color_kinesin/25_50ms_561nm01_640nm02_600w52_676w37_1_MMStack_Default_combined.tif';
-
+layers=find(obj.getPar('sr_layerson'));
 % obj=g;
-[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','xpix','ypix','frame','track_id','channel','track_length','layer','filenumber'},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
+obj.locData.filter; %does this fix the bug?
+[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','xpix','ypix','frame','track_id','channel','track_length','layer','filenumber'},'layer',layers,'position','roi','grouping','ungrouped');
 
+% unique(locs.channel)
 
 exposuretime=obj.locData.files.file(locs.filenumber(1)).info.exposure;
 

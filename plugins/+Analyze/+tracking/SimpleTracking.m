@@ -29,8 +29,8 @@ switch p.trackwhat.selection
         end
     case 'channels'
         channels=unique(obj.locData.loc.channel);
-        [locs,indin]=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','phot','frame','track_id','channel'},'position','roi','grouping','ungrouped');
         for k=1:length(channels)
+            [locs,indin]=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','phot','frame','track_id','channel'},'position','roi','grouping','ungrouped');
             chgood=locs.channel==channels(k);
             out=tracksingle(obj,p,locs,indin,chgood);
             p.overwritetracks=false;
