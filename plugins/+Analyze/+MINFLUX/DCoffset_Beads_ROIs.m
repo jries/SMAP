@@ -172,13 +172,14 @@ end
 % scatter(x1a(:),y1a(:),5,dya(:),'filled','Parent',p.dyims); colorbar(p.dyims)
 % plot(p.dxims,dxa(:))
 
+goodlocs=~isnan(dxa)&dxa~=0;
 xlabel(p.axdxn,'time (ms)'); ylabel(p.axdxn,'dx-dx(1) (nm)')
 xlabel(p.axdyn,'time (ms)'); ylabel(p.axdyn,'dy-dy(1) (nm)')
 xlabel(p.axdx,'time (ms)'); ylabel(p.axdx,'dx (nm)')
-title(p.axdx,"median: "+ median(abs(dxa(dx~=0)))+", std: "+num2str(std(dxa(dx~=0)),'%2.1f') + " nm")
+title(p.axdx,"median: "+ median(abs(dxa(goodlocs)))+", std: "+num2str(std(dxa(goodlocs)),'%2.1f') + " nm")
 xlabel(p.axdy,'time (ms)'); ylabel(p.axdy,'dy (nm)')
 % title(p.axdy,median(abs(dya(dx~=0))))
-title(p.axdy,"median: "+ median(abs(dya(dx~=0)))+", std: "+num2str(std(dya(dx~=0)),'%2.1f') + " nm")
+title(p.axdy,"median: "+ median(abs(dya(goodlocs)))+", std: "+num2str(std(dya(goodlocs)),'%2.1f') + " nm")
 xlabel(p.t1,'dt start (ms)'); ylabel(p.t1,'dt stop (ms)')
 xlabel(p.t2,'dt start (ms)'); ylabel(p.t2,'fraction ch1/ch0')
 
