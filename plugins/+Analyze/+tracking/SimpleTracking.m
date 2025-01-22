@@ -46,6 +46,7 @@ obj.locData.setloc('track_length',tracklength);
 
 
 obj.locData.regroup;
+obj.locData.filter;
 obj.setPar('locFields',fieldnames(obj.locData.loc))
 
 

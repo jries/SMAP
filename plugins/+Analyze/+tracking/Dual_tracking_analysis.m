@@ -236,8 +236,9 @@ if contains(p.showtraces.selection,'progressive co-tracks')
     goodpairs=find(trackstat.coprogressive);
     figure(102)
     clf
+    numrows=ceil(length(goodpairs)/5);
     for k=1:length(goodpairs)
-        subplot(5,5,k)
+        subplot(numrows,5,k)
         hold off
         id1=locs.track_id==goodpairs(k);
         pid=trackstat.partnerids(goodpairs(k));
