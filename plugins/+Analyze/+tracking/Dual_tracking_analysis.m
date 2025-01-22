@@ -267,32 +267,78 @@ clipboard('copy',output)
 %add to movie
 dx=3;
 dimmark=3;
-if p.addtracksmovie && ~isempty(p.tiffile)
-    imstack=tiffreadVolume(p.tiffile);
-    imstack=permute(imstack,[1 2 4 3]);
-    immax=max(imstack(:));
-    [lenx,leny]=size(imstack,[1,2]);
-    idcoprogress=find(trackstat.coprogressive);
-    for k=1:length(idcoprogress)
-        ind=locs.track_id==idcoprogress(k);
-        x=round(locs.xnm(ind)/pixelsize(1)-roi(1)); y=round(locs.ynm(ind)/pixelsize(2)-roi(2)); frame=locs.frame(ind);
-        x=min(lenx-dx,x);x=max(dx+1,x);y=min(leny-dx,y);y=max(dx+1,y);
-        for l=1:length(x)
-            imstack(y(l)+dx, x(l)-dx:x(l)+dx,dimmark,frame(l))=immax;
-            imstack(y(l)-dx, x(l)-dx:x(l)+dx,dimmark,frame(l))=immax;
-            imstack(y(l)-dx:y(l)+dx, x(l)+dx,dimmark,frame(l))=immax;
-            imstack(y(l)-dx:y(l)+dx, x(l)-dx,dimmark,frame(l))=immax;
-
-        end
-
+if p.makemovie && ~isempty(p.tiffile) 
+    if ~isempty(p.Tfile)
+        tt=load(p.Tfile).transformation;
+    else
+        tt=obj.locData.files.file.transformation;
     end
-fout2=strrep(tiffile,'_combined.tif','_mark.tif');
-options.color=true;
-saveastiff(squeeze(single(imstack)),fout2,options);
+    il=imageloaderMM; il.attachPar(obj.P);
+    il.openi(p.tiffile);
+    il.prefit;   
+    numf=il.metadata.numberOfFrames+1;
+    if tt.info{1}.xrange==tt.info{2}.xrange
+        sx=ceil(il.metadata.Height/2);
+        splitvert=true;
+        imcomb=zeros(sx,il.metadata.Width,3,numf);
+    else
+        sx=ceil(il.metadata.Width/2);
+        splitvert=false;  
+        imcomb=zeros(il.metadata.Height,sx,3,numf);
+    end
+
+    
+    
+ 
+    for k=1:numf
+        img=double(il.getimage(k));
+        imgt=tt.transformImageToTarget(2,img,'pixel',il.metadata.roi);
+        imrgb(:,:,1)=img;imrgb(:,:,2)=imgt;imrgb(:,:,3)=0;
+        figure(99); image(imrgb/max(imrgb(:)));
+        if splitvert
+            imcomb(:,:,1,k)=img(1:sx,:);
+            % imcomb(:,:,3,k)=img(:,1:sx);
+            imcomb(:,:,2,k)=imgt(1:sx,:);             
+        else
+            imcomb(:,:,1,k)=img(:,1:sx);
+            % imcomb(:,:,3,k)=img(:,1:sx);
+            imcomb(:,:,2,k)=imgt(:,1:sx);    
+        end
+    end
+    il.close;
+    [fp,fn,ext]=fileparts(p.tiffile);
+    fout=[fp filesep 'overlays' filesep 'combined_' fn ext];
+    % fout=strrep(p.tiffile,'.ome.tif','_combined.tif');
+    options.color=true;
+    saveastiff(squeeze(single(imcomb)),fout,options);
+
+
+    if p.addtracksmovie %&& ~isempty(p.tiffile)
+        % imstack=tiffreadVolume(p.tiffile);
+        % imstack=permute(imstack,[1 2 4 3]);
+        imstack=imcomb;
+        immax=max(imstack(:));
+        [lenx,leny]=size(imstack,[1,2]);
+        idcoprogress=find(trackstat.coprogressive);
+        for k=1:length(idcoprogress)
+            ind=locs.track_id==idcoprogress(k);
+            x=round(locs.xnm(ind)/pixelsize(1)-roi(1)); y=round(locs.ynm(ind)/pixelsize(2)-roi(2)); frame=locs.frame(ind);
+            x=min(lenx-dx,x);x=max(dx+1,x);y=min(leny-dx,y);y=max(dx+1,y);
+            for l=1:length(x)
+                imstack(y(l)+dx, x(l)-dx:x(l)+dx,dimmark,frame(l))=immax;
+                imstack(y(l)-dx, x(l)-dx:x(l)+dx,dimmark,frame(l))=immax;
+                imstack(y(l)-dx:y(l)+dx, x(l)+dx,dimmark,frame(l))=immax;
+                imstack(y(l)-dx:y(l)+dx, x(l)-dx,dimmark,frame(l))=immax;
+    
+            end
+    
+        end
+        fout2=[fp filesep 'overlays' filesep 'mark_' fn ext];
+        % fout2=strrep(fout,'_combined.tif','_mark.tif');
+        options.color=true;
+        saveastiff(squeeze(single(imstack)),fout2,options);
+    end
 end
-
-
-
 end
              
 function pard=guidef(obj)
@@ -344,8 +390,6 @@ pard.cotrackfractiont.Width=1.5;
 pard.cotrackfraction.object=struct('String','0','Style','edit');
 pard.cotrackfraction.position=[3,4.5];
 pard.cotrackfraction.Width=.5;
-
-
 
 pard.velocityt.object=struct('String','velocity (nm/s) min','Style','text');
 pard.velocityt.position=[4,1];
