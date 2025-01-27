@@ -234,11 +234,15 @@ end
 if contains(p.showtraces.selection,'progressive co-tracks')
     trackstat.coprogressive=(trackstat.channel==1 & trackstat.comovement & trackstat.progressive & trackstat.progressivepartner);
     goodpairs=find(trackstat.coprogressive);
-    figure(102)
-    clf
+    figure;
     numrows=ceil(length(goodpairs)/5);
+    f=0;
     for k=1:length(goodpairs)
-        subplot(numrows,5,k)
+        if k-f>25
+            f=f+25;
+            figure
+        end
+        subplot(5,5,k-f)
         hold off
         id1=locs.track_id==goodpairs(k);
         pid=trackstat.partnerids(goodpairs(k));
