@@ -242,18 +242,27 @@ if contains(p.showtraces.selection,'progressive co-tracks')
             f=f+25;
             figure
         end
-        subplot(5,5,k-f)
+        subplot(5,6,2*k-1-f)
         hold off
         id1=locs.track_id==goodpairs(k);
         pid=trackstat.partnerids(goodpairs(k));
         id2=locs.track_id==pid;
         tmin=min(min(locs.frame(id1)),min(locs.frame(id2)));
+        tmax=max(max(locs.frame(id1)),min(locs.frame(id2)));
     
         [x1,y1]=rotcoord(locs.xnm(id1)-mean(locs.xnm(id1)),locs.ynm(id1)-mean(locs.ynm(id1)),trackstat.angle(goodpairs(k)));
         [x2,y2]=rotcoord(locs.xnm(id2)-mean(locs.xnm(id2)),locs.ynm(id2)-mean(locs.ynm(id2)),trackstat.angle(pid));
         plot(locs.frame(id1),x1,'.-',locs.frame(id2),x2,'.-')
         hold on
-        title(['frame: ' num2str(tmin) ', x: ' num2str(mean(locs.xpix(id1)),'%3.0f') ', y: ' num2str(mean(locs.ypix(id1)),'%3.0f')])  
+        title(['frame: ' num2str(tmin) ':', num2str(tmax),', x: ' num2str(mean(locs.xpix(id1)),'%3.0f') ', y: ' num2str(mean(locs.ypix(id1)),'%3.0f')])  
+        xlabel('time(frame)')
+        ylabel('xrot (nm)')
+        subplot(5,6,2*k-f)
+        plot(locs.xnm(id1)-mean(locs.xnm(id1)),locs.ynm(id1)-mean(locs.ynm(id1)),'.-',locs.xnm(id2)-mean(locs.xnm(id2)),locs.ynm(id2)-mean(locs.ynm(id2)),'.-')
+        axis equal
+        xlabel('x (nm)')
+        ylabel('y (nm)')
+
     end
 end
 
