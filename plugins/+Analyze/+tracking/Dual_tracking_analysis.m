@@ -235,11 +235,11 @@ if contains(p.showtraces.selection,'progressive co-tracks')
     trackstat.coprogressive=(trackstat.channel==1 & trackstat.comovement & trackstat.progressive & trackstat.progressivepartner);
     goodpairs=find(trackstat.coprogressive);
     figure;
-    numrows=ceil(length(goodpairs)/5);
+    % numrows=ceil(length(goodpairs)/5);
     f=0;
     for k=1:length(goodpairs)
-        if k-f>25
-            f=f+25;
+        if 2*k-f>25
+            f=f+30;
             figure
         end
         subplot(5,6,2*k-1-f)
