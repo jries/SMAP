@@ -11,43 +11,54 @@ end
 %     parpool('threads')
 % end
 
+
+% XXXX bugs in this code, slight difference to direct calling. NO idea why
+
 args=varargin;
 
 % k_block=100;
 imfit=args{1};
-args2=args(2:end);
+
 numlocs=size(imfit,3);
 % parpool('local');                          % processes
 % imfitc = parallel.pool.Constant(imfit);
-imfitc=imfit;
+% imfitc=imfit;
 % starts = 1:k_block:size(imfit,3);
 % outparnum=3;
 
 % [varargout0{1:nargout}] = fh(imfitc.Value(:,:,1),args{2:end});
-[varargout0{1:nargout}] = fh(imfitc(:,:,1,:),args{2:end});
+[varargout0{1:nargout}] = fh(imfit(:,:,1,:),args{2:end});
 % for k=nargout:-1:1
-    out1=zeros(size(imfit,3),size(varargout0{1},2));
-    out2=zeros(size(imfit,3),size(varargout0{2},2));
-    out3=zeros(size(imfit,3),size(varargout0{3},2));
+    out1=zeros(numlocs,size(varargout0{1},2),'single');
+    out2=zeros(numlocs,size(varargout0{2},2),'single');
+    out3=zeros(numlocs,size(varargout0{3},2),'single');
 % end
 
-parfor b = 1:numlocs
-    % s = starts(b);
-    % e = min(s + k_block - 1, size(imfitc.Value,3));
-    % Ablk = imfitc.Value(:,:,b);
-    Ablk = imfitc(:,:,b,:);
+fhs=func2str(fh);
+if contains(fhs,"MultiChannel")
+    mode=1;
+    % arglocs=[1,3,6,9];
+    % locdim=zeros(9,1)-1;
+    % locdim(arglocs)=[3,2,3,2];
+else
+    error('not implemented')
+end
+if mode==1
+    for b=numlocs:-1:1
+        argsh{b}={args{1}(:,:,b,:),args{2},args{3}(:,b),args{4},args{5},args{6}(:,:,b),args{7},args{8},args{9}(1,b)};
+    end
+end
 
-    [t1,t2,t3] = fh(Ablk,args2{:});
+parfor b = 1:numlocs
+
+    [t1,t2,t3] = feval(fh,argsh{b}{:});
+    % [t1,t2,t3] = fh(imfit(:,:,b,:),args{2:end});
 
     out1(b,:)=t1;
     out2(b,:)=t2;
     out3(b,:)=t3;
-
-    % out(:,:,s:e) = yblk;
 end
 varargout={out1,out2,out3};
-% [varargout{1:nargout}] = feval(fh, varargin{:});
-
 end
 
 
