@@ -43,15 +43,13 @@ if contains(fhs,"MultiChannel")
 else
     error('not implemented')
 end
-if mode==1
-    for b=numlocs:-1:1
-        argsh{b}={args{1}(:,:,b,:),args{2},args{3}(:,b),args{4},args{5},args{6}(:,:,b),args{7},args{8},args{9}(1,b)};
-    end
-end
 
 parfor b = 1:numlocs
+    if mode==1
+        [t1,t2,t3] = feval(fh,args{1}(:,:,b,:),args{2},args{3}(:,b),args{4},args{5},args{6}(:,:,b),args{7},args{8},args{9}(1,b));
+    end
 
-    [t1,t2,t3] = feval(fh,argsh{b}{:});
+    % [t1,t2,t3] = feval(fh,argsh{:});
     % [t1,t2,t3] = fh(imfit(:,:,b,:),args{2:end});
 
     out1(b,:)=t1;
