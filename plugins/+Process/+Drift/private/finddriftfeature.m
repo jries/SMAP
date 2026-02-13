@@ -322,11 +322,15 @@ mxh=mxh+cent(1)-1;
 myh=myh+cent(1)-1;
 %now determine maximum
 % x0,y0,A,b,V11,V12,V22
-lb=[0 0 0 0 .05 -0.7 0.05];
-ub=[2*window 2*window inf inf 20 0.7 20];
+% xm=startp(1);ym=startp(2);a=startp(3);bg=startp(4);sxm=startp(5);sym=startp(6);rho
+% lb=[0 0 0 0 .05 -0.7 0.05];
+% ub=[2*window 2*window inf inf 20 0.7 20];
+
+lb=[0 0 0 0 .2  .2 -0.7];
+ub=[2*window 2*window inf inf 5  5 0.7];
 
 smallframe=double(img(mxh-window:mxh+window,myh-window:myh+window));
-[fitout,outim,outimnorm,ci]=my2Dgaussfit(smallframe,[window+1,window+1,inten,min(smallframe(:)),max(2,3/window),max(2,3/window),0],3,lb,ub);
+[fitout,outim,outimnorm,ci]=my2Dgaussfit(smallframe,[window+1,window+1,inten,min(smallframe(:)),max(3,3/window),max(3,3/window),0],3,lb,ub);
 x=mxh-window+fitout(1)-1;y=myh-window+fitout(2)-1;
 dc=ci(:,2)-ci(:,1);
 errx=dc(1);erry=dc(2);
