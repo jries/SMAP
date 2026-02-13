@@ -1,5 +1,5 @@
 function varargout=callfitter(fh,varargin)
-if contains(func2str(fh),'GPU')
+if 1 %contains(func2str(fh),'GPU')
     [varargout{1:nargout}] = feval(fh, varargin{:});
     return
 end
