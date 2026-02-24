@@ -89,10 +89,14 @@ end
 
 
 function absPath = rel2abs(rel)
+try
 cur = pwd;
 c = onCleanup(@() cd(cur));          % ensure we return to original folder
 cd(rel);
 absPath = pwd;
+catch err
+    absPath="";
+end
 end
 
 

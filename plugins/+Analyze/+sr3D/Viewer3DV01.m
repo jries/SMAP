@@ -140,6 +140,17 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                  obj.locDataL.filter({zfield,zfielderr});
             end
         end
+        function getminmax_callback(obj,a,b)
+            p=obj.getAllParameters;
+            if ~contains(p.animatemode.selection,"Time")
+                  obj.setGuiParameters(struct('anglerange',"0 360"));
+                return
+            end
+            [loc]=obj.locData.getloc({'frame'},'position','roi','layer',find(obj.getPar('sr_layerson')));
+            range=quantile(loc.frame,[0.05 0.95]);
+            rangeext=(range(2)-range(1))*0.05*[-1 1];
+            obj.setGuiParameters(struct('anglerange',num2str(round(range+rangeext))));
+        end
 
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -1077,7 +1088,12 @@ pard.rotateb.position=[1,3];
 pard.rotateb.TooltipString='Start continuous animation';
 pard.rotateb.Optional=false;
 
-pard.animatemode.object=struct('String',{{'Rotate','Translate'}},'Style','popupmenu');
+
+pan(1).value=[1,2]; pan(1).on={'raxis','danglet','dangle','zpost','zpos'}; pan(1).off={};
+pan(2).value=3; pan(2).on={}; pan(2).off=pan(1).on;
+
+
+pard.animatemode.object=struct('String',{{'Rotate','Translate','Time'}},'Style','popupmenu','Callback',{{@obj.switchvisible,pan}});
 pard.animatemode.position=[1,4];
 pard.animatemode.TooltipString='Select rotation or translation';
 pard.animatemode.Optional=false;
@@ -1111,7 +1127,7 @@ pard.zpos.Width=0.5;
 pard.zpos.TooltipString=pard.danglet.TooltipString;
 pard.zpos.Optional=true;
 
-pard.zdistt.object=struct('String','dz','Style','text');
+pard.zdistt.object=struct('String','dz/dframe','Style','text');
 pard.zdistt.position=[5,4];
 pard.zdistt.Width=0.5;
 pard.zdistt.TooltipString='slice thickness (nm) for z-movie';
@@ -1135,7 +1151,7 @@ pard.savemoviemode.TooltipString='Save rotating movie. Uses min - max angle';
 pard.savemoviemode.Optional=false;
 pard.savemoviemode.Width = 0.6;
 
-pard.tx.object=struct('String','min max','Style','text');
+pard.tx.object=struct('String','min max','Style','pushbutton','Callback',@obj.getminmax_callback);
 pard.tx.position=[4,3];
 pard.tx.TooltipString='start and stop angle/position. Uses step from above';
 pard.tx.Optional=true;
