@@ -577,18 +577,22 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             end
             function [loc,indu,sortind]=getlocrot(layer,pl)
 
-                [loc,indu]=locCopy.getloc({'xnmline','ynmline','znm','locprecnm','locprecznm',renderfield{:},'numberInGroup','phot'},...
+                [loc,indu]=locCopy.getloc({'xnmline','ynmline','znm','locprecnm','locprecznm',renderfield{:},'numberInGroup','phot','frame'},...
                     'position','roi','layer',layer,'shiftxy',[pl.shiftxy_min,pl.shiftxy_max,pl.shiftxy_z]);   
                 loc.znm=loc.znm+pl.shiftxy_z;
-                if strcmp(p.animatemode.selection,'Translate')&&strcmp(p.raxis.selection,'vertical')
-                    thetaoffset=90;%pi/2;
-%                     induf=find(indu);
-                    indz=(loc.znm>p.zpos-p.zdist/2 & loc.znm<=p.zpos+p.zdist/2);
-                    indu(indu)=indz;
-                    loc=copystructReduce(loc,indz);
-       
-                else
-                    thetaoffset=0;
+                thetaoffset=0;
+                if p.rotateb
+                    if strcmp(p.animatemode.selection,'Translate')&&strcmp(p.raxis.selection,'vertical')
+                        thetaoffset=90;%pi/2;
+    %                     induf=find(indu);
+                        indz=(loc.znm>p.zpos-p.zdist/2 & loc.znm<=p.zpos+p.zdist/2);
+                        indu(indu)=indz;
+                        loc=copystructReduce(loc,indz);
+           
+                    elseif contains(p.animatemode.selection,'Time')
+                        indtime=(loc.frame>p.zpos & loc.frame<=p.zpos+p.zdist);
+                        loc=copystructReduce(loc,indtime);
+                    end
                 end
                 [yrot,depth]=rotcoorddeg(loc.znm-zmean,loc.ynmline,p.theta+thetaoffset);
                 [sortdepth,sortind]=sort(-depth);
@@ -777,8 +781,21 @@ classdef Viewer3DV01<interfaces.DialogProcessor
 %                                     theta=theta-obj.getSingleGuiParameter('dangle')*pi/180;
 %                                     theta=mod(theta,2*pi);                       
 %                                     obj.setGuiParameters(struct('theta',theta));
-%                                     obj.redraw;   
+%                                     obj.redraw;                      
+                       end
+                    case 'Time'
+                        zpos=obj.getSingleGuiParameter('zpos');
+                        dz=obj.getSingleGuiParameter('dangle');
+                        zrange=obj.getSingleGuiParameter('anglerange');
+                        znew=zpos+dz;
+                        if znew>zrange(2)
+                            znew=zrange(1);
                         end
+                        if znew<zrange(1)
+                            znew=zrange(2);
+                        end
+                        obj.setGuiParameters(struct('zpos',znew));
+                        obj.redraw;
                 end
                 
 %                 pause(0.01)
@@ -855,7 +872,10 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                                 pos(1,:)=pos(1,:)+step*roivec/1000;
                                 pos(2,:)=pos(2,:)+step*roivec/1000;
                                 roih.setPosition(pos); 
-                        end
+                       end
+                case 'Time'
+                    znew=p.anglerange(1);
+                    obj.setGuiParameters(struct('zpos',znew)); 
             end           
             button=obj.guihandles.rotateb;
             button.Value=1;
@@ -1093,7 +1113,7 @@ pan(1).value=[1,2]; pan(1).on={'raxis','danglet','dangle','zpost','zpos'}; pan(1
 pan(2).value=3; pan(2).on={}; pan(2).off=pan(1).on;
 
 
-pard.animatemode.object=struct('String',{{'Rotate','Translate','Time'}},'Style','popupmenu','Callback',{{@obj.switchvisible,pan}});
+pard.animatemode.object=struct('String',{{'Rotate','Translate','Time'}},'Style','popupmenu');%,'Callback',{{@obj.switchvisible,pan}});
 pard.animatemode.position=[1,4];
 pard.animatemode.TooltipString='Select rotation or translation';
 pard.animatemode.Optional=false;
