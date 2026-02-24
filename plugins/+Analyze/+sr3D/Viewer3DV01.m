@@ -1109,11 +1109,11 @@ pard.rotateb.TooltipString='Start continuous animation';
 pard.rotateb.Optional=false;
 
 
-pan(1).value=[1,2]; pan(1).on={'raxis','danglet','dangle','zpost','zpos'}; pan(1).off={};
-pan(2).value=3; pan(2).on={}; pan(2).off=pan(1).on;
+pan(1).value=2; pan(1).on={'raxis'}; pan(1).off={};
+pan(2).value=[1,3]; pan(2).on={}; pan(2).off=pan(1).on;
 
 
-pard.animatemode.object=struct('String',{{'Rotate','Translate','Time'}},'Style','popupmenu');%,'Callback',{{@obj.switchvisible,pan}});
+pard.animatemode.object=struct('String',{{'Rotate','Translate','Time'}},'Style','popupmenu','Callback',{{@obj.switchvisible,pan}});
 pard.animatemode.position=[1,4];
 pard.animatemode.TooltipString='Select rotation or translation';
 pard.animatemode.Optional=false;
