@@ -4,7 +4,7 @@
 field="groupindex";
 skipfirst=0; % for MINFLUX: skip to measure size without tails
 
-valnan=500; % if only one localization is found, std would be zero, so set to a high value
+valnan=100; % if only one localization is found, std would be zero, so set to a high value
 
 groupid=g.locData.loc.(field);
 [sgroupid,indsort]=sort(groupid);
