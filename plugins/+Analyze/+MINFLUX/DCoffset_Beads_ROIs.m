@@ -59,9 +59,13 @@ for k=1:length(sites)
     ind2=locs.tid==id2;
 
     timef=fixtime(locs.time);
+    % timef=locs.time;
 
     x1h=locs.xnm(ind1)-subx;x2h=locs.xnm(ind2);y1h=locs.ynm(ind1)-suby;y2h=locs.ynm(ind2);
     t1h=timef(ind1);t2h=timef(ind2);
+
+    t1=locs.time(ind1);t2=locs.time(ind2);
+
 
     dx=distancedc(t1h, x1h, t2h, x2h);
     dy=distancedc(t1h, y1h, t2h, y2h);
@@ -69,7 +73,8 @@ for k=1:length(sites)
    
     
     plot(p.axdx, t1h(p.skip+1:end), dx(p.skip+1:end))
-    plot(p.axx,t1h(p.skip+1:end), x1h(p.skip+1:end), t2h(p.skip+1:end), x2h(p.skip+1:end))
+    % plot(p.axx,t1h(p.skip+1:end), x1h(p.skip+1:end), t2h(p.skip+1:end), x2h(p.skip+1:end))
+    plot(p.axx,t1(p.skip+1:end), x1h(p.skip+1:end), t2(p.skip+1:end), x2h(p.skip+1:end))
     
     plot(p.axdy, t1h(p.skip+1:end), dy(p.skip+1:end))
     plot(p.axy, t1h(p.skip+1:end), y1h(p.skip+1:end), t2h(p.skip+1:end), y2h(p.skip+1:end))

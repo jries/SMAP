@@ -10,7 +10,10 @@ end
 % if isempty(p)
 %     parpool('threads')
 % end
+%XXXXXX
 
+fh=@CPUmleFit_LM_MultiChannel2026;
+%XXXX
 args=varargin;
 
 % k_block=100;
