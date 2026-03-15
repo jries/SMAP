@@ -206,13 +206,13 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             
            %1.up, 2.down, 3.left, 4.right, 5.back, 6.front, 0.reset
             switch data.Character
-                case {'w','W','8',30}
+                case {'w','W','8',30,'↑'}
                     dir=1;
-                case {'s','S','2',31}
+                case {'s','S','2',31,'↓'}
                     dir=2;
-                case {'a','A','4',28}
+                case {'a','A','4',28,'←'}
                     dir=3;
-                case {'d','D','6',29}
+                case {'d','D','6',29,'→'}
                     dir=4;
                 case {',','q','Q','7'}
                     dir=5;
@@ -803,6 +803,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             if ~isempty(savemovie)
 
                 imout=uint8(outim*(2^8-1));
+
                 switch p.savemoviemode.selection
                     case 'tif'
                         options.color=true;
@@ -815,6 +816,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                         else
                             fr=frameratemp4;
                         end
+                        
                         mysavemovie(imout,savemovie.file,'FrameRate',fr, 'Quality', 100)
                 end           
             end

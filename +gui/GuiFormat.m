@@ -364,7 +364,7 @@ persistent timercount
 % if isempty(totalscroll)
 %     totalscroll=0;
 % end
-mint=0.01;
+mint=0.02;
 % totalscroll=1+totalscroll;
 if isempty(timercount)||toc(timercount)>mint
     vs=eventdata.VerticalScrollCount;
@@ -702,19 +702,24 @@ delete(obj.roihandle)
 
 xlim=sr_axes.XLim;
 ylim=sr_axes.YLim;
+if isempty(roiposition)
+    roipositionh={};
+else
+    roipositionh={roiposition};
+end
 switch roimode
     case {1,'imrect'}
-        h=imrect(sr_axes,roiposition);
+        h=imrect(sr_axes,roipositionh{:});
     case {2,'imellipse'}
-        h=imellipse(sr_axes,roiposition);
+        h=imellipse(sr_axes,roipositionh{:});
     case {3,'imfreehand'}
-        h=imfreehand(sr_axes,roiposition);
+        h=imfreehand(sr_axes,roipositionh{:});
     case {4,'imline'} %line
-        h=imline(sr_axes,roiposition);        
+        h=imline(sr_axes,roipositionh{:});        
     case {5,'impoint'}
-        h=impoint(sr_axes,roiposition);
+        h=impoint(sr_axes,roipositionh{:});
     case {6,'impoly'}
-        h=impoly(sr_axes,roiposition);
+        h=impoly(sr_axes,roipositionh{:});
     case 0
         if p.roishow
             roi_callback(callobj,data,obj,class(obj.roihandle),obj.roiposition);
