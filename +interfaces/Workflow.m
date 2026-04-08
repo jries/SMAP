@@ -132,7 +132,7 @@ classdef Workflow<interfaces.DialogProcessor
                 overwrite=false;
             end
             if nargin<4 || isempty(writeParameters)
-                writeParameters=true;
+                writeParameters=false;
             end
             if nargin<3|| isempty(pGui)
                 pGui=[];

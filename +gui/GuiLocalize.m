@@ -3,7 +3,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
         mainworkflow
         customworkflows
         batchfile
-        loadpar=true;
+        loadpar=false;
     end
     methods
         function obj=GuiLocalize(varargin)
