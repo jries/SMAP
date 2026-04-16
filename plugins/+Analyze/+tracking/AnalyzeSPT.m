@@ -48,6 +48,10 @@ end
 p.timediff=30;%XXX
 p.mintracklength=minlen;
 img=obj.getPar('sr_image');
+ax=obj.initaxis('tracks');
+plottracks(loct,p,2,ax);
+axis(ax,'ij')
+
 ax=obj.initaxis('tracks overlay');
 imagesc(ax,img.rangex*1000,img.rangey*1000,img.image)
 hold(ax,'on')
@@ -387,7 +391,9 @@ end
 			to(ind,end) = coeffs(2);	% add slope to tracks
 			
 			if (show == 2)	%plot tracks
-				plot(ax,x,y,'Color',cols(k,:))
+				plot(ax,x,y,'Color',cols(k,:),'LineWidth',p.linewidth)
+                hold(ax,'on')
+                axis(ax,'equal')
 			end
 			
 			if (show == 1)						%plot msd vs time
@@ -396,6 +402,7 @@ end
 				end
 				plot(ax,d)
 				hold(ax,'on')
+                
 			end
 		end
 	end
@@ -919,11 +926,17 @@ pard.saveD.Width=3;
 
 pard.fnamet.object=struct('String','Fiel name of track id','Style','text');
 pard.fnamet.position=[5,1];
-pard.fnamet.Width=2;
+pard.fnamet.Width=1.25;
 pard.fnameid.object=struct('String','track_id','Style','edit');
-pard.fnameid.position=[5,3];
-pard.fnameid.Width=1;
+pard.fnameid.position=[5,2.25];
+pard.fnameid.Width=.75;
 
+pard.lwt.object=struct('String','Line width (pix)','Style','text');
+pard.lwt.position=[5,3];
+pard.lwt.Width=1.25;
+pard.linewidth.object=struct('String','1','Style','edit');
+pard.linewidth.position=[5,4.25];
+pard.linewidth.Width=.75;
 
 pard.plugininfo.description=sprintf('Interactive analysis of SPT data');
 pard.plugininfo.type='ProcessorPlugin';
