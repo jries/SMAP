@@ -176,6 +176,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            if  isempty(obj.steps) || p.refitalways
                refit(0,0,obj,1)
            end
+           
            calculatestepparameters(obj, obj.steps.indstep);
            plotsteps(obj)
            out=obj.site.evaluation.(obj.name);

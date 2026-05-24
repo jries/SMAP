@@ -1093,6 +1093,11 @@ hold(ax,'on')
 plot(ax,[xm-5 xm+10-5], [ym ym],'k','LineWidth',3)
 ax.XTick=[];
 ax.YTick=[];
+% hFig=gcf;
+% hFig.Units = 'pixels';
+% ax.Units = 'pixels';
+% pos = ax.Position;  % [left bottom width height]
+
 for k=1:length(ts)
     indh1=time1<=ts(k); xh1=x1(indh1); yh1=y1(indh1);th1=time1(indh1);
     indh2=time2<=ts(k); xh2=x2(indh2); yh2=y2(indh2);th2=time2(indh2);
@@ -1123,9 +1128,10 @@ for k=1:length(ts)
     %     hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
     % end
    
-    
+    xlim(ax,[xm-15 xx+15])
+    ylim(ax,[ym-15 yx+15])
     drawnow
-    Fr(k)=getframe(ax);
+    Fr(k)=getframe(gcf);
     delete(hd1);
     delete(hl1);
     delete(ht)
@@ -1149,7 +1155,7 @@ end
 
 [file,pfad]=uiputfile([pfad filesep '*.mp4']);
 if file
-    mysavemovie(Fr,[pfad  file],'FrameRate',30,'profile','MPEG-4')
+mysavemovie(Fr,[pfad  file],'FrameRate',30,'profile','MPEG-4','Quality',95)
 end 
 end
 

@@ -19,8 +19,12 @@ v=VideoWriter(fsave,profile);
 for k=1:2:length(varargin)
     set(v,varargin{k},varargin{k+1});
 end
-
-imgp = pad_to_mod16_rgb(img);
+if isstruct(img)
+    imgp=img;
+    %imgp.cdata=pad_to_mod16_rgb(img.cdata);
+else
+    imgp = pad_to_mod16_rgb(img);
+end
 
 open(v);
 writeVideo(v,imgp)
