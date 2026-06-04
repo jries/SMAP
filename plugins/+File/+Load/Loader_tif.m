@@ -102,7 +102,7 @@ if isfield(p,'mirrortif' ) && p.mirrortif
     for k=1:length(images)
         images(k).image=images(k).image(:,end:-1:1);
         roih=images(k).info.roi;
-        % images(k).info.roi(1)=512-roih(1)-roih(3);
+        images(k).info.roi(1)=512-roih(1)-roih(3);
         % added for Sarah for M2. MIght not be the same for other cameras.
     end
 end
