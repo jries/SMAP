@@ -77,23 +77,22 @@ Use the locs histogram (Preview) to decide where to set `min_locs` — look for 
 
 ## Installation
 
-1. Download `SiteAutoDetect.m` from the link above and copy it to `<SMAP_root>/plugins/+Analyze/+other/`
-2. Open `<SMAP_root>/plugins/plugin.m` and add these two entries:
+This plugin has been submitted to the official SMAP repository as **PR #34**:
+**https://github.com/jries/SMAP/pull/34**
 
-   **In the `switch` block** (after the `makeMovieTiff` case):
-   ```matlab
-   case 'Analyze.other.SiteAutoDetect'
-      module=Analyze.other.SiteAutoDetect(varargin{:});
-   ```
-   **In the `out` struct** (after the `VersatileRenderer` line):
-   ```matlab
-   out.Analyze.other.SiteAutoDetect={'Analyze','other','SiteAutoDetect','Auto-detect CCP Sites','ProcessorPlugin'};
-   ```
-3. Run `clear classes` in MATLAB
-4. Plugin appears under **Analyze → other → Auto-detect CCP Sites**
+Once merged, just pull the latest SMAP and the plugin appears automatically — no manual steps needed:
 
-> If you want this included in the official SMAP distribution so everyone gets it on `git pull`,
-> open a pull request from `AndreuBoixPages/SMAP:ccp-autodetect` → `jries/SMAP:master`.
+```bash
+cd <your SMAP folder>
+git pull
+```
+
+Then in MATLAB: `clear classes` (or restart MATLAB), and the plugin will appear under **Analyze → other → Auto-detect CCP Sites**.
+
+> **Before the PR is merged:** download `SiteAutoDetect.m` from
+> `https://github.com/AndreuBoixPages/SMAP/tree/ccp-autodetect/plugins/%2BAnalyze/%2Bother`
+> and copy it manually to `<SMAP_root>/plugins/+Analyze/+other/`. No changes to `plugin.m` needed —
+> SMAP auto-discovers plugins at startup.
 
 ## After detection — verifying it worked
 
