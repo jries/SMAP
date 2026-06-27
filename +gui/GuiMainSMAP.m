@@ -425,8 +425,12 @@ end
 
 function error_reset(a,b,obj)
 if a.Value==0
-warndlg(obj.getPar('errorindicator'));
-resetstyle(obj)
+    errmsg=obj.getPar('errorindicator');
+    % Only show dialog if error message is not empty
+    if ~isempty(errmsg)
+        warndlg(errmsg);
+    end
+    resetstyle(obj)
 end
 end
 

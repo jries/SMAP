@@ -12,8 +12,8 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             if nargin>0
                 obj.handle=varargin{1};  
             end        
-            obj.processors{1}=interfaces.SEEvaluationProcessor;
-            obj.currentmodule.number=1;
+            obj.processors={}; % Initialize as empty, modules are added via addmodule
+            obj.currentmodule.number=0; % No module selected initially
         end
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -56,10 +56,14 @@ classdef SEEvaluationGui< interfaces.SEProcessor
             rgp=obj.getPar('ROI_restoreparameters');
             if isempty(rgp)|| rgp
                 setGuiParameters@interfaces.SEProcessor(obj,p,setchildren,setmenulist);
+                
+                % Clear both table AND processors to ensure synchronization
                 obj.guihandles.modules.Data={};
+                obj.processors = {}; % Clear processors array
+                
                 if isfield(p,'children')
                     modules=fieldnames(p.children);
-                    for k=1:length(modules);
+                    for k=1:length(modules)
                         mh=modules{k};
                         while mh(end)>'0'&&mh(end)<'9'
                             mh=mh(1:end-1);
@@ -79,9 +83,10 @@ classdef SEEvaluationGui< interfaces.SEProcessor
                         % Yu-Le added end/
                     end
 
-                    %set on / off
+                    %set on / off (only for indices within bounds)
                     for k=1:length(modules)
-                        if isfield(p,'modules')&&~isempty(find(strcmpi(p.modules.Data(:,2),modules{k}),1))
+                        if k <= size(obj.guihandles.modules.Data,1) && ...
+                           isfield(p,'modules')&&~isempty(find(strcmpi(p.modules.Data(:,2),modules{k}),1))
                             val=p.modules.Data{k,1};
                             obj.guihandles.modules.Data{k,1}=val; 
                         end
@@ -226,9 +231,15 @@ d=obj.guihandles.modules.Data;
 s=size(d);
 for k=1:s(1)
     if d{k,1} %evaluate
-        module=obj.processors{k};
-        module.display=p.se_display;
-        module.evaluate(site);
+        % Check if processor exists at this index
+        if k <= length(obj.processors)
+            module=obj.processors{k};
+            module.display=p.se_display;
+            module.evaluate(site);
+        else
+            warning('SEEvaluationGui:IndexMismatch', ...
+                'Module row %d in table exceeds processors array length (%d). Skipping evaluation.', k, length(obj.processors));
+        end
     end
 end
 end

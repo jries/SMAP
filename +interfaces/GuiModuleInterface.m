@@ -304,7 +304,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 phere=p;
                 h=obj.guihandles;
                 for k=1:length(fn)
-                    if isfield(h,fn{k})&&isprop(h.(fn{k}),'Style')&&~strcmp(h.(fn{k}).Style,'text')&&~any(ismember(obj.excludeFromSave,fn))                        
+                    if isfield(h,fn{k})&&isprop(h.(fn{k}),'Style')&&~strcmp(h.(fn{k}).Style,'text')&&~ismember(fn{k}, obj.excludeFromSave)                        
                         
                         hs=obj.value2handle(phere.(fn{k}),h.(fn{k}));                      
                         if (strcmp(h.(fn{k}).Style,'popupmenu'))
@@ -456,7 +456,11 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             if ~isempty(obj.children)
                 ch=fieldnames(obj.children);
                 for k=1:length(ch)
-                    obj.children.(ch{k}).resize(factor);
+                    child = obj.children.(ch{k});
+                    % Check if child is a valid object with resize method
+                    if isvalid(child) && ismethod(child, 'resize')
+                        child.resize(factor);
+                    end
                 end
             end    
         end
