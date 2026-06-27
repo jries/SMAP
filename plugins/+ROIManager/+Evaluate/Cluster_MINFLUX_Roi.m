@@ -161,7 +161,9 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 outsig.sigmax=sigmax;outsig.sigmay=sigmay;outsig.sigmaz=sigmaz;outsig.sxrobust=sxrobust;outsig.syrobust=syrobust;outsig.szrobust=szrobust;outsig.sxdetrend=sxdetrend;outsig.sydetrend=sydetrend;outsig.szdetrend=szdetrend;
 
                 axbbz=obj.setoutput('zbin');
-                plotstdbin(p,locs.znm(ind)-mz, locs.phot(ind), axbbz)
+                mz=mean(locs.znm(ind));
+                dzplot=locs.znm(ind)-mz;
+                plotstdbin(p,dzplot, locs.phot(ind), axbbz)
             else
                 tz='nlocs \t on-time \t dtmin \t dtmedian \t <dt> \t sigmax \t sigmay \t sigmax robust \t sigmay robust \t sigmax detrend \t sigmay detrend \t efo med \t cfr med  \t eco med  \t ecc med  \t efc med \t fbg med \t filename' ;
                 tsig=['\t' num2str(sigmax) '\t' num2str(sigmay)  '\t' num2str(sxrobust)  '\t' num2str(syrobust)  '\t' num2str(sxdetrend)  '\t' num2str(sydetrend)];
@@ -218,6 +220,11 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 axfty=obj.setoutput('ffty');
                 plotfft(dyplot,median(dt),axfty)        
                 median(dt)
+                if isfield(locs,'znm') && ~isempty(locs.znm) & any(locs.znm ~= 0)
+                    axftz=obj.setoutput('fftz');
+                    plotfft(dzplot,median(dt),axftz) 
+                end
+
             end
             
             out.nocs=nlocs;out.ontime=ontime;out.dtmin=dtmin; out.dtmedian=dtmedian;out.dtmean=dtmean;
