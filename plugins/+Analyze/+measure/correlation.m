@@ -44,14 +44,12 @@ classdef correlation<interfaces.DialogProcessor
             end
             layers=find(p.sr_layerson);
             colors=lines(length(layers));
+            locsl={};
             for k=1:length(layers)
                 [locs,~, hroi]=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','xnmline','ynmline'},'layer',layers(k),'position','roi');
                 % paircorrelationfunction(locs.xnm,locs.ynm,roihandle=obj.getPar('sr_roihandle'))
                 if contains(p.mode.selection,"2D pair correlation")
-                    [grn,xx]=paircorrelationfunction(locs.xnm,locs.ynm,roihandle=roih,dr=p.binwidth,rmax=p.maxr);
-                    plot(axpcf,xx(2:end),grn(2:end)); 
-                    xlabel(axpcf,'r (nm)')
-                    ylabel(axpcf,'pair correlation function (norm)')
+                    locsl{k}=locs; %collected, correlations are calculated after the loop
                 elseif contains(p.mode.selection,"1D correlation")
                     if  contains(class(roih),'imline')
                         ca(k)=correlationtools(locs,p.binwidth,periodguess=p.period,maxcorr=p.maxr);
@@ -70,7 +68,54 @@ classdef correlation<interfaces.DialogProcessor
                       
                 end
             end
-            obj.currentcorr=ca;
+
+            if contains(p.mode.selection,"2D pair correlation")
+                %auto-correlation of every layer and cross-correlation of every pair of layers
+                layernames=obj.getPar('layernames');
+                if isempty(layernames) %fallback if the layers are not named
+                    layernames=arrayfun(@(x) ['layer' num2str(x)],1:max(layers),'UniformOutput',false);
+                end
+                haslocs=cellfun(@(x) numel(x.xnm)>=2,locsl);
+                if ~any(haslocs)
+                    warning('no localizations found. Draw a ROI that contains localizations.')
+                    return
+                elseif ~all(haslocs)
+                    warning('no localizations in layer(s) %s, they are skipped.',strjoin(layernames(layers(~haslocs)),', '))
+                    layers=layers(haslocs);locsl=locsl(haslocs);colors=colors(haslocs,:);
+                end
+                gr={};names={};cols=[];styles={};
+                for k=1:length(layers)
+                    for l=k:length(layers)
+                        if k==l
+                            [~,r,g]=paircrosscorrelationfunction(locsl{k}.xnm,locsl{k}.ynm,[],[],...
+                                roihandle=roih,dr=p.binwidth,rmax=p.maxr);
+                            names{end+1}=layernames{layers(k)};
+                            cols(end+1,:)=colors(k,:);
+                            styles{end+1}='-';
+                        else
+                            [g,r]=paircrosscorrelationfunction(locsl{k}.xnm,locsl{k}.ynm,...
+                                locsl{l}.xnm,locsl{l}.ynm,roihandle=roih,dr=p.binwidth,rmax=p.maxr);
+                            names{end+1}=[layernames{layers(k)} ' x ' layernames{layers(l)}];
+                            cols(end+1,:)=(colors(k,:)+colors(l,:))/2;
+                            styles{end+1}='--';
+                        end
+                        gr{end+1}=g;
+                    end
+                end
+                for k=1:length(gr) %r(1)=0 contains the self-pairs of the auto-correlations
+                    plot(axpcf,r(2:end),gr{k}(2:end),styles{k},'Color',cols(k,:));
+                    hold(axpcf,'on')
+                end
+                hold(axpcf,'off')
+                xlabel(axpcf,'r (nm)')
+                ylabel(axpcf,'pair correlation function (norm)')
+                legend(axpcf,names)
+                out.r=r;out.g=gr;out.names=names;
+            end
+
+            if contains(p.mode.selection,"1D correlation")
+                obj.currentcorr=ca;
+            end
 
             if length(layers)>1 && contains(p.mode.selection,"1D correlation") %CC, only 2 layers can be active
                 % obj.currentcorr=ca(1);
