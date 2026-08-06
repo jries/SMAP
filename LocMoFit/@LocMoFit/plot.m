@@ -1,4 +1,4 @@
-function [ax,finalImg] = plot(obj,locs,varargin)
+function [ax,finalImg,layerImg] = plot(obj,locs,varargin)
 % :meth:`plot` visualize the fitted model.
 %
 % Args:
@@ -27,6 +27,7 @@ function [ax,finalImg] = plot(obj,locs,varargin)
 % Returns:
 %   ax (Axes object): the axes object where the fit is visualized.
 %   finalImg (structure array, numeric array): either a rendered image (numeric array) or a structure array representing the current model.
+%   layerImg (numeric array): the intensities the rendered image is based on, one plane per layer and not yet converted into colours. Empty for the point type.
 %
 % Important:
 % 	For developers: currently this function can also export coordinates. This is somehow confusing. For compatibility, this function should keep the same input and output. However, in the future, it should be based on two parts: 1) exporting model points and 2) ploting based on the exported points. The second part is already there (see :meth:`rotCoordNMkImg`).
@@ -276,6 +277,7 @@ end
 %% Render the models
 % From models to layers: generate for each layer an image
 dataCol = {'r','g','b'};
+layerImg = [];
 if isequal(results.plotType,'image')
 %     nameAllLut = mymakelut;
     img2disp = artBoard(:,:,1);
@@ -317,6 +319,7 @@ if isequal(results.plotType,'image')
                     oneCh = squeeze(mean(oneCh,1));
             end
         end
+        layerImg(:,:,ch) = oneCh';
         if ~isempty(obj.weightLayer)
             % before 200605
 %               img2disp = img2disp + ind2rgb(ceil((oneCh./max(oneCh,[],1:length(size(oneCh)))).*obj.weightLayer(ch)*255)', mymakelut(nameAllLut{ch})); %%% !!!!!!quick and dirty

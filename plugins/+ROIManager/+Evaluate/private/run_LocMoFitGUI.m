@@ -78,6 +78,7 @@ try
     %     fitter.model{m}.locsMedSig = median(locs.locprecnm(lThisLayer).^2+variation.^2);
     % end
     %% Perform the fitting and export related
+    out.image = [];     % the fitted model, rendered on the grid of obj.site.image
     if ~(inp.noFit||forceDisplay)
         %     fitter.resetInit;
         % also gets controlLogLikelihood
@@ -149,6 +150,10 @@ try
         out.externalInfo = fitter.externalInfo;
     end
     if ~lPassOnDataOnly
+        %% Render the fitted model on the grid of the site image
+        out.image = renderFitOnSiteGrid(obj, fitter, locs);
+
+        %% Display the result
         if obj.getPar('se_display')||forceDisplay
             if fitter.dataDim == 2
                 vis = obj.setoutput('Plot');
@@ -443,5 +448,85 @@ if sum(~lWithoutVal)>0
     obj.locData.loc.(['siteID_' obj.name])(idxWithVal(lReplace)) = obj.site.ID;
     obj.locData.loc.class(idxWithVal(lReplace)) = obj.site.ID;
     obj.locData.loc.(['rank_' obj.name])(idxWithVal(lReplace)) = obj.site.indList;
+end
+end
+
+function imout = renderFitOnSiteGrid(obj, fitter, locs)
+% RENDERFITONSITEGRID Renders the fitted model on the same grid as obj.site.image.
+% The model is moved onto the data ('movModel') instead of the data being
+% moved onto the model, so that the rendering stays in the coordinate frame
+% of the locs, which is the site-centred, site-rotated frame (xnmrot/ynmrot,
+% see processLocs). This is the same frame the site image is displayed in,
+% so the two images can be overlaid pixel by pixel. For 3D data the xy
+% projection is rendered. The image holds intensities only, one plane per
+% layer, normalized to their maxima: apply the lut of choice when displaying
+% it. Returns [] when the rendering fails, so that a problem here never
+% breaks the fit.
+imout = [];
+try
+    pixelSize = fitter.model{1}.pixelSize;      % render natively, then resample onto the site grid
+    [~, ~, img] = fitter.plot(locs, 'plotType', 'image', 'Projection', 'xy',...
+        'movModel', true, 'doNotPlot', true, 'pixelSize', pixelSize);
+    if isempty(img)||~isnumeric(img)
+        return
+    end
+    % intensities only, one plane per layer: the lut is applied when displaying
+    imax = max(img,[],1:2);
+    img = img./max(imax,eps);
+    % the rendered image is centred on the site centre, rows are y, columns are x
+    sizeMod = [size(img,1) size(img,2)];
+    fovMod = sizeMod.*pixelSize;                % [y x] in nm
+
+    % Target grid: the one of the site image, if it has already been rendered
+    siteImg = obj.site.image;
+    pos = obj.site.pos; pos(end+1:3) = 0;
+    if isstruct(siteImg)&&isfield(siteImg,'image')&&~isempty(siteImg.image)
+        sizeSite = [size(siteImg.image,1) size(siteImg.image,2)];
+        rangex = double(siteImg.rangex);        % in um, centred on the site
+        rangey = double(siteImg.rangey);
+        fovSite = [diff(rangey) diff(rangex)]*1000;
+        % offset of the centre of the site image relative to the site centre
+        offCen = [mean(rangey)*1000-pos(2) mean(rangex)*1000-pos(1)];
+    else
+        fovSite = repelem(obj.getPar('se_sitefov'),2);
+        sizeSite = round(fovSite./obj.getPar('se_sitepixelsize'));
+        rangex = (pos(1)+[-1 1]*fovSite(2)/2)/1000;
+        rangey = (pos(2)+[-1 1]*fovSite(1)/2)/1000;
+        offCen = [0 0];
+    end
+    pixelSizeSite = fovSite./sizeSite;           % [y x] in nm
+
+    % The site image is only rotated by the annotation angle when se_rotate is
+    % on, whereas the locs always are. Undo the rotation if needed.
+    angle = obj.site.annotation.rotationpos.angle;
+    if ~obj.getPar('se_rotate')&&angle~=0
+        img = imrotate(img, -angle, 'bilinear', 'crop');
+    end
+
+    % Bring the model onto the site pixel size and then cut it out
+    sizeRes = round(fovMod./pixelSizeSite);
+    img = imresize(img, sizeRes);
+    imgSite = zeros([sizeSite size(img,3)]);
+    % row r of the site grid corresponds to row r+shift of the model image
+    shift = round((offCen-(fovSite-fovMod)/2)./pixelSizeSite);
+    for d = 2:-1:1
+        idxSite{d} = 1:sizeSite(d);
+        idxMod{d} = idxSite{d}+shift(d);
+        lIn = idxMod{d}>=1&idxMod{d}<=sizeRes(d);
+        idxSite{d} = idxSite{d}(lIn);
+        idxMod{d} = idxMod{d}(lIn);
+    end
+    if isempty(idxSite{1})||isempty(idxSite{2})
+        return
+    end
+    imgSite(idxSite{1},idxSite{2},:) = img(idxMod{1},idxMod{2},:);
+
+    imout.image = im2uint8(min(max(imgSite,0),1));
+    imout.imax = squeeze(imax)';            % the intensity each plane was scaled by
+    imout.rangex = rangex;
+    imout.rangey = rangey;
+    imout.pixelsize = pixelSizeSite;
+catch ME
+    warning('LocMoFitGUI:siteImage','The fit could not be rendered on the grid of the site image, out.image stays empty:\n%s', getReport(ME, 'basic'))
 end
 end
