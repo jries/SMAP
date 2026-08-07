@@ -455,78 +455,101 @@ function imout = renderFitOnSiteGrid(obj, fitter, locs)
 % RENDERFITONSITEGRID Renders the fitted model on the same grid as obj.site.image.
 % The model is moved onto the data ('movModel') instead of the data being
 % moved onto the model, so that the rendering stays in the coordinate frame
-% of the locs, which is the site-centred, site-rotated frame (xnmrot/ynmrot,
-% see processLocs). This is the same frame the site image is displayed in,
-% so the two images can be overlaid pixel by pixel. For 3D data the xy
+% of the model. The locs are transformed onto the model the same way the fit
+% does it, so the two are in one frame by construction. Note that this frame
+% is the one of the model, not the one of obj.site.image. For 3D data the xy
 % projection is rendered. The image holds intensities only, one plane per
 % layer, normalized to their maxima: apply the lut of choice when displaying
-% it. Returns [] when the rendering fails, so that a problem here never
-% breaks the fit.
+% it. The locs are rendered on the same grid into .dataimage, so that the
+% two are aligned by construction. Returns [] when the rendering fails, so
+% that a problem here never breaks the fit.
 imout = [];
 try
     pixelSize = fitter.model{1}.pixelSize;      % render natively, then resample onto the site grid
+    % The model is rendered where it is defined and the locs are transformed
+    % onto it, exactly like the fit and the display of LocMoFit do it. Moving
+    % the model onto the locs instead ('movModel') uses a separate code path,
+    % which put the two out of register.
     [~, ~, img] = fitter.plot(locs, 'plotType', 'image', 'Projection', 'xy',...
-        'movModel', true, 'doNotPlot', true, 'pixelSize', pixelSize);
+        'movModel', false, 'doNotPlot', true, 'pixelSize', pixelSize);
     if isempty(img)||~isnumeric(img)
         return
     end
     % intensities only, one plane per layer: the lut is applied when displaying
     imax = max(img,[],1:2);
     img = img./max(imax,eps);
-    % the rendered image is centred on the site centre, rows are y, columns are x
+    % rows are y, columns are x, and the centre of the site is at size/2
+    % (see how the locs are placed in LocMoFit.plot)
     sizeMod = [size(img,1) size(img,2)];
-    fovMod = sizeMod.*pixelSize;                % [y x] in nm
 
-    % Target grid: the one of the site image, if it has already been rendered
+    %% The grid
+    % Size and pixel size are taken from the site image, so that the result has
+    % the same dimensions. The pixel size comes from the parameters it was
+    % rendered with: the renderer bins at exactly sr_pixrec, whereas the stored
+    % range is the requested one, not necessarily a multiple of it.
     siteImg = obj.site.image;
-    pos = obj.site.pos; pos(end+1:3) = 0;
-    if isstruct(siteImg)&&isfield(siteImg,'image')&&~isempty(siteImg.image)
+    lSiteImg = isstruct(siteImg)&&isfield(siteImg,'image')&&~isempty(siteImg.image);
+    if lSiteImg
         sizeSite = [size(siteImg.image,1) size(siteImg.image,2)];
-        rangex = double(siteImg.rangex);        % in um, centred on the site
-        rangey = double(siteImg.rangey);
-        fovSite = [diff(rangey) diff(rangex)]*1000;
-        % offset of the centre of the site image relative to the site centre
-        offCen = [mean(rangey)*1000-pos(2) mean(rangex)*1000-pos(1)];
     else
-        fovSite = repelem(obj.getPar('se_sitefov'),2);
-        sizeSite = round(fovSite./obj.getPar('se_sitepixelsize'));
-        rangex = (pos(1)+[-1 1]*fovSite(2)/2)/1000;
-        rangey = (pos(2)+[-1 1]*fovSite(1)/2)/1000;
-        offCen = [0 0];
+        sizeSite = round(repelem(obj.getPar('se_sitefov'),2)./obj.getPar('se_sitepixelsize'));
     end
-    pixelSizeSite = fovSite./sizeSite;           % [y x] in nm
-
-    % The site image is only rotated by the annotation angle when se_rotate is
-    % on, whereas the locs always are. Undo the rotation if needed.
-    angle = obj.site.annotation.rotationpos.angle;
-    if ~obj.getPar('se_rotate')&&angle~=0
-        img = imrotate(img, -angle, 'bilinear', 'crop');
+    if lSiteImg&&isfield(siteImg,'parameters')&&isfield(siteImg.parameters,'sr_pixrec')
+        pixelSizeSite = double(siteImg.parameters.sr_pixrec);
+    else
+        pixelSizeSite = obj.getPar('se_sitepixelsize');
     end
+    pixelSizeSite = pixelSizeSite([1 end]);      % [y x], sr_pixrec may be a scalar
+    % the grid is centred on the model. The rotation of the site plays no role
+    % here: the locs are transformed into the frame of the model, whatever the
+    % site is rotated by.
+    cen1 = -(sizeSite-1).*pixelSizeSite/2;
 
-    % Bring the model onto the site pixel size and then cut it out
-    sizeRes = round(fovMod./pixelSizeSite);
-    img = imresize(img, sizeRes);
+    %% Resample the model onto the grid of the site image
+    % Both grids are expressed in nm relative to the centre of the site, so no
+    % rounding of pixel sizes or offsets is involved.
+    x = cen1(2)+(0:sizeSite(2)-1).*pixelSizeSite(2);
+    y = cen1(1)+(0:sizeSite(1)-1).*pixelSizeSite(1);
+    % the centre of the model image is at size/2+1 (measured, LocMoFit.plot
+    % places the locs on top of it one pixel off, at size/2)
+    [colMod, rowMod] = meshgrid(x./pixelSize+sizeMod(2)/2+1, y./pixelSize+sizeMod(1)/2+1);
     imgSite = zeros([sizeSite size(img,3)]);
-    % row r of the site grid corresponds to row r+shift of the model image
-    shift = round((offCen-(fovSite-fovMod)/2)./pixelSizeSite);
-    for d = 2:-1:1
-        idxSite{d} = 1:sizeSite(d);
-        idxMod{d} = idxSite{d}+shift(d);
-        lIn = idxMod{d}>=1&idxMod{d}<=sizeRes(d);
-        idxSite{d} = idxSite{d}(lIn);
-        idxMod{d} = idxMod{d}(lIn);
+    for k = 1:size(img,3)
+        imgSite(:,:,k) = interp2(img(:,:,k), colMod, rowMod, 'linear', 0);
     end
-    if isempty(idxSite{1})||isempty(idxSite{2})
-        return
-    end
-    imgSite(idxSite{1},idxSite{2},:) = img(idxMod{1},idxMod{2},:);
+
+    %% Render the locs on the very same grid
+    % Both images come out of one coordinate mapping, so the model cannot end
+    % up out of register with the data it was fitted to.
+    blurFactor = 0.8;       % sigma of the blur of the locs, in pixels
+    locsT = fitter.locsHandler(locs, fitter.exportPars(1,'lPar'), 1);
+    imgData = renderLocsOnGrid(locsT, x, y, blurFactor);
 
     imout.image = im2uint8(min(max(imgSite,0),1));
+    imout.dataimage = im2uint8(min(max(imgData,0),1));
     imout.imax = squeeze(imax)';            % the intensity each plane was scaled by
-    imout.rangex = rangex;
-    imout.rangey = rangey;
+    % the grid is centred on the model, not on the site: keep the coordinates
+    % it actually covers, in nm relative to the centre of the model
+    imout.rangex = [x(1) x(end)]-pixelSizeSite(2)/2;
+    imout.rangey = [y(1) y(end)]-pixelSizeSite(1)/2;
     imout.pixelsize = pixelSizeSite;
 catch ME
     warning('LocMoFitGUI:siteImage','The fit could not be rendered on the grid of the site image, out.image stays empty:\n%s', getReport(ME, 'basic'))
 end
+end
+
+function imgData = renderLocsOnGrid(locs, x, y, blurFactor)
+% RENDERLOCSONGRID Bins the locs on the grid defined by the coordinate vectors
+% x and y (in nm, relative to the centre of the site) and blurs them with a
+% Gaussian of sigma = blurFactor*pixelSize. The grid is the one the model is
+% rendered on, so the two cannot end up out of register.
+pixelSize = [y(min(2,end))-y(1) x(min(2,end))-x(1)];
+col = (locs.xnm-x(1))./pixelSize(2)+1;
+row = (locs.ynm-y(1))./pixelSize(1)+1;
+lIn = col>=0.5&col<length(x)+0.5&row>=0.5&row<length(y)+0.5;
+imgData = accumarray([round(row(lIn)) round(col(lIn))], 1, [length(y) length(x)]);
+if blurFactor>0
+    imgData = imgaussfilt(imgData, blurFactor);  % sigma in pixels
+end
+imgData = imgData./max(max(imgData(:)), eps);
 end

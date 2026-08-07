@@ -8,9 +8,10 @@
 p.evalname = '';            % name of the LocMoFit evaluation, empty: take the first one found
 p.sitesPerRow = 3;          % number of site/overlay pairs next to each other
 p.rowsPerPage = 5;          % number of rows on one A4 page
+p.lutData = 'red hot';      % lut for the data
 p.lutModel = {'green'};     % lut for the fitted model, one per layer, cycled
 p.modelWeight = 1;          % how strong the model is added on top of the site image
-p.modelSaturation = 0.7;    % fraction of the maximum that is shown white, smaller: more contrast (and clipping)
+p.modelSaturation = 01;    % fraction of the maximum that is shown white, smaller: more contrast (and clipping)
 p.modelGamma = .8;         % <1 brightens the weak parts of the model
 p.dataWeight = 0.7;         % the site image is dimmed by this factor in the overlay
 p.renderMissing = true;     % render the site image if it has not been rendered yet
@@ -79,6 +80,9 @@ for pg = 1:numPages
     indPage = indUse((pg-1)*perPage+1:min(pg*perPage, length(indUse)));
     for k = 1:length(indPage)
         site = sites(indPage(k));
+        imfit = site.evaluation.(p.evalname).image;
+
+        % left: the image of the site explorer
         if (~isstruct(site.image)||isempty(site.image))&&p.renderMissing
             SE.plotsite(site);
         end
@@ -87,13 +91,21 @@ for pg = 1:numPages
             continue
         end
         imSite = im2double(site.image.image);
-        imModel = modelRGB(site.evaluation.(p.evalname).image, p.lutModel, p.modelSaturation, p.modelGamma);
-        if ~isequal(size(imModel,1,2), size(imSite,1,2))
-            % should not happen, the fit is rendered on the grid of the site image
-            warning(['Site ' num2str(site.ID) ': the fit and the site image differ in size, the fit is resized.'])
-            imModel = imresize(imModel, size(imSite,1,2));
+
+        % right: the data and the model of the fit. Both are rendered on one
+        % grid by the evaluation, so they are in register with each other.
+        imModel = modelRGB(imfit, p.lutModel, p.modelSaturation, p.modelGamma);
+        if isfield(imfit,'dataimage')&&~isempty(imfit.dataimage)
+            imData = ind2rgb(imfit.dataimage, mymakelut(p.lutData));
+        else
+            % older results: the fit was stored on the grid of the site image
+            imData = imSite;
         end
-        imOverlay = min(p.dataWeight*imSite + p.modelWeight*imModel, 1);
+        if ~isequal(size(imModel,1,2), size(imData,1,2))
+            warning(['Site ' num2str(site.ID) ': the model and the data of the fit differ in size, the model is resized.'])
+            imModel = imresize(imModel, size(imData,1,2));
+        end
+        imOverlay = min(p.dataWeight*imData + p.modelWeight*imModel, 1);
 
         ax1 = nexttile(t);
         showimage(ax1, imSite);
