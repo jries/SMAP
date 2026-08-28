@@ -1,4 +1,4 @@
-function [xr,yr,angleout]=rotateCenterCoordinates(x,y,time,range,angle)
+function [xr,yr,angleout,centerpoint]=rotateCenterCoordinates(x,y,time,range,angle,centerpoint)
 
 if nargin>3 && length(range)==2%time range passed on
     range=range+min(time);
@@ -17,8 +17,11 @@ else
     [xa, ya] = deal(a(1,ind(end)), a(2,ind(end)));
     angle = cart2pol(xa, ya);
 end
+if nargin<6
+    centerpoint(1)=mean(xh);centerpoint(2)=mean(yh);
+end
 
-[xr,yr]=rotcoord(x-mean(xh),y-mean(yh),angle);
+[xr,yr]=rotcoord(x-centerpoint(1),y-centerpoint(2),angle);
 indx=xr<mean(xr);
 angleout=angle;
 if mean(time(indx))>mean(time(~indx)) %increasing position with time, rotate by pi

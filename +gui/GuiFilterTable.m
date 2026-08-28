@@ -15,7 +15,7 @@ classdef GuiFilterTable< interfaces.LayerInterface
            obj.excludefields={'peakfindxnm','peakfindynm','groupindex','photerr','inframes'};
            columnname = {'Name','min set','min','mean','max','max set','filt','inv'};
            columnformat = {'char','short g','short g','short g','short g','short g','logical','logical'};
-           columnedit=[false, true, false, false, false, true, true, true];
+           columnedit=[true, true, false, false, false, true, true, true];
            
            s{1,8}=false;
            h.table = uitable('Parent',obj.handle,'Data', s,... 
@@ -174,27 +174,28 @@ classdef GuiFilterTable< interfaces.LayerInterface
                 obj.locData.layer(obj.layer).groupfilter=[];
                 obj.locData.filter([],obj.layer);
                 
-                if isempty(obj.javaobj)
+                if 0 %isempty(obj.javaobj)
                     hovim=obj.getPar('ov_axes').Parent;
                     hovvis=hovim.Visible;
                     hovim.Visible='off';
                     hfilter=obj.getPar('filterpanel');
                     hfilter.Visible='on';
                     drawnow
-                    js=findjobj(obj.guihandles.table);
+                    % js=findjobj(obj.guihandles.table);
                     if strcmp(hovvis,'on')
                         hovim.Visible='on';
                         hfilter.Visible='off';
                     end
-                    obj.javaobj=js;
+                    % obj.javaobj=js;
                 else 
-                    js=obj.javaobj;
+                    % js=obj.javaobj;
                 end
-                jtable=js.getViewport.getView;
-                jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
-                jtable.setAutoResort(true);
-                jtable.setMultiColumnSortable(true);
-                jtable.setPreserveSelectionsAfterSorting(true);
+                % jtable=js.getViewport.getView;
+                % jtable.setSortable(true);		% or: set(jtable,'Sortable','on');
+                % jtable.setAutoResort(true);
+                % jtable.setMultiColumnSortable(true);
+                % jtable.setPreserveSelectionsAfterSorting(true);
+                
         
 
                 

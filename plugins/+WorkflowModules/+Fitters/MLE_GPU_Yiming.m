@@ -297,11 +297,15 @@ end
     end
 
     [P CRLB LogL]=fitpar.fitfunction(arguments{:});
+
+    % [P CRLB LogL]=callfitter(fitpar.fitfunction,arguments{:});
+
     if fitpar.addgaussfit && fitpar.fitmode>=5
         val2mode=[1 2 4];
         arguments{2}=val2mode(fitpar.addgaussfit_mode.Value);
         arguments{4}=1;
         [P2 CRLB2 LogL2]=fitpar.fitfunction(arguments{:});
+        % [P2 CRLB2 LogL2]=callfitter(fitpar.fitfunction,arguments{:});
     else
         P2=[];CRLB2=[];
     end

@@ -17,12 +17,13 @@ classdef AnalyzeSPT<interfaces.DialogProcessor
 end
 function out=analyzei(obj,p)
 out=[];
-[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','frame','track_id','diffusionCoefficient'},'layer',1,'position','roi','grouping','ungrouped');
+[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','frame','diffusionCoefficient',p.fnameid},'layer',find(obj.getPar('sr_layerson')),'position','roi','grouping','ungrouped');
+locs.track_id=locs.(p.fnameid);
 intrack=find(locs.track_id>0);
 trackid=locs.track_id(intrack);
 %maybe filter with minimum length here: histogram 1:N
 hc=histcounts(trackid,1:max(trackid)+1);
-minlen=10;
+minlen=p.lentracks;
 goodids=(hc>minlen);
 longtrack=goodids(trackid);
 inindin=intrack(longtrack);
@@ -47,11 +48,15 @@ end
 p.timediff=30;%XXX
 p.mintracklength=minlen;
 img=obj.getPar('sr_image');
+ax=obj.initaxis('tracks');
+plottracks(loct,p,2,ax);
+axis(ax,'ij')
+
 ax=obj.initaxis('tracks overlay');
 imagesc(ax,img.rangex*1000,img.rangey*1000,img.image)
-hold on
-statistics=plottracks(loct,p,2);
-hold off
+hold(ax,'on')
+statistics=plottracks(loct,p,2,ax);
+hold(ax,'off')
 
 switch p.analysismode.selection
     case 'statistics'
@@ -132,24 +137,24 @@ maxD=myquantile(Ds,.995);
 minD=myquantile(Ds,.005);
 step=10^floor(log10(maxD)-1);
     n = minD:step:maxD;
-    h = hist(Ds,n);
-    bar(n,h);
+    h = hist(ax,Ds,n);
+    bar(ax,n,h);
     parmhat = lognfit( Ds(Ds>0) );
-    hold on
+    hold(ax,'on')
     pp=lognpdf(n,parmhat(1),parmhat(2));
     pp=pp/sum(pp)*sum(h(n>=0) );
-    plot(n,pp,'r')
-    hold off
+    plot(ax,n,pp,'r')
+    hold(ax,'off')
 
     D = median(slo)/4; %2D
-    title(['Dmed=' num2str(D) ' , logn mu=' num2str(    exp( parmhat(1) ))])
-    xlabel('D µm^2/s')
+    title(ax,['Dmed=' num2str(D) ' , logn mu=' num2str(    exp( parmhat(1) ))])
+    xlabel(ax,'D µm^2/s')
 
     s = sqrt(median(off));
 ax=obj.initaxis('offset');
-    hist((off),50)
-    title(['sqrt(median(off))=' num2str(s)])
-    xlabel('offset^2 (nm^2)')
+    hist(ax,(off),50)
+    title(ax,['sqrt(median(off))=' num2str(s)])
+    xlabel(ax,'offset^2 (nm^2)')
 
     ax=obj.initaxis('logD');
     indb = slo<=0;
@@ -158,27 +163,31 @@ ax=obj.initaxis('offset');
     Dlg = log10(Di);
 
     nlg = log10(max(1e-8,minD)):0.1:log10(maxD);
-    xlabel('log10 D')
+    
 
     indnorm = find(nlg>cutoffimmobile,1,'first');
 
-    h = hist(Dlg,nlg);
+    h = hist(ax,Dlg,nlg);
+    xlabel(ax,'log10 D')
+    hold(ax,'on')
 %     alldat(ind).nDl = nlg;alldat(ind).hDl=h;
-    bar(nlg,h);
-    hold off
+    bar(ax,nlg,h);
+    hold(ax,"off")
 ax=obj.initaxis('cumulateive sum');
     Dlgs = cumsum(h);
     Dlgs = Dlgs-Dlgs(indnorm);
     Dlgs = Dlgs/Dlgs(end);
-    plot(nlg,Dlgs);
-    xlabel('cumulative log D')
+    plot(ax,nlg,Dlgs);
+    xlabel(ax,'cumulative log D')
 %     alldat(ind).nDc = nlg;alldat(ind).hDc=Dlgs;
 ax=obj.initaxis('tracklength');
     nlen = 1:50;
-    hlen = hist(statt.lent,nlen);
-    bar(nlen,hlen);
-    xlabel('tracklength')
-    title(['median tracklength = ' num2str(median(statt.lent)) ' total nr of tracks ' num2str(sum(hlen))]);
+    hlen = hist(ax,statt.lent,nlen);
+   
+    bar(ax,nlen,hlen);
+    
+    xlabel(ax,'tracklength')
+    title(ax,['median tracklength = ' num2str(median(statt.lent)) ' total nr of tracks ' num2str(sum(hlen))]);
     out=[];
 end
 
@@ -271,9 +280,9 @@ D=trD(goodt(sortind));
 			Dldraw=Dl0; Dldraw(ind0)=minDl; Dldraw(Dldraw>maxD)=maxD; Dldraw(Dldraw<minDl)=minDl;
 			Dldraw(1,1)=maxD;
 			ax=obj.initaxis('median diffusion map');
-			imagesc(xl,yl,Dldraw)
-			colormap jet
-			colorbar
+			imagesc(ax,xl,yl,Dldraw)
+			colormap(ax,"jet")
+			colorbar(ax)
 			savim=size(avim);
             Dlhr=imresize(Dl,savim([1 2]),'nearest');
             
@@ -303,17 +312,20 @@ D=trD(goodt(sortind));
 			ax=obj.initaxis('diffusion map in SR');
 			
 % 			size(Db)
-			h=imshow(Drgb);
+			h=imshow(Drgb,'Parent',ax);
 			
 % 			     colormap jet
 % 			     colorbar
-			hold on
-			k=   imshow(0*sum(Drgb,3));
-			hold off
+			hold(ax,'on')
+			k=   imshow(0*sum(Drgb,3),'Parent',ax);
+			hold(ax,'off')
 			set(k,'AlphaData',mask)
 end
 
-function out=plottracks(locs,p,show)
+function out=plottracks(locs,p,show,ax)
+if nargin<4
+    ax=gca;
+end
 
 	pfound = max(locs.track_id);
 	cols = jet(pfound); 		% default colormap
@@ -379,15 +391,18 @@ function out=plottracks(locs,p,show)
 			to(ind,end) = coeffs(2);	% add slope to tracks
 			
 			if (show == 2)	%plot tracks
-				plot(x,y,'Color',cols(k,:))
+				plot(ax,x,y,'Color',cols(k,:),'LineWidth',p.linewidth)
+                hold(ax,'on')
+                axis(ax,'equal')
 			end
 			
 			if (show == 1)						%plot msd vs time
 				for l = 1:length(x)-1
 					d(l) = mean( (x(1:end-l)-x(l+1:end)).^2 + (y(1:end-l)-y(l+1:end)).^2 );
 				end
-				plot(d)
-				hold on
+				plot(ax,d)
+				hold(ax,'on')
+                
 			end
 		end
 	end
@@ -909,6 +924,19 @@ pard.saveD.object=struct('String','Write diffusion coefficient to localization d
 pard.saveD.position=[4,1];
 pard.saveD.Width=3;
 
+pard.fnamet.object=struct('String','Fiel name of track id','Style','text');
+pard.fnamet.position=[5,1];
+pard.fnamet.Width=1.25;
+pard.fnameid.object=struct('String','track_id','Style','edit');
+pard.fnameid.position=[5,2.25];
+pard.fnameid.Width=.75;
+
+pard.lwt.object=struct('String','Line width (pix)','Style','text');
+pard.lwt.position=[5,3];
+pard.lwt.Width=1.25;
+pard.linewidth.object=struct('String','1','Style','edit');
+pard.linewidth.position=[5,4.25];
+pard.linewidth.Width=.75;
 
 pard.plugininfo.description=sprintf('Interactive analysis of SPT data');
 pard.plugininfo.type='ProcessorPlugin';

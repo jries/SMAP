@@ -25,21 +25,32 @@ end
 function out=runintern(obj,p)
 out=[];
 tid=obj.locData.loc.tid;
+
+[tidsort,indsort]=sort(tid);
+% if ~isfield(obj.locData.loc,'thi')|| isempty(obj.locData.loc.thi)
+%     thi=0*tid;
+% else
+%     thi=obj.locData.loc.thi;
+% end
+% fn=obj.locData.loc.filenumber;
+
 % time=obj.locData.loc.time;
 % file=obj.locData.loc.filenumber;
 % allid=unique(tid);
 % allfiles=unique(file);
-locintrack=0*tid;
+locintrack=0*tidsort;
 count=1;
-tc=tid(1);
-for k=1:length(tid)
-    if tid(k)~=tc
+tc=tidsort(1);
+for k=1:length(tidsort)
+    if tidsort(k)~=tc
         count=1;
-        tc=tid(k);
+        tc=tidsort(k);
     end
     locintrack(k)=count;
     count=count+1;
 end
+[~,iback]=sort(indsort);
+
 % for f=1:length(allfiles)
 %     for id=1:length(allid)
 %         ixh=allfiles(f)==file & allid(id)==tid;
@@ -47,7 +58,7 @@ end
 %         locintrack(ixh)=1:numloc;
 %     end
 % end
-obj.locData.loc.locintrack=locintrack;
+obj.locData.loc.locintrack=locintrack(iback);
 obj.locData.regroup;
 end
 

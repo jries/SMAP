@@ -29,7 +29,30 @@ classdef TifSaver<interfaces.DialogProcessor
                 description=sprintf(txt);
 %                 [~,~,ext]=fileparts(f);
                 outim=makeoutputtif(obj,p);
-                imwrite(outim,[path f],'Description',description);
+                pixelsize=obj.getPar('sr_pixrec');
+                xResolution = 1 / pixelsize;
+                tags.ResolutionUnit = Tiff.ResolutionUnit.Centimeter;
+                tags.XResolution = xResolution * 10000000;
+                tags.YResolution = xResolution * 10000000;
+                tags.ImageDescription=description;
+                for k=1:length(outim)
+                    if length(outim)>1
+                        itxt=['_' k];
+                    else
+                        itxt='';
+                    end
+                    if size(outim{k},3)==3
+                        options.color=true;
+                    else
+                        options.color=false;
+                    end
+                     
+                    options.comp='lzw';
+                    [~,fn,ext]=fileparts(f);
+                    saveastiff(outim{k},[path fn itxt ext],options,tags)
+                end
+
+                % imwrite(outim,[path f],'Description',description,'Resolution',xResolution);
             end
             obj.status('save done')
             out=[];
@@ -50,8 +73,9 @@ classdef TifSaver<interfaces.DialogProcessor
             pard.img_ext.position=[1,4];
             pard.img_ext.Width=1;
         end
-        function run(obj,p)
+        function r=run(obj,p)
             obj.save(p)
+            r=[];
         end        
         function initGui(obj)
             obj.guihandles.outputformat.String=makeoutputtif;

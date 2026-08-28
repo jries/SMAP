@@ -3,7 +3,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
         mainworkflow
         customworkflows
         batchfile
-        loadpar=true;
+        loadpar=false;
     end
     methods
         function obj=GuiLocalize(varargin)
@@ -21,9 +21,9 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
                  dh=56;
                  dhx=22;
             else
-                l2=obj.guiPar.FieldHeight*1.2;
-                h2=obj.guiPar.FieldHeight*1.2;
-                 dh=62;
+                l2=obj.guiPar.FieldHeight*1.;
+                h2=obj.guiPar.FieldHeight*1.;
+                 dh=62+10;
                  dhg=3;
                  dhx=0;
                  dhgx=0;
@@ -33,6 +33,8 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
             h.loctab.Position(2)=h.loctab.Position(2)+dh;
             h.loctab.Position(4)=h.loctab.Position(4)-dh;
             h.loctab.Units='normalized';
+            h.wfname=uicontrol(obj.handle,'Style','text','String','x','Position',[10+10, l2, 350 h2],...
+                'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left');  
             h.previewbutton=uicontrol(obj.handle,'Style','pushbutton','String','Preview','Position',[10 2, 70 h2],...
                 'FontSize',obj.guiPar.fontsize,'Callback',{@preview_callback,obj},'FontWeight','bold');
             h.previewbutton.TooltipString=sprintf('Test current fitter settings on a single frame. \n Opens window which shows found localizations.\n Use before running fit on all frames.\n Use to open image to select ROIs for fitting.'); 
@@ -65,8 +67,7 @@ classdef GuiLocalize<interfaces.GuiModuleInterface&interfaces.LocDataInterface
              uimenu(h.wfcontext,'label','Edit workflow','Callback',{@wfedit_callback,obj});
             uimenu(h.wfcontext,'label','Save workflow settings','Callback',{@savepar_callback,obj});
             uimenu(h.wfcontext,'label','Save workflow as...','Callback',{@wsave_callback,obj});
-            h.wfname=uicontrol(obj.handle,'Style','text','String','x','Position',[10+10, l2, 350 h2],...
-                'FontSize',obj.guiPar.fontsize,'HorizontalAlignment','left');    
+             
             h.wfname.UIContextMenu=h.wfcontext;
             makemenuindicator(h.wfname,'lo');
             h.wfname.TooltipString='Name of current workflow. Right-click for context menu: info, change workflow, save current workflow settings';

@@ -18,6 +18,15 @@ classdef GuiPluginWindow< interfaces.GuiModuleInterface & interfaces.LocDataInte
             else
                 h.(obj.maindir)=obj.tabgroup;
             end
+            f=getParentFigure(obj.handle);
+            c=uicontextmenu(f);
+            h.(obj.maindir).UIContextMenu=c;
+            m1 = uimenu(c,'Label','remove ','Callback',{@menu_callback,obj});
+            m2 = uimenu(c,'Label','add','Callback',{@menu_callback,obj});
+            m3 = uimenu(c,'Label','add workflow','Callback',{@menu_callback,obj});
+            m4 = uimenu(c,'Label','move left','Callback',{@menu_callback,obj});
+            m5 = uimenu(c,'Label','move right','Callback',{@menu_callback,obj});
+            m6 = uimenu(c,'Label','detach','Callback',{@menu_callback,obj});
             
 %             htg=h.(obj.maindir);
             obj.adjusttabgroup(h.(obj.maindir));
@@ -56,18 +65,13 @@ classdef GuiPluginWindow< interfaces.GuiModuleInterface & interfaces.LocDataInte
                 
            
             
-            f=getParentFigure(obj.handle);
-            c=uicontextmenu(f);
-            h.(obj.maindir).UIContextMenu=c;
-            m1 = uimenu(c,'Label','remove ','Callback',{@menu_callback,obj});
-            m2 = uimenu(c,'Label','add','Callback',{@menu_callback,obj});
-            m3 = uimenu(c,'Label','add workflow','Callback',{@menu_callback,obj});
-            m4 = uimenu(c,'Label','move left','Callback',{@menu_callback,obj});
-            m5 = uimenu(c,'Label','move right','Callback',{@menu_callback,obj});
-             m6 = uimenu(c,'Label','detach','Callback',{@menu_callback,obj});
+          
             if ispc
                 posmen='tri';
                 shiftmen=[-10 -5];
+            elseif ismac && year(version('-date'))>2024
+                posmen='tri';
+                shiftmen=[-10 -10];
             else
                 posmen='tli';
                 shiftmen=[10 -10];
@@ -80,6 +84,7 @@ classdef GuiPluginWindow< interfaces.GuiModuleInterface & interfaces.LocDataInte
             end
                     
                     ht=uitab(obj.guihandles.(obj.maindir),'Title',screenname,'Tag',name);
+                    ht.UIContextMenu=ht.Parent.UIContextMenu;
 %                     ht.units='pixels';
 %                     ht.Position(
 %                     ht.units='normalized';

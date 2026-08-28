@@ -104,6 +104,6 @@ hold off
 axis equal
 xlabel('x srpix')
 ylabel('y srpix')
-title('zoom in cross-correlation to fit maximum')
+title("zoom to fit max. dx="+num2str(dx,'%1.1f')+", dy="+num2str(dy,'%1.1f'))
 end
 abg=abg/sqrt(s1*s2);

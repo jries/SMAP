@@ -19,7 +19,7 @@ zd=zeros(size(locs.x),'single');
 loc.ynm=single(locs.x*pix2nm(1));
 loc.xnm=single(locs.y*pix2nm(2));
 loc.znm=single(locs.z);
-if ndims(locs.phot) == 1
+if sum(size(locs.phot) > 1) == 1
     loc.phot=single(locs.phot);
 else
     loc.phot = single(locs.phot(1, :))';

@@ -1,8 +1,8 @@
 %plotaudiospectrum
 global path
 fmin=30;
-fmax=105;
-Fres=0.01; %Hz
+fmax=800;
+Fres=.1; %Hz
 
 [file path]=uigetfile([path filesep  '*.wav']);
 [a,Fs]=audioread([path filesep file]);

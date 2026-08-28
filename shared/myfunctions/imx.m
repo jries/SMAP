@@ -87,9 +87,9 @@ methods
                 obj.plotimage
             end
         end
-        function updatergb(a,b)
+        function updatergb(obj,a,b)
             p.rgb=a.Value;
-            updateall;
+            obj.updateall;
         end
         function updateall(obj,a,b)
              warning('off','MATLAB:callback:error');

@@ -71,21 +71,25 @@ classdef RoiCutterWF<interfaces.WorkflowModule
 %             ind=0;
             %if length(maxima)>1: multi-channel separated, assumes images
             %also separated by (x,y,1,ch). 
-             if size(image,4)~=length(maxima)
+             if size(image,4)~=length(maxima) %only used for T defined directly
                  trafo=obj.getPar('loc_globaltransform');
                  switch trafo.params.dual.channel_arrange
                      case 'up-down'
                         mp=trafo.images_size(1);
+                        mp=floor(size(image,1)/2); %XXXXXX
                         imnew(:,:,1,1)=image(1:mp,:);
-                        imh=image(mp+1:end,:);
+                        % imh=image(mp+1:end,:);
+                        imh=image(end-mp+1:end,:);
                         if ~strcmp(trafo.params.dual.mirrortype,'none')
                             imh=imh(end:-1:1,:);
                         end
                         imnew(:,:,1,2)=imh;  
                      case 'right-left'
                          mp=trafo.images_size(2);
+                         mp=floor(size(image,2)/2); %XXXXXX
                         imnew(:,:,1,1)=image(:,1:mp);
-                        imh=image(:,mp+1:end);
+                        % imh=image(:,mp+1:end);
+                        imh=image(:,end-mp+1:end);
                         if ~strcmp(trafo.params.dual.mirrortype,'none')
                             imh=imh(:,end:-1:1);
                         end

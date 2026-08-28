@@ -9,6 +9,8 @@ classdef export_tiffs<interfaces.DialogProcessor&interfaces.SEProcessor
         function out=run(obj,p)  
             out=[];
             sites=obj.SE.sites;
+            keep=obj.getPar('se_keeptempimages');
+            obj.setPar('se_keeptempimages',true);
             if p.export_selected
                 sev=obj.getPar('se_viewer');
                 pv=sev.getAllParameters;
@@ -26,6 +28,8 @@ classdef export_tiffs<interfaces.DialogProcessor&interfaces.SEProcessor
                 return
             end
             [~,f]=fileparts(f);
+
+        
      
             for k=selectedsites
                 site=sites(k);
@@ -35,11 +39,23 @@ classdef export_tiffs<interfaces.DialogProcessor&interfaces.SEProcessor
                 site.image.image=imold;
                 options.color=true;
                 options.comp='lzw';
+                pixelsize=site.image.parameters.sr_pixrec;
+                xResolution = 1 / pixelsize;
+                tags.ResolutionUnit = Tiff.ResolutionUnit.Centimeter;
+                tags.XResolution = xResolution * 10000000;
+                tags.YResolution = xResolution * 10000000;
+                
+
                 filen=[f strrep(site.name,'.','_')];
                 fhere= [filen '.tif'];
-                imout=uint8(site.image.image*255);
+                if p.export_scalebar
+                    imsel=site.image.image;
+                else
+                    imsel=site.image.composite;
+                end
+                imout=uint8(imsel*255);
                 
-                saveastiff(imout,[path fhere],options);
+                saveastiff(imout,[path fhere],options,tags);
                 if length(site.image.layers)>1
                     for ll=1:length(site.image.layers)
                         
@@ -86,6 +102,7 @@ classdef export_tiffs<interfaces.DialogProcessor&interfaces.SEProcessor
              end
             
             out=0;
+            obj.setPar('se_keeptempimages',keep);
         end
         function pard=guidef(obj)
             pard=guidef;
@@ -109,6 +126,12 @@ pard.export_cells.Width=2;
 pard.export_files.object=struct('String','export file images as well','Style','checkbox');
 pard.export_files.position=[3,1];
 pard.export_files.Width=2;
+
+pard.export_scalebar.object=struct('String','scale bar and LUT','Style','checkbox','Value',1);
+pard.export_scalebar.position=[1,3];
+pard.export_scalebar.Width=2;
+
+
 
 pard.plugininfo.type='ROI_Analyze';
 pard.plugininfo.description='export superresolution reconstructions of selected ROIs';

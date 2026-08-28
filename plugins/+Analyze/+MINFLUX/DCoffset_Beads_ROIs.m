@@ -58,8 +58,14 @@ for k=1:length(sites)
     id2=findch2(locs, ind1, followch);
     ind2=locs.tid==id2;
 
+    timef=fixtime(locs.time);
+    % timef=locs.time;
+
     x1h=locs.xnm(ind1)-subx;x2h=locs.xnm(ind2);y1h=locs.ynm(ind1)-suby;y2h=locs.ynm(ind2);
-    t1h=locs.time(ind1);t2h=locs.time(ind2);
+    t1h=timef(ind1);t2h=timef(ind2);
+
+    t1=locs.time(ind1);t2=locs.time(ind2);
+
 
     dx=distancedc(t1h, x1h, t2h, x2h);
     dy=distancedc(t1h, y1h, t2h, y2h);
@@ -67,7 +73,8 @@ for k=1:length(sites)
    
     
     plot(p.axdx, t1h(p.skip+1:end), dx(p.skip+1:end))
-    plot(p.axx,t1h(p.skip+1:end), x1h(p.skip+1:end), t2h(p.skip+1:end), x2h(p.skip+1:end))
+    % plot(p.axx,t1h(p.skip+1:end), x1h(p.skip+1:end), t2h(p.skip+1:end), x2h(p.skip+1:end))
+    plot(p.axx,t1(p.skip+1:end), x1h(p.skip+1:end), t2(p.skip+1:end), x2h(p.skip+1:end))
     
     plot(p.axdy, t1h(p.skip+1:end), dy(p.skip+1:end))
     plot(p.axy, t1h(p.skip+1:end), y1h(p.skip+1:end), t2h(p.skip+1:end), y2h(p.skip+1:end))
@@ -77,7 +84,7 @@ for k=1:length(sites)
     hold(p.axx,"on")
     hold(p.axy,"on")
 
-    xm(k)=mean(dx); ym(k)=mean(dx);
+    xm(k)=mean(dx); ym(k)=mean(dy);
     stx(k)=std(dx);sty(k)=std(dy);
    
 end
@@ -115,11 +122,16 @@ for ss=length(sites):-1:1
     followch=~p.mainch;
     locs=obj.locData.getloc({'xnm','ynm','time','tid','thi','ecc','eco'},'layer',layers,'Position',sites(ss),'grouping','ungrouped');
     indmain=locs.thi==p.mainch;
-    hc=histcounts(locs.tid(indmain),1:max(locs.tid)+1);
+    if isempty(locs.tid)
+        continue
+    end
+    hc=histcounts(locs.tid(indmain),1:(max(locs.tid))+1);
+    
     tidgood=find(hc>=p.minlen);
     if isempty(tidgood)
         continue
     end
+    % hc(tidgood)
 
     dx=zeros(length(tidgood),1);dy=dx; ti=dx;x1=dx;x2=dx; y1=dx;y2=dy;
     dtstart=dx; dtstop=dx; tfraction=dx;
@@ -167,11 +179,14 @@ end
 % scatter(x1a(:),y1a(:),5,dya(:),'filled','Parent',p.dyims); colorbar(p.dyims)
 % plot(p.dxims,dxa(:))
 
+goodlocs=~isnan(dxa)&dxa~=0;
 xlabel(p.axdxn,'time (ms)'); ylabel(p.axdxn,'dx-dx(1) (nm)')
 xlabel(p.axdyn,'time (ms)'); ylabel(p.axdyn,'dy-dy(1) (nm)')
 xlabel(p.axdx,'time (ms)'); ylabel(p.axdx,'dx (nm)')
+title(p.axdx,"median: "+ median(abs(dxa(goodlocs)))+", std: "+num2str(std(dxa(goodlocs)),'%2.1f') + " nm")
 xlabel(p.axdy,'time (ms)'); ylabel(p.axdy,'dy (nm)')
-
+% title(p.axdy,median(abs(dya(dx~=0))))
+title(p.axdy,"median: "+ median(abs(dya(goodlocs)))+", std: "+num2str(std(dya(goodlocs)),'%2.1f') + " nm")
 xlabel(p.t1,'dt start (ms)'); ylabel(p.t1,'dt stop (ms)')
 xlabel(p.t2,'dt start (ms)'); ylabel(p.t2,'fraction ch1/ch0')
 
@@ -359,6 +374,29 @@ function id2=findch2(locs, ind1, followch, maxd, offset)
 tm=min(locs.time(ind1)); tx=max(locs.time(ind1));
 id2=mode(locs.tid(locs.time > tm & locs.time < tx & locs.thi==followch));
 end
+
+function tout=fixtime(tin)
+diffti=diff(tin);
+difft=abs([0 ; diffti])+abs([diffti ;0]);
+dtmax=max(difft)/5;
+ib=find((difft)>dtmax);
+tout=tin;
+w=1d5;
+for k=1:length(ib)
+    dtest=diffti(max(1,ib(k)-w):min(ib(k)+w,length(diffti)));
+    dtmean=mean(dtest(abs(dtest)<dtmax));
+    % if difft(ib(k))>0
+        % tout(ib(k))=tout(ib(k)-1)+dtmean;
+    % else
+        tout(ib(k)+1)=tout(ib(k))+dtmean;
+    % end
+   
+  
+end
+% tout(ib)=(tin(ib-1)+tin(ib+1))/2;
+
+end
+
 
 function pard=guidef(obj)
 pard.modet.object=struct('String','analysis mode','Style','text');

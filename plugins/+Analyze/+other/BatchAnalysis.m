@@ -1,5 +1,5 @@
 classdef BatchAnalysis<interfaces.DialogProcessor
-% Batch analysis of many files with defined plugins. Create a Batchanlaysis
+% Batch analysis of many files with defined plugins. Create a Batchanalysis
 % Tab in the Anlaysis tab and add all plugins for batch analysis there.';
 
     methods
@@ -52,9 +52,13 @@ classdef BatchAnalysis<interfaces.DialogProcessor
                 mkdir([outp filesep outf filesep aplugins{a}]);
             end
             for f=1:length(filelist)
+                disp("processing: "+filelist{k})
+                gsmap.setGuiParameters(allpars,true);
                 [path,file,ext]=fileparts(filelist{f});
                 gFile.loadbutton_callback( 0,0,0,[path filesep],[file ext]);
-                gsmap.setGuiParameters(allpars,true);
+                
+                
+                % initGuiAfterLoad(obj)
                 gFormat.resetview;
                 %re-evaluate if needed
 %                 if p.evalutesites
@@ -65,7 +69,7 @@ classdef BatchAnalysis<interfaces.DialogProcessor
                    ahere=gabatch.children.(aplugins{a});
 %                    try
                        re=ahere.processgo;
-                       re
+                       re;
                        results.(aplugins{a}){f}=re;
                        
                        outfig=ahere.resultstabgroup.Parent;
@@ -153,7 +157,7 @@ end
 
 function pard=guidef(obj)
 
-pard.text.object=struct('Style','text','String','Create a Batchanlaysis tab in the Analysis tab and add all plugins that you want to evaluate.');
+pard.text.object=struct('Style','text','String','Create a Batchanalysis tab in the Analysis tab and add all plugins that you want to evaluate.');
 pard.text.position=[1,1];
 pard.text.Width=4;
 
@@ -196,5 +200,5 @@ pard.savefigures.Width=1;
 
 pard.plugininfo.type='ProcessorPlugin';
 
-pard.plugininfo.description='Batch analysis of many files with defined plugins. Create a Batchanlaysis Tab in the Anlaysis tab and add all plugins for batch analysis there.';
+pard.plugininfo.description='Batch analysis of many files with defined plugins. Create a Batchanalysis Tab in the Anlaysis tab and add all plugins for batch analysis there.';
 end

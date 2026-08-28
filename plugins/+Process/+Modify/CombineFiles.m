@@ -33,6 +33,11 @@ classdef CombineFiles<interfaces.DialogProcessor
                     if isfield(obj.locData.files.file(ftarget),'raw')
                         obj.locData.files.file(ftarget).raw=[obj.locData.files.file(ftarget).raw obj.locData.files.file(fhere).raw];
                     end
+                    if p.addchannel
+                        obj.locData.loc.channel(ind)=obj.locData.loc.channel(ind)+dat{k,2};
+                    else
+                        obj.locData.loc.channel(ind)=dat{k,2};
+                    end
                     
                  end
                 obj.locData.loc.filenumber(obj.locData.loc.filenumber==12345)=ftarget;
@@ -75,7 +80,7 @@ classdef CombineFiles<interfaces.DialogProcessor
             initGuiAfterLoad(obj)
              
         end
-        function initGui(obj)
+        function initGui(obj,a,b)
             fl=obj.getPar('filelist_short');
             numfiles=length(fl.String);
             data=cell(numfiles,3);
@@ -121,18 +126,21 @@ pard.table.position=[5,1];
 pard.table.Width=4;
 pard.table.Height=5;
 
+pard.updatelistb.object=struct('String','refresh','Style','pushbutton','Callback',{{@obj.initGui}});
+pard.updatelistb.position=[7,1];
+
 pard.newfilenameb.object=struct('String','New filename:','Style','pushbutton','Callback',{{@newfilenameb_callback,obj}});
-pard.newfilenameb.position=[7,1];
+pard.newfilenameb.position=[8,1];
 
 pard.newfilename.object=struct('String','newfile_sml','Style','edit');
-pard.newfilename.position=[7,2];
+pard.newfilename.position=[8,2];
 pard.newfilename.Width=3;
 
 pard.addchannel.object=struct('String','add Channel number to existing','Style','checkbox');
-pard.addchannel.position=[6,3];
+pard.addchannel.position=[7,3];
 pard.addchannel.Width=2;
 
-p(1).value=0; p(1).on={'addchannel'}; p(1).off={'fileordert','fileorder'};
+p(1).value=0; p(1).on={}; p(1).off={'fileordert','fileorder'};
 p(2).value=1;p(2).on=p(1).off;p(2).off=p(1).on;
 pard.framecontinuous.object=struct('String','Continuous Frames','Style','checkbox','Callback',{{@obj.switchvisible,p}});
 pard.framecontinuous.position=[6,1];

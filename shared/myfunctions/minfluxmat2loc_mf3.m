@@ -8,12 +8,13 @@ locz=locs(:,3);
 % indgood=~isnan(locx);
 if onlyvalid
     indgood=jt.vld;
+    indnan=false(size(locx));
 else
     indnan=isnan(locx);
     indgood = true (size(locx));
     locx(indnan)=-1; locy(indnan)=-1; locz(indnan)=-1;
 end
-
+indgood=indgood & abs(locx)<1e9 & abs(locy)<1e9; %XXX inserted 17.1.26 for Takahiro
 % numlocs=size(locs,1);
 locnums=(1:numlocs)';
 

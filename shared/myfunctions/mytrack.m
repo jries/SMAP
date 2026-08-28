@@ -1,5 +1,5 @@
 function tracks = mytrack(xyzs,maxdisp,param)
-
+tracks=[];
 %;
 % ; see http://glinda.lrsm.upenn.edu/~weeks/idl
 % ;   for more information

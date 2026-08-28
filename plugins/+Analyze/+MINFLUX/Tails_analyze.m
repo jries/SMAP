@@ -26,6 +26,7 @@ function out=runintern(obj,p)
 out=[];
 
 p.meantails=obj.initaxis('meantails');
+p.meantailsadd=obj.initaxis('meantailsadd','keep');
 p.tails=obj.initaxis('tails');
 p.taillengthduration=obj.initaxis('length vs duration');
 p.taillength=obj.initaxis('length');
@@ -62,8 +63,12 @@ taillen=zeros(length(tidgood),1);taillocs=zeros(length(tidgood),1);
 
 locs=obj.locData.getloc({'xnm','ynm','time','tid','ecc','eco','filenumber'},'layer',layers,'Position','all','grouping','ungrouped');
 tidfn=locs.tid+maxtid*double(locs.filenumber);
-locsall=obj.locData.getloc({'tid','ecc','eco','time','filenumber'},'Position','all','grouping','ungrouped');
+locsall=obj.locData.getloc({'xnm','ynm','tid','ecc','eco','time','filenumber'},'Position','all','grouping','ungrouped');
 tidfnall=locsall.tid+maxtid*double(locsall.filenumber);
+
+if contains(p.source.selection, 'ROI')
+locs=locsall; tidfn=tidfnall;
+end
 for k=1:length(tidgood)
     ind=find(tidfn==tidgood(k));
 
@@ -102,7 +107,9 @@ for k=1:length(tidgood)
 end
 
 
-plot(p.taillengthduration,taillocs+ (rand(length(taillocs),1))*0.5,taillen,'.');  hold(p.taillengthduration,"on")
+% plot(p.taillengthduration,taillocs+ (rand(length(taillocs),1))*0.5,taillen,'.');  hold(p.taillengthduration,"on")
+axes(p.taillengthduration); hold(p.taillengthduration,'on');
+plot(p.taillengthduration, taillocs + rand(size(taillocs))*0.5, taillen, '.');
 
 
 ylim([0, quantile(taillen,.99)])
@@ -110,11 +117,12 @@ ylim([0, quantile(taillen,.99)])
 n=0:5:quantile(taillen,.99);
 histogram(taillen,n,'Parent',p.taillength)
 xlabel(p.taillength,'length of tail (nm)')
-n=1:max(taillocs)+1;
+hTL = histogram(taillen,n,'Parent',p.taillength); legend(p.taillength, hTL, ['median = ', num2str(round(median(taillen, "omitnan"),1))]);
+n = 1:max(taillocs, [], "omitnan") + 1;
 histogram(taillocs,n,'Parent',p.duration)
 xlabel(p.duration,'localizations until convergence')
 % plot(p.taillength,h)
-
+hTL = histogram(taillocs,n,'Parent',p.duration); legend(p.duration, hTL, ['median = ', num2str(median(taillocs, "omitnan"))]);
 
 
 tailsall(tailsall==0)=NaN;
@@ -131,8 +139,18 @@ p.meantails.YAxis.Scale="log";
 xlabel(p.taillengthduration,'duration of tails (localizations)'); ylabel(p.taillengthduration,'length of tails (nm)')
 
 plotevery=length(tidgood)/p.maxplottails;
+hold(p.tails,'off')
 plot(p.tails, tailsall(:,1:plotevery:end));
+hold(p.tails,'on')
+plot(p.tails, mean(tailsall,2),'k','LineWidth',2);
 xlabel(p.tails,'localization'); ylabel(p.tails,'distance to average final position (nm)')
+
+[~,ftagname]=fileparts(strrep(obj.locData.files.file(locs.filenumber(1)).name,'\',filesep));
+
+hold(p.meantailsadd,'on')
+plot(p.meantailsadd, mean(tailsall,2),'DisplayName',ftagname);
+xlabel(p.meantailsadd,'localization'); ylabel(p.meantailsadd,'distance to average final position (nm)')
+legend(p.meantailsadd);
 end
 
 

@@ -619,6 +619,7 @@ switch fitpar.mode
 end
 
 [P, CRLB, LogL, color,llsecond]=fitpar.fitfunction(arguments{:});
+% [P, CRLB, LogL, color,llsecond]=callfitter_global(fitpar.fitfunction,arguments{:});
 
 %subtract dT for y
 if fitpar.link(1)

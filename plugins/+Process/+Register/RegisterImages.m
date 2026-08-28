@@ -43,7 +43,8 @@ classdef RegisterImages<interfaces.DialogProcessor
                 return;
             end
             initaxis(p.resultstabgroup,'correlation');
-             [dy,dx]=getShiftCorr(imref,imtarget,1);
+            
+             [dy,dx]=getShiftCorr(imref,imtarget,1,p.maxd/pixrec);
              dx=dx*pixrec;
              dy=dy*pixrec;
                 dxt=obj.getPar('shiftxy_min','layer',targetlayer);
@@ -128,6 +129,14 @@ pard.setpixelsize.Width=1.5;
 pard.pixelsize.object=struct('Style','edit','String','5');
 pard.pixelsize.position=[1,4.5];
 pard.pixelsize.Width=0.5;
+
+pard.maxdt.object=struct('Style','text','String','Max displacement (nm)');
+pard.maxdt.position=[2,3];
+pard.maxdt.Width=1.5;
+pard.maxd.object=struct('Style','edit','String','2500');
+pard.maxd.position=[2,4.5];
+pard.maxd.Width=0.5;
+
 
 pard.dataselect.object=struct('Style','popupmenu','String','File');
 pard.dataselect.position=[5,1];

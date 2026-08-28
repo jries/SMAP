@@ -117,7 +117,8 @@ for phot=1:length(PhotonRatios)
     end
     for k=1:length(zstart)
          zstarth=repmat(zstart(k),1,Nfits);
-         [Ph,CRLBh,LogLh]=fitterh(imstack,fittype,shared,(iterations),splinecoeff,dT,varmap,silent,zstarth);
+         % [Ph,CRLBh,LogLh]=fitterh(imstack,fittype,shared,(iterations),splinecoeff,dT,varmap,silent,zstarth);
+         [Ph,CRLBh,LogLh]=callfitter(fitterh,imstack,fittype,shared,(iterations),splinecoeff,dT,varmap,silent,zstarth);
         if first %first round
             P=Ph;
             CRLB=CRLBh;
@@ -141,7 +142,9 @@ if photonratiofixed
     if fittype >1
         zstarth=P(:,3);
         dT(4,4,:)=PhotonRatios(color);
-    [P,CRLB,LogL]=fitterh(imstack,fittype,shared,iterationsin,splinecoeff,dT,varmap,silent,zstarth);
+    % [P,CRLB,LogL]=fitterh(imstack,fittype,shared,iterationsin,splinecoeff,dT,varmap,silent,zstarth);
+    [P,CRLB,LogL]=callfitter(fitterh,imstack,imstack,fittype,shared,iterationsin,splinecoeff,dT,varmap,silent,zstarth);
+
     end
     ml=max(LogLp,[],2);
     LLsecond=quantile(ml./LogLp,1-1/length(PhotonRatios),2);    

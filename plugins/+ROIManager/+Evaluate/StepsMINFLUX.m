@@ -38,6 +38,11 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                 end                
            end
 
+           if existnotempty(obj.site.evaluation,(obj.modulename),'overshoot') %&& ~isempty(obj.site.evaluation.(obj.modulename).overshoot)
+               p.overshoot=obj.site.evaluation.(obj.modulename).overshoot;
+               obj.setGuiParameters(struct('overshoot',p.overshoot));
+           end
+
            %identify all localizations in track
            usefields={'xnm','ynm','groupindex','tid','time','znm', 'efo', 'cfr', 'eco', 'ecc', 'efc','filenumber','vld','sta'};
            locs=obj.getLocs(usefields,'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
@@ -69,6 +74,29 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                id=mode(locs.(fid)(ind));
                
            end
+            
+           if isfield(p,'fromdc') && p.fromdc
+               switch p.dcch
+                   case 1
+                       idname='id1';   
+                   case 2
+                       idname='id2';
+               end
+               if ~isfield(obj.site.evaluation.StepsMINFLUX_dc,idname)
+                   out=[];
+                   return
+               end
+               if p.dcch==2
+                      offset=obj.site.evaluation.StepsMINFLUX_dc.offset;
+               else
+                   offset=[0 0];
+               end
+               id=obj.site.evaluation.StepsMINFLUX_dc.(idname);
+               angle=obj.site.evaluation.StepsMINFLUX_dc.angle;
+               rotcenter=obj.site.evaluation.StepsMINFLUX_dc.rotcenter;
+               
+               % obj.locData.SE.sites(1).evaluation
+           end
            filenumberh=mode(locs.filenumber);
            
            if p.filterlocs
@@ -99,8 +127,8 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            else
                z=[];
            end
+            
 
-           [xr,yr,angle]=rotateCenterCoordinates(x,y,time,obj.range);
             % if p.filtertrackmode
                 zf=z;
                 windowsize=p.filterwindow;
@@ -109,8 +137,17 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
                 if ~isempty(z)
                     zf=runningWindowAnalysis(time,z,time,windowsize,p.filtermode.selection);  
                 end
+
+           if isfield(p,'fromdc') && p.fromdc
+               [xr,yr,angle]=rotateCenterCoordinates(x+offset(1),y+offset(2),time,obj.range,angle,rotcenter);
+               [xfr,yfr,angle]=rotateCenterCoordinates(xf+offset(1),yf+offset(2),time,obj.range,angle,rotcenter);
+           else
+
+                [xr,yr,angle,rotcenter]=rotateCenterCoordinates(x,y,time,obj.range);
+                [xfr,yfr,angle]=rotateCenterCoordinates(xf,yf,time,obj.range,angle,rotcenter);
+           end
 %                 plot(axx,timeplot,xf,'b');
-                [xfr,yfr,angle]=rotateCenterCoordinates(xf,yf,time,obj.range,angle);
+                
             % else
                 
                 % xfr=[]; yfr=[]; zf=[];
@@ -139,6 +176,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
            if  isempty(obj.steps) || p.refitalways
                refit(0,0,obj,1)
            end
+           
            calculatestepparameters(obj, obj.steps.indstep);
            plotsteps(obj)
            out=obj.site.evaluation.(obj.name);
@@ -148,6 +186,7 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
 
            filelist=obj.getPar('filelist_short');
            out.filename=filelist.String{mode(obj.locsuse.filenumber)};
+           out.overshoot=p.overshoot;
            
            plotstatistics(obj)
         end
@@ -196,6 +235,11 @@ classdef StepsMINFLUX<interfaces.SEEvaluationProcessor
         function pard=guidef(obj)
             pard=guidef(obj);
         end     
+        function overshootupdate(obj,a,b)
+            overshoot=obj.getSingleGuiParameter('overshoot');
+            obj.site.evaluation.(obj.modulename).overshoot=overshoot;
+
+        end
     end
 
 end
@@ -451,7 +495,7 @@ else
     tm=max(obj.coord.timeplot);
 end
 
-legend(ax2,['tid: ' num2str(trackid)])
+legend(ax2,['tid: ' num2str(trackid)], 'Location', 'northwest')
 
 mv=obj.steps.stepvalue;
 hstep=stairs(ax2,[obj.steps.steptime ;tm],[mv ;mv(end)],'r');
@@ -480,6 +524,7 @@ end
 
 %xy plot
 goff=median(mod(obj.steps.stepvalue,16),'omitnan');
+goff=0; % XXXX
 obj.xyplotoffset=goff;
 % goff=0; %switch off shift 
 axxy=obj.setoutput('xy');
@@ -525,7 +570,7 @@ sigmax=std(obj.coord.xr);sigmay=std(obj.coord.yr);
 sxdetrend=std(diff(obj.coord.xr))/sqrt(2);sydetrend=std(diff(obj.coord.yr))/sqrt(2);
 [~, sxrobust]=robustMean(obj.coord.xr); [~, syrobust]=robustMean(obj.coord.yr);
 title(axxy,['std(x) = ' num2str(sigmax,ff) ' nm, std(x) detrend = ' num2str(sxdetrend,ff) ' nm.' ' std(y) = ' num2str(sigmay,ff) ' nm, std(y) detrend = ' num2str(sydetrend,ff) ' nm.'])
-
+legend(axxy,['phtTotal: ' num2str(sum(obj.locData.loc.eco(obj.index))+sum(obj.locData.loc.ecc(obj.index)))], 'Location', 'northeast')
 
 
 if ~isempty(obj.coord.z)
@@ -573,11 +618,11 @@ grid(axsy);
 
 if ~isempty(dmv) && length(dmv)>1
 ax3=obj.setoutput('stephist');
-histogram(ax3,dmv,min(dmv):.5:max(dmv));
+histogram(ax3,dmv,floor(min(dmv)):.5:ceil(max(dmv)));
 %step time
 axstept=obj.setoutput('dwelltime');
 dt=max(0.1,round(mean(obj.steps.dwelltime)/5));
-histogram(axstept,obj.steps.dwelltime,0:dt:max(obj.steps.dwelltime))
+histogram(axstept,obj.steps.dwelltime,0:dt:max(obj.steps.dwelltime)+dt)
 title(axstept,"mean step time = "+ num2str(mean(obj.steps.dwelltime),'%2.1f') + " ms");
 end
 
@@ -1044,7 +1089,7 @@ pard.link.Width=1.5;
 
 pard.overshoott.object=struct('String','Coarsness','Style','text');
 pard.overshoott.position=[2,1];
-pard.overshoot.object=struct('String','.8','Style','edit');
+pard.overshoot.object=struct('String','.8','Style','edit','Callback',@obj.overshootupdate);
 pard.overshoot.position=[2,2];
 pard.overshoot.Width=0.5;
 
@@ -1156,6 +1201,14 @@ pard.resetview.Width=1.3;
 pard.onlyvld.object=struct('String','only vld','Style','checkbox','Value',1);
 pard.onlyvld.position=[8,3];
 pard.onlyvld.Width=2;
+
+pard.fromdc.object=struct('String','display only second color, ch:','Style','checkbox','Value',0);
+pard.fromdc.position=[9,1];
+pard.fromdc.Width=3;
+
+pard.dcch.object=struct('String','1','Style','edit');
+pard.dcch.position=[9,4];
+pard.dcch.Width=1;
 
 % pard.dxt.Width=3;
 pard.inputParameters={'numberOfLayers','sr_layerson','se_cellfov','se_sitefov','se_siteroi','se_sitepixelsize'};

@@ -1,4 +1,4 @@
-function makemenuindicator(handle,postxt,shift)
+function hm=makemenuindicator(handle,postxt,shift)
 if nargin<3
     shift=[0 0];
 end

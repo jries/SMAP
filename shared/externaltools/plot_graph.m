@@ -166,7 +166,8 @@ fol = lower(computer('arch'));
 switch fol;
     case 'win32';   foo = 'mwdot.exe';  %not tested
     case 'win64';   foo = 'mwdot.exe';  %tested
-    case 'maci64';  foo = 'mwdot';      %not tested
+    case 'maci64';  foo = 'mwdot';   
+    case 'maca64';  foo = 'mwdot';  %not tested
     case 'glnxa64'; foo = 'mwdot';      %not tested
     case 'glnx86';  foo = 'mwdot';      %not tested
     otherwise;

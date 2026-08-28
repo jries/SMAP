@@ -139,6 +139,10 @@ else
     p.Vrim=100;
 end
     module.handle=figure('MenuBar','none','Toolbar','none','Name',name);
+    if ismac && year(version('-date'))>2024
+        module.handle.Position(3:4)=[560 420];
+    end
+
     module.attachPar(obj.P);
     module.attachLocData(obj.locData);
     
@@ -210,7 +214,7 @@ end
 
 [f, p]=uiputfile(gfile);
 if f
-    if strcmp(fn,'SimpleGUI')
+    if strcmp(f,'SimpleGUI')
         answ=questdlg('Overwrite SimpleGUI.txt? This file is synchronized via git with all other SMAP users worldwide. If not, select NO and save under a different name.');
         if ~strcmp(answ, 'Yes')
             disp('saving of settings aborted.')

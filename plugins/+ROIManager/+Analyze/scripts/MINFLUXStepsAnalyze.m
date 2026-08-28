@@ -40,6 +40,7 @@ for k=1:length(sites)
         k
         continue
     end
+    if sites(1,k).annotation.use == 1
     sh=sites(k).evaluation.(pluginname).(fieldname1);
     sh2=sites(k).evaluation.(pluginname).(fieldname2);
     
@@ -73,6 +74,7 @@ for k=1:length(sites)
     nt(1)=1;
     nt(end)=1;
     newtrack(end+1:end+length(sh.indstepglobal))=nt;
+    end
     end
    
 end

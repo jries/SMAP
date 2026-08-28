@@ -10,7 +10,9 @@ end
 %    info=imfinfo(file);Tiff
    switch ext
        case '.tif'
-           if exist([path filesep 'metadata.txt'],'file')
+           if isNDTiff(path)
+               imloader=@imageloaderNDTiff;
+           elseif exist([path filesep 'metadata.txt'],'file')
 %                imloader=@imageloaderMM;s
                if countfiles(file)>1 && ~(any(strfind(file,'MMStack'))||any(strfind(file,'.ome.')))
                    imloader=@imageloaderMMsingle;
@@ -30,9 +32,13 @@ end
 %                imloader=@imageloaderMM;
            end
        case '' %directory
-           fns=dir([file filesep '*.tif']);
-           varargin{1}=[file filesep fns(1).name];
-           imloader=@imageloaderMMsingle;
+           if isNDTiff(file)
+               imloader=@imageloaderNDTiff;
+           else
+               fns=dir([file filesep '*.tif']);
+               varargin{1}=[file filesep fns(1).name];
+               imloader=@imageloaderMMsingle;
+           end
        case '.dcimg'
            imloader=@imageloaderDCIMG;
        case '.mat'
@@ -50,6 +56,13 @@ end
    end
 end
 
+function isnd=isNDTiff(path)
+%NDTiff datasets are directories with an NDTiff.index file
+if isempty(path)
+    path='.';
+end
+isnd=exist([path filesep 'NDTiff.index'],'file')>0;
+end
 function f=filesize(file)
 d=dir(file);
 f=d.bytes;

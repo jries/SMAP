@@ -1,4 +1,4 @@
-function saveastiff(data, path, options)
+function saveastiff(data, path, options,tagstruct)
 % options.color
 %   : true or FALSE
 %   : If this is true, third dimension should be 3 and the data is saved as a color image.
@@ -154,6 +154,10 @@ if (options.color == false && ndims(data) > 3) ...
     || (options.color == true && ndims(data) > 4)
     errcode = 10; assert(0);
 end
+if nargin<4
+    tagstruct=struct;
+end
+    
 
 pathstr = fileparts(which(path));
 if ~isempty(pathstr)
@@ -284,6 +288,7 @@ if ~options.append
         tempfile = 'temporal.tif';
     else
         tempfile = '._temporal.tif';
+        tempfile = 'temporal.tif';
     end
     pfad=fileparts(path);
     tempfile=[pfad filesep  tempfile];

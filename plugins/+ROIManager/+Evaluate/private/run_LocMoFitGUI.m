@@ -78,6 +78,7 @@ try
     %     fitter.model{m}.locsMedSig = median(locs.locprecnm(lThisLayer).^2+variation.^2);
     % end
     %% Perform the fitting and export related
+    out.image = [];     % the fitted model, rendered on the grid of obj.site.image
     if ~(inp.noFit||forceDisplay)
         %     fitter.resetInit;
         % also gets controlLogLikelihood
@@ -149,6 +150,10 @@ try
         out.externalInfo = fitter.externalInfo;
     end
     if ~lPassOnDataOnly
+        %% Render the fitted model on the grid of the site image
+        out.image = renderFitOnSiteGrid(obj, fitter, locs);
+
+        %% Display the result
         if obj.getPar('se_display')||forceDisplay
             if fitter.dataDim == 2
                 vis = obj.setoutput('Plot');
@@ -444,4 +449,107 @@ if sum(~lWithoutVal)>0
     obj.locData.loc.class(idxWithVal(lReplace)) = obj.site.ID;
     obj.locData.loc.(['rank_' obj.name])(idxWithVal(lReplace)) = obj.site.indList;
 end
+end
+
+function imout = renderFitOnSiteGrid(obj, fitter, locs)
+% RENDERFITONSITEGRID Renders the fitted model on the same grid as obj.site.image.
+% The model is moved onto the data ('movModel') instead of the data being
+% moved onto the model, so that the rendering stays in the coordinate frame
+% of the model. The locs are transformed onto the model the same way the fit
+% does it, so the two are in one frame by construction. Note that this frame
+% is the one of the model, not the one of obj.site.image. For 3D data the xy
+% projection is rendered. The image holds intensities only, one plane per
+% layer, normalized to their maxima: apply the lut of choice when displaying
+% it. The locs are rendered on the same grid into .dataimage, so that the
+% two are aligned by construction. Returns [] when the rendering fails, so
+% that a problem here never breaks the fit.
+imout = [];
+try
+    pixelSize = fitter.model{1}.pixelSize;      % render natively, then resample onto the site grid
+    % The model is rendered where it is defined and the locs are transformed
+    % onto it, exactly like the fit and the display of LocMoFit do it. Moving
+    % the model onto the locs instead ('movModel') uses a separate code path,
+    % which put the two out of register.
+    [~, ~, img] = fitter.plot(locs, 'plotType', 'image', 'Projection', 'xy',...
+        'movModel', false, 'doNotPlot', true, 'pixelSize', pixelSize);
+    if isempty(img)||~isnumeric(img)
+        return
+    end
+    % intensities only, one plane per layer: the lut is applied when displaying
+    imax = max(img,[],1:2);
+    img = img./max(imax,eps);
+    % rows are y, columns are x, and the centre of the site is at size/2
+    % (see how the locs are placed in LocMoFit.plot)
+    sizeMod = [size(img,1) size(img,2)];
+
+    %% The grid
+    % Size and pixel size are taken from the site image, so that the result has
+    % the same dimensions. The pixel size comes from the parameters it was
+    % rendered with: the renderer bins at exactly sr_pixrec, whereas the stored
+    % range is the requested one, not necessarily a multiple of it.
+    siteImg = obj.site.image;
+    lSiteImg = isstruct(siteImg)&&isfield(siteImg,'image')&&~isempty(siteImg.image);
+    if lSiteImg
+        sizeSite = [size(siteImg.image,1) size(siteImg.image,2)];
+    else
+        sizeSite = round(repelem(obj.getPar('se_sitefov'),2)./obj.getPar('se_sitepixelsize'));
+    end
+    if lSiteImg&&isfield(siteImg,'parameters')&&isfield(siteImg.parameters,'sr_pixrec')
+        pixelSizeSite = double(siteImg.parameters.sr_pixrec);
+    else
+        pixelSizeSite = obj.getPar('se_sitepixelsize');
+    end
+    pixelSizeSite = pixelSizeSite([1 end]);      % [y x], sr_pixrec may be a scalar
+    % the grid is centred on the model. The rotation of the site plays no role
+    % here: the locs are transformed into the frame of the model, whatever the
+    % site is rotated by.
+    cen1 = -(sizeSite-1).*pixelSizeSite/2;
+
+    %% Resample the model onto the grid of the site image
+    % Both grids are expressed in nm relative to the centre of the site, so no
+    % rounding of pixel sizes or offsets is involved.
+    x = cen1(2)+(0:sizeSite(2)-1).*pixelSizeSite(2);
+    y = cen1(1)+(0:sizeSite(1)-1).*pixelSizeSite(1);
+    % the centre of the model image is at size/2+1 (measured, LocMoFit.plot
+    % places the locs on top of it one pixel off, at size/2)
+    [colMod, rowMod] = meshgrid(x./pixelSize+sizeMod(2)/2+1, y./pixelSize+sizeMod(1)/2+1);
+    imgSite = zeros([sizeSite size(img,3)]);
+    for k = 1:size(img,3)
+        imgSite(:,:,k) = interp2(img(:,:,k), colMod, rowMod, 'linear', 0);
+    end
+
+    %% Render the locs on the very same grid
+    % Both images come out of one coordinate mapping, so the model cannot end
+    % up out of register with the data it was fitted to.
+    blurFactor = 0.8;       % sigma of the blur of the locs, in pixels
+    locsT = fitter.locsHandler(locs, fitter.exportPars(1,'lPar'), 1);
+    imgData = renderLocsOnGrid(locsT, x, y, blurFactor);
+
+    imout.image = im2uint8(min(max(imgSite,0),1));
+    imout.dataimage = im2uint8(min(max(imgData,0),1));
+    imout.imax = squeeze(imax)';            % the intensity each plane was scaled by
+    % the grid is centred on the model, not on the site: keep the coordinates
+    % it actually covers, in nm relative to the centre of the model
+    imout.rangex = [x(1) x(end)]-pixelSizeSite(2)/2;
+    imout.rangey = [y(1) y(end)]-pixelSizeSite(1)/2;
+    imout.pixelsize = pixelSizeSite;
+catch ME
+    warning('LocMoFitGUI:siteImage','The fit could not be rendered on the grid of the site image, out.image stays empty:\n%s', getReport(ME, 'basic'))
+end
+end
+
+function imgData = renderLocsOnGrid(locs, x, y, blurFactor)
+% RENDERLOCSONGRID Bins the locs on the grid defined by the coordinate vectors
+% x and y (in nm, relative to the centre of the site) and blurs them with a
+% Gaussian of sigma = blurFactor*pixelSize. The grid is the one the model is
+% rendered on, so the two cannot end up out of register.
+pixelSize = [y(min(2,end))-y(1) x(min(2,end))-x(1)];
+col = (locs.xnm-x(1))./pixelSize(2)+1;
+row = (locs.ynm-y(1))./pixelSize(1)+1;
+lIn = col>=0.5&col<length(x)+0.5&row>=0.5&row<length(y)+0.5;
+imgData = accumarray([round(row(lIn)) round(col(lIn))], 1, [length(y) length(x)]);
+if blurFactor>0
+    imgData = imgaussfilt(imgData, blurFactor);  % sigma in pixels
+end
+imgData = imgData./max(max(imgData(:)), eps);
 end

@@ -36,7 +36,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             end
             
             %PC-Mac differences
-            if ispc
+            if ispc 
                  guiPar.fontsize=10;
                  guiPar.FieldHeight=26;
                  guiPar.tabsize1=[0    -1  546 342];
@@ -44,6 +44,14 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                  guiPar.Vsep=3;
                  guiPar.Xrim=3;
                  guiPar.Vrim=2;              
+            elseif ismac && year(version('-date'))>2024
+                 guiPar.fontsize=11;
+                 guiPar.FieldHeight=26;
+                 guiPar.tabsize1=[1    4  546 336];
+                 guiPar.tabsize2=[5    4  544 324];    
+                 guiPar.Vsep=3;
+                 guiPar.Xrim=3;
+                 guiPar.Vrim=2; 
             elseif ismac
                  guiPar.fontsize=15;
                  guiPar.FieldHeight=25;
@@ -289,27 +297,27 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                 setchildren=false;
             end
             if nargin<4
-                setmenulist=true;
+                setmenulist=false;
             end
             if isstruct(p)
                 fn=fieldnames(p);
                 phere=p;
                 h=obj.guihandles;
                 for k=1:length(fn)
-                    if isfield(h,fn{k})&&isprop(h.(fn{k}),'Style')&&~strcmp(h.(fn{k}).Style,'text')&&~any(ismember(obj.excludeFromSave,fn))                        
+                    if isfield(h,fn{k})&&isprop(h.(fn{k}),'Style')&&~strcmp(h.(fn{k}).Style,'text')&&~ismember(fn{k}, obj.excludeFromSave)                        
                         
                         hs=obj.value2handle(phere.(fn{k}),h.(fn{k}));                      
-%                         if (strcmp(h.(fn{k}).Style,'popupmenu'))
-%                             htmp.Value=hs.Value;
-%                             if (iscell(hs.String)&&hs.Value>length(hs.String)||(~iscell(hs.String)&&hs.Value>size(hs.String,1)))
-%                                 htmp.Value=1;
-%                             end
-%                             hs=htmp;                   
-%                         end
-                        if ~setmenulist && strcmp(h.(fn{k}).Style,'popupmenu')&&isprop(h.(fn{k}),'String')
-                            hs=myrmfield(hs,'String');
-                            hs.Value=min(hs.Value, length(h.(fn{k}).String));
+                        if (strcmp(h.(fn{k}).Style,'popupmenu'))
+                            % htmp.Value=hs.Value;
+                            if (iscell(hs.String)&&hs.Value>length(hs.String)||(~iscell(hs.String)&&hs.Value>size(hs.String,1)))
+                                hs.Value=1;
+                            end
+                            % hs=htmp;                   
                         end
+                        % if ~setmenulist && strcmp(h.(fn{k}).Style,'popupmenu')&&isprop(h.(fn{k}),'String')
+                        %     hs=myrmfield(hs,'String');
+                        %     hs.Value=min(hs.Value, length(h.(fn{k}).String));
+                        % end
                         h.(fn{k})=copyfields(h.(fn{k}),hs);
 %                     elseif strcmp(fn{k},'globaltable')
                     elseif isfield(h,fn{k}) && isa(h.(fn{k}),'matlab.ui.control.Table') %Table    
@@ -448,19 +456,24 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
             if ~isempty(obj.children)
                 ch=fieldnames(obj.children);
                 for k=1:length(ch)
-                    obj.children.(ch{k}).resize(factor);
+                    child = obj.children.(ch{k});
+                    % Check if child is a valid object with resize method
+                    if isvalid(child) && ismethod(child, 'resize')
+                        child.resize(factor);
+                    end
                 end
             end    
         end
         
         function  adjusttabgroup(obj,htg)
             %adjusts width of second tabgroup on mac
-            if ispc
+            if ispc 
+
             else
                 htg.Units='pixel';
                 htg.Position(1)=htg.Position(1)-8;
                 htg.Position(3)=htg.Position(3)+16;
-                htg.Position(2)=htg.Position(2)-12;
+                htg.Position(2)=htg.Position(2)-12-4;
                 htg.Position(4)=htg.Position(4)+16;
                 htg.Units='normalized';
             end
@@ -656,7 +669,7 @@ classdef GuiModuleInterface<interfaces.GuiParameterInterface
                         
                         if isfield(thisField,'uimenu')
                             if iscell(thisField.uimenu)
-                                makemenuindicator(hg,thisField.uimenu{1},thisField.uimenu{2})
+                                makemenuindicator(hg,thisField.uimenu{1},thisField.uimenu{2});
                             else
                                 makemenuindicator(hg,thisField.uimenu);
                             end

@@ -41,8 +41,9 @@ classdef export_coordinates<interfaces.DialogProcessor
                     for k=1:p.numberOfLayers
                         if p.sr_layerson(k)
                             locs=obj.locData.getloc(obj.exportfields,'layer',k,'position','roi');
-                            
-                            locs.layer=k*ones(size(locs.(obj.exportfields{1})));
+                            if sum(obj.getPar('sr_layerson'))>1
+                                locs.layer=k*ones(size(locs.(obj.exportfields{1})));
+                            end
                             ltab=struct2table(locs);
                             taball=vertcat(taball,ltab);
                         end
@@ -55,8 +56,12 @@ classdef export_coordinates<interfaces.DialogProcessor
             if isempty(fn)
                 of=['*.' par.format.selection];
             else
-            [path,file,ext]=fileparts(fn);
-            of=[path filesep file  '.' par.format.selection];
+                [path,file,ext]=fileparts(fn);
+                if ~contains(par.format.selection,"mat")
+                    of=[path filesep file  '.' par.format.selection];
+                else
+                    of=[path filesep file  '_export.' par.format.selection];
+                end
             end
             
             if isempty(defaultfilename)
@@ -66,11 +71,16 @@ classdef export_coordinates<interfaces.DialogProcessor
                     return
                 end
                 of=[path f];
-            else
+            elseif ischar(defaultfilename)
                 of=defaultfilename;
             end
             out=of;
-            writetable(taball,of);
+            if contains(par.format.selection,"mat")
+                localizations=taball;
+                save(of,'localizations');
+            else
+                writetable(taball,of);
+            end
             obj.status('save done')
         end
         function initGui(obj)
@@ -148,7 +158,7 @@ pard.grouped.object=struct('Style','checkbox','Visible','on','String','grouped',
 pard.grouped.position=[1,2.5];
 pard.grouped.Width=1.5;
 
-pard.format.object=struct('Style','popupmenu','Visible','on','String',{{'csv','txt','dat','xls'}});
+pard.format.object=struct('Style','popupmenu','Visible','on','String',{{'csv','txt','dat','xls','mat'}});
 pard.format.position=[1,4];
 pard.format.Width=1;
 

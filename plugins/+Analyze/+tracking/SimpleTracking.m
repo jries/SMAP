@@ -4,7 +4,7 @@ classdef SimpleTracking<interfaces.DialogProcessor
         function obj=SimpleTracking(varargin)        
             obj@interfaces.DialogProcessor(varargin{:}) ;
             obj.inputParameters={'sr_pixrec','numberOfLayers','sr_pos','sr_size','layers','sr_layerson'};
-            obj.showresults=true;
+            obj.showresults=false;
         end
         function out=run(obj,p)
             
@@ -16,19 +16,76 @@ classdef SimpleTracking<interfaces.DialogProcessor
     end
 end
 function out=tracki(obj,p)
-[locs,indin]=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','phot','frame','track_id'},'layer',1,'position','roi','grouping','ungrouped');
+ layers=find(obj.getPar('sr_layerson'));
+ locsf=obj.locData.getloc({'filenumber'},'layer',layers(1),'position','roi','grouping','ungrouped');
+          
+switch p.trackwhat.selection
+    case 'all'
+        [locs,indin]=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','phot','frame','track_id','channel','filenumber'},'position','roi','grouping','ungrouped');
+        out=tracksingle(obj,p,locs,indin);
+    case 'layers'
+        layers=find(obj.getPar('sr_layerson'));
+        for k=1:length(layers)
+            [locs,indin]=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','phot','frame','track_id','filenumber'},'layer',layers(k),'position','roi','grouping','ungrouped');
+            out=tracksingle(obj,p,locs,indin);
+            p.overwritetracks=false;
+        end
+    case 'channels'
+        channels=unique(obj.locData.loc.channel);
+        for k=1:length(channels)
+            [locs,indin]=obj.locData.getloc({'xnm','ynm','znm','locprecnm','locprecznm','phot','frame','track_id','channel','filenumber'},'position','roi','grouping','ungrouped');
+            chgood=locs.channel==channels(k) & locs.filenumber==mode(locsf.filenumber);
+            out=tracksingle(obj,p,locs,indin,chgood);
+            p.overwritetracks=false;
+        end
+end
+
+tracklength=zeros(size(obj.locData.loc.xnm),'like',obj.locData.loc.xnm);
+for k=1:max(obj.locData.loc.track_id)
+    indt=obj.locData.loc.track_id==k & obj.locData.loc.filenumber==mode(locs.filenumber);
+    tracklength(indt)=sum(indt);
+end
+obj.locData.setloc('track_length',tracklength);
+
+
+obj.locData.regroup;
+obj.locData.filter;
+obj.setPar('locFields',fieldnames(obj.locData.loc))
+
+
+end
+
+function out=tracksingle(obj,p,locs,indin,indfilter)
+out=[];
 % locs.xnm=-min(locs.xnm);
 % locs.ynm=-min(locs.ynm);
+if nargin>4 %filter transmitted
+    findin=find(indin);
+    indin(findin(~indfilter))=false;
+else
+    indfilter=true(1,length(locs.xnm));
+end
+
+if sum(indfilter)==0 % no localizations
+        obj.locData.setloc('track_id',zeros(size(obj.locData.loc.xnm)));
+    return
+end
+
+
 if ~isempty(locs.znm)
-    xyzt=horzcat(locs.xnm,locs.ynm,locs.znm,locs.frame);
+    xyzt=horzcat(locs.xnm(indfilter),locs.ynm(indfilter),locs.znm(indfilter),locs.frame(indfilter));
     p.dim=3;
 else
     p.dim=2;
-xyzt=double(horzcat(locs.xnm,locs.ynm,locs.frame));
+xyzt=double(horzcat(locs.xnm(indfilter),locs.ynm(indfilter),locs.frame(indfilter)));
 end
 p.quiet=false;
 tracks=mytrack(xyzt,p.maxdisp,p);
-llocs.x=locs.xnm;llocs.y=locs.ynm;llocs.frame=locs.frame;
+if isempty(tracks)
+    obj.locData.setloc('track_id',zeros(size(obj.locData.loc.xnm)));
+    return
+end
+llocs.x=locs.xnm(indfilter);llocs.y=locs.ynm(indfilter);llocs.frame=locs.frame(indfilter);
 
 ftracks=tracks(:,end-1);
 [~,trackssort]=sort(ftracks);
@@ -42,25 +99,19 @@ trackids=tracks(trackssort,end);
 id=trackids(iBa);
 if isempty(locs.track_id)||p.overwritetracks
     idall=zeros(size(indin),'single');
+    % tracklength=zeros(size(indin),'single');
     minID=0;
 else
     idall=obj.locData.loc.track_id; 
+    % tracklength=obj.locData.loc.track_length;
     minID=max(idall);
 end
 findin=find(indin);
 idall(findin(iAa))=id+minID;
 obj.locData.setloc('track_id',idall);
 
-tracklength=zeros(size(indin),'single');
-for k=1:max(idall)
-    indt=idall==k;
-    tracklength(indt)=sum(indt);
-end
-obj.locData.setloc('track_length',tracklength);
 
-out=[];
-obj.locData.regroup;
-obj.setPar('locFields',fieldnames(obj.locData.loc))
+
 % p.mode=1;
 % analyze_SPT(tracks,p);
 end
@@ -81,7 +132,7 @@ pard.maxdisp.Width=.5;
 pard.maxdisp.TooltipString=pard.maxdispt.TooltipString;
 
 pard.memt.object=struct('String','Maximum dark time (frames)','Style','text');
-pard.memt.position=[3,1];
+pard.memt.position=[2,3];
 pard.memt.Width=1.5;
 pard.memt.TooltipString=sprintf(['this is the number of time steps that a particle can be \n'...
             'lost and then recovered again.  If the particle reappears \n'...
@@ -89,22 +140,32 @@ pard.memt.TooltipString=sprintf(['this is the number of time steps that a partic
             'tracked as a new particle. The default setting is zero. \n'...
            'this is useful if particles occasionally drop out of the data.']);
 pard.mem.object=struct('String','2','Style','edit');
-pard.mem.position=[3,2.5];
+pard.mem.position=[2,4.5];
 pard.mem.Width=.5;
 pard.mem.TooltipString=pard.memt.TooltipString;
 
 
 pard.goodt.object=struct('String','Minimum length of tracks','Style','text');
-pard.goodt.position=[4,1];
+pard.goodt.position=[3,1];
 pard.goodt.Width=1.5;
 pard.goodt.TooltipString=sprintf(['set this keyword to eliminate all trajectories with \n'...
             ' fewer than param.good valid positions.  This is useful \n'...
            'due to blinking noise particles in the data stream.']);
 pard.good.object=struct('String','2','Style','edit');
-pard.good.position=[4,2.5];
+pard.good.position=[3,2.5];
 pard.good.Width=.5;
 pard.good.TooltipString=pard.goodt.TooltipString;
 
+pard.trackwhat.object=struct('String',{{'all','layers','channels'}},'Style','popupmenu');
+pard.trackwhat.position=[3,3];
+pard.trackwhat.Width=1.5;
+% pard.uselayers.object=struct('String','use layers','Style','checkbox','Value',0);
+% pard.uselayers.position=[4,1];
+% pard.uselayers.Width=1.5;
+
+% pard.usechannels.object=struct('String','use channels','Style','checkbox','Value',1);
+% pard.usechannels.position=[4,3];
+% pard.usechannels.Width=1.5;
 
 pard.overwritetracks.object=struct('String','overwrite tracks','Style','checkbox','Value',1);
 pard.overwritetracks.position=[5,1];

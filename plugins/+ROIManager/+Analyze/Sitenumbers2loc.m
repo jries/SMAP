@@ -64,12 +64,16 @@ classdef Sitenumbers2loc<interfaces.DialogProcessor&interfaces.SEProcessor
                     sitenumbers(newindall)=sites(k).ID;
                     siteorder(newindall)=k;
                     cellnumbers(newindall)=sites(k).info.cell;
+                    if isfield(sites(k).evaluation,"LocMoFitGUI_3")
                     locMoFitPar(newindall)=sites(k).evaluation.LocMoFitGUI_3.allParsArg.value(mp);
+                    end
                 else
                     sitenumbers(indh)=sites(k).ID;
                     siteorder(indh)=k;
                     cellnumbers(indh)=sites(k).info.cell;
+                    if isfield(sites(k).evaluation,"LocMoFitGUI_3")
                     locMoFitPar(indh)=sites(k).evaluation.LocMoFitGUI_3.allParsArg.value(mp);
+                    end
                 end
 
 

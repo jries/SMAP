@@ -42,7 +42,7 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            end
 
            %identify all localizations in track
-           usefields={'xnm','ynm','groupindex','tid','time','znm', 'efo', 'cfr', 'eco', 'ecc', 'efc','filenumber','thi'};
+           usefields={'xnm','ynm','groupindex','tid','time','znm', 'efo', 'cfr', 'eco', 'ecc', 'efc','filenumber','thi','vld'};
            locs=obj.getLocs(usefields,'layer',find(obj.getPar('sr_layerson')),'size',obj.getPar('se_siteroi')/2,'removeFilter',{'time'});
            indch=locs.thi==0;
            if isempty(locs.xnm)
@@ -77,6 +77,9 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
 
            %get id for second channel
            indexh=locs.(fid)==id;
+           if sum(indexh)==0
+               return
+           end
            tmin=min(locs.time(indexh));
            tmax=max(locs.time(indexh));
            indt=(locs.time>=tmin & locs.time<=tmax);
@@ -89,10 +92,13 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
                index2=obj.locsuse.(fid) == id2 & obj.locsuse.filenumber ==filenumberh;
            else
                obj.locsuse=obj.locData.loc;
-               index1=obj.locsuse.(fid)==id;
-               index2=obj.locsuse.(fid)==id2;
+               index1=obj.locsuse.(fid)==id & obj.locsuse.filenumber ==filenumberh;
+               index2=obj.locsuse.(fid)==id2 & obj.locsuse.filenumber ==filenumberh;
            end
-           
+           if p.onlyvld && isfield(obj.locsuse,'vld')
+                index1=index1 & obj.locsuse.vld==1;
+                index2=index2 & obj.locsuse.vld==1;
+           end           
             trackid1=mode(obj.locsuse.tid(index1));
             trackid2=mode(obj.locsuse.tid(index2));
 
@@ -105,9 +111,19 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            x1=obj.locsuse.xnm(index1);
            y1=obj.locsuse.ynm(index1);
            time1=obj.locsuse.time(index1);
-           x2=obj.locsuse.xnm(index2)+p.offx;
-           y2=obj.locsuse.ynm(index2)+p.offy;
+
+           %offset
+           if existnotempty(obj.site,'evaluation',obj.modulename,'offset') %isfield(obj.site.evaluation.(obj.modulename),'offset') && ~isempty(obj.site.evaluation.(obj.modulename).offset)
+               offset=obj.site.evaluation.(obj.modulename).offset;
+               obj.setGuiParameters(struct('offx',offset(1),'offy',offset(2)));
+           else
+               offset=[p.offx, p.offy];
+           end
+
+           x2=obj.locsuse.xnm(index2)+offset(1);%+p.offx;
+           y2=obj.locsuse.ynm(index2)+offset(2);%+p.offy;
            time2=obj.locsuse.time(index2);
+           out.offset=offset;
            % 
            % if isfield(obj.locData.loc,'znm')
            %     z=obj.locsuse.znm(index1);
@@ -116,35 +132,83 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
            % end
 
            [xr,yr,angle]=rotateCenterCoordinates(x1,y1,time1,obj.range);
+           out.angle=angle;
+           out.rotcenter=[mean(x1),mean(y1)];
 
-           [xr2,yr2]=rotcoord(x2-mean(x1),y2-mean(y1),angle);
-           [xr1,yr1]=rotcoord(x1-mean(x1),y1-mean(y1),angle);
+           % [xr2,yr2]=rotcoord(x2-mean(x1),y2-mean(y1),angle);
+           % [xr1,yr1]=rotcoord(x1-mean(x1),y1-mean(y1),angle);
+           [xr2,yr2]=rotcoord(x2-out.rotcenter(1),y2-out.rotcenter(2),angle);
+           [xr1,yr1]=rotcoord(x1-out.rotcenter(1),y1-out.rotcenter(2),angle);
 
            axxyr=obj.setoutput('xyr');
            plot(axxyr,xr1,yr1,[p.col1 '.-'], xr2,yr2,[p.col2 '.-']);
            axis(axxyr,'equal')
            title(axxyr,['tid: ' num2str(trackid1) ', ' num2str(trackid2)])
+           xlabel(axxyr,'xrot (nm)')
+           ylabel(axxyr,'yrot (nm)')
 
            axxtr=obj.setoutput('xtr');
            plot(axxtr,time1,xr1,[p.col1 '.-'], time2,xr2,[p.col2 '.-']);
            % axis(axxt,'equal')
+           xlabel(axxtr,'time ')
+           ylabel(axxtr,'xrot (nm)')
 
            axytr=obj.setoutput('ytr');
            plot(axytr,time1,yr1,[p.col1 '.-'], time2,yr2,[p.col2 '.-']);
+           xlabel(axytr,'time ')
+           ylabel(axytr,'yrot (nm)')
            % axis(axyt,'equal')
 
            axxy=obj.setoutput('xy');
            plot(axxy,x1,y1,[p.col1 '.-'], x2,y2,[p.col2 '.-']);
            axis(axxy,'equal')
            obj.axxy=axxy;
+           xlabel(axxy,'x (nm)')
+           ylabel(axxy,'y (nm)')
 
            axxt=obj.setoutput('xt');
            plot(axxt,time1,x1,[p.col1 '.-'], time2,x2,[p.col2 '.-']);
            % axis(axxt,'equal')
-
+           xlabel(axxt,'time ')
+           ylabel(axxt,'y (nm)')
            axyt=obj.setoutput('yt');
            plot(axyt,time1,y1,[p.col1 '.-'], time2,y2,[p.col2 '.-']);
+           xlabel(axyt,'time ')
+           ylabel(axyt,'y (nm)')
          
+
+           obj.coord1.xr=xr1;obj.coord1.yr=yr1;obj.coord1.time=time1;obj.coord1.timeplot=time1-min(time1);
+           obj.coord1.x=x1;obj.coord1.y=y1;
+           obj.coord2.xr=xr2;obj.coord2.yr=yr2;obj.coord2.time=time2;obj.coord2.timeplot=time2-min(time1);
+           obj.coord2.x=x2;obj.coord2.y=y2;
+            
+           out.id2=id2;
+           out.id1=id;
+
+           axxtrs=obj.setoutput('xr_step');
+           hold(axxtrs,'off')
+
+         
+
+           try
+               s1=obj.site.evaluation.StepsMINFLUX.steps;
+               s2=obj.site.evaluation.StepsMINFLUX_2.steps;
+               plot(axxtrs,obj.coord1.timeplot,xr1,[p.col1 '-'], obj.coord2.timeplot,xr2,[p.col2 '-']);
+               hold(axxtrs,'on')
+               stairs(axxtrs,[s1.steptime ;max(obj.coord1.timeplot)],[s1.stepvalue ;s1.stepvalue(end)],p.col1);
+               dt=obj.coord1.time(1)-obj.coord2.time(1);
+               stairs(axxtrs,[s2.steptime ;max(obj.coord2.timeplot)]-dt,[s2.stepvalue ;s2.stepvalue(end)],p.col2);
+               xlabel(axxtrs,'time ')
+               ylabel(axxtrs,'xrot (nm)')
+
+           catch err
+               disp('no steps evaluated yet')
+           end
+
+           
+
+
+
            % axis(axyt,'equal')
             % if p.filtertrackmode
 %                 zf=z;
@@ -177,10 +241,6 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
             
 %            xr=x;yr=y;  %XXXX to not rotate
 
-           obj.coord1.xr=xr1;obj.coord1.yr=yr1;obj.coord1.time=time1;obj.coord1.timeplot=time1-min(time1);
-           obj.coord1.x=x1;obj.coord1.y=y1;
-           obj.coord2.xr=xr2;obj.coord2.yr=yr2;obj.coord2.time=time2;obj.coord2.timeplot=time2-min(time1);
-           obj.coord2.x=x2;obj.coord2.y=y2;
 
            % obj.coord1.z=z;  obj.coord1.zf=zf;
            % 
@@ -243,7 +303,12 @@ classdef StepsMINFLUX_dc<interfaces.SEEvaluationProcessor
         end
         function pard=guidef(obj)
             pard=guidef(obj);
-        end     
+        end    
+        function offsetupdate(obj,a,b)
+            offset=[obj.getSingleGuiParameter('offx'), obj.getSingleGuiParameter('offy')];
+            obj.site.evaluation.(obj.modulename).offset=offset;
+
+        end
     end
 
 end
@@ -1028,6 +1093,11 @@ hold(ax,'on')
 plot(ax,[xm-5 xm+10-5], [ym ym],'k','LineWidth',3)
 ax.XTick=[];
 ax.YTick=[];
+% hFig=gcf;
+% hFig.Units = 'pixels';
+% ax.Units = 'pixels';
+% pos = ax.Position;  % [left bottom width height]
+
 for k=1:length(ts)
     indh1=time1<=ts(k); xh1=x1(indh1); yh1=y1(indh1);th1=time1(indh1);
     indh2=time2<=ts(k); xh2=x2(indh2); yh2=y2(indh2);th2=time2(indh2);
@@ -1058,9 +1128,10 @@ for k=1:length(ts)
     %     hc=plot(ax,cx,cy,'m+','MarkerSize',15,'LineWidth',6);
     % end
    
-    
+    xlim(ax,[xm-15 xx+15])
+    ylim(ax,[ym-15 yx+15])
     drawnow
-    Fr(k)=getframe(ax);
+    Fr(k)=getframe(gcf);
     delete(hd1);
     delete(hl1);
     delete(ht)
@@ -1084,7 +1155,7 @@ end
 
 [file,pfad]=uiputfile([pfad filesep '*.mp4']);
 if file
-    mysavemovie(Fr,[pfad  file],'FrameRate',30,'profile','MPEG-4')
+mysavemovie(Fr,[pfad  file],'FrameRate',30,'profile','MPEG-4','Quality',95)
 end 
 end
 
@@ -1191,9 +1262,9 @@ pard.simplemovie.position=[7,4];
 pard.offt.object=struct('String','shift xy (nm)','Style','text');
 pard.offt.position=[8,1];
 pard.offt.Width=2;
-pard.offx.object=struct('String','0','Style','edit');
+pard.offx.object=struct('String','0','Style','edit','Callback',@obj.offsetupdate);
 pard.offx.position=[8,3];
-pard.offy.object=struct('String','0','Style','edit');
+pard.offy.object=struct('String','0','Style','edit','Callback',@obj.offsetupdate);
 pard.offy.position=[8,4];
 
 pard.colt.object=struct('String','Color (rgbycmk...) (ch1, ch2)','Style','text');
@@ -1204,7 +1275,9 @@ pard.col1.position=[9,3];
 pard.col2.object=struct('String','r','Style','edit');
 pard.col2.position=[9,4];
 
-
+pard.onlyvld.object=struct('String','only vld','Style','checkbox','Value',1);
+pard.onlyvld.position=[4,3];
+pard.onlyvld.Width=2;
 
 % p(1).value=1; p(1).on={}; p(1).off={'filterwindowt','filterwindow','filtermode'};
 % p(2).value=2; p(2).on=p(1).off; p(2).off={};

@@ -140,6 +140,17 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                  obj.locDataL.filter({zfield,zfielderr});
             end
         end
+        function getminmax_callback(obj,a,b)
+            p=obj.getAllParameters;
+            if ~contains(p.animatemode.selection,"Time")
+                  obj.setGuiParameters(struct('anglerange',"0 360"));
+                return
+            end
+            [loc]=obj.locData.getloc({'frame'},'position','roi','layer',find(obj.getPar('sr_layerson')));
+            range=quantile(loc.frame,[0.05 0.95]);
+            rangeext=(range(2)-range(1))*0.05*[-1 1];
+            obj.setGuiParameters(struct('anglerange',num2str(round(range+rangeext))));
+        end
 
         function pard=guidef(obj)
             pard=guidef(obj);
@@ -195,13 +206,13 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             
            %1.up, 2.down, 3.left, 4.right, 5.back, 6.front, 0.reset
             switch data.Character
-                case {'w','W','8',30}
+                case {'w','W','8',30,'↑'}
                     dir=1;
-                case {'s','S','2',31}
+                case {'s','S','2',31,'↓'}
                     dir=2;
-                case {'a','A','4',28}
+                case {'a','A','4',28,'←'}
                     dir=3;
-                case {'d','D','6',29}
+                case {'d','D','6',29,'→'}
                     dir=4;
                 case {',','q','Q','7'}
                     dir=5;
@@ -566,18 +577,22 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             end
             function [loc,indu,sortind]=getlocrot(layer,pl)
 
-                [loc,indu]=locCopy.getloc({'xnmline','ynmline','znm','locprecnm','locprecznm',renderfield{:},'numberInGroup','phot'},...
+                [loc,indu]=locCopy.getloc({'xnmline','ynmline','znm','locprecnm','locprecznm',renderfield{:},'numberInGroup','phot','frame'},...
                     'position','roi','layer',layer,'shiftxy',[pl.shiftxy_min,pl.shiftxy_max,pl.shiftxy_z]);   
                 loc.znm=loc.znm+pl.shiftxy_z;
-                if strcmp(p.animatemode.selection,'Translate')&&strcmp(p.raxis.selection,'vertical')
-                    thetaoffset=90;%pi/2;
-%                     induf=find(indu);
-                    indz=(loc.znm>p.zpos-p.zdist/2 & loc.znm<=p.zpos+p.zdist/2);
-                    indu(indu)=indz;
-                    loc=copystructReduce(loc,indz);
-       
-                else
-                    thetaoffset=0;
+                thetaoffset=0;
+                if p.rotateb
+                    if strcmp(p.animatemode.selection,'Translate')&&strcmp(p.raxis.selection,'vertical')
+                        thetaoffset=90;%pi/2;
+    %                     induf=find(indu);
+                        indz=(loc.znm>p.zpos-p.zdist/2 & loc.znm<=p.zpos+p.zdist/2);
+                        indu(indu)=indz;
+                        loc=copystructReduce(loc,indz);
+           
+                    elseif contains(p.animatemode.selection,'Time')
+                        indtime=(loc.frame>p.zpos & loc.frame<=p.zpos+p.zdist);
+                        loc=copystructReduce(loc,indtime);
+                    end
                 end
                 [yrot,depth]=rotcoorddeg(loc.znm-zmean,loc.ynmline,p.theta+thetaoffset);
                 [sortdepth,sortind]=sort(-depth);
@@ -766,8 +781,21 @@ classdef Viewer3DV01<interfaces.DialogProcessor
 %                                     theta=theta-obj.getSingleGuiParameter('dangle')*pi/180;
 %                                     theta=mod(theta,2*pi);                       
 %                                     obj.setGuiParameters(struct('theta',theta));
-%                                     obj.redraw;   
+%                                     obj.redraw;                      
+                       end
+                    case 'Time'
+                        zpos=obj.getSingleGuiParameter('zpos');
+                        dz=obj.getSingleGuiParameter('dangle');
+                        zrange=obj.getSingleGuiParameter('anglerange');
+                        znew=zpos+dz;
+                        if znew>zrange(2)
+                            znew=zrange(1);
                         end
+                        if znew<zrange(1)
+                            znew=zrange(2);
+                        end
+                        obj.setGuiParameters(struct('zpos',znew));
+                        obj.redraw;
                 end
                 
 %                 pause(0.01)
@@ -775,6 +803,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
             if ~isempty(savemovie)
 
                 imout=uint8(outim*(2^8-1));
+
                 switch p.savemoviemode.selection
                     case 'tif'
                         options.color=true;
@@ -787,6 +816,7 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                         else
                             fr=frameratemp4;
                         end
+                        
                         mysavemovie(imout,savemovie.file,'FrameRate',fr, 'Quality', 100)
                 end           
             end
@@ -844,7 +874,10 @@ classdef Viewer3DV01<interfaces.DialogProcessor
                                 pos(1,:)=pos(1,:)+step*roivec/1000;
                                 pos(2,:)=pos(2,:)+step*roivec/1000;
                                 roih.setPosition(pos); 
-                        end
+                       end
+                case 'Time'
+                    znew=p.anglerange(1);
+                    obj.setGuiParameters(struct('zpos',znew)); 
             end           
             button=obj.guihandles.rotateb;
             button.Value=1;
@@ -1077,7 +1110,12 @@ pard.rotateb.position=[1,3];
 pard.rotateb.TooltipString='Start continuous animation';
 pard.rotateb.Optional=false;
 
-pard.animatemode.object=struct('String',{{'Rotate','Translate'}},'Style','popupmenu');
+
+pan(1).value=2; pan(1).on={'raxis'}; pan(1).off={};
+pan(2).value=[1,3]; pan(2).on={}; pan(2).off=pan(1).on;
+
+
+pard.animatemode.object=struct('String',{{'Rotate','Translate','Time'}},'Style','popupmenu','Callback',{{@obj.switchvisible,pan}});
 pard.animatemode.position=[1,4];
 pard.animatemode.TooltipString='Select rotation or translation';
 pard.animatemode.Optional=false;
@@ -1111,7 +1149,7 @@ pard.zpos.Width=0.5;
 pard.zpos.TooltipString=pard.danglet.TooltipString;
 pard.zpos.Optional=true;
 
-pard.zdistt.object=struct('String','dz','Style','text');
+pard.zdistt.object=struct('String','dz/dframe','Style','text');
 pard.zdistt.position=[5,4];
 pard.zdistt.Width=0.5;
 pard.zdistt.TooltipString='slice thickness (nm) for z-movie';
@@ -1135,7 +1173,7 @@ pard.savemoviemode.TooltipString='Save rotating movie. Uses min - max angle';
 pard.savemoviemode.Optional=false;
 pard.savemoviemode.Width = 0.6;
 
-pard.tx.object=struct('String','min max','Style','text');
+pard.tx.object=struct('String','min max','Style','pushbutton','Callback',@obj.getminmax_callback);
 pard.tx.position=[4,3];
 pard.tx.TooltipString='start and stop angle/position. Uses step from above';
 pard.tx.Optional=true;

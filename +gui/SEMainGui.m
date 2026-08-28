@@ -43,16 +43,6 @@ classdef SEMainGui< gui.GuiPluginWindow
             se.processors.annotation=annotation;
             obj.children.annotation=annotation;
             
-            %sort panel
-%             guiparsort.FieldHeight=24;
-%              h.sortpanel=uipanel(h.tab_sort,'Unit','pixels','Position',obj.guiPar.tabsize2); 
-%             sort=gui.SESort(h.sortpanel,obj.P);
-%             sort.attachSE(se);
-%             sort.attachLocData(obj.locData);
-%             sort.setGuiAppearence(guiparsort);
-%             sort.makeGui;
-%              se.processors.sort=sort;
-%             obj.children.sort=sort;
             
             %evaluation panel
             h.evalpanel=uipanel(h.tab_evaluate,'Unit','pixels','Position',obj.guiPar.tabsize2); 
@@ -65,8 +55,6 @@ classdef SEMainGui< gui.GuiPluginWindow
             
             obj.children.eval=eval;
             
-            %Explorer GUI
-%             obj.make_siteexplorer;
             
             se.processors.SEMainGui=obj;
             obj.tabgroup=h.sitetabs;

@@ -1,4 +1,3 @@
-
 %  DESCRIPTION:   SMAP: Superresolution Microscopy Analysis Platform
 %  COPYRIGHT:     Jonas Ries, 2020
 %  LICENSE:       GPLv3

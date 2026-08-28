@@ -14,7 +14,14 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
  
         function makeGui(obj)            
             %make channel tabs
+
+            f=getParentFigure(obj.handle);
+            c=uicontextmenu(f);
+            m3 = uimenu(c,'Label','add layer','Callback',{@menu_callback,obj});
+            m1 = uimenu(c,'Label','remove layer','Callback',{@menu_callback,obj});
+            m4 = uimenu(c,'Label','rename layer','Callback',{@menu_callback,obj});
             h.layertab=uitabgroup(obj.handle,'SelectionChangedFcn',{@selectLayer_callback,obj});
+            h.layertab.UIContextMenu=c;
             obj.adjusttabgroup(h.layertab);
             h.tab_layer1=uitab(h.layertab,'Title',['Layer' num2str(1)],'Tag','Layer1');
             
@@ -42,21 +49,19 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
             addlistener(obj.P,'sr_render',@obj.render_notify);
             addlistener(obj.P,'sr_display',@obj.display_notify);  
             
-            f=getParentFigure(obj.handle);
-            c=uicontextmenu(f);
-            h.layertab.UIContextMenu=c;
             
-            m3 = uimenu(c,'Label','add layer','Callback',{@menu_callback,obj});
-            m1 = uimenu(c,'Label','remove layer','Callback',{@menu_callback,obj});
-            m4 = uimenu(c,'Label','rename layer','Callback',{@menu_callback,obj});
-            if ispc
+            if ispc 
                 posmen='tlo';
                 shiftmen=[10 0];
+            elseif year(version('-date'))>2024
+                posmen='tri';
+                shiftmen=[-10 -10];
             else
                 posmen='tli';
                 shiftmen=[10 -10];
             end
-            makemenuindicator(h.layertab,posmen,shiftmen);
+            hm=makemenuindicator(h.layertab,posmen,shiftmen);
+            hm.UIContextMenu=c;
         end
         
         function setGuiParameters(obj,p,setchildren,setmenulist)
@@ -109,7 +114,8 @@ classdef GuiRender< interfaces.GuiModuleInterface & interfaces.LocDataInterface
              layer.name=tag;
 %              obj.locData.layer(k).filter=[];
 %              obj.locData.layer(k).groupfilter=[];
-             obj.locData.filter([],k);           
+             obj.locData.filter([],k);    
+              handle.UIContextMenu=handle.Parent.UIContextMenu;
         end
         
         function display_notify(obj,lp,eventdata)

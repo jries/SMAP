@@ -28,7 +28,7 @@ classdef TifLoader<interfaces.WorkflowModule
         end
         function initGui(obj)
             if isempty(obj.loaders)
-             obj.loaders={'auto',@imageloaderAll;'MMStack',@imageloaderMM;'MMSingle',@imageloaderMMsingle;'OME',@imageloaderOME;'simple Tif',@imageloaderTifSimple};
+             obj.loaders={'auto',@imageloaderAll;'MMStack',@imageloaderMM;'MMSingle',@imageloaderMMsingle;'NDTiff',@imageloaderNDTiff;'OME',@imageloaderOME;'simple Tif',@imageloaderTifSimple};
             end
             initGui@interfaces.WorkflowModule(obj);
             obj.inputParameters={'loc_subtractbg','loc_blocksize_frames'};            

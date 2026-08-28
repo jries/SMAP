@@ -127,7 +127,7 @@ pard.txt.object=struct('Style','text','String','Filter ([min max]):');
 pard.txt.position=[1,1];
 pard.txt.Width=1.3;
 pard.txt.Optional=true;
-pard.check_locprec.object=struct('Style','checkbox','String','xy-locprec (nm)','Value',1);
+pard.check_locprec.object=struct('Style','checkbox','String','xy-locprec (nm)','Value',0);
 pard.check_locprec.position=[2,1];
 pard.check_locprec.Width=1.3;
 pard.check_locprec.TooltipString=sprintf('Filter localization precision before saving.');
@@ -163,7 +163,7 @@ pard.val_phot.TooltipString=sprintf('minimum number of photons or vector with mi
 pard.val_phot.Optional=true;
 
 
-pard.check_LL.object=struct('Style','checkbox','String','rel. Log Likelihood','Value',1);
+pard.check_LL.object=struct('Style','checkbox','String','rel. Log Likelihood','Value',0);
 pard.check_LL.position=[5,1];
 pard.check_LL.Width=1.3;
 pard.check_LL.TooltipString=sprintf('Filter log-lieklihood before saving.');
@@ -175,13 +175,13 @@ pard.val_LL.Width=.7;
 pard.val_LL.TooltipString=sprintf('Cutoff relative to maximum of log-likelihood distribution (typically 1, not much smaller).');
 pard.val_LL.Optional=true;
 
-pard.check_converged.object=struct('Style','checkbox','String','iter< max_iter','Value',1);
+pard.check_converged.object=struct('Style','checkbox','String','iter< max_iter','Value',0);
 pard.check_converged.position=[6,1];
 pard.check_converged.Width=1.3;
 pard.check_converged.TooltipString=sprintf('Filter fits that did not converge.');
 pard.check_converged.Optional=true;
 
-pard.check_convergedxy.object=struct('Style','checkbox','String','|xfit-xpeakfind|<','Value',1);
+pard.check_convergedxy.object=struct('Style','checkbox','String','|xfit-xpeakfind|<','Value',0);
 pard.check_convergedxy.position=[7,1];
 pard.check_convergedxy.Width=1.3;
 pard.check_convergedxy.TooltipString=sprintf('Filter fits that did not converge to any point close to center of ROI (in pixels)');

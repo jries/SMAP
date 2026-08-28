@@ -9,6 +9,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
         SE %siteexplorer object, linked here why?
         history={};
         warning=false;
+        pluginresults;
 %         iscopy=true;
     end
     
@@ -430,7 +431,11 @@ classdef LocalizationData<interfaces.GuiParameterInterface
             
             if nargin>6 && ~isempty(filenumber)%filenumber
                     saveloc.file=saveloc.file(filenumber);
+                    try
                     saveloc.history=saveloc.history(filenumber);
+                    catch err
+                        err
+                    end
                     saveloc.loc.filenumber=ones(size(obj.loc.filenumber)); % yu-le mod
                     if isempty(goodind)
                         goodind=obj.loc.filenumber==filenumber;
@@ -717,6 +722,7 @@ classdef LocalizationData<interfaces.GuiParameterInterface
             locout.SE=obj.SE.copy;
              locout.SE.locData=locout;
              locout.history=obj.history;
+            locout.pluginresults=obj.pluginresults; 
              
             if nargin<2
                 locout.loc=obj.loc;

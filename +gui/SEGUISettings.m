@@ -137,7 +137,7 @@ pard.se_rotate.position=[8,1];
 pard.se_drawboxes.object=struct('Style','checkbox','String','draw boxes','Value',1);
 pard.se_drawboxes.position=[8,2];
 
-pard.se_drawsideview.object=struct('Style','checkbox','String','draw sideview','Value',1);
+pard.se_drawsideview.object=struct('Style','checkbox','String','draw sideview','Value',0);
 pard.se_drawsideview.position=[8,3];
 
 

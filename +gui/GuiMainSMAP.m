@@ -10,7 +10,6 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             obj.attachPar(interfaces.ParameterData);
             obj.P.clear;
             obj.locData.attachPar(obj.P)
-%             obj.locData.iscopy=false;
 
         end
         function makeGui(obj)
@@ -18,7 +17,11 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             if ispc
                 set(0,'DefaultUIControlFontSize',9);
             elseif ismac
-                set(0,'DefaultUIControlFontSize',12);
+                if year(version('-date'))>2024
+                    set(0,'DefaultUIControlFontSize',9);
+                else
+                    set(0,'DefaultUIControlFontSize',12);
+                end
             elseif isunix
                 set(0,'DefaultUIControlFontSize',9);               
             end
@@ -115,28 +118,9 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             end
         
             %update documentation from external files
-            
-            %from OC
-%              urlzip='https://oc.embl.de/index.php/s/g0O4jQ4JEtmEris/download';
-%              outdirdoc=[settingsdir filesep 'temp' filesep 'Documentation.tar'];
-%              savewebfile(outdirdoc,urlzip);
-%              if isdeployed
-%                  outdir=[settingsdir filesep 'temp'];
-%              else
-%                  outdir=pwd;
-%              end
-%              unzip(outdirdoc,outdir);
-%              delete(outdirdoc);
-        %from tier1
             worked=false;
-%            try 
                 mainaddress='https://www.embl.de/download/ries/Documentation/';
                 docfiles={'SMAP_manual_NPC.pdf','Example_SMAP_Step_by_step.pdf','ProgrammingGuide.pdf','SMAP_UserGuide.pdf','Getting_Started.pdf'};
-%                 if isdeployed
-%                      outdir=[settingsdir filesep 'temp' filesep 'Documentation' filesep];
-%                 else
-%                      outdir=[pwd filesep 'Documentation' filesep 'pdf' filesep];
-%                 end
                  outdir= [fileparts(pluginhelp) filesep 'pdf' filesep];
                  if ~exist(outdir,'dir')
                       mkdir(outdir)
@@ -144,10 +128,6 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
                 for k=1:length(docfiles)
                     worked=worked|savewebfile([outdir docfiles{k}] ,[mainaddress docfiles{k}]);
                 end
-%             catch err
-%                 err
-%                 s
-%             end
             if ~worked
                 disp(['could not download and save documentation pdfs. Help might not work. Make sure you have write access to settings. Move the settings directory to ' possibledirs]);
                 warndlg(['could not download and save documentation pdfs. Help might not work.  Make sure you have write access to settings. Move the settings directory to ' possibledirs])
@@ -156,8 +136,7 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             %update plugin file if new plugins are saved
             makeplugincallfile('plugins');
             makeGeometricModelList; %XXXX did not owrk removed on the
-            % 5.7.24
-            %add java path to bioformats
+        
                 bfpath=obj.getGlobalSetting('bioformatspath');
                 bffile=[bfpath filesep 'bioformats_package.jar'];
                 
@@ -215,7 +194,10 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
             h.maintab = uitabgroup(handle,'Units','pixels','Position',tabpos);
             if ispc
                 posmen='tri';
-                shiftmen=[-10 -5];            
+                shiftmen=[-10 -5];
+            elseif ismac && year(version('-date'))>2024
+                posmen='tri';
+                shiftmen=[-10 -10];
             elseif ismac
                 posmen='tli';
                 shiftmen=[10 -10];
@@ -231,11 +213,13 @@ classdef GuiMainSMAP<interfaces.GuiModuleInterface & interfaces.LocDataInterface
       
 
             h.tab_file = uitab(h.maintab,'Title','File');
-            h.tab_loc = uitab(h.maintab,'Title','Localize');
-            h.tab_render = uitab(h.maintab,'Title','Render');
-            h.tab_process = uitab(h.maintab,'Title','Process','Tag','tab_process');
-            h.tab_analyze = uitab(h.maintab,'Title','Analyze','Tag','tab_analyze');
-            h.tab_siteexplorer=uitab(h.maintab,'Title','ROIs','Tag','tab_siteexplorer');
+            h.tab_file.UIContextMenu=ch; 
+
+            h.tab_loc = uitab(h.maintab,'Title','Localize');h.tab_loc.UIContextMenu=ch; 
+            h.tab_render = uitab(h.maintab,'Title','Render');h.tab_render.UIContextMenu=ch; 
+            h.tab_process = uitab(h.maintab,'Title','Process','Tag','tab_process');h.tab_process.UIContextMenu=ch; 
+            h.tab_analyze = uitab(h.maintab,'Title','Analyze','Tag','tab_analyze');h.tab_analyze.UIContextMenu=ch; 
+            h.tab_siteexplorer=uitab(h.maintab,'Title','ROIs','Tag','tab_siteexplorer');h.tab_siteexplorer.UIContextMenu=ch; 
             set(h.maintab,'SelectedTab',h.tab_file)
             
             h.stopnow=uicontrol('Style','togglebutton','Units','normalized',...
@@ -441,8 +425,12 @@ end
 
 function error_reset(a,b,obj)
 if a.Value==0
-warndlg(obj.getPar('errorindicator'));
-resetstyle(obj)
+    errmsg=obj.getPar('errorindicator');
+    % Only show dialog if error message is not empty
+    if ~isempty(errmsg)
+        warndlg(errmsg);
+    end
+    resetstyle(obj)
 end
 end
 

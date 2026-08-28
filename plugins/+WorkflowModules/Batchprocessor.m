@@ -174,9 +174,11 @@ classdef Batchprocessor<interfaces.GuiModuleInterface&interfaces.LocDataInterfac
             for k=1:length(filelist)
                 obj.locData.clear;
                 filen=filelist{k};
-                status=['fitting ' num2str(k) '/' num2str(length(filelist)) '. ' filen];
+                % status=['fitting ' num2str(k) '/' num2str(length(filelist)) '. ' filen];
+                [~, parent_dir_name] = fileparts(fileparts(filen));
+                status=['fitting ' num2str(k) '/' num2str(length(filelist)) '. ' parent_dir_name];
                  obj.guihandles.status.String=status;drawnow;
-                 disp(status);
+                 disp(status);                
                 obj.P.par=parsave;
                 obj.setPar('synchronizeguistate',false)
                 if contains(filen,'.tif') || contains(filen,'.dcimg')
@@ -285,6 +287,7 @@ img='';
 searchstr=p.adddir_mask;
 mintiffs=p.adddir_minimages;
 files=dir([path filesep searchstr]);
+
 matfiles=dir([path filesep '*_sml.mat']);
 matfilesc={matfiles(:).name};
 for k=1:length(files)
@@ -312,6 +315,7 @@ for k=1:length(files)
 %     p.hstatus.String=['directory ' num2str(k) ' of ' num2str(length(files))];
 %     drawnow;
 end
+
 end
 function img=findimageindir(path,p)
 img={};
@@ -378,7 +382,7 @@ pard.adddironline_button.position=[5,4];
 pard.adddironline_button.Width=1;
 
 
-pard.adddir_mask.object=struct('Style','edit','String','*_Loc_*');
+pard.adddir_mask.object=struct('Style','edit','String','');
 pard.adddir_mask.position=[6,4];
 pard.adddir_mask.Width=1;
 
@@ -403,7 +407,7 @@ pard.process_button.object=struct('Style','pushbutton','String','Batch process',
 pard.process_button.position=[11,4];
 pard.process_button.Height=2;
 
-pard.useforall.object=struct('Style','checkbox','String','use for all','Value',0);
+pard.useforall.object=struct('Style','checkbox','String','use for all','Value',1);
 pard.useforall.position=[2,4];
 pard.useforall.Height=1;
 

@@ -25,13 +25,15 @@ elseif isa(handle,'matlab.ui.container.TabGroup')
         if strcmpi(name,children(k).Title)
             found=1;
             tab=children(k);
-            if ~strcmp(option,'keep')
+            if ~strcmp(option,'keep') %|| ~isa(children(k))
             delete(children(k).Children(:));
             
             ax=axes('Parent',children(k));
             else
-                ax=tab.Children;
-               
+                iax=find(arrayfun(@(o) isa(o, 'matlab.graphics.axis.Axes'), tab.Children));
+                ax=tab.Children(iax(1));
+                ileg=arrayfun(@(o) isa(o, 'matlab.graphics.illustration.Legend'), tab.Children);
+                delete(tab.Children(ileg));
             end
             break
         end
@@ -54,6 +56,6 @@ elseif isa(handle,'matlab.ui.Figure')
 end
 tabgroup.SelectedTab=tab;
 state=tab.Parent.Parent.Visible;
- axes(ax);
+ % axes(ax); %%%%XXXXX taken out
  fig=tab.Parent.Parent;
  fig.Visible=state;

@@ -35,9 +35,9 @@ classdef SEExploreGui<interfaces.SEProcessor
                  'String',' empty','Units','normalized','FontSize',fontsize-2,'max',100,...
                  'Callback',{@celllist_callback,obj});
               h.celllist.Tooltip=sprintf(mytextwrap('List of cells. Select entry to render it.',60,10));
-             h.redrawsite=uicontrol(obj.handle,'Position',[30,925,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawsite_callback,obj});
+             h.redrawsite=uicontrol(obj.handle,'Position',[30,925,100,40],'Style','pushbutton','String','Site: redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawsite_callback,obj});
               h.redrawsite.Tooltip=sprintf(mytextwrap('Render the ROI image again, also runs evaluation plugins again.',60,10));
-             h.redrawsiteall=uicontrol(obj.handle,'Position',[110,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawsiteall_callback,obj});
+             h.redrawsiteall=uicontrol(obj.handle,'Position',[125,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawsiteall_callback,obj});
               h.redrawsiteall.Tooltip=sprintf(mytextwrap('Renders and evaluates all ROIs (sites).',60,10));
              h.addsite=uicontrol(obj.handle,'Position',[290,925,60,40],'Style','pushbutton','String','Add','Units','normalized','FontSize',fontsize,'Callback',{@addsite,obj});
               h.addsite.Tooltip=sprintf(mytextwrap('Add current ROI to the site list',60,10));
@@ -47,15 +47,15 @@ classdef SEExploreGui<interfaces.SEProcessor
               h.toggleuse.Tooltip=sprintf(mytextwrap('Toggle the use property',60,10));
              h.updatelist=uicontrol(obj.handle,'Position',[480,540,50,30],'Style','pushbutton','String','upd','Units','normalized','FontSize',fontsize,'Callback',{@updatelist_callback,obj});
               h.updatelist.Tooltip=sprintf(mytextwrap('Update the ROI list. This might be necessary after using some evaluation/Analysis that change the ROIs.',60,10));
-             h.redrawcell=uicontrol(obj.handle,'Position',[430,925,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawcell_callback,obj});
+             h.redrawcell=uicontrol(obj.handle,'Position',[430,925,100,40],'Style','pushbutton','String','Cell: redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawcell_callback,obj});
               h.redrawcell.Tooltip=sprintf(mytextwrap('Render the cell image again.',60,10));
-             h.redrawcellall=uicontrol(obj.handle,'Position',[510,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawcellall_callback,obj});
+             h.redrawcellall=uicontrol(obj.handle,'Position',[530,925,40,40],'Style','pushbutton','String','all','Units','normalized','FontSize',fontsize,'Callback',{@redrawcellall_callback,obj});
               h.redrawcellall.Tooltip=sprintf(mytextwrap('Render all cells',60,10));
              h.addcell=uicontrol(obj.handle,'Position',[650,925,60,40],'Style','pushbutton','String','Add','Units','normalized','FontSize',fontsize,'Callback',{@addcell,obj});
               h.addcell.Tooltip=sprintf(mytextwrap('Add current cell to the Cell list',60,10));
              h.removecell=uicontrol(obj.handle,'Position',[600+20,540,90,30],'Style','pushbutton','String','Remove','Units','normalized','FontSize',fontsize,'Callback',{@removecell_callback,obj});
               h.removecell.Tooltip=sprintf(mytextwrap('Remove currently selected Cell from the list.',60,10));
-             h.redrawfile=uicontrol(obj.handle,'Position',[30,525,80,40],'Style','pushbutton','String','redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawfile_callback,obj});
+             h.redrawfile=uicontrol(obj.handle,'Position',[30,525,100,40],'Style','pushbutton','String','File: redraw','Units','normalized','FontSize',fontsize,'Callback',{@redrawfile_callback,obj});
               h.redrawfile.Tooltip=sprintf(mytextwrap('Render the file overview image.',60,10));
              h.fileax.ButtonDownFcn={@fileaxclick,obj};
              h.cellax.ButtonDownFcn={@cellaxclick,obj};
@@ -499,6 +499,7 @@ for k=length(sites):-1:1
         end
     end
         
+    sites(k).indList=k; %XXXX try to fix list when deleting sites.
     
 %     list=[num2str(sites(k).annotation.list1.value) num2str(sites(k).annotation.list2.value)...
 %         num2str(sites(k).annotation.list3.value) num2str(sites(k).annotation.list4.value)];

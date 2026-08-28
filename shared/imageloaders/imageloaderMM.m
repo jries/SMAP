@@ -62,9 +62,18 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             allmd=gethashtable(imgmetadata);
             alls=gethashtable(summarymetadata);
             try
-            comments=char(img.getDisplayAndComments.get('Comments'));
-            allmd(end+1,:)={'Comments direct',comments};
+            
+            txt=fileread([fileparts(obj.file) filesep 'comments.txt']);
+            cfile=jsondecode(txt);
+            ctxt=cfile.map.GeneralAnnotation.scalar.comments.scalar;
+            ctxt=strrep(ctxt, newline,'; ');
+            allmd(end+1,:)={'Comments direct',ctxt};
             catch
+                try
+                    comments=char(img.getDisplayAndComments.get('Comments'));
+                    allmd(end+1,:)={'Comments direct',comments};
+                catch 
+                end
             end
             %direct
             try
@@ -84,15 +93,40 @@ classdef imageloaderMM<interfaces.imageloaderSMAP
             end
             try
                 po=summarymetadata.get('Positions');
-            end            
-            possibleframes=[img.lastAcquiredFrame,sl,fr,po];
+            end       
+            try
+                ik=size(img.imageKeys);
+            end
+            possibleframes=[img.lastAcquiredFrame,sl,fr,po,ik];
             framesd=min(possibleframes(possibleframes>100));
             if isempty(framesd)
                 framesd=max(possibleframes);
             end
 %             framesd=max([img.lastAcquiredFrame,summarymetadata.get('Slices'),summarymetadata.get('Frames'),summarymetadata.get('Positions')]);
-            allmd(end+1,:)={'frames direct',num2str(framesd)};
+            % allmd(end+1,:)={'frames direct',num2str(framesd)};
+            allmd(end+1,:)={'frames direct',num2str(ik)};
             
+          
+
+            %try to get real time difference
+            it0=obj.reader.getImageTags(0,0,0,0);
+            [~,imgpos]=readstack(obj,framesd);
+            ite=obj.reader.getImageTags(imgpos{:});
+            try
+            t0=it0.get('ElapsedTime-ms');
+            te=ite.get('ElapsedTime-ms');
+            dt=(te-t0)/(framesd+1);
+            catch err
+            try 
+            t0b=it0.get('UserData').get('TimeStampMsec').get('scalar');
+            teb=ite.get('UserData').get('TimeStampMsec').get('scalar');
+            dt=(str2double(teb)-str2double(t0b))/(framesd+1);
+            catch err
+                dt=NaN;
+            end
+            end
+            allmd(end+1,:)={'timediff direct',num2str(dt)};
+
             allmd=vertcat(allmd,alls);
             obj.allmetadatatags=allmd;
         end
@@ -105,7 +139,7 @@ end
 
 
 
-function image=readstack(obj,imagenumber)
+function [image,imgpos]=readstack(obj,imagenumber)
 img=obj.reader.getImage(0,0,imagenumber-1,0);
 imgpos={0,0,imagenumber-1,0};
 if isempty(img)
@@ -124,8 +158,9 @@ image=img.pix;
 if isempty(image)
     return
 end
+imgmeta=obj.reader.getImageTags(imgpos{:});
 % if numel(image)==obj.metadata.Width*obj.metadata.Height
-    image=reshape(image,obj.metadata.Width,obj.metadata.Height)';
+    image=reshape(image,imgmeta.get('Width'),imgmeta.get('Height'))';
     if isa(image,'int16')
         image2=uint16(image);
         ind=image<0;
@@ -135,7 +170,7 @@ end
     end
 
 if ~isempty(obj.readoutimgtags)
-    imgmeta=obj.reader.getImageTags(imgpos{:});
+    
     if obj.init
         obj.imtags=zeros(length(obj.readoutimgtags),obj.metadata.numberOfFrames);
 %          for k=1:length(obj.readoutimgtags)

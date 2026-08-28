@@ -18,7 +18,7 @@ classdef Channeldrift4Pi<interfaces.WorkflowModule
             peakcombiner=wf.module('PeakCombiner');
             framecorrection=peakcombiner.guihandles.framecorrection.Value;
 
-            if obj.getPar('loc_preview') 
+            if obj.getPar('loc_preview') || ~p.getchanneldrift
                 obj.output(data,1)
                 return
             end
@@ -80,11 +80,14 @@ classdef Channeldrift4Pi<interfaces.WorkflowModule
         end
         function pard=guidef(obj)
             pard.frameblockt.object=struct('Style','text','String','Ch drift window (frames)');
-            pard.frameblockt.position=[1,1];
+            pard.frameblockt.position=[2,1];
             pard.frameblockt.Width=1.5;
             pard.frameblock.object=struct('Style','edit','String','3000');
-            pard.frameblock.position=[1,2.5];
+            pard.frameblock.position=[2,2.5];
             pard.frameblock.Width=0.5;
+            pard.getchanneldrift.object=struct('Style','checkbox','String','get Channel drift');
+            pard.getchanneldrift.position=[1,1];
+            pard.getchanneldrift.Width=1.5;            
             pard.plugininfo.type='WorkflowModule'; 
             pard.plugininfo.description='runs the 4Pi fitting two times to determine channel drift';
         end

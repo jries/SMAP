@@ -11,6 +11,7 @@ classdef RoiAdder<interfaces.WorkflowModule
         function obj=RoiAdder(varargin)
             obj@interfaces.WorkflowModule(varargin{:});
             obj.propertiesToSave={'mask'};
+            obj.excludeFromSave={'roistyle'};
         end
         function pard=guidef(obj)
             pard=guidef;

@@ -28,7 +28,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                     elseif isfield(l,'saveloc')
                         obj.transform=l.saveloc.file.transformation;
                     elseif isfield(l,'T')
-                        obj.transform.T=double(cat(3,eye(3,3),permute(l.T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
+                        obj.transform.T=double(cat(3,eye(3,3),permute(l.T,[3 ,2 ,1]))); % xXXX create transform with that matrix
                         obj.transform.centercoord=l.imgcenter;
                     else
                         errordlg(['no transformation found in' p.Tfile])
@@ -37,8 +37,10 @@ classdef PeakCombiner<interfaces.WorkflowModule
                     l=loadh5(p.Tfile);
                     T=l.res.T;
                     s=size(T);
+                    obj.transform=[];
                     if length(s)==2 %2Ch
                         obj.transform.T=double(cat(3,eye(3,3),permute(T,[2 ,1]))); % xXXX create transform with that matrix.
+                        %obj.transform.T=double(cat(3,permute(T,[2 ,1]),eye(3,3))); % xXXX create transform with that matrix.
                     elseif length(s)==3 %4Pi
                         obj.transform.T=double(cat(3,eye(3,3),permute(T,[3 ,2 ,1]))); % xXXX create transform with that matrix.
                     end
@@ -204,7 +206,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
                 maxout.dy=squeeze(dyh(:));
                 dato=data;
                 dato.data=maxout;
-            elseif isfield(obj.transform,'T') %new 4Pi
+            elseif isfield(obj.transform,'T') %new 4Pi or uipsf
                 if p.framecorrection
                     drift=p.loc_4Pichanneldrift;
                     s=size(drift.dx,1);
@@ -263,6 +265,7 @@ classdef PeakCombiner<interfaces.WorkflowModule
 
                 for k=length(maximas):-1:1
                     T=obj.transform.T(:,:,k);
+                    T=inv(T); %Yiming XXXXX
                     ct=transformT4Pi(ccombined,T,obj.transform.centercoord);
 %                     ct=(T*ccombined')';
                     ct(:,1)=ct(:,1)-roi(1)+driftx(k); %bring back to ROI on camera
@@ -344,7 +347,7 @@ switch t.params.dual.channel_arrange
         mp=t.images_size(2);
 end
 ind=maxima.(direction)<=mp;
-maximao(1)=copystructReduce(maxima,ind);
+maximao(1)=copystructReduce(maxima,ind); 
 maximao(2)=copystructReduce(maxima,~ind);
 if strcmp(t.params.dual.mirrortype,'none')
     maximao(2).(direction)=maximao(2).(direction)-mp;

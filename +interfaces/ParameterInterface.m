@@ -86,14 +86,8 @@ classdef ParameterInterface<handle
         end
         
         function setAutoResults(obj,pluginpath,value)
-            q=value;
-           
-            for k=length(pluginpath):-1:2
-                 p=[];
-                p.(pluginpath{k})=q;
-                q=p;
-            end
-            obj.P.autoresults.(pluginpath{1})=p;
+             S = struct('type', '.', 'subs', pluginpath);
+            obj.P.autoresults = subsasgn(obj.P.autoresults, S, value);
         end
        
     end
