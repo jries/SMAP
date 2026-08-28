@@ -123,7 +123,7 @@ classdef LocMoFit<matlab.mixin.Copyable
         %% separate functions
         converter(obj, source, rule, target)
         [totalIntensity,wk,LLctrl] = intensityCal(obj, fitPars, locs)
-        [ax,finalImg] = plot(obj,locs,varargin)
+        [ax,finalImg,layerImg] = plot(obj,locs,varargin)
         modPoint = getModPoint(obj, modelSamplingFactor)
         layerPoint = getLayerPoint(obj, modSamplingF)
         modPoint = transModPoint(obj, modPoint,varargin)

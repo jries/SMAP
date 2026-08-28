@@ -12,7 +12,7 @@ end
 % end
 %XXXXXX
 
-fh=@CPUmleFit_LM_MultiChannel2026;
+%fh=@CPUmleFit_LM_MultiChannel2026;
 %XXXX
 args=varargin;
 

@@ -142,7 +142,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
             axbby=obj.setoutput('ybin');
             plotstdbin(p,locs.ynm(ind)-my, locs.phot(ind), axbby)
 
-            if isfield(locs,'znm') && ~isempty(locs.znm) & any(locs.znm ~= 0)
+            if isfield(locs,'znm') && ~isempty(locs.znm) & any(locs.znm(ind) ~= 0)
                 sigmaz=std(locs.znm(ind));
                 szdetrend=std(diff(locs.znm(ind)))/sqrt(2);
                 [~, szrobust]=robustMean(locs.znm(ind)); 
@@ -220,7 +220,7 @@ classdef Cluster_MINFLUX_Roi<interfaces.SEEvaluationProcessor
                 axfty=obj.setoutput('ffty');
                 plotfft(dyplot,median(dt),axfty)        
                 median(dt)
-                if isfield(locs,'znm') && ~isempty(locs.znm) & any(locs.znm ~= 0)
+                if isfield(locs,'znm') && ~isempty(locs.znm) & any(locs.znm(ind) ~= 0)
                     axftz=obj.setoutput('fftz');
                     plotfft(dzplot,median(dt),axftz) 
                 end
