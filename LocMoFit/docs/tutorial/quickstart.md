@@ -106,7 +106,7 @@ We will be using the model {class}`ring2D<models.ring2D>` here ({doc}`more about
 ### Preview the model before fitting
 In practice, you often have to optimize the fitting settings, especially finding good initial parameters. In this case, previewing the model with the initial parameters is useful.
 
-1. To activate the preview mode, check the checkbox **preview** in the bottom-left corner of the tab **[Parameters]**.
+1. To activate the preview mode, check the checkbox **preview** in the bottom-right corner of the tab **[Parameters]**.
 
 2. Go back to **[Evaluate]**, make sure that **evaluate on** and **display** in the left panel are checked.
 	:::{Note}
