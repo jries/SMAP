@@ -142,7 +142,10 @@ costs a few percent of resolution.
 fitted as a cubic B-spline in time (no time windows, no interpolation
 afterwards) from grouped localizations.  4 s on the clathrin dataset against
 2:33 for free per-window vectors, 0.6-0.7 nm noise per axis against 1.9-5.2, and
-a better image out of sample.  `--knot-frames` sets how finely it can bend.
+a better image out of sample.  `--knot-frames` sets how finely it can bend; the default (2000) is the better
+all-round choice, and finer settings buy a better-resolved transient at the
+start of an acquisition at the cost of spurious wiggle where the density has
+bleached away -- see [NOTES.md](NOTES.md).
 
 `--rcc` estimates the drift by redundant cross-correlation instead -- an
 independent method (ported from SMAP's `finddriftfeature`), useful as a second

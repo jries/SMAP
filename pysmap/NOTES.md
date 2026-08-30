@@ -701,6 +701,51 @@ Knot spacing on the full data: 200 frames gives 1.7-2.0 nm noise, 2000 gives
 of over-smoothing, which is what a slowly drifting stage should look like.
 `spline_penalty` adds a second-difference penalty on top if a dataset needs it.
 
+### Time resolution, and the first seconds
+
+The estimate can be made as fine as one likes -- `spline_knot_frames` for the
+overlap fit, `n_timepoints` for RCC -- and on this dataset finer is worse
+everywhere except at the very start:
+
+| curve | ranges x/y/z (nm) | dz over frames 0-1000 | time |
+|---|---|---|---|
+| spline, 2000 fr knots (default) | 62.5 / 70.1 / 69.9 | 4.4 nm | 2.6 s |
+| spline, 500 fr knots | 63.5 / 74.8 / 72.7 | 3.9 nm | 5.1 s |
+| RCC, 20 windows of 2300 fr (default) | 56.0 / 71.5 / 61.1 | 0.0 nm | 3.8 s |
+| RCC, 92 windows of 500 fr | 58.8 / 75.6 / 73.6 | 7.7 nm | 72 s |
+
+Past frame 30 000 both 500-frame estimators break into +-5 nm oscillations that
+the defaults do not have, and the two disagree on their phase -- noise, not
+signal.  That is where the localization density has fallen from 31 to 4.4 per
+frame and the median precision has gone from 10 to 23 nm, so a 500-frame window
+has the least to work with.  Split-half noise says the same: 0.69/0.61/0.73 nm
+at 2000-frame knots against 1.14/1.10/1.27 at 500.  RCC's cost also grows with
+the square of the window count -- 4186 correlations instead of 190.
+
+**The drift really is faster at the start**, which is worth knowing before
+trying to regularise it away.  Over the first 5000 frames the lateral drift
+moves 31 nm in x and 39 nm in y, against ~10 nm per 5000 frames later.  It is
+not an artefact of density or of mislocalization: a strict filter
+(precision < 10 nm, `logl_rel > -1.4`) makes it *larger* (37 / 56 nm), and
+matching the localization density across the movie changes nothing (33 / 52 nm).
+Both estimators show it, grouped and ungrouped alike.  The first 2000 frames
+also carry 4x the density of the rest at 2.5x fewer photons each -- a sample
+that has just been mounted, settling.
+
+There is a separate, sharper feature in **z over the first ~1000 frames**.  RCC
+at its default 20 windows appears flat there, but only because its first
+estimate sits at frame 1150 and PCHIP extrapolates: given 500-frame windows it
+shows 7.7 nm, larger than either spline (3.9-4.4 nm) and in the same direction.
+Three bases agree it is there.  What is *not* real is the additional ~6 nm spike
+at frame 0 that only the per-window fit has (39 nm against 28-32 for everything
+else): its first window has no left neighbour to constrain it and the cubic
+interpolation through it overshoots at the edge.  The spline has no such edge.
+
+Not a way to fix any of this: `spline_penalty`.  At 1e3 it flattens the initial
+lateral excursion from 31 nm to 3.6 nm and simultaneously moves the curve 12.9 nm
+away from RCC over those frames and 6.7 nm away over the whole movie.  It
+removes the correction, not an artefact.
+
 ### Two ways to be wrong about which estimate is better
 
 Both of these produced a wrong conclusion earlier in this work, so they are
