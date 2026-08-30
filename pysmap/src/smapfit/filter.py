@@ -50,14 +50,39 @@ class LocFilter:
 
         Only this field's array is recomputed.
         """
-        values = self._locs[field]  # raises if the column does not exist
-        mask = np.ones(self._n, dtype=bool)
+        self._ranges[field] = (lo, hi)
+        self._masks[field] = self._range_mask(field, lo, hi)
+        return self._invalidate()
+
+    def _range_mask(self, field: str, lo: Optional[float], hi: Optional[float],
+                    start: int = 0) -> np.ndarray:
+        """The mask for one range, over the rows from ``start`` on."""
+        values = self._locs[field][start:]  # raises if the column does not exist
+        mask = np.ones(values.shape[0], dtype=bool)
         if lo is not None:
             mask &= values >= lo
         if hi is not None:
             mask &= values <= hi
-        self._ranges[field] = (lo, hi)
-        self._masks[field] = mask
+        return mask
+
+    def append(self, n_new: int) -> "LocFilter":
+        """Take in ``n_new`` rows appended to the table since the last call.
+
+        Only the new rows are tested, against the bounds already set: appending
+        never re-derives a limit, so what the user typed keeps meaning exactly
+        what they typed while data arrives.  A mask set by hand (`set_mask`)
+        has no rule to extend it, so its new rows are excluded until it is set
+        again -- visible and recoverable, unlike silently including them.
+        """
+        start, self._n = self._n, self._n + int(n_new)
+        if len(self._locs) != self._n:
+            raise ValueError(f"the table has {len(self._locs)} rows, "
+                             f"expected {self._n} after appending {n_new}")
+        for name, mask in self._masks.items():
+            tail = (self._range_mask(name, *self._ranges[name], start=start)
+                    if name in self._ranges
+                    else np.zeros(int(n_new), dtype=bool))
+            self._masks[name] = np.concatenate([mask, tail])
         return self._invalidate()
 
     def set_mask(self, name: str, mask: np.ndarray) -> "LocFilter":

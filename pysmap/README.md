@@ -71,12 +71,46 @@ precision, z, PSF size, relative log-likelihood and frame; an empty box means
 The "grouped" box switches to the grouped table, which is built on first use and
 keeps its own filter; "additive" switches field colouring to SMAP's composite,
 where overlapping colours add (red over cyan saturates to white).
+
+"colour by" selects a plain intensity image or one coded by z, frame,
+localization precision or photons, with the range typed into the "colour" row
+(empty ends fall back to the data's own).  The range is always explicit, so the
+same z means the same colour at every zoom and after every block of a live fit;
+the LUT follows the choice -- `hot` for intensity, `turbo` for a coded field.
 Needs matplotlib (`pip install matplotlib`).
 
 Or from the command line:
 
     .venv/bin/python scripts/fit_dataset.py DATA CAMERAS.mat CONFIG.yaml OUT.h5 \
         --cal CAL_3dcal.mat --units nm
+
+## Online: fit while the microscope writes
+
+    .venv/bin/python scripts/live_fit.py DATA CAMERAS.mat CONFIG.yaml OUT.h5 \
+        --cal CAL_3dcal.mat --update 3 --timeout 30
+
+`DATA` is the growing Micro-Manager TIFF, or the directory it is being written
+into; it does not have to exist yet.  The window opens as soon as the first
+frames appear and takes in new localizations every `--update` seconds; the fit
+ends `--timeout` seconds after the last frame is written, which is how an
+acquisition stops.  `OUT.h5` is written throughout and is the result.
+
+Everything the offline viewer offers works while this runs -- zoom, pan, the
+filter boxes, contrast, grouping -- and **an update changes none of them**: new
+localizations appear inside the view being looked at, under the bounds already
+typed.  The frame comes from the camera field of view, so the image does not
+rescale as data arrives.  Grouping cannot be extended, so the grouped table is
+marked stale and rebuilt when it is next asked for.
+
+From Python:
+
+    from smapfit.live import LiveSettings, live_view
+
+    live_view(directory, camera, finder, model, FitSettings(output_unit="nm"),
+              output="OUT.h5", live=LiveSettings(update_seconds=3.0))
+
+`LiveFit` is the same thing without a window: it runs the pipeline in a thread
+and queues finished blocks, for a different front end or a headless run.
 
 For online analysis, drive `LocalizationEngine` directly: `push(frames)` returns
 localizations once enough ROIs have accumulated, `flush()` forces a partial

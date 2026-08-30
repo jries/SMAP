@@ -73,6 +73,18 @@ class ImageSource:
         if buffer:
             yield buffer_start, np.stack(buffer)
 
+    def watch(self, chunk: int = 100, **kwargs) -> Iterator[Tuple[int, np.ndarray]]:
+        """Like `frames`, but for a file the microscope is still writing.
+
+        Yields the frames already there and then whatever arrives, stopping
+        when nothing new has for a while.  See
+        :func:`smapfit.io.watch.watch_stack` for the timing and the options;
+        it is imported here rather than at the top because it is the one part
+        of reading a stack that waits.
+        """
+        from .watch import watch_stack
+        return watch_stack(self.files[0], chunk=chunk, **kwargs)
+
     def frame(self, index: int) -> np.ndarray:
         """Read a single frame (convenience for previews and tests)."""
         for start, block in self.frames(chunk=1, start=index, stop=index + 1):

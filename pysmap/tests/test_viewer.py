@@ -208,3 +208,201 @@ def test_the_additive_switch_only_redisplays():
     viewer.switches.set_active(1)
     assert state.display.color_mode == "hue"
     assert np.allclose(before, viewer.image.get_array())
+
+
+# ------------------------------------------------------------ colour coding
+def _viewer(locs=None, **kwargs):
+    from smapfit.viewer import Viewer
+    return Viewer(ViewState(locs if locs is not None else _table()), **kwargs)
+
+
+def test_the_colour_control_offers_intensity_and_what_the_table_carries():
+    viewer = _viewer()
+    labels = [name for name, _ in viewer.color_choices]
+    assert labels[0] == "intensity"
+    assert dict(viewer.color_choices)["z"] == "z_nm"
+    assert "photons" not in labels          # this table has no photons column
+    assert viewer.state.settings.color_field is None
+
+
+def test_choosing_a_field_colours_the_image_over_an_explicit_range():
+    """The range must be concrete, or the same z means a different colour at
+    every zoom and after every block of a live fit."""
+    viewer = _viewer()
+    viewer._on_color("z")
+    assert viewer.state.settings.color_field == "z_nm"
+    assert viewer.state.settings.color_range is not None
+    lo, hi = viewer.state.settings.color_range
+    assert -400 < lo < hi < 400
+    assert viewer.state.display.lut == "turbo"        # a hue ramp, not `hot`
+    assert viewer._rendered is not None and viewer._rendered.color is not None
+
+
+def test_typing_a_colour_range_is_what_gets_rendered():
+    viewer = _viewer()
+    viewer._on_color("z")
+    viewer._on_color_bound(0, "-150")
+    viewer._on_color_bound(1, "150")
+    assert viewer.state.settings.color_range == (-150.0, 150.0)
+
+    viewer._on_color_bound(1, "")            # an empty end means the data's own
+    lo, hi = viewer.state.settings.color_range
+    assert lo == -150.0 and hi == pytest.approx(
+        float(np.nanmax(viewer.state.locs["z_nm"])))
+
+    viewer._on_color_bound(0, "junk")        # junk is ignored, not applied
+    assert viewer.state.settings.color_range[0] == -150.0
+
+
+def test_going_back_to_intensity_undoes_the_colouring():
+    viewer = _viewer()
+    viewer._on_color("frame")
+    assert viewer.state.settings.color_field == "frame"
+    viewer._on_color("intensity")
+    assert viewer.state.settings.color_field is None
+    assert viewer.state.settings.color_range is None
+    assert viewer.state.display.lut == "hot"
+    assert viewer._rendered.color is None
+
+
+def test_the_range_does_not_carry_across_fields():
+    viewer = _viewer()
+    viewer._on_color("z")
+    viewer._on_color_bound(0, "-100")
+    viewer._on_color("frame")
+    lo, hi = viewer.state.settings.color_range
+    assert lo >= 0 and hi <= len(viewer.state.locs)     # a frame range, not a z one
+
+
+def test_a_field_the_table_does_not_carry_is_refused_not_crashed():
+    """A live window offers the choices the fit will produce, before it has."""
+    viewer = _viewer(color_fields=[("intensity", None), ("photons", "photons")])
+    viewer._on_color("photons")
+    assert viewer.state.settings.color_field is None    # moved back
+    assert viewer._color_hint.get_text() == "(intensity)"
+
+
+def test_opening_already_coloured_shows_that_in_the_panel():
+    """`view_locs.py --color z_nm` must not open a panel saying "intensity"."""
+    from smapfit.render import RenderSettings as RS
+    from smapfit.viewer import Viewer
+
+    locs = _table()
+    state = ViewState(locs, RS(color_field="z_nm", color_range=(-200.0, 200.0)))
+    viewer = Viewer(state)
+    assert viewer._color_label == "z"
+    assert viewer.colors.value_selected == "z"
+    assert viewer.state.settings.color_range == (-200.0, 200.0)
+    assert viewer._rendered.color is not None
+
+
+def test_a_column_outside_the_usual_choices_gets_its_own_entry():
+    from smapfit.render import RenderSettings as RS
+    from smapfit.viewer import Viewer
+
+    locs = _table()
+    viewer = Viewer(ViewState(locs, RS(color_field="logl_rel")))
+    assert viewer.colors.value_selected == "logl_rel"
+    assert ("logl_rel", "logl_rel") in viewer.color_choices
+
+
+# ------------------------------------------------------------------ gestures
+def _events(viewer):
+    """Send real mouse events through the canvas, as the backend would."""
+    from matplotlib.backend_bases import MouseButton, MouseEvent
+
+    fig = viewer.figure
+    fig.canvas.draw()
+
+    def send(name, x, y):
+        MouseEvent(name, fig.canvas, x, y, button=MouseButton.LEFT)._process()
+    return send
+
+
+def test_a_click_does_not_force_a_blocking_redraw_per_text_box():
+    """Every TextBox redraws the figure when a click lands elsewhere.
+
+    With a dozen boxes that is a dozen *blocking* full draws before the first
+    motion event of a drag arrives -- a fifth of a second here, near a second
+    on a retina canvas, felt as the image lagging the mouse.
+    """
+    from smapfit.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()))
+    send = _events(viewer)
+    blocking = []
+    viewer.figure.canvas.draw = lambda *a, **k: blocking.append(1)
+
+    box = viewer.axes.get_window_extent()
+    send("button_press_event", box.x0 + box.width / 2, box.y0 + box.height / 2)
+    assert blocking == []
+    assert len(viewer.bounds) + 1 >= 5      # there really are that many boxes
+
+
+def test_panning_does_not_drift_even_though_it_renders_as_it_goes():
+    """The grabbed point must stay under the cursor for the whole drag."""
+    from smapfit.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()))
+    send = _events(viewer)
+    box = viewer.axes.get_window_extent()
+    cx, cy = box.x0 + box.width / 2, box.y0 + box.height / 2
+
+    send("button_press_event", cx, cy)
+    grabbed = viewer._drag
+    for i in range(1, 9):
+        send("motion_notify_event", cx - 9 * i, cy - 4 * i)
+    send("button_release_event", cx - 72, cy - 32)
+
+    under_cursor = viewer.axes.transData.inverted().transform((cx - 72, cy - 32))
+    assert under_cursor == pytest.approx(grabbed, abs=1e-6)
+
+
+def test_a_fast_render_happens_inside_the_gesture():
+    from smapfit.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()))
+    send = _events(viewer)
+    box = viewer.axes.get_window_extent()
+    cx, cy = box.x0 + box.width / 2, box.y0 + box.height / 2
+
+    rendered = []
+    viewer._rendered_at = 0.0            # not throttled by the render just done
+    real = viewer._render_now
+    viewer._render_now = lambda: (rendered.append(1), real())[1]
+
+    send("button_press_event", cx, cy)
+    send("motion_notify_event", cx - 20, cy - 10)
+    assert rendered, "a cheap render should follow the mouse, not wait for it"
+
+
+def test_a_slow_render_is_deferred_instead_of_making_the_gesture_lurch():
+    from smapfit.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()))
+    send = _events(viewer)
+    box = viewer.axes.get_window_extent()
+    cx, cy = box.x0 + box.width / 2, box.y0 + box.height / 2
+
+    rendered = []
+    viewer._render_seconds = 10.0        # as if a render took ten seconds
+    real = viewer._render_now
+    viewer._render_now = lambda: (rendered.append(1), real())[1]
+
+    send("button_press_event", cx, cy)
+    send("motion_notify_event", cx - 20, cy - 10)
+    assert not rendered                  # the image still moved; nothing rendered
+    assert viewer.axes.get_xlim() != (0, 0)
+
+
+def test_a_queued_render_does_not_land_in_the_middle_of_a_drag():
+    from smapfit.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()))
+    send = _events(viewer)
+    box = viewer.axes.get_window_extent()
+    stopped = []
+    viewer._timer.stop = lambda: stopped.append(1)
+
+    send("button_press_event", box.x0 + box.width / 2, box.y0 + box.height / 2)
+    assert stopped

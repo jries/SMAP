@@ -276,6 +276,116 @@ there are fewer localizations in view.  The zoomed numbers are floored by every
 thread scanning all 5M localizations to find the ~50k in view; a spatial index
 would remove that.
 
+## Interaction latency
+
+Two things made a drag feel like it started a second late, neither of them the
+render (35 ms for 211k localizations at this canvas size):
+
+**Every `TextBox` redraws the whole figure when a click lands anywhere else**,
+to take its cursor away -- with `canvas.draw()`, which blocks.  A window with a
+dozen boxes therefore paid a dozen full draws before the first motion event of
+a drag was delivered: 212 ms measured here, close to a second on a retina
+canvas.  `viewer._patched_text_box` swaps `draw` for `draw_idle` around
+`stop_typing`, collapsing all of them into the one draw that was going to
+happen anyway; the press went from 212 ms to 0.9 ms.  It is swapped in around
+the call rather than reimplementing `stop_typing`, whose body reaches into
+private state that changes between matplotlib versions.
+
+**A queued render could land in the middle of the gesture.**  The press now
+stops the timer.
+
+With those gone, deferring the render to the end of a gesture is no longer
+worth it when the render is cheap: `_refresh` renders inside the gesture when
+the last one took under `LIVE_RENDER_SECONDS` (0.12 s), throttled by the
+render's own cost so a gesture never queues up renders it cannot keep up with,
+and falls back to moving the image and deferring when it is slower -- a slow
+render inside a gesture would make it lurch, which is worse than a blank edge.
+Panning and zooming therefore fill in what they expose as they go.  `fit`
+keeps the centre and is idempotent, so re-rendering repeatedly inside a drag
+cannot make the view creep: measured drift over a twelve-event drag is 7e-12
+nm.
+
+## Online analysis
+
+Fitting an acquisition while the microscope writes it and watching the image
+build up (`smapfit.live`, `smapfit.io.watch`).
+
+**The bridge between the fitter and the viewer is a queue in one process, not
+the HDF5 file.**  The file is still written, and it is still the result -- but
+using it as the transport would mean SWMR mode (every column declared before
+the first block knows what they are, `refresh()` on every read) and re-reading
+and decompressing a tail that is already sitting in memory.  The engine already
+hands finished blocks to a `sink`; the live path adds a second sink, which is a
+queue.  A separate process only earns that cost when the fitter and the viewer
+are on different machines, and then the change is additive: same
+`ViewState.append`, a different feeder.
+
+**The fitter runs in a thread, and the GIL is not in the way.**  Detection,
+fitting, rendering and grouping all release it in the C++ (`csrc/`), and frame
+reading already overlaps through `prefetch`, so the window stays responsive
+while a block is being fitted.  Only the viewer's own thread touches the view,
+on a timer, so nothing in the state needs a lock: a block of localizations is
+handed over and never looked at again by the thread that made it.
+
+**An update must not change a setting.**  This is structural, not a discipline:
+appending *extends* the table, each filter's cached mask and the spatial index,
+and re-derives none of them.  What that took:
+
+* `Localizations.extend` grows each column in a buffer with 50% headroom and
+  exposes an exact-length view, so 500 updates over an hour do not each copy
+  the whole table.
+* `LocFilter.append` evaluates the bounds already set on the new rows only.  A
+  bound therefore keeps meaning exactly what was typed; nothing re-quantiles
+  the larger table.  A hand-set mask has no rule to extend it, so its new rows
+  are excluded until it is set again -- visible, rather than silently included.
+* `GrowingIndex` gives each appended block its own `SpatialIndex` and answers a
+  query as the union.  Segments are merged occasionally (the tail when there
+  are too many of them, everything when the tail reaches the size of the head),
+  so the merge work is O(N log N) over an acquisition rather than a 0.3 s
+  argsort per update.  Segments deliberately do not share a grid: a query is
+  answered against each segment's own origin, so a block landing outside the
+  area seen so far needs no rebuild.
+* The index takes an `extent` -- the camera's field of view -- so `bounds`, and
+  with it the viewer's full view, is the same before the first localization and
+  after the last.  The image does not rescale under the user.
+* The median localization precision, which caps the rendering sigma, is
+  recomputed once the table has grown by a fifth rather than on every block.
+
+**Colouring by a field is a re-render, and its range is explicit.**  Each
+localization contributes its own colour, so the LUT is applied per localization
+and baked into the accumulation -- unlike contrast and gamma, which re-display
+what is already there.  The range is never taken from the data at render time,
+which `render_locs` would otherwise do: the visible set changes with every zoom,
+every filter and, online, every block, so an implicit range would give the same
+z a different colour each time.  Choosing a field therefore fills the range in
+from that field's 1--99% quantiles and leaves it there; a range typed for one
+field is not carried to the next, since a z slab means nothing for a frame
+number.  The LUT follows the choice (`hot` for intensity, `turbo` for a field),
+because a coded field cannot be read off a brightness ramp.
+
+**Grouping is the one thing that cannot be extended.**  It links localizations
+across frames, so an append marks the grouped table stale and it is rebuilt the
+next time it is asked for, keeping the bounds set on it.  The title says
+"(stale)" rather than the view quietly lagging.
+
+**Knowing when the acquisition ended.**  Micro-Manager does not say, and the
+declared frame count is what was planned.  So: read what is there, wait, look
+again, and stop when nothing new has appeared for `timeout` seconds.  The
+newest page of the file being written is held back until another follows it
+(its pixels may still be arriving) and read on the way out, once nothing can
+follow it.  Every read is retried rather than trusted -- a file caught
+mid-write raises instead of returning half an image -- and the file list is
+re-globbed on each poll, so the `_1.ome.tif` that appears when the current file
+fills up is picked up without reopening anything.
+
+**The engine is flushed on a timer as well as when its ROI buffer fills.**  The
+buffer holds 15000 ROIs; a sparse sample would take minutes to fill it, and
+nothing would appear in the meantime.
+
+Checked against the offline path on 300 frames of the astigmatic dataset,
+replayed frame by frame into a growing two-file series: same 28724
+localizations, every column identical.
+
 ## Open questions
 
 * Fitted x sits ~0.24 px from the peak-finder position, and the sign flips with
@@ -287,6 +397,12 @@ would remove that.
   so the settings file is used with a warning.  Should that be a hard error?
 * A configuration layer that merges file metadata with user settings once, up
   front, so downstream code never deals with partial metadata.
+* A filter bound cannot be set on a live table before the first block has
+  arrived, because the column does not exist yet: `LocFilter.set` raises and
+  the viewer restores the box.  Holding such a bound as pending and applying it
+  on the first append would be friendlier.
+* Online drift correction, and an online estimate of the labelling density:
+  both want the whole table, which is what an appended view already has.
 
 ## Environment
 

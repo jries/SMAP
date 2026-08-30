@@ -30,6 +30,7 @@ beside each row.
 
 from __future__ import annotations
 
+import time
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
@@ -39,7 +40,7 @@ from .group import GroupSettings, group
 from .locs import Localizations
 from .render import (DisplaySettings, FieldOfView, RenderSettings, RenderedImage,
                      positions, render_locs)
-from .spatial import SpatialIndex
+from .spatial import GrowingIndex, SpatialIndex
 
 # The fields worth a filter control, best alternative first.  Everything else
 # stays available through `LocFilter` without cluttering the window.
@@ -51,6 +52,20 @@ FILTER_FIELDS: Sequence[Tuple[str, ...]] = (
     ("frame",),
 )
 
+# What an image can be coloured by, beside plain intensity: a short label and
+# the column it stands for, best alternative first.  Colour is baked into the
+# accumulation (each localization contributes its own colour), so changing this
+# is a re-render, unlike contrast or gamma.
+COLOR_FIELDS: Sequence[Tuple[str, Tuple[str, ...]]] = (
+    ("z", ("z_nm",)),
+    ("frame", ("frame",)),
+    ("precision", ("loc_precision_nm", "loc_precision_pix")),
+    ("photons", ("photons",)),
+)
+
+INTENSITY_LUT = "hot"    # an intensity ramp: brightness is the only dimension
+FIELD_LUT = "turbo"      # a full-hue ramp, which is what a coded field needs
+
 
 class LocSet:
     """One table with the things that are derived from it and nothing else.
@@ -61,21 +76,65 @@ class LocSet:
     rebuilt on every switch otherwise.
     """
 
-    def __init__(self, locs: Localizations, filter: Optional[LocFilter] = None):
+    def __init__(self, locs: Localizations, filter: Optional[LocFilter] = None,
+                 extent: Optional[Sequence[float]] = None,
+                 growable: bool = False):
         self.locs = locs
         self.filter = filter if filter is not None else LocFilter(locs)
-        x, y = positions(locs)
-        self.index = SpatialIndex(x, y)
+        # a live view is opened before the first block has been fitted, so an
+        # empty table is a normal starting point, not an error
+        empty = np.empty(0, np.float32)
+        x, y = positions(locs) if locs.columns else (empty, empty)
+        self.index = (GrowingIndex(x, y, extent=extent) if growable
+                      else SpatialIndex(x, y, extent=extent))
 
         # for the query margin: how far the widest blob reaches beyond the view
         self.median_precision = 0.0
+        self._precision_field: Optional[str] = None
         for name in ("loc_precision_nm", "loc_precision_pix"):
             if name in locs:
-                values = np.asarray(locs[name], np.float64)
-                values = values[np.isfinite(values)]
-                if values.size:
-                    self.median_precision = float(np.median(values))
+                self._precision_field = name
                 break
+        self._precision_n = 0
+        self._update_precision()
+
+    def _update_precision(self, force: bool = True) -> None:
+        """Recompute the median localization precision.
+
+        It only sets the cap on the rendering sigma and it hardly moves when a
+        few percent more localizations arrive, so while data is streaming in it
+        is recomputed once the table has grown by a fifth rather than on every
+        block -- a median over millions of values is not free.
+        """
+        if self._precision_field is None:
+            return
+        if not force and len(self.locs) < self._precision_n * 1.2:
+            return
+        values = np.asarray(self.locs[self._precision_field], np.float64)
+        values = values[np.isfinite(values)]
+        if values.size:
+            self.median_precision = float(np.median(values))
+        self._precision_n = len(self.locs)
+
+    def append(self, new: Localizations) -> int:
+        """Add localizations to the end of the table.  Returns how many.
+
+        The table, the filter and the index are all extended rather than
+        rebuilt, and nothing that was set -- a filter bound, the grid the index
+        is on -- is re-derived from the larger table.
+        """
+        n = len(new)
+        if n == 0:
+            return 0
+        if not isinstance(self.index, GrowingIndex):
+            raise TypeError("this table was not opened for appending; "
+                            "build the ViewState with live=True")
+        x, y = positions(new)
+        self.locs.extend(new)
+        self.filter.append(n)
+        self.index.append(x, y)
+        self._update_precision(force=False)
+        return n
 
     def __len__(self) -> int:
         return len(self.locs)
@@ -88,14 +147,20 @@ class ViewState:
                  settings: Optional[RenderSettings] = None,
                  display: Optional[DisplaySettings] = None,
                  filter: Optional[LocFilter] = None,
-                 grouped: Optional[Localizations] = None):
+                 grouped: Optional[Localizations] = None,
+                 live: bool = False,
+                 extent: Optional[Sequence[float]] = None):
+        """``live`` prepares the table for `append`; ``extent`` fixes the area
+        the index covers, so the full view does not move as data arrives."""
         self.settings = settings or RenderSettings()
         self.display = display or DisplaySettings()
         self.n_threads = 0
-        self.sets: Dict[str, LocSet] = {"ungrouped": LocSet(locs, filter)}
+        self.sets: Dict[str, LocSet] = {
+            "ungrouped": LocSet(locs, filter, extent=extent, growable=live)}
         if grouped is not None:
             self.sets["grouped"] = LocSet(grouped)
         self.use_grouped = False
+        self.grouped_stale = False
 
     # The active table.  Everything downstream goes through these, so switching
     # is a single assignment and no cached mask is thrown away.
@@ -120,11 +185,34 @@ class ViewState:
         return "grouped" in self.sets
 
     def group(self, settings: Optional[GroupSettings] = None) -> LocSet:
-        """Build the grouped table, once.  This is the slow part."""
-        if "grouped" not in self.sets:
+        """Build the grouped table, once.  This is the slow part.
+
+        Grouping links localizations across frames and has no incremental form,
+        so an append cannot extend it: the table is marked stale instead and
+        rebuilt the next time it is asked for.
+        """
+        if "grouped" not in self.sets or self.grouped_stale:
             grouped, _ = group(self.sets["ungrouped"].locs, settings)
+            keep = self.sets.get("grouped")
             self.sets["grouped"] = LocSet(grouped)
+            if keep is not None:      # a rebuild: the bounds the user set stand
+                for field, (lo, hi) in keep.filter.ranges.items():
+                    if field in grouped:
+                        self.sets["grouped"].filter.set(field, lo, hi)
+            self.grouped_stale = False
         return self.sets["grouped"]
+
+    def append(self, new: Localizations) -> int:
+        """Add localizations to the ungrouped table.  Returns how many.
+
+        Called from whichever thread owns the view -- the GUI one -- so that
+        nothing here has to be thread-safe; a fitter running in the background
+        hands blocks over through a queue.
+        """
+        n = self.sets["ungrouped"].append(new)
+        if n and "grouped" in self.sets:
+            self.grouped_stale = True
+        return n
 
     def show_grouped(self, on: bool,
                      settings: Optional[GroupSettings] = None) -> None:
@@ -134,11 +222,9 @@ class ViewState:
 
     def full_view(self, margin_fraction: float = 0.01) -> Tuple[tuple, tuple]:
         """The coordinate ranges covering every localization."""
-        ix = self.index
-        x1 = ix.x0 + ix.n_cols * ix.cell_size
-        y1 = ix.y0 + ix.n_rows * ix.cell_size
-        mx, my = (x1 - ix.x0) * margin_fraction, (y1 - ix.y0) * margin_fraction
-        return (ix.x0 - mx, x1 + mx), (ix.y0 - my, y1 + my)
+        x0, y0, x1, y1 = self.index.bounds
+        mx, my = (x1 - x0) * margin_fraction, (y1 - y0) * margin_fraction
+        return (x0 - mx, x1 + mx), (y0 - my, y1 + my)
 
     def max_sigma(self, pixelsize: float) -> float:
         """The largest rendering sigma at this zoom, in data units."""
@@ -175,6 +261,37 @@ def _nice_length(span: float) -> float:
                default=power)
 
 
+def _patched_text_box(TextBox):
+    """A `TextBox` that does not force a blocking redraw of the whole figure.
+
+    Every TextBox redraws the figure when a click lands anywhere else, to take
+    its cursor away -- with `canvas.draw()`, which blocks.  A window with a
+    dozen boxes therefore pays a dozen full draws before the first motion event
+    of a drag is even delivered: a fifth of a second here, close to a second on
+    a retina canvas, felt as the image not moving when the mouse does.
+
+    `draw_idle` collapses all of them into the one draw that was going to
+    happen anyway.  It is swapped in around the call rather than reimplementing
+    `stop_typing`, whose body reaches into private state that changes between
+    matplotlib versions.
+    """
+
+    class _TextBox(TextBox):
+        def stop_typing(self):
+            canvas = self.ax.figure.canvas
+            had = canvas.__dict__.get("draw")
+            canvas.draw = canvas.draw_idle
+            try:
+                super().stop_typing()
+            finally:
+                if had is None:
+                    canvas.__dict__.pop("draw", None)
+                else:
+                    canvas.draw = had
+
+    return _TextBox
+
+
 class Viewer:
     """A matplotlib window over a :class:`ViewState`.
 
@@ -187,23 +304,37 @@ class Viewer:
     """
 
     REDRAW_DELAY_MS = 150
+    # A render this fast can be run inside the gesture itself, so panning and
+    # zooming fill in what they expose instead of dragging a stale image around
+    # and only catching up once the mouse stops.  Above it, moving the image is
+    # all that happens until the gesture settles: a slow render inside the
+    # gesture would make it lurch, which is worse than a blank edge.
+    LIVE_RENDER_SECONDS = 0.12
 
     def __init__(self, state: ViewState, figsize=(9.5, 8.5),
                  filter_fields: Optional[Sequence[str]] = None,
+                 color_fields: Optional[Sequence[Tuple[str, Optional[str]]]] = None,
                  group_settings: Optional[GroupSettings] = None):
         import matplotlib.pyplot as plt
-        from matplotlib.widgets import CheckButtons, Slider, TextBox
+        from matplotlib.widgets import CheckButtons, RadioButtons, Slider
+        from matplotlib.widgets import TextBox as _MplTextBox
+
+        TextBox = _patched_text_box(_MplTextBox)
 
         self.state = state
         self.group_settings = group_settings
         self.fov: Optional[FieldOfView] = None
         self._rendered: Optional[RenderedImage] = None
+        self.status = ""            # appended to the title; the live view uses it
 
         fields = list(filter_fields) if filter_fields is not None \
             else self._available_fields()
+        self.color_choices: List[Tuple[str, Optional[str]]] = (
+            list(color_fields) if color_fields is not None
+            else self._available_color_fields())
 
         self.figure = plt.figure(figsize=figsize)
-        rows = len(fields) + 2                      # + contrast and gamma
+        rows = len(fields) + 3        # + the colour range, contrast and gamma
         bottom = 0.06 + 0.045 * rows
         self.axes = self.figure.add_axes([0.08, bottom, 0.90, 0.94 - bottom])
         self.axes.set_facecolor("black")
@@ -228,6 +359,44 @@ class Viewer:
             self.bounds[name] = (low, high)
         self._update_hints()
 
+        # Colouring by a field needs a range, and it must be an explicit one:
+        # taken from the data it would be re-derived on every render, so the
+        # same z would mean a different colour at every zoom and after every
+        # block of a live fit.  The row reads as the filter rows do -- the
+        # field on the left, a minimum and a maximum, the data range beside it.
+        y = 0.055 + 0.045 * 2
+        self._color_typed: List[Optional[float]] = [None, None]
+        low = TextBox(self.figure.add_axes([0.30, y, 0.09, 0.032]), "colour",
+                      initial="", textalignment="right")
+        high = TextBox(self.figure.add_axes([0.42, y, 0.09, 0.032]), "to",
+                       initial="", textalignment="right")
+        for box, which in ((low, 0), (high, 1)):
+            box.on_submit(lambda text, w=which: self._on_color_bound(w, text))
+        self.color_bounds = (low, high)
+        self._color_hint = self.figure.text(0.53, y + 0.008, "", fontsize=8,
+                                            color="0.45")
+
+        # What to colour by.  Mutually exclusive, so radio buttons rather than
+        # another check box: an image is coloured by one thing or by nothing.
+        # The panel starts on whatever the settings passed in already say, so
+        # opening with a colour field selected does not show "intensity".
+        active = self._color_choice_for(self.state.settings.color_field)
+        ax = self.figure.add_axes([0.845, 0.055, 0.145, max(bottom - 0.155, 0.06)])
+        ax.set_frame_on(False)
+        self.colors = RadioButtons(ax, [name for name, _ in self.color_choices],
+                                   active=active)
+        for label in self.colors.labels:
+            label.set_fontsize(8)
+        ax.set_title("colour by", fontsize=8, color="0.3")
+        self.colors.on_clicked(self._on_color)
+        self._color_label = self.color_choices[active][0]
+        if self.state.settings.color_field is not None:
+            self._color_typed = list(
+                self.state.settings.color_range
+                or quantile_range(self.state.locs,
+                                  self.state.settings.color_field, 0.01, 0.99))
+            self._apply_color_range()
+
         # SMAP's dynamic contrast: saturate 10^-p of the pixels.  The useful
         # range spans decades, which is why the slider moves the exponent.
         ax = self.figure.add_axes([0.20, 0.055 + 0.045, 0.62, 0.03])
@@ -251,6 +420,8 @@ class Viewer:
         self.image = None
         self._scalebar: List = []
         self._drag: Optional[Tuple[float, float]] = None
+        self._render_seconds = 0.0      # how long the last render took
+        self._rendered_at = 0.0
         self._timer = self.figure.canvas.new_timer(interval=self.REDRAW_DELAY_MS)
         self._timer.single_shot = True
         self._timer.add_callback(self._render_now)
@@ -263,6 +434,7 @@ class Viewer:
         canvas.mpl_connect("button_release_event", self._on_release)
         canvas.mpl_connect("resize_event", lambda _event: self._schedule())
 
+        self._update_color_row()
         self.reset()
 
     # ------------------------------------------------------------------ set-up
@@ -274,6 +446,32 @@ class Viewer:
                     found.append(name)
                     break
         return found
+
+    def _available_color_fields(self) -> List[Tuple[str, Optional[str]]]:
+        """Plain intensity, and every field this table could be coloured by."""
+        found: List[Tuple[str, Optional[str]]] = [("intensity", None)]
+        for label, names in COLOR_FIELDS:
+            for name in names:
+                if name in self.state.locs:
+                    found.append((label, name))
+                    break
+        return found
+
+    def _color_choice_for(self, field: Optional[str]) -> int:
+        """Which radio entry a colour field is, adding one if it is not offered.
+
+        `RenderSettings.color_field` takes any column, and the panel lists the
+        few that are usually wanted; a table opened already coloured by
+        something else gets that column as an entry of its own rather than a
+        panel that disagrees with the image.
+        """
+        if field is None:
+            return 0
+        for i, (_, name) in enumerate(self.color_choices):
+            if name == field:
+                return i
+        self.color_choices.append((field, field))
+        return len(self.color_choices) - 1
 
     def reset(self) -> None:
         """Show everything."""
@@ -292,7 +490,13 @@ class Viewer:
         return FieldOfView.fit((x0, x1), (y0, y1), nx, ny)
 
     def _render_now(self) -> None:
+        started = time.perf_counter()
         self.fov = self._current_fov()
+        if len(self.state.locs) == 0:
+            # a live view opens before the first block has been fitted
+            self._update_title()
+            self.figure.canvas.draw_idle()
+            return
         self._rendered = self.state.render(self.fov)
         rgb = self.state.display.apply(self._rendered)
         if self.image is None:
@@ -305,6 +509,8 @@ class Viewer:
         self._draw_scalebar()
         self._update_title()
         self.figure.canvas.draw_idle()
+        self._render_seconds = time.perf_counter() - started
+        self._rendered_at = time.perf_counter()
 
     def _redisplay(self) -> None:
         """Re-apply the display settings to the planes we already have.
@@ -336,10 +542,14 @@ class Viewer:
     def _update_title(self, note: str = "") -> None:
         shown = self._rendered.n_locs if self._rendered else 0
         kind = "grouped" if self.state.use_grouped else "localizations"
-        self.axes.set_title(
-            note or f"{shown:,} of {len(self.state.locs):,} {kind}   ·   "
-                    f"{self.fov.pixelsize:.3g} per pixel   ·   "
-                    f"{self.state.settings.mode}", fontsize=10)
+        if self.state.use_grouped and self.state.grouped_stale:
+            kind += " (stale)"     # data has arrived since these were grouped
+        title = note or (f"{shown:,} of {len(self.state.locs):,} {kind}   ·   "
+                         f"{self.fov.pixelsize:.3g} per pixel   ·   "
+                         f"{self.state.settings.mode}")
+        if self.status:
+            title += f"   ·   {self.status}"
+        self.axes.set_title(title, fontsize=10)
 
     def _set_limits(self, xlim, ylim) -> None:
         self.axes.set_xlim(*xlim)
@@ -352,6 +562,21 @@ class Viewer:
         self._timer.stop()
         self._timer.start()
 
+    def _refresh(self) -> None:
+        """Follow a gesture: render inside it when that is fast, else defer.
+
+        The throttle is the render's own cost, so a gesture never queues up
+        renders it cannot keep up with -- at worst every other frame of the
+        gesture is a rendered one.
+        """
+        if (self._render_seconds <= self.LIVE_RENDER_SECONDS
+                and time.perf_counter() - self._rendered_at >= self._render_seconds):
+            self._timer.stop()
+            self._render_now()
+        else:
+            self.figure.canvas.draw_idle()
+            self._schedule()
+
     # ------------------------------------------------------------------ events
     def _zoom(self, factor: float, cx: Optional[float] = None,
               cy: Optional[float] = None) -> None:
@@ -361,8 +586,7 @@ class Viewer:
         cy = 0.5 * (y0 + y1) if cy is None else cy
         self._set_limits((cx - (cx - x0) * factor, cx + (x1 - cx) * factor),
                          (cy - (cy - y0) * factor, cy + (y1 - cy) * factor))
-        self.figure.canvas.draw_idle()
-        self._schedule()
+        self._refresh()
 
     def _on_scroll(self, event) -> None:
         if event.inaxes is not self.axes:
@@ -379,6 +603,7 @@ class Viewer:
 
     def _on_press(self, event) -> None:
         if event.inaxes is self.axes and event.button == 1:
+            self._timer.stop()      # a queued render must not land mid-drag
             self._drag = (event.xdata, event.ydata)
 
     def _on_motion(self, event) -> None:
@@ -390,7 +615,7 @@ class Viewer:
         x0, x1 = self.axes.get_xlim()
         y0, y1 = self.axes.get_ylim()
         self._set_limits((x0 + dx, x1 + dx), (y0 + dy, y1 + dy))
-        self.figure.canvas.draw_idle()
+        self._refresh()
 
     def _on_release(self, event) -> None:
         if self._drag is not None:
@@ -409,8 +634,118 @@ class Viewer:
         if lo is None and hi is None:
             self.state.filter.remove(field)
         else:
-            self.state.filter.set(field, lo, hi)
+            try:
+                self.state.filter.set(field, lo, hi)
+            except KeyError:        # no such column (yet): a live view with no data
+                self._restore_bounds()
+                return
         self._schedule()
+
+    def take_new_data(self, blocks: Sequence[Localizations]) -> int:
+        """Append localizations and redraw.  Returns how many arrived.
+
+        Nothing the user set is touched: the limits, the filter bounds, the
+        contrast and the colour map are all left exactly as they are, so data
+        appears inside the view being looked at instead of resetting it.  The
+        one exception is the first block, which has to be framed because there
+        was nothing to frame before.
+
+        A redraw is deferred while the mouse is down, so an update can never
+        interrupt a drag.
+        """
+        n = 0
+        for block in blocks:
+            n += self.state.append(block)
+        if n == 0:
+            return 0
+        self._update_hints()
+        self._update_color_row()    # the data range moves; what was typed does not
+        if self.state.use_grouped:
+            self._update_title()    # the grouped table is stale, not different
+            self.figure.canvas.draw_idle()
+        elif len(self.state.locs) == n:
+            self.reset()            # the first data: there was no view to keep
+        elif self._drag is None:
+            self._render_now()
+        else:
+            self._schedule()
+        return n
+
+    # ----------------------------------------------------------------- colour
+    def _on_color(self, label: str) -> None:
+        """Colour by a field, or by nothing.
+
+        The LUT follows: an intensity image wants a brightness ramp and a coded
+        field wants a full-hue one, and there is no reading a field off `hot`.
+        The range starts at the field's own data range -- a z range means
+        nothing for a frame number, so it is not carried across.
+        """
+        field = dict(self.color_choices).get(label)
+        if field is not None and field not in self.state.locs:
+            self._set_color_choice(self._color_label)   # not in this table
+            self._update_color_row()
+            return
+        self._color_label = label
+        self._set_color_choice(label)       # a no-op when it was clicked
+        self.state.settings.color_field = field
+        self.state.display.lut = INTENSITY_LUT if field is None else FIELD_LUT
+        self._color_typed = ([None, None] if field is None
+                             else list(quantile_range(self.state.locs, field,
+                                                      0.01, 0.99)))
+        self._apply_color_range()
+        self._update_color_row()
+        self._render_now()
+
+    def _on_color_bound(self, which: int, text: str) -> None:
+        """One end of the colour range was typed.  Empty means the data's own."""
+        try:
+            value = float(text) if text.strip() else None
+        except ValueError:
+            self._update_color_row()        # put the previous value back
+            return
+        self._color_typed[which] = value
+        self._apply_color_range()
+        self._schedule()
+
+    def _apply_color_range(self) -> None:
+        """Turn what was typed into the concrete range the renderer takes."""
+        field = self.state.settings.color_field
+        lo, hi = self._color_typed
+        if field is None or (lo is None and hi is None):
+            self.state.settings.color_range = None
+            return
+        values = np.asarray(self.state.locs[field], np.float64)
+        self.state.settings.color_range = (
+            float(np.nanmin(values)) if lo is None else lo,
+            float(np.nanmax(values)) if hi is None else hi)
+
+    def _update_color_row(self) -> None:
+        """Show the field being coloured by, its range and the data's own."""
+        field = self.state.settings.color_field
+        for box, value in zip(self.color_bounds, self._color_typed):
+            events, box.eventson = box.eventson, False
+            try:
+                box.set_val("" if value is None else f"{value:g}")
+            finally:
+                box.eventson = events
+        if field is None:
+            self._color_hint.set_text("(intensity)")
+        elif field in self.state.locs and len(self.state.locs):
+            lo, hi = quantile_range(self.state.locs, field, 0.01, 0.99)
+            self._color_hint.set_text(f"{field}  [{lo:.4g} … {hi:.4g}]")
+        else:
+            self._color_hint.set_text(f"{field}  (not in this table)")
+
+    def _set_color_choice(self, label: str) -> None:
+        """Move the radio button without setting off its callback."""
+        names = [name for name, _ in self.color_choices]
+        if label not in names:
+            return
+        events, self.colors.eventson = self.colors.eventson, False
+        try:
+            self.colors.set_active(names.index(label))
+        finally:
+            self.colors.eventson = events
 
     def _on_contrast(self, value: float) -> None:
         self.state.display.contrast = float(value)
@@ -452,6 +787,12 @@ class Viewer:
             self.figure.canvas.draw_idle()
             self.figure.canvas.flush_events()
         self.state.show_grouped(on, self.group_settings)
+        field = self.state.settings.color_field
+        if field is not None and field not in self.state.locs:
+            self._set_color_choice("intensity")
+            self._on_color("intensity")     # renders; the rest is done there
+            self._restore_bounds()
+            return
         self._restore_bounds()
         self._render_now()
 
@@ -471,6 +812,7 @@ class Viewer:
     def _restore_bounds(self) -> None:
         """Show the active table's own filter in the boxes, silently."""
         self._update_hints()
+        self._update_color_row()
         ranges = self.state.filter.ranges
         for field, boxes in self.bounds.items():
             for box, value in zip(boxes, ranges.get(field, (None, None))):

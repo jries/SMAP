@@ -33,6 +33,10 @@ class Localizations:
     columns: Dict[str, np.ndarray] = field(default_factory=dict)
     metadata: Dict[str, object] = field(default_factory=dict)
 
+    # the arrays `columns` are views into; see `extend`
+    _buffers: Dict[str, np.ndarray] = field(default_factory=dict, init=False,
+                                            repr=False, compare=False)
+
     def __len__(self) -> int:
         return 0 if not self.columns else len(next(iter(self.columns.values())))
 
@@ -52,15 +56,46 @@ class Localizations:
         return self.columns.keys()
 
     def extend(self, other: "Localizations") -> None:
-        """Append another table with the same columns."""
+        """Append another table with the same columns.
+
+        Each column is kept in a buffer with room to spare and exposed as a
+        view of exactly the used length, so a table that is appended to many
+        times -- a live acquisition, one block every few seconds -- does not
+        copy everything on every block.  `compact` gives the spare room back.
+        """
         if not self.columns:
             self.columns = {k: np.asarray(v) for k, v in other.columns.items()}
+            self._buffers = dict(self.columns)
             return
         if set(self.columns) != set(other.columns):
             raise ValueError(
                 f"column mismatch: {sorted(set(self.columns) ^ set(other.columns))}")
+
+        n, m = len(self), len(other)
+        if m == 0:
+            return
         for k in self.columns:
-            self.columns[k] = np.concatenate([self.columns[k], other.columns[k]])
+            column = self.columns[k]
+            values = np.asarray(other.columns[k])
+            dtype = np.result_type(column.dtype, values.dtype)
+            buffer = self._buffers.get(k)
+            if (buffer is None or buffer.dtype != dtype
+                    or buffer.shape[0] < n + m
+                    or column.base is not buffer):
+                # 1.5 rather than 2: appending stays amortized O(1) while the
+                # spare capacity stays a fraction of a table that is already
+                # the largest thing in memory
+                buffer = np.empty(max(n + m, int((n + m) * 1.5)), dtype=dtype)
+                buffer[:n] = column
+                self._buffers[k] = buffer
+            buffer[n:n + m] = values
+            self.columns[k] = buffer[:n + m]
+
+    def compact(self) -> "Localizations":
+        """Release the spare capacity left by `extend`."""
+        self.columns = {k: np.array(v, copy=True) for k, v in self.columns.items()}
+        self._buffers = dict(self.columns)
+        return self
 
     def __str__(self) -> str:
         return (f"{len(self)} localizations, columns: "
