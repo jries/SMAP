@@ -249,7 +249,11 @@ class GroupSettings:
 
 def group(locs: Localizations, settings: Optional[GroupSettings] = None
           ) -> Tuple[Localizations, np.ndarray]:
-    """Group a table.  Returns the grouped table and the per-input group id."""
+    """Group a table.  Returns the grouped table and the per-input group id.
+
+    The ids are **1-based**, as `connect` produces them, so the row of the
+    grouped table a localization ended up in is ``group_index - 1``.
+    """
     settings = settings or GroupSettings()
     from .render import positions
 

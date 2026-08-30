@@ -64,10 +64,21 @@ To look at the result:
     from smapfit.viewer import show
     show(locs)                       # or: scripts/view_locs.py OUT.h5
 
+The image and the controls open as two windows.  The image window holds nothing
+but the image, so it can be resized to whatever the screen allows -- any shape,
+filled edge to edge: a wide window shows more x rather than putting bands beside
+a square image, and pixels stay square throughout.  Since the rendered pixel
+size follows the canvas, a larger window is a *finer* image, not a scaled-up
+one.  Closing it closes both; closing the controls leaves the image alone.
+
 Scroll or pinch to zoom about the cursor, `+`/`-` to zoom about the centre, drag
-to pan, `r` to reset.  Type a minimum and maximum to filter on localization
-precision, z, PSF size, relative log-likelihood and frame; an empty box means
-"no bound", and the data range is shown beside each row.
+to pan, `r` to reset.  Panning and zooming re-render as they go, so a gesture
+fills in what it exposes instead of dragging a stale image around.  Type a
+minimum and maximum to filter on localization precision, z, PSF size, relative
+log-likelihood and frame; an empty box means "no bound", and the data range is
+shown beside each row.  A window opens with a precision cut at 25 nm, relative
+log-likelihood above -1.5 and z within +-500 nm; each is written into its box,
+so what has been filtered out is visible rather than hidden in a default.
 The "grouped" box switches to the grouped table, which is built on first use and
 keeps its own filter; "additive" switches field colouring to SMAP's composite,
 where overlapping colours add (red over cyan saturates to white).
@@ -83,6 +94,71 @@ Or from the command line:
 
     .venv/bin/python scripts/fit_dataset.py DATA CAMERAS.mat CONFIG.yaml OUT.h5 \
         --cal CAL_3dcal.mat --units nm
+
+## Drift correction
+
+Sample drift is estimated with [COMET](https://github.com/gpufit/Comet), which
+maximises the overlap of localizations between time windows -- no fiducials, no
+reference structure.  It is an optional dependency; the source is vendored:
+
+    .venv/bin/python -m pip install -e externaltools/Comet/Python_interface
+
+    .venv/bin/python scripts/drift_correct.py OUT.h5 \
+        --filter loc_precision_nm - 20 --filter logl_rel -2 - \
+        --frames-per-window 500 --max-drift 300 --plot
+
+The drift is estimated from the localizations that pass the `--filter` ranges --
+the same limits the viewer takes -- and then subtracted from **all** of them,
+including the ones the filter hides: a filter is a view, the correction is a
+coordinate change.  The result is written as `OUT_driftc.h5`, an ordinary
+localization file the viewer opens unchanged, with the drift curve kept in a
+`/drift` group.
+
+From Python:
+
+    from smapfit.drift import DriftSettings, correct_drift, save_drift_corrected
+
+    keep = LocFilter(locs, loc_precision_nm=(None, 20), logl_rel=(-2, None))
+    corrected, drift = correct_drift(locs, DriftSettings(segmentation_var=500),
+                                     select=keep)
+    save_drift_corrected("OUT_driftc.h5", corrected, drift)
+
+`drift.drift[f]` is `(dx, dy, dz)` in nm for frame `f`, and `drift.plot()` draws
+it.  z drift is estimated whenever the table has `z_nm`; `DriftSettings(use_z=
+False)` keeps it lateral.
+
+Nearly all the time is the optimizer, which evaluates a cost over every
+neighbour pair a few hundred times: 1:17 for 410 k localizations and 314 M pairs
+on the CPU backend (46 k frames, 92 time windows), down from 13 minutes -- see
+[NOTES.md](NOTES.md) for the measurements, the noise floor they are judged
+against, and what did *not* help.
+
+`--group` estimates from grouped localizations instead, one per blink: 314 M ->
+21 M pairs and the whole correction takes **5 s**, agreeing with the full
+estimate to about 1 nm (median) while being twice as noisy per window, which
+costs a few percent of resolution.
+
+**`--spline --group` is the best estimator measured so far**: the drift is
+fitted as a cubic B-spline in time (no time windows, no interpolation
+afterwards) from grouped localizations.  4 s on the clathrin dataset against
+2:33 for free per-window vectors, 0.6-0.7 nm noise per axis against 1.9-5.2, and
+a better image out of sample.  `--knot-frames` sets how finely it can bend.
+
+`--rcc` estimates the drift by redundant cross-correlation instead -- an
+independent method (ported from SMAP's `finddriftfeature`), useful as a second
+opinion.  On the clathrin dataset, with both estimating from grouped
+localizations and at matched smoothing, the two agree to 1.2 / 1.7 / 1.6 nm rms
+in x / y / z -- the level of their own noise (0.6-0.9 nm each).
+
+`--two-stage` runs the grouped pass first and then an ungrouped one over a 30 nm
+radius, which is **~9x faster than the single pass for ~99% of the improvement**
+-- and, because the fine pass is bounded by its own radius, it cannot produce
+the runaway time window the single pass occasionally does.
+
+Filter before estimating, and **include a z cut**: without one the axial drift
+follows the out-of-focus tail (`z_err_nm` has a 95th percentile of 108 nm).
+`--filter logl_rel -2 - --filter loc_precision_nm - 15 --filter z_nm -300 300`
+is a reasonable set for a 3D dataset.
 
 ## Online: fit while the microscope writes
 
@@ -126,6 +202,7 @@ block.  Nothing asks how many frames there will be.
 | `check_fit.py` | spline fits on real data, with and without the mirror flip |
 | `fit_dataset.py` | the whole pipeline, to HDF5 |
 | `view_locs.py` | opens the viewer on a saved localization file |
+| `drift_correct.py` | drift-corrects a saved file with COMET |
 
 ## Tests
 
