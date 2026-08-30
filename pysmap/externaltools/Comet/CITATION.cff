@@ -1,0 +1,53 @@
+cff-version: 1.2.0
+message: "If you use COMET in your research, please cite the preprint below."
+title: "COMET: Cost-function Optimized Maximal Overlap Drift EsTimation"
+abstract: >-
+  COMET is a fast, GPU-accelerated software package for drift correction in
+  single-molecule localization microscopy (SMLM) datasets. It achieves high
+  spatial and temporal resolution by maximizing spatiotemporal overlap across
+  frames using a cost-function optimization approach.
+type: software
+license: MIT
+repository-code: "https://github.com/gpufit/Comet"
+url: "https://comet.smlm.tools/"
+version: 1.1.0
+keywords:
+  - single-molecule localization microscopy
+  - super-resolution microscopy
+  - drift correction
+  - STORM
+  - MINFLUX
+  - GPU
+authors:
+  # TODO: add `orcid: "https://orcid.org/..."` to each author.
+  - family-names: Reinkensmeier
+    given-names: Lenny
+    email: lenny.reinkensmeier@ifnano.de
+    affiliation: "Institute for NanoPhotonics Göttingen"
+  - family-names: Bates
+    given-names: Mark
+    email: mark.bates@ifnano.de
+    affiliation: "Institute for NanoPhotonics Göttingen"
+preferred-citation:
+  type: article
+  title: >-
+    Cost-function Optimized Maximal Overlap Drift Estimation for Single Molecule
+    Localization Microscopy
+  doi: 10.64898/2026.03.27.714864
+  url: "https://www.biorxiv.org/content/10.64898/2026.03.27.714864"
+  journal: bioRxiv
+  year: 2026
+  month: 3
+  # The bioRxiv record lists given names as initials only; expand them here if
+  # you want the full forms in the citation.
+  authors:
+    - family-names: Reinkensmeier
+      given-names: L.
+    - family-names: Aufmkolk
+      given-names: S.
+    - family-names: Farabella
+      given-names: I.
+    - family-names: Egner
+      given-names: A.
+    - family-names: Bates
+      given-names: M.

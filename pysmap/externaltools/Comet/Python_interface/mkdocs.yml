@@ -1,0 +1,49 @@
+site_name: pyCOMET
+extra_css:
+  - res/extra.css
+theme:
+  name: material
+  logo: res/Comet_logo_small.png
+  favicon: res/Comet_logo_small.png
+
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+    - toc.follow
+
+nav:
+  - Overview: index.md
+  - How it works: how-it-works.md
+  - step-by-step tutorial: step-by-step.md
+  - Pipeline: pipeline.md
+  - CLI: cli.md
+  - I/O: io.md
+  - FAQ: faq.md
+  - Data model: data-model.md
+  - API reference: api.md
+
+
+plugins:
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_root_toc_entry: false
+            docstring_style: numpy
+            merge_init_into_class: true
+            separate_signature: true
+          setup_commands:
+            - import sys, pathlib; sys.path.insert(0, str(pathlib.Path('.').resolve()))
+
+watch:
+  - comet
+
+markdown_extensions:
+  - admonition
+  - def_list
+  - pymdownx.superfences
+  - pymdownx.details
+  - toc:
+      permalink: true

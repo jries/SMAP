@@ -1,0 +1,14 @@
+LIBRARY	      "gpu_optimize_storm_drift"
+EXPORTS
+	gpu_opt_storm_drift_initialize_2d_portable       @1
+    gpu_opt_storm_drift_compute_2d_portable          @2
+    gpu_opt_storm_drift_free_2d_portable             @3
+    gpu_opt_storm_drift_initialize_3d_portable       @4
+    gpu_opt_storm_drift_compute_3d_portable          @5
+    gpu_opt_storm_drift_free_3d_portable             @6
+	gpu_opt_storm_drift_initialize_2d                @7
+    gpu_opt_storm_drift_compute_2d                   @8
+    gpu_opt_storm_drift_free_2d                      @9
+    gpu_opt_storm_drift_initialize_3d                @10
+    gpu_opt_storm_drift_compute_3d                   @11
+    gpu_opt_storm_drift_free_3d                      @12

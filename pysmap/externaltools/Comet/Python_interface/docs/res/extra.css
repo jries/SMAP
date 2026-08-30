@@ -1,0 +1,27 @@
+.md-header__button.md-logo img {
+  height: 3.2rem;   /* try 2.2–3.2rem until you like it */
+  width: auto;
+}
+
+/* Optional: slightly taller header so the bigger logo fits nicely */
+.md-header {
+  min-height: 3.6rem;
+}
+
+/* Light mode (default) */
+:root {
+  --md-primary-fg-color:        #323232;  /* your primary */
+  --md-primary-fg-color--light: #AAAAAA;  /* optional lighter */
+  --md-primary-fg-color--dark:  #111111;  /* optional darker */
+
+  --md-accent-fg-color:         #FF7A00;  /* your accent */
+}
+
+/* Dark mode (if you use slate scheme) */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        #323232;  /* your primary */
+  --md-primary-fg-color--light: #AAAAAA;  /* optional lighter */
+  --md-primary-fg-color--dark:  #111111;  /* optional darker */
+
+  --md-accent-fg-color:         #FF7A00;
+}

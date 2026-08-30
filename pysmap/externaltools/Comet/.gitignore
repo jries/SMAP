@@ -1,0 +1,56 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Packaging / build artefacts
+build/
+dist/
+sdist/
+wheels/
+*.egg-info/
+*.egg
+.eggs/
+MANIFEST
+
+# Virtual environments
+# No trailing slash: venv2/venv3 in this repo are stray files, not directories.
+venv
+venv[0-9]*
+.venv/
+env/
+ENV/
+
+# Test / coverage / tooling caches
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Documentation build output
+Python_interface/site/
+
+# CUDA / native build output
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.lib
+*.exp
+cmake-build-*/
