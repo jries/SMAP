@@ -9,5 +9,8 @@ description = "Single-molecule localization fitting pipeline (Python port of the
 requires-python = ">=3.9"
 dependencies = ["numpy>=1.22", "scipy>=1.8", "tifffile>=2022.5", "h5py>=3.6"]
 
+[project.optional-dependencies]
+viewer = ["matplotlib>=3.4"]   # RangeSlider
+
 [tool.setuptools.packages.find]
 where = ["src"]

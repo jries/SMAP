@@ -44,6 +44,145 @@ Zernike and astigmatic-Gaussian z models, multiple z start values.
   (`parameters.emmirror` in the `_3Dcal.mat`) is handled by flipping the ROI in x
   and flipping the fitted x back; the fitter itself is orientation-free.
 
+## Rendering
+
+The renderer is deliberately two stages: accumulation into float planes, and a
+display step (normalise, gamma, LUT) that turns them into RGB.  Changing the
+contrast or the colour map therefore never re-renders, which is what a viewer
+needs.  SMAP splits the same way (`renderSMAP` / `drawerSMAP`).
+
+* **One kernel for all three modes.**  The kernel is the *pixel integral* of the
+  Gaussian, `erf(right) - erf(left)`, not a point sample of it.  A rendered
+  pixel is an integral over its area, and point sampling breaks down exactly
+  where sigma approaches one pixel -- which is where the renderer spends most of
+  its time.  It also makes the histogram the sigma -> 0 limit of the Gaussian
+  rather than a separate model, and both are tested against each other.
+* **No template.**  SMAP looks up a 601x601 Gaussian template with
+  nearest-neighbour sampling.  The kernel is separable, so a (2d+1)^2 ROI costs
+  2(2d+2) `erf` calls plus the outer product, which dominates either way: the
+  template buys nothing and costs quantisation error.
+* **Normalised by its own sum, not by an erf truncation correction.**  Every
+  localization then contributes exactly N, whatever its sigma or subpixel
+  position, so histogram and Gaussian images carry the same total intensity.
+  The kernel is built over the full ROI even where the image clips it, so a
+  localization at the border loses the outside part instead of having it
+  redistributed inwards -- and the result does not depend on thread boundaries.
+* **Field colouring keeps four planes**, the three colour-weighted ones plus the
+  plain weight, so both composites come from one render and the switch between
+  them is a re-display.  `sum` is SMAP's: display the colour planes directly, so
+  a red and a cyan localization in one saturated pixel **add to white**, as
+  additive colour should.  `hue` divides by the weight first, so that pixel
+  stays a mid grey at full brightness and the hue never drifts towards white
+  with density.  Below saturation the two are algebraically identical -- `hue`
+  divides by the weight and multiplies it back in -- so the difference is
+  confined to the brightest pixels: on the clathrin data at p = 2.5, 4-8% of
+  pixels differ by more than 0.02, and those are the dense cores and the
+  fiducials.  Which is right depends on what the image is for: `sum` reads as
+  brightness-is-density with colour bleaching out where it is densest, `hue`
+  keeps z legible in exactly those cores.  `hue` is the default; the viewer's
+  "additive" box switches.
+* **Contrast is SMAP's dynamic contrast**, parameterised the way SMAP's
+  `imax_min` is: one number p saturates 10^-p of the pixels.  The value
+  distribution of a superresolution image is extremely heavy-tailed -- on real
+  data a fiducial bead outweighs the structure by three orders of magnitude --
+  so an absolute maximum does not transfer between datasets and the useful
+  range of p spans decades, which is why the slider moves the exponent.  p = 3
+  is the default; SMAP's own scripts use 3.5, which is too dark for the
+  clathrin dataset.
+* **The pixel grid is stated once.**  A position lands in pixel
+  `floor((x - x0) / pixelsize)`.  SMAP rounds and shifts the range by half a
+  pixel first, which is the same grid expressed twice.
+* Not ported: the transparency/occlusion modes (`gaussrenderT`,
+  `gaussrenderTx`), layers and compositing, the DL/tiff modes, grouped
+  localizations, `normalizeFoV`, `remout`.  The sigma policy (`gaussfac`,
+  `mingaussnm`, `mingausspix`, the cap at 10x the median) is kept, in
+  `SigmaSettings`, because it is what makes precision-weighted images readable.
+
+**Filtering** (`LocFilter`) caches one boolean array per field and recomputes
+only the field that changed, which is what SMAP does and the reason interactive
+filtering is possible at all; the displayed set is an AND over a handful of
+arrays.  `indices` hands the renderer a compacted selection so filtering indexes
+three or four columns instead of copying the table.  A range excludes NaN,
+because a comparison against NaN is false -- a localization with no z should not
+appear in a z slab.  Not ported: ROI/polygon masks and the grouped-localization
+filters; `set_mask` takes an arbitrary boolean array under a name, which is
+where those, or the viewer's "inside the field of view", would plug in.
+
+Changing the LUT is free -- it is applied to the finished image -- *except* when
+colouring by a field, where the colour is baked into the accumulation and the
+image has to be rendered again.  That is why `render_locs` takes the display
+settings too.
+
+**The viewer** is split into a `ViewState` -- table, spatial index, filter,
+settings, and a field of view in, an image out -- and a matplotlib front end, so
+another toolkit replaces only the second half.  Three things make it usable on
+millions of localizations:
+
+* it renders at *display* resolution, so the pixel size follows from the window
+  and the cost of a render is bounded by the canvas rather than by the zoom;
+* a gesture only moves the axes limits and matplotlib rescales the image it
+  already has; a timer re-renders once the gesture has been still for 150 ms.
+  Interaction stays smooth even where a render takes 130 ms;
+* the `SpatialIndex` answers what is on screen, so a zoomed view never walks the
+  whole table.  Queries are padded by `roi_sigma * max_sigma` so a blob whose
+  centre is off screen still contributes its tail -- the index may return extra
+  candidates but never loses one, and that is what the tests check.
+
+The filter controls cover only the fields that get used (localization precision,
+z or PSF size, `logl_rel`, frame) rather than every column; a slider at either
+end means "no bound", so opening a file never silently drops localizations.
+
+Threading is by contiguous row bands: a localization contributes to whichever
+bands its kernel reaches and each band writes only its own rows, so there are no
+shared pixels, no locks and no per-thread image copies.
+
+## Grouping
+
+A single emitter is localized in many consecutive frames, so a raw table counts
+one blink many times.  `group.py` links them (SMAP's `connectsingle2c.c`, greedy
+frame-to-frame, first match inside a **box** of half-width `dx` wins, up to `dt`
+dark frames) and combines each run into one row using the per-column rules from
+`Grouper.m`.
+
+* **The linking bug is fixed.**  The original tested `list[thisentry] > 0`
+  before the bounds check, so with the last localization already assigned it
+  read -- and could then write -- one past the end of the array.  `Grouper.m`
+  carries two workarounds for the unassigned first/last entries ("FIX
+  connectsingle doesnt assign last loc. Fix later!"); with the tests in the
+  right order every localization gets a group and the workarounds are gone.
+* **Blocks are linked separately** rather than by SMAP's trick of zeroing the
+  frame at each boundary, which leaves the array no longer sorted by frame and
+  lets a group start in one block and search into the next.
+* **The error of a summed quantity adds in quadrature.**  This is the rule that
+  keeps shot noise consistent: with `e_i = sqrt(N_i)`, `sqrt(sum(e_i^2))` is
+  `sqrt(sum(N_i))` exactly -- the shot noise of the summed photons.  SMAP
+  applies its `*err -> 1/sqrt(sum(1/e^2))` rule to `photons_err` and
+  `background_err` instead, which understates a four-member group by six times.
+  Background is summed alongside photons, so the pair stays consistent: a group
+  is one measurement over several exposures, with total signal and total
+  background.  (Note this makes a grouped `background` n times the per-frame
+  level; a filter on it means something different than on ungrouped data.)
+* **`logl` is dropped, `logl_rel` is kept.**  A group's raw log-likelihood is a
+  sum over its members' fits, so no reduction of it is meaningful across groups
+  of different size; the per-pixel `logl_rel`, which is what the filter uses,
+  takes the maximum as in SMAP.
+* **Each coordinate is weighted by its own error** -- `x_nm` by `x_err_nm`,
+  `y_nm` by `y_err_nm`, `z_nm` by `z_err_nm` (`WEIGHT_FOR`).  SMAP weights all
+  three with the pooled `locprecnm` because that is the one weight it computes,
+  and flags it as a shortcut.  The pooled weight is the correct inverse-variance
+  estimate only when the errors are equal, and under astigmatism they are not:
+  on the clathrin data `x_err/y_err` runs from 0.42 to 3.15 across
+  localizations, since that divergence is exactly what encodes z.  The
+  difference in the grouped position is a median 0.11 nm laterally but reaches
+  14-21 nm, and in z a median 0.41 nm reaching 487 nm -- far above the
+  localization precision, so it is not cosmetic.
+
+Grouped and ungrouped are **two tables kept side by side**, each with its own
+filter and spatial index (`LocSet`), because a precision cut that makes sense
+for single localizations is the wrong one for groups, and because rebuilding the
+filter caches on every switch would throw away the work.  The viewer's switch is
+then a single assignment; only the first switch pays for the linking.
+
 ## Conventions
 
 Fixed once, in `io/calibration.py`, so nothing downstream deals with MATLAB's
@@ -64,6 +203,21 @@ layout:
 * the mirror flip was confirmed on real data: the flipped orientation has the
   better log-likelihood for 65.8% of ROIs (median dlogL +2.82)
 * threaded output is bit-identical to serial, at every stage
+* the render kernel's second moment is `sigma^2 + 1/12`, the variance the pixel
+  itself contributes -- a point-sampled kernel would give `sigma^2`
+* the C++ renderer matches a numpy reference to float32 precision in all three
+  modes, coloured and not
+* the whole renderer runs on real data: 844k localizations from the clathrin
+  dataset, filtered to 575k, render to structure that looks like clathrin pits,
+  and zooming to a 150 nm field resolves the individual localizations as
+  ellipses of their own precision
+* the spatial index is checked against brute force on random rectangles: it may
+  return extra candidates, never lose one
+* grouping on the clathrin dataset: 844k -> 377k rows, photon sum conserved
+  exactly, `frame` is the group start, and the precision of every multi-member
+  group is better than its best member (median 7.0 -> 4.5 nm)
+* the summed-error rule is checked against the shot-noise identity: for
+  `e_i = sqrt(N_i)` the grouped error is `sqrt(sum(N_i))` to float precision
 
 ## Performance
 
@@ -82,6 +236,45 @@ Findings worth keeping:
 * threading gives ~4x on filtering and maxima, ~6.5x on fitting
 * the per-frame dynamic-cutoff loop is the last serial part (~2.7 s, 80% of it
   numpy dispatch overhead).  It could be vectorised with one lexsort per chunk.
+
+### Rendering
+
+M1 Pro, 5M localizations into 2000x2000:
+
+| | full field (100 nm/px) | zoomed 10x (10 nm/px) |
+|---|---|---|
+| histogram | 49 ms | 23 ms |
+| fixed sigma | 156 ms | 40 ms |
+| sigma from precision | 133 ms | 42 ms |
+| the same, coloured | 314 ms | 48 ms |
+| the same, one thread | 898 ms | 44 ms |
+
+Filtering 5M localizations on four fields: 18 ms to build, 5 ms for the AND,
+3 ms to compact.  Moving one slider costs 14 ms (one field recomputed, AND,
+compact) plus 31 ms to render the 0.7M that survive -- live filtering at ~20 fps.
+
+Grouping 844k localizations (dx = 50 nm, dt = 1): **0.31 s**, dominated by the
+sequential linking.  The population median precision *rises* (17.5 -> 21.0 nm)
+even though every group improves, because bright long-lived emitters collapse
+into few rows and dim singles stay -- the per-group comparison above is the one
+that means something.
+
+End to end through the viewer, 5M localizations filtered to 3.7M, into a
+1000x1000 canvas: **126 ms** for the full field, **3.9 ms** zoomed 10x, **0.4 ms**
+zoomed 100x (select + render).  Without the index the zoomed cases cost ~42 ms,
+because every thread walked all five million localizations to find the ones on
+screen.
+
+The spatial index over 5M localizations builds in 100 ms and answers in
+0.02-0.12 ms.  It is a `lexsort` on 16-bit row and column keys: numpy radix-sorts
+narrow integer keys and falls back to a comparison sort for wide ones, so the
+obvious `argsort` on a combined cell id costs 1.5 s instead of 60 ms.
+
+Rendering at *display* resolution rather than a fixed nm/pixel is what bounds
+this: zoomed out the kernels collapse onto the `mingausspix` floor, zoomed in
+there are fewer localizations in view.  The zoomed numbers are floored by every
+thread scanning all 5M localizations to find the ~50k in view; a spatial index
+would remove that.
 
 ## Open questions
 

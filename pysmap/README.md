@@ -31,6 +31,48 @@ See [NOTES.md](NOTES.md) for the design decisions and open questions.
     locs, engine = fit_stack(source.frames(chunk=200), camera, finder, model,
                              FitSettings(roisize=13, output_unit="nm"))
 
+To render an image from a localization table:
+
+    from smapfit.filter import LocFilter
+    from smapfit.render import (FieldOfView, RenderSettings, DisplaySettings,
+                                render_locs)
+
+    keep = LocFilter(locs, loc_precision_nm=(None, 20), logl_rel=(-2, 0))
+    fov = FieldOfView.around(locs["x_nm"], locs["y_nm"], pixelsize=10.0)
+    image = render_locs(locs, fov, RenderSettings(mode="precision"), select=keep)
+    rgb = DisplaySettings(lut="hot", gamma=0.7).apply(image)
+
+`mode` is `"hist"`, `"gauss"` (one sigma for all) or `"precision"` (sigma from
+the localization precision, the default in SMAP).  Set `color_field` to colour
+by z or any other column instead of by density.  Rendering and display are
+separate on purpose: contrast, gamma and the colour map change without
+re-rendering.
+
+To merge localizations of the same emitter across consecutive frames:
+
+    from smapfit.group import group, GroupSettings
+
+    grouped, group_index = group(locs, GroupSettings(dx=50.0, dt=1))
+
+`grouped` carries the same columns, combined by SMAP's per-column rules
+(positions weighted by precision, z by its own error, photons summed and their
+errors added in quadrature, precisions added in inverse quadrature), plus
+`n_in_group`.
+
+To look at the result:
+
+    from smapfit.viewer import show
+    show(locs)                       # or: scripts/view_locs.py OUT.h5
+
+Scroll or pinch to zoom about the cursor, `+`/`-` to zoom about the centre, drag
+to pan, `r` to reset.  Type a minimum and maximum to filter on localization
+precision, z, PSF size, relative log-likelihood and frame; an empty box means
+"no bound", and the data range is shown beside each row.
+The "grouped" box switches to the grouped table, which is built on first use and
+keeps its own filter; "additive" switches field colouring to SMAP's composite,
+where overlapping colours add (red over cyan saturates to white).
+Needs matplotlib (`pip install matplotlib`).
+
 Or from the command line:
 
     .venv/bin/python scripts/fit_dataset.py DATA CAMERAS.mat CONFIG.yaml OUT.h5 \
@@ -49,6 +91,7 @@ block.  Nothing asks how many frames there will be.
 | `check_detection.py` | filtering, peak finding and ROI cutting on real frames |
 | `check_fit.py` | spline fits on real data, with and without the mirror flip |
 | `fit_dataset.py` | the whole pipeline, to HDF5 |
+| `view_locs.py` | opens the viewer on a saved localization file |
 
 ## Tests
 

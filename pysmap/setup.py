@@ -72,7 +72,23 @@ ext_modules = [
         cxx_std=17,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
-    )
+    ),
+    Pybind11Extension(
+        "smapfit._group",
+        ["csrc/group.cpp"],
+        include_dirs=["csrc"],
+        cxx_std=17,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+    ),
+    Pybind11Extension(
+        "smapfit._render",
+        ["csrc/render.cpp"],
+        include_dirs=["csrc"],
+        cxx_std=17,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+    ),
 ]
 
 setup(ext_modules=ext_modules, cmdclass={"build_ext": build_ext})
