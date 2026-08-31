@@ -10,5 +10,5 @@ External/bfmatlab/*
 Documentation/pdf/*
 LocMoFit/modelList.m
 # COMET ships 40 MB of sample data with its source; the patched package is
-# tracked (pysmap uses it for drift correction), the datasets are not.
-pysmap/externaltools/Comet/test_dataset/
+# tracked (SMAPpy uses it for drift correction), the datasets are not.
+SMAPpy/externaltools/Comet/test_dataset/
