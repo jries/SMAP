@@ -198,6 +198,10 @@ def test_live_view_wires_the_whole_thing_up(tmp_path):
     try:
         assert len(viewer.state.locs) == 0          # the window opens empty
         assert viewer.axes.get_xlim()[1] > SHAPE[1] * 100.0 * 0.9   # framed already
+        # the first draw settles the axes box (equal aspect in a new window),
+        # so re-frame once against it before recording what must not move
+        viewer.figure.canvas.draw()
+        viewer._render_now()
         framed = viewer.axes.get_xlim(), viewer.axes.get_ylim()
 
         deadline = time.monotonic() + 20

@@ -23,9 +23,15 @@ The filter controls cover the fields that are actually used -- localization
 precision, z (or the PSF size for a free fit), relative log-likelihood, frame --
 rather than every column, and each is a typed minimum and maximum rather than a
 slider: the numbers wanted are exact ones (a 20 nm precision cut, a +-150 nm z
-slab), and the useful ranges span decades.  An empty box means no bound, so
-opening a file never silently drops localizations.  The data range is printed
-beside each row.
+slab), and the useful ranges span decades.  An empty box means no bound.  A
+window opens with the few bounds in `DEFAULT_BOUNDS` -- the ones that are right
+almost every time -- and each of them is written into its box, so what has been
+filtered out is on screen rather than hidden in a default.  The data range is
+printed beside each row.
+
+The image and the controls are separate windows: the image can then be as large
+as the screen allows, and because the rendered pixel size follows the canvas,
+making it larger renders a finer image rather than scaling one up.
 """
 
 from __future__ import annotations
@@ -62,6 +68,17 @@ COLOR_FIELDS: Sequence[Tuple[str, Tuple[str, ...]]] = (
     ("precision", ("loc_precision_nm", "loc_precision_pix")),
     ("photons", ("photons",)),
 )
+
+# The bounds a window opens with.  Every one of them throws localizations
+# away, so each is shown in its box: what is filtered out is on screen, not
+# hidden in a default.  Only fields whose unit is fixed get one -- a 25 nm
+# precision cut means nothing in pixels -- and a bound already set (a file
+# opened with one, a table switched back to) is never overridden.
+DEFAULT_BOUNDS: Dict[str, Tuple[Optional[float], Optional[float]]] = {
+    "loc_precision_nm": (None, 25.0),   # nm; a looser cut is rarely wanted
+    "logl_rel": (-1.5, None),           # drops the fits that did not converge
+    "z_nm": (-500.0, 500.0),            # the depth a spline calibration covers
+}
 
 INTENSITY_LUT = "hot"    # an intensity ramp: brightness is the only dimension
 FIELD_LUT = "turbo"      # a full-hue ramp, which is what a coded field needs
@@ -261,6 +278,13 @@ def _nice_length(span: float) -> float:
                default=power)
 
 
+def _window_title(figure, title: str) -> None:
+    """Name a window, where the backend has windows to name (Agg has not)."""
+    manager = getattr(figure.canvas, "manager", None)
+    if manager is not None and hasattr(manager, "set_window_title"):
+        manager.set_window_title(title)
+
+
 def _patched_text_box(TextBox):
     """A `TextBox` that does not force a blocking redraw of the whole figure.
 
@@ -293,7 +317,14 @@ def _patched_text_box(TextBox):
 
 
 class Viewer:
-    """A matplotlib window over a :class:`ViewState`.
+    """Two matplotlib windows over a :class:`ViewState`: an image and controls.
+
+    The image has a window to itself so it can be resized to whatever the
+    screen allows -- and since the rendered pixel size follows the canvas, a
+    bigger window is a *finer* image rather than a scaled-up one.  The controls
+    sit in a second, small window that keeps its size, so they neither eat into
+    the image nor stretch across it.  Closing the image closes both; closing
+    the controls leaves the image alone.
 
     Scroll or pinch to zoom about the cursor, ``+``/``-`` to zoom about the
     centre, drag to pan, ``r`` to reset.  Each filter field takes a minimum and
@@ -311,10 +342,11 @@ class Viewer:
     # gesture would make it lurch, which is worse than a blank edge.
     LIVE_RENDER_SECONDS = 0.12
 
-    def __init__(self, state: ViewState, figsize=(9.5, 8.5),
+    def __init__(self, state: ViewState, figsize=(8.5, 8.5),
                  filter_fields: Optional[Sequence[str]] = None,
                  color_fields: Optional[Sequence[Tuple[str, Optional[str]]]] = None,
-                 group_settings: Optional[GroupSettings] = None):
+                 group_settings: Optional[GroupSettings] = None,
+                 control_width: float = 4.6):
         import matplotlib.pyplot as plt
         from matplotlib.widgets import CheckButtons, RadioButtons, Slider
         from matplotlib.widgets import TextBox as _MplTextBox
@@ -326,6 +358,7 @@ class Viewer:
         self.fov: Optional[FieldOfView] = None
         self._rendered: Optional[RenderedImage] = None
         self.status = ""            # appended to the title; the live view uses it
+        self._closed = False
 
         fields = list(filter_fields) if filter_fields is not None \
             else self._available_fields()
@@ -333,89 +366,129 @@ class Viewer:
             list(color_fields) if color_fields is not None
             else self._available_color_fields())
 
+        # The image gets the whole of its own window, so it can be made as
+        # large as the screen allows and the render follows: the rendered pixel
+        # size comes from the canvas, so a bigger window is a finer image
+        # rather than a scaled-up one.
         self.figure = plt.figure(figsize=figsize)
-        rows = len(fields) + 3        # + the colour range, contrast and gamma
-        bottom = 0.06 + 0.045 * rows
-        self.axes = self.figure.add_axes([0.08, bottom, 0.90, 0.94 - bottom])
+        _window_title(self.figure, "smappy")
+        self.axes = self.figure.add_axes([0.02, 0.02, 0.96, 0.93])
         self.axes.set_facecolor("black")
-        self.axes.set_aspect("equal")
+        # Square pixels, but never at the cost of the window: with
+        # ``adjustable="datalim"`` matplotlib widens the view to fill the axes
+        # instead of shrinking the axes to the view's shape.  So a window of
+        # any proportion is filled edge to edge -- a wide one simply shows more
+        # x -- and `FieldOfView.fit`, which sizes a render from the canvas and
+        # keeps one pixel size for both axes, agrees with it by construction.
+        self.axes.set_aspect("equal", adjustable="datalim")
 
-        # A min and a max box per field, empty meaning "no bound".  Typing an
-        # exact number is what this is actually used for -- a precision cut at
-        # 20 nm, a z slab at +-150 -- and a slider cannot express that.  The
-        # data range is shown beside each row so the numbers to type are known.
-        self.bounds: Dict[str, tuple] = {}
-        self._hints: Dict[str, object] = {}
-        for i, name in enumerate(fields):
-            y = 0.055 + 0.045 * (rows - 1 - i)
-            low = TextBox(self.figure.add_axes([0.30, y, 0.09, 0.032]), name,
-                          initial="", textalignment="right")
-            high = TextBox(self.figure.add_axes([0.42, y, 0.09, 0.032]), "to",
-                           initial="", textalignment="right")
-            for box, which in ((low, 0), (high, 1)):
-                box.on_submit(lambda text, n=name, w=which: self._on_bound(n, w, text))
-            self._hints[name] = self.figure.text(0.53, y + 0.008, "", fontsize=8,
-                                                 color="0.45")
-            self.bounds[name] = (low, high)
-        self._update_hints()
+        # The controls get a second, small window.  Rows are laid out in inches
+        # and the window is sized to fit them, so the spacing stays the same
+        # whatever the number of filter fields or colour choices.
+        row, box_h, slider_h, gap, pad = 0.34, 0.24, 0.16, 0.12, 0.16
+        block = max(0.95, 0.20 * len(self.color_choices) + 0.30)
+        height = (pad + block + 0.34 + 2 * (slider_h + 0.16) + gap
+                  + (len(fields) + 1) * row + pad)
+        self.controls = plt.figure(figsize=(control_width, height))
+        _window_title(self.controls, "smappy controls")
 
-        # Colouring by a field needs a range, and it must be an explicit one:
-        # taken from the data it would be re-derived on every render, so the
-        # same z would mean a different colour at every zoom and after every
-        # block of a live fit.  The row reads as the filter rows do -- the
-        # field on the left, a minimum and a maximum, the data range beside it.
-        y = 0.055 + 0.045 * 2
-        self._color_typed: List[Optional[float]] = [None, None]
-        low = TextBox(self.figure.add_axes([0.30, y, 0.09, 0.032]), "colour",
-                      initial="", textalignment="right")
-        high = TextBox(self.figure.add_axes([0.42, y, 0.09, 0.032]), "to",
-                       initial="", textalignment="right")
-        for box, which in ((low, 0), (high, 1)):
-            box.on_submit(lambda text, w=which: self._on_color_bound(w, text))
-        self.color_bounds = (low, high)
-        self._color_hint = self.figure.text(0.53, y + 0.008, "", fontsize=8,
-                                            color="0.45")
+        def place(x, y_inches, w, h):
+            """An axes in the control window, positioned in inches from below."""
+            return self.controls.add_axes([x, y_inches / height, w, h / height])
+
+        def hint(x, y_inches):
+            return self.controls.text(x, (y_inches + 0.07) / height, "",
+                                      fontsize=7, color="0.45")
+
+        y = pad
+        # "grouped" rebuilds the table (once); "additive" only changes how the
+        # colour planes are composited, so it re-displays without re-rendering
+        ax = place(0.52, y, 0.44, block)
+        ax.set_frame_on(False)
+        self.switches = CheckButtons(
+            ax, ["grouped", "additive"],
+            [state.use_grouped, state.display.color_mode == "sum"])
+        for text in self.switches.labels:
+            text.set_fontsize(8)
+        self.switches.on_clicked(self._on_switch)
+        self.grouped = self.switches   # the switch panel, kept under both names
 
         # What to colour by.  Mutually exclusive, so radio buttons rather than
         # another check box: an image is coloured by one thing or by nothing.
         # The panel starts on whatever the settings passed in already say, so
         # opening with a colour field selected does not show "intensity".
         active = self._color_choice_for(self.state.settings.color_field)
-        ax = self.figure.add_axes([0.845, 0.055, 0.145, max(bottom - 0.155, 0.06)])
+        ax = place(0.08, y, 0.38, block)
         ax.set_frame_on(False)
+        ax.set_title("colour by", fontsize=8, color="0.3")
         self.colors = RadioButtons(ax, [name for name, _ in self.color_choices],
                                    active=active)
-        for label in self.colors.labels:
-            label.set_fontsize(8)
-        ax.set_title("colour by", fontsize=8, color="0.3")
+        for text in self.colors.labels:
+            text.set_fontsize(8)
         self.colors.on_clicked(self._on_color)
         self._color_label = self.color_choices[active][0]
+        y += block + 0.34       # room for the "colour by" title above the panel
+
+        # SMAP's dynamic contrast: saturate 10^-p of the pixels.  The useful
+        # range spans decades, which is why the slider moves the exponent.
+        self.gamma = Slider(place(0.30, y, 0.50, slider_h), "gamma", 0.2, 2.0,
+                            valinit=state.display.gamma)
+        self.gamma.on_changed(self._on_gamma)
+        y += slider_h + 0.16
+        self.contrast = Slider(place(0.30, y, 0.50, slider_h), "contrast (p)",
+                               1.0, 5.0, valinit=state.display.contrast)
+        self.contrast.on_changed(self._on_contrast)
+        for slider in (self.contrast, self.gamma):
+            slider.label.set_fontsize(8)
+            slider.valtext.set_fontsize(8)
+        y += slider_h + 0.16 + gap
+
+        # Colouring by a field needs a range, and it must be an explicit one:
+        # taken from the data it would be re-derived on every render, so the
+        # same z would mean a different colour at every zoom and after every
+        # block of a live fit.  The row reads as the filter rows do -- a
+        # minimum and a maximum, with the field and its data range beside them.
+        self._color_typed: List[Optional[float]] = [None, None]
+        low = TextBox(place(0.40, y, 0.17, box_h), "colour", initial="",
+                      textalignment="right")
+        high = TextBox(place(0.60, y, 0.17, box_h), "to", initial="",
+                       textalignment="right")
+        for box, which in ((low, 0), (high, 1)):
+            box.on_submit(lambda text, w=which: self._on_color_bound(w, text))
+        self.color_bounds = (low, high)
+        self._color_hint = hint(0.79, y)
+        y += row
+
+        # A min and a max box per field, empty meaning "no bound".  Typing an
+        # exact number is what this is actually used for -- a precision cut at
+        # 20 nm, a z slab at +-150 -- and a slider cannot express that.  The
+        # data range is shown beside each row so the numbers to type are known.
+        # Laid out from the bottom up, so the fields read in their usual order.
+        self.bounds: Dict[str, tuple] = {}
+        self._hints: Dict[str, object] = {}
+        for name in reversed(fields):
+            low = TextBox(place(0.40, y, 0.17, box_h), name, initial="",
+                          textalignment="right")
+            high = TextBox(place(0.60, y, 0.17, box_h), "to", initial="",
+                           textalignment="right")
+            for box, which in ((low, 0), (high, 1)):
+                box.on_submit(
+                    lambda text, n=name, w=which: self._on_bound(n, w, text))
+            self._hints[name] = hint(0.79, y)
+            self.bounds[name] = (low, high)
+            y += row
+        for boxes in list(self.bounds.values()) + [self.color_bounds]:
+            for box in boxes:
+                box.label.set_fontsize(8)
+                box.text_disp.set_fontsize(8)
+        self._update_hints()
+
         if self.state.settings.color_field is not None:
             self._color_typed = list(
                 self.state.settings.color_range
                 or quantile_range(self.state.locs,
                                   self.state.settings.color_field, 0.01, 0.99))
             self._apply_color_range()
-
-        # SMAP's dynamic contrast: saturate 10^-p of the pixels.  The useful
-        # range spans decades, which is why the slider moves the exponent.
-        ax = self.figure.add_axes([0.20, 0.055 + 0.045, 0.62, 0.03])
-        self.contrast = Slider(ax, "contrast (p)", 1.0, 5.0,
-                               valinit=state.display.contrast)
-        self.contrast.on_changed(self._on_contrast)
-        ax = self.figure.add_axes([0.20, 0.055, 0.62, 0.03])
-        self.gamma = Slider(ax, "gamma", 0.2, 2.0, valinit=state.display.gamma)
-        self.gamma.on_changed(self._on_gamma)
-
-        # "grouped" rebuilds the table (once); "additive" only changes how the
-        # colour planes are composited, so it re-displays without re-rendering
-        ax = self.figure.add_axes([0.845, bottom - 0.085, 0.145, 0.075])
-        ax.set_frame_on(False)
-        self.switches = CheckButtons(
-            ax, ["grouped", "additive"],
-            [state.use_grouped, state.display.color_mode == "sum"])
-        self.switches.on_clicked(self._on_switch)
-        self.grouped = self.switches   # the switch panel, kept under both names
 
         self.image = None
         self._scalebar: List = []
@@ -433,7 +506,9 @@ class Viewer:
         canvas.mpl_connect("motion_notify_event", self._on_motion)
         canvas.mpl_connect("button_release_event", self._on_release)
         canvas.mpl_connect("resize_event", lambda _event: self._schedule())
+        canvas.mpl_connect("close_event", lambda _event: self.close())
 
+        self._apply_default_bounds()
         self._update_color_row()
         self.reset()
 
@@ -473,6 +548,21 @@ class Viewer:
         self.color_choices.append((field, field))
         return len(self.color_choices) - 1
 
+    def _apply_default_bounds(self) -> None:
+        """Put `DEFAULT_BOUNDS` on a table that has no bounds of its own yet.
+
+        Once per table: a bound the user cleared must stay cleared, including
+        across a switch to the grouped table and back.
+        """
+        current = self.state.current
+        if getattr(current, "defaults_applied", False):
+            return
+        for field, (lo, hi) in DEFAULT_BOUNDS.items():
+            if field in current.locs and field not in current.filter.ranges:
+                current.filter.set(field, lo, hi)
+        current.defaults_applied = True
+        self._restore_bounds()
+
     def reset(self) -> None:
         """Show everything."""
         xrange, yrange = self.state.full_view()
@@ -493,7 +583,11 @@ class Viewer:
         started = time.perf_counter()
         self.fov = self._current_fov()
         if len(self.state.locs) == 0:
-            # a live view opens before the first block has been fitted
+            # A live view opens before the first block has been fitted.  The
+            # limits are still set from the field of view, so the empty window
+            # already frames what the first localizations will land in and the
+            # image does not jump when they do.
+            self._set_limits((self.fov.x0, self.fov.x1), (self.fov.y1, self.fov.y0))
             self._update_title()
             self.figure.canvas.draw_idle()
             return
@@ -502,6 +596,8 @@ class Viewer:
         if self.image is None:
             self.image = self.axes.imshow(rgb, extent=self.fov.extent,
                                           origin="upper", interpolation="nearest")
+            # imshow sets the aspect itself; put ours back
+            self.axes.set_aspect("equal", adjustable="datalim")
         else:
             self.image.set_data(rgb)
             self.image.set_extent(self.fov.extent)
@@ -660,6 +756,8 @@ class Viewer:
             return 0
         self._update_hints()
         self._update_color_row()    # the data range moves; what was typed does not
+        if len(self.state.locs) == n:
+            self._apply_default_bounds()    # the columns exist only now
         if self.state.use_grouped:
             self._update_title()    # the grouped table is stale, not different
             self.figure.canvas.draw_idle()
@@ -787,6 +885,7 @@ class Viewer:
             self.figure.canvas.draw_idle()
             self.figure.canvas.flush_events()
         self.state.show_grouped(on, self.group_settings)
+        self._apply_default_bounds()
         field = self.state.settings.color_field
         if field is not None and field not in self.state.locs:
             self._set_color_choice("intensity")

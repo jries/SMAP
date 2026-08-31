@@ -9,7 +9,8 @@ from smappy.filter import LocFilter                      # noqa: E402
 from smappy.locs import Localizations                    # noqa: E402
 from smappy.render import (DisplaySettings, FieldOfView,  # noqa: E402
                             RenderSettings, render_locs)
-from smappy.viewer import ViewState, Viewer, _nice_length  # noqa: E402
+from smappy.viewer import (DEFAULT_BOUNDS, ViewState,      # noqa: E402
+                            Viewer, _nice_length)
 
 
 def _table(n=20000, seed=0):
@@ -57,7 +58,7 @@ def test_a_filter_change_is_visible_without_rebuilding_the_index():
 def test_viewer_zoom_pan_and_reset():
     viewer = Viewer(ViewState(_table()))
     full = viewer.fov
-    assert viewer._rendered.n_locs == len(viewer.state.locs)
+    assert viewer._rendered.n_locs == len(viewer.state.filter)   # after DEFAULT_BOUNDS
 
     viewer._zoom(0.25, cx=5000.0, cy=4000.0)
     viewer._render_now()
@@ -78,7 +79,7 @@ def test_typed_bounds_filter_and_an_empty_box_means_no_bound():
     viewer = Viewer(ViewState(_table()))
     field = "loc_precision_nm"
 
-    viewer._on_bound(field, 1, "12")
+    viewer._on_bound(field, 1, "12")               # tighter than the default
     assert viewer.state.filter.ranges[field] == (None, 12.0)
     assert not viewer.state.filter.mask.all()
 
@@ -89,6 +90,7 @@ def test_typed_bounds_filter_and_an_empty_box_means_no_bound():
     assert viewer.state.filter.ranges[field] == (None, 12.0)
     viewer._on_bound(field, 1, "  ")               # both cleared: no filter
     assert field not in viewer.state.filter
+    viewer.state.filter.clear()                    # and with the defaults gone too
     assert viewer.state.filter.mask.all()
 
 
@@ -179,13 +181,14 @@ def test_the_viewer_switch_restores_the_boxes_silently():
 
     viewer.grouped.set_active(0)                     # -> grouped
     assert viewer.state.use_grouped
-    assert viewer.state.filter.ranges == {}          # not carried across
-    assert viewer.bounds[field][1].text == ""
+    # its own filter: the typed bound is not carried across, the defaults apply
+    assert viewer.state.filter.ranges[field] == DEFAULT_BOUNDS[field]
+    assert viewer.bounds[field][1].text == "25"
     assert viewer._hints[field].get_text() != hint   # the ranges follow the table
 
     viewer.grouped.set_active(0)                     # -> back
     assert not viewer.state.use_grouped
-    assert viewer.state.filter.ranges == {field: (None, 20.0)}
+    assert viewer.state.filter.ranges[field] == (None, 20.0)
     assert viewer.bounds[field][1].text == "20"
     assert viewer._hints[field].get_text() == hint
 
@@ -406,3 +409,108 @@ def test_a_queued_render_does_not_land_in_the_middle_of_a_drag():
 
     send("button_press_event", box.x0 + box.width / 2, box.y0 + box.height / 2)
     assert stopped
+
+
+# ------------------------------------------------------------ opening bounds
+def test_a_window_opens_with_the_default_bounds_shown_in_its_boxes():
+    """The defaults throw localizations away, so they must be on screen."""
+    from smappy.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()))
+    ranges = viewer.state.filter.ranges
+    assert ranges["loc_precision_nm"] == (None, 25.0)
+    assert ranges["logl_rel"] == (-1.5, None)
+    assert ranges["z_nm"] == (-500.0, 500.0)
+    assert viewer.bounds["loc_precision_nm"][1].text == "25"
+    assert viewer.bounds["logl_rel"][0].text == "-1.5"
+    assert viewer.bounds["z_nm"][0].text == "-500"
+    assert len(viewer.state.filter) < len(viewer.state.locs)
+
+
+def test_a_bound_already_set_is_not_overridden_by_a_default():
+    from smappy.filter import LocFilter
+    from smappy.viewer import Viewer
+
+    locs = _table()
+    state = ViewState(locs, filter=LocFilter(locs, loc_precision_nm=(None, 8.0)))
+    viewer = Viewer(state)
+    assert viewer.state.filter.ranges["loc_precision_nm"] == (None, 8.0)
+    assert viewer.state.filter.ranges["z_nm"] == (-500.0, 500.0)   # the rest apply
+
+
+def test_a_cleared_default_stays_cleared():
+    from smappy.viewer import Viewer
+
+    viewer = Viewer(ViewState(_groupable_table()))
+    viewer._on_bound("loc_precision_nm", 1, "")
+    assert "loc_precision_nm" not in viewer.state.filter
+    viewer.grouped.set_active(0)          # -> grouped, which gets its own defaults
+    viewer.grouped.set_active(0)          # -> back
+    assert "loc_precision_nm" not in viewer.state.filter
+
+
+def test_a_pixel_table_gets_only_the_bounds_whose_unit_is_fixed():
+    """25 nm means nothing in pixels, so that default does not apply there."""
+    from smappy.viewer import Viewer
+
+    locs = _table()
+    locs.columns["loc_precision_pix"] = locs.columns.pop("loc_precision_nm")
+    locs.columns["x_pix"] = locs.columns.pop("x_nm")
+    locs.columns["y_pix"] = locs.columns.pop("y_nm")
+    viewer = Viewer(ViewState(locs))
+    assert "loc_precision_pix" not in viewer.state.filter
+    assert viewer.state.filter.ranges["logl_rel"] == (-1.5, None)
+
+
+def test_the_image_and_the_controls_are_separate_windows():
+    from smappy.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()))
+    assert viewer.controls is not viewer.figure
+    assert viewer.axes.figure is viewer.figure          # the image window
+    for boxes in viewer.bounds.values():
+        assert all(box.ax.figure is viewer.controls for box in boxes)
+    assert viewer.colors.ax.figure is viewer.controls
+    assert viewer.contrast.ax.figure is viewer.controls
+    # the image fills its window: no widgets, and nothing but the axes
+    assert viewer.figure.axes == [viewer.axes]
+
+
+def test_resizing_the_image_window_rerenders_at_the_new_size():
+    from smappy.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()))
+    before = viewer.fov.shape
+    viewer.figure.set_size_inches(5.0, 5.0)
+    viewer.figure.canvas.draw()
+    viewer._render_now()
+    assert viewer.fov.shape != before                   # rendered to fit the canvas
+
+
+@pytest.mark.parametrize("figsize", [(13, 6), (6, 10), (8.5, 8.5)])
+def test_the_image_fills_a_window_of_any_shape_with_square_pixels(figsize):
+    """A window that is not square must not leave bands beside the image.
+
+    The axes may never be shrunk to the shape of the view: it is the view that
+    widens to the shape of the window (a wide window simply shows more x), so
+    the canvas is filled edge to edge while one pixel size still serves both
+    axes -- an SMLM image with non-square pixels would be a lie.
+    """
+    from smappy.viewer import Viewer
+
+    viewer = Viewer(ViewState(_table()), figsize=figsize)
+    viewer.figure.canvas.draw()
+    viewer._render_now()
+    viewer.figure.canvas.draw()
+
+    box = viewer.axes.get_window_extent()
+    width, height = viewer.figure.get_size_inches() * viewer.figure.dpi
+    assert box.width == pytest.approx(0.96 * width, rel=0.01)
+    assert box.height == pytest.approx(0.93 * height, rel=0.01)
+
+    x0, x1 = viewer.axes.get_xlim()
+    ylo, yhi = sorted(viewer.axes.get_ylim())
+    assert (x1 - x0) / (yhi - ylo) == pytest.approx(box.width / box.height, rel=0.02)
+    assert viewer.fov.shape == (round(box.height), round(box.width))
+    assert (x1 - x0) == pytest.approx(viewer.fov.pixelsize * box.width, rel=0.02)
+    assert (yhi - ylo) == pytest.approx(viewer.fov.pixelsize * box.height, rel=0.02)
