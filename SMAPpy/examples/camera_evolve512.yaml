@@ -1,7 +1,0 @@
-# Values that override whatever the image metadata provides.
-# Anything left out is taken from the file (and, for the conversion, from the
-# SMAP camera settings file if one is given).
-camera:
-  pixelsize_um: 0.127     # not recorded by Micro-Manager for this setup
-  # conversion: 6.7       # e-/ADU, normally from the settings file
-  # offset: 400           # ADU, normally from the image metadata
