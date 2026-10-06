@@ -57,6 +57,13 @@ pard.linelength.object=struct('String','250','Style','edit');
 pard.linelength.position=[3,2];
 pard.linelength.TooltipString='This overrides the length of the ROI and uses a well-defined ROI. Useful for direct comparison.';
 pard.linelengthcheck.TooltipString=pard.linelength.TooltipString;
+
+pard.textplotstyle.object=struct('String','plot profiles as:','Style','text');
+pard.textplotstyle.position=[4,1];
+pard.plotstyle.object=struct('String','line|bar','Style','popupmenu');
+pard.plotstyle.position=[4,2];
+pard.plotstyle.TooltipString='line: profile as curve, fit as black dashed line. bar: profile as histogram, fit in the color of the layer.';
+pard.textplotstyle.TooltipString=pard.plotstyle.TooltipString;
 pard.plugininfo.name='Line profiles';
 pard.plugininfo.description=sprintf('Calculates profiles along a linear ROI and fits it with a model of choice. \n Flat: step function convolved with Gaussian (=Erf). \n Disk: Projection of a homogeneously filled disk, convolved with Gaussian. \n Ring: Projection of a ring, convolved with Gaussian. \n Distance: Two Gaussians in a distance d.');
 pard.plugininfo.type='ProcessorPlugin';

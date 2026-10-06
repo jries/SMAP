@@ -25,6 +25,8 @@ Distance: Fit with a double Gaussian with the same sigma.
 
 gui:linelength This overrides the length of the ROI and uses a well-defined ROI. Useful for direct comparison.
 gui:linelengthcheck This overrides the length of the ROI and uses a well-defined ROI. Useful for direct comparison.
+gui:plotstyle How to plot the profiles. line: profile as curve, fit as black dashed line. bar: profile as histogram, fit in the color of the layer.
 gui:restrictsigma If checked, the sigma of the Gaussian used for convulution is not fitted, but the average localization precision is used instead.
 gui:setbinwidth Binwidth for profiles. If not checked, use pixel size of reconstruction
-gui:text2=fitmodel 
+gui:text2=fitmodel
+gui:textplotstyle=plotstyle 

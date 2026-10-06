@@ -28,6 +28,8 @@ else
     binwidth=p.sr_pixrec;
 end
 
+plotstyle=p.plotstyle.selection;
+
 % fushuang, storage the lengends for xyz profile
 legends_for_profiles = {};
 
@@ -99,10 +101,7 @@ for layer=1:length(p.sr_layerson)
     jervistemp.profy=profy;
     axes(ax2)
 
-    % fushuang, change plot to bar
-%     plot(ax2,n,profy);
-    bar_tmp=bar(ax2,n,profy,'edgecolor','none','facealpha',0.5); 
-    bar_color=bar_tmp.CData(1, :);
+    profcolor=plotprofile(ax2,n,profy,plotstyle);
     hold(ax2,'on')
     
     xlabel(ax2,'Position perpendicular to line ROI (nm)')
@@ -114,9 +113,7 @@ for layer=1:length(p.sr_layerson)
     sigma=median(locprecnm);
     [fitp,fitprof,fittxt]=fitgeneralprofile(profy,n,p,sigma);
 
-    % fushuang, vislually better plot
-%     plot(ax2,n,fitprof,'k--')
-    plot(ax2,n,fitprof,'linewidth',2,'color',bar_color)
+    plotfit(ax2,n,fitprof,profcolor,plotstyle)
 
     t1(end+1:end+length(fittxt))=fittxt;
 
@@ -128,10 +125,7 @@ for layer=1:length(p.sr_layerson)
     jervistemp.nx=n;
     axes(ax3)
 
-    % fushuang, change plot to bar
-%     plot(ax3,n,profx);
-    bar_tmp=bar(ax3,n,profx,'edgecolor','none','facealpha',0.5); 
-    bar_color=bar_tmp.CData(1, :);
+    profcolor=plotprofile(ax3,n,profx,plotstyle);
 
     hold(ax3,'on')
     xlabel(ax3,'Position along line ROI (nm)')
@@ -142,9 +136,7 @@ for layer=1:length(p.sr_layerson)
 %     t2{end+1}=['FWHM: ' 9 num2str(fwhm)];
      [fitp,fitprof,fittxt]=fitgeneralprofile(profx,n,p,sigma);
 
-     % fushuang, vislually better plot
-%     plot(ax3,n,fitprof,'k--')
-    plot(ax3,n,fitprof,'linewidth',2,'color',bar_color)
+    plotfit(ax3,n,fitprof,profcolor,plotstyle)
 
     t2(end+1:end+length(fittxt))=fittxt;
     
@@ -159,10 +151,7 @@ for layer=1:length(p.sr_layerson)
     profz=hist(z,n);profz([1 end])=[];n([1 end])=[];
     axes(ax4)
 
-    % fushuang, change plot to bar
-%     plot(ax4,n,profz);
-    bar_tmp=bar(ax4,n,profz,'edgecolor','none','facealpha',0.5); 
-    bar_color=bar_tmp.CData(1, :);
+    profcolor=plotprofile(ax4,n,profz,plotstyle);
 
     hold(ax4,'on')
     xlabel(ax4,'z (nm)')
@@ -171,9 +160,7 @@ for layer=1:length(p.sr_layerson)
 %     t3{end+1}=['FWHM: ' 9  num2str(fwhm)];
     [fitp,fitprof,fittxt]=fitgeneralprofile(profz,n,p,fwhm/2.6);
 
-    % fushuang, vislually better plot
-%     plot(ax4,n,fitprof,'k--') 
-    plot(ax4,n,fitprof,'linewidth',2,'color',bar_color)
+    plotfit(ax4,n,fitprof,profcolor,plotstyle)
 
     t3(end+1:end+length(fittxt))=fittxt;
     
@@ -211,6 +198,22 @@ end
 tab2.Parent.SelectedTab=tab2;
 assignin('base','jervistemp',jervistemp);
 results=[t1 t2 t3];
+
+function col=plotprofile(ax,n,prof,plotstyle)
+if strcmp(plotstyle,'bar')
+    h=bar(ax,n,prof,'edgecolor','none','facealpha',0.5);
+    col=h.CData(1,:);
+else
+    h=plot(ax,n,prof);
+    col=h.Color;
+end
+
+function plotfit(ax,n,fitprof,col,plotstyle)
+if strcmp(plotstyle,'bar')
+    plot(ax,n,fitprof,'linewidth',2,'color',col)
+else
+    plot(ax,n,fitprof,'k--')
+end
 
 function [fwhm,fwhmind]=getFWHM(profile,x)
     [mp, ip]=max(profile);
